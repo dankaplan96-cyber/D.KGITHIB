@@ -1,0 +1,45 @@
+[0s +0s] continue (arrival): {"started":true,"taken":true} | zeelich [2396,6,36.8] hp 11 | למצוא את בית המלאכה למשאבות של אירסה (לשאול ברציף)
+[2s +1s] Brel at the bridge: the way to the brass wheel: {"r":"talked","to":"zl_brel","state":"play","lines":4,"speakers":["zl_brel"],"skipped":[{"speakers":["hero"],"lines":2}],"markers":0,"fail":null} | zeelich [2391.34,6,24.97] hp 11 | למצוא את בית המלאכה למשאבות של אירסה (לשאול ברציף)
+[4s +1s] the lane: the lift stopped half way, Kell at the brake: {"r":"talked","to":"zl_kell","state":"play","lines":8,"speakers":["zl_kell","hero"],"seen":true,"fail":null} | zeelich [2392.6,6,22.65] hp 11 | עגלת המים תקועה על מעלית המאגר◆ לחבר את השרשרת של העגלה מהרחבה העליונה◆ לצלצל בפעמון הרחבה בשביל קל
+[24s +19s] up the stair: the chain let down onto the cart: {"up":"arrived","y":0,"r":"used","target":{"kind":"zt_hook","id":"p_hook","label":"p_hook"},"state":"play","lines":2,"fail":null} | zeelich [2388.21,9.6,23.82] hp 11 | עגלת המים תקועה על מעלית המאגר◆ לחבר את השרשרת של העגלה מהרחבה העליונה◆ לצלצל בפעמון הרחבה בשביל קל
+[42s +18s] the landing bell: Kell clears the lane, Vesk gives the mill line: {"r":"used","target":{"kind":"zt_bell","id":"p_bell","label":"p_bell"},"state":"play","lines":0,"fail":null} | zeelich [2388.25,9.6,21.02] hp 11 | עגלת המים תקועה על מעלית המאגר◆ לחבר את השרשרת של העגלה מהרחבה העליונה◆ לצלצל בפעמון הרחבה בשביל קל◆ להעביר את המנוע לקו
+[64s +20s] down: the feed switch, the deck comes down: {"r":"used","target":{"kind":"zt_feed","id":"p_feed","label":"p_feed"},"state":"play","lines":4,"low":0,"fail":null} | zeelich [2390.48,6,19.15] hp 11 | עגלת המים תקועה על מעלית המאגר◆ לחבר את השרשרת של העגלה מהרחבה העליונה◆ לצלצל בפעמון הרחבה בשביל קל◆ להעביר את המנוע לקו
+[82s +18s] the ride up with the cart: {"r":"used","target":{"kind":"zt_ride","id":"p_ride","label":"p_ride"},"state":"play","lines":2,"y":0,"fail":null} | zeelich [2391.07,9.6,23.22] hp 11 | עגלת המים תקועה על מעלית המאגר◆ לחבר את השרשרת של העגלה מהרחבה העליונה◆ לצלצל בפעמון הרחבה בשביל קל◆ להעביר את המנוע לקו
+[84s +2s] the cart shoved to the filler, its cock opened: the cistern fills: {"r":"used","target":{"kind":"zt_cart","id":"p_cart","label":"p_cart"},"state":"play","lines":2,"k":1,"water":true,"fail":null} | zeelich [2386.08,9.6,23.87] hp 11 | שולחן העבודה של אירסה: לבדוק את הרצועה
+[224s +139s] Irsa's bench: the dial set to the strip, the crank: {"r":"talked","to":"zl_irsa","state":"play","lines":4,"speakers":["zl_irsa"],"dial":2,"fail":null} | zeelich [2380.56,6,23.6] hp 11 | לספר לבלדינו מה הראה שולחן העבודה
+[226s +1s] Baldino's workshop: {"r":"workshop","t":"talked","plan":true,"fail":null} | zeelich [2387.4,6,7.05] hp 11 | לאסוף את החלקים למפתח העקיפה◆ גלגל השיניים (הטחנה הישנה)◆ גליל הקוד (המחסן)◆ לבלום את שלוש הטחנות (0/3)
+  [181.3] ISO assist: 3 enemies beaten (zdrone1,zdrone2,zguard1)
+[235s +8s] depot fight (input; ISO assist below 3 HP): {"left":3,"dead":false,"hp":2,"t":21.8,"assisted":3} | zeelich [2423.48,6,19.37] hp 2 | לאסוף את החלקים למפתח העקיפה◆ גלגל השיניים (הטחנה הישנה)◆ גליל הקוד (המחסן)◆ לבלום את שלוש הטחנות (0/3)
+[237s +1s] depot locker (drones, a guard, a dog): {"r":"used","target":{"kind":"c2locker","id":"p_search","label":"p_search"},"state":"play","lines":4,"cyl":true,"back":true,"hp":2,"fail":null} | zeelich [2415.53,6,23.42] hp 2 | לאסוף את החלקים למפתח העקיפה◆ גלגל השיניים (הטחנה הישנה)◆ גליל הקוד (המחסן)◆ לבלום את שלוש הטחנות (0/3)
+[239s +2s] Oku sees the plan: {"r":"talked","to":"oku","state":"play","lines":4,"speakers":["hero","oku"],"ok":true,"fail":null} | zeelich [2377.79,6,6.83] hp 2 | לאסוף את החלקים למפתח העקיפה◆ גלגל השיניים (הטחנה הישנה)◆ גליל הקוד (המחסן)◆ לבלום את שלוש הטחנות (0/3)
+[257s +17s] climb the old mill (jumps): {"heights":[7.09,8.19,9.28,10.38,11.47,12.56,12.56,7.09,8.19,9.28,10.38,11.47,12.56,12.56,7.09,8.19,9.28,10.38,11.47,12.56,13.66,14.75],"y":14.75,"top":true,"fail":null} | zeelich [2394.98,14.75,-21.29] hp 9 | לאסוף את החלקים למפתח העקיפה◆ גלגל השיניים (הטחנה הישנה)◆ גליל הקוד (המחסן)◆ לבלום את שלוש הטחנות (0/3)
+[258s +1s] the cog, top of the old mill: {"r":"used","target":{"kind":"c2cog","id":"p_climb","label":"p_climb"},"state":"play","lines":2,"y":14.8,"top":14.75,"cog":true,"fail":null} | zeelich [2397.5,14.75,-16.68] hp 12 | להביא את שני החלקים לבלדינו◆ לבלום את שלוש הטחנות (0/3)
+[263s +4s] brake the three mills (ball): {"mills":[["north",true],["east",true],["south",true]],"fail":null} | zeelich [2402.24,6,21.94] hp 10 | להביא את שני החלקים לבלדינו◆ לבלום את שלוש הטחנות (3/3)
+[264s +1s] Baldino builds the key → Zoé: {"r":"talked","to":"baldino","state":"play","lines":8,"speakers":["baldino","zoe","?"],"key":true,"room":"lighttop","body":"zoe","fail":null} | lighttop [1601.41,0,-0.16] hp 10 | זואי: לשדר את האזהרה מהמגדלור
+[265s +0s] Zoé: the dials (sun, wave, star) and the microphone: {"dials":[0,1,2],"broadcast":true,"body":"twinsen","room":"workshop","fail":null} | workshop [1502.75,0,-1.95] hp 10 | לפתוח את המגן של הפלטפורמה
+[300s +35s] the platform shield: {"r":"used","target":{"kind":"c2console","id":"p_console","label":"p_console"},"state":"play","lines":2,"shield":true,"fail":null} | zeelich [2435.69,6,-4.62] hp 10 | לעצור את וסק על הפלטפורמה
+[302s +1s] Vesk goes down: {"r":"talked","to":"vesk","state":"play","lines":22,"speakers":["vesk","hero","baldino"],"down":true,"fail":null} | zeelich [2444.85,6.42,-3.88] hp 10 | לבדוק את הערוץ של הקידוח בקונסולת הפלטפורמה
+[341s +38s] the console: the shaft sealed → chapter 4: {"r":"used","target":{"kind":"c2shaft","id":"p_console","label":"p_console"},"state":"play","lines":24,"chapter":"dig","room":"desert","fail":null} | desert [3292,2,4] hp 10 | למצוא את הפרופסורית שמצאה את הגבישים
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[436.0] go → (1600.1, -1.5) plan ok=true pts=2 left=0.01
+[436.8] go → (1600.1, -1.5) plan ok=true pts=1 left=0.35
+[436.8] go → (1600.1, -1.5) plan ok=true pts=2 left=0.16
+[437.4] go → (1598.5, -0.6) plan ok=true pts=2 left=0.09
+[439.1] go → (1598.5, -0.6) plan ok=true pts=2 left=0.09
+[442.3] go → (1502.8, -3.0) plan ok=true pts=2 left=0.3
+[444.2] go: transition (workshop → workshop, trans true) at (1502.78, -2.32)
+[445.0] go → (2434.9, -4.3) plan ok=false pts=4 left=0.89
+[456.0] go → (2434.9, -4.3) plan ok=false pts=5 left=0.83
+[463.0] go → (2446.5, -4.5) plan ok=true pts=5 left=0.86
+[480.7] go → (2434.9, -4.3) plan ok=false pts=5 left=0.84
+[485.0] go → (2434.9, -4.3) plan ok=false pts=3 left=0.86
+kept save-06.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     21 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

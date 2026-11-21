@@ -1,0 +1,26 @@
+{
+ "lang": [
+  "he",
+  "xl",
+  "ltr",
+  "no-cursor hud-lba big-text xl-text"
+ ],
+ "firstState": "play",
+ "box": {
+  "text": "",
+  "over": false,
+  "box": [
+   0,
+   0,
+   0,
+   0
+  ],
+  "font": "50.6px",
+  "dir": "ltr"
+ },
+ "inv": {
+  "clipped": 0,
+  "dir": "ltr"
+ },
+ "errs": []
+}

@@ -1,0 +1,62 @@
+[0s +0s] continue: {"chapter":"evacuation","lane":true,"cart":true} | citadel [-105.2,16,-64.6] hp 9 | Go home to Zoé
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[7s +6s] home: Zoé: {"r":"talked","to":"zoe","state":"play","lines":18,"speakers":["zoe","arthur","hero"],"home":true,"fail":null} | house [998.05,0,-0.53] hp 9 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Ask Mira for water◆ Ask Pippa for supplies
+  stats: {"play":48.2,"dialog":2.7,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":9,"words":181,"says":9,"walked":208,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[9s +2s] Gilbert: {"r":"talked","to":"gilbert","state":"play","lines":8,"speakers":["gilbert","hero"],"g":true,"fail":null} | citadel [-38.55,2.2,5.67] hp 9 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+  stats: {"play":20.4,"dialog":1.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":4,"words":95,"says":4,"walked":87,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[16s +6s] the fortress lever: {"r":"used","target":{"kind":"c8lever","id":"p_lever","label":"p_lever"},"state":"play","lines":4,"fort":true,"fail":null} | citadel [-33.25,15.88,-69.57] hp 6 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+  stats: {"play":48.7,"dialog":0.4,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":36,"says":2,"walked":101,"hpLost":3,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":6,"cloversNow":4,"revives":0}
+[35s +19s] the depot wheel (ball): {"depot":true,"fail":null} | citadel [-92.14,15.87,-68.38] hp 9 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+  stats: {"play":37.4,"dialog":1.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":14,"says":1,"walked":88,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[39s +4s] Mira (Water Office): {"door":"entered","r":"talked","to":"mira","state":"play","lines":6,"speakers":["mira","hero"],"mira":true,"fail":null} | office [1199.64,0,-0.71] hp 9 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+  stats: {"play":30.9,"dialog":0.8,"trans":0.7,"scene":3.4,"menu":0,"other":0,"lines":3,"words":68,"says":3,"walked":131,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[48s +9s] Pippa: {"r":"talked","to":"pippa","state":"play","lines":2,"speakers":["pippa"],"pippa":true,"fail":null} | citadel [-47.98,2.2,-2.06] hp 9 | Tell Zoé the shelters are open
+  stats: {"play":9,"dialog":0.3,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":26,"says":1,"walked":23,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[51s +3s] Zoé starts her run: {"r":"talked","to":"zoe","state":"play","lines":4,"speakers":["hero","zoe"],"start":true,"body":"zoe","fail":null} | citadel [-43.75,2.34,77.2] hp 9 | Zoé: bring the hill families to the lighthouse (0/3)
+  stats: {"play":26,"dialog":0.6,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":2,"words":32,"says":2,"walked":98,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[56s +5s] the three farms: {"done":3,"fail":null} | citadel [-56.11,2.23,53.29] hp 9 | Zoé: go to the lighthouse
+  stats: {"play":60.4,"dialog":0.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":43,"says":3,"walked":102,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[58s +2s] the lighthouse gathering: {"relay":true,"body":"zoe","fail":null} | citadel [-83.07,0.84,96.3] hp 9 | Zoé: compare the list cart's schedule with its route◆ The schedule◆ The driver's route
+  stats: {"play":28.7,"dialog":0.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":50,"says":3,"walked":56,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[58s +0s] Zoé: the schedule and the route (the board): {"a":"used","b":"used","s":true,"r":true,"sched":true,"body":"zoe","fail":null} | citadel [-89.48,1.2,96] hp 9 | Zoé: bring the lane's people to the landing (0/2)
+  stats: {"play":6.3,"dialog":1.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":94,"says":4,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[61s +2s] Zoé: Bram: {"r":"talked","to":"bram","state":"play","lines":6,"speakers":["bram","zoe"],"bram":true,"fail":null} | citadel [-43.54,2.26,64.42] hp 9 | Zoé: bring the lane's people to the landing (1/2)
+  stats: {"play":29.7,"dialog":0.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":43,"says":3,"walked":58,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[62s +1s] Zoé: Hedda and Tobin: {"r":"talked","to":"ev_hedda","state":"play","lines":10,"speakers":["ev_hedda","ev_tobin","zoe"],"hedda":true,"fail":null} | citadel [-29.16,2.36,73.02] hp 9 | Zoé: go to the landing by the pump house
+  stats: {"play":10.2,"dialog":1.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":37,"says":5,"walked":17,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[63s +1s] Zoé: to the landing → Twinsen: {"done":true,"body":"twinsen","waited":5.5,"fail":null} | citadel [-46.3,2.3,66.2] hp 9 | Open the lane's water gate (the pump room)◆ Find the culvert's pipe◆ Open its cock
+  stats: {"play":18.3,"dialog":1,"trans":0.3,"scene":0,"menu":0,"other":0,"lines":4,"words":61,"says":4,"walked":20,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[72s +9s] the pump room: the culvert pipe: {"r":"used","room":"pumproom","seen":true,"fail":null} | pumproom [9701.05,0,597.28] hp 9 | Open the lane's water gate (the pump room)◆ Find the culvert's pipe◆ Open its cock
+  stats: {"play":5.9,"dialog":0.4,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":2,"words":58,"says":2,"walked":8,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[73s +0s] the culvert's cock (in a rest): {"tries":1,"kicks":0,"gate":true,"open":true,"outside":true,"fail":null} | pumproom [9700.77,0,597.46] hp 9 | Up to the landing
+  stats: {"play":3.8,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":30,"says":2,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[74s +1s] up to the landing: the cart, the lane boards: {"board":true,"t":0,"bram":5.1,"fail":null} | citadel [-44.49,2.28,65.63] hp 9 | Go to the station's control room
+  stats: {"play":4.9,"dialog":2.9,"trans":0.7,"scene":22,"menu":0,"other":0,"lines":10,"words":96,"says":10,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[81s +7s] the control room: {"vesk":true,"fail":null} | control [1404.3,0,-3] hp 9 | Board a project ship at the spaceport
+  stats: {"play":34.8,"dialog":1.4,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":5,"words":119,"says":5,"walked":155,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[87s +5s] a project ship at the spaceport → chapter 9: {"r":"used","target":{"kind":"c8ship","id":"p_board","label":"p_board"},"state":"play","lines":4,"chapter":"council","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 9 | Find Baldino in his workshop
+  stats: {"play":40.4,"dialog":0.5,"trans":2.9,"scene":3.8,"menu":0,"other":0,"lines":2,"words":39,"says":2,"walked":157,"hpLost":0,"deaths":0,"rooms":2,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[412.3] go: transition (pumproom → pumproom, trans true) at (9695.51, 601.83)
+[438.2] go → (-25.7, -58.5) plan ok=true pts=21 left=0.27
+[472.1] go: transition (citadel → citadel, trans true) at (-26.25, -59.14)
+[475.1] go → (1404.3, -4.0) plan ok=true pts=2 left=0.25
+[476.9] go: transition (control → control, trans true) at (1404.33, -3.30)
+[477.7] go: through the spaceport's terminal (onto the deck)
+[477.8] go → (-14.3, 40.0) plan ok=true pts=21 left=0.2
+[509.1] go: transition (citadel → citadel, trans true) at (-15.15, 40.19)
+[509.9] go → (8593.6, -5.5) plan ok=true pts=7 left=0.21
+[515.0] go: transition (terminal → terminal, trans true) at (8594.14, -5.02)
+[515.8] go → (0.3, 41.0) plan ok=true pts=2 left=0.64
+[516.8] go → (0.3, 41.0) plan ok=true pts=2 left=0.29
+stats total: {"play":464.1,"dialog":19.6,"trans":9.5,"scene":29.2,"menu":0,"other":0,"lines":65,"words":1122,"says":65,"walked":1323,"hpLost":3,"deaths":0,"rooms":7,"chapter":"council","coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+kept save-11.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     19 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
