@@ -47,8 +47,16 @@ await ev(() => {
 // the talk: walk up until the Talk prompt is hers, face her, E (as p79-faces.mjs)
 await ev((spot) => {
   const z = P.npc('zoe'), ready = () => { const tg = P.target(); return tg?.kind === 'npc' && tg.id === 'zoe'; };
-  if (spot === 'wall') { P.go(z.pos.x - 1.6, z.pos.z + 0.4, { tol: 0.5, maxT: 30 }); }
-  P.go(z.pos.x, z.pos.z, { tol: 1.4, stopWhen: ready, maxT: 40 }); P.face(z.pos.x, z.pos.z);
+  if (spot === 'wall') {
+    // (staged: the nearest wall to her, found by the camera's own solid test at head height; he stands between, his back
+    // to it at most 1 m off, so the shot on her from behind him has no room there)
+    let best = null;
+    for (let i = 0; i < 48; i++) { const a = (i / 48) * Math.PI * 2; for (let r = 1.5; r < 7; r += 0.25) { const p = new game.camera.position.constructor(z.pos.x + Math.sin(a) * r, z.pos.y + 1.5, z.pos.z + Math.cos(a) * r); if (game.camRig._solidAt(p, 0)) { if (!best || r < best.r) best = { a, r }; break; } } }
+    window.F2.wall = best;
+    if (best) { const d = Math.max(1.3, Math.min(2.2, best.r - 0.7)); P.go(z.pos.x + Math.sin(best.a) * d, z.pos.z + Math.cos(best.a) * d, { tol: 0.3, maxT: 30 }); }
+  }
+  if (spot !== 'wall') P.go(z.pos.x, z.pos.z, { tol: 1.4, stopWhen: ready, maxT: 40 });
+  P.face(z.pos.x, z.pos.z);
   for (let k = 0; k < 3 && !ready(); k++) { P.go(z.pos.x, z.pos.z, { tol: 1.0 - k * 0.2, maxT: 20 }); P.face(z.pos.x, z.pos.z); }
   P.tap('KeyE', 0.02);
 }, SPOT);
@@ -80,7 +88,8 @@ const path = await ev(() => {
   for (let i = 1; i < R.length; i++) { if (!R[i] || !R[i - 1]) continue; const d = Math.hypot(R[i][0] - R[i - 1][0], R[i][1] - R[i - 1][1], R[i][2] - R[i - 1][2]); if (d > 0.6) cuts.push([i, +d.toFixed(2), R[i][3]]); else maxMove = Math.max(maxMove, d); }
   return { frames: R.length, cuts, maxMovePerFrame: +maxMove.toFixed(3), solidFrames: F2.solid };
 });
-fs.writeFileSync(OUT + 'face-2.json', JSON.stringify({ W, H, SPOT, lines, after, path }, null, 1));
+const wall = await ev(() => F2.wall ? { ...F2.wall, hero: [game.hero.pos.x, game.hero.pos.z].map((v) => +v.toFixed(2)) } : null);
+fs.writeFileSync(OUT + 'face-2.json', JSON.stringify({ W, H, SPOT, wall, lines, after, path }, null, 1));
 const zl = lines.filter((l) => l.who === 'zoe' && l.head), hl = lines.filter((l) => l.who === 'hero' && l.head);
 check('lines from both of them were heard', zl.length > 0 && hl.length > 0, lines.map((l) => l.who + ':' + l.fav));
 check('Zoé speaking: the shot favours her, her head 100-170 px tall, her face turned under 75° from the lens, over the box', zl.every((l) => l.fav === 'npc' && l.head.px >= 100 && l.head.px <= 170 && l.head.turn < 75 && l.head.bottom < l.box), zl.map((l) => [l.fav, l.head, l.box]));

@@ -260,7 +260,9 @@ const CH_TALK_K = [1, 1.3, 0.8, 1.65], CH_TALK_PS = [CH_TALK_P, 0.5], CH_TALK_K_
 // (half cut at its edge, it costs most). When Twinsen speaks, the reverse: over the
 // other's shoulder at his face. Calm: a change of speaker cuts to the other side only once a shot has been held FV_HOLD s,
 // and only in the first FV_LATE s of a line; when the talk ends it is back on his side before the chase takes over.
-const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.12, 0.9, 1.28, 1.5], FV_Q = [0.2, 0.3, 0.12], FV_FACE = 1.25, FV_NEAR = 1.7, FV_HOLD = 2.2, FV_LATE = 2.5, FV_MIX = [0.3, 0.42];
+// FV_CHECK s into a shot it looks once more: someone who was still stepping when it was set (more than FV_MOVED m since),
+// or a face that has not turned to the talk (a pair chatting on a bench), gets the shot set again from where they are.
+const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.12, 0.9, 1.28, 1.5], FV_Q = [0.2, 0.3, 0.12], FV_FACE = 1.25, FV_NEAR = 1.7, FV_HOLD = 2.2, FV_LATE = 2.5, FV_MIX = [0.3, 0.42], FV_CHECK = 0.8, FV_MOVED = 0.3;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -1721,14 +1723,14 @@ export class CameraRig {
   // FACE-2: the two-shot favouring F's face (F: him or one of `who`): from the others' side of the line between them,
   // FV_ANG off it, the speaker's head FV_HEAD of the frame (see FV_*), on the side `want` of the line from him to them
   // (the side the talk started on) → { pos, look, fav: F } or null (this.faceOf missing, or nowhere clear)
-  _favPose(hero, who, F, want) {
+  _favPose(hero, who, F, want, real = false) {
     const I = this.faceOf, all = [hero, ...who];
     if (!I || !F || !all.includes(F)) return null;
     const fi = I(F), oth = all.filter((p) => p !== F), oi = oth.map((p) => I(p));
     if (!fi || !oi.length || oi.some((o) => !o)) return null;
     const lx = oi.reduce((s, o) => s + o.x, 0) / oi.length, lz = oi.reduce((s, o) => s + o.z, 0) / oi.length;
     if (Math.hypot(lx - fi.x, lz - fi.z) < 0.4) return null;
-    const line = Math.atan2(lx - fi.x, lz - fi.z), fyaw = fi.yaw ?? line;   // (a face turns to the talk, unless seated)
+    const line = Math.atan2(lx - fi.x, lz - fi.z), fyaw = (real ? fi.now : null) ?? fi.yaw ?? line;   // (a face turns to the talk, unless seated; `real`: the way it faces now)
     const cx = who.reduce((s, p) => s + p.x, 0) / who.length, cz = who.reduce((s, p) => s + p.z, 0) / who.length;
     const side = (x, z) => Math.sign((cx - hero.x) * (z - hero.z) - (cz - hero.z) * (x - hero.x));
     const tv = Math.tan(((this.cam.fov || CH_FOV) * Math.PI) / 360), A = this.cam.aspect || 1.78, zT = (0.54 * fi.s) / (FV_HEAD * 2 * tv);
@@ -1752,9 +1754,9 @@ export class CameraRig {
       // (nobody's head or shoulders over the speaker's face; the others' heads in the frame, or it costs)
       let hid = false, out = 0;
       for (const o of oi) {
-        for (const [dy, rr] of [[0, 0.27], [-0.45, 0.33]]) {
+        for (const [dy, rr] of [[0, 0.27], [-0.45, 0.33], [-0.85, 0.36]]) {
           const [ox, oy, od] = this._ndc(p, look, o.x, o.y + dy * o.s, o.z);
-          if (od > 0.05 && od < fd && Math.hypot((ox - fx) * A, oy - fy) < fr * 0.8 + (rr * o.s) / (od * tv)) { hid = true; break; }
+          if (od > 0.05 && od < fd && Math.hypot((ox - fx) * A, oy - fy) < fr * 1.4 + (rr * o.s) / (od * tv)) { hid = true; break; }   // (and a margin round the face)
         }
         if (hid) break;
         const [ox, oy, od] = this._ndc(p, look, o.x, o.y, o.z), orr = (0.27 * o.s) / (Math.max(od, 0.05) * tv), ow = orr / A;
@@ -1769,6 +1771,8 @@ export class CameraRig {
       if (c < bc) c += this._crowdIn(p, look, all, crowd) * CH_TALK_K_PART;
       if (c < bc) { bc = c; best = { pos: p.clone(), look: look.clone(), fav: F, why: [ang, k, q, sg, mx, +c.toFixed(2)] }; }   // (why: for the tests)
     }
+    // (where everyone stood for it: _talkShot looks again once, FV_CHECK s on)
+    if (best) best.at = all.map((p) => [p.x, p.z]);
     return best;
   }
 
@@ -1792,7 +1796,7 @@ export class CameraRig {
       const sk = this.speaker?.(), spk = sk === 'hero' ? hero : sk && who.includes(sk) ? sk : null;
       if (spk !== S.spk) { S.spk = spk; S.lineT = 0; S.tried = null; } else S.lineT += dt;
       S.held = (S.held || 0) + dt;
-      const cutTo = (ns) => { if (ns && S.shot && S.init && Math.abs(angleDiff(Math.atan2(S.pos.x - S.look.x, S.pos.z - S.look.z), Math.atan2(ns.pos.x - ns.look.x, ns.pos.z - ns.look.z))) > CH_TALK_CUT) S.init = false; };
+      const cutTo = (ns, film = false) => { if (ns && S.shot && S.init && (film || Math.abs(angleDiff(Math.atan2(S.pos.x - S.look.x, S.pos.z - S.look.z), Math.atan2(ns.pos.x - ns.look.x, ns.pos.z - ns.look.z))) > CH_TALK_CUT)) S.init = false; };   // (`film`: another face, a cut as a film's, however near)
       if (!S.shot || who.length !== S.n) {
         S.n = who.length;
         // (FACE-2: the side of the line between him and them the talk starts on is kept to its end)
@@ -1801,13 +1805,21 @@ export class CameraRig {
         const fav = S.fav && (S.fav === hero || who.includes(S.fav)) ? S.fav : spk && spk !== hero ? spk : who[0];
         const ns = this._favPose(hero, who, fav, S.side) || this._talkPose(hero, who);
         cutTo(ns);
-        if (ns) { S.fav = ns.fav || null; S.held = 0; if (S.fav !== hero) S.base = ns; }
+        if (ns) { S.fav = ns.fav || null; S.held = 0; S.checked = false; if (S.fav !== hero) S.base = ns; }
         S.shot = ns || S.shot; S.miss = !S.shot;
       } else if (spk && spk !== S.fav && S.held >= FV_HOLD && S.lineT <= FV_LATE && S.tried !== spk) {
         // FACE-2: a new speaker: over to the other side, at that face (asked once a line)
         S.tried = spk;
         const ns = this._favPose(hero, who, spk, S.side);
-        if (ns) { cutTo(ns); S.shot = ns; S.fav = spk; S.held = 0; if (spk !== hero) S.base = ns; }
+        if (ns) { cutTo(ns, true); S.shot = ns; S.fav = spk; S.held = 0; S.checked = false; if (spk !== hero) S.base = ns; }
+      } else if (S.fav && S.shot?.at && !S.checked && S.held >= FV_CHECK) {
+        // FACE-2: once, a moment into the shot: still the shot it was set for?
+        S.checked = true;
+        const fi = this.faceOf?.(S.fav), all = [hero, ...who];
+        const moved = all.length !== S.shot.at.length || all.some((p, i) => Math.hypot(p.x - S.shot.at[i][0], p.z - S.shot.at[i][1]) > FV_MOVED);
+        const away = !!fi && fi.now != null && Math.abs(angleDiff(fi.now, Math.atan2(S.shot.pos.x - fi.x, S.shot.pos.z - fi.z))) > FV_FACE + 0.15;
+        const ns = moved || away ? this._favPose(hero, who, S.fav, S.side, away) : null;
+        if (ns) { cutTo(ns); if (!S.init) S.held = 0; S.shot = ns; if (S.fav !== hero) S.base = ns; }
       }
     } else {
       S.n = 0; S.spk = null;

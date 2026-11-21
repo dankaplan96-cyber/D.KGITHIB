@@ -475,7 +475,8 @@ class Game {
       return out.length ? out : null;
     };
     // (FACE-2, P86: the two-shot favours whoever speaks — him ('hero') or one of the talkers (their place) — and frames
-    //  that face; where a face is: its head's middle, its scale, and for someone seated or asleep the way it keeps facing)
+    //  that face; where a face is: its head's middle, its scale, for someone seated or asleep the way it keeps facing, and
+    //  the way it faces now)
     this.camRig.speaker = () => (this.state !== 'dialog' || !this.speaker ? null : this.speaker === this.hero ? 'hero' : this.speaker.pos || null);
     this.camRig.faceOf = (p) => {
       let a = p === this.hero.pos ? this.hero : null;
@@ -483,7 +484,7 @@ class Game {
       const hd = a?.rig?.j?.head;
       if (!hd) return null;
       const v = hd.getWorldPosition(new THREE.Vector3()), s = a.rig.root.scale.y || 1;
-      return { x: v.x, y: v.y + 0.05 * s, z: v.z, s, yaw: a !== this.hero && (a.pinY != null || a.forceAnim === 'doze') ? a.angle : null };
+      return { x: v.x, y: v.y + 0.05 * s, z: v.z, s, yaw: a !== this.hero && (a.pinY != null || a.forceAnim === 'doze') ? a.angle : null, now: a.angle };
     };
     // (CAM-CROWD, PLAYTHROUGH PT-8: the people standing round a dialogue, not in it — its two-shot keeps them out of the way)
     this.camRig.crowd = () => {
