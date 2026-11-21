@@ -5926,3 +5926,13 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   refresh-count tolerance is 0.08 → 0.12 (at 57 Hz, 30 = 1.90 refreshes now counts 2 instead of the grid's 1-in-8 early
   frames). Please confirm in the 57 Hz state: 30 FPS, T1–T3 (`tests/fps30-feel.mjs` RATE=real) and SMOOTH-HW's street
   route, ≥ 45 ms intervals and early frames, v121 vs v122. F9 counting presented frames: not done yet (noted).
+- **P96-HW · confirmed in part** (the desktop, 21.11, 22:37–23:10, the 57 Hz state, plugged in, headed Chrome on the
+  GTX 1050). Branch **`smooth-hw`** `4fe4fa66`, `docs/lba3-performance/smooth-hw/P96-HW.md`; compared v121 `bf348951` with v122 `31656587`.
+  - **The 0.12 tolerance works:** the one-refresh-early frames went 23 → 0 per T2 pass.
+  - **The keep-alive helps but does not remove all the gaps:**
+    - the cloud's `fps30-feel.mjs` RATES=real T1–T3: ≥ 45 ms intervals 53 → 24 over 18 passes (9 of v122's 18 passes clean);
+    - smooth-routes street at 30: > 50 ms 45 → 22 over 6 passes;
+    - the desktop's runner (T2 street): 4–5 → 0 in all 5 passes;
+    - gaps of ~400 ms remain in half of the cloud test's passes.
+  - **The game's GPU timer reads 16–20 ms with v122** against 6–8 with v121 (nvidia-smi's average did not rise). Probably the query now spans the compositor's extra presents. Worth checking before Auto reads it.
+  - Next on the desktop: 62 FPS30-FEEL "after" (v121 = P94; the user's order).
