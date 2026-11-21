@@ -506,15 +506,17 @@ class Area {
       parts.push({ M, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
       if ((acc += T.length) > 4096 || long()) { acc = 0; yield 'cell part'; }
     }
-    const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; }
+    // (ARRIVAL-2: a large cell's arrays made one a unit once the unit is long: fresh memory, megabytes at a time)
+    const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; if (nv > 4096 && long()) yield 'cell part'; }
     const index = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
     let io = 0;
     for (const { M, T, map, from, vo } of parts) {
       const g = M.geo, I = g.index, IA = I ? I.array : null, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
       if ((acc += nf) > 4096 || long()) { acc = 0; yield 'cell part'; }
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
-      // (ARRIVAL-STEPS: a large piece's attributes one a step, its matrices its own meanwhile)
-      const big = nf >= 8192, Mm = big ? _m.clone() : _m, Nm = big ? _nm.clone() : _nm;
+      // (ARRIVAL-STEPS: a large piece's attributes one a step, its matrices its own meanwhile; ARRIVAL-2: a piece of 1 024
+      //  vertices or more also between its attributes once the unit is long)
+      const big = nf >= 8192, part = nf >= 1024, Mm = part ? _m.clone() : _m, Nm = part ? _nm.clone() : _nm;
       for (const n of names) {
         const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
         // (PERF-CALLS: positions and normals without a call per vertex — three's own arithmetic, in its order, so the
@@ -554,7 +556,7 @@ class Area {
         else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
         else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
         else { const sz = a.itemSize, A = a.array; for (let k = 0; k < nf; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
-        if (big) yield 'cell part';
+        if (big || (part && long())) yield 'cell part';
       }
       if (!T) {
         if (I) { const X = I.array, n = I.count - (I.count % 3); for (let i = 0; i < n; i += 3) { index[io + i] = X[i] + vo; index[io + i + 1] = X[C.flip ? i + 2 : i + 1] + vo; index[io + i + 2] = X[C.flip ? i + 1 : i + 2] + vo; } io += n; }
