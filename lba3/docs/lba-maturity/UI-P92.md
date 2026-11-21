@@ -60,6 +60,8 @@ All Automated runtime only (swiftshader, port 85xx, one browser at a time on a s
   toast (B2), the audit's 25 turned keys and 3 code-led lines (B5 ×2), "Touch" shared by two pipes (C1). After:
   **PASS 29/29**, errors none. The before Hebrew captures come from an earlier run of the same script (its pad
   section's switch back to the keyboard pressed a different key, nothing else differs).
+- After merging origin/ccr-c1c2c4b9-dep6ed (P95 Auto, depot, narrative text; `he-text.js` regenerated, no diff):
+  `tests/ui-p92.mjs` again **PASS 29/29**, errors none; dialogue-check **PASS**. The suites below ran before the merge.
 - `tests/opening-tutorial.mjs` **PASS 43/43** (A8 now expects the Talk key from 3.5 m).
 - `tests/hebrew.mjs` **PASS 24/24**; `tests/inventory-calm.mjs` **PASS 23/23**; `tests/uipass.mjs` **PASS 25/25**;
   `tests/campaign-thread.mjs` `ONLY=A` (chapter 2's pump room, the pipes and cocks by input) **PASS 13/13**.
