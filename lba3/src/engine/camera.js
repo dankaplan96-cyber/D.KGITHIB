@@ -262,7 +262,7 @@ const CH_TALK_K = [1, 1.3, 0.8, 1.65], CH_TALK_PS = [CH_TALK_P, 0.5], CH_TALK_K_
 // and only in the first FV_LATE s of a line; when the talk ends it is back on his side before the chase takes over.
 // FV_CHECK s into a shot it looks once more: someone who was still stepping when it was set (more than FV_MOVED m since),
 // or a face that has not turned to the talk (a pair chatting on a bench), gets the shot set again from where they are.
-const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.12, 0.9, 1.28, 1.5], FV_Q = [0.2, 0.3, 0.12], FV_FACE = 1.25, FV_NEAR = 1.7, FV_HOLD = 2.2, FV_LATE = 2.5, FV_MIX = [0.3, 0.42], FV_CHECK = 0.8, FV_MOVED = 0.3;
+const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.12, 0.9, 1.28, 1.5], FV_Q = [0.2, 0.3, 0.12], FV_FACE = 1.25, FV_NEAR = 1.7, FV_HOLD = 2.2, FV_LATE = 2.5, FV_MIX = [0.3, 0.42], FV_CHECK = 0.8, FV_MOVED = 0.3, FV_FG = 3, FV_FG_PAD = 0.45, FV_K_FG = 0.45;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -1720,6 +1720,25 @@ export class CameraRig {
     return [(vx * r0 + vz * r2) / (D * th), (vx * u0 + vy * u1 + vz * u2) / (D * tv), d];
   }
 
+  // FACE-2: how many of the lines from p to the faces, chests and waists in a two-shot pass, in their first FV_FG m from
+  // the lens, within FV_FG_PAD of a collider (a sign's post, a lamp, a fence's rail; a listener's line counts half, the
+  // speaker's — faces[0] — whole): a prop big in the
+  // foreground across a body (the yard's street sign over him, in dialogue-scenes' D2/D3, ghosting him)
+  _fgClutter(p, faces) {
+    const P = this.physics;
+    if (!P) return 0;
+    let n = 0;
+    for (let fi = 0; fi < faces.length; fi++) for (const dy of [0, -0.6, -1.1]) {
+      const f = faces[fi];
+      const tx = f.x - p.x, ty = f.y + dy * f.s - p.y, tz = f.z - p.z, L = Math.hypot(tx, ty, tz), end = Math.min(FV_FG, L - 0.6);
+      hit: for (let d = 0.3; d < end; d += 0.25) {
+        const k = d / L, x = p.x + tx * k, y = p.y + ty * k, z = p.z + tz * k, C = P.near(x, z);
+        for (let i = 0; i < C.length; i++) { const c = C[i]; if (c.enabled && y > c.bottom - 0.1 && y < c.top + 0.35 && P._inside(c, x, z, FV_FG_PAD)) { n += fi === 0 ? 1 : 0.5; break hit; } }
+      }
+    }
+    return n;
+  }
+
   // FACE-2: the two-shot favouring F's face (F: him or one of `who`): from the others' side of the line between them,
   // FV_ANG off it, the speaker's head FV_HEAD of the frame (see FV_*), on the side `want` of the line from him to them
   // (the side the talk started on) → { pos, look, fav: F } or null (this.faceOf missing, or nowhere clear)
@@ -1768,6 +1787,7 @@ export class CameraRig {
       c += out;
       if (c >= bc || this._solidAt(p, CH_GAP) || !this._line(p, fi.x, fi.y, fi.z, true) || !this._line(p, fi.x, fi.y - 0.5 * fi.s, fi.z, true)) continue;
       for (const o of oth) if (c < bc && !this._sees(p, o, true)) c += CH_TALK_K_PART * 0.5;
+      if (c < bc) c += this._fgClutter(p, [fi, ...oi]) * FV_K_FG;
       if (c < bc) c += this._crowdIn(p, look, all, crowd) * CH_TALK_K_PART;
       if (c < bc) { bc = c; best = { pos: p.clone(), look: look.clone(), fav: F, why: [ang, k, q, sg, mx, +c.toFixed(2)] }; }   // (why: for the tests)
     }
