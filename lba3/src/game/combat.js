@@ -537,10 +537,16 @@ export class HeroCombat {
       h.angle += clamp(d, -mx, mx);
     }
     // a short readable step, stopping short of the target
-    if (m.stepLeft > 0 && m.t < D.s + D.a) {
+    // (ONE-SHOT-30: at an even pace over the whole frames that startup + active begin in — what is left of the step
+    //  shared among the frames still to come — so it is the step's full length at any frame rate. It was taken at
+    //  step / (s + a) only on frames ending before the end, and a 33 ms frame dropped the last of it: a jab stepped
+    //  0.27 m at 30 fps against 0.30 at 60 and 120. The pace stays even, as before: eased in like the dodge's hop, the
+    //  step lost the coast it ends on and was 10–14 % shorter at every frame rate)
+    const T = D.s + D.a, t0 = m.t - dt;
+    if (m.stepLeft > 0 && t0 < T - 1e-6) {
       const near = m.tgt?.alive ? h.distTo(m.tgt) - (m.tgt.radius || 0.5) : 99;
       if (near > D.reach * 0.55) {
-        const v = (D.step / (D.s + D.a)) * 1.0, s = Math.min(m.stepLeft, v * dt);
+        const s = m.stepLeft / Math.max(1, Math.ceil((T - t0) / Math.max(dt, 1e-4) - 1e-6));
         m.stepLeft -= s;
         out.drive = { x: Math.sin(h.angle) * (s / dt), z: Math.cos(h.angle) * (s / dt) };
       } else m.stepLeft = 0;

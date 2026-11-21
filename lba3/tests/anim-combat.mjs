@@ -104,7 +104,7 @@ for (const fps of [30, 60, 120]) {
     const d = E('a_dummy'); d.hits = 0;
     const feet0 = [C.wp(h.rig.j.legL.foot), C.wp(h.rig.j.legR.foot)];
     C.press('KeyK', dt);
-    let hitAt = null, yaws = [], t = 0, slid = 0, lastF = null;
+    let hitAt = null, yaws = [], t = 0, slid = 0, lastF = null, lastStep = [false, false];
     const D = h.combat.move.def;
     for (let i = 0; i < Math.round(0.5 * fps); i++) {
       const before = d.hits; G.frame(dt, false); t += dt;
@@ -116,9 +116,11 @@ for (const fps of [30, 60, 120]) {
         const yaw = Math.atan2(tip.x - hand.x, tip.z - hand.z) - h.angle; yaws.push(+Math.atan2(Math.sin(yaw), Math.cos(yaw)).toFixed(2));
       }
       // a foot on the ground (the lower one, at ground height) gliding over it
-      const F = [C.wp(h.rig.j.legL.foot), C.wp(h.rig.j.legR.foot)];
-      if (lastF) for (let k = 0; k < 2; k++) if (F[k].y - h.pos.y < 0.115) slid += Math.hypot(F[k].x - lastF[k].x, F[k].z - lastF[k].z) * (F[k].y < F[1 - k].y + 0.005 ? 1 : 0);
-      lastF = F;
+      // (ONE-SHOT-30: not a foot the planting is stepping, in this frame or the last: at 30 fps the frame a step comes
+      //  down in can sample its foot under the height bar, and the step's last 13 cm were counted as a glide)
+      const F = [C.wp(h.rig.j.legL.foot), C.wp(h.rig.j.legR.foot)], P = h.rig._feet, stepNow = [!!P?.L.stepping, !!P?.R.stepping];
+      if (lastF) for (let k = 0; k < 2; k++) if (F[k].y - h.pos.y < 0.115 && !stepNow[k] && !lastStep[k]) slid += Math.hypot(F[k].x - lastF[k].x, F[k].z - lastF[k].z) * (F[k].y < F[1 - k].y + 0.005 ? 1 : 0);
+      lastF = F; lastStep = stepNow;
     }
     void feet0;
     return { fps, s: D.s, a: D.a, hitAt, yawFirst: yaws[0], yawLast: yaws[yaws.length - 1], yaws, plantedGlideCm: +(slid * 100).toFixed(1), nan: C.nan() };

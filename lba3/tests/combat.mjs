@@ -2,7 +2,7 @@
 // the measured values. Covers: input buffer and combo, active-frame timing and single hits, walls blocking
 // melee and targeting, the dodge's invulnerability, the ball at low frame rates (no tunnelling), recall,
 // scene changes, presses during dialogue, lock-on, the sentry's shield and guard break, the crawler's slam,
-// the ball switch, weapon save/load, dodge distance at 30 vs 60 fps and by direction (LBA2's), and the ball's LBA2 rules (magic, bounces, fetch).
+// the ball switch, weapon save/load, dodge distance at 30 / 60 / 120 fps and by direction (LBA2's), and the ball's LBA2 rules (magic, bounces, fetch).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -233,17 +233,25 @@ r = await ev(() => {
 });
 check('weapons saved and restored', r.hasSword && !r.hasPulse && r.weapon === 'sword' && r.owned.join() === 'ball,sword,fists', r);
 
-// 14. frame-rate independence of the dodge
+// 14. frame-rate independence of the dodge: the same distance at 30, 60 and 120 fps, the same way, from the same press
+// (ONE-SHOT-30: a moment of play with no key before the press. Pressed on the first frame after G.devArena()'s scene
+//  change, the held D was read by CAM-DOORS as the way he came in (Hero.inputYaw `reanchor`): that first dodge went
+//  straight ahead, and the x-only measure read it as 0 — "d30 0" whichever frame rate came first. Measured along the
+//  ground now, with its direction compared)
 r = await ev(() => {
-  const { G } = C; G.devArena(); const out = [];
-  for (const dt of [1 / 30, 1 / 60]) {
-    C.only([], [6190, 6], 0); const h = G.hero; const x0 = h.pos.x;
+  const { G } = C; G.devArena(); const out = {};
+  for (const dt of [1 / 30, 1 / 60, 1 / 120]) {
+    C.only([], [6190, 6], 0); const h = G.hero; C.step(0.2, dt); const p0 = h.pos.clone();
     G.input.keys.add('KeyD'); G.input.keys.add('ShiftLeft'); G.input.taps.add('ShiftLeft'); C.step(dt, dt); G.input.keys.delete('ShiftLeft'); G.input.keys.delete('KeyD');
-    C.step(0.5, dt); out.push(+Math.abs(h.pos.x - x0).toFixed(2)); C.step(1.0, dt);
+    const started = h.combat.dodgeT > 0;
+    C.step(0.5, dt); const dx = h.pos.x - p0.x, dz = h.pos.z - p0.z;
+    out[Math.round(1 / dt)] = { d: +Math.hypot(dx, dz).toFixed(2), dir: +Math.atan2(dx, dz).toFixed(2), started }; C.step(1.0, dt);
   }
-  return { d30: out[0], d60: out[1] };
+  const k = [30, 60, 120];
+  return { d30: out[30].d, d60: out[60].d, d120: out[120].d, dir: k.map((f) => out[f].dir), started: k.map((f) => out[f].started) };
 });
-check('dodge distance consistent at 30 and 60 fps', Math.abs(r.d30 - r.d60) < 0.12 && r.d60 > 1.4 && r.d60 < 2.6, r);
+check('dodge distance consistent at 30, 60 and 120 fps (±5 %), the same way, from the same press',
+  r.started.every(Boolean) && r.d60 > 1.4 && r.d60 < 2.6 && [r.d30, r.d120].every((d) => Math.abs(d - r.d60) <= 0.05 * r.d60) && r.dir.every((a) => Math.abs(a - r.dir[1]) < 0.05), r);
 
 // 14b. CONTROL-FEEL: the dodge goes LBA2's distance by its way from his facing (ANIM.HQR root motion, H = 2.065 m):
 // aside 2.41 m (78/79), back 2.03 m (53, also the backstep with no direction), forward 1.45 m (52); it was 3.1 m every way
@@ -363,8 +371,18 @@ r = await ev(() => {
   const strafe = +h.pos.distanceTo(p0).toFixed(2), legs = h.rig.anim;
   G.input.keys.delete('KeyF'); C.step(0.1);
   // the recovery: the arm doesn't snap when the controller lets go
-  let maxJump = 0, prev = h.rig.j.armR.sh.rotation.x, layered = false;
-  for (let i = 0; i < 40; i++) { C.step(1 / 60); const v = h.rig.j.armR.sh.rotation.x; maxJump = Math.max(maxJump, Math.abs(v - prev)); prev = v; layered ||= !!h.rig.over && h.rig.anim === 'walk'; }
+  // (ONE-SHOT-30: judged from the frame the controller lets go of the throw — through the layer's own fade and its end —
+  //  not from 0.1 s after the button: that is the throw's clock 0.18, two hundredths past the release, where the arm's
+  //  whip (THROW keys, ≤ 1.2 rad a frame in anim-combat) still moves 0.31 rad a frame by design; the let-go itself and
+  //  the layer's end moved it 0.055 and 0.007. The whip is kept as `whip`, for the record)
+  let maxJump = 0, whip = 0, prev = h.rig.j.armR.sh.rotation.x, layered = false, letGo = null, overEnd = null;
+  for (let i = 0; i < 40; i++) {
+    C.step(1 / 60); const v = h.rig.j.armR.sh.rotation.x, d = Math.abs(v - prev); prev = v;
+    if (h.combat.throwing) whip = Math.max(whip, d); else { letGo ??= i; maxJump = Math.max(maxJump, d); }
+    if (letGo != null && overEnd == null && !h.rig.over) overEnd = i;
+    layered ||= !!h.rig.over && h.rig.anim === 'walk';
+  }
+  layered &&= letGo != null && overEnd != null && overEnd > letGo;   // (the controller let go while the layer still played, and it ended in the window)
   G.input.keys.delete('KeyD'); B.launch = orig; C.step(2);
   // Aim Assist Off: aiming 25° to the right of the dummy picks nothing and the ball flies straight
   G.settings.aimAssist = 'off'; C.only(['a_dummy'], [6190, 8], 0); C.put('a_dummy', 6190 + Math.sin(0.44) * 6, 8 + Math.cos(0.44) * 6); B.reset(); C.step(0.2);
@@ -382,13 +400,13 @@ r = await ev(() => {
   const dragLock = !!G.targeting.lock;
   pe('pointerdown', { button: 2 }); C.step(1 / 60); pe('pointerup', { button: 2 }); C.step(0.1);
   const tapLock = !!G.targeting.lock; G.targeting.release();
-  return { still, shot, strafe, legs, maxJump: +maxJump.toFixed(3), layered, off, dragLock, tapLock };
+  return { still, shot, strafe, legs, maxJump: +maxJump.toFixed(3), whip: +whip.toFixed(3), letGo, overEnd, layered, off, dragLock, tapLock };
 });
 check('mouse aim: a cursor left still for 6 s is still the aim', r.still.aiming && r.still.src === 'mouse' && r.still.z > 0.9, r.still);
 check('mouse aim: walking sideways while charging does not redirect the throw', r.shot && r.shot.aim.z > 0.9 && r.strafe > 0.2, { shot: r.shot, strafe: r.strafe });
 check('charging on the move: the legs walk (no frozen pose)', r.legs === 'walk', { legs: r.legs });
 check('the ball leaves the hand at the release frame', r.shot && Math.abs(r.shot.actionT - 0.16) < 0.03 && r.shot.hand < 0.35, r.shot);
-check('the follow-through blends into the walk (no arm snap)', r.layered && r.maxJump < 0.3, { maxJump: r.maxJump, layered: r.layered });
+check('the follow-through blends into the walk (no arm snap)', r.layered && r.maxJump < 0.3 && r.whip <= 1.2, { maxJump: r.maxJump, whip: r.whip, letGo: r.letGo, overEnd: r.overEnd, layered: r.layered });
 check('Aim Assist Off: no soft target, no correction', !r.off.soft && !r.off.target && r.off.drift < 0.05, r.off);
 check('a camera drag never toggles the lock; a right tap does', !r.dragLock && r.tapLock, { drag: r.dragLock, tap: r.tapLock });
 
