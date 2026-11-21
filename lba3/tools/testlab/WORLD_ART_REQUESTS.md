@@ -5936,3 +5936,10 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
     - gaps of ~400 ms remain in half of the cloud test's passes.
   - **The game's GPU timer reads 16–20 ms with v122** against 6–8 with v121 (nvidia-smi's average did not rise). Probably the query now spans the compositor's extra presents. Worth checking before Auto reads it.
   - Next on the desktop: 62 FPS30-FEEL "after" (v121 = P94; the user's order).
+- **62 FPS30-FEEL "after" · plugged in, done** (the desktop, 21.11, 23:00–23:45) — branch **`fps30-feel`** (now with
+  `ccr-c1c2c4b9-dep6ed` merged in; FPS30.md §8.7 "Real hardware" holds the before and after rows). Before `a333b00d`, after v121 `bf348951` (P94), plus v122 for comparison. The frame clock was in the 57 Hz state.
+  - **P94's aim fix holds on the GTX 1050:** no view turn while aiming by mouse (0.18–0.57 rad → 0), and the ring reaches the cursor at once at 30 on 59.9 (0.16 → 2.75). Press and release timing unchanged.
+  - **The bank shot** (`tests/chapter3.mjs`, real GPU, at 60): 48/48 in both builds. The only verdict FAIL is a favicon 404 from the local server.
+  - **Pacing at 30** is the 57 Hz state's: the ~400 ms gaps and ~20 early frames per run, before and after alike. v122 removes the early frames and most of the gaps in T1/T2.
+  - **T3's camera at 30:** not better after. One pass of the cloud's T3 had a 2.96 m camera step (yaw 0.097 rad).
+  - Left: the battery half.
