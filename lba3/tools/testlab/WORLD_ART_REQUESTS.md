@@ -5789,6 +5789,15 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   street/interior/combat stayed 92–100 % but **the arrival route at 30 alternated 16.7 / 33.3 ms intervals**
   (GTX1050-BATTERY, `bat-benchfps-auto.txt` "arrival at 30") — an uneven 30 of the kind the user describes. That
   computer's own report (Pause → Benchmark: Frame Rates, and F9's "on pace" line at 30) is what would show which.
+- **The user's own Benchmark: Frame Rates, 21.11 11:53** (pasted to the desktop agent; saved verbatim as
+  `docs/lba3-performance/HARDWARE/2026-11-21-user-benchfps/user-benchfps-gtx1050-battery.txt`).
+  - **Where:** build 0.49.0. **Not the "other computer"** — it is this GTX 1050 laptop: on battery, window 1536×819 at devicePixelRatio 1.25, **frame-rate limit off (60)**, so it says nothing about 30. Chrome used the GTX 1050 (D3D11) even on battery. Auto started at Medium (a guess, nothing cached) and held Medium the whole run (evaluation passed: 59.8 fps, missed 0 %).
+  - **Even:** street, transition, hamalayi and nearly all of the interior sit on every refresh (100 % on the refresh, p99 16.8–16.9 ms, GPU p95 11.7–14.8 ms).
+  - **Two single hitches a player may see:**
+    - combat: one 50 ms frame at 13.9 s, the frame before it 46 ms of CPU work (a first-time cost? a throw or an enemy's first appearance);
+    - interior: one 50 ms frame at 10.0 s with only 11 ms of work before it (not the game's CPU: the browser or the GPU).
+  - **Arrival:** four long frames (67/67/50/100 ms), all behind the black (geometry upload; the shadow cache rebuilt on the last).
+  - **Still wanted for "30 isn't even":** the same report from the other computer, with the limit at 30.
 - **P58-HW (60.3) · done** — branch `p58-hw` (`b7e3b75e`), `src/game/island.js` only. GTX 1050, Chrome, 1280×720, v113.
   - **How it was found:**
     - Twinsen walked by input (`P.go`, stepped at 1/60) round both huts (clockwise and back), between them, behind them, along their fronts and round the yard.
