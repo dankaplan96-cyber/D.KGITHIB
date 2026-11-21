@@ -29,7 +29,7 @@ Object.assign(STR.en, {
   c2_bal_2: "Look at the globe. Deep under Twinsun there's a shell, like an egg's, and something sleeps inside it. Sendell has watched over it longer than anyone remembers.",
   c2_bal_3: "Vesk's bore on Citadel is drilling into that shell to draw off its heat. He thinks it will crack anyway, so he's saving whoever he can. The rest... he isn't.",
   c2_tw_bal2: 'Then we stop the drill.',
-  c2_bal_4: "No! Pull it out halfway and the hole cracks wider on its own. Run it backwards instead: push the heat back down, and the bore becomes a patch. Vesk steers it from his platform here, behind a shield.",
+  c2_bal_4: 'No! Pull it out halfway and the hole cracks wider on its own. Run it backwards instead. Push the heat back down, and the bore becomes a patch. Vesk steers it from his platform here, behind a shield.',
   c2_bal_5: "So I built an override key. Almost. It still needs the cog from the top of the old mill and the code cylinder in the project depot's locker.",
   c2_bal_6: "The shield runs off the three mills. Brake them, and the key can open it.",
   c2_bal_7: "Zoé's waiting at the Citadel lighthouse with my radio. When the key is ready, she warns the whole island. Not before, or Vesk shuts his platform tight.",
@@ -67,7 +67,7 @@ Object.assign(STR.en, {
   c2_guard_block: "No entry. The shield is on, and I'm not moving.",
   c2_guard_after: "I'm... I'm just the guard. The engineer is inside.",
 
-  c2_vesk_1: 'Twinsen. I knew Baldino would send you. And that broadcast from the Citadel lighthouse, was that you as well?',
+  c2_vesk_1: 'Twinsen. I knew Baldino would send you. And that broadcast from your lighthouse: you as well?',
   // (P81 / VESK: Twinsen asks about the people the plan leaves out; Vesk's answer is one he believes. The drill's argument
   //  is Baldino's when he is on the platform, Twinsen's in his words when he isn't. The camera shows the escape: no
   //  line describes it)
@@ -117,7 +117,7 @@ Object.assign(STR.en, {
   c2_tw_sealed0: 'He locked it behind him.',
   c2_bal_sealed1: "Those doors only open on the bore's own network code, and every project station has to send it at once. We can't do that. Not yet.",
   c2_tw_sealed: "So we wait while he drills?",
-  c2_bal_sealed2: "No. We learn what the shell is, so that when we get down there we know how to turn the bore around. The first crystals were dug up on Desert Island, by a professor the project sacked for asking questions. Find her.",
+  c2_bal_sealed2: 'No. First we learn what the shell is, so we know how to turn the bore around. The first crystals came out of a dig on Desert Island, and the project sacked the professor who found them. Find her.',
   c2_doran_sealed: "Desert Island? I'll fly us home to Citadel first, then it's two days south on the project's ferry. Funny thing: nobody's thought to change my codes.",
   c2_j_arrive: "Doran flew me to Zeelich in the project's ship.",
   c2_j_bal: "Baldino said Vesk's bore on Citadel is drilling into a shell deep under Twinsun, where something sleeps. Pulled out halfway, the shell would crack; run backwards, the bore would push the heat back down and patch it. Vesk steers it from his platform on Zeelich. To get past its shield, Baldino's override key still needs a cog from the old mill and the depot's code cylinder.",

@@ -12,25 +12,25 @@ Object.assign(STR.en, {
 
   c8_zoe_1: 'You came back! Arthur, he came back!',
   c8_ar_1: 'Dad! I told you he would! Did you see the snow? Did you bring me snow?',
-  c8_zoe_2: "The project ships take only the list. Yesterday Vesk switched off the heat posts: every bit of power goes to his bore now. People on the list are queuing at the spaceport. Everyone else was told to wait.",
+  c8_zoe_2: 'The ships take only the list. Vesk switched the heat posts off yesterday: every bit of power goes to his bore. Everyone on the list is queuing at the spaceport. The rest were told to wait.',
   c8_tw_z1: "Then we take everyone else. Where's safe?",
   c8_zoe_3: "The lighthouse cliffs are high and solid, and Doran's old boats are moored under them. I'll get the hill families there. You find somewhere for the town.",
   c8_ar_2: 'Grandpa Gilbert says FunFrock dug tunnels under everything! He says it all the time. Nobody listens.',
   c8_zoe_4: "This time, somebody should. And ask Mira and Pippa for help. They'll want to be asked.",
   // (P81: the repeats)
-  c8_zoe_wait: "Gilbert knows the tunnels. Mira has the water, Pippa the supplies. Ask all three: they'll want to be asked.",
+  c8_zoe_wait: "Gilbert knows the tunnels. Mira has the water, Pippa the supplies. Ask all three. They'll want to be asked.",
   c8_zoe_done: "They're all up here, goats included, and I'm keeping count. Go on. I'll hear you on the relay.",
   c8_ar_after: "So Grandpa's tunnels are real! I'm packing for the shelter: my radio, a torch, and a spare torch.",
 
   c8_gil_1: "Twinsen! They fenced my well. MY well. I paid for that water twice.",
   c8_tw_g1: 'Gilbert, the tunnels. FunFrock\'s tunnels. Arthur says you know them.',
   c8_gil_2: "Know them? I dug them! Well, I carried the buckets, and I kept the surveyors' charts. Two shelters, big enough for the whole town: one under the fortress, one under the old depot.",
-  c8_gil_3: "The fortress one opens from inside the yard, by the old cistern. Its guards went down to the spaceport queue this morning, so nobody's on the gate. The depot bunker has a hatch up on its frame. Rusted, last I saw. FunFrock never oiled anything.",
+  c8_gil_3: 'The fortress one opens inside the yard, by the old cistern, and its guards are down at the spaceport queue. The depot bunker has a hatch up on its frame. Rusted, last I saw. FunFrock never oiled anything.',
   c8_gil_after: "Down the tunnels, everyone! Bring blankets. Bring cake, if you have cake.",
 
   c8_mira_1: 'Twinsen. The project says the water office is "non-essential". I have been non-essential for two days.',
   c8_tw_m1: 'I need you. The town is going into the shelters, and they need water.',
-  c8_mira_2: 'Water I can do. Under this office there is FunFrock\'s valve control room: every valve on the island, in one place. Here is the key. Don\'t lose it, there is only one and it is older than me.',
+  c8_mira_2: "Water I can do. Under this office is FunFrock's valve room: every valve on the island, in one place. Here is the key. There is only one, and it is older than me.",
   c8_toast_key: 'Valve room key',
   c8_mira_after: 'The shelters have water. My report will say "the water office saved the island". Again.',
 

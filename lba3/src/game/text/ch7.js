@@ -27,7 +27,7 @@ Object.assign(STR.en, {
   c7_sendell_2: "Yes. I have been holding the shell together with my own light. It is not enough any more. I am fading.",
   c7_sendell_3: 'I cannot do this alone any more. You will have to help me, all of you. Open the vent below this mountain, and she will breathe easier.',
   c7_tw_s2: 'Who is she, Sendell?',
-  c7_sendell_4: "When you reach the bottom of the world, you will know her. Not before. Go.",
+  c7_sendell_4: 'She sleeps under the shell. You will meet her when you get there. Not before. Go.',
   c7_keeper_4: "The dome's big mirror can throw that light down onto the glacier. It will melt the ice over the vent. Turn the telescope, I'll do the rest.",
   c7_scope: 'The dome grinds round. A shaft of light swings out over the glacier, and the ice cap over the vent begins to steam.',
   c7_keeper_5: 'Hurry. The meltwater will fill the basin. And I see something flying down there. Something with the project\'s colours.',
@@ -50,7 +50,7 @@ Object.assign(STR.en, {
   c7_arthur_1: 'Dad? Dad! It\'s Arthur. Mum\'s busy. Everyone\'s busy!',
   c7_tw_ar1: 'Arthur, slow down. What is it?',
   c7_arthur_2: "The project ships came this morning. They're only taking people on the list. Grandpa Gilbert's not on it. Mira's not on it. WE'RE not on it!",
-  c7_tw_ar2: "I'm coming home. Tell your mother. Tell everyone: nobody gets left behind.",
+  c7_tw_ar2: "I'm coming home. Tell your mother. Tell everyone. Nobody gets left behind.",
   c7_hesk_go: "Dug out, patched, and pointed downhill. Climb in. It's a long glide to Citadel.",
   c7_hesk_radio: "Hesk here. The glider's dug out, and the monks have a slope steep enough to launch from. Meet me at the monastery!",
 

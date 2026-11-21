@@ -8,10 +8,10 @@ Object.assign(STR.en, {
   n_zl_irsaradio: 'Irsa (radio)',
 
   // ---- the workshop: Baldino wants his isolator back
-  nw_bal_iso: "One more thing. The code line at the station is old project cable, and its joint is cracked. Nothing holds a cracked joint but my isolator, so I want it back off Kell's feed box. Irsa says she'll hold the lane by hand. Fetch it on your way to the port.",
+  nw_bal_iso: "One more thing. The code line at the station is old project cable, and its joint is cracked. Only my isolator holds a cracked joint, so I want it back off Kell's feed box. Irsa will hold the lane by hand. Pick it up on your way to the port.",
 
   // ---- Mill Lane: Irsa takes the bypass
-  nw_irsa_1: "Baldino wants his clip back? Then I hold the lane. I've run the mills' line onto Kell's feed switch: the bypass the chief kept promising. It jumps when the ground knocks, so a hand stays on it.",
+  nw_irsa_1: "Baldino wants his clip back? Then I hold the lane. I've run the mills' line onto Kell's feed switch, the bypass the chief kept promising. It jumps when the ground knocks, so a hand stays on it.",
   nw_irsa_wait: "Take the clip off when you're ready. I'm ready.",
   nw_unclip: '(The isolator comes off the feed box. The motor coughs...)',
   nw_irsa_2: "...and holds. Got her. Go on, take your clip.",
@@ -37,7 +37,7 @@ Object.assign(STR.en, {
 
   // ---- the lighthouse: Zoé alone, Arthur home
   nw_zoe_1: "There you are. The transmitter's warm. Arthur wanted to come; I gave him the kitchen pipe instead. He's home on the radio.",
-  nw_zoe_2: "Baldino's channel is my old warning with the star moved to the front. Set the dials. I'll read the needle: when it's right, it sits still.",
+  nw_zoe_2: "Baldino's channel is my old warning with the star moved to the front. Set the dials. I'll read the needle. When it's right, it sits still.",
   nw_zoe_again: "Star, sun, wave. I'm watching the needle.",
   nw_zoe_right: "Still. Completely still.",
   nw_ar_mic: "This is Arthur, at home on Citadel. I heard the hum go quiet. Station ready!",

@@ -62,6 +62,9 @@ class BlChapter extends ChapterBase {
   get H() { return this.game.regions.built('ballastra')?.harbor; }
   room() { return this.game.room?.id ?? null; }
   inMine() { return this.reached() && this.story.inCampaign(this.key); }
+  // a short wait in game time (a scene's beat); stepWaits(dt) runs them, from each chapter's update
+  after(s, fn) { (this.waits ??= []).push({ s, fn }); }
+  stepWaits(dt) { if (this.waits?.length && this.game.state !== 'pause') for (const w of this.waits.splice(0)) { w.s -= dt; if (w.s <= 0) w.fn(); else this.waits.push(w); } }
   say(key, vars, done, who = '') { const g = this.game; g.say(who ? 'n_' + who : '', [t(key, vars)], done, null, SPEAKER_COLORS[who || 'narrator']); }
   near(id, d) { const n = this.npc(id); return n?.present && n.distTo(this.game.hero) < d; }
   // the House's hall and the Cradle Hall: their spots once built (read through regions so a spot in an unbuilt area waits)
@@ -137,7 +140,7 @@ export class Balances extends BlChapter {
     const g = this.game, f = this.f;
     if (!this.isCur() || !this.inMine()) return;
     // (the scene beats' waits, in game time)
-    if (this.waits?.length && g.state !== 'pause') for (const w of this.waits.splice(0)) { w.s -= dt; if (w.s <= 0) w.fn(); else this.waits.push(w); }
+    this.stepWaits(dt);
     if (this.run) this.stepRun(dt);
     if (g.state !== 'play' || g.trans || g.cine) return;
     if (!f.bh_started) { this.begin(); return; }
@@ -249,8 +252,6 @@ export class Balances extends BlChapter {
     });
     return true;
   }
-  // a short wait in game time (a scene's beat)
-  after(s, fn) { (this.waits ??= []).push({ s, fn }); }
   // run 2: the sluice opens; each basin rises to its band in turn; then the lamps say whether each band was right
   startRun() {
     const R = this.GD?.rig; if (!R) return;
@@ -377,19 +378,29 @@ export class Cradles extends BlChapter {
   }
   get C() { return this.game.regions.built('bl_arches')?.arches?.cradles; }
   regionBuilt(ids) { if (ids.includes('bl_arches')) this.sync(true); }
-  applyFlags() { this.rota = null; this.leaving = false; if (this.inMine()) this.sync(true); }
+  applyFlags() { this.rota = null; this.leaving = false; this.waits = []; if (!this.f.wk_started) this.begun = false; if (this.inMine()) this.sync(true); }
 
   begin() {
     const g = this.game, f = this.f;
     readyCast();
-    this.chain([['bl_wenna', 'wk_we_1'], ['hero', 'wk_tw_1'], ['bl_wenna', 'wk_we_2'], ['hero', 'wk_tw_2'], ['bl_wenna', 'wk_we_3']], () => {
-      f.wk_started = true; this.sync(true); this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
+    // (P90: Jory's own words, his card, are a line of their own; a breath of play after Twinsen's answer, and only then
+    // does Wenna say where the hall is: the chapter's first instruction)
+    this.chain([['bl_wenna', 'wk_we_1'], ['hero', 'wk_tw_1'], ['bl_wenna', 'wk_we_2'], ['bl_wenna', 'wk_we_2b'], ['hero', 'wk_tw_2']], () => {
+      // (if he has started another talk or gone through a door in the pause, she waits until he is free)
+      const where = () => {
+        if (g.state !== 'play' || g.trans || g.cine) { this.after(0.3, where); return; }
+        this.chain([['bl_wenna', 'wk_we_3']], () => {
+          f.wk_started = true; this.sync(true); this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
+        });
+      };
+      this.after(1.6, where);
     });
     this.begun = true;
   }
   update(dt) {
     const g = this.game, f = this.f;
     if (!this.isCur() || !this.inMine()) return;
+    this.stepWaits(dt);
     if (this.rota) this.stepRota(dt);
     if (g.state !== 'play' || g.trans || g.cine) return;
     if (!f.wk_started && !this.begun) { this.begin(); return; }

@@ -69,7 +69,7 @@ Object.assign(STR.en, {
   c3_ilka_hold: "Twinsen, the overload is pulling on every station! Dallan and I are opening the desert vent wide to bleed it off.",
   c3_pim_hold: "Sefa turned the dome right into the sun! The relay's burning like a lamp. We're holding!",
   c3_toast_coil: "Hit the glowing coil over Vesk's console with the ball",
-  c3_ilka_bleed: "It's still building on your side! The bore has a bleed line to the vents: open its valve on the deck ring and we'll take the surge out.",
+  c3_ilka_bleed: "It's still building on your side! The bore has a bleed line to the vents. Open its valve on the deck ring and we'll take the surge out.",
   c3_ilka_bled: "There it goes! The vent's roaring like a geyser. Keep that line open!",
   c3_vesk_coil: "Into the sand? Then what's left comes to this console. Somebody has to hold it.",
   c3_toast_bleed: "Hit the guardian as it climbs, or step out of its dive, then turn the red bleed valve on the deck ring",

@@ -10,7 +10,7 @@ Object.assign(STR.en, {
   sh_sub_bank: "Try the crew's test receiver (bounce the ball)",
   sh_bal_bank: "That's it! Off the panel and round the wall. The core has three of those, and the guardian won't wait while you practise. Stand still on the plate and it lines you up.",
   // the machinery: the damper answers
-  sh_two: "Three... and two. The three is the shell, as it's knocked since our kitchen tap. The two come from that damper. Something down here is answering it.",
+  sh_two: 'Three... and two. The three is the shell, knocking like our kitchen tap. The two come from that damper. Something down here is answering.',
   sh_two2: 'Up at home Arthur counted four. Only the first of these carries that far.',
   sh_east: 'And the steam over that end of the catwalk stopped when it knocked.',
   sh_sub_steam: 'Get past the steam on the catwalk to valve C',
