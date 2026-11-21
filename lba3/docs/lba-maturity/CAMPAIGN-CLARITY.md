@@ -163,6 +163,12 @@ consequences show in the network (the valve room's B-8) and before the end card 
    `inCampaign('survey') && wk_awake` (the same test as the Cradle Hall's scene), else `ep_end_text`.
 3. **Done.** Chapter 13's pause: `BlChapter.faceFor(id, p, s)` (a listener's turn toward a point for s seconds of game
    time, via `listenTo`; `unface()` on applyFlags) turns Wenna toward `GD.exits.toArches` for 1.5 s.
+   **Automated runtime only** (21.11, SwiftShader, shared machine): `exp-balances` 37/37 (new: the valve room's box and
+   pointer, the four station lines, a box on all five relays and again after applyFlags, the journal line, Wenna's turn
+   from 1.47 rad off to 0 and let go, the Ballastra end card; the legacy `exp_base` save keeps the original card and shows
+   no box); `exp-ballastra` 33/33; `epilogue-home` 12/12; `world-consistency` 37/37; segment `13-network` from `base-13`
+   PASS (0 assists; through to the shell); `14-shell` from `base-14` PASS (1 ISO assist at the core's pylons; the
+   original end card, the fixture has no Ballastra flags); `dialogue-check` PASS. Played: none.
 
 ## 8. Open risks
 - Played: none. Whether the 1.6 s pause reads as a breath or as a hitch needs a person (it is in play, not a frozen
