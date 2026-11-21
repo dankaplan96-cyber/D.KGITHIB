@@ -95,13 +95,14 @@ await said();
 const p2b = await ev(() => { const sp = game.world.spaceport; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'project'; k++) { r = P.use(sp.pad.x - 4.2, sp.pad.z, { run: true, kind: 'c1ship' }); P.settle(60); } const Z = game.rooms.zeelich, L = Z.spaceport.landing, h = game.hero;
   return { r: r.r, kind: r.target?.kind, ch: game.flags.chapterKey, room: game.room?.id, state: game.state, onPortDeck: Math.hypot(h.pos.x - L.x, h.pos.z - L.z) < 4, ferry: Z.ferry?.group?.visible ?? null, taken: !!game.flags.c2_planTaken }; });
 p2b.said = await said();
-check('chapter 2 → 3: E at the project\'s ship on Citadel Spaceport\'s pad (INPUT) flies him to Zeelich: chapter 3 starts on Zeelich Spaceport\'s deck, the plan confiscated there; no sky-ferry at Zeelich\'s dock', p2b.kind === 'c1ship' && p2b.ch === 'zeelich' && p2b.room === 'zeelich' && p2b.state === 'play' && p2b.onPortDeck && p2b.ferry === false && p2b.taken, p2b);
+check('chapter 2 → 3: E at the project\'s ship on Citadel Spaceport\'s pad (INPUT) flies him to Zeelich: chapter 3 starts on Zeelich Spaceport\'s deck, the plan confiscated there; the sky-ferry at Zeelich\'s dock (U-1: the old line\'s ferry, there from chapter 3 on)', p2b.kind === 'c1ship' && p2b.ch === 'zeelich' && p2b.room === 'zeelich' && p2b.state === 'play' && p2b.onPortDeck && p2b.ferry === true && p2b.taken, p2b);
 // chapter 8 → 9 by input: the project ship boards at the spaceport, not at the harbour
 await setChapter('evacuation', { c8_started: true, c8_home: true, c8_relay: true, c8_vesk: true, c8_zoeDone: true });
 await near('citadel_ferry');
 const p8a = await ev(() => { const Q = game.world.pierStart; P.go(Q.x - 6, Q.z, { tol: 1.0, run: true }); P.face(Q.x - 7, Q.z); return { kind: P.target()?.kind ?? null }; });
 await said();
-const p8b = await ev(() => { const sp = game.world.spaceport; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'evacuation'; k++) { r = P.use(sp.pad.x - 4.2, sp.pad.z, { run: true, kind: 'c8ship' }); P.settle(60); } const L = game.rooms.zeelich.spaceport.landing, h = game.hero;
+const p8b = await ev(() => { const sp = game.world.spaceport; let r; const sides = [[4.2, 0], [0, 4.2], [-4.2, 0]];   // (SPACEPORT-3's Pema works the fuel port on the west side: at her elbow her Talk rightly wins)
+  for (let k = 0; k < 3 && game.flags.chapterKey === 'evacuation'; k++) { r = P.use(sp.pad.x + sides[k][0], sp.pad.z + sides[k][1], { run: true, kind: 'c8ship' }); P.settle(60); } const L = game.rooms.zeelich.spaceport.landing, h = game.hero;
   return { r: r.r, kind: r.target?.kind, ch: game.flags.chapterKey, room: game.room?.id, onPortDeck: Math.hypot(h.pos.x - L.x, h.pos.z - L.z) < 4 }; });
 p8b.said = await said();
 check('chapter 8 → 9: no ship at the harbour\'s quay; E at the project ship on Citadel Spaceport\'s pad (INPUT) → chapter 9 on Zeelich Spaceport\'s deck', p8a.kind !== 'c8ship' && p8b.kind === 'c8ship' && p8b.ch === 'council' && p8b.room === 'zeelich' && p8b.onPortDeck, { p8a, p8b });
@@ -178,7 +179,7 @@ check('the Holomap shows the planet he is on (Twinsun: Citadel, Desert Island, t
 // in no collider, in the right region, in play, nothing of the films is left in the scene, and Save → Continue puts
 // him back there. Then the skip (hold E) in each film, a short press that does not skip, and no journey mid-dialogue.
 const FILMS_ONLY = process.env.FILMS_ONLY;   // (a route filter for quick runs: a substring of "from>to")
-await setChapter('home', { ep_free: true });
+await setChapter('home', { ep_free: true, bl_arrived: true });   // (EXP-2: Ballastra's routes open once the freighter has landed there)
 await ev(() => {
   const G = game; G.travel.films.on = true; G.travel.films.log.length = 0;
   // (the menu's own items, to pick a destination by its point and not its label)
