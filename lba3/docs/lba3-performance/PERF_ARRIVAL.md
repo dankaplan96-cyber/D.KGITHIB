@@ -318,3 +318,98 @@ unit.
 - `tests/merge.mjs` (twinOf / mergeStatic): PASS.
 - `tools/game-files.mjs`: 509 files (unchanged).
 - NOT TESTED: a 30-minute session; a probed return to Citadel from a room built on its first visit; any hardware.
+
+## P87b (21.11) — the other builders' texture clones (follow-up to ARRIVAL-2)
+
+**Automated runtime only (SwiftShader)**: headless Chromium, ANGLE on SwiftShader, 4-core shared container, Medium,
+1366×768, areas left unbuilt as in play (`NOPREP=1`). Base = `8e0706bd` (an export, port 8211), candidate = this branch
+(port 8212). One browser of mine at a time, and no other agent's browser at the start of any run (each result file logs
+that count and the load). No GTX 1050 or UHD 620 number here. Probes: `P87b/probes/`; raw results: `P87b/results/`.
+
+### What was probed
+
+- **Census** (`probes/q_census.js`, `DEEP=1`): Citadel's street batched as in play, then the house and the well batched,
+  then every one of the 126 groups not built at startup built in turn (`regions.buildGroup`, its hooks included) and
+  its rooms batched straight after (`drawBatch.prepare`, as if visited). After each build: the batched pieces, in every
+  area batched so far, whose map's texture source version moved, and every texture source already used in the scene
+  whose version moved. Each version move is traced to its call site through a hook on three's `Source.needsUpdate`.
+- **Play's path** (`probes/q_return.js`): the game's own scene changes, each area built on its first visit:
+  Zeelich > Citadel > Desert Island > Zeelich > sewers > Zeelich > Knartas > Zeelich > the shaft > Citadel > the maze >
+  Citadel. Each visit runs from the scene change until 1 s after the fade clears. Recorded per visit: pieces that left
+  draw batches, uploads (KB), and canvases sent to the GPU a second time. A first run took Citadel's interiors instead:
+  house > Citadel > tavern > Citadel > Bazoo > Citadel > pharmacy > Citadel > office > Citadel > Zeelich > Citadel >
+  Desert Island > Zeelich > sewers > Zeelich > Citadel > house (`results/return-base-1.txt`).
+
+### Findings (MEASURED, base)
+
+- The three builders named in ARRIVAL-2 are not the cause. `interiors.js tex()` (exported as `texMat`) is not called
+  anywhere. `architecture.js texMat` runs only in Citadel's startup build (`town.js`, `island.js`), and no first-visit
+  build calls it. `props-esmer.js harbourTex` (an island's harbour) clones a canvas that nothing else uses yet; it was
+  changed with the rest anyway (below). **Citadel and the interiors:
+  no first-visit build moved a source that one of their batched pieces uses** (0 in the census). In play, 0 pieces left
+  Citadel's, the house's or Zeelich's batches on any return.
+- The same clone pattern is in thirteen places in builders that run on a first visit. Seven of them moved a texture
+  source that something already built was using:
+
+| Build (first visit) | call site | source | effect in play (base) |
+|---|---|---|---|
+| Desert Island | `desert.js` 566 | the sea | sent again: 1 canvas, 256 KB (mip 0) |
+| sewers | `sewers.js` 75 | the sea | sent again: 1 canvas, 256 KB |
+| each Zeelich island | `zislands.js` 2276 | the cloud-sea layers | sent again: 2 canvases, 2 048 KB (Knartas) |
+| Ballastra ×3 | `ballastra/sea.js` 150 | the sea | census only (not on the route) |
+| underground, maze, Zeelich | `underground.js` 959, `lba1room.js` 652, `zeelich.js` 1860 | hazard stripes (85 KB), the maze's stone (1.7 MB), chain (21 KB) | census only (version moved; not sent again on the route's frames) |
+
+  In the census, five builds (Desert Island, the sewers, and Ballastra's three areas) also moved the sea under 2 of
+  Zeelich's batched water pieces: 10 piece moves in all. That did not happen in play: on the play route 0 pieces left
+  on the returns to Zeelich. INFERRED: in play those water pieces leave on Zeelich's first visit (68 pieces leave
+  there, in its settle), while the census's `prepare` skips that frame's check. Take the census figure as an upper
+  bound.
+- So the problem in play is small: no piece left a batch, but 4 canvases (2.5 MB at mip 0) were sent again on the
+  route's first visits, on top of the 15–110 MB that each first visit uploads anyway.
+
+### Change
+
+- `src/engine/textures.js` `cloneTex(t)`: the clone keeps its source's version, as `merge.js twinOf` has since ARRIVAL-2.
+  The pixels and settings are the same. The copy's own version still makes three set it up: the same wrap shares the
+  GPU texture already there, and a new wrap gets its own GPU texture, uploaded then.
+- Used at the 13 clone sites in first-visit builders: `desert.js`, `sewers.js`, `ballastra/sea.js`,
+  `ballastra/harbor.js`, `zislands.js`, `zeelich.js` (×4), `underground.js` (×2), `lba1room.js`, `props-esmer.js`.
+  Startup-only clones (`architecture.js`, `town.js`, `island.js`, `statue.js`, `world.js`, `environment.js`) and the
+  unused `interiors.js texMat` are unchanged. Every texture the change touches is painted once and cached, so no repaint
+  depended on a clone's needsUpdate.
+- No visual change was intended: the same texels, the same texture settings, and the same GPU texture or a new one with
+  the same data (see the image check below). No new shipped file (`tools/game-files.mjs`: 509), and saves are untouched.
+
+### Before / after (Automated runtime only, SwiftShader)
+
+| | base | candidate |
+|---|---|---|
+| census: batched pieces whose source moved, 126 first builds | 10 (5 builds) | **0** |
+| census: in-use sources moved by the builds (any material) | 259 (~268 MB at 1.33× for mips) | 234 (~243 MB): only the off-the-wall repaints below |
+| play route: pieces leaving batches on revisits | 0 | 0 |
+| play route: canvases sent again | 4 (2 560 KB, mip 0): Desert Island 1, sewers 1, Knartas 2 | **0** |
+| play route: revisit uploads in all | 25 092 KB | 25 113 KB (same; varies run to run) |
+
+The first visits' own uploads and long frames are about the same in both (for example Knartas 72 058 vs 70 040 KB).
+The 75–235 s frames inside first visits are SwiftShader's canvas read-back stall (ARRIVAL-2's flush), present in both.
+
+### Remaining (not changed)
+
+- `offwall.js` `OW.score` / `OW.marks` repaint Desert Island's slate and sand canvases (2 MB together) after **every**
+  area build: 117 of the 126 builds in the census. Each repaint is real canvas work, and three sends both canvases again
+  the next time Desert Island is drawn. The text is usually unchanged. This is a story refresh, not a clone. A fix belongs
+  with `story/offwall.js` (repaint only when the lines or marks change). INFERRED cost; not probed in play.
+
+### Verification (candidate, GAME_URL=http://localhost:8212/)
+
+- `tests/arrival-steps.mjs`: PASS 12/12 (load 0.9 → 4.3). An earlier run at load 2–3.8, straight after the probes,
+  FAILed one check: the tavern's draw-batch unit was 49 ms (cell part 39.5), over the 40 ms limit. The tavern uses
+  none of the changed builders, and ARRIVAL-2 recorded the same kind of failure under load in base and candidate alike.
+- `tests/lazyregions.mjs`: PASS 13/13. `tests/merge.mjs`: PASS 3/3. `tests/travel.mjs`: PASS 27/27.
+- Image, base vs candidate (`probes/q_shot.js`, `probes/shotcmp.py`): Desert Island's pier just after its first visit
+  (Zeelich > Desert Island, the case where base sent the sea again), the frame read back after the route. The two
+  frames look the same: the sea is drawn with its texture, and nothing is blank or stale. They are not pixel-identical.
+  The candidate's visit ran 10 frames longer (133 vs 123; the route waits on the build in real time), so the sea had
+  moved: 95 % of the pixels more than 8 levels apart are on the animated water, and the other 1 383 are scattered
+  moving things. A pixel-identical capture at the same simulated moment was not made.
+- NOT TESTED: a 30-minute session; Ballastra on the play route; any hardware.

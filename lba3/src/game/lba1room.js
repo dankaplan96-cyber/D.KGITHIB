@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { TEX } from './props.js';
+import { cloneTex } from '../engine/textures.js';
 
 export const CELL = 2.1 / 1240 * 512, CH = 2.1 / 1240 * 256;   // 0.867 m, 0.434 m
 const LAYOUTS = {};
@@ -649,7 +650,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   mats.side.color.set(opts.sideCol || '#ffffff').multiplyScalar(opts.sideGain ?? 1.6);
   // (WORLD-ART-7: opts.topCol / opts.sideCol tint floors and walls apart; the measured brick colours alone make both the same grey)
   if (opts.topCol) mats.top.color.set(opts.topCol);
-  for (const kind of ['side', 'top']) { const m = mats[kind]; m.map = m.map.clone(); m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping; m.map.needsUpdate = true; }
+  for (const kind of ['side', 'top']) { const m = mats[kind]; m.map = cloneTex(m.map); m.map.wrapS = m.map.wrapT = THREE.RepeatWrapping; }
   // a lid's meshes: transparent from the start (its fade changes only the opacity, never the program), writing depth
   // as the room does; where one is drawn over the hero it clears his mark in the stencil, so his silhouette shows
   // through it as through any wall (characters.js addSilhouette)

@@ -1,0 +1,7 @@
+load before 3.81 3.84 3.40; other gpu-processes 0
+P87b return probe · medium · zeelich > desert
+zeelich   first   (was unloaded): left 68, uploads 2381 (109127 KB), worst frame 1513 ms, 143 frames, canvases sent again 0 (0 KB, mip 0) · in-use sources bumped by 1x twinOf engine/merge.js:58:54 | 1x twinOf engine/merge.js:58:212
+desert    first   (was unloaded): left 46, uploads 1883 (85886 KB), worst frame 77014 ms, 133 frames, canvases sent again 0 (0 KB, mip 0)
+TOTAL on revisits: 0 pieces left their draw batches, 0 KB uploaded; canvases sent again over the route: 0 (0 KB, mip 0)
+SHOT (PNG data URL removed)
+exit 0 load after 4.25 4.06 3.64

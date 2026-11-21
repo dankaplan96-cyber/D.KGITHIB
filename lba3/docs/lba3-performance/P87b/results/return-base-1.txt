@@ -1,0 +1,22 @@
+load before 0.77 2.11 2.15; other gpu-processes 0
+P87b return probe · medium · house > citadel > tavern > citadel > bazoo > citadel > pharmacy > citadel > office > citadel > zeelich > citadel > desert > zeelich > sewer > zeelich > citadel > house
+house     first   (was cached): left 0, uploads 485 (6771 KB), worst frame 365 ms, 93 frames
+citadel   revisit (was built): left 0, uploads 1342 (10516 KB), worst frame 3272 ms, 82 frames
+tavern    first   (was unloaded): left 0, uploads 852 (45057 KB), worst frame 234960 ms, 103 frames
+citadel   revisit (was built): left 0, uploads 1293 (2771 KB), worst frame 59 ms, 67 frames
+bazoo     first   (was unloaded): left 0, uploads 648 (22846 KB), worst frame 138999 ms, 93 frames
+citadel   revisit (was built): left 0, uploads 1233 (2641 KB), worst frame 95 ms, 67 frames
+pharmacy  first   (was unloaded): left 0, uploads 610 (23446 KB), worst frame 103930 ms, 93 frames
+citadel   revisit (was built): left 0, uploads 1262 (2689 KB), worst frame 18 ms, 67 frames
+office    first   (was unloaded): left 0, uploads 642 (40712 KB), worst frame 112926 ms, 93 frames
+citadel   revisit (was built): left 0, uploads 1273 (2672 KB), worst frame 17 ms, 67 frames
+zeelich   first   (was unloaded): left 68, uploads 2372 (115294 KB), worst frame 1365 ms, 143 frames · in-use sources bumped by 1x twinOf engine/merge.js:58:54 | 1x twinOf engine/merge.js:58:212
+citadel   revisit (was built): left 0, uploads 1406 (3432 KB), worst frame 965 ms, 73 frames
+desert    first   (was unloaded): left 46, uploads 1932 (78646 KB), worst frame 128118 ms, 123 frames
+zeelich   revisit (was cached): left 0, uploads 941 (3910 KB), worst frame 693 ms, 83 frames
+sewer     first   (was unloaded): left 0, uploads 524 (34162 KB), worst frame 118298 ms, 103 frames
+zeelich   revisit (was cached): left 0, uploads 724 (2151 KB), worst frame 20 ms, 83 frames
+citadel   revisit (was built): left 0, uploads 1383 (3381 KB), worst frame 3990 ms, 83 frames
+house     revisit (was cached): left 0, uploads 432 (1361 KB), worst frame 2150 ms, 83 frames
+TOTAL on revisits: 0 pieces left their draw batches, 35524 KB uploaded
+exit 0 load after 4.37 4.14 3.57

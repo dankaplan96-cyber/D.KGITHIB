@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import { tm, pm, cached, bbox, boxUV, cyl, lathe, tube, compose, tint, ctex, brassM, VC, panelGeo, frameGeo, fillGeo } from './kit.js';
 import { rng } from '../engine/math.js';
-import { keyJSON } from '../engine/textures.js';
+import { keyJSON, cloneTex } from '../engine/textures.js';
 import { tulipGeometry } from './vegetation.js';
 import { fitAdd } from './worldfit.js';
 
@@ -653,7 +653,7 @@ export const harbourTex = () => {
     });
     for (let i = 0; i < 70; i++) { x.fillStyle = 'rgba(255,255,255,0.7)'; x.fillRect(r() * S, r() * S, 2 + r() * 3, 1); }
   });
-  const c = t.clone(); c.needsUpdate = true; c.wrapS = c.wrapT = THREE.RepeatWrapping; return c;
+  const c = cloneTex(t); c.wrapS = c.wrapT = THREE.RepeatWrapping; return c;
 };
 const wrap = (S, fn) => { for (const a of [-S, 0, S]) for (const b of [-S, 0, S]) fn(a, b); };
 // an alpha ramp for a water sheet's open side ('x0' | 'x1' | 'z0' | 'z1'): clear at that edge, solid a quarter in

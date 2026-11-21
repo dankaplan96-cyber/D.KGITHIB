@@ -39,6 +39,7 @@ import { RoomBuilder, glowSprite, twoSided, sag } from './interiors.js';
 import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, canvasTex } from './props.js';
 import * as P from './props.js';
 import { rng, smoothstep, lerp } from '../engine/math.js';
+import { cloneTex } from '../engine/textures.js';
 
 // ================================================================ shared kit
 const GC = new Map();
@@ -764,7 +765,7 @@ function buildDeep(scene, physics) {
 
   // --- coolant materials, one per valve (dark when shut, flowing cyan when open)
   const flowMats = {};
-  const flowMat = (id) => (flowMats[id] ??= (() => { const tx = flowTex().clone(); tx.needsUpdate = true; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; const m = stdM({ color: '#28343a', emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0, roughness: 0.25, metalness: 0.3 }); m.userData.flow = tx; return m; })());
+  const flowMat = (id) => (flowMats[id] ??= (() => { const tx = cloneTex(flowTex()); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; const m = stdM({ color: '#28343a', emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0, roughness: 0.25, metalness: 0.3 }); m.userData.flow = tx; return m; })());
   const glassPipe = (pts, r, id) => {
     const g = pipe(pts, r, 0.25, 10).clone(), L = pts.reduce((a, p, i) => a + (i ? Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1], p[2] - pts[i - 1][2]) : 0), 0);
     const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * L * 0.6);
@@ -956,7 +957,7 @@ function buildDeep(scene, physics) {
     // CAMPAIGN-9 (story/answer.js): the heat comes back and the shutter starts down; her crystal grows up at its posts and holds it
     // at 2.15 m (the way stays open). instant: as held (a load)
     held: false, hold(instant = false) { this.held = true; this.isOpen = true; doorCol.enabled = false; holdT = instant ? 9 : 0; lamp.material.emissive.set('#ffb030'); R.holdCols?.forEach((c) => { c.enabled = true; }); } };
-  k.add(plane(2.6, 1.8), M('ughatch', () => stdM({ map: tiled(P.TEX.hazard().clone(), 3, 2), roughness: 0.6 })), doorX, 0.008, BZ + 1.2, 0, { rx: -Math.PI / 2 });
+  k.add(plane(2.6, 1.8), M('ughatch', () => stdM({ map: tiled(cloneTex(P.TEX.hazard()), 3, 2), roughness: 0.6 })), doorX, 0.008, BZ + 1.2, 0, { rx: -Math.PI / 2 });
   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.8, to: 'c3-gallery' });
   R.exits.push({ ...B.world(LX + 0.45, entZ), r: 0.75, to: 'c3-shaft' });
   R.spawn = { ...B.world(LX + 1.7, entZ), a: Math.PI / 2 };

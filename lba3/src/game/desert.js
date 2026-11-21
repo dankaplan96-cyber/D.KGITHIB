@@ -31,7 +31,7 @@
 // glider field and the condenser hall at the original's level there.
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
-import { textures } from '../engine/textures.js';
+import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
 import { shuttleTraffic } from './shuttle.js';
@@ -563,7 +563,7 @@ export function* buildDesertSteps(scene, physics) {
 
   // --- the sea around it
   {
-    const t = TX.sea.clone(); t.needsUpdate = true; t.repeat.set(70, 70); t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    const t = cloneTex(TX.sea); t.repeat.set(70, 70); t.wrapS = t.wrapT = THREE.RepeatWrapping;
     // (CITADEL-ORIG-2, the user 16.11: LBA2's bright turquoise sea on every Twinsun island: #7ac4e0 lit only → a paler
     //  tint lit, and the same texture glowing turquoise (its own map as the emissive map: no new texture, no new draw).
     //  From above, (59, 108, 151) on screen → (95, 169, 204); LBA2's (72, 167, 207))

@@ -40,7 +40,7 @@ import * as THREE from 'three';
 import { RoomBuilder, blueRocks, glowSprite } from './interiors.js';
 import { MAT, M, TEX, rbox, cyl, sphere, torus, lathe, plane, pipe, canvasTex, soft, softMat } from './props.js';
 import * as P from './props.js';
-import { textures } from '../engine/textures.js';
+import { textures, cloneTex } from '../engine/textures.js';
 import { pumpDoors, pumpExit } from './pumproom.js';
 
 export const SEWER_AT = { sewer: { x: 5800, z: 0 }, sewervault: { x: 5880, z: 0 }, sewerglobe: { x: 5960, z: 0 } };
@@ -72,7 +72,7 @@ const glowM = () => MAT.glow('#d6f2ff', '#5ab0e0', 1.5);
 const deadM = () => MAT.flat('#4a5458', 0.35);
 const waterM = () => M('sw_water', () => {
   // (the game's sea texture, tinted the original's pale cyan; its own copy so it can drift on its own)
-  const t = textures().sea.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  const t = cloneTex(textures().sea); t.wrapS = t.wrapT = THREE.RepeatWrapping;
   const m = new THREE.MeshStandardMaterial({ map: t, color: '#e2f6e6', emissive: '#5e9c92', emissiveIntensity: 0.7, roughness: 0.3, metalness: 0.05 });
   m.userData.noShadow = true;
   return m;

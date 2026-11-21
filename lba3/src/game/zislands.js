@@ -18,7 +18,7 @@
 import { placeTag } from '../engine/placetag.js';
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
-import { textures } from '../engine/textures.js';
+import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, fbm } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { MAX_SLOPE } from '../engine/physics.js';
@@ -2273,7 +2273,7 @@ function buildIsland0(scene, physics, name, L, at) {
   // --- the sea of clouds round it, puffs along the shore, other shuttles in the sky
   {
     const mk = (tex, y, rep, color, opacity, speed, transparent) => {
-      const map = tex.clone(); map.needsUpdate = true; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(rep, rep);
+      const map = cloneTex(tex); map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(rep, rep);
       const m = new THREE.MeshBasicMaterial({ map, color, transparent, opacity, depthWrite: !transparent, fog: true });
       const pl = new THREE.Mesh(cached('isle-cloudpl', () => new THREE.PlaneGeometry(1400, 1400).rotateX(-Math.PI / 2)), m);
       pl.position.y = y; pl.renderOrder = transparent ? -1 : 0; group.add(pl);

@@ -20,7 +20,7 @@
 //   bedDrawn(x, z)   the drawn bed's height (local)
 //   SEA_WY           the outer water's level (0)
 import * as THREE from 'three';
-import { textures } from '../../engine/textures.js';
+import { textures, cloneTex } from '../../engine/textures.js';
 import { fbm, smoothstep } from '../../engine/math.js';
 import { tm } from '../kit.js';
 
@@ -147,7 +147,7 @@ export function seaSetup(group, ox, oz, physics, { picture = null, picBox = [-60
   // physics: deep water everywhere in the region's square (no ground of its own: what stands is bricks)
   physics.terrain.addPatch({ half: 420, heightAt: () => -3 }, ox, oz);
   group.add(bedMesh());
-  const TX = textures(), sea = TX.sea.clone(); sea.needsUpdate = true; sea.wrapS = sea.wrapT = THREE.RepeatWrapping;
+  const TX = textures(), sea = cloneTex(TX.sea); sea.wrapS = sea.wrapT = THREE.RepeatWrapping;
   const U = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
     uTime: { value: 0 }, uAmp: { value: 0.055 }, uSunDir: { value: new THREE.Vector3(...sunDir).normalize() },
     uDeep: { value: new THREE.Color(env.deep || '#2a7a86') }, uShallow: { value: new THREE.Color(env.shallow || '#62c2b0') }, uSky: { value: new THREE.Color(env.sky || '#d4e8ea') },

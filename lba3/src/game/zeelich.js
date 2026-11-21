@@ -34,7 +34,7 @@ import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
 import { esmerBuilding, Place, setLook, glassM, tealGlassM, capParts, capSpike, capM, frondTree, goldPlant } from './props-esmer.js';
 const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
-import { textures, keyJSON } from '../engine/textures.js';
+import { textures, keyJSON, cloneTex } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
@@ -1571,7 +1571,7 @@ export function* buildZeelichSteps(scene, physics) {
     B.add(cyl(1.97, 1.97, 0.3, 8, 1, true), glassM(), x, Y0 + 0.36, z, 0, Math.PI / 8, 0);
     B.add(lathe([[0.4, 0], [0.32, 0.6], [0.26, 1.2], [0.3, 1.3], [0.9, 1.45], [0.95, 1.6], [0.2, 1.62], [0.12, 1.9], [0.2, 2.1], [0.05, 2.5], [0, 2.55]], 16), brassM(), x, Y0 + 0.2, z);
     const water = mesh(group, cached('wdisc', () => new THREE.CircleGeometry(1.72, 8).rotateX(-Math.PI / 2)), tm('sea', { color: '#c8f0f8', rough: 0.15, metal: 0.1, emissive: '#204860', ei: 0.4 }), x, Y0 + 0.55, z, Math.PI / 8, { cast: false });
-    water.material.map = water.material.map.clone(); water.material.map.needsUpdate = true; water.material.map.repeat.set(0.6, 0.6);
+    water.material.map = cloneTex(water.material.map); water.material.map.repeat.set(0.6, 0.6);
     const bowl = mesh(group, cached('bwater', () => new THREE.CircleGeometry(0.86, 16).rotateX(-Math.PI / 2)), water.material, x, Y0 + 1.75, z, 0, { cast: false });
     void bowl;
     // falling water: a thin translucent bell
@@ -1857,7 +1857,7 @@ export function* buildZeelichSteps(scene, physics) {
   // ================================================================ the project depot
   function buildDepot() {
     const D = DEPOT;
-    const chain = cached('chainMat', () => { const map = textures().chain.clone(); map.needsUpdate = true; map.wrapS = map.wrapT = THREE.RepeatWrapping; return new THREE.MeshStandardMaterial({ map, color: '#c8d0d4', roughness: 0.5, metalness: 0.5, alphaTest: 0.35, side: THREE.DoubleSide }); });
+    const chain = cached('chainMat', () => { const map = cloneTex(textures().chain); map.wrapS = map.wrapT = THREE.RepeatWrapping; return new THREE.MeshStandardMaterial({ map, color: '#c8d0d4', roughness: 0.5, metalness: 0.5, alphaTest: 0.35, side: THREE.DoubleSide }); });
     const chainGeo = (len, h) => cached(`chain${len.toFixed(2)},${h}`, () => { const g = new THREE.PlaneGeometry(len, h); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len / 0.32, uv.getY(i) * h / 0.32); return g; });
     const fence = (a, b, h = 2.3) => {
       const len = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(len / 2.6)), ry = Math.atan2(b[0] - a[0], b[1] - a[1]) - Math.PI / 2;
@@ -2148,7 +2148,7 @@ export function* buildZeelichSteps(scene, physics) {
     PB.build();
     // the shield: a curved translucent energy wall between the pylons
     const shieldMat = new THREE.MeshBasicMaterial({ map: shieldTex(), color: '#8ff4ff', transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending, fog: true });
-    shieldMat.map = shieldMat.map.clone(); shieldMat.map.needsUpdate = true; shieldMat.map.repeat.set(3, 2);
+    shieldMat.map = cloneTex(shieldMat.map); shieldMat.map.repeat.set(3, 2);
     const sR = 3.6, sA = Math.asin(GATE.half / sR);
     const shGeo = new THREE.CylinderGeometry(sR, sR, 4.8, 24, 1, true, -Math.PI / 2 - sA, sA * 2);
     const shield = mesh(group, shGeo, shieldMat, gx + Math.cos(sA) * sR - 0.1, Y0 + 2.4, 0, 0, { cast: false });
@@ -2212,7 +2212,7 @@ export function* buildZeelichSteps(scene, physics) {
   function buildClouds() {
     const size = 1600;
     const mk = (tex, y, rep, color, opacity, speed, transparent) => {
-      const map = tex.clone(); map.needsUpdate = true; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(rep, rep);
+      const map = cloneTex(tex); map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(rep, rep);
       const m = new THREE.MeshBasicMaterial({ map, color, transparent, opacity, depthWrite: !transparent, fog: true });
       const pl = mesh(group, cached('cloudpl', () => new THREE.PlaneGeometry(size, size).rotateX(-Math.PI / 2)), m, 0, y, 0, 0, { cast: false });
       pl.receiveShadow = false; pl.renderOrder = transparent ? -1 : 0;
