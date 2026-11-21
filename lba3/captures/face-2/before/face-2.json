@@ -2,6 +2,7 @@
  "W": 1280,
  "H": 720,
  "SPOT": "yard",
+ "wall": null,
  "lines": [
   {
    "who": "zoe",
@@ -12,14 +13,14 @@
     "x": 762,
     "bottom": 289,
     "top": 216,
-    "turn": 36
+    "turn": 34
    },
    "other": {
     "px": 108,
-    "x": 432,
-    "bottom": 370,
-    "top": 262,
-    "turn": 121
+    "x": 424,
+    "bottom": 374,
+    "top": 266,
+    "turn": 119
    },
    "box": 552
   },
@@ -29,17 +30,17 @@
    "line": "And look at their kettle. Furred with these sinc",
    "head": {
     "px": 73,
-    "x": 758,
-    "bottom": 289,
-    "top": 216,
-    "turn": 36
+    "x": 760,
+    "bottom": 290,
+    "top": 217,
+    "turn": 33
    },
    "other": {
-    "px": 107,
-    "x": 440,
-    "bottom": 364,
-    "top": 258,
-    "turn": 121
+    "px": 108,
+    "x": 428,
+    "bottom": 372,
+    "top": 264,
+    "turn": 123
    },
    "box": 552
   },
@@ -48,18 +49,18 @@
    "fav": "",
    "line": "(Tiny crystals. Still warm.)",
    "head": {
-    "px": 107,
-    "x": 437,
-    "bottom": 366,
-    "top": 259,
+    "px": 108,
+    "x": 431,
+    "bottom": 369,
+    "top": 262,
     "turn": 122
    },
    "other": {
     "px": 73,
-    "x": 761,
+    "x": 759,
     "bottom": 289,
-    "top": 216,
-    "turn": 37
+    "top": 217,
+    "turn": 41
    },
    "box": 552
   },
@@ -68,30 +69,30 @@
    "fav": "",
    "line": "Mira's got the well padlocked, and she's telling",
    "head": {
-    "px": 72,
-    "x": 762,
+    "px": 73,
+    "x": 763,
     "bottom": 289,
-    "top": 217,
-    "turn": 35
+    "top": 216,
+    "turn": 34
    },
    "other": {
     "px": 108,
-    "x": 427,
-    "bottom": 372,
-    "top": 264,
-    "turn": 120
+    "x": 423,
+    "bottom": 373,
+    "top": 265,
+    "turn": 124
    },
    "box": 534
   }
  ],
  "after": {
-  "state": "found",
+  "state": "play",
   "fav": "",
   "keep": true,
-  "talk": 1
+  "talk": 0
  },
  "path": {
-  "frames": 1152,
+  "frames": 1189,
   "cuts": [],
   "maxMovePerFrame": 0.141,
   "solidFrames": 0
