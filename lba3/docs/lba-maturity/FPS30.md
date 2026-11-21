@@ -252,3 +252,173 @@ part A, then passed three times with identical numbers). Automated runtime only 
 Not explained by this, still open: at 30 the report's GPU time per frame on the street and arrival routes is 17–18.5 ms
 (p50) — more than one refresh — so the compositor may show some frames a refresh late even with even rAF. That needs the
 presented frames on the user's machine (order 60.0 FPS30-PRESENT). Note the report ran on the Intel UHD 620, not the GTX.
+
+## 8. P94 (21.11): the 30 limit in active play — running, turning the view, aiming the ball
+
+The owner's brief (status.md P94): at Frame Rate 30, running, turning the camera and aiming the magic ball should feel
+steady and responsive with the image sharp; active play in already-loaded areas (region changes and startup out of scope).
+Base `6ee0b0b5` (origin/ccr-c1c2c4b9-dep6ed with P93's ball-release fix merged). **Every number in this section is
+"Automated runtime only"**: headless Chromium, SwiftShader (a CPU rasteriser), the draw stubbed (each drawn frame is
+sampled, not rasterised), on a machine shared with other workers' browsers (load 9–14 on 4 cores). No number here is a
+result for a real screen or GPU; the laptop's run is order 62 (§8.7).
+
+### 8.1 Read in code before any change
+- **The limiter** (`main.js loop`): one rAF loop; at 30 on a 59.9/60/120 Hz screen frames are counted in refreshes (P88
+  `_drawT`: drawn on the first callback ≥ n − ½ refreshes after the last drawn one); a late frame restarts the count, no
+  catch-up; a skipped refresh only runs `input.poll()`. **Order 60.0's question** (on battery, ≥ 50 ms pictures from rAF
+  callbacks arriving a refresh late): a refresh gets a picture only if its callback runs. When the callback of the refresh
+  a frame is due on never comes, the next one is a refresh later and that frame is 50 ms whatever the rule; accepting an
+  early draw after a late one would only shorten the *next* frame to 16.7 ms (50 + 17 instead of 50 + 33): it cannot
+  remove the 50 ms hold and adds an uneven frame. On this browser's own rAF (`cpu` passes, before, 18 passes): all 47
+  drawn intervals ≥ 45 ms contain a missing callback (a callback gap > 25 ms); 22 of them are the plain case (a frame drawn,
+  the skipped refresh's callback, then no callback on the refresh it was due). **Not changed**: without a second timer the
+  limiter has no lever on a callback that does not come.
+- **Input between drawn frames** (`input.js`): keys, clicks, pad buttons (latched by `poll()` on the skipped refresh) and
+  touch taps are kept for the next step; mouse motion accumulates; both 60 Hz steps of a drawn frame read input; the stick
+  is read live each step. No stale input found (§8.3-2).
+- **Steps** (`advance`): at 30 two 60 Hz steps a drawn frame, the camera last in each, the render after the second;
+  Twinsen's drawn transform is his simulated one (no interpolation state that could drift).
+- **The Follow camera** (`camera.js _chase`): springs and damping per time; the keep-out rules place it outright (SMOOTH-1
+  §3.4). **The aim** (`actors.js MagicBall.preview`, `aimPoint`, `combat.js stepThrow`): the dots on the arc's 10 ms
+  samples by index (SMOOTH-1 §3.6); the cursor's ground point found in 0.25 m steps down its ray and kept at the last step
+  above the ground; while the ball is held in Modern he faces the aim.
+
+### 8.2 Method
+`tests/fps30-feel.mjs` (new), one scene: Citadel's harbour quay, fixture `new-11-town`, 1366×768, Follow, Medium, world
+resolution 100 %, Edges Smooth; the same inputs at the same game time at every rate (`tests/lib/smoothrec.js`).
+- **T1** the view turned at a constant rate past the quay's rail and bollard posts, the lamp posts and the shop windows.
+  The Follow camera takes no camera input (it stands at his back), so the view turns as he turns on the spot: Classic Right
+  held 3 s (keys), the pad's stick at a constant 0.8 (pad).
+- **T2** run along the quay's edge beside the posts 2 s, stop 0.7 s, back 2 s, camera untouched: keys Classic (Up, —,
+  Down), pad Modern (stick forward, —, back: he turns and runs toward the camera, which holds).
+- **T3** the ball at the harbour bell (2.6 m up on its post, 9.7 m away): mouse path Modern — ball key held, strafe left
+  1.2 s, right 1.2 s, still 0.4 s, let go, the cursor kept on the bell as a player would (moved once a drawn frame to where
+  the bell was drawn); pad path Classic — the ball button held, the aim turned across the bell and back with the stick.
+- Rates: synthetic display 30@60, 30@59.9 and 60 (exact timestamps), and `cpu` (Frame Rate 30 on this browser's own rAF,
+  the draw stubbed); 3 runs each (the synthetic runs repeat to the frame). Recorded: every rAF callback's timestamp and every
+  drawn frame's (p50/p95/p99/max, count ≥ 45 ms); **presentation timing: none** (headless has no display and no
+  presentation feedback). Per drawn frame: the camera's position and heading step and its single-frame jumps (a step > 1.5×
+  both neighbours' and > 3 cm / 0.005 rad over their mean — fixed before the first run); Twinsen's on-screen step against
+  the nearest post and its change frame to frame; the aim ring's and the middle dot's steps; the ball's gap from the hand on
+  the first frame it is drawn flying. **Input probes** (synthetic only): an input put in on a refresh the limit skips (as a
+  real event arrives between frames), counted in drawn frames to its first visible response; then the cursor held still 1 s.
+
+### 8.3 Found (before = 6ee0b0b5)
+1. **Delivery on the synthetic display is exact** (every drawn interval 33.33 / 33.39 ms, none ≥ 45 ms), and Twinsen and
+   the camera move evenly in T1 and T2: no camera jump; the frame-to-frame change of the posts' and his on-screen steps is
+   ~4× the 60 Hz value (T1 10.7 vs 2.6 px p95, T2 1.7 vs 0.4) — (33.3/16.7)², the same motion sampled half as often, not a
+   defect. Keys and pad identical in T1.
+2. **Input: no extra frame anywhere.** Ball pressed → in his hand on the next drawn frame; aim moved (cursor or stick) → the
+   next drawn frame; let go → the ball leaves the hand 3 drawn frames later at 30 (6 at 60), which is the deliberate whip
+   (`releaseAfterCharge` 0.08 s: 5 steps after the step that sees the key come up). The dots after the press: 7 drawn
+   frames, the deliberate `chargeAfter` 0.2 s. Same before and after.
+3. **The reticle drifted with the mouse still (Modern, Follow, mouse).** Holding the ball he faces the cursor's point; the
+   Follow camera turns with his facing; so the cursor's point moves on and he follows it. With the cursor 60 px off and
+   untouched, **he and the view spun at 3.85–4.0 rad/s and the middle aim dot slid 4.3–8.3 m/s**, at 60 and at 30 alike.
+   The largest aim fault found; not tied to the frame rate.
+4. **The cursor's aimed point hopped** 0.15–0.2 m whenever the count of 0.25 m ray steps changed (the ring 0.05–0.09 m and
+   the middle dot up to 0.47 m in one frame while strafing), and **the dots hopped between arc samples** (SMOOTH-1 §3.6;
+   0.23–0.29 m steps while the arc ended on a lamp post).
+5. **The camera's arm comes in by 0.25 m steps** where something crosses its line (T3 mouse: `occ`, `want` 8.75 → 8.5 →
+   8.25 → 8.0 m): camera steps of 0.24–0.36 m in one drawn frame at 30; the same motion spread over 2–3 frames at 60 (4
+   position jumps by the criterion at 30, 0 at 60). The same in play time at both rates. **Not changed**: the arm's search
+   granularity is camera design with its own tests' budgets (camfollow/camsteady/camclear).
+6. **No keep-out "tilt" release, lock-swing step or over-head step** occurred in T1–T3, nor in SMOOTH-1's combat route
+   re-run on this base at 30@60, 30@59.9 and 60 (no keep rule fired; the only single-frame steps were tilts of
+   0.011–0.018 rad while the arm came in). The Mill Lane over-head step is in Zeelich, outside this scene: not re-measured,
+   not changed.
+7. **At 30 the ball is first seen 0.35 m from the hand** when the 60 Hz release step falls on the inner step (pad path):
+   that frame shows it one 60 Hz step into a flight identical to 60's (P93's release). Mouse path 0.08 m (the hand's own
+   offset). Not changed (P93's throw origin, and consistent with the 60 Hz flight).
+8. **Twinsen pops ~20–24 px on the screen** when he steps on or off a 0.25 m kerb in T3 (a step-up in one simulation step;
+   the camera's pivot is eased). Before and after, every rate; not a frame-pacing matter.
+
+### 8.4 Changed
+- `src/game/actors.js` **MagicBall.preview**: SMOOTH-1's patch (`docs/lba3-performance/SMOOTH-1/aim-preview.diff`) applied
+  on top of P93: the dots at even shares of the flight on the exact arc, the touch-down between the last two samples.
+- `src/game/actors.js` **MagicBall.aimPoint**: the cursor ray's ground point interpolated between its 0.25 m samples (the
+  throw goes where the cursor points instead of up to 0.2 m short of it).
+- `src/engine/camera.js` **_chase** (+ `CameraRig.aimHold`, set in `src/main.js` beside `lockOn`): while the ball is held
+  and aimed with the mouse cursor (not yet thrown, no lock-on) the Follow camera keeps its heading, as it already does for
+  camera-relative controls pushed back; thrown, it comes round behind him as after any turn. Classic, the pad, a lock-on and
+  every other moment: unchanged.
+- `tests/fps30.mjs`: the arena's enemies taken out at the start. During A–C (~40 s of play) they killed him, so in the full
+  run B1 met the game-over screen and D measured a dead hero (walk 0, no jump, no throw): the order dependence of "D fails
+  only in the full run". D's reset also clears `dead`. `tests/fps30-feel.mjs` (new); `tests/README.md`.
+- Not changed: the limiter, input, the steps, interpolation (none needed), quality, resolution, the camera's damping.
+
+### 8.5 Before / after (Automated runtime only; 3 runs each, ranges where runs differ)
+
+| test, path, rate | what was measured | before | after |
+|---|---|---|---|
+| T1 keys / pad, 30@60 · 30@59.9 | drawn intervals p50 = p95 = p99 = max (ms); ≥ 45 ms | 33.33 · 33.39; 0 | same |
+| T1 keys, 30@60 | camera jumps pos/heading/tilt; heading step p50/max (rad) | 0/0/0; 0.098/0.123 | same |
+| T1 keys, cpu (headless rAF) | callback gaps ≥ 45 ms / drawn ≥ 45 ms, 3 runs pooled | 15 / 14 of 364 | 23 / 25 of 344 (machine load) |
+| T2 keys, 30@60 | his step against the post, change p95/max px (60: 0.4/3.6) | 1.7/5.2 | same |
+| T2 pad, 30@60 | same (60: 0.3/3.0) | 1.4/6.1 | same |
+| T3 mouse, 30@60 · 30@59.9 · 60 | aim ring: step max (m); single-frame jumps | 0.049–0.088 · 0.049 · 0.051; 1 | 0.017 · 0.017 · 0.009; 0 |
+| T3 mouse, 30@60 | middle dot steps > 0.1 m in one frame (of ~94) | 13 | 7 |
+| T3 mouse, 30@60 | camera jumps pos/heading/tilt (§8.3-5) | 4/0/2 | 4/0/2 |
+| T3 mouse / pad, 30@60 | first flying frame: ball's gap from the hand (m) (60: 0.08) | 0.08 / 0.35 | 0.08 / 0.35 |
+| probe mouse, 30@60 · 30@59.9 · 60 | cursor held still 1 s: his turn (rad/s); middle dot (m/s) | 4.0 · 3.95 · 3.85; 8.3 · 5.1 · 4.3 | 0 · 0 · 0; 0.48 · 0.43 · 0.32 |
+| probe mouse, 30@59.9 | middle dot's move per drawn frame after the cursor moved (m) | 0.23, 0.21, 0.16, 0.14, 0.15 … | 1.37, 0.001, 0, 0, 0 |
+| probe keys / pad, 30 (60) | drawn frames: press → ball in hand; aim → response; let go → ball leaves | 1; 1; 3 (1; 1; 6) | same |
+
+The ">0.1 m" dot count was chosen after looking at the series (descriptive, not a target). The 7 left are events, not
+sampling: the arc's end switching between a lamp post and the ground (2), the charge becoming full (the arc flattens),
+stepping on/off the kerb (2), 2 unattributed. The `cpu` rows follow this machine's load (other workers' browsers), not the
+build; the synthetic rows are the comparison.
+
+### 8.6 Tests run (this machine; after = this branch)
+One browser at a time; after = `b2b590ec` (the T3 mouse pass and its probe re-run on the merge with P95, `846cfb30`:
+the same numbers).
+- `tests/fps30-feel.mjs`: before and after, all of T1–T3 × keys/mouse and pad × 30@60, 30@59.9, 60, cpu × 3 runs, and
+  the probes: table above. Measures only; verdict PASS (no page error) on both.
+- `tests/fps30.mjs` whole: 55/56 — the one failure A5 (120 Hz: one 24.8 ms interval at the start of the 30 run, the
+  intermittent of §7); `ONLY=A` re-run 10/10. B1 and every D check pass in the full run (before the test fix the full run
+  failed B1 and 7 D checks: the dead hero).
+- `tests/combat.mjs` 76/78: the two known (dodge at 30/60; "the follow-through blends into the walk", maxJump 0.314),
+  KNOWN-FAILING.md.
+- `tests/camfollow.mjs` 30/31: the known "full turn on the spot by the wall" (unseen 1 frame, 2.83°), KNOWN-FAILING.md.
+- `tests/camclear.mjs` 12/14 + 1 visual: the Hamalayi dead tree and the ch8 hatch wheel not fired, the ch10 north mill
+  off screen — identical on the base `6ee0b0b5` (run there: the same three). Not in KNOWN-FAILING.md: for the coordinator.
+- `tests/camsteady.mjs` 105/110 (the known five of KNOWN-FAILING.md); the base in the same session 105/111 (the same
+  plus a jitter check that varies run to run).
+- `tests/chapter3.mjs` (the bank shots: the three pylons by a real throw from their plates, at 60) 48/48.
+- `tests/smooth-routes.mjs` combat, synthetic 30@60 / 30@59.9 / 60, base only (diagnosis, §8.3-6).
+Not run: the full regression set; anim-combat, timing, depot (P93's), autoquality (P95's).
+
+**What a person should notice** (expected from the measurements, not yet felt on hardware): in Modern with the Follow
+camera and the mouse, holding the ball no longer makes the view swing round on its own. The ring stays under the
+cursor and the arc's dots glide while he strafes instead of ticking. Running and turning at 30 are unchanged. They were
+already even on the synthetic display. Remaining unevenness at a stable 30 would come from presentation, a missed rAF
+callback, or the camera arm's 0.25 m steps (§8.3-5).
+
+**Open / risks**: (a) the view-hold is a behaviour change for Modern + Follow + mouse while the ball is out; with the
+cursor near the screen's edge he now turns to it and the view stays, so a target behind him needs the ball released or
+the view turned first. This is how a cursor aim works in the Free camera, but a person should try it. (b) The camera
+arm's 0.25 m steps (§8.3-5) are still there. (c) At 30, when the release falls on the inner step, the ball is first drawn
+0.35 m from the hand (§8.3-7). (d) camclear's three failures predate this change and are not filed. (e) P95 (Auto under
+the 30 limit) does not interact: these changes add one ground query per aimed frame and run nothing per refresh. The
+tests run with Auto off.
+
+### 8.7 The local run (order 62 FPS30-FEEL)
+Before = `6ee0b0b5`, after = this branch once merged. Headed Chrome (or the Electron build) on the laptop, nothing else
+heavy running, the window in front; Windows `cmd` (PowerShell: `$env:NAME='value'`):
+```
+set PLAYWRIGHT=C:\…\lba3\tools\testlab\node_modules\playwright\index.mjs
+set GAME_URL=http://localhost:8123/
+set HEADED=1& set CHANNEL=chrome& set RUNS=3
+set RATES=real,30@60,30@59.9& set OUT=out\fps30-feel-after-battery& set LABEL=after on battery
+node tests\fps30-feel.mjs > %OUT%.txt
+```
+`real` = the real loop and the real draw at Frame Rate 30 (the numbers to read: drawn intervals and rAF callbacks, p50 /
+p95 / p99 / max / ≥ 45 ms, per test and path); the synthetic rates check the logic on that machine. The same with
+`GAME_URL` on the before build's server, then plugged in. Presented frames (the compositor's), which the script cannot
+see: a Chrome trace (`chrome://tracing`, categories `benchmark,cc,gpu,viz`) of one T2 and one T3 run, its "Frame" /
+presentation events' intervals; or the Frame Rates benchmark's line. At 60: `set RATES=real60& set TESTS=T3`, and
+`node tests\chapter3.mjs` for the bank shot (its pylons, chapter 3's core). Then by hand, mouse and pad: Modern + Follow, hold the
+ball, cursor beside him: the view should stay put and the ring stay under the cursor (before: it spun round).
+
+#### Real hardware
+Not measured yet (order 62). Nothing in §8.1–8.6 is a hardware result.

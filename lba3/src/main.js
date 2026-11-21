@@ -466,6 +466,8 @@ class Game {
     this.camRig.relative = () => this.settings.controls !== 'classic';   // (CAM-2: camera-relative controls: the free orbit never turns by itself)
     // (CAM-FOLLOW: with a lock-on the Follow camera stands behind his shoulder on the line from the target, framing both)
     this.camRig.lockOn = () => { const e = this.targeting?.lock; return e && e.alive !== false && e.present !== false && e.pos ? e.pos : null; };
+    // (P94: the ball held and aimed with the mouse cursor: the Follow camera keeps its heading until it is thrown — camera.js _chase)
+    this.camRig.aimHold = () => { const c = this.hero?.combat, T = c?.throwing; return !!T && !T.released && c.lastAim?.src === 'mouse'; };
     // (CAM-CLEAR-2: a dialogue outdoors under Follow frames him and whoever has spoken in it, within 9 m: AUDIT-CH12 #13)
     this.camRig.talk = () => {
       // (CAM-AFTERTALK: in the outdoor areas too — Desert Island, Zeelich and its isles, the Hamalayi —, not only on Citadel)
