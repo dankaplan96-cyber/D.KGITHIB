@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   hs_title: 'בית המשוגעים הישן',
-  p_hs_open: 'פתיחה', p_hs_read: 'קריאה', p_hs_unlock: 'פתיחת המנעול',
+  p_hs_open: 'לפתוח', p_hs_read: 'לקרוא', p_hs_unlock: 'לפתוח את המנעול',
   n_hs_foreman: 'מנהל העבודה אורדו', n_hs_cook: 'מאמא פופה', n_hs_worker1: 'זיזי', n_hs_worker2: 'טלם', n_hs_worker3: 'גורו', n_hs_worker4: 'קסו הזקן', n_hs_sleeper: 'וויקס',
   it_hs_key: 'המפתח של וסק', itd_hs_key: 'מפתח נחושת על תווית סגולה: "ו. · משרד". הוא היה מתחת לקש של ארגז מזמזם.',
   hs_j_crate: 'למצוא מה מזמזם במחסן שמתחת להוסטל',

@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   n_hesk: 'הסק', n_tarra: 'אמא טארה', n_ilka: 'הפרופסורית אילקה', n_dallan: 'דאלן', n_dkid: 'סאני', n_dtrader: 'ברוסק', n_weaver: 'לומי',
-  p_rope: 'הרמה', p_desk: 'חיפוש', p_code: 'הקשת קוד', p_carving: 'בדיקה', p_ride: 'נסיעה', p_listen: 'הקשבה', p_push: 'דחיפה',
+  p_rope: 'להרים', p_desk: 'לחפש', p_code: 'להקיש קוד', p_carving: 'לבדוק', p_ride: 'לנסוע', p_listen: 'להקשיב', p_push: 'לדחוף',
 
   // arrival
   c4_arrive: 'בחזרה בטווינסאן, דורן מחליף את הספינה במעבורת של המיזם. יומיים דרומה מסיטדל, היא גולשת אל המים הרדודים של האי המדברי.',

@@ -4,12 +4,12 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   sw_title: 'מתחת לרחוב',
-  p_sw_lift: 'הרמה', p_sw_ease: 'סגירה עדינה', p_sw_down: 'ירידה', p_sw_up: 'עלייה',
+  p_sw_lift: 'להרים', p_sw_ease: 'לסגור בעדינות', p_sw_down: 'לרדת', p_sw_up: 'לעלות',
   it_sw_map: 'המפה של ארתור', itd_sw_map: 'מצוירת בצבעי פנדה: הרחוב, הפתח, סולם, X גדול. "א + ל. הכניסה אסורה. (לא את, לולו.)"',
   sw_toast_owed: 'התלתן מהתיבה הישנה: בכיס שלך',
   sw_toast_owed2: 'התלתן מהמערה: בכיס שלך',
   n_fosse: 'פוס',
-  p_sw_bolt: 'שחרור התפס', p_sw_unlock: 'פתיחת המנעול', p_sw_shut: 'סגירה',
+  p_sw_bolt: 'לשחרר את התפס', p_sw_unlock: 'לפתוח את המנעול', p_sw_shut: 'לסגור',
   it_sw_key: 'המפתח של ברסימון', itd_sw_key: 'מפתח נחושת קטן עם כוכב בראש. לחדר הקטן שמתחת לעיר.',
 
   // ---- the street hatch

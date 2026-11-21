@@ -3,7 +3,7 @@
 import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
-  p_service: 'דלת השירות', p_compare: 'להניח עליו את ההעתק', p_stop: 'הפעלת העצירה', p_clip: 'חיבור המבודד',
+  p_service: 'לעבור בדלת השירות', p_compare: 'להניח עליו את ההעתק', p_stop: 'להפעיל את העצירה', p_clip: 'לחבר את המבודד',
   n_cn_iso: 'מבודד',
 
   // ---- the archive's door: Vesk's standing order

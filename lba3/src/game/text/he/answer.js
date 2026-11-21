@@ -3,7 +3,7 @@
 import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
-  p_knock: 'דפיקה', p_cock_co: 'סיבוב', p_lockbar: 'הרמה',
+  p_knock: 'לדפוק', p_cock_co: 'לסובב', p_lockbar: 'להרים',
 
   // chapter 11: the shaft's test receiver
   sh_bal_teach: 'עוד דבר, ליד הקידוח. תעמוד על לוח הנחושת. תקפיץ את הכדור מהלוח: במטרה הזאת אי אפשר לפגוע ישר.',

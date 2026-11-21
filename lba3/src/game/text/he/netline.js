@@ -3,7 +3,7 @@
 import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
-  p_unclip: 'ניתוק המבודד', p_joint: 'חיבור המבודד למפרק',
+  p_unclip: 'לנתק את המבודד', p_joint: 'לחבר את המבודד למפרק',
   n_zl_irsaradio: 'אירסה (רדיו)',
 
   // ---- the workshop: Baldino wants his isolator back

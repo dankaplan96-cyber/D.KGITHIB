@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   n_ilkaradio: 'אילקה (רדיו)', n_yornaradio: 'יורנה (רדיו)', n_heskradio: 'הסק (רדיו)', n_pimradio: 'פים (רדיו)',
-  p_relay: 'הצבת ממסר', p_fly: 'טיסה', p_station: 'שימוש',
+  p_relay: 'להציב ממסר', p_fly: 'לטוס', p_station: 'להשתמש',
   fly_title: 'הדאון של הסק: לאן?',
   fly_citadel: 'אי סיטדל', fly_desert: 'האי המדברי', fly_hamalayi: 'ההמלאיה',
   fly_done: '(בוצע)', fly_here: '(אתה כאן)',

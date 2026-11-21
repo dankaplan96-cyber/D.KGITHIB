@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   n_clerk: 'הפקיד אוטבו', n_chair: 'חבר המועצה אמארו', n_councilB: 'חברת המועצה סלה', n_councilC: 'חבר המועצה ברום', n_archivist: 'הארכיונאי',
-  p_cabinet: 'חיפוש', p_coat: 'לקיחה', p_counter: 'הגשה',
+  p_cabinet: 'לחפש', p_coat: 'לקחת', p_counter: 'להגיש',
   chapter_council: 'המועצה',
 
   c9_narr: 'ספינת המיזם נוחתת בנמל החלל של זיליך במשב של ענן ורוד. הנוסעים שלה ממהרים לכיוון הפלטפורמה של המיזם. אף אחד לא מסתכל פעמיים על עוד נוסע.',

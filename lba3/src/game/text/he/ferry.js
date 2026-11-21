@@ -5,7 +5,7 @@ import { STR } from '../../i18n.js';
 Object.assign(STR.he, {
   lf_title: 'המעבורת האחרונה',
   n_lf_ossel: 'רב החובל אוסל', n_lf_wick: 'וויק',
-  p_sail: 'הפלגה', p_turn: 'סיבוב', p_bell: 'צלצול',
+  p_sail: 'להפליג', p_turn: 'לסובב', p_bell: 'לצלצל',
 
   // ---- the sailings board on the West Pier
   lf_board_closed: 'מעבורת השמיים "סבלנות". המזח המערבי - סמטת הטחנה. הפלגות לפי הפעמון. מודבק לרוחבו: הקו סגור. המעבורות האסמריות משרתות את כל התחנות.',

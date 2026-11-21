@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   n_keeper: 'ספה', n_arthurradio: 'ארתור (רדיו)',
-  p_mirror: 'סיבוב', p_scope: 'הסתכלות', p_vent: 'פתיחה',
+  p_mirror: 'לסובב', p_scope: 'להסתכל', p_vent: 'לפתוח',
 
   c7_narr: 'בוקר במנזר. שביל הרכס מטפס אל תוך העננים.',
   c7_yorna_1: 'במעלה הרכס, ואז אל הכיפה. ספה יהיה ליד הטלסקופ שלו. הוא תמיד שם.',

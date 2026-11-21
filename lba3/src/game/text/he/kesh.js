@@ -4,7 +4,7 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   k_title: 'קש',
-  p_turn: 'סיבוב', p_fit: 'התקנה',
+  p_turn: 'לסובב', p_fit: 'להתקין',
   it_kscreen: 'הרשת של לומי', itd_kscreen: 'רשת חול שלומי ארגה בשביל לוכד הרוח של החדר הקריר. בפסים, כמובן.',
   k_toast_screen: 'הרשת של לומי',
   k_toast_owed: 'התשלום של ברוסק: {n} קאשים',
