@@ -269,7 +269,7 @@ Object.assign(STR.en, {
   // bh_book2 (the B-7 bought with every copy, "failed buyer's test"), bh_card (the House's own test: passed), bh_fe_bench /
   // bh_fe_book (what is still unread), bh_te_bands and each bh_*_need (each basin's band from its neighbour's need:
   // A high, B middle, C low), every bh_rw_* (which way a wrong band was off).
-  bh_te_1: "Corvin's firing my float. That leaves the numbers.",
+  bh_te_1: "My float's in Corvin's kiln. Now all I need is the figures.",
   bh_tw_1: 'Where do I find this House?',
   bh_te_2: "Over the causeway past Corvin's wheel. They sold every coil on this island. They'll have kept the figures.",
   bh_te_3: "I'll set up the test rig in the gardens. Bring me the B-7's figures and I'll show you whether they're worth anything.",
@@ -282,7 +282,7 @@ Object.assign(STR.en, {
 
   bh_fe_1: 'Welcome to the House of Balances. Weighed, tested, sold.',
   bh_tw_f1: "I need the figures for the B-7 regulator. Tessa mended one, and she wants to build more.",
-  bh_fe_2: 'Sold. The design, the figures and every copy, to the buyer. That is what sold means.',
+  bh_fe_2: "Sold. The design, the figures and every copy. I've nothing to show you.",
   bh_tw_f2: 'Who bought them?',
   bh_fe_3: "I fill orders. I don't read them out loud. The order book is on its stand, if you can read upside down.",
   bh_fe_book: "Everything the House sells goes through that order book. I can't stop a customer reading.",

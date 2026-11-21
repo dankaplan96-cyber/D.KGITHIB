@@ -6,9 +6,9 @@ Object.assign(STR.en, {
   p_knock: 'Knock', p_cock_co: 'Turn', p_lockbar: 'Lift',   // (P39: its own key; p_cock is text/thread.js's 'Open')
 
   // chapter 11: the shaft's test receiver
-  sh_bal_teach: "One more thing. The crew tested the pylons' receivers on a target by the bore. You can't hit it straight: stand on the brass plate and bounce the ball off the panel. The core has three of those, and the guardian won't wait while you practise.",
+  sh_bal_teach: "One more thing, by the bore. Stand on the brass plate. Bounce the ball off the panel: that target can't be hit straight.",
   sh_sub_bank: "Try the crew's test receiver (bounce the ball)",
-  sh_bal_bank: "That's it! Off the panel and round the wall. Remember the plate: stand still on it and it lines you up.",
+  sh_bal_bank: "That's it! Off the panel and round the wall. The core has three of those, and the guardian won't wait while you practise. Stand still on the plate and it lines you up.",
   // the machinery: the damper answers
   sh_two: "Three... and two. The three is the shell, as it's knocked since our kitchen tap. The two come from that damper. Something down here is answering it.",
   sh_two2: 'Up at home Arthur counted four. Only the first of these carries that far.',
@@ -49,7 +49,7 @@ Object.assign(STR.en, {
   // (P81 / VESK: one concrete report from Mill Lane, then Vesk, as the player left him. His key is his own choice; it
   //  erases nothing: the guard names the log and the list. Essential clue: the bar goes up after her two, in the quiet)
   co_tw_cock: "Irsa, the lane's on the mills down here. What's Kell's cart doing?",
-  co_irsa_1: 'It is going up. Kell is running a full cart to the cistern, and my hand is off the switch.',
+  co_irsa_1: "I've let go. Kell's cart is still climbing.",
   co_vesk_up_helped: "You pulled me out of that. And now Kell's cart goes up without my line.",
   co_vesk_why: "I cut that log so the lane wouldn't go dry. It doesn't need me.",
   co_vesk_up_left: "Don't look at me like that. I heard Irsa. Kell's cart, going up without my line.",

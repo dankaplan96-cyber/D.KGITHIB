@@ -158,7 +158,7 @@ export const VOICE_META = {
   dt_vesk_3: ['annoyed', 'annoyed'], dt_vesk_4: { i: ['annoyed', 'annoyed'], h: 1 }, dt_tw_gate1: ['annoyed', 'neutral', 'annoyed'],
   dp_vesk_fight: ['annoyed', 'annoyed'], dp_vesk_over: { i: 'urgent', e: 'console' },
   // (P81 / VESK: Irsa's one report; Vesk hears it and takes a breath before what it means; the lock's clue said plainly)
-  co_tw_cock: ['neutral', 'curious'], co_irsa_1: { i: ['pleased', 'neutral'], e: ['up', 'off'] },
+  co_tw_cock: ['neutral', 'curious'], co_irsa_1: { i: ['neutral', 'pleased'], e: ['go', 'climbing'] },
   co_vesk_up_helped: { i: ['uncertain', 'neutral'], e: [null, 'without'], p: [0, 0.5] }, co_vesk_why: { i: ['neutral', 'uncertain'], h: 1, p: [0, 0.6] },
   co_vesk_up_left: { i: ['annoyed', 'neutral', 'neutral'], e: [null, 'heard', 'without'], p: [0, 0.3, 0.4] },
   co_vesk_key: { i: ['neutral', 'neutral', 'neutral'], e: [null, 'out', 'two'] }, co_tw_key: 'neutral',
@@ -191,7 +191,7 @@ export const VOICE_META = {
   // ---------------------------------------------------------------- EXP-3: the House of Balances, the Cradles (bh_, wk_, nwb_, ep_bl_)
   bl_ba_2x: ['urgent', 'urgent', 'concerned'], bl_te_end4x: ['neutral', 'annoyed', 'annoyed'],
   bh_te_2: ['neutral', 'annoyed', 'neutral'], bh_te_wait2: ['annoyed', 'neutral'],
-  bh_fe_1: 'pleased', bh_fe_2: { i: ['neutral', 'neutral', 'annoyed'], e: [null, null, 'sold'] }, bh_fe_3: ['neutral', 'neutral', 'pleased'],
+  bh_fe_1: 'pleased', bh_fe_2: { i: ['neutral', 'neutral', 'annoyed'], e: ['sold', null, null] }, bh_fe_3: ['neutral', 'neutral', 'pleased'],
   bh_tw_d1: 'annoyed', bh_fe_d1: ['neutral', 'neutral', 'neutral'], bh_fe_d2: ['neutral', 'concerned'], bh_fe_d3: { i: ['neutral', 'neutral', 'annoyed'], e: ['hand', null, null] },
   bh_tw_t1: ['neutral', 'concerned'], bh_fe_t1: 'neutral', bh_fe_t2: { i: 'uncertain', h: 1 }, bh_fe_t3: { i: ['concerned', 'neutral', 'neutral'], p: [0.4] },
   bh_fe_t4: ['neutral', 'neutral', 'pleased'], bh_fe_t5: ['neutral', 'pleased', 'annoyed'],
