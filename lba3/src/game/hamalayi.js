@@ -11,7 +11,7 @@
 //
 // CONTRACT used by src/game/story/pass.js (chapter 6) and observatory.js (chapter 7). World coordinates.
 //   R.landing {x,z,a}; R.glider {x,z}; R.gliderObj (its Group); R.hut {x,z}
-//   R.gorge {tree:{x,y,z, fallen, fell(instant?)}}  ballTargets entry {…, tree:true}
+//   R.gorge {tree:{x,y,z, fallen, fell(instant?), rock()}, prop:{x,y,z, knock()}}  ballTargets entries {…, tree:true}, {…, prop:true}
 //   R.lhar {x,z}; R.npcSpots {yorna, pim, v1, v2, v3, keeper, hesk} {x,z,a}
 //   R.lift {bottom:{x,z}, top:{x,z}, y0, y1, frozen, thaw(), up, ride(up, riders, done), speed, y, halt(), jolt()};
 //   R.line the line's pulse, lamps, cable, crank, gauge and upper brake (winchline.js); R.heatPost {x,z, on, setOn(b)}
@@ -19,8 +19,9 @@
 //   R.monastery {gate:{x,z}, yard:{x,z}, hall:{x,z,y,ry,sill}}  (hall: the hall's door on its porch: story/hamlife.js)
 //   R.chimney(doorId, on), R.lharWindows(on): a house's smoke, Lhar's window glow (story/hamlife.js, by the story's phase)
 //   R.observatory {door:{x,z}, x,z}; R.vent {x,z, open, setOpen(b)}; R.basin {x,z}
-//   R.ventDiscs [{i, x,y,z, warm, lit, setLit(b)}] five carved discs round the vent's seal (three warm: they steam once the
-//   cap is melted); their ball targets {…, disc:i} call R.onDisc(i) (story/observatory.js; CHAPTER-BALANCE)
+//   R.ventDiscs [{i, x,y,z, warm, free, breathing, setFree(b)}] five carved discs round the vent's seal (three warm: they
+//   steam once the cap is melted; two choked under ice: PUZZLES P-B); a choked one's ball target {…, disc:i} calls
+//   R.onDisc(i) (story/observatory.js); R.ventPuff(i, s) jets a disc's steam for s seconds
 //   R.snow {setLevel(0..1)}
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
@@ -350,16 +351,46 @@ export function* buildHamalayiSteps(scene, physics) {
   const treeCol = col({ type: 'cyl', x: TREE.x, z: TREE.z, r: 0.45, top: H(TREE.x, TREE.z) + 11 });
   const bridgeCol = col({ type: 'box', x: TREE.x, z: (GORGE.z0 + GORGE.z1) / 2, hw: 0.55, hd: (GORGE.z1 - GORGE.z0) / 2 + 2.5, top: L0 - 0.2, enabled: false });
   bridgeCol.enabled = false;
+  // (PUZZLES phase 2: the tree leans out over the gorge on an old prop, a pole wedged under its trunk on the gorge side.
+  //  The ball on the tree rocks it and it settles back on the pole; the ball on the pole knocks it out, and the tree falls)
+  const PROP = { x: TREE.x + 0.15, z: TREE.z + 1.15, top: 2.7 };
+  const propG = new THREE.Group(); propG.position.set(PROP.x, H(PROP.x, PROP.z), PROP.z); group.add(propG);
+  {
+    const poleM = pm('#c8b088', 0.85), lashM = pm('#7a4a2a', 0.9);
+    const len = Math.hypot(PROP.top, 0.62);
+    const pole = mesh(propG, cyl(0.12, 0.15, len, 8, 0), poleM, 0, PROP.top / 2, -0.31, 0, { rx: -Math.atan2(0.62, PROP.top) });
+    void pole;
+    mesh(propG, cyl(0.16, 0.16, 0.2, 8, 0), lashM, 0, PROP.top - 0.25, -0.56, 0, { rx: -Math.atan2(0.62, PROP.top) });
+    mesh(propG, new THREE.SphereGeometry(0.22, 7, 5).scale(1, 0.5, 1), snowM, 0, 0.06, 0, 0, { cast: false });
+  }
+  let propT = -1;
   R.gorge = {
     tree: {
-      x: ox + TREE.x + 0.6, y: H(TREE.x, TREE.z) + 8.2, z: oz + TREE.z + 0.3, fallen: false,
+      x: ox + TREE.x + 0.6, y: H(TREE.x, TREE.z) + 8.2, z: oz + TREE.z + 1.1, fallen: false,
       fell(instant = false) {
         this.fallen = true; treeCol.enabled = false; bridgeCol.enabled = true;
+        if (instant) propG.visible = false;
         T.fell(instant);
+      },
+      rock() { T.rock(); },
+    },
+    // the prop: knocked out, it kicks away into the gorge (out of sight in under a second)
+    prop: {
+      x: ox + PROP.x, y: H(PROP.x, PROP.z) + 2.2, z: oz + PROP.z - 0.45, y0: H(PROP.x, PROP.z),
+      knock() {
+        if (propT >= 0 || !propG.visible) return;
+        propT = 0;
+        updaters.push(function kick(dt) {
+          propT += dt; propG.rotation.x = Math.min(1.4, propT * 3.2); propG.position.z = PROP.z + propT * 1.6; propG.position.y = H(PROP.x, PROP.z) - propT * propT * 4;
+          if (propT > 0.8) { propG.visible = false; updaters.splice(updaters.indexOf(kick), 1); }
+        });
       },
     },
   };
   R.ballTargets.push({ x: R.gorge.tree.x, y: R.gorge.tree.y, z: R.gorge.tree.z, r: 1.2, tree: true });
+  // (the pole is a target the ball curves to only once the tree has been seen to rock back onto it: story/pass.js; before
+  //  that the tree's own target, nearer the throw's line, takes the ball's help)
+  R.ballTargets.push({ x: R.gorge.prop.x, y: R.gorge.prop.y, z: R.gorge.prop.z, r: 0.8, prop: true, done: true });
 
   // ---- the trail: cairns and a rope rail on posts along its open (lower) side
   {
@@ -738,11 +769,14 @@ export function* buildHamalayiSteps(scene, physics) {
     melt(instant = false) { this.melted = true; if (instant) { ventCap.visible = false; return; } let t = 0; updaters.push(function m(dt) { t += dt; ventCap.scale.y = Math.max(0.01, 1 - t / 4); ventCap.position.y = H(VENT.x, VENT.z) + 0.4 - t * 0.2; if (t > 4) { ventCap.visible = false; updaters.splice(updaters.indexOf(m), 1); } }); },
     setOpen(b) { this.open = !!b; if (b) { ventCap.visible = false; seal.rotation.y = 1.2; seal.position.y -= 0.4; } steamLevel = b ? 1 : 0; },
   };
-  // (CHAPTER-BALANCE, 7.11.2026) the seal is carved like the dig's (chapter 4): five discs round its rim. Three are warm
-  // and steam once the dome's light has melted the cap; the ball wakes them (as the warm seals at the dig), and with all
-  // three awake the seal turns. A cold one only rings. Each on bare ice just outside the vent's collider.
+  // (CHAPTER-BALANCE, 7.11.2026) the seal is carved like the dig's (chapter 4): five discs round its rim, each over a
+  // channel from the vent. PUZZLES P-B (20.11): three are warm and steam once the dome's light has melted the cap: they
+  // are breathing already. Two are choked: a lump of clear ice over each, no steam. The seal stays frozen until all five
+  // breathe. The ice breaks to the ball (the dome's frozen slit taught it) or to a blow; a ball on a breathing disc only
+  // rings (story/observatory.js says so). Each on bare ice just outside the vent's collider.
   {
     const WARM = [0, 2, 3], discs = [], stoneM = tm('stone', { color: '#a89c8c' });
+    const iceM = new THREE.MeshStandardMaterial({ color: '#d4ecf8', roughness: 0.12, metalness: 0.05, transparent: true, opacity: 0.86, emissive: '#7ab8e0', emissiveIntensity: 0.18 });
     const steams = [];
     for (let i = 0; i < 5; i++) {
       const a = 0.35 + (i * Math.PI * 2) / 5, lx = VENT.x + Math.sin(a) * 4.0, lz = VENT.z + Math.cos(a) * 4.0, gy = H(lx, lz);
@@ -750,13 +784,33 @@ export function* buildHamalayiSteps(scene, physics) {
       const d = mesh(group, cyl(0.5, 0.55, 0.16, 16, 0), stoneM, lx, gy + 0.06, lz, a);
       const ring = mesh(group, cyl(0.3, 0.3, 0.02, 14, 0), glowM, lx, gy + 0.15, lz, a);
       void d; void ring;
-      const D = { i, ...W(lx, lz), y: gy + 0.25, warm: WARM.includes(i), lit: false, setLit(b) { this.lit = !!b; glowM.emissiveIntensity = b ? 1.6 : 0; } };
+      const warm = WARM.includes(i);
+      // the ice over a choked one: a heaved lump, wider than the disc, clear blue-white (it reads apart from the stone)
+      const cap = warm ? null : mesh(group, new THREE.IcosahedronGeometry(0.62, 0).scale(1, 0.62, 1), iceM, lx, gy + 0.32, lz, a * 1.7);
+      const D = { i, ...W(lx, lz), y: gy + 0.25, warm, lit: false, free: false,
+        get breathing() { return this.warm || this.free; },
+        setLit(b) { this.lit = !!b; },   // (kept for a save's old c7_discN flags: nothing reads it now)
+        setFree(b) { this.free = !!b; if (cap) cap.visible = !this.free; } };
       discs.push(D);
-      if (D.warm) steams.push({ D, pl: new Plume({ rate: 6, rise: 1.4, h: 2.6, w0: 0.6, w1: 1.6, a: 0.55, add: 0.08, drift: 0.4, spread: 0.3, color: '#f2f6ff' }) });
-      R.ballTargets.push({ x: D.x, y: D.y, z: D.z, r: 0.8, disc: i, get done() { return D.lit || !R.vent.melted || R.vent.open || !R.onDisc; }, onHit() { R.onDisc?.(i); } });
+      steams.push({ D, glowM, pl: new Plume({ rate: 6, rise: 1.4, h: 2.6, w0: 0.6, w1: 1.6, a: 0.55, add: 0.08, drift: 0.4, spread: 0.3, color: '#f2f6ff' }) });
+      // (a choked one is a ball target until freed; a breathing one is not one the ball curves to: its ring is the
+      //  story's, Observatory.ballHit)
+      if (!warm) R.ballTargets.push({ x: D.x, y: D.y, z: D.z, r: 0.85, disc: i, material: 'crystal', result: 'break', get done() { return D.free || !R.vent.melted || R.vent.open || !R.onDisc; }, onHit() { R.onDisc?.(i); } });
     }
-    // the warm ones breathe a thread of steam once the cap is gone (until woken, or the vent is open)
-    updaters.push((dt, t, fx) => { if (!fx || !R.vent.melted || R.vent.open) return; for (const s of steams) if (!s.D.lit) s.pl.tick(fx, dt, s.D.x, s.D.y, s.D.z, 1); });
+    // the breathing ones puff a thread of steam and glow warm once the cap is gone (until the vent is open); a freed one
+    // jets harder for a few seconds (R.ventPuff)
+    const jet = new Map();
+    R.ventPuff = (i, s = 3) => { jet.set(i, s); };
+    updaters.push((dt, t, fx) => {
+      const on = R.vent.melted && !R.vent.open;
+      for (const s of steams) {
+        s.glowM.emissiveIntensity = on && s.D.breathing ? 1.1 : 0;
+        if (!fx || !on || !s.D.breathing) continue;
+        const j = jet.get(s.D.i) || 0;
+        if (j > 0) jet.set(s.D.i, j - dt);
+        s.pl.tick(fx, dt, s.D.x, s.D.y, s.D.z, j > 0 ? 2.5 : 1);
+      }
+    });
     R.ventDiscs = discs;
   }
   R.ventPatrol = [[VENT.x - 8, VENT.z - 4], [VENT.x + 6, VENT.z - 6], [VENT.x + 7, VENT.z + 6], [VENT.x - 6, VENT.z + 7]].map(([x, z]) => [ox + x, oz + z]);

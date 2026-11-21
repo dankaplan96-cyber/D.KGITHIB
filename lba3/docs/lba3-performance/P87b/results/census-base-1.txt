@@ -1,0 +1,172 @@
+load before 0.24 1.41 1.82; other gpu-processes 0
+P87b census · medium · batched areas: [object Object],[object Object] · pieces with a map: 316
+office (552 ms): 0
+projoffice (297 ms): 0
+control (245 ms): 0
+workshop (187 ms): 0
+lighttop (179 ms): 0
+cellar (122 ms): 0
+zeelich (76269 ms): 0
+underground (430 ms): 0
+desert (1135 ms): 0
+condenser (120 ms): 0
+butemple (52 ms): 0
+wtent (30 ms): 0
+school (77 ms): 0
+asylum (659 ms): 0
+bumaze (31 ms): 0
+hamalayi (780 ms): 0
+obsv (21 ms): 0
+upper (304 ms): 0
+valves (19 ms): 0
+arena (8 ms): 0
+sewer (124 ms): 0
+tavern (101 ms): 0
+bazoo (45 ms): 0
+ticket (52 ms): 0
+pharmacy (30 ms): 0
+nbrhouse (87 ms): 0
+pumproom (21 ms): 0
+nellhouse (55 ms): 0
+tavcellar (22 ms): 0
+baggage (23 ms): 0
+tralucave (63 ms): 0
+zterminal (30 ms): 0
+terminal (40 ms): 0
+zh_pelleck (121 ms): 0
+zh_nara (43 ms): 0
+zh_oku (19 ms): 0
+zh_bakery (17 ms): 0
+ih_otringal_6_m29 (20 ms): 0
+ih_otringal_m4_m60 (28 ms): 0
+ih_otringal_m1_m53 (18 ms): 0
+ih_otringal_3_m59 (15 ms): 0
+ih_otringal_17_m71 (26 ms): 0
+ih_otringal_63_m45 (22 ms): 0
+ih_otringal_45_m52 (30 ms): 0
+ih_otringal_55_m47 (18 ms): 0
+ih_otringal_63_m52 (27 ms): 0
+ih_otringal_59_m60 (22 ms): 0
+ih_otringal_47_m68 (59 ms): 0
+ih_otringal_52_m60 (33 ms): 0
+ih_otringal_m55_m15 (18 ms): 0
+ih_otringal_6_m24 (22 ms): 0
+ih_otringal_4_26 (29 ms): 0
+ih_otringal_m21_m10 (12 ms): 0
+ih_otringal_4_m11 (15 ms): 0
+ih_otringal_m49_55 (21 ms): 0
+ih_otringal_4_31 (11 ms): 0
+ih_otringal_m2_56 (16 ms): 0
+ih_otringal_3_65 (18 ms): 0
+ih_otringal_12_43 (16 ms): 0
+ih_otringal_40_43 (17 ms): 0
+ih_knartas_m30_m18 (28 ms): 0
+ih_knartas_33_m14 (20 ms): 0
+ih_knartas_25_m22 (10 ms): 0
+ih_knartas_25_m20 (13 ms): 0
+ih_knartas_33_m20 (13 ms): 0
+ih_knartas_19_m20 (10 ms): 0
+ih_knartas_19_m22 (13 ms): 0
+ih_knartas_28_m36 (12 ms): 0
+ih_knartas_14_m36 (13 ms): 0
+ih_knartas_36_m20 (12 ms): 0
+ih_knartas_37_m14 (10 ms): 0
+ih_knartas_28_29 (17 ms): 0
+ih_knartas_21_19 (15 ms): 0
+ih_knartas_22_15 (25 ms): 0
+ih_knartas_16_18 (22 ms): 0
+ih_knartas_16_24 (17 ms): 0
+ih_knartas_9_32 (15 ms): 0
+ih_knartas_38_36 (43 ms): 0
+ih_knartas_44_37 (19 ms): 0
+ih_knartas_35_12 (14 ms): 0
+ih_mosquibee_m15_28 (14 ms): 0
+ih_mosquibee_26_15 (12 ms): 0
+ih_celebration_m9_4 (14 ms): 0
+ih_undergas_8_m39 (13 ms): 0
+ih_platform_m24_m27 (13 ms): 0
+ih_platform_27_m31 (19 ms): 0
+ih_platform_27_m38 (19 ms): 0
+ih_platform_27_12 (17 ms): 0
+ih_platform_35_15 (14 ms): 0
+ih_platform_30_27 (8 ms): 0
+ih_platform_50_46 (15 ms): 0
+ih_orchard_4_28 (12 ms): 0
+ih_kesh_house0 (20 ms): 0
+ih_kesh_house1 (12 ms): 0
+ih_kesh_house2 (13 ms): 0
+ih_kesh_house3 (10 ms): 0
+ih_kesh_house4 (9 ms): 0
+ih_post_cabin0 (18 ms): 0
+ih_post_cabin1 (13 ms): 0
+ih_post_cabin2 (16 ms): 0
+ih_ham_landing0 (10 ms): 0
+ih_ham_lhar0 (14 ms): 0
+ih_ham_lhar1 (14 ms): 0
+ih_ham_lhar2 (12 ms): 0
+ih_ham_lhar3 (12 ms): 0
+ih_ham_lhar4 (16 ms): 0
+ih_ham_obs0 (73 ms): 0
+ih_s28 (20 ms): 0
+ih_hall (36 ms): 0
+ih_house_s40 (12 ms): 0
+ham_hall (23 ms): 0
+ballastra (342 ms): 0
+bl_arches (369 ms): 0
+bl_gardens (302 ms): 0
+otrbar (47 ms): 0
+otrhotel (30 ms): 0
+celtemple (20 ms): 0
+isle_otringal (657 ms): 0
+isle_knartas (326 ms): 0
+isle_mosquibee (233 ms): 0
+isle_celebration (113 ms): 0
+isle_undergas (257 ms): 0
+isle_platform (239 ms): 0
+isle_liftdock (109 ms): 0
+isle_orchard (144 ms): 0
+isle_oldwatch (59 ms): 0
+TOTAL: 0 piece-moves in 0 of 126 first builds
+SITES (bumps of a batched piece's source, by call site):
+ALL bumps during the builds, by site (top 40):
+  1599x game/kit.js:432:20
+  831x game/kit.js:433:10
+  806x game/kit.js:434:20
+  465x toTex game/props.js:206:13
+  371x Terrain._squares engine/terrain.js:328:31
+  120x OW.score game/offwall.js:198:118
+  120x OW.marks game/offwall.js:221:23
+  91x ctex game/kit.js:35:13
+  54x mk game/zislands.js:2276:23
+  29x ctex game/zeelich.js:121:13
+  27x mk game/zislands.js:2276:48
+  11x tex game/yearslate.js:60:13
+  11x Terrain._heightTexture engine/terrain.js:358:21
+  8x buildLba1Room game/lba1room.js:652:77
+  7x canvasTex game/teststand.js:36:13
+  6x seaSetup game/ballastra/sea.js:150:39
+  6x mk game/zeelich.js:2215:23
+  6x game/underground.js:767:75
+  4x buildLba1Room game/lba1room.js:652:154
+  4x chainMat game/ballastra/harbor.js:356:52
+  3x seaSetup game/ballastra/sea.js:150:64
+  3x mk game/zeelich.js:2215:48
+  3x signTex game/zlift.js:49:13
+  3x game/underground.js:767:99
+  3x canvasTex game/lba1room.js:29:141
+  3x bedTexture game/ballastra/sea.js:121:65
+  2x game/underground.js:959:78
+  2x buildPlaza game/zeelich.js:1574:45
+  2x buildDesertSteps game/desert.js:566:22
+  2x game/sewers.js:75:28
+  2x game/zeelich.js:1860:75
+  2x buildPlatform game/zeelich.js:2151:35
+  2x chainMat game/ballastra/harbor.js:356:75
+  2x seaSetup game/ballastra/sea.js:159:91
+  2x Module.harbourTex game/props-esmer.js:656:15
+  1x buildPlaza game/zeelich.js:1574:85
+  1x buildDesertSteps game/desert.js:566:45
+  1x game/sewers.js:75:51
+  1x game/zeelich.js:1860:100
+  1x game/zeelich.js:2122:691
+exit 0 load after 3.67 2.56 2.21

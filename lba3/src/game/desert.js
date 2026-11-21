@@ -31,7 +31,7 @@
 // glider field and the condenser hall at the original's level there.
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
-import { textures } from '../engine/textures.js';
+import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
 import { shuttleTraffic } from './shuttle.js';
@@ -41,7 +41,7 @@ import { fitAdd, FIT } from './worldfit.js';
 import { roomOcc } from './roomocc.js';
 import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
-import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
+import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS, COURT, COURT_ROCKS, courtAt, courtClear } from './desertold.js';
 import { buildTestStand, buildSteamDrive } from './teststand.js';
 import {
   tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, LodBatch, emblemMaterial, emq, mergeGeos, BATCH,
@@ -273,6 +273,9 @@ function heightFn(x, z) {
   // the School's water channel at the mask's foot (desertold.js)
   const rl = rillAt(x, z);
   if (rl > 0) h = Math.min(h, -0.5 + 1.6 * (1 - rl));
+  // Tali's court on the School's back terrace (desertold.js COURT, P83): its yard held level
+  const ca = courtAt(x, z);
+  if (ca > 0) h += (COURT.g - h) * ca;
   // near the pier the beach slopes gently down to the deck
   const dd = Math.hypot(x - (DOCK.x + 8), (z - DOCK.z) * 0.8);
   if (dd < 22) h = h + (DOCK.deck + 0.2 + (h - DOCK.deck - 0.2) * smoothstep(4, 22, dd) - h) * (1 - smoothstep(16, 22, dd));
@@ -315,7 +318,7 @@ function dryRock(seed, lo = 0) {
 function rockAt(x, z, h, slope) {
   const old = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
   if (h < 0.6) return old;
-  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z))));
+  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z)))) * (1 - courtAt(x, z));   // (P83: Tali's court is sand)
   if (clear <= 0) return old;
   // (near a place the outcrops shrink, their edge kept crisp, rather than fading: a half weight smeared the texture)
   const out = outcropNoise(x, z) + 0.3 * smoothstep(1, 8, h) + 0.45 * smoothstep(0.15, 0.7, slope) - 0.35 - 1.5 * (1 - clear);
@@ -560,7 +563,7 @@ export function* buildDesertSteps(scene, physics) {
 
   // --- the sea around it
   {
-    const t = TX.sea.clone(); t.needsUpdate = true; t.repeat.set(70, 70); t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    const t = cloneTex(TX.sea); t.repeat.set(70, 70); t.wrapS = t.wrapT = THREE.RepeatWrapping;
     // (CITADEL-ORIG-2, the user 16.11: LBA2's bright turquoise sea on every Twinsun island: #7ac4e0 lit only → a paler
     //  tint lit, and the same texture glowing turquoise (its own map as the emissive map: no new texture, no new draw).
     //  From above, (59, 108, 151) on screen → (95, 169, 204); LBA2's (72, 167, 207))
@@ -947,7 +950,7 @@ export function* buildDesertSteps(scene, physics) {
     for (const [x, z, s, ry] of OLD_ROCKS) rocks.push({ x, y: H(x, z) - 0.15 * s, z, ry, s });
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     // (Kesh's places stay clear: filtered after the draw, so the island's other rocks keep their places)
-    for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
+    for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s) || courtClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
     for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
     // CLOUD_ORDERS 13: scree on the steep grey slopes (rockAt's outcrops, outside our places and off the tracks), from
     // its own draws after every other (rng 4313), so nothing else moves. Drawn with the rocks above, in the same three
@@ -963,8 +966,10 @@ export function* buildDesertSteps(scene, physics) {
       scree.push({ x, y: h - 0.25 * s, z, ry, s, scree: true });
     }
     placeRocks = () => {
-      const more = scree.filter((r) => !inBuilding(r.x, r.z, r.s));
-      const all = rocks.concat(more);   // (the old rocks keep their variants: the new ones come after them)
+      const more = scree.filter((r) => !inBuilding(r.x, r.z, r.s) && !courtClear(r.x, r.z, r.s));
+      // (P83: the boulder at Tali's court, after every other, so none of them changes its variant)
+      const yard = COURT_ROCKS.map(([x, z, s, ry]) => ({ x, y: H(x, z) - 0.15 * s, z, ry, s }));
+      const all = rocks.concat(more, yard);   // (the old rocks keep their variants: the new ones come after them)
       for (let v = 0; v < 3; v++) {
         const list = all.filter((_, i) => i % 3 === v).map((r) => ({ ...r, color: '#ece6de' }));   // (was '#e8a888', a pink)
         const hi = dryRock(v + 1), lo = dryRock(v + 1, 1);
@@ -979,7 +984,7 @@ export function* buildDesertSteps(scene, physics) {
         }
         B.build();
       }
-      for (const r of more) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+      for (const r of more.concat(yard)) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
       R.rockCount = { old: rocks.length, scree: more.length };   // (for the Test Lab's measurements)
     };
   }
@@ -1015,13 +1020,13 @@ export function* buildDesertSteps(scene, physics) {
       list.push({ x, y: h + 0.1, z, ry, s: 0.5 + sz * 0.8, color: c < 0.5 ? '#9a8a4a' : '#7a7a3a' });
     }
     // (TREES-1: drawn once every building of the island stands, below: none in a house's walls)
-    plantShrubs = () => cullInstances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list.filter((t) => !inBuilding(t.x, t.z, 0.5 * t.s - 0.05)), { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js; HEADING-LOAD-2: culled per instance in each pass, kit.js)
+    plantShrubs = () => cullInstances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list.filter((t) => !inBuilding(t.x, t.z, 0.5 * t.s - 0.05) && !courtClear(t.x, t.z, 0.5 * t.s)), { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js; HEADING-LOAD-2: culled per instance in each pass, kit.js)
     const cactM = pm('#5a8a4a', 0.75);
     const CB = new Batch(group);
     for (let i = 0; i < 26; i++) {
       const x = (rr() - 0.5) * 160, z = (rr() - 0.5) * 160;
       if (coastDist(x, z) < 8 || trackDist(x, z) < 3 || inPost(x, z, 3) || Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 2) continue;
-      const y = H(x, z), h = 1.6 + rr() * 1.6, keep = !keshClear(x, z);   // (the draws happen either way: the rest keep their places)
+      const y = H(x, z), h = 1.6 + rr() * 1.6, keep = !keshClear(x, z) && !courtClear(x, z, 0.5);   // (the draws happen either way: the rest keep their places)
       if (keep) CB.add(cyl(0.2, 0.24, h, 8, 0), cactM, x, y + h / 2, z);
       if (keep) CB.add(new THREE.SphereGeometry(0.2, 8, 6), cactM, x, y + h, z);
       for (const s of [-1, 1]) if (rr() < 0.7) {
@@ -1037,7 +1042,7 @@ export function* buildDesertSteps(scene, physics) {
     for (let i = 0; i < 60; i++) {
       const x = (r4() - 0.5) * 280, z = (r4() - 0.5) * 280, h = 1.6 + r4() * 1.6, arms = [r4(), r4(), r4(), r4()];
       if (Math.hypot(x, z) < 78 || coastDist(x, z) < 8 || trackDist(x, z) < 3 || keepNear(x, z) < 0) continue;
-      const y = H(x, z); if (y > BASE + 4 || terrain.slopeAt(x, z) > 0.5) continue;
+      const y = H(x, z); if (y > BASE + 4 || terrain.slopeAt(x, z) > 0.5 || courtClear(x, z, 0.5)) continue;
       CB.add(cyl(0.2, 0.24, h, 8, 0), cactM, x, y + h / 2, z);
       CB.add(new THREE.SphereGeometry(0.2, 8, 6), cactM, x, y + h, z);
       [-1, 1].forEach((sd, k) => { if (arms[k * 2] < 0.7) { const ay = y + h * (0.4 + arms[k * 2 + 1] * 0.25); CB.add(cyl(0.13, 0.13, 0.5, 7, 0), cactM, x + sd * 0.4, ay, z, 0, 0, Math.PI / 2); CB.add(cyl(0.13, 0.13, 0.7, 7, 0), cactM, x + sd * 0.62, ay + 0.35, z); } });

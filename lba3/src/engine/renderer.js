@@ -306,6 +306,29 @@ void main() {
       gl_FragColor.rgb = clamp( cM + sharpen * ( cM - 0.25 * ( cNW + cNE + cSW + cSE ) ), mn, mx );
     }
   }
+  // FPS30 (motion smoothing): the camera's turn since the last drawn frame, as a short blur along each pixel's motion.
+  // reproj takes a pixel's view ray to where the previous frame's camera saw that ray (the rotation and the lens only:
+  // the motion of the far scenery, which is what judders when the camera turns at 30); mblur the shutter (the share of
+  // the frame's motion that is blurred), mvMax the longest blur; inside the masks (ellipses in the screen's 0–1: Twinsen,
+  // the tutorial's marker) it fades to nothing. Five taps along the line, a tent (0.3 / 0.2 / 0.15). Off (0): nothing runs.
+  if ( mblur > 0.0 ) {
+    vec2 ndc = vUv * 2.0 - 1.0;
+    vec4 pp = reproj * vec4( ndc, 1.0, 1.0 );
+    if ( pp.w > 0.0 ) {
+      vec2 v = ( ndc - pp.xy / pp.w ) * ( 0.5 * mblur );
+      float L = length( v );
+      if ( L > mvMax ) v *= mvMax / L;
+      float k = 1.0;
+      for ( int i = 0; i < 3; i++ ) { vec4 m = masks[ i ]; if ( m.z > 0.0 ) k = min( k, smoothstep( 1.0, 1.8, length( ( vUv - m.xy ) / m.zw ) ) ); }
+      vec2 s = v * k * uvScale;
+      if ( dot( s / texel, s / texel ) > 0.5 ) {
+        vec3 a = gl_FragColor.rgb * 0.3;
+        a += 0.2 * ( textureLod( tDiffuse, clamp( uv + s * 0.25, vec2( 0.0 ), uvMax ), 0.0 ).rgb + textureLod( tDiffuse, clamp( uv - s * 0.25, vec2( 0.0 ), uvMax ), 0.0 ).rgb );
+        a += 0.15 * ( textureLod( tDiffuse, clamp( uv + s * 0.5, vec2( 0.0 ), uvMax ), 0.0 ).rgb + textureLod( tDiffuse, clamp( uv - s * 0.5, vec2( 0.0 ), uvMax ), 0.0 ).rgb );
+        gl_FragColor.rgb = a;
+      }
+    }
+  }
 `;
 
 // The scene pass, drawn into the lower-left part of the (fixed-size) target when the automatic resolution is
@@ -321,6 +344,12 @@ class ScaledRenderPass extends RenderPass {
 }
 
 const GRADE = 0.72;   // WA-13 (proto)
+// FPS30 motion smoothing: shutter — the share of a frame's camera motion drawn as blur (subtle: under a film's half);
+// maxLen — the longest blur, a share of the picture's width; minPx — below this many pixels of blur, none (the camera
+// barely moved: the pass's taps are skipped); cut — a turn over this many radians between two frames is a cut
+export const MOTION = { shutter: 0.35, maxLen: 0.012, minPx: 1.5, cut: 0.35 };
+const MOTION_PTS = [[0, 0], [-0.9, -0.9], [0.9, -0.9], [-0.9, 0.9], [0.9, 0.9]];
+const _mR = new THREE.Matrix4(), _mT = new THREE.Matrix4(), _mD = new THREE.Matrix4(), _v4 = new THREE.Vector4();
 export class Renderer {
   constructor(container) {
     this.container = container;
@@ -414,9 +443,14 @@ export class Renderer {
     this.output.uniforms.sharpen = { value: 0 };
     this.output.uniforms.edgeAA = { value: 0 };
     this.output.uniforms.exact = { value: 1 };
+    // (FPS30 motion smoothing: motionStep sets these each drawn frame; mblur 0 = off)
+    this.output.uniforms.mblur = { value: 0 };
+    this.output.uniforms.reproj = { value: new THREE.Matrix4() };
+    this.output.uniforms.mvMax = { value: MOTION.maxLen };
+    this.output.uniforms.masks = { value: [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()] };
     const fs0 = this.output.material.fragmentShader, main = fs0.indexOf('void main() {'), tone = fs0.indexOf('// tone mapping');
     if (main > 0 && tone > main && fs0.includes('gl_FragColor = texture2D( tDiffuse, vUv );')) {
-      this.output.material.fragmentShader = fs0.slice(0, main).replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax; uniform vec2 texel; uniform float sharpen; uniform float edgeAA; uniform float exact;')
+      this.output.material.fragmentShader = fs0.slice(0, main).replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax; uniform vec2 texel; uniform float sharpen; uniform float edgeAA; uniform float exact; uniform float mblur; uniform mat4 reproj; uniform float mvMax; uniform vec4 masks[ 3 ];')
         + OUTPUT_EDGES + fs0.slice(tone);
       // (PERF-GPU: compiled as GLSL ES 3.00 — three's OutputShader is written in ES 1.00, which has no textureLod or
       //  texelFetch in a fragment shader; same code otherwise: three adds only the version line to a raw shader)
@@ -632,9 +666,39 @@ export class Renderer {
       if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
       else if (this.mid) S.updateMatrixWorld();
       this.mid?.();   // (RENDER-INV: the draw batches check their pieces with this frame's matrices: engine/drawbatch.js)
+      this.motionStep();   // (FPS30: the motion smoothing's uniforms for this frame, or off)
       this.timer?.begin();   // (RENDER-INV: the GPU's time for the frame, while the benchmark runs: perf.js GpuTimer)
       this.composer.render();
     } finally { this.timer?.end(); S.matrixWorldAutoUpdate = auto; this.post?.(); }
+  }
+
+  // FPS30 motion smoothing (Settings → Display → Motion Smoothing): `motion.want` (the game sets it: at a 30 limit, or
+  // always / never as chosen), `motion.masks` (up to 3 ellipses { x, y, rx, ry } in the screen's 0–1, set before each
+  // render: what stays sharp), `motion.hold` (true: none this frame — the aim's dots are shown). Off — or the camera turned
+  // less than MOTION.minPx pixels of blur, or more than MOTION.cut (a cut, not a turn) — the shader does nothing.
+  // `motion.last`: this frame's state, for the F9 overlay and the tests ({ on, px, why }).
+  motionStep() {
+    const U = this.output.uniforms, M = (this.motion ??= { want: false, masks: [], hold: false, prevR: null, prevP: new THREE.Matrix4(), last: { on: false, px: 0, why: 'off' } });
+    if (!U.mblur) return;
+    const cam = this.camera;
+    cam.updateMatrixWorld();
+    const R = _mR.extractRotation(_mT.copy(cam.matrixWorld).invert());
+    let on = !!M.want && !this.retro && !this.noOutputEdges && !M.hold && !!M.prevR, px = 0, why = !M.want ? 'off' : M.hold ? 'aiming' : this.retro || this.noOutputEdges ? 'unavailable' : 'first frame';
+    if (on) {
+      // the turn between the frames: Rprev · Rcurᵀ (its angle: a cut beyond MOTION.cut)
+      _mD.copy(M.prevR).multiply(_mT.copy(R).transpose());
+      const e = _mD.elements, ang = Math.acos(Math.max(-1, Math.min(1, (e[0] + e[5] + e[10] - 1) / 2)));
+      U.reproj.value.copy(M.prevP).multiply(_mD).multiply(cam.projectionMatrixInverse);
+      // the longest blur over five screen points, in pixels of the drawn picture
+      const W = this.composer.renderTarget1.width * this.effScale(), H = this.composer.renderTarget1.height * this.effScale();
+      for (const [x, y] of MOTION_PTS) { _v4.set(x, y, 1, 1).applyMatrix4(U.reproj.value); if (_v4.w <= 0) { px = 1e9; break; } const dx = (x - _v4.x / _v4.w) * 0.5 * W, dy = (y - _v4.y / _v4.w) * 0.5 * H; px = Math.max(px, Math.hypot(dx, dy) * MOTION.shutter); }
+      px = Math.min(px, MOTION.maxLen * Math.max(W, H));
+      if (ang > MOTION.cut) { on = false; why = 'cut'; } else if (px < MOTION.minPx) { on = false; why = 'still'; } else why = 'turning';
+    }
+    U.mblur.value = on ? MOTION.shutter : 0;
+    if (on) for (let i = 0; i < 3; i++) { const m = M.masks[i]; U.masks.value[i].set(m?.x ?? 0, m?.y ?? 0, m ? m.rx : 0, m ? m.ry : 0); }
+    M.last = { on, px: +px.toFixed(1), why };
+    (M.prevR ??= new THREE.Matrix4()).copy(R); M.prevP.copy(cam.projectionMatrix);
   }
 
   // Compiles every material in the scene for the way it is really drawn: into the composer's target (no tone
@@ -653,6 +717,50 @@ export class Renderer {
     let p;
     try { p = R.compileAsync(scene, camera); } finally { R.setRenderTarget(prev); if (ex) for (let i = 0; i < ex.length; i++) ex[i].visible = vis[i]; }
     return p;
+  }
+  // ARRIVAL-STEPS: precompile() in parts, a generator: each next() is one call of three's compile on a run of the scene's
+  // objects, and the generator's value at the end is every material compiled (whenReady waits for them, as compileAsync
+  // does). The objects in three's own walk order; the scene's lights walked once (three's compile walks the whole shown
+  // scene for them on every call) and given to every call in the same order: the same light state, fog, shadows and
+  // target as precompile() has them, so the same programs, made over several black frames instead of in one.
+  // A run is up to partObjects (400) objects, but an object whose material three has never compiled is a run of its
+  // own, and after a call that made a program the runs are one object until one makes none again: a new program can
+  // take long to make (the user's Intel UHD 620: one warm-up step of 1 013 ms; the GTX 1050: up to 110 ms), so a step —
+  // which ends after the call that crosses its time — holds at most one new program's compile wherever that is slow.
+  // (`split` is kept for the callers; every object is walked once, as in precompile())
+  *precompileParts(split = [], scene = this.scene, camera = this.camera) {
+    const R = this.renderer, mats = new Set(), Pr = R.properties;
+    this.applyResize();
+    const lights = []; scene.traverseVisible((o) => { if (o.isLight) lights.push(o); });
+    const target = Object.create(scene); target.traverseVisible = (cb) => { for (const l of lights) cb(l); };
+    const list = [];
+    scene.traverse((o) => { if ((o.isMesh || o.isPoints || o.isLine || o.isSprite) && o.material) list.push(o); });
+    yield 'parts';
+    const most = this.partObjects || 400, fresh = (o) => { const m = o.material; if (Array.isArray(m)) { for (const x of m) if (!Pr.get(x).programs) return true; return false; } return !Pr.get(m).programs; };
+    const ex = scene === this.scene ? this.warmExtra?.() : null, vis = this._warmVis ??= [];
+    let i = 0, run = most;
+    while (i < list.length) {
+      const part = [];
+      while (i < list.length && part.length < run) { const o = list[i], f = fresh(o); if (f && part.length) break; part.push(o); i++; if (f) break; }
+      const prev = R.getRenderTarget(), p0 = R.info.programs?.length ?? 0;
+      R.setRenderTarget(this.composer.renderTarget1);
+      if (ex) for (let k = 0; k < ex.length; k++) { vis[k] = ex[k].visible; ex[k].visible = true; }
+      try { for (const m of R.compile({ traverse: (cb) => { for (const o of part) cb(o); }, traverseVisible() {} }, camera, target)) mats.add(m); }
+      catch (e) { console.warn('precompile part', e); }
+      finally { R.setRenderTarget(prev); if (ex) for (let k = 0; k < ex.length; k++) ex[k].visible = vis[k]; }
+      const made = (R.info.programs?.length ?? 0) - p0;
+      run = made > 0 ? 1 : Math.min(most, run * 4);
+      yield made > 0 ? 'program' : 'compile';
+    }
+    return mats;
+  }
+  // (resolves when every program of `mats` is ready: three's compileAsync's own wait)
+  whenReady(mats) {
+    const R = this.renderer, P = R.properties, par = !!R.extensions?.has?.('KHR_parallel_shader_compile');
+    return new Promise((res) => {
+      const check = () => { for (const m of mats) { const p = P.get(m).currentProgram; if (!p || p.isReady()) mats.delete(m); } if (!mats.size) res(); else setTimeout(check, 10); };
+      if (par) check(); else setTimeout(check, 10);
+    });
   }
 
   // Automatic resolution, fed the displayed frame time (ms). Every 90 frames: a 90th percentile over 1.2× the frame

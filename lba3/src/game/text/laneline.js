@@ -20,7 +20,7 @@ Object.assign(STR.en, {
   ev_z_sched: '(SCHEDULE, EVERY ROUND. Stop four, LANE GATE: Bram, Hedda, Tobin. They are on it. Every round.)',
   ev_z_route: "(The driver's route. Bridge, plaza, fields, lighthouse path. The lane is crossed out: GATE SHUT, NO STOP.)",
   ev_z_both: 'So on paper the lane is picked up every round. On the road nobody stops. They are sitting on their cases waiting for a cart that turns round.',
-  ev_z_go: "Then they wait at the cart's own stop, where the driver can't miss them. The landing by the pump house.",
+  ev_z_go: "Those three are on the list: the seats on the ships are theirs. So they wait at the cart's own stop, the landing by the pump house, where the driver can't miss them.",
 
   // ------------------------------------------------------------ the lane's people
   ev_obj_lane: "Zoé: bring the lane's people to the landing ({n}/2)",
@@ -83,5 +83,5 @@ Object.assign(STR.en, {
   ev_j_sched: "At the lighthouse path Zoé read the cart's schedule against the driver's route: the lane's people were on one and crossed off the other.",
   ev_j_lane: 'Zoé brought Bram, Hedda and Tobin to the landing by the pump house. Pippa was already there, with bread.',
   ev_j_gate: "In the pump room I opened the culvert's cock in the rest between the copper pipe's kicks. The culvert drained, and the lane's water gate opened.",
-  ev_j_board: 'The cart came in through the gate, and the lane boarded it.',
+  ev_j_board: "The cart came in through the gate, and the lane rode it to the ships' queue on the bridge. The shelters are for everyone the list left out.",
 });

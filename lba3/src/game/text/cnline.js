@@ -43,14 +43,14 @@ Object.assign(STR.en, {
   cn_sub_log: 'The log of test 14',
 
   // ---- the verdict, in a game with the thread: the council orders the stop
-  cn_tw_log: "And this. The log of test 14, uncut, with two traces, and Vesk's order cutting the second one. I ran that test. Here is my own carbon of it.",
+  cn_tw_log: "And this. The log of test 14, uncut, with two traces, and Vesk's order cutting the second one. I pulled the cutoff on that test. Here is my own carbon of it.",
   cn_tw_log_b: "And this. The log of test 14 at the desert station, uncut, with two traces, and Vesk's order cutting the second one, in his own hand.",
   cn_tw_cab_b: "Test 14. Dallan's test at the desert station. Two traces, and he filed one.",
   cn_councilC_log: '"I will not drain a quarter over noise." He wrote down his reason. Mill Lane is my ward.',
-  cn_chair_stop: "The council has heard enough. By vote of this council, the Joint Project's bore is to be stopped. Now, not when it suits him.",
+  cn_chair_stop: "The council has heard enough. A reversal needs the project's own engineers; a stop needs only our vote. By vote of this council, the Joint Project's bore is to be stopped. Now, not when it suits him.",
   cn_councilC_stop: "And if he was right about Mill Lane?",
   cn_chair_stop2: "Then we will know that too. Twinsen, the platform's console takes the council's word. Throw the stop yourself, so nobody says a project hand did it gently.",
-  cn_bal_stop: "I'll meet you at the platform. I want to see those needles with my own eyes.",
+  cn_bal_stop: "Stopped, not reversed. Well. A drill held still is not a drill pulled out. I'll meet you at the platform, and I'll watch those needles very closely.",
   cn_obj_stop: "Throw the stop at the platform's console",
   cn_chair_wait: 'The order is given. The console is on the platform.',
 
@@ -65,7 +65,9 @@ Object.assign(STR.en, {
   cn_vesk_1: "Twinsen. I see the line has dropped. So has Mill Lane's. I wrote it on your door.",
   cn_vesk_2: "And the ground goes on knocking, as it has for a week. Now the council knows what I knew. Stop wasting my drill.",
   cn_tw_vesk: "You knew both, and you cut one out of the log.",
-  cn_bal_stop2: "He's right about one thing: the stop only reached the drill. The bore's own switch is at the bottom of the shaft, behind the blast doors, and they open to a code from every station at once.",
+  cn_bal_stop2: "He's right about one thing: the stop only reached the drill. It keeps the cracks from growing; it doesn't close them. The bore's own switch is at the bottom of the shaft, behind the blast doors, and they open to a code from every station at once.",
+  // (P83 / S-3: the three days Vesk gave in chapter 8 are on hold while the drill is)
+  cn_tw_days: "The drill isn't going deeper, at least. The stop bought us some days.",
   cn_bal_stop3: "And the lane hangs on the platform's line. Come to my bench. I have something that holds a line steady. One line.",
   cn_obj_bench: "Try Baldino's isolator on the relays at his bench",
   cn_sub_a: 'On the first relay', cn_sub_b: 'On the second relay',

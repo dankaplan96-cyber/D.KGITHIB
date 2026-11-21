@@ -429,6 +429,7 @@ export class HUD {
     D.full = D.lines[D.i];
     D.shown = 0; D.readT = 0;
     D.text.textContent = '';
+    this.game.faceLine?.(D.full);   // (FACE-1: the speaker's face for this line)
   }
   get talking() { return !this.dialog.el.classList.contains('hidden'); }
   advance(auto = false) {

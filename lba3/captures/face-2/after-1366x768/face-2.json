@@ -1,0 +1,143 @@
+{
+ "W": 1366,
+ "H": 768,
+ "SPOT": "yard",
+ "wall": null,
+ "lines": [
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "line": "Same next door. Their tap ran warm, knocked thre",
+   "why": [
+    0.76,
+    1,
+    0.3,
+    1,
+    0.42,
+    0.53
+   ],
+   "head": {
+    "px": 139,
+    "x": 923,
+    "bottom": 323,
+    "top": 184,
+    "turn": 40
+   },
+   "other": {
+    "px": 211,
+    "x": 25,
+    "bottom": 521,
+    "top": 310,
+    "turn": 77
+   },
+   "box": 589
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "line": "And look at their kettle. Furred with these sinc",
+   "why": [
+    0.76,
+    1,
+    0.3,
+    1,
+    0.42,
+    0.53
+   ],
+   "head": {
+    "px": 140,
+    "x": 914,
+    "bottom": 325,
+    "top": 185,
+    "turn": 41
+   },
+   "other": {
+    "px": 211,
+    "x": 43,
+    "bottom": 514,
+    "top": 303,
+    "turn": 82
+   },
+   "box": 589
+  },
+  {
+   "who": "hero",
+   "fav": "hero",
+   "line": "(Tiny crystals. Still warm.)",
+   "why": [
+    0.9,
+    1,
+    0.2,
+    -1,
+    0.42,
+    0.85
+   ],
+   "head": {
+    "px": 146,
+    "x": 405,
+    "bottom": 348,
+    "top": 203,
+    "turn": 53
+   },
+   "other": {
+    "px": 192,
+    "x": 1268,
+    "bottom": 469,
+    "top": 276,
+    "turn": 67
+   },
+   "box": 589
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "line": "Mira's got the well padlocked, and she's telling",
+   "why": [
+    0.9,
+    1,
+    0.3,
+    1,
+    0.42,
+    0.7
+   ],
+   "head": {
+    "px": 137,
+    "x": 977,
+    "bottom": 334,
+    "top": 197,
+    "turn": 58
+   },
+   "other": {
+    "px": 184,
+    "x": 113,
+    "bottom": 447,
+    "top": 263,
+    "turn": 75
+   },
+   "box": 582
+  }
+ ],
+ "after": {
+  "state": "play",
+  "fav": "npc",
+  "keep": true,
+  "talk": 0
+ },
+ "path": {
+  "frames": 1189,
+  "cuts": [
+   [
+    456,
+    1.61,
+    1
+   ],
+   [
+    720,
+    1.29,
+    1
+   ]
+  ],
+  "maxMovePerFrame": 0.184,
+  "solidFrames": 0
+ }
+}

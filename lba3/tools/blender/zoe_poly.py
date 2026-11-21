@@ -29,7 +29,7 @@ from mathutils import Vector  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402
 from lbapoly import Builder, box, catmull, lerp, lip_band, loft, mouth_lens, ring, smooth, sphere, tube  # noqa: E402
 
-args = [a for a in sys.argv[1:] if not a.endswith('.py')]
+args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [a for a in sys.argv[1:] if not a.endswith('.py')]   # (inside Blender: the arguments after --)
 SKEL, OUT = args[0], args[1]
 BLEND = args[2] if len(args) > 2 else None
 if os.path.isdir(OUT) or not OUT.endswith('.json'):
@@ -38,6 +38,12 @@ ALL = json.load(open(SKEL))
 S = ALL.get('zoe', ALL)
 B = S['bones']
 ZH = 1.95   # metres per H on the game's Zoé skeleton (hips 0.95, shoulders 1.47, neck 1.56, head 1.63)
+
+# CHAR-FORM (REPAIR-PASS-18-11 phase 3; the user 18.11, from play: "characters still look like connected tubes instead of
+# designed bodies"). Form, not a new design: the same outfit, colours, face, hair and proportions, built as clothes over
+# a body (see FORM_LEG, FORM_ARM and w_body below). ZOE_FORM=0 builds the shipped ZOE-LOOK-38 model byte for byte; the
+# older flags (ZOE_LOOK_OLD, ZOE_LBA2, ZOE_HEAD_LBA2, ZOE_NECKLACE_OLD) build their own models without it.
+FORM = os.environ.get('ZOE_FORM', '1') != '0' and not any(os.environ.get(k) for k in ('ZOE_LOOK_OLD', 'ZOE_LBA2', 'ZOE_HEAD_LBA2', 'ZOE_NECKLACE_OLD'))
 
 # ---- colours: the original's palette ramp shades as the game's LbaMaterial shows them (vertex colour = the mid-lit
 # shade, as for Twinsen: ramp shade ~9); hair: palette 106 drawn flat (see HAIR_UP)
@@ -106,6 +112,22 @@ ZOE_LEG = [(0.44, 0.06, 0.062, 0.088, -0.085), (0.404, 0.064, 0.062, 0.09, -0.08
 if os.environ.get('ZOE_LBA2'):
     ZOE_LEG = [(0.44, 0.06, 0.066, 0.11, -0.1), (0.404, 0.066, 0.066, 0.112, -0.1), (0.308, 0.065, 0.059, 0.095, -0.09), (0.212, 0.064, 0.052, 0.078, -0.077),
                (0.116, 0.065, 0.045, 0.05, -0.065), (0.05, 0.065, 0.039, 0.044, -0.056)]
+# CHAR-FORM: each trouser leg in more sections (y, half-width across, front, back; H), as cloth over a leg: full over the
+# hip and the seat, gathering in a little at the knee (the knee reads when it bends), a fuller fall over the calf behind,
+# gathered at the ankle and flaring a touch at the hem over the shoe; the knee's bend spread over five sections instead of
+# one band (FORM_KNEE_W), so a stride or a run bends the leg round the knee instead of folding a tube
+FORM_LEG = [(0.47, 0.055, 0.074, -0.076), (0.44, 0.059, 0.080, -0.084), (0.41, 0.061, 0.084, -0.088), (0.375, 0.061, 0.087, -0.086),
+            (0.335, 0.058, 0.084, -0.080), (0.30, 0.0545, 0.079, -0.074), (0.275, 0.0525, 0.074, -0.070), (0.252, 0.0505, 0.070, -0.067),
+            (0.23, 0.0505, 0.069, -0.068), (0.205, 0.0505, 0.067, -0.070), (0.17, 0.049, 0.062, -0.069), (0.13, 0.0465, 0.055, -0.064),
+            (0.095, 0.042, 0.048, -0.058), (0.068, 0.0385, 0.044, -0.054), (0.05, 0.039, 0.045, -0.056)]
+FORM_KNEE_W = 0.075    # (m above and below the knee over which the leg passes from the thigh's bone to the shin's)
+FORM_HIP = (0.48, 0.395)   # (H: the trouser leg passes from the hips to the thigh's bone between these)
+# JOINTS-BLENDER (CLOUD_ORDERS 57): the hip's join. The pass above was centred 7 cm under the hip joint (0.472 H), so in a
+# sit (slump: the thighs at -1.4) the top of the trouser leg lagged half behind the thigh and the leg bent a second time
+# below the joint, a balloon in front. Centred on the joint now, over 13 cm; JOINTS_OLD=1 builds the model as before.
+JOINTS = not os.environ.get('JOINTS_OLD')
+if JOINTS:
+    FORM_HIP = (0.505, 0.44)
 # the shoes: long and pointed, z −0.054 … +0.107, ±0.038 wide; sections (z, half-width, height)
 ZOE_SHOE = [(-0.054, 0.03, 0.05), (-0.02, 0.036, 0.06), (0.03, 0.036, 0.05), (0.07, 0.026, 0.032), (0.107, 0.006, 0.01)]
 
@@ -262,7 +284,23 @@ def w_body(p):
     w = {'hips': hips * (1 - arm), 'torso': (1 - hips) * (1 - arm) * (1 - neck), 'neck': neck * (1 - arm)}
     if arm > 0:
         w['sh' + s_] = arm
+    if FORM:
+        # CHAR-FORM: the top's hem (below 0.47 H) rides the thighs a little, two thirds at its edge, each side on its own leg
+        # and the middle on both, so in a stride it swings over the leading thigh as cloth does instead of the trouser
+        # leg's top pushing out through it
+        k = FORM_HEM_K * smooth(0.47 * ZH, 0.404 * ZH, y)
+        if JOINTS:
+            # (JOINTS-BLENDER: the hem's front lies on the thighs (in a sit, on her lap), its back hangs more from the hips)
+            k = (FORM_HEM_BACK + (FORM_HEM_FRONT - FORM_HEM_BACK) * smooth(-0.04, 0.05, z)) * smooth(0.47 * ZH, 0.404 * ZH, y)
+        if k > 0:
+            l = smooth(-0.05, 0.05, x)
+            w = {b_: v * (1 - k) for b_, v in w.items()}
+            w['hipL'], w['hipR'] = k * l, k * (1 - l)
     return {k: v for k, v in w.items() if v > 0}
+
+
+FORM_HEM_K = 0.65
+FORM_HEM_FRONT, FORM_HEM_BACK = 0.88, 0.6   # (JOINTS-BLENDER)
 
 
 def sec(y):
@@ -398,9 +436,15 @@ for s_, sx in (('L', 1), ('R', -1)):
         y = p[1]
         top = smooth(0.47 * ZH, 0.4 * ZH, y)
         knee = smooth(kn[1] + 0.06, kn[1] - 0.06, y)
+        if FORM:
+            top = smooth(FORM_HIP[0] * ZH, FORM_HIP[1] * ZH, y)
+            knee = smooth(kn[1] + FORM_KNEE_W, kn[1] - FORM_KNEE_W, y)
         return {k: v for k, v in (('hips', 1 - top), ('hip' + s_, top * (1 - knee)), ('knee' + s_, top * knee)) if v > 0}
-    leg = b.P('leg' + s_, COL['red'], w_leg, 50)
-    loft(leg, [ring(y * ZH, r * ZH, zf * ZH, zb * ZH, 12, 0.8, cx=sx * max(hp[0], cx * ZH * 0.8)) for y, cx, r, zf, zb in reversed(ZOE_LEG)], cap_bottom=True)
+    leg = b.P('leg' + s_, COL['red'], w_leg, 50 if not FORM else 62)
+    if FORM:
+        loft(leg, [ring(y * ZH, r * ZH, zf * ZH, zb * ZH, 16, 0.8, cx=sx * abs(hp[0])) for y, r, zf, zb in reversed(FORM_LEG)], cap_bottom=True)
+    else:
+        loft(leg, [ring(y * ZH, r * ZH, zf * ZH, zb * ZH, 12, 0.8, cx=sx * max(hp[0], cx * ZH * 0.8)) for y, cx, r, zf, zb in reversed(ZOE_LEG)], cap_bottom=True)
     sh = b.P('shoe' + s_, COL['shoe'], 'foot' + s_, 40)
     x0 = sx * max(hp[0], 0.065 * ZH * 0.8)
     rr = [[(x0 + hw * ZH * math.cos(2 * math.pi * k / 8), 0.004 + h * ZH * 0.5 * (1 + math.sin(2 * math.pi * k / 8)), z * ZH) for k in range(8)] for z, hw, h in ZOE_SHOE]
@@ -427,9 +471,49 @@ ARM = [   # (u along the arm: 0 the shoulder, 0.5 the elbow, 1 the wrist; half-w
     (0.5, 0.034, 0.038), (0.58, 0.038, 0.041), (0.66, 0.041, 0.042), (0.8, 0.033, 0.036), (0.93, 0.023, 0.029),
     (1.0, 0.0195, 0.026),
 ]
+# CHAR-FORM: the same arm (the same lengths, widths at the shoulder, elbow and wrist) with its muscles placed: each section
+# also shifted out from the body (+) and forward (+), metres: the deltoid's cap full and out over the shoulder and tapering
+# to its insertion a third down, the biceps forward, the elbow narrow with its point behind, the forearm's swell high on
+# its outer side, the wrist flat; 17 sections (11), five of them round the elbow, where the bend is spread
+FORM_ARM = [
+    (-0.06, 0.030, 0.034, -0.004, 0.0), (0.0, 0.047, 0.047, 0.0, 0.0), (0.06, 0.0525, 0.050, 0.0045, 0.0),
+    (0.13, 0.0505, 0.049, 0.005, -0.001), (0.20, 0.045, 0.046, 0.003, 0.001), (0.28, 0.0415, 0.046, 0.0, 0.004),
+    (0.36, 0.040, 0.044, -0.001, 0.0035), (0.43, 0.036, 0.039, 0.0, 0.001), (0.47, 0.0345, 0.038, 0.0, -0.001),
+    (0.50, 0.034, 0.038, 0.0, -0.003), (0.53, 0.0355, 0.039, 0.001, -0.002), (0.57, 0.038, 0.041, 0.003, 0.0),
+    (0.63, 0.041, 0.042, 0.0045, 0.0005), (0.72, 0.037, 0.039, 0.003, 0.0), (0.82, 0.030, 0.034, 0.001, 0.0),
+    (0.92, 0.023, 0.029, 0.0, 0.0), (1.0, 0.0195, 0.026, 0.0, 0.0),
+]
+# ZOE-SHOULDER (the user, 21.11, her shoulder in play: "Zoé's shoulder is strange"): the arm's top stood out past the
+# shoulder's line (its top section 3 cm round, 1-2 cm outside the body's side) with the armhole's green band wrapped round
+# it, so the shoulder read as a cuff or a pad set on the arm. Now the arm's top sections tuck in under the shoulder's
+# slope (shifted in toward the body, the top one narrower), so the shoulder's line runs on into the arm, and the band
+# round the arm is gone: the dress's own green edge along the strap is the armhole's trim. ZOE_SHOULDER_OLD=1: as before.
+SHOULDER_NEW = not os.environ.get('ZOE_SHOULDER_OLD')
+# the top: a hemisphere over the joint, the upper arm's own 4.7 cm round (u, half-width, half-depth, out, forward): the
+# shoulder keeps its round shape at any angle of the arm (raised, the old top showed as a flat disc beside the neck),
+# and at rest it rounds off under the strap's edge
+SHOULDER_TOP = [tuple(float(x) for x in r.split(':')) for r in os.environ.get('ZOE_SH_TOP',
+    '-0.0695:0.008:0.008:0:0|-0.064:0.02:0.02:0:0|-0.054:0.03:0.03:0:0|-0.04:0.038:0.038:0:0|-0.022:0.044:0.044:0:0|0.0:0.047:0.047:0:0').split('|')]
+if FORM and SHOULDER_NEW:
+    FORM_ARM = SHOULDER_TOP + FORM_ARM[2:]
+if FORM:
+    ARM = FORM_ARM
 ARMHOLE = (-0.06, 0.0)           # (ZOE-LOOK-38: the armhole trim along the arm, u)
 BANGLE = (0.86, 0.90, 0.0045)     # (ZOE-LOOK-38: the bangle along the forearm, u, and how far it stands off the skin: m)
 ARM_N = 14 if LOOK38 else 12   # (ZOE-LOOK-38: 14 sides, a rounder arm outline)
+if FORM:
+    ARM_N = 16
+
+
+def arm_off(u):
+    # (CHAR-FORM: the section's shift out and forward at u, metres)
+    if len(ARM[0]) < 5:
+        return 0.0, 0.0
+    for a_, c_ in zip(ARM, ARM[1:]):
+        if a_[0] <= u <= c_[0]:
+            t = (u - a_[0]) / (c_[0] - a_[0])
+            return a_[3] + (c_[3] - a_[3]) * t, a_[4] + (c_[4] - a_[4]) * t
+    return (ARM[-1][3], ARM[-1][4]) if u > 0 else (ARM[0][3], ARM[0][4])
 
 
 def build_hand(part, el, hd, sx, lines=None):
@@ -540,13 +624,17 @@ for s_, sx in (('L', 1), ('R', -1)):
         return {k: v for k, v in (('sh' + s_, 1 - e), ('el' + s_, e)) if v > 1e-4}
     arm = b.P('arm' + s_, COL['skin'], w_arm, 50)
     rings = []
-    for u, ra, rd in ARM:
+    for row in ARM:
+        u, ra, rd = row[:3]
         c = along(u)
-        d = (along(min(1.0, u + 0.06)) - along(max(-0.06, u - 0.06))).normalized()
+        d = (along(min(1.0, u + 0.06)) - along(max(min(-0.06, ARM[0][0]), u - 0.06))).normalized()
         across = Vector((d.y, -d.x, 0.0)).normalized()
         dep = d.cross(across).normalized()
         if dep.z < 0:
             dep = -dep
+        if FORM:
+            ox, oz = arm_off(u)
+            c = c + (across if across.x * sx > 0 else -across) * ox + dep * oz   # (out from the body, either side)
         rr = [tuple(c + across * (math.cos(2 * math.pi * i / ARM_N) * ra) + dep * (math.sin(2 * math.pi * i / ARM_N) * rd)) for i in range(ARM_N)]
         for q in rr:
             AU[tuple(round(v, 6) for v in q)] = u
@@ -564,11 +652,14 @@ for s_, sx in (('L', 1), ('R', -1)):
         # weights, so it rides the shoulder like a cap sleeve's edge), and a green bangle on the wrist (on the forearm)
         def arm_frame(u):
             c = along(u)
-            d = (along(min(1.0, u + 0.06)) - along(max(-0.06, u - 0.06))).normalized()
+            d = (along(min(1.0, u + 0.06)) - along(max(min(-0.06, ARM[0][0]), u - 0.06))).normalized()
             across = Vector((d.y, -d.x, 0.0)).normalized()
             dep = d.cross(across).normalized()
             if dep.z < 0:
                 dep = -dep
+            if FORM:
+                ox, oz = arm_off(u)
+                c = c + (across if across.x * sx > 0 else -across) * ox + dep * oz   # (out from the body, either side)
             return c, d, across, dep
 
         def arm_r(u):
@@ -576,7 +667,7 @@ for s_, sx in (('L', 1), ('R', -1)):
                 if a_[0] <= u <= c_[0]:
                     t = (u - a_[0]) / (c_[0] - a_[0])
                     return a_[1] + (c_[1] - a_[1]) * t, a_[2] + (c_[2] - a_[2]) * t
-            return ARM[-1][1:]
+            return ARM[-1][1:3]
 
         def band(part, u0, u1, out, n=ARM_N, au=None):
             rr = []
@@ -595,7 +686,8 @@ for s_, sx in (('L', 1), ('R', -1)):
             cen = sum((Vector(part.v[i]) for i in f0), Vector()) / len(f0)
             if (b_ - a_).cross(c_ - a_).dot(cen - arm_frame((u0 + u1) / 2)[0]) < 0:
                 part.f = part.f[:k0] + [list(reversed(f)) for f in part.f[k0:]]
-        band(b.P('armtrim' + s_, COL['trim'], w_arm, 50), ARMHOLE[0], ARMHOLE[1], 0.0032, au=AU)
+        if not SHOULDER_NEW:
+            band(b.P('armtrim' + s_, COL['trim'], w_arm, 50), ARMHOLE[0], ARMHOLE[1], 0.0032, au=AU)
         band(b.P('bangle' + s_, COL['trim'], 'el' + s_, 60), BANGLE[0], BANGLE[1], BANGLE[2], 12)
     el, hd = tuple(E0), tuple(H0)
     build_hand(b.P('hand' + s_, COL['skin'], 'hand' + s_, 55), Vector(el), Vector(hd), sx, b.P('fingers' + s_, COL['skinLine'], 'hand' + s_, 30))

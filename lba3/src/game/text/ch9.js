@@ -18,7 +18,7 @@ Object.assign(STR.en, {
   c9_bal_after: "Two stamps, then the clerk. The council house is the big one with the arcade, across the street.",
 
   c9_nara_1: "A petition to the council? About the bore? Twinsen, half my customers have family on the drill crews. They're frightened.",
-  c9_tw_n1: "Then they should be frightened of the right thing. If the bore goes through, the shell cracks. The cold comes in, here first.",
+  c9_tw_n1: "Then they should be frightened of the right thing. If the bore goes through, the shell cracks, and what sleeps under it wakes too soon. Nobody knows what that does to two worlds' heat. Not even Vesk.",
   c9_nara_2: "...I heard your Zoé on the radio. She didn't sound like someone telling stories. Give it here.",
   c9_nara_stamp: "Nara breathes on her stamp and presses it down hard. A little coral flower.",
   c9_nara_after: "Go on. And don't let Councillor Brum talk over you. He talks over everyone.",
@@ -30,6 +30,9 @@ Object.assign(STR.en, {
   c9_oku_stamp: 'Oku takes a heavy old stamp from his sash. A mill wheel, worn almost smooth.',
   c9_oku_after: "The council chamber has good benches and bad acoustics. Speak up.",
   c9_mill_free: 'The brake springs loose, and the sails creak back into motion.',
+  // (MILLS: the brakes came off in chapter 3, the day they went on: council.js early)
+  c9_oku_r1: 'You braked my mills and let them go the same day. The east terraces carried buckets for one afternoon, not a week.',
+  c9_oku_r2: 'One afternoon I can forgive. Give me that petition.',
 
   c9_clerk_none: "Petitions only. Form 12-B, two stamps from citizens of standing. Next!",
   c9_clerk_half: "One stamp. Form 12-B requires two. I don't make the rules. I file them.",
@@ -64,8 +67,8 @@ Object.assign(STR.en, {
   c9_councilC_2: "Not assessed is not the same as broken. Plans are not proof that the shell will crack.",
   c9_dallan_1: "Then here's the rest of it. Councillors.",
   c9_tw_d1: 'Dallan?',
-  c9_dallan_2: "Hesk flew me up from Kesh, and nobody checks a foreman on a project ship. Professor Ilka sent these: her rubbings of the dig's seals and her readings from the vents. The carvings map the shell, and the bore line runs through its thinnest part.",
-  c9_dallan_3: "I was project security. I stood guard over that dig for a year. I'm telling you: the professor is right, and the project knew enough to stop asking.",
+  c9_dallan_2: "Hesk flew me to Citadel, and nobody checks a foreman on a project ship. Professor Ilka sent these: her rubbings of the dig's seals and her readings from the vents. The carvings map the shell, and the bore line runs through its thinnest part.",
+  c9_dallan_3: "I ran that dig for a year, and its guards answered to me. I'm telling you: the professor is right, and the project knew enough to stop asking.",
   c9_councilC_3: "...My cousin works on the bore. If it cracks the shell, he's at the bottom of it.",
   c9_chair_3: "The council has heard enough. By vote of this council: the Joint Project is ordered to reverse the bore.",
   c9_chair_4: "But understand, Twinsen: an order is paper. Vesk is already below Citadel, and only the console at the bottom can switch the bore. The shaft's blast doors answer to a code sent from all the project's stations at once.",
@@ -83,6 +86,8 @@ Object.assign(STR.en, {
   c9_sub_key: "The BORE cabinet's key (the archivist's desk)",
   c9_obj_back: 'Bring the plans to the council',
   c9_j_petition: "Baldino said nothing happens on Zeelich without a form. He gave me a blank petition: it needs two citizens' stamps, then the clerk.",
+  c9_j_oku: 'Oku would not stamp while his mills stood braked: the east terraces had gone a week without water. I knocked the brakes loose, and he stamped.',
+  c9_j_oku_r: 'Oku remembered that I let his mills go the day I braked them, and stamped the petition.',
   c9_j_heard: "I told the council the bore will crack the shell. Afraid of losing the project's heat, they would not act on a story and asked for proof the project wrote down.",
   c9_j_plans: "In the project archive I found the bore's master plans: it goes straight through the shell, and the margin reads \"Integrity: not assessed.\"",
   c9_j_vote: "After Dallan brought Ilka's rubbings and readings, the council ordered the bore reversed. Only the console at the bottom can switch it, and the shaft's doors open only on a code from every project station at once.",

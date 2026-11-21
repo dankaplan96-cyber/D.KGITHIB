@@ -930,7 +930,9 @@ export function playOpening(story) {
   say(72.3, 'zoe', 'op_zoe_5', 2.55, zo);
 
   // where and when: two captions over the island
-  const caps = [{ t: 1.6, d: 7.0, text: t('op_cap_place'), sub: t('op_cap_time') }];
+  // (P83 / S-7: then who, for a newcomer: Sendell, FunFrock and his clones. The first caption was up 7.0 s for 70
+  //  characters; 5.0 leaves the second about 17 characters a second, ending 0.8 s before the resident's first line)
+  const caps = [{ t: 1.6, d: 5.0, text: t('op_cap_place'), sub: t('op_cap_time') }, { t: 7.0, d: 6.8, text: t('op_cap_lore'), sub: t('op_cap_lore_sub') }];
 
   // ---------------------------------------------------------------- prepare / finish
   let stationWas = false;

@@ -92,3 +92,23 @@ mistake; it was removed); the before run's measurements above describe it.
 - opening-tutorial, chapter1, shops and controls to re-run on a machine with memory to spare.
 - "החזקה לדילוג" (the story scenes' Hold to skip) for the clarity editor.
 - Not read by a person in a played session.
+
+## HE-FONT (P68, 18.11): one font, and the minimap back in its corner
+
+The user, 18.11: "in Hebrew make one uniform font; the minimap does move to the left — make sure that apart from the
+language itself nothing changes, only the language itself RTL".
+
+- **Font**: the bundled Rubik had Latin letters only, so every Hebrew letter fell back to the system's font (Segoe UI /
+  Arial…) beside Rubik's Latin, key caps and numbers. Rubik's own Hebrew is bundled now (`assets/fonts/rubik-hebrew.woff2`,
+  the variable font: one file for every weight; OFL like the rest; from @fontsource-variable/rubik), declared in
+  `assets/fonts/rubik.css` under the same family name with the Hebrew unicode-range: HTML text and the maps' canvases
+  (already `Rubik, …`) take it with no other change. The twelve-years-late card (story/yearslate.js, a handwriting font with
+  no Hebrew) falls back to Rubik for Hebrew letters, its stamps are Rubik. World signs stay English art (HE-TEXT).
+  Files: 508 of 512.
+- **Minimap**: `#minimap` was placed by `inset-inline-end`, and Hebrew gives the minimap itself `direction: rtl` (for its
+  painted words): a logical inset follows the element's own direction, so it turned into `left: 16px`. It is placed by
+  `right: 16px` now. Checked in the browser: Hebrew left auto / right 16px, as English (before the fix: left 16px).
+  The other two elements with their own `direction: rtl` (the holomap's canvas, a flex item; the story subtitle, centred
+  by left 50%) do not move.
+- Automated runtime only (Chromium): the Hebrew font file fetched and loaded (`document.fonts`), the minimap's computed
+  place. `tests/hebrew.mjs` not rerun (the user: keep tests minimal).

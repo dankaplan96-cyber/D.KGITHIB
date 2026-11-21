@@ -242,6 +242,8 @@ def w_cape(p):
     # LBA2's weights (the original's cape sides follow the arms): the shape below is drawn with them at SPREAD
     x, y, z = p
     arm = smooth(0.095, 0.165, abs(x)) * (1 - smooth(0.70, 0.745, y))
+    if FORM:   # (CHAR-FORM: the same weights over a wider band round the arm, so a swing curves the cloth, no hard fold)
+        arm = smooth(0.082, 0.178, abs(x)) * (1 - smooth(0.695, 0.75, y))
     el = arm * (1 - smooth(0.49, 0.6, y))
     s = side(x)
     return {'torso': 1 - arm, 'sh' + s: arm - el, 'el' + s: el}
@@ -336,6 +338,19 @@ def cut_sleeves(part, n, rings):
 cape = Part('cape', 'tunic', w_cape, angle=55, reweight=w_cape_game if CAPE_046 else None)
 hem = lambda t: 0.448 - 0.04 * abs(math.sin(t)) ** 1.6   # the hem rises over the belt in front and behind
 N = 24
+# CHAR-FORM (REPAIR-PASS-18-11 phase 3; the user 18.11, from play: "characters still look like connected tubes instead of
+# designed bodies"). Form, not a new design: the same cape, robe, colours, face and hair, built as cloth over a body.
+#   cape   the shoulders read: the cloth runs nearly level from the collar to a rounded shoulder point (±0.177 H at 0.70,
+#          was a straight cone through ±0.163) and then hangs; four more rings through the shoulder and the elbow's
+#          blend, so a swung or bent arm curves the cape's side instead of folding it into a flat sheet (the run)
+#   robe   a pelvis: the robe swells over the hips and the seat just under the belt and then falls in its A-line; eleven
+#          rings instead of five, so a stride bends each half round the hip and the knee instead of shearing one band
+#   shins  a knee, a calf behind and a slim ankle into the slipper (they show when the robe parts), not a straight tube
+# The front centre line of the cape (where the medallion and the cord are laid) is the old one. TW_FORM=0 builds the
+# shipped TWINSEN-ORIG byte for byte; every older flag (TW_FIGURE, TW_CAPE_*, TW_LOOK_*, TW_LEGS_OLD, TW_CUFF_OLD,
+# TW_BALL_HAND) builds its own model without CHAR-FORM.
+FORM = os.environ.get('TW_FORM', '1') != '0' and not FIGURE and not any(os.environ.get(k) for k in (
+    'TW_CAPE_046', 'TW_CAPE_CUT', 'TW_LOOK_38', 'TW_LOOK_OLD', 'TW_LEGS_OLD', 'TW_CUFF_OLD', 'TW_BALL_HAND'))
 # NECK-TW: the cape's top. It was flat (0.765 → 0.772 H while narrowing from ±0.052 to ±0.03) and, being ring()s,
 # notched at the back, so the neck stuck out of it like a cut pipe. Now the shoulders slope up into a soft rolled
 # collar round the neck, as the original's cape rises onto its neck (measured: ±0.138 at 0.744, ±0.107 at 0.768,
@@ -349,17 +364,43 @@ CAPE_TOP = [
 ]
 # the cloth has thickness: an inner lip turns up under the cape's edge (darker, in its own shadow)
 lip = Part('capeLip', 'inner', w_cape, angle=70, reweight=w_cape_game if CAPE_046 else None)
-loft(lip, [ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62)])
+
+
+def cape_folds(pts, amp):
+    # (CHAR-FORM: soft folds hanging from the shoulders, deeper toward the hem: a ridge and a hollow in each quarter,
+    # mirrored left and right, none on the front and back centre lines (the medallion, the cord) or over the arms)
+    out = []
+    for k, (x, y, z) in enumerate(pts):
+        t = 2 * math.pi * k / len(pts)
+        f = 1 + amp * math.sin(2 * t) ** 2 * math.cos(6 * t)
+        out.append((x * f, y, z * f))
+    return out
+
+
+CAPE_FOLD = lambda y: 0.03 * smooth(0.64, 0.45, y) if FORM else 0.0
+loft(lip, [cape_folds(r_, CAPE_FOLD(0.43)) for r_ in (ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62))])
 if CAPE_CUT:
     cut_sleeves(lip, N, 2)
 PARTS.append(lip)
-loft(cape, [
+CAPE_BODY = [
     ring(hem, 0.212, 0.128, -0.077, N, 0.62),
     ring(0.54, 0.214, 0.132, -0.077, N, 0.62),
     ring(0.62, 0.197, 0.138, -0.066, N, 0.66),
     ring(0.70, 0.163, 0.118, -0.046, N, 0.72),
     ring(0.74, 0.122, 0.096, -0.028, N, 0.8),
-] + CAPE_TOP)
+]
+if FORM:   # (CHAR-FORM: y, half-width, front, back, roundness; the front and back as the old cone's at each height)
+    CAPE_BODY = [cape_folds(ring(hem, 0.212, 0.128, -0.077, N, 0.62), CAPE_FOLD(0.43))] + [cape_folds(ring(y_, hw_, zf_, zb_, N, p_), CAPE_FOLD(y_)) for y_, hw_, zf_, zb_, p_ in (
+        (0.495, 0.2135, 0.130, -0.077, 0.62),
+        (0.54, 0.214, 0.132, -0.077, 0.62),
+        (0.58, 0.2095, 0.135, -0.0715, 0.64),
+        (0.62, 0.2035, 0.138, -0.066, 0.66),
+        (0.66, 0.1955, 0.128, -0.056, 0.68),
+        (0.70, 0.1815, 0.118, -0.046, 0.70),   # the shoulder point
+        (0.722, 0.1625, 0.107, -0.0375, 0.74),  # rounding over the top of the shoulder
+        (0.74, 0.134, 0.096, -0.028, 0.8),     # the shoulder's top, nearly level into the collar
+    )]
+loft(cape, CAPE_BODY + CAPE_TOP)
 if CAPE_CUT:
     cut_sleeves(cape, N, CUT_RINGS)
 PARTS.append(cape)
@@ -414,16 +455,41 @@ def folds(pts, amp):
     return out
 
 
-loft(robe, [
+ROBE = [
     folds(ring(0.04, 0.158, 0.133, -0.13, N, 0.7), 0.035),
     folds(ring(0.12, 0.161, 0.139, -0.12, N, 0.7), 0.028),
     folds(ring(0.24, 0.15, 0.14, -0.106, N, 0.7), 0.018),
     folds(ring(0.35, 0.124, 0.136, -0.088, N, 0.72), 0.008),
     ring(0.415, 0.104, 0.125, -0.076, N, 0.75),
-])
+]
+if FORM:   # (CHAR-FORM: y, half-width, front, back, roundness, fold depth; the hem ring is the old one, for the lip)
+    ROBE = [folds(ring(y_, hw_, zf_, zb_, N, p_), f_) if f_ else ring(y_, hw_, zf_, zb_, N, p_) for y_, hw_, zf_, zb_, p_, f_ in (
+        (0.04, 0.158, 0.133, -0.13, 0.7, 0.035),
+        (0.08, 0.1605, 0.136, -0.125, 0.7, 0.031),
+        (0.12, 0.161, 0.139, -0.12, 0.7, 0.028),
+        (0.165, 0.158, 0.140, -0.115, 0.7, 0.024),
+        (0.21, 0.153, 0.140, -0.110, 0.7, 0.020),
+        (0.25, 0.147, 0.140, -0.105, 0.7, 0.017),
+        (0.29, 0.141, 0.139, -0.100, 0.71, 0.013),
+        (0.33, 0.135, 0.138, -0.095, 0.72, 0.009),   # over the hips and the seat
+        (0.36, 0.129, 0.135, -0.091, 0.72, 0.006),
+        (0.39, 0.118, 0.130, -0.083, 0.74, 0.0),
+        (0.415, 0.104, 0.125, -0.076, 0.75, 0.0),     # into the belt
+    )]
+if FORM:
+    # (the cloth falls in between the legs a little from the thigh down, in front and behind, so two legs read under it)
+    def leg_valley(r_):
+        out = []
+        for x, y, z in r_:
+            d = (0.012 if z > 0 else 0.007) * smooth(0.33, 0.17, y) * math.exp(-(x / 0.035) ** 2)
+            out.append((x, y, z - d if z > 0 else z + d))
+        return out
+    ROBE = [leg_valley(r_) for r_ in ROBE]
+loft(robe, ROBE)
 PARTS.append(robe)
 rlip = Part('robeLip', 'inner', w_robe, angle=70)
-loft(rlip, [folds(ring(0.07, 0.146, 0.12, -0.118, N, 0.7), 0.035), folds(ring(0.04, 0.156, 0.131, -0.128, N, 0.7), 0.035)])
+RLIP = [folds(ring(0.07, 0.146, 0.12, -0.118, N, 0.7), 0.035), folds(ring(0.04, 0.156, 0.131, -0.128, N, 0.7), 0.035)]
+loft(rlip, [leg_valley(r_) for r_ in RLIP] if FORM else RLIP)
 PARTS.append(rlip)
 # the belt's knot at the front left, two ends hanging
 knot = Part('knot', 'belt', lambda p: {'torso': 1.0}, angle=50)
@@ -521,8 +587,18 @@ for sx in (1, -1):
         # (CONNECT-1 for the hero, the user 11.11: "every limb should be connected": under the robe there were no legs, so a
         # stride or a run showed the slipper on its own inside the open robe. A bare shin from above the knee down into the
         # slipper, on the knee's bone, hidden by the robe when he stands)
-        shin = Part('shin' + s, 'skin', lambda p, s=s: {'knee' + s: 1.0}, angle=60)
-        tube(shin, (cx, 0.27, 0.0), (cx, 0.03, 0.004), 0.024, 0.019, 10, cap0=True)
+        shin = Part('shin' + s, 'skin', lambda p, s=s: {'knee' + s: 1.0}, angle=60 if not FORM else 75)
+        if FORM:
+            # CHAR-FORM: the lower leg in sections (y, half-width, front, back from the bone's line; H): the knee's cap in
+            # front, the calf behind, a slim ankle over the slipper, the foot of it inside the slipper
+            SHIN = [(0.27, 0.0265, 0.025, -0.026), (0.245, 0.0265, 0.030, -0.025), (0.215, 0.025, 0.026, -0.028),
+                    (0.18, 0.0245, 0.022, -0.033), (0.145, 0.022, 0.020, -0.031), (0.105, 0.019, 0.018, -0.024),
+                    (0.07, 0.0165, 0.0175, -0.0185), (0.045, 0.018, 0.021, -0.020), (0.03, 0.019, 0.022, -0.019)]
+            loft_along(shin, [[(cx + hw_ * math.sin(2 * math.pi * i / 12), y_,
+                                0.002 + (zf_ if math.cos(2 * math.pi * i / 12) >= 0 else -zb_) * math.cos(2 * math.pi * i / 12))
+                               for i in range(12)] for y_, hw_, zf_, zb_ in reversed(SHIN)])   # (bottom up: faces outward)
+        else:
+            tube(shin, (cx, 0.27, 0.0), (cx, 0.03, 0.004), 0.024, 0.019, 10, cap0=True)
         PARTS.append(shin)
     hb = (lambda b: (lambda p: {b: 1.0}))('hand' + s)
     # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it

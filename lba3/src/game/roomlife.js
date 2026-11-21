@@ -346,17 +346,17 @@ export const ROOMS = {
       { id: 'pask', char: 'oku_b', tint: '#f6f0e6', color: '#d8c0a0', speed: 0.85, start: 0, when: 'always', stops: [
         D('pask_wait', ZT.porter.x, ZT.porter.z, ZT.porter.a, 'stand', [10, 16], { spot: 'porter' }),   // (at the arrivals stair's foot)
         D('pask_case', ZT.porter.x + 1.4, ZT.AZ1 + 0.6, Math.PI, 'reach', [4, 6], { carry: 'case' }),   // (a case off the arrivals deck's lip)
-        L('pask_gate', ZT.LX + 2.6, ZT.GATEZ + 1.4, ZT.LX, ZT.GATEZ, 'put', [5, 7], { carry: null }),   // (set by the gate for the next ship)
+        L('pask_gate', ZT.GATEX + 0.95, ZT.BZ + 2.0, ZT.GATEX, ZT.BZ, 'put', [5, 7], { carry: null }),   // (set by the gate for the next ship; P83: the gate in the back wall)
       ] },
       // WC-4, chapter 9: the council's guards. One by the gate, where every departure is checked (on post, a step toward
       // the gate now and then); one between the door and the hall, watching who comes in. Clear of the gate's and the
       // door's ways, the counter's and the board's spots and Pask's round
       { id: 'zt_guard', char: 'keeper_b', tint: '#dde2ff', color: '#98a0e8', speed: 0.6, start: 0, when: ['council'], stops: [
         D('ztg_post', ZT.guard.x, ZT.guard.z, ZT.guard.a, 'stand', [30, 45], { spot: 'guard' }),
-        D('ztg_look', ZT.LX + 1.7, ZT.GATEZ + 2.6, Math.PI / 2, 'stand', [8, 12], { gest: ['nod'] }),   // (a look down the hall: clear of Pask's cases by the gate)
+        D('ztg_look', ZT.LX + 0.9, ZT.BZ + 4.7, Math.PI / 2, 'stand', [8, 12], { gest: ['nod'] }),   // (a look down the hall: clear of Pask's cases and the gate's way)
       ] },
       { id: 'zt_guard2', char: 'keeper_b', tint: '#e6e0ff', color: '#a8a0e8', speed: 0.65, start: 1, when: ['council'], stops: [
-        L('ztg2_door', ZT.LX + 2.3, ZT.DOORZ - 1.5, ZT.LX, ZT.DOORZ, 'stand', [20, 30]),
+        L('ztg2_door', ZT.DOORX - 1.5, ZT.D / 2 - 1.7, ZT.DOORX, ZT.D / 2, 'stand', [20, 30]),   // (P83: the door in the near wall)
         L('ztg2_hall', 0.2, 0.6, ZT.CX, ZT.CZ, 'stand', [12, 18], { gest: ['sigh'] }),
       ] },
     ],
@@ -438,14 +438,15 @@ const CITADEL_PORT = [
   ] },
 ];
 // Zeelich's: in the frame of travel.js ZPORT (the island's origin; the deck x −14…6, z 33…51 at 6 m; the bridge comes in
-// at x −4 from z 26; the landing (−4, 36.8); the pad (−4, 44), its ring 5.8 m; the board at (−0.6, 35.2), read from its
-// south-east). Esmers do not sit (walkers.js canSit): they stand.
+// at x −4 from z 26 to the terminal's door; P83: the terminal (zterminal.js ZPORT_TERMINAL) stands across the bridge's
+// end, x −10…2, z 31…36, its gate at (−4, 36); the landing (−4, 37.4); the pad (−4, 44), its ring 5.8 m). Esmers do not
+// sit (walkers.js canSit): they stand.
 const ZEELICH_PORT = [
   // (SPACEPORT-1: Velo, the port agent, went inside to the terminal's counter: zterminal above)
   { id: 'ennu', char: 'oku_b', tint: '#eef8ff', color: '#a8d8f0', speed: 0.75, start: 0, stops: [
     D('ennu_wait', -11.5, 40.0, Math.PI / 2, 'stand', [20, 30], { carry: 'case', gest: ['sigh'] }),
     L('ennu_ship', -11.5, 47.0, -4, 44, 'stand', [14, 20]),
-    L('ennu_board', -8.0, 34.5, -0.6, 35.2, 'stand', [8, 12]),
+    L('ennu_board', -11.6, 36.6, -4, 36, 'stand', [8, 12]),   // (P83: a look at the gate; the board went landside)
   ] },
   { id: 'oshra', char: 'xil', tint: '#fff0f6', color: '#e0a8c8', speed: 0.85, start: 1, stops: [
     D('oshra_rail', -12.5, 44.0, Math.PI / 2, 'stand', [20, 30]),
@@ -500,8 +501,9 @@ export function placeDefs(game) {
   for (const p of CITADEL_PORT) add(p, 'port_citadel', sp ? p.stops.map((s) => ({ ...s, seat: s.seat ? { ...s.seat } : undefined })) : null, { outdoor: true });
   const Z = G?.built('zeelich'), zs = Z?.spaceport;
   if (zs) {
-    const d = zs.deck;
-    register(game, 'port_zeelich', [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1, y: d.y }], []);
+    // (P83: the deck only, airside, as Citadel's: the terminal's walls keep the planner off its end; its gate a doorway)
+    const d = zs.deck, gt = zs.gate;
+    register(game, 'port_zeelich', [{ x0: d.x0, x1: d.x1, z0: d.z0, z1: d.z1, y: d.y }], gt ? [{ x: gt.x, z: gt.z + 0.35, r: 0.9 }] : []);
   }
   const zo = Z?.group?.position;
   for (const p of ZEELICH_PORT) add(p, 'port_zeelich', zs && zo ? p.stops.map((s) => toWorld(s, zo.x, zo.z)) : null, { outdoor: true });

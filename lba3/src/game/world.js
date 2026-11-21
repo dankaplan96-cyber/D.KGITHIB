@@ -11,7 +11,7 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, bugFootDist, LAWN_FENCE, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG, OLD_PINK_DZ } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
-import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, HARBOUR_PLAT, plateauStairAt } from './island.js';
+import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, HARBOUR_PLAT, plateauStairAt, plateauStairGround, PLATEAU_STAIR_BOX } from './island.js';
 import { buildDinoFly } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
@@ -552,7 +552,7 @@ function dropRocks(mesh, inside, [x0, z0, x1, z1]) {
     par.set(find(ks[1]), find(ks[0])); par.set(find(ks[2]), find(ks[0]));
   }
   const gone = new Set();
-  for (const t of near) for (let v = 0; v < 3; v++) { const i = t * 3 + v; if (inside(A[i * 3], A[i * 3 + 2])) gone.add(find(key(i))); }
+  for (const t of near) for (let v = 0; v < 3; v++) { const i = t * 3 + v; if (inside(A[i * 3], A[i * 3 + 2], A[i * 3 + 1])) gone.add(find(key(i))); }   // (x, z, y)
   if (!gone.size) return 0;
   const drop = new Uint8Array(nT);
   for (const t of near) if (gone.has(find(key(t * 3)))) drop[t] = 1;
@@ -680,8 +680,10 @@ function scatterGround(T) {
       if (d !== 0) pre.set(k, T.heights[k] + d);
     }
   }
+  // (CAVE-STAIR: and the ground under the plateau's stair as it stood before it was cut to the flight's line)
+  for (const [k, v] of STAIR_PRE) if (!pre.has(k)) pre.set(k, v);
   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
-  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX, PLATEAU_STAIR_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const heightAt = (x, z) => {
     if (!near(x, z, 2)) return T.heightAt(x, z);
     const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
@@ -698,6 +700,7 @@ function scatterGround(T) {
 }
 
 // ---------- the terrain grid, checked for soft-locks ----------
+let STAIR_PRE = new Map();   // (CAVE-STAIR: the grid's points under the plateau's stair before the cut: index → height)
 const TERRAIN_SIZE = 260, TERRAIN_SEGS = 280;
 export function buildHeightGrid(size, segs) {
   const n = segs + 1, half = size / 2, step = size / segs, X0 = ISLAND.cx - half, Z0 = ISLAND.cz - half;
@@ -711,6 +714,17 @@ export function buildHeightGrid(size, segs) {
     if (w > 0 && h[a] < f.h) h[a] += (f.h - h[a]) * w;
   }
   const trapped = fixTraps(h, n, X0, Z0, step);
+  // CAVE-STAIR: the ground under the plateau's stair cut to the flight's line (island.js plateauStairGround), after the
+  // trap filler: the island's own ground there is the sea cliff (6–9 m), and what lay over the treads was the filler's
+  // fill stepping down from the bank (0.79 m a point); cut before it, the filler only filled it again. The points as
+  // they stood are kept for scatterGround (no random draw moves)
+  STAIR_PRE = new Map();
+  {
+    const [x0, z0, x1, z1] = PLATEAU_STAIR_BOX;
+    for (let j = 0; j < n; j++) { const z = Z0 + j * step; if (z < z0 || z > z1) continue;
+      for (let i = 0; i < n; i++) { const x = X0 + i * step; if (x < x0 || x > x1) continue;
+        const a = j * n + i, v = plateauStairGround(x, z, h[a]); if (v !== h[a]) { STAIR_PRE.set(a, h[a]); h[a] = v; } } }
+  }
   // blurred copy for the concavity tint
   const blur = new Float32Array(n * n);
   const R = 2;
@@ -809,7 +823,7 @@ export function* buildWorldSteps(parentScene) {
   });
   climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
   dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
-  dropRocks(W_cliffs.mesh, (x, z) => plateauStairAt(x, z), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js)
+  dropRocks(W_cliffs.mesh, (x, z, y) => plateauStairAt(x, z, 0, y), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js; CAVE-STAIR: and a rock standing up through its landing)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,

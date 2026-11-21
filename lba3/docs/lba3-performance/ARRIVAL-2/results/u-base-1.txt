@@ -1,0 +1,33 @@
+waited 85s for other browsers; load 1.01 2.82 3.91
+== zeelich
+steps: shadow batches 15 [large piece 4.4] | shadow batches 12 [large piece 8.7] | shadow batches 13 [large piece 7.9] | shadow batches 15 [cell part 6.6] | shadow batches 14 [cell 5.2] | shadow batches 12 [cell 2] | shadow batches 12 [cell 2.3] | shadow batches 12 [cell 4.3] | shadow batches 3 [cell 1.6] | texture layers 33406 | texture layers 18 | texture layers 13 | texture layers 12 | texture layers 14 | texture layers 11 | draw batches 12 [fixed draws 2.9] | draw batches 12 [parts 4.1] | draw batches 21 [place 10.5] | draw batches 12 [place 3.7] | draw batches 18 [array 15.1] | draw batches 23 [array 22.7] | draw batches 14 [cell part 4.4] | draw batches 13 [cell 4.2] | draw batches 12 [cell 2.3] | draw batches 16 [cell part 3.8] | draw batches 12 [cell part 5.1] | draw batches 12 [cell 2.2] | draw batches 12 [cell 4.5] | draw batches 17 [cell 5.9] | draw batches 2 [cell 0.4] | geometry 0 | geometry 31 | geometry 6 | geometry 10 | geometry 13 | geometry 4 | draw batches settle 13 [cell part 5] | draw batches settle 13 [cell part 5.6] | draw batches settle 12 [cell part 4.8] | draw batches settle 12 [cell 2] | draw batches settle 5 [cell 0.8] | batch meshes 0 | textures 10 | shadow programs 0 | shader warm-up 17 [compile 7.6] | shader warm-up 17 +1p [compile 7.7] | shader warm-up 14 [compile 4.3] | shader warm-up 13 [compile 6.2] | shader warm-up 0 [ 0]
+place parts > 2 ms: 
+dbg {"parts":634,"joined":555,"fresh":53,"byFixed":19,"byPlaced":7,"big":1,"planeMs":18.899999991059303,"planeTris":47239,"fixedMs":2.7999999970197678,"partsMs":26.5,"placeMs":25}
+array inits: [{"name":"world.textureArray 512x512|4 ×12","ms":6.3,"at":83272},{"name":"world.textureArray 256x256|4 ×39","ms":17.8,"at":83284},{"name":"world.textureArray 128x128|4 ×35","ms":0.5,"at":83304},{"name":"world.textureArray 64x64|4 ×4","ms":0.1,"at":83305}]
+units >= MINU:
+  {"area":"zeelich","tag":"draw build","from":"array","to":"array","ms":22.7,"cell":null,"arrays":"512x512|4:12 256x256|4:39 128x16|1:3 128x128|4:35 64x64|4:4"}
+  {"area":"zeelich","tag":"draw build","from":"assign","to":"array","ms":15.1,"cell":null,"arrays":"512x512|4:12 256x256|4:39 128x16|1:3 128x128|4:35 64x64|4:4"}
+  {"area":"zeelich","tag":"draw build","from":"place","to":"place","ms":10.5,"cell":null}
+  {"area":"zeelich","tag":"shadow build","from":"large piece","to":"large piece","ms":8.6,"cell":null}
+  {"area":"zeelich","tag":"shadow build","from":"large piece","to":"large piece","ms":7.9,"cell":null}
+  {"area":"zeelich","tag":"shadow build","from":"cell","to":"cell part","ms":6.6,"cell":{"tag":"shadow","key":"147,-1|0|null","n":36}}
+frames > 40 ms: #20 33435B texture layers 33406
+   #70 105B 
+black frames 62, longest black 33435, longest in view 21
+== tavern
+steps: shadow batches 19 [large piece 15.1] | shadow batches 12 [large piece 2.5] | shadow batches 13 [cell 6.4] | shadow batches 12 [cell part 4.6] | shadow batches 0 [cell 0.2] | texture layers 30519 | texture layers 29 | texture layers 37 | texture layers 36 | texture layers 0 | draw batches 17 [array 11.5] | draw batches 29 [array 28.7] | draw batches 12 [cell part 3.6] | draw batches 13 [cell part 7.2] | draw batches 19 [cell part 15.6] | draw batches 17 [cell part 8.6] | draw batches 15 [cell part 5.3] | draw batches 12 [cell part 3.3] | draw batches 6 [cell 2.5] | geometry 0 | geometry 18 | geometry 5 | geometry 4 | geometry 6 | geometry 4 | draw batches settle 0 [check 0.2] | batch meshes 0 | textures 2 | shadow programs 24 | shader warm-up 13 [compile 3.6] | shader warm-up 14 +1p [program 4.6] | shader warm-up 17 [compile 9] | shader warm-up 6 [compile 5.2]
+place parts > 2 ms: 
+dbg {"parts":33,"joined":21,"fresh":7,"byFixed":4,"byPlaced":1,"big":0,"planeMs":0.6000000014901161,"planeTris":7932,"fixedMs":0.20000000298023224,"partsMs":3,"placeMs":1.2999999970197678}
+array inits: [{"name":"world.textureArray 512x512|4 ×13","ms":2.2,"at":114826},{"name":"world.textureArray 256x256|4 ×41","ms":23.4,"at":114834},{"name":"world.textureArray 128x128|4 ×36","ms":0.3,"at":114859}]
+units >= MINU:
+  {"area":"tavern","tag":"draw build","from":"array","to":"array","ms":28.7,"cell":null,"arrays":"512x512|4:13 256x256|4:41 128x16|1:3 128x128|4:36 64x64|4:4"}
+  {"area":"tavern","tag":"draw build","from":"cell part","to":"cell part","ms":15.5,"cell":{"tag":"draw","key":"19431f45-73f3-4adf-bb70-044bcd62bc37|fold:arr|true|0|false","n":3}}
+  {"area":"tavern","tag":"shadow build","from":"large piece","to":"large piece","ms":15,"cell":null}
+  {"area":"tavern","tag":"draw build","from":"assign","to":"array","ms":11.5,"cell":null,"arrays":"512x512|4:13 256x256|4:41 128x16|1:3 128x128|4:36 64x64|4:4"}
+  {"area":"tavern","tag":"draw build","from":"cell part","to":"cell part","ms":8.6,"cell":{"tag":"draw","key":"19431f45-73f3-4adf-bb70-044bcd62bc37|fold:arr|true|0|false","n":3}}
+  {"area":"tavern","tag":"draw build","from":"cell part","to":"cell part","ms":7.2,"cell":{"tag":"draw","key":"b211b61c-1b77-4f32-8af6-d8fdb638d940|fold:arr|true|0|false","n":8}}
+  {"area":"tavern","tag":"shadow build","from":"cell part","to":"cell","ms":6.3,"cell":{"tag":"shadow","key":"412,0|0|null","n":32,"mesh":106941}}
+  {"area":"tavern","tag":"draw build","from":"cell part","to":"cell part","ms":6,"cell":{"tag":"draw","key":"19431f45-73f3-4adf-bb70-044bcd62bc37|fold:arr|true|0|false","n":3}}
+frames > 40 ms: #17 30520B texture layers 30519
+black frames 52, longest black 30520, longest in view 9
+another browser ran beside it for 64s; load 3.84 3.26 3.93

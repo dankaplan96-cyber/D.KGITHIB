@@ -204,3 +204,285 @@ verdicts. `perfbudget`: PASS (was FAIL on base).
 2. High arrival (was 49.4 fps, draw calls p95 625; Zeelich should now be ≈ 150 calls lighter) and High street.
 3. Startup (plugged in, cold): build (was 13.6 s) and the preparation's parts; whether parallel shader compile is "yes".
 4. First Ctrl (behaviour menu) and a preset change in Settings: no hitch after the change has applied.
+
+## ARRIVAL-2 (P87, 21.11) — the open stalls behind the arrival black
+
+**Automated runtime only (SwiftShader)**: headless Chromium, ANGLE on SwiftShader, 4-core shared container, Medium,
+960×540 (arrival-steps) / 1366×768 (the Citadel probe). No GTX 1050 or UHD 620 number here. Base = `a4e1fb45` (served
+from an export, port 8191), candidate = this branch (port 8195), run one browser of mine at a time; other agents' test
+browsers ran on the machine at times (each result file says for how long: `probes/quiet.sh` waits for them, then logs
+it). Probes and raw results: `ARRIVAL-2/probes/`, `ARRIVAL-2/results/` (summary: `ARRIVAL-2/results/summary.json`).
+
+### Units found (MEASURED; the prepLog's `u` and `probes/units.mjs`, every staged unit ≥ 6 ms with the label it began
+after and the one it ended on)
+
+| Arrival | unit (from > to) | what it is | base, quiet | base, loaded |
+|---|---|---|---|---|
+| Zeelich, tavern | `assign>array`, `array>array` | a texture array made: the 10–13 MB copy of its data (`slice`) and its upload (texSubImage3D; the second array's waits for SwiftShader's GPU process still on the first) | 17–35 (one 78) | 34–45 |
+| Zeelich | `place>place` | overlapRuns placing 32 parts | ≤ 11 | **50, 95, 113** (3 frames in a row) |
+| Zeelich, tavern | `cell part>cell part`, `cell part>cell` | a cell's merge (its arrays allocated, a piece's attributes) | 15–28 | 35–54 |
+| Zeelich | `order>fixed draws` | overlapRuns' walk of the area, every draw's box, one unit | 4–13 | 43 |
+| tavern | `fixed draws>parts` | a cut piece's vertices into world space, one unit | 34 | — |
+| Citadel return | first frame drawn | 12 station / pipeline / harbour pieces leave their batches, cells rebuilt in it | 91 ms frame | — |
+
+FULL-TEST's 154 ms Zeelich unit was not logged with its label. The same kinds of unit reached 113 ms (placing) and 62 ms
+(a cell merge) here with another browser on the machine, so 154 is INFERRED to be one of these, enlarged by load. A trace
+(`results/gc-overlap-*.txt`) shows how load enlarges them: with CPU taken by other processes, the V8 GC's main-thread
+parts land inside the units. In one case a 28 ms cell merge held a 25 ms scavenge that was mostly waiting for a safepoint.
+A 43 ms walk held 33 ms of incremental marking. MajorGC finalisation and the external-memory GC prologue (8–10 ms, set
+off by the merges' large typed arrays) were inside 16–26 ms tavern merges.
+
+The Citadel return: the 12 pieces left because of their **texture source's version** (3 → 5; `lookVer` reads it, the
+settle's string check does not). The bump came from `merge.js twinOf`. Arriving in Zeelich, warmLayers → recipe made a
+new twin, and `t0.clone()` (three's `copy()` sets needsUpdate) plus the explicit `map.needsUpdate` each counted as a
+repaint of the shared canvas. three then sent the canvas again: 5.7 MB of uploads in that frame against 0.5 MB.
+
+### Changes
+
+- `src/engine/drawbatch.js` `UNIT` (set by `runFor` for each unit; Infinity outside, so a one-step build is unchanged):
+  the staged build's long loops also end their unit once it has run 4 ms. This covers the pieces, order and assign loops;
+  overlapRuns' fixed draws (now a list, then the same boxes in the same order), parts (also inside a cut piece's
+  vertices and triangles) and placing; and a cell merge (at piece boundaries, between its array allocations, and
+  between the attributes of a piece of ≥ 1 024 vertices, which now gets its own matrices). The same work runs in the same
+  order: test A gives identical staged and one-step batches.
+- `src/engine/texarray.js`: the array texture is made from a `subarray` view of its data, not a copy. layerOf only writes
+  past the texture's layers, and a growth makes a new buffer, so the texels are the same.
+- `src/engine/merge.js` `twinOf`: the clone keeps its source's version. The pixels did not change, and the twin's own
+  version still makes three set it up. The cache key is the same, so the twin uses the same GPU texture.
+- `tests/arrival-steps.mjs`: prints each kind's longest unit and its label (`[label ms]`), and the label of a slice
+  over the limit.
+- No visual change: the same batches (test A), the same programs, and the same texels. No new shipped file
+  (`tools/game-files.mjs`: 509). Nothing in gameplay timing or saves was touched.
+
+### Before / after (Automated runtime only, SwiftShader)
+
+Longest draw-batch unit (ms, label) per arrival, `tests/arrival-steps.mjs` and `probes/units.mjs`:
+
+| Run (conditions) | Zeelich | tavern | verdict |
+|---|---|---|---|
+| base, quiet (`before-1`) | 33 array | 35 (cell part 27) | FAIL: desert warm-up step 157 (a 146 ms compile unit, no program) |
+| base, other browser 90 s beside (`q-base-1`) | 26 array | 36 cell part | PASS |
+| base, load 5–7 from another agent's browser (`ab-base-1`) | **62 cell part** | **48 array, 45 cell** | FAIL ×2 (FULL-TEST's kind) |
+| base, 3 busy loops beside (`units-before-load3`) | **113 place** | 41 cell part | (probe) |
+| cand at 57c3787a, quiet (`after-1`) | **20 array** | **29 array** | **PASS 12/12** |
+| cand, final code, other browser 96 s beside (`q-cand-2`) | **28 array** (slice 37) | **24 array** | **PASS 12/12** |
+| cand at 57c3787a, load 5–7 (`ab-cand-1`) | 31 cell part | 53 cell | FAIL: tavern 53, desert 46 |
+| cand, final code, load 5 → 8 (`ab-cand-2`) | 75 parts | 59 cell part | FAIL ×3 |
+| cand, final code, other browser 256 s beside, load → 8.8 (`q-cand-1`) | 24 array | 107 cell part | FAIL ×2 |
+
+Units probe, all draw-batch units, the same quiet window (`u-base-1` / `u-cand-1`, another browser 64 s beside each):
+
+| | Zeelich: units > 10 ms; longest | tavern: units > 10 ms; longest |
+|---|---|---|
+| base | 3; 22.7 array, 15.1 array, 10.5 place | 3; 28.7 array, 15.5 cell part, 11.5 array |
+| cand | 2; 24.5 array, 20.4 cell end | **1; 19.7 array**, next 7.1 |
+
+Citadel return after Zeelich (`probes/q_look.js` via the ARRIVAL-STEPS runner, Medium, canvases flushed before each visit,
+`c-base-1` / `c-cand-1`):
+
+| | base | cand |
+|---|---|---|
+| pieces leaving their batches on the first frame drawn (still black) | 12 (all "texture source version 3→5") | **0** |
+| that frame: ms / uploads / "submit other" | 91 ms / 94 (5 666 KB) / 58 ms | **48 ms / 65 (536 KB) / 21 ms** |
+| longest black frame | 91 | 48 |
+| longest preparation step | draw batches back 32 | geometry 36 |
+
+The remaining 48 ms is the first frame's own draw and the shadow cache's full build on SwiftShader, not a preparation
+unit.
+
+### Reading
+
+- On a quiet machine, every draw-batch unit of the three arrivals is now ≤ ~8 ms, except the texture-array upload
+  (one GL call, 20–25 ms here, most of it waiting for SwiftShader's GPU process). The tavern's next unit is 7.1 ms.
+  Splitting that upload by layers would cost an extra full mipmap pass per array (three makes mipmaps after every
+  upload), so it was not done.
+- With other browsers or busy processes on this 4-core machine, units of 45–107 ms still occur in **both** base and
+  candidate, inside loops that now yield every 4 ms. That is the process being descheduled or GC pauses, not one long
+  unit of work. `arrival-steps`' 40 ms check is not a reliable verdict under such load. Run it alone.
+- The Citadel return's first-frame rebuild is gone (MEASURED) in two cases. In the benchmark's case (areas built
+  beforehand), 12 pieces left on base and 0 on the candidate. In play's case, Zeelich was built on its first visit
+  (`NOPREP=1`, `results/c-cand-lazy1.txt`): 0 pieces left and the uploads were 536 KB. That run's 1.5 s first frame is
+  "submit main", SwiftShader's canvas raster stall: the flush before Citadel read 0 ms there. **NOT VERIFIED**: the
+  interiors' and other builders' clones (interiors.js `tex()`, architecture.js `texMat`, props-esmer.js), built on a
+  first visit to a room. They can move a shared source's version in the same way, and a return from a newly built room
+  to Citadel was not probed.
+- Hardware: NOT VERIFIED. The user's GTX 1050 "Citadel return 250 ms" in FULL-TEST §4 is PERFORMANCE_REPORT §3's
+  SwiftShader figure (the first drawn frame, 53 → 250 ms there). It was never measured on the GTX 1050.
+
+### Verification (final code, GAME_URL=http://localhost:8195/, one browser of mine at a time)
+
+- `tests/arrival-steps.mjs`: **PASS 12/12** on a quiet machine (`q-cand-2`, the final code; `after-1` at 57c3787a too).
+  Under load from other browsers it FAILs, in base and candidate alike (table above).
+- `tests/travel.mjs` (Citadel ⇄ Zeelich and every route, arriving in play): PASS 27/27.
+- `tests/lazyregions.mjs` (a door into an interior not built yet, in real time; a second visit builds nothing): PASS 13/13.
+- `tests/merge.mjs` (twinOf / mergeStatic): PASS.
+- `tools/game-files.mjs`: 509 files (unchanged).
+- NOT TESTED: a 30-minute session; a probed return to Citadel from a room built on its first visit; any hardware.
+
+## P87b (21.11) — the other builders' texture clones (follow-up to ARRIVAL-2)
+
+**Automated runtime only (SwiftShader)**: headless Chromium, ANGLE on SwiftShader, 4-core shared container, Medium,
+1366×768, areas left unbuilt as in play (`NOPREP=1`). Base = `8e0706bd` (an export, port 8211), candidate = this branch
+(port 8212). One browser of mine at a time, and no other agent's browser at the start of any run (each result file logs
+that count and the load). No GTX 1050 or UHD 620 number here. Probes: `P87b/probes/`; raw results: `P87b/results/`.
+
+### What was probed
+
+- **Census** (`probes/q_census.js`, `DEEP=1`): Citadel's street batched as in play, then the house and the well batched,
+  then every one of the 126 groups not built at startup built in turn (`regions.buildGroup`, its hooks included) and
+  its rooms batched straight after (`drawBatch.prepare`, as if visited). After each build: the batched pieces, in every
+  area batched so far, whose map's texture source version moved, and every texture source already used in the scene
+  whose version moved. Each version move is traced to its call site through a hook on three's `Source.needsUpdate`.
+- **Play's path** (`probes/q_return.js`): the game's own scene changes, each area built on its first visit:
+  Zeelich > Citadel > Desert Island > Zeelich > sewers > Zeelich > Knartas > Zeelich > the shaft > Citadel > the maze >
+  Citadel. Each visit runs from the scene change until 1 s after the fade clears. Recorded per visit: pieces that left
+  draw batches, uploads (KB), and canvases sent to the GPU a second time. A first run took Citadel's interiors instead:
+  house > Citadel > tavern > Citadel > Bazoo > Citadel > pharmacy > Citadel > office > Citadel > Zeelich > Citadel >
+  Desert Island > Zeelich > sewers > Zeelich > Citadel > house (`results/return-base-1.txt`).
+
+### Findings (MEASURED, base)
+
+- The three builders named in ARRIVAL-2 are not the cause. `interiors.js tex()` (exported as `texMat`) is not called
+  anywhere. `architecture.js texMat` runs only in Citadel's startup build (`town.js`, `island.js`), and no first-visit
+  build calls it. `props-esmer.js harbourTex` (an island's harbour) clones a canvas that nothing else uses yet; it was
+  changed with the rest anyway (below). **Citadel and the interiors:
+  no first-visit build moved a source that one of their batched pieces uses** (0 in the census). In play, 0 pieces left
+  Citadel's, the house's or Zeelich's batches on any return.
+- The same clone pattern is in thirteen places in builders that run on a first visit. Seven of them moved a texture
+  source that something already built was using:
+
+| Build (first visit) | call site | source | effect in play (base) |
+|---|---|---|---|
+| Desert Island | `desert.js` 566 | the sea | sent again: 1 canvas, 256 KB (mip 0) |
+| sewers | `sewers.js` 75 | the sea | sent again: 1 canvas, 256 KB |
+| each Zeelich island | `zislands.js` 2276 | the cloud-sea layers | sent again: 2 canvases, 2 048 KB (Knartas) |
+| Ballastra ×3 | `ballastra/sea.js` 150 | the sea | census only (not on the route) |
+| underground, maze, Zeelich | `underground.js` 959, `lba1room.js` 652, `zeelich.js` 1860 | hazard stripes (85 KB), the maze's stone (1.7 MB), chain (21 KB) | census only (version moved; not sent again on the route's frames) |
+
+  In the census, five builds (Desert Island, the sewers, and Ballastra's three areas) also moved the sea under 2 of
+  Zeelich's batched water pieces: 10 piece moves in all. That did not happen in play: on the play route 0 pieces left
+  on the returns to Zeelich. INFERRED: in play those water pieces leave on Zeelich's first visit (68 pieces leave
+  there, in its settle), while the census's `prepare` skips that frame's check. Take the census figure as an upper
+  bound.
+- So the problem in play is small: no piece left a batch, but 4 canvases (2.5 MB at mip 0) were sent again on the
+  route's first visits, on top of the 15–110 MB that each first visit uploads anyway.
+
+### Change
+
+- `src/engine/textures.js` `cloneTex(t)`: the clone keeps its source's version, as `merge.js twinOf` has since ARRIVAL-2.
+  The pixels and settings are the same. The copy's own version still makes three set it up: the same wrap shares the
+  GPU texture already there, and a new wrap gets its own GPU texture, uploaded then.
+- Used at the 13 clone sites in first-visit builders: `desert.js`, `sewers.js`, `ballastra/sea.js`,
+  `ballastra/harbor.js`, `zislands.js`, `zeelich.js` (×4), `underground.js` (×2), `lba1room.js`, `props-esmer.js`.
+  Startup-only clones (`architecture.js`, `town.js`, `island.js`, `statue.js`, `world.js`, `environment.js`) and the
+  unused `interiors.js texMat` are unchanged. Every texture the change touches is painted once and cached, so no repaint
+  depended on a clone's needsUpdate.
+- No visual change was intended: the same texels, the same texture settings, and the same GPU texture or a new one with
+  the same data (see the image check below). No new shipped file (`tools/game-files.mjs`: 509), and saves are untouched.
+
+### Before / after (Automated runtime only, SwiftShader)
+
+| | base | candidate |
+|---|---|---|
+| census: batched pieces whose source moved, 126 first builds | 10 (5 builds) | **0** |
+| census: in-use sources moved by the builds (any material) | 259 (~268 MB at 1.33× for mips) | 234 (~243 MB): only the off-the-wall repaints below |
+| play route: pieces leaving batches on revisits | 0 | 0 |
+| play route: canvases sent again | 4 (2 560 KB, mip 0): Desert Island 1, sewers 1, Knartas 2 | **0** |
+| play route: revisit uploads in all | 25 092 KB | 25 113 KB (same; varies run to run) |
+
+The first visits' own uploads and long frames are about the same in both (for example Knartas 72 058 vs 70 040 KB).
+The 75–235 s frames inside first visits are SwiftShader's canvas read-back stall (ARRIVAL-2's flush), present in both.
+
+### Remaining (not changed)
+
+- `offwall.js` `OW.score` / `OW.marks` repaint Desert Island's slate and sand canvases (2 MB together) after **every**
+  area build: 117 of the 126 builds in the census. Each repaint is real canvas work, and three sends both canvases again
+  the next time Desert Island is drawn. The text is usually unchanged. This is a story refresh, not a clone. A fix belongs
+  with `story/offwall.js` (repaint only when the lines or marks change). INFERRED cost; not probed in play.
+
+### Verification (candidate, GAME_URL=http://localhost:8212/)
+
+- `tests/arrival-steps.mjs`: PASS 12/12 (load 0.9 → 4.3). An earlier run at load 2–3.8, straight after the probes,
+  FAILed one check: the tavern's draw-batch unit was 49 ms (cell part 39.5), over the 40 ms limit. The tavern uses
+  none of the changed builders, and ARRIVAL-2 recorded the same kind of failure under load in base and candidate alike.
+- `tests/lazyregions.mjs`: PASS 13/13. `tests/merge.mjs`: PASS 3/3. `tests/travel.mjs`: PASS 27/27.
+- Image, base vs candidate (`probes/q_shot.js`, `probes/shotcmp.py`): Desert Island's pier just after its first visit
+  (Zeelich > Desert Island, the case where base sent the sea again), the frame read back after the route. The two
+  frames look the same: the sea is drawn with its texture, and nothing is blank or stale. They are not pixel-identical.
+  The candidate's visit ran 10 frames longer (133 vs 123; the route waits on the build in real time), so the sea had
+  moved: 95 % of the pixels more than 8 levels apart are on the animated water, and the other 1 383 are scattered
+  moving things. A pixel-identical capture at the same simulated moment was not made.
+- NOT TESTED: a 30-minute session; Ballastra on the play route; any hardware.
+
+## P87c (21.11) — the off-the-wall slate and sand repaints (follow-up to P87b "Remaining")
+
+**Automated runtime only (SwiftShader)**: headless Chromium, ANGLE on SwiftShader, 4-core shared container, Medium,
+1366×768. Base = `70eaf3c6` (an export, port 8221), candidate = this branch (port 8222). One browser at a time, no
+other agent's browser at the start of any run. No hardware number here. Probes: `P87c/probes/`; results:
+`P87c/results/` (`summary.json` is the machine-readable before/after).
+
+### What was probed
+
+`probes/run_ow.mjs` + `q_ow.js`: the save `tests/fixtures/campaign/base-07-dig` continued as a player does (chapter 4
+on Desert Island, Tali's court open; only the save's own areas built at load, the rest on first visit, as with
+`NOPREP=1`). Then the game's own scene changes: Desert Island > school > Desert Island > tent > Desert Island >
+Zeelich > sewers > Zeelich > Desert Island > Citadel > tavern > Citadel > Bazoo > Citadel > Desert Island. Per visit:
+`OW.score` / `OW.marks` calls, real repaints (the canvas texture's version moved), ms in those calls, and the two
+canvases sent to the GPU (count, KB at mip 0, ms in `texImage2D`). Then the story's own changes on the island (the same
+`applyWorld` the game runs), and a frame on the island rendered and finished on the GPU (`gl.finish`) with both canvases
+repainted, against one without.
+
+### Findings (MEASURED, base)
+
+- Every first-visit build calls `story.decorate` (`main.js regionBuilt`), which runs `OffTheWall.applyWorld`, which
+  repaints both canvases: 6 of 6 builds on the route, 12 repaints, with the same lines and marks each time.
+- Each return to Desert Island after such a build sent both canvases again: 4 returns, 8 sends, 6 234 KB (1 558 KB
+  each time: the slate 640 KB, the sand 918 KB, mip 0).
+- The cost is small. The calls take 0.0–0.4 ms of main-thread time (the canvas commands are only recorded). The
+  `texImage2D` calls take 0.0–0.1 ms on the route and 2–8 ms when the send follows straight after the repaint on the
+  island. The full cost, measured on the island with `gl.finish`, is about 2 ms a frame: 5.7 ms with both canvases
+  repainted and sent against 3.5 ms without (medians of 6, SwiftShader). The first visits' own stalls (75–200 s here,
+  the SwiftShader read-back stall of ARRIVAL-2) are many orders of magnitude larger.
+- So this was never a cause of a visible hitch on the measured route. It is wasted work, about 1.5 MB uploaded on most
+  returns to Desert Island, and the fix is a few lines, so it was changed anyway.
+
+### Change
+
+`src/game/offwall.js`: `OW.score(lines)` and `OW.marks(list)` keep a signature of what they last drew
+(`JSON.stringify` of the lines / the marks) and return without drawing if it is the same. The drawing depends on those
+arguments alone, so the canvas already shows what a repaint would draw. The first call (at build) always draws, and any
+change of lines or marks draws as before. No other code writes to these two canvases. Nothing is saved, so old saves
+load as before. No new shipped file (`tools/game-files.mjs`: 509).
+
+### Before / after (Automated runtime only, SwiftShader)
+
+| | base | candidate |
+|---|---|---|
+| route: OW calls / repaints (6 first-visit builds) | 12 / 12 | 12 / **0** |
+| route: canvases sent again on the 4 returns to Desert Island | 8 (6 234 KB) | **0** |
+| on the island: `applyWorld` with nothing changed | 2 repaints, 1 558 KB sent | **0, 0** |
+| the board moved (court, 4 rings) | 2 repaints, 1 558 KB sent | 2 repaints, 1 558 KB sent |
+| a ring counted (TWINSEN 5) | 1 repaint, 640 KB sent | 1 repaint, 640 KB sent |
+| the board's spot changed by flags (the marks show every spot, so nothing to draw) | 2 repaints, same pixels | 0 |
+
+Image check (`probes/pngcmp.py`): the slate and sand canvases read back after the route (the save's state: TALI 31,
+JOSS 2, her ring) and after the board moved (TALI 31, JOSS 2, TWINSEN 5, the court's spots) are pixel-identical between
+base and candidate. Note for later probes: a canvas read back with `getImageData` gives slightly different pixels when it
+is drawn again afterwards (both builds; Chromium draws it another way after a read-back), so compare captures taken at
+the same point of the same sequence.
+
+Seen only in the probe (not investigated): calling `story.decorate()` by hand after the court flags were set by hand
+built 9 more areas in that frame (each through `main.js regionBuilt`). On the play route each build called `applyWorld`
+once.
+
+### Verification (candidate, GAME_URL=http://localhost:8222/)
+
+- `tests/off-the-wall.mjs` (the only test that covers the slate): PASS 24/24, including old saves base-07-dig,
+  new-13-desert and base-12 loading with Tali at her bell and the court as the flags have it.
+- `tests/arrival-steps.mjs`: PASS 12/12. `tests/lazyregions.mjs`: PASS 13/13.
+- `tests/travel.mjs`: PASS 27/27 (load 1.5). A first run straight after the three tests above, at load 3.8–4.2,
+  FAILed one check (chapter 10: the walk to Hesk at Citadel ended "stuck", so his glider menu did not open; the log of
+  that run was overwritten). Base, run next at load 1.3, PASSed 27/27, and so did the candidate's second run. The
+  check is on Citadel, where nothing of the off-the-wall court is, so it is taken as a load-related flake (INFERRED).
+- NOT TESTED: a 30-minute session; any hardware. Only one sample of the probe for each build (the counts are exact;
+  the ms are single samples).

@@ -68,7 +68,9 @@ export class DesertLife extends ChapterBase {
       g.audio.play('paper');
       // (chapter 5: the ferry is requisitioned partway through; until then the board and the gate read as in chapter 4)
       const early = this.phase() === 'steam' && !this.f.c5_ferryTaken && (it.id === 'board' || it.id === 'post');
-      const key = it.id === 'school' ? (this.f.pp_lamp ? 'dl_school_lit' : 'dl_school') : early ? `dl_${it.id}_wet` : this.keyFor('dl_' + it.id);
+      // (STORY-FIX: chapter 5 after the vent is Kesh's 'after', but the ferry is still the project's and Hesk still here)
+      const noFerry = it.id === 'board' && this.phase() === 'after' && this.story.cur?.key === 'steam' && !!this.f.c5_ferryTaken;
+      const key = it.id === 'school' ? (this.f.pp_lamp ? 'dl_school_lit' : 'dl_school') : early ? `dl_${it.id}_wet` : noFerry ? 'dl_board_steam' : this.keyFor('dl_' + it.id);
       g.say('', [t(key)]);
       return true;
     }

@@ -16,7 +16,7 @@ Object.assign(STR.en, {
   c4_kid_pump: "I hear the pump from my roof. Every gust it goes clack, clack, grrrk. Two gears clack. One grinds.",
   c4_kid_pump2: "Not a clacky one! Watch them when the wind pulls. The grinding one doesn't turn. It spits sand.",
   c4_kid_leak: 'Now it goes thump, thump, and then splash. On the ground, not in the oasis.',
-  c4_kid_2: 'The pump is working! I can hear it from my roof!',
+  c4_kid_2: "The pump's working! I'm meant to be filling Mum's jars. I'm testing the water first.",
   c4_trader_1: "Water costs more than anything I sell. The pump seized when the project's test bore started shaking the ground.",
   c4_trader_1b: "Kick it, hit it, it won't help. It's the ground. Tell the project to stop shaking it.",
   c4_trader_leak: "Water all over the sand? The shaking knocked that pipe loose too. I'd bet my dates on it.",
@@ -33,7 +33,7 @@ Object.assign(STR.en, {
   c4_tarra_3: 'Water. Real water, in the oasis. All right. You are not with the project.',
   c4_tarra_4: 'The one you want is Ilka. She dug up the glowing stones, told the project they were dangerous, and they threw her out. She lives in a tent under the north mesa.',
   c4_tarra_5: 'Hesk can take you on his sand-yacht. He owes me a favour. Several.',
-  c4_tarra_idle: 'The children are swimming in the oasis. I had forgotten that sound.',
+  c4_tarra_idle: 'Hear that? Sani, splashing in the oasis. I had forgotten that sound.',
 
   // the wind-pump (ADV-2: the fault is found by listening and watching a gust)
   c4_listen_1: 'The wheel tugs at every gust and stops dead. Clack, clack... and something grinds.',
@@ -48,7 +48,7 @@ Object.assign(STR.en, {
   // Hesk and the sand-yacht
   c4_hesk_1: "You want a ride? My yacht's mast stay snapped in the last storm. No rope, no sail, no ride.",
   c4_hesk_rope: "There's a coil of good rope on the pier. Bring it and we'll fly.",
-  c4_hesk_wait: 'Rope first. The pier, stranger.',
+  c4_hesk_wait: "No rope, no ride. There's a coil on the pier, stranger.",
   c4_rope_got: 'A coil of rope. Hesk will be pleased.',
   c4_toast_rope: 'Rope',
   c4_hesk_2: "Now that's rope. Hold on to something, and not to me.",
@@ -60,9 +60,9 @@ Object.assign(STR.en, {
   // Ilka
   c4_ilka_1: "Hm? Oh. If you're from the project, the answer is still no.",
   c4_tw_ilka1: "I'm Twinsen. Baldino sent me. The crystals you found are growing under Citadel Island now.",
-  c4_ilka_2: 'Under Citadel too? Then it is everywhere. The crystals grow where heat leaks from deep down. I told the project. They told me to pack.',
+  c4_ilka_2: "Baldino still writes to me. In capitals. Under Citadel too? Then it is everywhere. The crystals grow where heat leaks from deep down, and when I told the project, they told me to pack.",
   c4_ilka_3: 'At the bottom of the dig there is a wall I never finished clearing. Old carvings, older than FunFrock. I think they show what is under the ground.',
-  c4_ilka_4: 'The project fenced off Temple-Park and dug down to the Temple of Bù itself. The gate code and my survey are in my notebook, which is on Dallan\'s desk at the research post.',
+  c4_ilka_4: "The project fenced off Temple-Park and dug down to the Temple of Bù, the old god's house under it. The gate code and my survey are in my notebook, which is on Dallan's desk at the research post.",
   c4_tw_ilka2: 'Then I need the notebook.',
   c4_ilka_5: 'The post has drones. But this season a sandstorm blows through every few minutes. Their cameras are blind in it. So is the gate guard, who hides in his cabin.',
   c4_ilka_wait: 'The research post, east of the village. Wait for the storm.',
@@ -77,7 +77,7 @@ Object.assign(STR.en, {
   c4_guard_storm: '(The guard has gone inside.)',
   c4_desk_1: "Ilka's notebook, under a pile of forms. Survey drawings, sample lists, and on the last page: DIG GATE 4-1-7.",
   c4_toast_notebook: "Ilka's notebook",
-  c4_dallan_note: '(A memo on the desk: "Test bore pressure rising. Keep drilling. Signed: Dallan, Foreman.")',
+  c4_dallan_note: "(A memo on the desk: \"Test bore pressure rising. Run test 14, then cap it. Signed: Dallan, Foreman.\")",
 
   // the dig
   c4_gate_locked: "A keypad on the barrier. The 1, 4 and 7 are worn shiny. Without the code I'd only be guessing the order.",
@@ -107,9 +107,9 @@ Object.assign(STR.en, {
   c4_dallan_1: "That's enough. This site is closed by order of the Joint Project.",
   c4_ilka_d1: 'Dallan. Look at this wall before you throw us out again.',
   c4_dallan_2: 'I looked at your reports, Professor. I follow the plan. The test bore stays capped and the pressure stays where it is.',
-  c4_tw_d1: "Your guards took Vesk's evacuation plan from me on Zeelich. You know what it says.",
+  c4_tw_d1: "You've seen Vesk's evacuation plan, Dallan. You know what it says.",
   c4_dallan_3: '...Thirty percent. I know. Leave the dig. Both of you. Now.',
-  c4_ilka_end: 'The vent under this island is the test bore, Twinsen. He has capped it. We have to open it, without boiling Kesh.',
+  c4_ilka_end: "The vent under this island comes up right under his test bore, Twinsen, and he has capped both. We have to open it, without boiling Kesh.",
 
   // objectives and journal
   c4_obj_find: 'Find the professor who found the crystals',
@@ -141,7 +141,7 @@ Object.assign(STR.en, {
   c4_j_discs: "Five stone discs stand round the temple door. The diggers' pick marks cover every one, and the door never moved.",
   c4_j_cold: "I struck a cold disc. It only thudded, and any seal I had opened ground shut.",
   c4_j_carving: "The carving in the Temple of Bù shows the shell with five vents that the project is closing by drawing all the heat under Citadel, which is why two discs were cold. Ilka says that if we open them, the shell can breathe.",
-  c4_j_dallan: "Dallan admitted he knows the plan saves only thirty percent, but threw us out of the dig. Ilka says the vent under this island is his capped test bore, and we must open it without boiling Kesh.",
+  c4_j_dallan: "Dallan admitted he knows the plan saves only thirty percent, but threw us out of the dig. Ilka says the vent under this island comes up under his capped test bore, and we must open it without boiling Kesh.",
   it_ropecoil: 'Rope', itd_ropecoil: 'A coil of good rope from the pier, for Hesk.',   // (its own key: it_rope is the prologue's Rope Ladder, which this used to overwrite)
   it_notebook: "Ilka's notebook", itd_notebook: 'Survey drawings of the dig. The gate code: 4-1-7.',
 });

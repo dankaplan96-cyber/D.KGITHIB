@@ -29,7 +29,7 @@ from mathutils import Vector  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402
 from lbapoly import Builder, hand_detail, loft, mouth_lens, ring, smooth, sphere, trunk_loft, trunk_weights, tube  # noqa: E402
 
-args = [a for a in sys.argv[1:] if not a.endswith('.py')]
+args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [a for a in sys.argv[1:] if not a.endswith('.py')]   # (inside Blender: the arguments after --)
 SKEL, OUT = args[0], args[1]
 BLEND = args[2] if len(args) > 2 else None
 if os.path.isdir(OUT) or not OUT.endswith('.json'):
@@ -234,16 +234,83 @@ for s_, sx in (('L', 1), ('R', -1)):
     leg = b.P('leg' + s_, COL['brown'], w_leg, 40)
     loft(leg, [ring(y * BH, hw * BH, zf * BH, zb * BH, 12, 0.35, cx=sx * LEG_X * BH) for y, hw, zf, zb in reversed(LEG)], cap_bottom=True)
 
+JOINTS = not os.environ.get('JOINTS_OLD')
+# (u: 0 the shoulder, 1 the elbow; radius × the sleeve's own taper there: a dome up into the shoulder, the elbow rounded)
+SLEEVE_RINGS = [(-0.16, 0.45), (-0.11, 0.8), (-0.05, 0.98), (0.0, 1.03), (0.4, 1.02), (0.75, 0.99), (0.9, 0.97),
+                (1.0, 0.97), (1.12, 1.0)]
+# (the forearm: t from the elbow (0) to the wrist (1), radius between FORE_R's: from inside the sleeve's end, a swell
+# below the elbow, narrowing to the wrist as LBA2's)
+FORE_RINGS = [(-0.02, 0.0, 0.92), (0.12, 0.0, 1.0), (0.3, 0.2, 1.04), (0.55, 0.5, 1.0), (0.8, 0.8, 1.0), (1.0, 1.0, 1.0)]
+
+
+def _frames(pts, n):
+    """rings round the points (centre, radius), framed by parallel transport (no twist round the bend)"""
+    rings, prev = [], None
+    for i, (c, r) in enumerate(pts):
+        a = pts[max(0, i - 1)][0]; c2 = pts[min(len(pts) - 1, i + 1)][0]
+        dd = (c2 - a).normalized()
+        if prev is None:
+            upv = Vector((0, 0, 1)) if abs(dd.z) < 0.9 else Vector((1, 0, 0))
+            ux = dd.cross(upv).normalized()
+        else:
+            ux = (prev - dd * prev.dot(dd)).normalized()
+        wz = dd.cross(ux).normalized()
+        prev = ux
+        rings.append([tuple(c + ux * (math.cos(2 * math.pi * q / n) * r) + wz * (math.sin(2 * math.pi * q / n) * r)) for q in range(n)])
+    return rings
+
+
+def _wind(rings, a, b_):
+    return [list(reversed(r_)) for r_ in rings] if (Vector(rings[0][1]) - a).cross(Vector(rings[0][0]) - a).dot((b_ - a).normalized()) > 0 else rings
+
+
+def sleeve_shell(part, S, E, H, n=10):
+    S, E, H = Vector(S), Vector(E), Vector(H)
+    pts, us = [], []
+    for u, k in SLEEVE_RINGS:
+        r = (SLEEVE_R[0] + (SLEEVE_R[1] - SLEEVE_R[0]) * min(1.0, max(0.0, u))) * BH * k
+        pts.append((S + (E - S) * u if u <= 1.0 else E.lerp(H, u - 1.0), r)); us.append(u)
+    rings = _wind(_frames(pts, n), S, E)
+    W_ = {}
+    wts = [{'sh': 1.0} if u <= 0.8 else {'el': 1.0} if u >= 1.2 else {'sh': (1.2 - u) / 0.4, 'el': (u - 0.8) / 0.4} for u in us]
+    for wt, rr in zip(wts, rings):
+        for v in rr:
+            W_[tuple(round(x, 6) for x in v)] = wt
+    loft(part, rings, cap_bottom=True, cap_top=True)
+    for v in part.v:   # (the caps' middle points: the nearest ring centre's weight, so the end past the elbow bends with it)
+        k = tuple(round(x, 6) for x in v)
+        if k not in W_:
+            W_[k] = min(zip((c for c, r in pts), wts), key=lambda cw: (Vector(v) - cw[0]).length)[1]
+    return W_
+
+
+def fore_shell(part, E, H, n=10):
+    E, H = Vector(E), Vector(H)
+    pts = [(E.lerp(H, t), (FORE_R[0] + (FORE_R[1] - FORE_R[0]) * f) * BH * k) for t, f, k in FORE_RINGS]
+    loft(part, _wind(_frames(pts, n), E, H), cap_bottom=True, cap_top=True)
+
+
 # ------------------------------------------------------------------ the arms: green sleeve, grey forearm, a round hand
 for s_, sx in (('L', 1), ('R', -1)):
     shp, el, hd = Vector(bp('sh' + s_)), Vector(bp('el' + s_)), Vector(bp('hand' + s_))
     e = el.y
-    up = b.P('sleeve' + s_, COL['green'], lambda p, s_=s_, e=e: {'sh' + s_: 1 - smooth(e + 0.06, e - 0.02, p[1]), 'el' + s_: smooth(e + 0.06, e - 0.02, p[1])}, 50)
     top = shp + Vector((-sx * 0.04, 0.03, -0.02))
-    tube(up, tuple(top), tuple(el), SLEEVE_R[0] * BH, SLEEVE_R[1] * BH, 9)
-    sphere(up, tuple(top), SLEEVE_R[0] * BH * 0.98, 9, 5)
     d = (hd - el).normalized()
-    tube(b.P('fore' + s_, COL['skin'], 'el' + s_, 50), tuple(el - d * 0.03), tuple(hd), FORE_R[0] * BH, FORE_R[1] * BH, 8)
+    if JOINTS:
+        # JOINTS-BLENDER (CLOUD_ORDERS 57, the user 20.11: the tubes at the shoulder and the elbow, on everyone): the green
+        # sleeve one shell from a dome up in the shoulder (no ball on its end) through a rounded elbow, its weight passing
+        # from the upper arm's bone to the forearm's over the bend, ending just past the elbow; the grey forearm shaped
+        # from under the sleeve's end (a swell below the elbow, narrowing to the wrist as before). JOINTS_OLD=1: as before.
+        AW = {}
+        up = b.P('sleeve' + s_, COL['green'], lambda p, s_=s_, AW=AW: {k + s_: v for k, v in AW.get(tuple(round(x, 6) for x in p), {'sh': 1.0}).items()}, 50)
+        AW.update(sleeve_shell(up, top, el, hd))
+        fe = b.P('fore' + s_, COL['skin'], 'el' + s_, 50)
+        fore_shell(fe, el, hd)
+    else:
+        up = b.P('sleeve' + s_, COL['green'], lambda p, s_=s_, e=e: {'sh' + s_: 1 - smooth(e + 0.06, e - 0.02, p[1]), 'el' + s_: smooth(e + 0.06, e - 0.02, p[1])}, 50)
+        tube(up, tuple(top), tuple(el), SLEEVE_R[0] * BH, SLEEVE_R[1] * BH, 9)
+        sphere(up, tuple(top), SLEEVE_R[0] * BH * 0.98, 9, 5)
+        tube(b.P('fore' + s_, COL['skin'], 'el' + s_, 50), tuple(el - d * 0.03), tuple(hd), FORE_R[0] * BH, FORE_R[1] * BH, 8)
     _hp = b.P('hand' + s_, COL['skin'], 'hand' + s_, 60)
     sphere(_hp, tuple(hd + d * 0.035), HAND_R * BH, 10, 7)
     hand_detail(_hp, tuple(hd + d * 0.035), HAND_R * BH, sx, grobo=True)   # (CAST-POLISH: a thumb and knuckle lobes on the ball)

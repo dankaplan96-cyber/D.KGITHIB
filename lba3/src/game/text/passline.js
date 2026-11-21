@@ -34,7 +34,7 @@ Object.assign(STR.en, {
   // ------------------------------------------------------------ chapter 7: the fourth setting
   ob_snow: '(The snow shakes under my feet. Powder jumps off it in threes, in a line down the mountain.)',
   ob_keeper_4: 'Before the glacier, my fourth setting. It follows the snow fields when they shake. They have shaken in threes since the melt.',
-  ob_keeper_wait: 'Setting four. The lever on the mount.',
+  ob_keeper_wait: "Setting four, if you please. The lever on the mount, by your hand.",
   ob_follow: '(It jerked three times, rested, jerked three more... and stopped. Pointing down.)',
   ob_keeper_read: 'Read the ring under it. Where does it point?',
   ob_read_1: '(The ring under the tube: PEAK, MONASTERY, LHAR, GLACIER... The pointer stands on DESERT ISLE, and past it, CITADEL.)',

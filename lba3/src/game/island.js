@@ -2854,7 +2854,7 @@ export const ISLET = { dome: { x: -159.7, z: -10.0, r: 9.55, h: 12.9 }, figure: 
 // the tunnel mouths: the door's face (x, z), the way it faces (ry: its outward normal is (sin ry, cos ry)), how far
 // back into the slope the vault runs; the trapdoor in the fort's yard (its middle)
 export const OLD_DOORS = {
-  plateau: { x: -80.7, z: -82.0, ry: Math.PI, back: 3.0 },
+  plateau: { x: -80.7, z: -82.0, ry: Math.PI, back: 3.0, y: 12.94, balcony: true },   // (CAVE-STAIR: y, the sill where the ground set it before the bank under the landing was cut; balcony: PLATEAU_STAIR)
   passageN: { x: -25.9, z: -84.6, ry: Math.PI, back: 4.6, bars: true },
   passageS: { x: -27.8, z: -61.6, ry: Math.PI / 2 },   // (3.6 m west of the original's: off the yard's deck-plate walk)
 };
@@ -2904,8 +2904,8 @@ function tunnelMouth(W, root, id, o) {
   const stoneM = tm('fortStone', { color: '#e6eaf2' }), trimM = tm('stone', { color: '#d8d4cc' });
   const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 }), slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
   const f = frame(o.x, o.z, o.ry), nx = Math.sin(o.ry), nz = Math.cos(o.ry);
-  // the sill: the ground just before the face
-  const y = W.H(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1;
+  // the sill: the ground just before the face (o.y: a sill fixed where the ground first set it)
+  const y = o.y ?? W.H(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1;
   const W2 = 1.7, wall = 2.0, dw = 1.3, dh = 2.25;
   // the vault: its section (a wall height and a half-round top) run back into the slope
   const sec = new THREE.Shape();
@@ -2928,9 +2928,18 @@ function tunnelMouth(W, root, id, o) {
     for (let i = -2; i <= 2; i++) { const [bx, bz] = f(i * 0.26, 0.2); B.add(cyl(0.03, 0.03, dh + 0.1, 5), ironM, bx, y + (dh + 0.1) / 2, bz); }
     for (const hy of [0.6, 1.6]) { const [bx, bz] = f(0, 0.2); B.add(bbox(dw + 0.1, 0.06, 0.05, 0.01, 1), ironM, bx, y + hy, bz, 0, o.ry, 0); }
   }
-  // a landing slab before the door, level with the sill, and two steps down off its front
-  { const [lx, lz] = f(0, 0.75); B.add(bbox(2.6, 1.4, 1.4, 0.04, 1), trimM, lx, y - 0.72, lz, 0, o.ry, 0); }
-  { const [lx, lz] = f(0, 1.65); B.add(bbox(2.2, 1.2, 0.5, 0.04, 1), trimM, lx, y - 0.85, lz, 0, o.ry, 0); }
+  // a landing slab before the door, level with the sill, and two steps down off its front; (o.balcony, CAVE-STAIR: the
+  // plateau's door over the sea cliff: no steps off its front, which led down into a 1–2 m drop to the slope; the slab
+  // the whole depth its collider has, 1.9 m, and as deep as the ground falls under it, its parapets plateauStair's)
+  if (o.balcony) {
+    let lo = Infinity;
+    for (let a = -1.3; a <= 1.31; a += 0.65) for (let b = 0.1; b <= 2.0; b += 0.475) lo = Math.min(lo, W.H(...f(a, b)));
+    const D = Math.min(4, Math.max(1.4, y - lo + 0.4)), [lx, lz] = f(-0.075, 1.04);
+    B.add(bbox(2.75, D, 2.02, 0.04, 1), trimM, lx, y - 0.02 - D / 2, lz, 0, o.ry, 0);
+  } else {
+    { const [lx, lz] = f(0, 0.75); B.add(bbox(2.6, 1.4, 1.4, 0.04, 1), trimM, lx, y - 0.72, lz, 0, o.ry, 0); }
+    { const [lx, lz] = f(0, 1.65); B.add(bbox(2.2, 1.2, 0.5, 0.04, 1), trimM, lx, y - 0.85, lz, 0, o.ry, 0); }
+  }
   B.build();
   // colliders: the vault (as far as it stands out of the slope), the landing to stand on
   const [cx, cz] = f(0, -o.back / 2);
@@ -2966,22 +2975,52 @@ function cellarHatch(W, root, id, o) {
 // the ground below the plateau's rim; dressed cheeks each side, their copings straight along the flight: on the north (the slope falls
 // to the sea cliff) a parapet 0.45 m over them, on the south (the bank stands at or over them) a retaining kerb. In the
 // door's frame (frame(): lx along the face, + to the west here; lz out of the face): from lx0 to lx1, centred on lz, w wide.
-export const PLATEAU_STAIR = { lx0: 1.3, lx1: 5.5, lz: 0.85, w: 1.8, n: 12 };   // (1.8 m between the cheeks: his body is 0.9 m across)
-// the stair's corridor in world coordinates (the cliff rocks there go: world.js dropRocks)
-export function plateauStairAt(x, z, m = 0) {
-  const o = OLD_DOORS.plateau, S = PLATEAU_STAIR, c = Math.cos(o.ry), s = Math.sin(o.ry), dx = x - o.x, dz = z - o.z;
-  const lx = c * dx - s * dz, lz = s * dx + c * dz;
-  return lx > S.lx0 - 0.2 - m && lx < S.lx1 + 0.3 + m && Math.abs(lz - S.lz) < S.w / 2 + 0.35 + m;
+// (top: the top tread's level, where the ground first set it: CAVE-STAIR fixed it with the sill, OLD_DOORS.plateau.y)
+export const PLATEAU_STAIR = { lx0: 1.3, lx1: 5.5, lz: 0.85, w: 1.8, n: 12, top: 15.52 };   // (1.8 m between the cheeks: his body is 0.9 m across)
+const plateauLocal = (x, z) => { const o = OLD_DOORS.plateau, c = Math.cos(o.ry), s = Math.sin(o.ry), dx = x - o.x, dz = z - o.z; return [c * dx - s * dz, s * dx + c * dz]; };
+// the stair's corridor in world coordinates (the cliff rocks there go: world.js dropRocks); with y (a rock's corner),
+// also a rock standing up through the landing or its parapets (CAVE-STAIR: one stood in the doorway, on the landing)
+export function plateauStairAt(x, z, m = 0, y = -Infinity) {
+  const S = PLATEAU_STAIR, [lx, lz] = plateauLocal(x, z);
+  if (lx > S.lx0 - 0.2 - m && lx < S.lx1 + 0.3 + m && Math.abs(lz - S.lz) < S.w / 2 + 0.35 + m) return true;
+  if (y > OLD_DOORS.plateau.y - 0.3 && lx > -1.75 && lx < S.lx0 + 0.2 && lz > -1.0 && lz < 2.35) return true;
+  // (and one against the north parapet standing over its coping, which hid him on the flight from the slope below)
+  const yl = OLD_DOORS.plateau.y - 0.02, line = yl + Math.max(0, Math.min(1, (lx - S.lx0) / (S.lx1 - S.lx0))) * (S.top - yl);
+  return lx > -1.75 && lx < S.lx1 && lz >= S.lz + S.w / 2 + 0.35 && lz < 3.3 && y > line + 0.5;
+}
+// CAVE-STAIR (P69, the user: "the stairs are in the air and not connected properly"): the ground under the flight. The
+// bank south of it rose over the treads' south third (up to 0.3 m: grass through the steps, and he walked on the
+// slope over them: the trap filler's fill, the island's own ground there being the sea cliff) and over the landing's back by the door; the plateau dipped 0.5 m just past the top, and fell 0.6 m
+// off the top's north half (a ledge he stuck at). Here (world.js islandHeight) the ground under the landing and the
+// flight lies 0.3 m under their line, and behind the south kerb (the terrain's next row of points, 0.15 m behind it)
+// at most 0.1 m over it; past the top an apron 2 cm under the top tread, 1.5 m deep, easing back to the land by 1.5 m.
+// The stair is laid on its own line (the sill and the top fixed where the ground first set them), so the cut moves
+// no step. (world.js buildHeightGrid: on the terrain's points, after its trap filler; scatterGround keeps the old ones)
+export const PLATEAU_STAIR_BOX = [-88.9, -85.3, -79.1, -80.9];
+export function plateauStairGround(x, z, h) {
+  const B = PLATEAU_STAIR_BOX;
+  if (x < B[0] || x > B[2] || z < B[1] || z > B[3]) return h;
+  const S = PLATEAU_STAIR, [lx, lz] = plateauLocal(x, z), yl = OLD_DOORS.plateau.y - 0.02, hw = S.w / 2;
+  if (lx > S.lx1 - 0.1) {
+    const ex = Math.max(S.lx1 - lx, lx - (S.lx1 + 1.5)), ez = Math.abs(lz - S.lz) - hw, d = ex > 0 && ez > 0 ? Math.hypot(ex, ez) : Math.max(ex, ez);
+    if (d < 1.5) h += (S.top - 0.02 - h) * (1 - smoothstep(0, 1.5, d));   // (2 cm under the top tread)
+  }
+  if (lx > -1.5 && lx < S.lx1 - 0.02) {   // (the terrain's points: the column past the top, 1.4 cm out, is the apron's)
+    const line = lx <= S.lx0 ? yl : yl + Math.min(1, (lx - S.lx0) / (S.lx1 - S.lx0)) * (S.top - yl);
+    if (lz > -0.25 && lz < 2.1) h = Math.min(h, line - 0.3);
+    else if (lz > -0.75 && lz <= -0.25) h = Math.min(h, line + 0.1);
+  }
+  return h;
 }
 function plateauStair(W, root, o) {
   const P = W.physics, T = W.H, S = PLATEAU_STAIR, grp = new THREE.Group(); grp.name = 'old-door-plateau-stair'; root.add(grp);
   const B = new Batch(grp);
   const stoneM = tm('fortStone', { color: '#e6eaf2' }), trimM = tm('stone', { color: '#d8d4cc' });
   const f = frame(o.x, o.z, o.ry), nx = Math.sin(o.ry), nz = Math.cos(o.ry);
-  const yl = T(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1 - 0.02;   // (the landing's top: tunnelMouth's sill − 2 cm)
+  const yl = o.y - 0.02;   // (the landing's top: tunnelMouth's sill − 2 cm)
   const run = (S.lx1 - S.lx0) / S.n, hw = S.w / 2, oN = S.lz + hw + 0.15, oS = S.lz - hw - 0.15;
   const gAt = (lx, lz) => T(...f(lx, lz));
-  const yEnd = gAt(S.lx1, S.lz), rise = (yEnd - yl) / S.n;
+  const yEnd = S.top, rise = (yEnd - yl) / S.n;   // (CAVE-STAIR: the top fixed; the apron past it is the ground's, plateauStairGround)
   let prev = yl;
   const steps = [];
   for (let i = 0; i < S.n; i++) {
@@ -2989,7 +3028,8 @@ function plateauStair(W, root, o) {
     let lo = Infinity, gc = -Infinity, gb = -Infinity;
     for (let t = a; t <= b + 1e-6; t += run / 2) {
       for (const lz of [oS - 0.15, S.lz - hw, S.lz, S.lz + hw, oN + 0.15]) lo = Math.min(lo, gAt(t, lz));
-      gc = Math.max(gc, gAt(t, S.lz)); gb = Math.max(gb, gAt(t, oS - 0.15));
+      if (t < S.lx1 - 0.01) gc = Math.max(gc, gAt(t, S.lz));   // (not the apron past the top, level with the top tread)
+      gb = Math.max(gb, gAt(t, oS - 0.15));
     }
     const top = Math.min(prev + 0.3, Math.max(yl + (i + 1) * rise, gc + 0.03)), bot = Math.min(lo, prev) - 0.4;
     prev = top;
@@ -2998,7 +3038,9 @@ function plateauStair(W, root, o) {
     // under the steps above it to the top (no seam between two: physics.js reads a brick 5 cm in from its edges), the
     // first one's from 15 cm back over the landing
     const [px, pz] = f(m, S.lz); B.add(bbox(run + 0.02, top - bot, S.w + 0.04, 0.03, 1), trimM, px, (top + bot) / 2, pz, 0, o.ry, 0);
-    { const c0 = i ? a : a - 0.15, [cx, cz] = f((c0 + S.lx1) / 2, S.lz); P.add({ type: 'box', x: cx, z: cz, hw: (S.lx1 - c0) / 2, hd: hw, rot: o.ry, top }); }
+    // (CAVE-STAIR: and 0.3 m on over the apron past the top, 2 cm under the top tread: the terrain's slope from the
+    //  cut under the last tread up to the apron, one point to the next, stopped him at the tread's edge)
+    { const c0 = i ? a : a - 0.15, c1 = S.lx1 + 0.3, [cx, cz] = f((c0 + c1) / 2, S.lz); P.add({ type: 'box', x: cx, z: cz, hw: (c1 - c0) / 2, hd: hw, rot: o.ry, top }); }
   }
   // the cheeks: each one dressed wall the stair's length, its coping a straight line along the flight (the wall sheared
   // to it, its ends plumb), down below the slope; the north one 0.45 m over the nosings at least, the south one 12 cm
@@ -3013,9 +3055,24 @@ function plateauStair(W, root, o) {
     B.add(sh(bbox(L + 0.02, D + 0.3, 0.3, 0.03, 1)), stoneM, px, ym - (D + 0.3) / 2, pz, 0, o.ry, 0);
     B.add(sh(bbox(L + 0.06, 0.08, 0.38, 0.02, 1)), trimM, px, ym + 0.04, pz, 0, o.ry, 0);
     for (const st of steps) { const [cx, cz] = f(st.m, lz); P.add({ type: 'box', x: cx, z: cz, hw: run / 2 + 0.02, hd: 0.15, rot: o.ry, top: line(st.m) + up + 0.15, noStand: true, seeThrough: true }); }
+    return up;
   };
-  cheek(oN, (st) => st.top + 0.45);
+  const upN = cheek(oN, (st) => st.top + 0.45);
   cheek(oS, (st) => Math.max(st.top + 0.12, st.gb + 0.08));
+  // CAVE-STAIR: the landing's parapets, its north edge (on the north cheek's line, from the landing's east edge to the
+  // cheek's foot) and its east edge (over the sea cliff: a 7 m fall), level with the north cheek's coping at its foot;
+  // dressed as the cheeks, down to the landing slab's foot (tunnelMouth: o.balcony)
+  {
+    // (each face 1 cm proud of the slab's and the cheek's in its plane, the corner's coping 3 cm under the north one's
+    //  and the north one 2 cm over the cheek's where they meet: no two surfaces in one plane, OVERLAP-1)
+    const yc = line(S.lx0) + upN, yb = yl - 0.05;
+    for (const [a0, a1, b0, b1, dy] of [[-1.47, S.lx0 - 0.01, oN - 0.16, oN + 0.16, 0.02], [-1.46, -1.15, -0.02, oN - 0.06, -0.01]]) {
+      const [px, pz] = f((a0 + a1) / 2, (b0 + b1) / 2), w = a1 - a0, d = b1 - b0, yt = yc + dy;
+      B.add(bbox(w, yt - yb, d, 0.03, 1), stoneM, px, (yt + yb) / 2, pz, 0, o.ry, 0);
+      B.add(bbox(w + 0.06, 0.08, d + 0.08, 0.02, 1), trimM, px, yt + 0.04, pz, 0, o.ry, 0);
+      P.add({ type: 'box', x: px, z: pz, hw: w / 2, hd: d / 2, rot: o.ry, top: yc + 0.15, noStand: true, seeThrough: true });
+    }
+  }
   B.build();
 }
 

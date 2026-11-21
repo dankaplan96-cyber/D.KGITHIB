@@ -14,7 +14,9 @@
 //   - Sendell's chamber: the arch he came in by grows shut behind him (shown first); Sendell explains both; the checkpoint
 //   Chapter 12 (The Core), after the coil (the fight is as it was): four steps he has done before
 //   - Mill Lane's branch turned over to the mills at its cock, in the rest (in a knock it kicks back: chapter 8's cock)
-//   - Irsa, at Kell's switch, on the radio: holding. Vesk hears it and turns his own key in the central lock (his choice)
+//   - Irsa, at Kell's switch, on the radio: Kell's cart going up, her hand off the switch (P81: one concrete report). Vesk
+//     hears a system work without him and turns his own key in the central lock (his choice; his words as the player left
+//     him: c3_veskHelped, VESK.md)
 //   - the central lock's bar lifted after her two, not after the shell's three (chapter 10's joint): the drill winds down
 //   - two knocks on the main to Citadel: Arthur hears them on the kitchen pipe ("twice for water", chapter 2), Zoé sends the
 //     signal, the bore turns to a shield; the council's guard names the cut log and the list
@@ -119,7 +121,7 @@ export class ShellThread {
     }
     if (f.co_v) {
       if (f.co_irsa) out.push({ key: 'co_j_lane', part: 2, done: true });
-      if (f.co_vesk) out.push({ key: 'co_j_vesk', part: 2, done: true });
+      if (f.co_vesk) out.push({ key: f.c3_veskHelped ? 'co_j_vesk_helped' : 'co_j_vesk', part: 2, done: true });
       if (f.co_signal) out.push({ key: 'co_j_signal', part: 2, done: true });
     }
     return out;
@@ -255,18 +257,21 @@ export class ShellThread {
   irsaHolding() {
     const g = this.game, f = this.f;
     g.audio.play('radio');
-    this.ch.chain([['zl_irsaradio', 'co_irsa_1'], ['zl_irsaradio', 'co_irsa_2'], ['hero', 'co_tw_irsa']], () => { f.co_irsa = true; g.save(false); this.veskChooses(); });
+    // (P81: one report, concrete: Kell's cart going up, her hand off the switch. The lane works without Vesk's line)
+    this.ch.chain([['zl_irsaradio', 'co_irsa_1']], () => { f.co_irsa = true; g.save(false); this.veskChooses(); });
   }
-  // Vesk heard it: he gets up, walks to his lock and turns his own key (in view); his lines as himself
+  // Vesk heard it: he gets up, walks to his lock and turns his own key (in view); his lines as himself, as the player left
+  // him (VESK: pulled clear, he owns the cut log before he goes to the lock; left, he says only what he heard). Either way
+  // he says how the bar goes up (after her two), and the guard still names the log and the list (guards)
   veskChooses() {
-    const g = this.game, f = this.f, C = this.R('c3core'), v = this.npc('vesk');
+    const g = this.game, f = this.f, C = this.R('c3core'), v = this.npc('vesk'), helped = !!f.c3_veskHelped;
     const done = () => {
       C.lock.turn(true); g.audio.play('lever', C.lock); f.co_vesk = true;
       if (v) { v.shWalk = false; v.controlled = false; }
       this.story.refreshCast();
-      this.ch.chain([['vesk', 'co_vesk_key'], ['hero', 'co_tw_key']], () => { this.busy = false; g.updateObjective(); g.save(false); });
+      this.ch.chain([['vesk', 'co_vesk_key'], ...(helped ? [['hero', 'co_tw_key']] : [])], () => { this.busy = false; g.updateObjective(); g.save(false); });
     };
-    const say = [['vesk', f.c3_veskHelped ? 'co_vesk_up_helped' : 'co_vesk_up_left']];
+    const say = helped ? [['vesk', 'co_vesk_up_helped'], ['vesk', 'co_vesk_why']] : [['vesk', 'co_vesk_up_left']];
     if (!v?.present) { this.ch.chain(say, done); return; }
     this.ch.fx?.release?.(); v.rig.ko = null; v.rig.play('idle');
     this.ch.chain(say, () => {

@@ -18,7 +18,7 @@ import { FarCull, BlobBatch, BoxCull, MW, FOGCULL, setFogCull, CASTER_ONLY } fro
 import { BLOBS, PLANT_VIEW } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
-import { DrawBatch, warmLayers } from './engine/drawbatch.js';
+import { DrawBatch, warmLayers, runFor } from './engine/drawbatch.js';
 import { TEXARRAY } from './engine/texarray.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
@@ -60,7 +60,9 @@ import { Story, ORDER, OLD_ORDER, EXP_KEYS, chapterNumber } from './game/story/i
 import { castReady, readyCast } from './game/story/ballastra.js';   // (EXP-2: the Ballastra cast's models, on demand)
 import { MAGIC_STEPS } from './game/story/magic.js';
 import { CRYSTAL_WORLD, CRYSTAL_TOTAL, crystalsIn } from './game/crystals.js';
-import { t, setLang, getLang, hintLine } from './game/i18n.js';
+import { t, setLang, getLang, hintLine, spoken } from './game/i18n.js';
+import { metaFor } from './game/text/voicemeta.js';   // (FACE-1: a line's intention, as its voice has it)
+import { intentOf } from './engine/voiceplan.js';
 import { roomName } from './game/mapdraw.js';
 import { BUILT } from './build-stamp.js';
 
@@ -184,7 +186,7 @@ export function migrateSave(raw) {
 // back on their feet; chapter 'throttle' in the expanded campaign, in the council chamber, the magic level the story
 // has given by the end of chapter 9; health, kashes and the other weapons and gadgets kept. Returns null when `raw`
 // isn't a save on exp_base.
-const EXP_START_DROP = /^(c10_|nw_|c3_|sh_|co_|ep_|dp_|ur_|og_|og2_|th_|sv_|bl_|wk_|vm_\d|a_jetHint$)/;   // (a_jetHint: the hop-pack's first-wear mark, arsenal.js; nw_, sh_, co_: the network's, the shell's and the last act's threads, CAMPAIGN-8/9; dp_: the epilogue's way down, UNDER-BAR)
+const EXP_START_DROP = /^(c10_|nw_|c3_|sh_|co_|ep_|dp_|ur_|og_|og2_|th_|sv_|bl_|bh_|wk_|nwb_|vm_\d|a_jetHint$)/;   // (a_jetHint: the hop-pack's first-wear mark, arsenal.js; nw_, sh_, co_: the network's, the shell's and the last act's threads, CAMPAIGN-8/9; dp_: the epilogue's way down, UNDER-BAR)
 const EXP_START_REVIVE = /^(ndrone\d+|nclone|nguard|nsentry|ncrawler|nmite\d+|c3drone|c3mite\d+|guardian)$/;
 export const EXP_START_KEY = EXP_KEYS[0];
 export const COUNCIL_SPOT = { x: 4844, z: 4.5 };   // (the council chamber's spawn by its door: upper.js buildCouncil)
@@ -310,7 +312,9 @@ class Game {
     this.settings.langV = 1;
     setLang(this.settings.lang);
 
-    this.renderer = new Renderer($('#game'));
+    // BOOT-FAIL (P73): a renderer that cannot start (no WebGL context) is named as such on the failure screen
+    if (FAIL_AT === 'renderer') throw Object.assign(new Error('Error creating WebGL context. (forced by ?failstart=renderer)'), { stage: 'renderer' });
+    try { this.renderer = new Renderer($('#game')); } catch (e) { throw Object.assign(e instanceof Error ? e : new Error(String(e)), { stage: 'renderer' }); }
     // (TITLE-LOAD: three asks the driver for the largest anisotropy (a call that waits for the GPU process) on the first
     //  texture that uses it, the loading screen's texture step, by then behind every shader sent early: the step's first
     //  texture waited for all of them (13 s here). Asked now, with nothing queued; three keeps the answer)
@@ -323,13 +327,14 @@ class Game {
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
     this.loadTimes = {};
     this.preparing = true;
-    this.ready = this.boot().catch((e) => { console.error('startup failed', e); loadingStep('The game could not start: ' + (e?.message || e)); throw e; });
+    this.ready = this.boot().catch((e) => { startupFailed(e, e?.stage || 'boot'); throw e; });
   }
 
   // LAZY-REGIONS: startup builds Citadel (the title's backdrop), Twinsen's house and the well (a new game's opening)
   // and the area the autosave stands in, in steps with a paint between them, so the loading bar moves with a real
   // label (src/game/regions.js; every other area is built the first time it is needed, behind a scene change's black).
   async boot() {
+    if (FAIL_AT === 'boot') throw Object.assign(new Error('forced by ?failstart=boot'), { stage: 'boot' });
     // startup cost per step (ms), for profiling: game.loadTimes
     const tm = performance.now(), L = this.loadTimes;
     const timed = (name, fn) => {
@@ -380,6 +385,7 @@ class Game {
     this.env = new Environment(this.scene, this.terrain);
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
     this.shadowCull.shadowsOn = () => this.renderer.renderer.shadowMap.enabled;   // (PERF-CPU: no caster tests without the shadow pass)
+    this.shadowCull.defer = () => !!(this.trans?.hold && this.trans.prep);   // (ARRIVAL-STEPS: an area's staged shadow batches wait for their steps behind the black)
     this.syncShadowCells();   // (PERF-HIGH: the cell size for the preset; before any area is built)
     this.renderer.setup(this.scene, this.camera);
     // (WEATHER-1: the rain lines and the motes compiled with the scene, not on the first rain; with the weather off, as before)
@@ -467,6 +473,18 @@ class Game {
       const h = this.hero.pos, out = [];
       for (const a of this.talkers) if (a.pos && a.present !== false && Math.hypot(a.pos.x - h.x, a.pos.z - h.z) < 9) out.push(a.pos);
       return out.length ? out : null;
+    };
+    // (FACE-2, P86: the two-shot favours whoever speaks — him ('hero') or one of the talkers (their place) — and frames
+    //  that face; where a face is: its head's middle, its scale, for someone seated or asleep the way it keeps facing, and
+    //  the way it faces now)
+    this.camRig.speaker = () => (this.state !== 'dialog' || !this.speaker ? null : this.speaker === this.hero ? 'hero' : this.speaker.pos || null);
+    this.camRig.faceOf = (p) => {
+      let a = p === this.hero.pos ? this.hero : null;
+      if (!a) for (const n of this.talkers || []) if (n.pos === p) { a = n; break; }
+      const hd = a?.rig?.j?.head;
+      if (!hd) return null;
+      const v = hd.getWorldPosition(new THREE.Vector3()), s = a.rig.root.scale.y || 1;
+      return { x: v.x, y: v.y + 0.05 * s, z: v.z, s, yaw: a !== this.hero && (a.pinY != null || a.forceAnim === 'doze') ? a.angle : null, now: a.angle };
     };
     // (CAM-CROWD, PLAYTHROUGH PT-8: the people standing round a dialogue, not in it — its two-shot keeps them out of the way)
     this.camRig.crowd = () => {
@@ -973,10 +991,26 @@ class Game {
   prepSteps(T) {
     const R = this.renderer.renderer, root = this.room?.group || this.world.root, S = [];
     const log = (this.prepLog ??= []), area = this.room?.id || 'citadel';
-    const stepT = (k, f) => S.push(() => { const t0 = performance.now(); f(); log.push({ area, k, ms: Math.round(performance.now() - t0) }); if (log.length > 300) log.shift(); });
+    // (ARRIVAL-STEPS: each entry also counts the shader programs the step made — p — and is numbered — i)
+    const P0 = () => R.info.programs?.length ?? 0, put = (k, t0, p0) => { log.push({ area, k, ms: Math.round(performance.now() - t0), p: P0() - p0, i: (this._prepN = (this._prepN || 0) + 1) }); if (log.length > 300) log.shift(); };
+    const stepT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); f(); put(k, t0, p0); });
     // (FRAME-1: its geometry too, in the black, the shadow batches included: they are built on the area's first update,
     //  which used to come later, so a house's 4.5 MB of batches went up on the first frame shown)
-    stepT('shadow batches', () => { this.lightPool.update(this.hero.pos); if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos); });
+    // ARRIVAL-STEPS: the shadow batches and the draw batches in slices of at most PREP_SLICE_MS a black frame (a slice
+    // ends after the piece or cell that crosses it), staged here so the frame's own update does not build them at once
+    // (the user's GTX 1050 on battery: black frames of 116 ms — shadow batches — and 264 ms — draw batches — in one step)
+    // (stagedBatches false: each in one step, as before — the A/B switch)
+    const staged = this.stagedBatches !== false;
+    const sliceT = (k, f) => S.push(() => { const t0 = performance.now(), p0 = P0(); this.drawBatch.unit = this.shadowCull.unit = this._prepUnit = null; const more = f(); put(k, t0, p0); const u = this._prepUnit?.unit || this.drawBatch.unit || this.shadowCull.unit; if (u) log[log.length - 1].u = u; return more; });
+    if (staged && this.shadowCull.stage(root)) {
+      let lit = false;
+      sliceT('shadow batches', () => {
+        if (!lit) { lit = true; this.lightPool.update(this.hero.pos); }
+        const more = this.shadowCull.slice(root, PREP_SLICE_MS);
+        if (!more && this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);   // (its first update, as the one-step build had)
+        return more;
+      });
+    } else stepT('shadow batches', () => { this.lightPool.update(this.hero.pos); if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos); });
     // FIRST-BUILD (Test Lab finding 4, region-entry: a first visit's 6–11 new programs were compiled at the end of the
     // preparation, the hold waiting for them): on a first visit the area's programs are started now, right after its
     // lamps are chosen, so where the driver compiles in parallel (KHR_parallel_shader_compile: the laptop) they compile
@@ -984,14 +1018,17 @@ class Game {
     // materials) and waits for all of it, as before. Without that extension three compiles them when first used: the
     // same work as before, at the end. (earlyWarm: true always, false never — A/B and probes; unset: where the extension is)
     if (!this.drawBatch.has(root) && R.compileAsync && (this.earlyWarm === true || (this.earlyWarm !== false && R.extensions?.has?.('KHR_parallel_shader_compile')))) {
-      stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
+      if (staged) { let W = null; sliceT('shader warm-up (early)', () => { W ??= this.renderer.precompileParts([root]); const U = (this._prepUnit = {}); return !runFor(W, PREP_SLICE_MS, U).done; }); }   // (ARRIVAL-STEPS: in parts; nothing waits for it)
+      else stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
     }
     if (!this.drawBatch.has(root) && this.drawBatch.enabled) {
       // (the texture layers the batches will read — a canvas read back each — at most LAYER_SLICE_MS a frame)
       const it = warmLayers(root, this.drawBatch.arrays && this.drawBatch.fold); let more = true;
-      S.push(() => { const t0 = performance.now(); while (more && performance.now() - t0 < LAYER_SLICE_MS) more = !it.next().done; log.push({ area, k: 'texture layers', ms: Math.round(performance.now() - t0) }); return more; });   // (true: again next frame)
-      stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
-    } else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
+      S.push(() => { const t0 = performance.now(), p0 = P0(); while (more && performance.now() - t0 < (staged ? PREP_SLICE_MS : LAYER_SLICE_MS)) more = !it.next().done; put('texture layers', t0, p0); return more; });   // (true: again next frame)
+      if (staged) sliceT('draw batches', () => (this.drawBatch.stage(root) ? this.drawBatch.slice(root, PREP_SLICE_MS) : false));   // (ARRIVAL-STEPS: in slices)
+      else stepT('draw batches', () => this.drawBatch.update(root));   // (RENDER-INV: the area's draw batches, before the upload)
+    } else if (staged) sliceT('draw batches back', () => this.drawBatch.readmitSlice(root, PREP_SLICE_MS));   // (ARRIVAL-STEPS: in slices)
+    else stepT('draw batches back', () => this.drawBatch.readmit(root));   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
     // (ROTATE-STALL: Citadel once more on its first entry in play — it was sent at startup, and what was made since (a
     //  harbour piece, a draw-batch cell rebuilt during the title or the opening) went up on the first street frames that
     //  looked at it: the Follow camera's first sweep, 126 and 26 vertices)
@@ -1000,6 +1037,19 @@ class Game {
     { let kids = null;
       for (let c = 0; c < GEO_PARTS; c++) stepT('geometry', () => { if (this._uploaded?.has(root)) return; kids ??= [...root.children]; this.uploadGeometry(root, new Set(kids.slice(Math.floor((c * kids.length) / GEO_PARTS), Math.floor(((c + 1) * kids.length) / GEO_PARTS)))); });
       stepT('geometry', () => this.uploadGeometry(root)); }
+    // ARRIVAL-STEPS: the pieces the hold's frames moved (a mill, a boat) leave their draw batches here, the world matrices
+    // brought up to date first (nothing is drawn in the hold, so they were not), their cells rebuilt in slices — on the
+    // first frame drawn, they left and their cells were rebuilt in that frame (46–67 pieces on the arrivals here). The
+    // batch meshes this remade go up in the next step. (Their shadow batches: the next frame's own update.)
+    if (staged && this.drawBatch.enabled && this.settleOn !== false) {   // (settleOn false: no settle — A/B)
+      let first = true;
+      sliceT('draw batches settle', () => {
+        const t0 = performance.now();
+        if (first && this.drawBatch.settleSlice(root, PREP_SLICE_MS)) return true;
+        first = false;   // (then the shadow batches' own settle, in the time left and the next frames)
+        return this.shadowCull.settleSlice(root, Math.max(1, PREP_SLICE_MS - (performance.now() - t0)));
+      });
+    }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)
     stepT('batch meshes', () => this.uploadBatches(root));
     stepT('textures', () => { this.uploadTextures(root); this.uploadExtras(root); });   // (ROTATE-STALL: what the area's first frame still made)
@@ -1009,15 +1059,26 @@ class Game {
     // its program, ~70–130 ms of main-thread time on SwiftShader's CPU even when nothing is left to compile: on the
     // user's laptop the transition stalls (up to 200 ms) at every door. A state already warmed, with no program made
     // since (anything new compiled anywhere starts it over), needs nothing.
-    stepT('shader warm-up', () => {
-      this.lightPool.update(this.hero.pos);
-      const lights = {};
-      this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
-      const key = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
-      const warmed = (this._warmed ??= new Map());
-      if (warmed.get(key) === R.info.programs.length) return;
-      T.prepWait = this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); this.uploadExtras(root, true); });
-    });
+    // ARRIVAL-STEPS: in parts of at most PREP_SLICE_MS a black frame (renderer.precompileParts: the same programs), then
+    // the wait for the driver as before
+    let W = null, wkey = null;
+    const warm = () => {
+      const t0 = performance.now(), warmed = (this._warmed ??= new Map());
+      if (!W) {
+        this.lightPool.update(this.hero.pos);
+        const lights = {};
+        this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
+        wkey = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
+        if (warmed.get(wkey) === R.info.programs.length) return false;
+        if (!staged) { T.prepWait = this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); }); return false; }
+        W = this.renderer.precompileParts([root]);
+      }
+      const r = runFor(W, Math.max(1, PREP_SLICE_MS - (performance.now() - t0)), (this._prepUnit = {}));
+      if (!r.done) return true;
+      T.prepWait = this.renderer.whenReady(r.value).catch(() => {}).finally(() => { warmed.set(wkey, R.info.programs.length); this.uploadExtras(root, true); });
+      return false;
+    };
+    sliceT('shader warm-up', warm);
     return S;
   }
   // TITLE-LOAD: the next step of the area's preparation (updateTransition's hold: one per black frame). After the last,
@@ -1071,6 +1132,8 @@ class Game {
     if (!root || this.testFreeze || !this.drawBatch?.enabled) return 0;
     const fresh = new Set();
     for (const m of this.drawBatch.meshes(root)) if (m.parent === root && m.geometry && !m.geometry._listeners?.dispose?.length) fresh.add(m);
+    // (ARRIVAL-STEPS: and the shadow batches rebuilt since — pieces the hold's frames moved left them — not on the first frame)
+    if (this.stagedBatches !== false) for (const m of this.shadowCull.areas.get(root)?.proxies || []) if (m.parent === root && m.geometry && !m.geometry._listeners?.dispose?.length) fresh.add(m);
     if (!fresh.size) return 0;
     return this.uploadGeometry(root, fresh, true);
   }
@@ -1265,6 +1328,7 @@ class Game {
       if (typeof spawn === 'function') spawn = spawn(R);
       if (this.room) this.room.group.visible = false;
       this.room = R;
+      this.resetFaces();   // (FACE-1: a scene change: faces neutral, gazes let go)
       this.regions.activate(id);
       R.group.visible = true;
       R.resetCut?.();   // (CUT-RESTORE: a room's cut-away, a porch's fade, start from where he lands: lba1room.js, zeelich.js)
@@ -1321,6 +1385,7 @@ class Game {
       this.regions.activate(null);
       if (R) { R.group.visible = false; R.lights.forEach((l) => { l.intensity = 0; }); }
       this.room = null;
+      this.resetFaces();   // (FACE-1: a scene change)
       this.world.root.visible = true;
       this.env.setRegion(null);
       this.env.setInterior(false);
@@ -1515,6 +1580,7 @@ class Game {
     this.brokenCrates = s.crates || [];
     this.played = Number.isFinite(s.played) ? s.played : null;
     this.tutorial.load(s.tut);   // (a save from before the tips has none: its lessons count as done)
+    this.resetFaces();   // (FACE-1: a load starts every face neutral, nobody's gaze held)
     this.applyCrystals();
     for (const e of this.enemies) if (this.killed.includes(e.id)) koGone(e);
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
@@ -1526,7 +1592,8 @@ class Game {
     this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
     // (ROOMS-FULL: a spot saved in a room that has been drawn smaller since, now off its floor or inside its furniture:
     //  the room's own spawn instead; DECLUTTER: a save in a cut place lands at its region's spawn: migrateSave)
-    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => (!s.respawn && this.onRoomFloor(R, at) ? at : { ...(R.spawn || at) }), true);
+    // (P83: on Zeelich, a spot inside the spaceport terminal's walls, the old deck by the bridge's end: before its door or gate)
+    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => { const p = R.spaceport?.saneSpot?.(at) ?? at; return !s.respawn && this.onRoomFloor(R, p) ? p : { ...(R.spawn || p) }; }, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(this.world.spaceport?.saneSpot?.(at) ?? at, true);   // (SPACEPORT-2: not inside the terminal's walls)
     this.unwedge();
@@ -1854,7 +1921,7 @@ class Game {
   setBackground() {
     const W = this._win, bg = !!(document.hidden || this._blurred || (W && (!W.focused || W.minimized || !W.visible)));
     if (bg === !!this.background) return;
-    this.background = bg; this._due = 0;
+    this.background = bg; this._due = 0; this._drawT = 0;
     this.renderer._fb.length = 0;   // (the automatic resolution starts its count again)
   }
   // the label of the key bound to an action ("E", "Space"...), for prompts
@@ -1927,6 +1994,12 @@ class Game {
         if (this.cine) break;
         this.hideScreens();
         this.bench.runAuto().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
+        break;
+      // FPS30: the same routes at Unlimited, 60 and 30 (engine/bench.js runPacing)
+      case 'benchfps':
+        if (this.cine) break;
+        this.hideScreens();
+        this.bench.runPacing().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
         break;
       case 'benchcopy': navigator.clipboard?.writeText($('#bench-out').value).then(() => this.hud.toast('bench_copied'), () => {}); break;
       // (RETRY, the user 8.11: "Retry goes back to the last autosave with full health")
@@ -2248,6 +2321,7 @@ class Game {
     // AUTO-QUALITY: a preset set directly while Auto is on (the benchmark's fixed runs, a test, a probe) is a preset by
     // hand from then on; Settings' Auto chip sets qualityAuto and the governor's tier
     if (this.settings.qualityAuto && this.autoQ && this.settings.quality !== this.autoQ.tier()) this.settings.qualityAuto = false;
+    { const f = String(this.settings.fps); this.settings.fps = f === '30' || f === '60' ? f : 'auto'; }   // (FPS30: 'auto' is Unlimited — the old "As the screen" / "Off"; anything else unknown too)
     const s = this.settings, was = this._applied || {}, now = { ...s, keys: JSON.stringify(s.keys || {}) };
     const changed = (k) => now[k] !== was[k];
     if (changed('keys') || changed('controls')) { setKeyScheme(s.controls); applyBindings(s.keys || {}); }
@@ -2269,7 +2343,7 @@ class Game {
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
-    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._acc = 0; }
+    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; this._drawT = 0; this.autoQ?.onBudget?.(); }
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
@@ -2511,6 +2585,64 @@ class Game {
     this.speakerColor = color;
     this.audio.duck(true);
     this.hud.say(name, lines, () => { this.speaker = null; this.audio.duck(false); this.setState('play'); done?.(); }, color);
+  }
+
+  // FACE-1 (P67 phase 4, the user 18.11: "the characters lack even basic facial expressions"): each dialogue line sets
+  // the speaker's face from the line's intention — the same one its voice is delivered with (text/voicemeta.js: written
+  // for the scenes that matter; else read from the words, voiceplan.js intentOf) — and the others in the conversation
+  // answer it more softly and look at the speaker; the speaker looks at whoever is spoken to. A face holds a few seconds
+  // past its line, then eases back to neutral. Called by the dialogue box as each line begins (hud.js _line).
+  faceLine(text) {
+    const sp = this.speaker, R = sp?.rig;
+    if (!R?.setFace) return;
+    const en = spoken(text) || text, m = metaFor(en);
+    const RANK = ['neutral', 'curious', 'uncertain', 'pleased', 'relieved', 'concerned', 'urgent', 'determined', 'annoyed'];
+    let face = 'neutral', k = 1;
+    if (m) { for (let i = 0; i < 6; i++) { const n = m.name(i); if (n && RANK.indexOf(n) > RANK.indexOf(face)) face = n; } }
+    else {
+      const p = /(\.\.\.|…|[.!?]+)\s*$/.exec(en)?.[1] || '.';
+      face = { tell: 'neutral', ask: 'curious', unsure: 'uncertain', warm: 'pleased', worry: 'concerned', excl: 'determined', no: 'determined' }[intentOf(en, p)] || 'neutral';
+      k = 0.75;
+    }
+    R.setFace(face, k, 6);
+    // the others: everyone who has spoken, him, and the people turned toward this speaker
+    const others = new Set([this.hero, ...(this.talkers || [])]);
+    for (const n of this.npcs || []) if (n.listenTo === sp) others.add(n);
+    others.delete(sp);
+    const head = (a) => (a._faceV ||= new THREE.Vector3()).set(a.pos.x, a.pos.y + (a.rig.height || 1.9) * (a.rig.root.scale.y || 1) * 0.93, a.pos.z);
+    const echo = { pleased: ['pleased', 0.5], relieved: ['pleased', 0.5], concerned: ['concerned', 0.55], uncertain: ['uncertain', 0.4], annoyed: ['uncertain', 0.5], urgent: ['concerned', 0.4], determined: ['curious', 0.35], curious: ['curious', 0.3] }[face];
+    let near = null, nd = Infinity;
+    for (const o of others) {
+      if (!o?.rig?.setFace || !o.pos || !sp.pos) continue;
+      const d = o.pos.distanceTo(sp.pos);
+      if (d > 12) continue;
+      if (echo) o.rig.setFace(echo[0], echo[1], 6); else o.rig.setFace('neutral');
+      o.rig.gazeAt = head(sp); o.rig.gazeT = 6;
+      if (d < nd) { nd = d; near = o; }
+    }
+    if (near && sp.pos) { R.gazeAt = head(near); R.gazeT = 6; }
+  }
+
+  // FACE-1: every face back to neutral at once (a load, a scene change), no gaze held
+  resetFaces() {
+    for (const a of [this.hero, ...(this.npcs || [])]) {
+      const R = a?.rig;
+      if (!R?.setFace) continue;
+      R.setFace('neutral'); R.gazeAt = null;
+      if (R.face) Object.assign(R.face, R.faceTo);
+    }
+  }
+  // FACE-1: scene events in play (not only dialogue): in a fight — his guard up or in Aggressive — he looks determined;
+  // at under a quarter of his life, concerned. Checked four times a second; each holds for a moment and eases back when
+  // the event is over. A dialogue line's face (faceLine) is left alone while it holds
+  heroFace(dt) {
+    const h = this.hero, R = h?.rig;
+    if (!R?.setFace || (this._hfT = (this._hfT || 0) - dt) > 0) return;
+    this._hfT = 0.25;
+    if (R.faceHold > 0.6 && R.faceHold !== Infinity) return;
+    const low = h.maxHp > 0 && h.hp / h.maxHp < 0.25;
+    if (R.guard || R.aggro) R.setFace('determined', 0.65, 0.6);
+    else if (low) R.setFace('concerned', 0.55, 0.6);
   }
 
   // who is talking: a small triangle pointing down at the speaker's head, in the speaker's colour (the name's colour in
@@ -2791,22 +2923,41 @@ class Game {
     // tell the display's own pace from the game's (engine/bench.js idleProbe). The time is not simulated.
     if (this.benching) {
       this._lag = performance.now() - now;
+      if (this._benchRaf && d > 0) this._benchRaf.push(d);   // (FPS30: every callback's interval, for the frame-rate benchmark's timestamp jitter)
       if (this.benchIdle) { this.benchIdle(now); this.last = now; requestAnimationFrame((t2) => this.loop(t2)); return; }
     }
-    // FRAME-1 / FRAME-2: frame-rate limit (Settings; off by default, off while benchmarking). A limit at or above the
-    // display's measured refresh does nothing: requestAnimationFrame sets the pace, so its jitter can never drop a
-    // frame (the user, 29.10). Below it, a time accumulator: each refresh adds its real interval, a frame is drawn once
-    // the sum reaches the limit less 1.5 ms of tolerance, and the limit is taken off; a remainder of more than half
-    // the limit (a stall) is dropped, so a stall can't cause a burst. A skipped refresh simulates and draws nothing (keys wait in Input): at 30 on a 60 Hz
-    // screen every other refresh is drawn, an even 33 ms.
+    // FRAME-1 / FRAME-2 / FPS30: frame-rate limit (Settings → Display → Frame Rate: 30 / 60 / Unlimited; Unlimited by
+    // default; off while benchmarking, except the benchmark's own frame-rate runs: benchCapMs). A limit at or above the
+    // display's measured refresh does nothing: requestAnimationFrame sets the pace (the user, 29.10). Below it, frames are
+    // due on a fixed grid of target times one limit apart (_due), and a refresh is drawn when it is the one nearest to its
+    // target (no more than half a refresh early): on a 60 Hz display every other refresh, 33.3 ms apart, however much the
+    // timestamps jitter (FPS30: the old accumulator allowed 1.5 ms, and a timestamp 1.6 ms early made the next frame
+    // wait a whole refresh — a 50 ms frame, then a 16.7 ms one to catch up: the user, 19.11, "it does not lock to 30").
+    // The grid keeps the average exact where the refresh is not a multiple of the limit (144 Hz: 34.7 ms, every fifth
+    // 27.8 ms). A frame drawn late — a missed refresh, a stall, a return from the background — starts a new grid from
+    // itself: the next frame is a whole limit later, never a catch-up frame a refresh after. A skipped refresh simulates
+    // and draws nothing; the input it brings waits (Input keeps taps; poll() latches a pad's buttons pressed meanwhile).
     if (this.background && !this.testFreeze && now - (this._bgCheck ?? 0) > 1000) { this._bgCheck = now; if (!document.hidden && document.hasFocus()) this.foreground(); }   // (BG-STUCK)
-    const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
+    const cap = this.benching ? (this.benchCapMs || 0) : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
     const refresh = this._refresh || this._vsync || 1000 / 60;
-    if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
-      this._acc = (this._acc ?? cap) + Math.max(0, d);
-      if (this._acc + LIMIT_TOL_MS < cap) { requestAnimationFrame((t2) => this.loop(t2)); return; }
-      const rem = this._acc - cap; this._acc = rem > cap / 2 ? 0 : rem;   // (signed: a frame drawn up to 1.5 ms early is paid back, so the average is the limit; a stall's late time is dropped: no burst)
-    } else this._acc = cap;   // (unlimited: the next limited frame is due at once)
+    // P88 (the user, 21.11, a 59.9 Hz laptop screen: "30 still jumps"): where the limit is close to a whole number of
+    // refreshes (30 on 59.9 / 60 / 120 Hz), frames are counted in refreshes, not on a grid of 33.33 ms: the grid drifted
+    // against a 16.70 ms refresh by 0.07 ms a frame, and every ~4 s a frame came a refresh early (16.7 ms) — at 59.94 Hz
+    // a long one followed. Now a frame is drawn on the n-th refresh after the last drawn one (at least n − ½ refreshes
+    // after it, by the rAF timestamps, which follow the display): no drift whatever the refresh. A late frame (a missed
+    // refresh) starts the count from itself: no catch-up. Other ratios (75, 144 Hz) keep the grid below.
+    const nR = cap ? Math.round(cap / refresh) : 0;
+    if (cap && nR >= 2 && Math.abs(cap / refresh - nR) < 0.08 && !this.testFreeze && !this.preparing) {
+      if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      this._drawT = now; this._due = 0;
+    } else if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
+      this._drawT = 0;
+      const due = this._due || 0;
+      if (due && now < due - refresh / 2) { this.input.poll?.(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      let nx = (due || now) + cap;
+      if (!due || nx - now < cap - 0.75 * refresh) nx = now + cap;   // (late by most of a refresh or more: a new grid from this frame)
+      this._due = nx;
+    } else { this._due = 0; this._drawT = 0; }   // (no limit: the next limited frame is due at once)
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
@@ -2843,7 +2994,14 @@ class Game {
     // (a heap that shrank since the last frame: a garbage collection ran in the interval)
     const gc = this._jc && this._jc.h && jc.h && this._jc.h - jc.h > 8e6 ? `GC −${((this._jc.h - jc.h) / 1048576).toFixed(0)} MB` : '';
     const dt = Math.min(real, MAX_STEP * MAX_SUB);
-    const n = Math.max(1, Math.ceil(dt / MAX_STEP - 1e-6)), sub = dt / n;
+    // (FPS30: a frame up to 10 % over a whole number of steps keeps that number: at the 30 limit the frame's timestamps
+    //  jitter round 33.3 ms, and a frame of 33.5 ms was simulated as two steps of 16.8, the next as one of 33.2 — alike now)
+    // (FPS30-SMOOTH §4: under the 30 limit the frame is simulated in 60 Hz steps — two steps a drawn frame — so the camera's
+    //  collision and arm rules run at the rate they were tuned at: with one 33 ms step its height reversed twice as often on
+    //  the busiest street route (camsteady, FPS30.md). The step between two drawn frames is an inner one (`_inner`: no
+    //  detail levels, lights or shadow culling). game.simStep overrides it (the A/B))
+    const capNow = this.benching ? this.benchCapMs : this.background ? 0 : this.frameCapMs;
+    const st = this.simStep || (capNow > 20 ? 1 / 60 : MAX_STEP), n = Math.max(1, Math.ceil(dt / st - STEP_TOL)), sub = dt / n;
     this.perf.beginFrame();
     this._renderMs = 0;
     this.benchTick?.(real);
@@ -2928,6 +3086,7 @@ class Game {
         this.hud.updateDialog(dt);
         if (input.pressed('interact') || input.pressed('action') || input.pressed('click') || input.pressed('recenter')) { this.tutorial.event('advance'); this.hud.advance(); }
         this.tutorial.dialog();   // (OPENING-TUT: the box's key hint, in the device in use)
+        if (this.tutorial._mk?.group.visible) this.tutorial._mk.group.visible = false;   // (FACE-2: the step's gold marker, over the head the two-shot frames, waits out the talk; play puts it back)
         this.updateBubble();
         {
           // Twinsen gestures when he speaks and turns to whoever else is talking
@@ -3057,6 +3216,7 @@ class Game {
     if (this.foundObj.next()) return;   // (an object received during a dialogue or a scene: its box, now play is back)
     this.dirty = true;
     this.tutorial.update(dt);   // (OPENING-TUT: before the keys below act, so it sees the inventory's and the map's)
+    this.heroFace(dt);   // (FACE-1: his face from what is happening: a fight, low health)
     if (input.pressed('pause')) { this.pause(); return; }
     if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }
     if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }
@@ -3163,10 +3323,13 @@ class Game {
   }
 }
 
-const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
+const MAX_STEP = 1 / 30, MAX_SUB = 4, STEP_TOL = 0.1; // (see Game.advance)
 // TITLE-LOAD: the longest slice of texture-layer reading (drawbatch.js warmLayers) in one task, behind the black or the
 // loading screen (ms; a slice ends at the first piece past it)
 const LAYER_SLICE_MS = 30;
+// ARRIVAL-STEPS: the longest slice of a scene change's batch builds (and texture layers) in one black frame (ms; a slice
+// ends after the piece or cell that crosses it). With the frame's own work it keeps a black frame near 1.5 refreshes here
+const PREP_SLICE_MS = 12;
 // TITLE-LOAD: the title screen's live view. As shipped: the camera 110 m out, 42 m up, the fog's end as in play, detail
 // levels from the camera. The other values are visible options for the title only, priced in docs/lba3-performance/
 // TITLE-LOAD (each OFF here): `far` a nearer fog end (m), `lodPush` detail levels measured from further out (m),
@@ -3193,10 +3356,51 @@ async function sliced(list, fn, name) {
 // ROTATE-STALL: a scene change's reveal waits for readiness (Game.updateTransition) at most this many frames / ms
 const REVEAL_MAX = 12, REVEAL_MS = 1500;
 const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
-const LIMIT_TOL_MS = 1.5;   // (FRAME-2: the frame-rate limit's tolerance for requestAnimationFrame's jitter)
 function medianOf(a, n) { const b = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return n ? b[n >> 1] : 0; }
 const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
-const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
+const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e && !startupFailed.shown) e.textContent = text; };
+// BOOT-FAIL (P73, the user's review of an exported build: "when WebGL context creation failed, the screen stayed on
+// 'Building Citadel…'"): any failure along the start — the preloads, new Game() (its renderer first), boot() — replaces
+// the progress with a short, accurate message, a Retry and a Copy diagnostics (the technical details stay behind it).
+// A renderer failure says the browser could not start 3D graphics, never that the island is still being built. Retry
+// reloads the page (without the test flag): nothing half-started survives it — no second loop, input handler or audio.
+// Test hook: ?failstart=renderer | game | boot.
+const FAIL_AT = new URLSearchParams(location.search).get('failstart');
+function startupFailed(e, stage = e?.stage || 'start') {
+  console.error('startup failed (' + stage + ')', e);
+  if (startupFailed.shown || typeof document === 'undefined') return;
+  startupFailed.shown = true;
+  const gfx = stage === 'renderer' || /webgl|context/i.test(String(e?.message || ''));
+  const L = document.querySelector('#loading');
+  if (!L) return;
+  L.classList.remove('hidden'); L.style.display = '';
+  for (const id of ['#load-bar', '#loading-step']) { const x = L.querySelector(id); if (x) x.style.display = 'none'; }
+  let gl = 'unknown';
+  try { const c = document.createElement('canvas'); gl = c.getContext('webgl2') ? 'webgl2 ok' : c.getContext('webgl') ? 'webgl1 only' : 'no webgl'; } catch { gl = 'no webgl (threw)'; }
+  const diag = [`LBA3 startup failure · build ${BUILT}`, `stage: ${stage}`, `error: ${e?.message || e}`, `webgl now: ${gl}`,
+    `browser: ${navigator.userAgent}`, `window: ${innerWidth}×${innerHeight} @${devicePixelRatio}`, `time: ${new Date().toISOString()}`,
+    '', String(e?.stack || '')].join('\n');
+  const box = document.createElement('div');
+  box.id = 'boot-fail'; box.setAttribute('role', 'alert');
+  box.style.cssText = 'position:absolute;left:50%;bottom:12%;transform:translateX(-50%);max-width:min(560px,90vw);padding:18px 22px;background:rgba(6,12,20,0.92);border:1px solid rgba(255,255,255,0.4);border-radius:10px;color:#fff;text-align:center;z-index:20;font-size:16px;line-height:1.45';
+  const msg = document.createElement('p'); msg.style.margin = '0 0 14px';
+  msg.textContent = t(gfx ? 'boot_fail_gfx' : 'boot_fail');
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
+  const btn = (key, fn) => { const b = document.createElement('button'); b.textContent = t(key); b.style.cssText = 'padding:8px 18px;font:inherit;font-weight:600;border-radius:8px;border:1px solid rgba(255,255,255,0.6);background:#1f3b57;color:#fff;cursor:pointer'; b.addEventListener('click', fn); row.appendChild(b); return b; };
+  btn('boot_retry', () => { const u = new URL(location.href); u.searchParams.delete('failstart'); location.replace(u.toString()); }).dataset.act = 'boot-retry';
+  // the details always shown in a box to select (FULL-TEST 20.11: the clipboard's promise can hang without an answer, and
+  // the click then showed nothing); copied as well where the browser allows it
+  const copy = btn('boot_copy', async () => {
+    let ta = box.querySelector('textarea');
+    if (!ta) { ta = document.createElement('textarea'); ta.value = diag; ta.readOnly = true; ta.style.cssText = 'display:block;width:100%;height:120px;margin-top:10px;font:12px monospace'; box.appendChild(ta); }
+    ta.select();
+    try { await navigator.clipboard.writeText(diag); copy.textContent = t('boot_copied'); } catch { /* the box is there to select */ }
+  });
+  copy.dataset.act = 'boot-copy';
+  box.append(msg, row);
+  L.appendChild(box);
+  startupFailed.diag = diag;
+}
 // the loading screen's bar (#27): real steps, and across the long synchronous builds an estimated pace (this
 // computer's previous start) animated on the compositor, so it keeps moving while the main thread builds
 const LOADT_KEY = 'lba3.loadTimes';
@@ -3306,7 +3510,10 @@ const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 const noBake = new URLSearchParams(location.search).has('nobake');
 // VOICE-2: the developer-only voice audition view (?voicelab; src/engine/voicelab.js), loaded only with the flag
 if (/[?&]voicelab\b/.test(location.search)) import('./engine/voicelab.js').then((m) => m.openVoiceLab()).catch((e) => console.warn('voicelab', e));
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); window.game = new Game(); });
+// (BAKE-URL, 19.11: the artifact serves the baked geometry as assets/bake.wasm — artifacts serve web media types only —
+//  and its page is index.html as it is, without artifact-page.py's LBA_BAKE_URL: bake.bin was a 404 there and every
+//  artifact start sculpted from scratch; now the second name is tried)
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false).then((ok) => ok || loadBake('assets/bake.wasm').catch(() => false)), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); if (FAIL_AT === 'game') throw Object.assign(new Error('forced by ?failstart=game'), { stage: 'game' }); window.game = new Game(); }).catch((e) => startupFailed(e, e?.stage || 'game'));
 
 // the mouse pointer (the user: "a mouse appears in the game and doesn't go away"): hidden while playing with the
 // keys or a pad, or after it rests 2.5 s; any mouse move brings it straight back (menus, aiming the ball)

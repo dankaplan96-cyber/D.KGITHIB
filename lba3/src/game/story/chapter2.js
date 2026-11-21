@@ -23,8 +23,18 @@ import { crossByShip } from '../travelfilm.js';
 import '../text/ch2.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
 import { LiftThread } from './zeelift.js';
+//
+// MILLS (REVIEW-TASKS-19-11 task 5): the brakes have a cost. The plaza fountain and the pumps up to the east terraces run
+// off the same mills (zeelich.js R.fountain: it runs while all three turn). The first brake stops it: a cut-away to the
+// fountain going still with Oku beside it, who says what it costs and when the brakes may come off (once the shield is
+// open). From the shield on, the ball knocks a braked mill's brake loose (flags c2_free_<mill>, saved; the key holds the
+// shield open). Released, all three: the fountain runs again (a second cut-away) and Oku remembers — in chapter 9 he
+// stamps the petition without his errand (council.js), and his lines in between change (zeelife.js). Left braked (or a
+// save from before this, which has no c2_free_ flags): chapter 9 is as it was, "a week without water", and his errand
+// frees only the mills still braked (no mill is released twice). Past the council every mill turns.
 
 const DIAL = ['sun', 'wave', 'star'];
+const MILL_IDS = ['north', 'east', 'south'];   // (zeelich.js MILLS: the flags c2_mill_<id>, c2_free_<id>, c9_free_<id>)
 // Zeelich's street folk and where they stand
 const ZFOLK = [['zbee1', 'bee1'], ['zbee2', 'bee2'], ['zmole1', 'mole1'], ['zmole2', 'mole2'], ['ztri1', 'tri1'], ['ztri2', 'tri2']];
 const SOLUTION = [0, 1, 2];
@@ -35,7 +45,17 @@ export class Chapter2 extends ChapterBase {
   // where the project's ship sets him down: Zeelich Spaceport's deck (travel.js), the dock in a build without it
   arrival() { const Z = this.Z; return Z.spaceport?.landing || Z.dock; }
   inZ() { return this.game.room?.id === 'zeelich'; }
-  millsBraked() { return (this.Z?.mills || []).filter((m) => this.f['c2_mill_' + m.id]).length; }
+  // (MILLS: counted from the flags, so the journal and the later chapters can ask without Zeelich built: LAZY-REGIONS)
+  millsBraked() { return MILL_IDS.filter((id) => this.f['c2_mill_' + id]).length; }
+  // MILLS: braked mills knocked loose again in this chapter, once the shield was open
+  millsFreed() { return MILL_IDS.filter((id) => this.f['c2_mill_' + id] && this.f['c2_free_' + id]).length; }
+  // all three let go in this chapter (read by council.js and zeelife.js: Oku remembers)
+  millsBack(f = this.f) { return MILL_IDS.every((id) => f['c2_free_' + id]); }
+  // a mill held by its chapter-3 brake now: not freed here, nor by Oku's errand (chapter 9), nor past the council
+  heldNow(m) {
+    const f = this.f, ci = this.story.chapters.findIndex((c) => c.key === 'council');
+    return !!f['c2_mill_' + m.id] && !f['c2_free_' + m.id] && !f['c9_free_' + m.id] && !(ci >= 0 && this.story.index > ci);
+  }
 
   // ---------------------------------------------------------------- cast
   npcDefs() {
@@ -99,7 +119,8 @@ export class Chapter2 extends ChapterBase {
       case 'guard':
         // (meets the ship: there from the landing on, while he has the plan to take. It was put there only once Doran's
         //  first lines were done, so he appeared out of nowhere beside Twinsen on the open deck)
-        if (!f.c2_planTaken && f.c1_plan) { const L = this.arrival(); return { x: L.x + 0.6, z: L.z - 1.8, a: 0 }; }
+        // (P83: beside him, facing him: 1.8 m before him is the spaceport terminal's gate now)
+        if (!f.c2_planTaken && f.c1_plan) { const L = this.arrival(); return { x: L.x + 1.6, z: L.z + 0.3, a: -Math.PI / 2 }; }
         return f.c2_shield ? { x: plat.gate.x + 0.5, z: plat.gate.z + 3.2, a: -Math.PI / 2 } : S.guard;
       case 'zoe': return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
       case 'worker': return null;
@@ -221,7 +242,7 @@ export class Chapter2 extends ChapterBase {
       case 'c2mic': {
         const d = this.dials || [1, 2, 0];
         if (d.every((v, i) => v === SOLUTION[i])) this.broadcast();
-        else { g.audio.play('deny'); this.chain([['zoe', 'c2_mic_wrong'], ['radio', 'c2_radio_wrong']]); }
+        else { g.audio.play('deny'); this.chain([['zoe', 'c2_mic_wrong'], ['balradio', 'c2_radio_wrong']]); }
         return true;
       }
     }
@@ -243,7 +264,10 @@ export class Chapter2 extends ChapterBase {
       case 'oku':
         if (f.c2_planBack && !f.c2_okuOK) return c([['hero', 'c2_tw_show_oku'], ['oku', 'c2_oku_plan']], () => { f.c2_okuOK = true; g.updateObjective(); g.save(false); });
         if (f.c2_plan && f.c2_planTaken && !f.c2_okuOK && !f.c2_cog) return c([['oku', 'c2_oku_1'], ['oku', 'c2_oku_ask']]);
-        if (this.millsBraked() >= 3) return c([['oku', 'c2_oku_after']]);
+        // (MILLS: the cost while a mill is braked; once the shield is open, let them go; all three back)
+        if (this.millsBraked() && this.millsBack()) return c([['oku', 'c2_oku_back']]);
+        if (this.millsBraked() && f.c2_shield) return c([['oku', 'c2_oku_free']]);
+        if (this.millsBraked()) return c([['oku', 'c2_oku_dry1'], ['oku', 'c2_oku_dry2']]);
         if (f.c2_plan && !f.c2_cog) return c([['oku', 'c2_oku_mill']]);
         return c([['oku', 'c2_oku_1'], ['oku', 'c2_oku_2']]);
       case 'baldino':
@@ -259,9 +283,11 @@ export class Chapter2 extends ChapterBase {
       case 'guard': return c([['guard', f.c2_shield ? 'c2_guard_after' : 'c2_guard_block']]);
       case 'vesk':
         if (f.c2_shield && !f.c2_veskDown) {
-          const lines = [['vesk', 'c2_vesk_1'], ['hero', 'c2_tw_vesk1'], ['vesk', 'c2_vesk_2']];
-          if (this.npc('baldino')?.present) lines.push(['baldino', 'c2_bal_vesk']);
-          lines.push(['vesk', 'c2_vesk_3'], ['hero', 'c2_tw_vesk2'], ['vesk', 'c2_vesk_4']);
+          // (P81 / VESK: the people left off the plan, his answer, the readings; the drill's argument from Baldino when he
+          //  is on the platform, else from Twinsen in his words, and Vesk answers whichever was said)
+          const bal = !!this.npc('baldino')?.present;
+          const lines = [['vesk', 'c2_vesk_1'], ['hero', 'c2_tw_vesk1'], ['vesk', 'c2_vesk_2'], ['vesk', 'c2_vesk_2b'],
+            bal ? ['baldino', 'c2_bal_vesk'] : ['hero', 'c2_tw_vesk_drill'], ['vesk', bal ? 'c2_vesk_3' : 'c2_vesk_3b'], ['hero', 'c2_tw_vesk2'], ['vesk', 'c2_vesk_4']];
           const beat = this.veskBeat();   // (REVEAL-CAMS: a close two-shot while he speaks, then the low view of the descent; null with ?nocine and in the tests)
           return c(lines, () => this.veskDescends(beat));
         }
@@ -271,19 +297,24 @@ export class Chapter2 extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- mills (magic ball on the brake)
+  // (MILLS: before the shield the ball brakes a turning mill; from the shield on it knocks a braked one loose)
   ballHit(p) {
     const f = this.f;
     if (!this.inZ() || !f.c2_plan) return false;
     for (const m of this.Z.mills) {
-      if (f['c2_mill_' + m.id]) continue;
-      if (Math.hypot(p.x - m.brake.x, p.y - m.brake.y, p.z - m.brake.z) < 0.9) { this.brakeMill(m); return true; }
+      const near = Math.hypot(p.x - m.brake.x, p.y - m.brake.y, p.z - m.brake.z) < 0.9;
+      if (!near) continue;
+      if (!f['c2_mill_' + m.id] && !f.c2_shield) { this.brakeMill(m); return true; }
+      if (f['c2_mill_' + m.id] && f.c2_shield && !f['c2_free_' + m.id]) { this.freeMill(m); return true; }
     }
     return false;
   }
   ballTargets() {
     const f = this.f;
     if (!this.inZ() || !f.c2_plan) return [];
-    return this.Z.mills.filter((m) => !f['c2_mill_' + m.id]).map((m) => ({ x: m.brake.x, y: m.brake.y, z: m.brake.z }));
+    const at = (m) => ({ x: m.brake.x, y: m.brake.y, z: m.brake.z });
+    if (f.c2_shield) return this.Z.mills.filter((m) => f['c2_mill_' + m.id] && !f['c2_free_' + m.id]).map(at);
+    return this.Z.mills.filter((m) => !f['c2_mill_' + m.id]).map(at);
   }
   brakeMill(m, silent = false) {
     const g = this.game, f = this.f;
@@ -293,7 +324,32 @@ export class Chapter2 extends ChapterBase {
     g.audio.play('chest');
     g.particles.burst(m.brake.x, m.brake.y, m.brake.z, '#ffe8a0', 16, 3);
     g.hud.toast('c2_toast_mill', { n: this.millsBraked() });
-    this.chain([['hero', 'c2_mill_brake']], () => { g.updateObjective(); g.save(false); });
+    const first = this.millsBraked() === 1;   // (MILLS: the first brake stops the fountain: seen, and what it costs)
+    this.chain([['hero', 'c2_mill_brake']], () => {
+      if (!first) { g.updateObjective(); g.save(false); return; }
+      this.fountainBeat([['oku', 'c2_oku_dry1'], ['oku', 'c2_oku_dry2']], () => { g.updateObjective(); g.save(false); });
+    });
+  }
+  // MILLS: the ball knocks a braked mill's brake loose (from the shield on); the third brings the fountain back
+  freeMill(m) {
+    const g = this.game, f = this.f;
+    f['c2_free_' + m.id] = true;
+    m.setSpinning(true);
+    g.audio.play('chest');
+    g.particles.burst(m.brake.x, m.brake.y, m.brake.z, '#ffe8a0', 16, 3);
+    g.hud.toast('c2_toast_free', { n: this.millsFreed() });
+    const all = this.millsBack();
+    this.chain([['hero', 'c9_mill_free']], () => {
+      if (!all) { g.updateObjective(); g.save(false); return; }
+      this.fountainBeat([['oku', 'c2_oku_back']], () => { g.updateObjective(); g.save(false); });
+    });
+  }
+  // a cut-away to the plaza fountain (Oku stands by it) while his lines are said; none with ?nocine and in the tests
+  fountainBeat(lines, done) {
+    const g = this.game, F = this.Z?.fountain;
+    const beat = F ? revealBeat(g, { in: 0.6 }) : null;
+    beat?.show(() => ({ pos: new THREE.Vector3(F.x + 8.0, F.y + 3.0, F.z + 3.6), look: new THREE.Vector3(F.x, F.y + 1.2, F.z + 3.0), fov: 44 }), 0.6);
+    this.chain(lines, () => { beat?.release(1.0); done(); });
   }
 
   // ---------------------------------------------------------------- the key
@@ -359,7 +415,7 @@ export class Chapter2 extends ChapterBase {
     if (silent) return;
     g.audio.play('rumble');
     g.camRig.shake(0.4);
-    this.chain([['hero', 'c2_shield_down']], () => { g.updateObjective(); g.save(false); });
+    this.chain([['hero', 'c2_shield_down'], ['hero', 'c2_tw_free']], () => { g.updateObjective(); g.save(false); });
   }
   // REVEAL-CAMS: Vesk's last words in a medium two-shot with Twinsen, then (veskDescends) the low view of him on the lift
   veskBeat() {
@@ -428,8 +484,9 @@ export class Chapter2 extends ChapterBase {
         const s = this.ship, h = g.hero;   // (he turns to watch it go)
         if (s) { const p = s.getWorldPosition(new THREE.Vector3()); h.angle = Math.atan2(p.x - h.pos.x, p.z - h.pos.z); }
         g.setState('play');
-        const bal = this.npc('baldino')?.present ? 'baldino' : 'balradio';
-        this.chain([['hero', 'c2_after_tw'], [bal, 'c2_ship_bal'], [bal, 'c2_after_bal'], [bal, 'c2_ship_bal2']], () => { g.updateObjective(); g.save(false); });
+        // (P81: the camera has shown the pad and the ship: nobody narrates it. Baldino says why they wait, then the plans)
+        const here = !!this.npc('baldino')?.present, bal = here ? 'baldino' : 'balradio';
+        this.chain([[bal, 'c2_ship_bal2'], [bal, here ? 'c2_after_bal' : 'c2_after_bal_r']], () => { g.updateObjective(); g.save(false); });
       }
     };
   }
@@ -504,7 +561,7 @@ export class Chapter2 extends ChapterBase {
   }
   onEnterRoom(id) {
     const f = this.f;
-    if (id === 'lighttop' && f.c2_zoeStart && !f.c2_broadcast) this.chain([['zoe', 'c2_zoe_in'], ['radio', 'c2_radio_freq']]);
+    if (id === 'lighttop' && f.c2_zoeStart && !f.c2_broadcast) this.chain([['zoe', 'c2_zoe_in'], ['balradio', 'c2_radio_freq']]);
   }
   applyFlags() {
     const f = this.f, RG = this.game.regions;
@@ -517,7 +574,8 @@ export class Chapter2 extends ChapterBase {
     RG.whenBuilt('zeelich', (Z) => Z.ferry?.setVisible?.(false));   // (the dock's sky-ferry stays away: Twinsun and Zeelich are joined by spaceship only)
     if (!this.reached()) return;
     RG.whenBuilt('zeelich', (Z) => {
-      for (const m of Z.mills) if (f['c2_mill_' + m.id]) this.brakeMill(m, true);
+      // (MILLS: a mill braked here stays still until it is let go: here, by Oku's errand, or past the council)
+      for (const m of Z.mills) if (f['c2_mill_' + m.id]) m.setSpinning(!this.heldNow(m));
       if (f.c2_shield) this.shieldDown(true);   // (keeps the flag set; the shield goes down)
     });
     if (f.c2_zoeStart && !f.c2_broadcast) f.c2_zoeStart = false;
@@ -529,8 +587,10 @@ export class Chapter2 extends ChapterBase {
     if (!f.c2_started) return '';
     if (!f.c2_plan) { const lo = this.lift.objective(); if (lo) return lo; if (this.lift.on) return this.goal('zt_obj_baldino'); }
     const n = this.millsBraked();
-    if (f.c2_veskDown) return this.goal('c2_obj_shaft');
-    if (f.c2_shield) return this.goal('c2_obj_vesk');
+    // (MILLS: from the shield on, letting the mills go is offered, never required)
+    const back = n && f.c2_shield ? this.sub(this.millsFreed() >= 3, 'c2_sub_free', { n: this.millsFreed() }) : '';
+    if (f.c2_veskDown) return this.goal('c2_obj_shaft') + back;
+    if (f.c2_shield) return this.goal('c2_obj_vesk') + back;
     if (f.c2_zoeStart && !f.c2_broadcast) return this.goal('c2_obj_zoe');
     if (f.c2_key) return n < 3 ? this.goal('c2_obj_mills', { n }) : this.goal('c2_obj_gate');
     if (f.c2_cog && f.c2_cyl) return this.goal('c2_obj_build') + this.sub(n >= 3, 'c2_sub_mills', { n });
@@ -572,7 +632,9 @@ export class Chapter2 extends ChapterBase {
       { key: 'c2_j_parts', done: !!(f.c2_cog && f.c2_cyl) },
       { key: 'c2_j_key', done: !!f.c2_key },
       { key: 'c2_j_zoe', done: !!f.c2_broadcast },
+      { key: 'c2_j_dry', done: this.millsBraked() > 0 },
       { key: 'c2_j_shield', done: !!f.c2_shield },
+      { key: 'c2_j_free', done: this.millsBack() },
       { key: 'c2_j_vesk', done: !!f.c2_veskDown },
       { key: 'c2_j_sealed', done: !!f.c2_done || this.story.index > this.pos },
     ].filter((l) => l.done);

@@ -50,6 +50,20 @@ export function hitchList(buf) {
 // (STABILIZATION: a CPU-by-section summary on one line, in a fixed order)
 const SEC_ORDER = ['people', 'hero', 'enemies', 'physics', 'interact', 'camera', 'other sim', 'submit other', 'submit main', 'submit shadow', 'submit post'];
 function secLine(c) { const keys = [...SEC_ORDER.filter((k) => c[k]), ...Object.keys(c).filter((k) => !SEC_ORDER.includes(k))]; return keys.map((k) => `${k} ${c[k].p50} / ${c[k].mean} (${c[k].calls})`).join(' · '); }
+// FPS30: a run's drawn-frame intervals (the frames behind a scene change's black apart) against its pace: the limit L (ms)
+// when it is above the refresh, otherwise the refresh
+export function pacingStats(frames, L, refresh) {
+  const F = frames.filter((f) => !f.black), all = frames.length;
+  if (!F.length) return null;
+  const ms = F.map((f) => f.ms), v = ms.slice().sort((a, b) => a - b), pc = (p) => +v[Math.min(v.length - 1, Math.floor(p * v.length))].toFixed(1);
+  const R = refresh || 1000 / 60, pace = L && L > R + 1 ? L : R;
+  let catchUp = 0; for (let k = 1; k < ms.length; k++) if (ms[k - 1] >= 1.35 * pace && ms[k] <= 0.75 * pace) catchUp++;
+  const w = F.map((f) => (f.sim || 0) + (f.render || 0)).sort((a, b) => a - b), wp = (p) => +w[Math.min(w.length - 1, Math.floor(p * w.length))].toFixed(1);
+  const real = ms.reduce((a, b) => a + b, 0) / 1000;
+  return { n: F.length, fps: +(F.length / Math.max(real, 1e-6)).toFixed(1), p50: pc(0.5), p95: pc(0.95), p99: pc(0.99), max: pc(1), pace: +pace.toFixed(2),
+    onPace: Math.round((100 * ms.filter((x) => Math.abs(x - pace) <= 0.12 * pace).length) / F.length), slow: ms.filter((x) => x >= 1.5 * pace).length, catchUp,
+    over50: frames.filter((f) => f.ms > 50).length, black: frames.filter((f) => f.ms > 50 && f.black).length, blackFrames: all - F.length, work50: wp(0.5), work95: wp(0.95) };
+}
 export const BENCH_AREAS = ['house', 'arena', 'zeelich', 'desert', 'hamalayi'];
 // ROTATE-STALL: the sweep route's turn (s per 360°), and a route's frames by their label (the sweep: the view's compass
 // heading): frame p50 / p95, the share over 20 ms (a 60 Hz refresh missed), draw calls, triangles, and the GPU's own
@@ -626,6 +640,104 @@ export class Bench {
       next();
     });
   }
+  // FPS30 (the user's brief, 18.11): "frame rates" — the same routes at Unlimited, 60 and 30, one after another on each
+  // route (so the same scene is compared back to back), the quality in force held for every run (Auto's governor paused,
+  // the automatic resolution off: the same effective quality), each warmed WARM s and measured opts.measure (10) s with
+  // the frame-rate limit applied as in play (the other runs measure without it). Per run: drawn frames a second, the
+  // drawn-frame intervals (p50 / p95 / p99 / max), the share on pace (within ±12 % of the limit, or of the refresh when
+  // the limit does not apply), intervals of 1.5× the pace or more (a 50 / 66.7 ms frame at 30), a long interval followed
+  // by a short one (a catch-up), frames over 50 ms (and behind black), the GPU's time a frame and a second, the game's CPU
+  // work a frame and a second. Pause → Frame Rate Benchmark, or game.bench.runPacing({ routes, limits: [0, 60, 30], measure }).
+  runPacing(opts = {}) {
+    const G = this.g, A = G.autoQ;
+    if (this.running) return Promise.resolve(null);
+    if (G.regions.missing(BENCH_AREAS).length) return this.prepareAreas().then(() => this.runPacing(opts));
+    const ids = opts.routes || ['street', 'interior', 'combat', 'arrival'], limits = (opts.limits || [0, 60, 30]).map((f) => (f ? 1000 / f : 0));
+    const routes = ids.map((id) => this.routes().find((r) => r.id === id)).filter(Boolean);
+    if (!routes.length) return Promise.resolve(null);
+    this.running = true;
+    this.setCamera(opts.camera); this.secOn();
+    const snap = G.snapshot(), state0 = G.state, C = G.camRig, cam0 = { view: C.view, yaw: C.yaw, pitch: C.pitch }, t0 = performance.now();
+    const gov0 = A?.gov.enabled; if (A) A.gov.enabled = false;
+    const auto0 = G.renderer.autoRes; G.renderer.setAutoRes(false);
+    const quality = A?.on?.() ? `Auto — ${A.label()} (held for the run)` : `${G.settings.quality} (chosen by hand)`;
+    G.benching = true;
+    G.renderer.timer = G.perf.gpuTimer; if (G.perf.gpuTimer) G.perf.gpuTimer.stride = 1;
+    G.hideScreens?.(); G.setState('play');
+    const plan = []; for (const r of routes) for (const L of limits) plan.push({ r, L });
+    const MEASURE_P = opts.measure ?? 10, results = [];
+    return new Promise((resolve) => {
+      let i = -1, t = 0, warm = 0, cur = null;
+      G.perf.onRecord = (f) => { if (cur?.measuring) cur.frames.push(f); };
+      const next = () => {
+        i++;
+        if (i >= plan.length) return finish();
+        cur = { ...plan[i], frames: [], cpu: cpuProbe(), measuring: false };
+        G.benchCapMs = cur.L; G._due = 0;
+        this.untag(); G.state = 'play'; cur.r.setup(); t = 0; warm = 0;
+        G.hud?.toast?.('bench_route', { n: i + 1, of: plan.length });
+      };
+      G.benchTick = (real) => {
+        if (!cur || G.gfxHold) return;
+        t += real; G.state = 'play';
+        cur.r.drive(t, real);
+        if (warm < WARM) { if (!G.trans) warm += real; if (warm >= WARM) { G.perf.reset(); cur.measuring = true; G._benchRaf = []; } return; }
+        if (t >= WARM + MEASURE_P) {
+          cur.measuring = false;
+          results.push({ id: cur.r.id, L: cur.L, frames: cur.frames, raf: G._benchRaf || [], gpu: G.perf.gpuTimer?.stats() ?? null, refresh: G.refreshMs?.() || null, cpu: cur.cpu, pr: G.renderer.pixelRatio?.() ?? null });
+          next();
+        }
+      };
+      const finish = () => {
+        G.benchTick = null; G.perf.onRecord = null; cur = null; G.benchCapMs = 0; G._due = 0; G._benchRaf = null; this.untag();
+        if (A) A.gov.enabled = gov0;
+        G.resetCombat('drop'); G.applySave(snap);
+        G.benching = false; G.renderer.setAutoRes(auto0); G.renderer.timer = A?.timer?.() ?? null;
+        this.secOff(); const camMode = this.camMode; this.restoreCamera(cam0);
+        G.setState(state0 === 'title' ? 'play' : state0 === 'pause' ? 'play' : state0);
+        this.running = false;
+        const text = this.reportPacing(results, quality, t0, camMode);
+        console.log(text);
+        resolve(text);
+      };
+      next();
+    });
+  }
+  // FPS30: one run's numbers from its drawn frames (exported for the tests: pacingStats)
+  reportPacing(results, quality, t0, camMode = 'orbit') {
+    const G = this.g, lines = [], name = (L) => (L ? `${Math.round(1000 / L)}` : 'Unlimited');
+    lines.push(`LBA3: The Awakening benchmark — frame rates (Unlimited / 60 / 30), the same routes and quality · build ${G.version || '?'} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`);
+    lines.push(`GPU (as reported by the browser): ${G.perf.gpu} · power: ${G.power ? G.power.describe() : '?'} · window ${innerWidth}×${innerHeight} · devicePixelRatio ${devicePixelRatio} · render pixel ratio ${results[0]?.pr?.toFixed?.(2) ?? '?'} · user agent ${navigator.userAgent.match(/(Electron|Chrome|Firefox|Safari)\/[\d.]+/g)?.join(' ') || '?'}`);
+    if (/SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(G.perf.gpu || '')) lines.push('NOTE: software rendering (no GPU acceleration in this browser): every number below is CPU-drawn');
+    { const r = G.refreshMs?.(); lines.push(`display refresh measured from requestAnimationFrame: ${r ? `${(1000 / r).toFixed(1)} Hz (median interval ${r.toFixed(2)} ms)` : '?'} · quality: ${quality} · automatic resolution off · camera: ${camMode === 'follow' ? 'Follow' : "the benchmark's free orbit"} · your Frame Rate setting: ${G.settings.fps === 'auto' ? 'Unlimited' : G.settings.fps}`); }
+    lines.push(this.prepLine());
+    lines.push('', 'route      limit       fps   interval p50 / p95 / p99 / max ms   on pace   >=1.5x pace   long->short   >50 ms (black)   GPU ms p50 / p95 · per s   CPU work ms p50 / p95 · per s');
+    const rows = [];
+    for (const x of results) {
+      const S = pacingStats(x.frames, x.L, x.refresh);
+      if (!S) { lines.push(`  ${x.id.padEnd(9)} ${name(x.L).padEnd(10)} no frames`); continue; }
+      const g = x.gpu; rows.push({ x, S });
+      lines.push(`  ${x.id.padEnd(9)} ${name(x.L).padEnd(10)} ${String(S.fps).padStart(5)}   ${S.p50} / ${S.p95} / ${S.p99} / ${S.max}`.padEnd(70)
+        + `${String(S.onPace).padStart(4)} %   ${String(S.slow).padStart(5)}        ${String(S.catchUp).padStart(4)}          ${S.over50} (${S.black})`.padEnd(52)
+        + `${g ? `${g.p50} / ${g.p95} · ${(g.p50 * S.fps).toFixed(0)}` : 'n/a'}`.padEnd(28) + `${S.work50} / ${S.work95} · ${(S.work50 * S.fps).toFixed(0)}`);
+    }
+    // the answer per limit, over the routes (without frames behind black)
+    lines.push('', 'per limit, over the routes: fps · interval p95 / p99 · on pace · >=1.5x pace · GPU ms per second · CPU work ms per second');
+    for (const L of [...new Set(results.map((x) => x.L))]) {
+      const R = rows.filter((y) => y.x.L === L); if (!R.length) continue;
+      const m = (f) => R.reduce((a, y) => a + f(y), 0) / R.length;
+      lines.push(`  ${name(L).padEnd(10)} ${m((y) => y.S.fps).toFixed(1)} fps · ${m((y) => y.S.p95).toFixed(1)} / ${m((y) => y.S.p99).toFixed(1)} ms · ${m((y) => y.S.onPace).toFixed(0)} % · ${R.reduce((a, y) => a + y.S.slow, 0)} · GPU ${R.every((y) => y.x.gpu) ? m((y) => y.x.gpu.p50 * y.S.fps).toFixed(0) : 'n/a'} ms/s · CPU ${m((y) => y.S.work50 * y.S.fps).toFixed(0)} ms/s`);
+    }
+    // the frame callbacks themselves: how far each callback's timestamp interval is from a whole number of refreshes (the
+    // display's clock as the browser hands it over; a jitter over ~1.5 ms broke the old 30 limit), and the 30 runs' first
+    // drawn intervals as they came
+    { const R = G.refreshMs?.() || 1000 / 60, dev = results.flatMap((x) => x.raf.map((d) => Math.abs(d - Math.max(1, Math.round(d / R)) * R))).sort((a, b) => a - b), pc = (p) => dev.length ? dev[Math.min(dev.length - 1, Math.floor(p * dev.length))].toFixed(2) : '?';
+      lines.push('', `frame callbacks: ${dev.length} timestamps · distance from a whole number of refreshes p50 ${pc(0.5)} / p95 ${pc(0.95)} / max ${pc(1)} ms · callbacks a refresh or more apart (missed): ${results.reduce((a, x) => a + x.raf.filter((d) => d > 1.5 * R).length, 0)}`);
+      for (const x of results.filter((y) => y.L > 30)) lines.push(`  ${x.id} at ${Math.round(1000 / x.L)}: the first drawn intervals (ms): ${x.frames.slice(0, 40).map((f) => f.ms.toFixed(1)).join(' ')}`); }
+    lines.push('', 'Intervals are between drawn frames, from requestAnimationFrame timestamps (when each frame began), not verified display presentation. "On pace": within ±12 % of the limit (or of the refresh when the limit does not apply). ">=1.5x pace": a frame that took a whole extra refresh or more (50 / 66.7 ms at 30). "long->short": a long interval followed by a short one (a catch-up). Frames behind a scene change\'s black screen are counted apart. GPU / CPU ms per second = the time a frame × frames a second: the share of each second the GPU / the game\'s CPU work is busy — a guide to power use, not a power measurement.');
+    return lines.join('\n');
+  }
+
   reportAuto(results, start, t0, camMode = 'orbit') {
     const G = this.g, A = G.autoQ, lines = [];
     lines.push(`LBA3: The Awakening benchmark — Quality Auto as played · build ${G.version || '?'} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`);

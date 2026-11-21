@@ -82,10 +82,26 @@ export function makeTree(env) {
     for (let i = 0; i < Math.ceil(n * 0.4); i++) { const a = Math.random() * 6.283, s = 0.9 + Math.random() * 1.6; fx.spawn({ x: x + Math.cos(a) * 0.3, y: y + Math.random() * 0.3, z: z + Math.sin(a) * 0.3, vx: Math.cos(a) * s, vy: up * (0.4 + Math.random() * 0.7), vz: Math.sin(a) * s, color: '#f6faff', a: 0.55, s0: sz * 0.5, s1: sz * 1.8, life: 1.1 + Math.random() * 0.8, grav: 0.3, drag: 1.6, add: 0, cell: 1, fi: 0.1, fo: 0.5 }); }
   };
   let falling = false;
+  // (PUZZLES phase 2: it stands leaning out over the gorge on an old prop; a ball on it rocks it toward the gorge and it
+  //  settles back onto the prop: rock(). The fall starts from the lean)
+  const LEAN = 0.1;
+  tree.rotation.x = LEAN;
+  let rockT = -1;
+  const rock = () => {
+    if (falling || rockT >= 0) return;
+    rockT = 0;
+    updaters.push(function rk(dt) {
+      rockT += dt;
+      if (falling) { updaters.splice(updaters.indexOf(rk), 1); rockT = -1; return; }
+      const u = rockT / 1.1;
+      tree.rotation.x = LEAN + 0.07 * Math.sin(u * Math.PI * 2.5) * Math.max(0, 1 - u) * (Math.sin(u * Math.PI * 2.5) > 0 ? 1 : 0.25);
+      if (u >= 1) { tree.rotation.x = LEAN; rockT = -1; updaters.splice(updaters.indexOf(rk), 1); }
+    });
+  };
   const fell = (instant = false) => {
     if (instant) { tree.rotation.x = Math.PI / 2; tree.position.y = yF; blob.visible = false; return; }
     if (falling) return; falling = true;
-    let th = 0.012, w = 0.12, t = 0, phase = 0, hop = 0, hv = 0, hops = 0, shed = 0;
+    let th = Math.max(0.012, tree.rotation.x), w = 0.12, t = 0, phase = 0, hop = 0, hv = 0, hops = 0, shed = 0;
     const bl = { on: false, v: new THREE.Vector3(), spin: new THREE.Vector3() };
     const step = (h, fx) => {
       t += h;
@@ -129,5 +145,5 @@ export function makeTree(env) {
       if (end) { tree.rotation.x = Math.PI / 2; tree.rotation.z = 0; tree.position.y = yF; blob.visible = false; updaters.splice(updaters.indexOf(fall), 1); }
     });
   };
-  return { tree, fell, blob };
+  return { tree, fell, blob, rock };
 }

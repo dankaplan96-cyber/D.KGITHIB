@@ -42,12 +42,13 @@ import '../text/ballastra.js';
 
 const gold = '#ffcf4a';
 export const BL_REGIONS = ['ballastra', 'bl_arches', 'bl_gardens'];
-const ROOM_REGION = { ballastra: 'ballastra', bl_shed: 'ballastra', bl_arches: 'bl_arches', bl_oren: 'bl_arches', bl_mags: 'bl_arches', bl_pump: 'bl_arches', bl_gardens: 'bl_gardens', bl_tunnel: 'bl_gardens', bl_kiln: 'bl_gardens' };
+const ROOM_REGION = { ballastra: 'ballastra', bl_shed: 'ballastra', bl_arches: 'bl_arches', bl_oren: 'bl_arches', bl_mags: 'bl_arches', bl_pump: 'bl_arches', bl_gardens: 'bl_gardens', bl_tunnel: 'bl_gardens', bl_kiln: 'bl_gardens', bl_house: 'bl_gardens', bl_cradles: 'bl_arches' };   // (bl_house, bl_cradles: EXP-3)
 // the cast: [id, model] (DRESS-1 gives each one sharing a model a dress of its own)
 const CAST = [['tessa', 'tessa'], ['bl_hobb', 'docker1'], ['bl_ferro', 'docker2'], ['bl_halden', 'docker3'], ['bl_quill', 'docker1'], ['bl_wenna', 'tessa'],
-  ['bl_corvin', 'docker2'], ['bl_mags', 'tessa'], ['bl_dunn', 'docker3'], ['bl_sorrel', 'docker1'], ['bl_brin', 'docker2'], ['bl_ottie', 'tessa'], ['bl_nuna', 'tessa']];
+  ['bl_corvin', 'docker2'], ['bl_mags', 'tessa'], ['bl_dunn', 'docker3'], ['bl_sorrel', 'docker1'], ['bl_brin', 'docker2'], ['bl_ottie', 'tessa'], ['bl_nuna', 'tessa'],
+  ['bl_fennick', 'docker3'], ['bl_garrow', 'docker1'], ['bl_odra', 'tessa'], ['bl_jory', 'docker2']];   // (EXP-3, chapters 12-13: story/balances.js places them; appended so the others keep their dresses)
 const CAST_IDS = new Set(CAST.map((c) => c[0]));
-const COLORS = { tessa: '#e8b860', bl_hobb: '#8ad0a8', bl_ferro: '#e8d8a0', bl_halden: '#c8c8e0', bl_quill: '#d8a888', bl_wenna: '#b8e090', bl_corvin: '#e8a070', bl_mags: '#f0a8a8', bl_dunn: '#c0b0a0' };
+const COLORS = { tessa: '#e8b860', bl_hobb: '#8ad0a8', bl_ferro: '#e8d8a0', bl_halden: '#c8c8e0', bl_quill: '#d8a888', bl_wenna: '#b8e090', bl_corvin: '#e8a070', bl_mags: '#f0a8a8', bl_dunn: '#c0b0a0', bl_fennick: '#d8c890', bl_garrow: '#a8c0b0', bl_odra: '#d8b8d0', bl_jory: '#b0d0e8' };
 
 // ---- the cast's models: loaded on demand (characters.js ONDEMAND_POLYS), once, for a save that needs them
 let READY = false, READY_P = null;
@@ -132,6 +133,7 @@ export class Ballastra extends ChapterBase {
       case 'bl_brin': return A(f.bl_n3 ? 'row1' : 'market1');
       case 'bl_ottie': return A(f.bl_n3 ? 'row3' : 'market2');
       case 'bl_nuna': return A('market3');
+      case 'bl_fennick': case 'bl_garrow': case 'bl_odra': case 'bl_jory': return null;   // (chapters 12-13: story/balances.js)
     }
     return undefined;
   }
@@ -216,6 +218,7 @@ export class Ballastra extends ChapterBase {
     const free = g.state === 'play' && !g.trans && !g.cine;
     if (!free) return;
     if (!f.bl_started) { this.begin(); return; }
+    if (f.bl_endTalk && !f.bl_done && this.story.keyOf(this.story.nextIndex()) === 'balances') f.bl_done = true;
     if (f.bl_done && !this.leaving) { this.end(); return; }
     const r = this.room(), h = g.hero;
     const near = (id, d) => { const n = this.speaker(id); return n && n !== h && n.present && n.distTo(h) < d; };
@@ -461,7 +464,7 @@ export class Ballastra extends ChapterBase {
     g.updateObjective(); g.save(false);
     this.chain([['narrator', 'bl_spill_open']], () => {
       g.audio.play('orenTone');
-      this.chain([['oren', 'bl_or_1'], ['hero', 'bl_tw_or1'], ['oren', 'bl_or_2'], ['hero', 'bl_tw_or2'], ['oren', 'bl_or_3']], () => {
+      this.chain([['oren', 'bl_or_1'], ['hero', 'bl_tw_or1'], ['oren', 'bl_or_2'], ['hero', 'bl_tw_or2'], ['oren', 'bl_or_3'], ['hero', 'bl_tw_or3']], () => {
         this.story.refreshCast(); g.updateObjective(); g.save(false);
       });
     });
@@ -556,7 +559,9 @@ export class Ballastra extends ChapterBase {
       case 'zoe': return f.bl_arrived ? false : c([['zoe', 'bl_zoe_home']]);
       case 'arthur': return f.bl_arrived ? false : c([['arthur', 'bl_ar_home']]);
       case 'bl_quill':
-        if (!f.bl_quWeighed) return c([['bl_quill', 'bl_qu_1'], ['narrator', 'bl_qu_weigh'], ['bl_quill', 'bl_qu_2'], ['hero', 'bl_tw_q1'], ['bl_quill', 'bl_qu_3']], () => { f.bl_quWeighed = f.bl_quHail = true; g.updateObjective(); g.save(false); });
+        // (P81: the way to Tessa only while he still looks for her: "She's been at the lift four days" after he found her
+        //  there was out of date)
+        if (!f.bl_quWeighed) return c([['bl_quill', 'bl_qu_1'], ['narrator', 'bl_qu_weigh'], ['bl_quill', 'bl_qu_2'], ...(f.bl_tessa1 ? [] : [['hero', 'bl_tw_q1'], ['bl_quill', 'bl_qu_3']])], () => { f.bl_quWeighed = f.bl_quHail = true; g.updateObjective(); g.save(false); });
         return c([['bl_quill', f.bl_n3 ? 'bl_qu_end' : f.bl_n1 ? 'bl_qu_n1' : 'bl_qu_wait']]);
       case 'tessa': return this.talkTessa();
       case 'bl_ferro': return c([['bl_ferro', f.bl_n1 ? 'bl_fe_after' : 'bl_fe_wait']]);
@@ -612,8 +617,11 @@ export class Ballastra extends ChapterBase {
     const g = this.game, f = this.f;
     this.chain([['tessa', 'bl_te_end1'], ['hero', 'bl_tw_e1'], ['tessa', 'bl_te_end2']], () => {
       g.audio.play('radio');
-      this.chain([['doranradio', 'bl_dr_1'], ['balradio', 'bl_ba_1'], ['hero', 'bl_tw_e2'], ['tessa', 'bl_te_end3'], ['balradio', 'bl_ba_2'], ['tessa', 'bl_te_end4']], () => {
+      // (EXP-3: with chapter 12 next, Baldino wants the regulators found and Tessa names the House; the chapter ends here)
+      const house = this.story.keyOf(this.story.nextIndex()) === 'balances';
+      this.chain([['doranradio', 'bl_dr_1'], ['balradio', 'bl_ba_1'], ['hero', 'bl_tw_e2'], ['tessa', 'bl_te_end3'], ['balradio', house ? 'bl_ba_2x' : 'bl_ba_2'], ['tessa', house ? 'bl_te_end4x' : 'bl_te_end4']], () => {
         f.bl_endTalk = true; f.vm_2 = 1;
+        if (house) f.bl_done = true;
         g.updateObjective(); g.save(false);
       });
     });

@@ -3,7 +3,8 @@
 // Twinsen comes home to an island being evacuated by the project's list: project ships at the spaceport and a
 // queue on its bridge, the heat posts dark, the square fenced. Zoé's plan: the town goes underground, the hill families to the lighthouse
 // cliffs. Gilbert knows FunFrock's two shelters (a lever by the old cistern in the station yard, guarded by
-// crowd-control drones; a hatch wheel on the depot bunker's door — the ball), Mira gives water and the key
+// crowd-control drones; a hatch wheel on the depot bunker's door — the ball turns it, the door rolls a hand's width and
+// sticks on a bar dropped inside: someone small has to slip in and lift it, and Lulu is the small one), Mira gives water and the key
 // to FunFrock's valve control room, Pippa sends supplies. Zoé (playable) brings the three hill farms to the
 // lighthouse and finds that its transmitter relays to Zeelich's council chamber. In the station's control
 // room Vesk announces three days to full depth. Twinsen boards a project ship at Citadel Spaceport for Zeelich
@@ -15,6 +16,7 @@ import '../text/ch8.js';
 import { buildShelter, centreForWheel, shelterFrame, addCart, addBundle, addBale } from './shelters.js';
 import { crossByShip } from '../travelfilm.js';
 import { LaneThread } from './laneline.js';
+const SHIP_HULL = 3.0;   // (the ship's hull radius on the spaceport's pad, spaceport.js hullAt)
 
 // (the farmers work the fields south of town; the landing and the fort on the northern plateau)
 const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
@@ -42,6 +44,14 @@ const FORT_F = shelterFrame(FORT.door.x, FORT.door.z, FORT_RY);
 const WHEEL = { x: DEPOT.door.x - 1.7, z: DEPOT.door.z };
 const DEPOT_C = centreForWheel(WHEEL.x, WHEEL.z, DEPOT_RY);
 const DEPOT_F = shelterFrame(DEPOT_C.x, DEPOT_C.z, DEPOT_RY);
+// MIDDLE-VARIETY (REVIEW-TASKS-19-11 task 6): the depot's door was one throw at its wheel, right after the fort's lever.
+// Now the throw turns the wheel and the door rolls a hand's width (GAP of its travel) and sticks on a bar dropped across
+// it inside: too narrow for him. Tim and Lulu (Pippa sends them with her cart, or he asks them on the quay) come to the
+// door; Lulu slips in and lifts the bar, and the door rolls open with her standing in it. A second throw only jerks the
+// stuck door. Flags (saved): c8_gap (the door stuck ajar), c8_kids (the children asked on the quay); c8_depot as before
+// (open). A save from before with c8_depot plays as it did; one without it starts again at the wheel.
+const GAP = 0.25, SQUEEZE_IN = 0.9, SQUEEZE_MAX = 7;   // (s: from her arrival at the gap to the bar; at most, from the start)
+const GAP_AT = DEPOT_F.at(0.5, -0.8);   // (in front of the gap, the door's left end: the leaf slides right)
 
 export class Evacuation extends ChapterBase {
   get W() { return this.game.world; }
@@ -51,6 +61,8 @@ export class Evacuation extends ChapterBase {
   outdoors() { return !this.game.room; }
   farmsDone() { return FARMS.filter((p) => this.f['c8_' + p.id]).length; }
   townDone() { const f = this.f; return !!(f.c8_gilbert && f.c8_fort && f.c8_depot && f.c8_mira && f.c8_pippa); }
+  // MIDDLE-VARIETY: Tim and Lulu by the depot's door (sent with Pippa's cart, or asked on the quay)
+  kidsAtDepot() { const f = this.f; return !!(f.c8_pippa || f.c8_kids); }
 
   npcDefs() {
     return [...FARMS.map((p) => ({ id: p.id, name: 'n_' + p.id, char: p.char, color: '#e8d0a0', x: p.x, z: p.z, angle: p.a })), ...this.ev.npcDefs()];
@@ -106,8 +118,25 @@ export class Evacuation extends ChapterBase {
     W.updaters.push((dt) => { this.fortDoor.tick(dt); this.depotDoor.tick(dt); near(plateauG, -72, -64, 70); near(farmG, -47, 43, 60); });
     // the cistern lever in the station yard
     const ly = H(FORT.lever.x, FORT.lever.z);
-    mesh(grp, cyl(1.2, 1.3, 0.8, 16, 0), tm('stone', { color: '#a8a090' }), FORT.lever.x + 1.6, ly + 0.4, FORT.lever.z);
+    // (PUZZLES phase 2: an open cistern now, so its water can be seen: the drum without its lid, a stone lip, the inner wall)
+    mesh(grp, cyl(1.2, 1.3, 0.8, 16, 0, true), tm('stone', { color: '#a8a090' }), FORT.lever.x + 1.6, ly + 0.4, FORT.lever.z);
+    mesh(grp, cyl(1.06, 1.06, 0.78, 16, 0, true), new THREE.MeshStandardMaterial({ color: '#7a7264', roughness: 0.95, side: THREE.BackSide }), FORT.lever.x + 1.6, ly + 0.41, FORT.lever.z, 0, { cast: false });
+    mesh(grp, new THREE.RingGeometry(1.05, 1.21, 20).rotateX(-Math.PI / 2), tm('stone', { color: '#a8a090' }), FORT.lever.x + 1.6, ly + 0.8, FORT.lever.z, 0, { cast: false });
     this.lever = mesh(grp, cyl(0.06, 0.06, 1.2, 6, 0), iron, FORT.lever.x, ly + 0.6, FORT.lever.z);
+    // (PUZZLES phase 2: FunFrock's door runs on the cistern's water, and the cistern is dry: its bottom shows, cracked and
+    //  dark. The old hand pump on its south side fills it in three strokes (the water's face rises each time); full, the
+    //  lever opens the door, and the cistern drains with it)
+    const CX = FORT.lever.x + 1.6, CZ = FORT.lever.z;
+    mesh(grp, cyl(1.08, 1.08, 0.02, 16, 0), pm('#3a3026', 0.95), CX, ly + 0.12, CZ, 0, { cast: false });
+    this.cisternWater = mesh(grp, cyl(1.1, 1.1, 0.02, 16, 0), pm('#3c7c9a', 0.15, { metalness: 0.1 }), CX, ly + 0.14, CZ, 0, { cast: false });
+    this.cisternWater.visible = false;
+    this.cisternY = (n) => { this.cisternWater.visible = n > 0; this.cisternWater.position.y = ly + 0.14 + Math.min(3, n) * 0.2; };
+    this.pumpAt = { x: CX, z: CZ + 1.75 };
+    const py = H(this.pumpAt.x, this.pumpAt.z);
+    mesh(grp, cyl(0.09, 0.11, 1.05, 8, 0), iron, this.pumpAt.x, py + 0.52, this.pumpAt.z);
+    mesh(grp, cyl(0.04, 0.04, 0.5, 6, 0), iron, this.pumpAt.x, py + 0.92, this.pumpAt.z - 0.25, 0, { rx: Math.PI / 2 });
+    this.pumpHandle = mesh(grp, cyl(0.03, 0.03, 0.75, 6, 0), pm('#7a4a2a', 0.8), this.pumpAt.x, py + 1.05, this.pumpAt.z + 0.3, 0, { rx: 1.1 });
+    this.cols.push(P.add({ type: 'cyl', x: this.pumpAt.x, z: this.pumpAt.z, r: 0.2, top: py + 1.1, noStand: true, enabled: false }));
     this.cols.push(P.add({ type: 'cyl', x: FORT.lever.x + 1.6, z: FORT.lever.z, r: 1.3, top: ly + 0.8, noStand: true, enabled: false }));
     // hay, a cart and bundles at each farm; a cart and bundles waiting at the gather point and by the depot shelter
     const solid = (x, z, ry, hw, hd, top) => this.cols.push(P.add({ type: 'box', x, z, hw, hd, rot: ry, top: H(x, z) + top, noStand: true, enabled: false }));
@@ -156,8 +185,12 @@ export class Evacuation extends ChapterBase {
         return undefined;     // (at home, as usual)
       case 'gilbert': { const p = FORT_F.at(1.9, 1.9); return f.c8_gilbert ? { x: p.x, z: p.z, a: FORT_RY + Math.PI + 0.35 } : { x: V.x + 3.5, z: V.z + 8.0, a: Math.PI }; }
       case 'pippa': return S ? { x: S.x, z: S.z, a: S.a } : undefined;
-      case 'tim': { const p = DEPOT_F.at(2.2, 2.0); return f.c8_pippa ? { x: p.x, z: p.z, a: DEPOT_RY + Math.PI - 0.4 } : { x: Q.x + 2.5, z: Q.z + 2, a: Math.PI / 2 }; }
-      case 'lulu': { const p = DEPOT_F.at(3.0, 1.3); return f.c8_pippa ? { x: p.x, z: p.z, a: DEPOT_RY + Math.PI - 0.7 } : { x: Q.x + 2.5, z: Q.z + 3.2, a: Math.PI / 2 }; }
+      case 'tim': { const p = DEPOT_F.at(2.2, 2.0); return this.kidsAtDepot() ? { x: p.x, z: p.z, a: DEPOT_RY + Math.PI - 0.4 } : { x: Q.x + 2.5, z: Q.z + 2, a: Math.PI / 2 }; }
+      case 'lulu': {
+        // (MIDDLE-VARIETY: at the gap while she slips in; in the doorway once the bar is up)
+        if (this.squeeze || (f.c8_depot && f.c8_gap)) return { x: GAP_AT.x, z: GAP_AT.z, a: DEPOT_RY + Math.PI };
+        const p = DEPOT_F.at(3.0, 1.3); return this.kidsAtDepot() ? { x: p.x, z: p.z, a: DEPOT_RY + Math.PI - 0.7 } : { x: Q.x + 2.5, z: Q.z + 3.2, a: Math.PI / 2 };
+      }
       case 'xil': return { x: Q.x + 4.5, z: Q.z - 0.5, a: -Math.PI / 2 };
       case 'worker': return B ? { x: B.x1 - 3.0, z: B.z + 1.3, a: Math.PI / 2 } : { x: Q.x + 6.5, z: Q.z + 0.2, a: -Math.PI / 2 };
       case 'doran': case 'vesk': case 'hesk': return null;
@@ -180,7 +213,7 @@ export class Evacuation extends ChapterBase {
     this.showProps(true);
     this.story.refreshCast({ walk: true });
     this.ev.begin();   // (CAMPAIGN-6: a game that reaches chapter 8 now has the lane ahead)
-    this.chain([['narrator', 'c8_narr'], ['radio', 'c8_hesk_1'], ['hero', 'c8_tw_1']], () => {
+    this.chain([['narrator', 'c8_narr'], ['heskradio', 'c8_hesk_1'], ['hero', 'c8_tw_1']], () => {
       this.f.c8_started = true; g.updateObjective(); g.save(false);
       // (CAMPAIGN-6: from the plateau he sees the project's cart come down to the lane's shut gate and turn away)
       if (this.ev.on && !this.f.ev_cart) this.ev.pass(() => this.chain([['hero', 'ev_cart_1']], () => g.save(false)));
@@ -195,10 +228,11 @@ export class Evacuation extends ChapterBase {
     this.ev.interactables(consider, dist);   // (CAMPAIGN-6: the board, the culvert's pipe and cock)
     if (!this.isCur() || !this.outdoors()) return;
     if (f.c8_gilbert && !f.c8_fort) consider(dist(FORT.lever.x, FORT.lever.z), 1.6, { kind: 'c8lever', label: 'p_lever' });
-    if (f.c8_gilbert && !f.c8_depot) { const p = DEPOT_F.at(1.9, 0); consider(dist(p.x, p.z), 2.2, { kind: 'c8hatch', label: 'p_shelter' }); }
+    if (f.c8_gilbert && !f.c8_fort && (f.c8_pump || 0) < 3 && this.pumpAt) consider(dist(this.pumpAt.x, this.pumpAt.z), 1.3, { kind: 'c8pump', label: 'p_pump' });
+    if (f.c8_gilbert && !f.c8_depot && !this.squeeze) { const p = DEPOT_F.at(1.9, 0); consider(dist(p.x, p.z), 2.2, { kind: 'c8hatch', label: f.c8_gap ? 'p_look' : 'p_shelter' }); }
     // a project ship on the spaceport's pad (same spot and reach as the pad's travel menu: the chapter wins the tie)
     const sp = this.W.spaceport;
-    if (f.c8_relay && f.c8_vesk && sp) consider(dist(sp.pad.x, sp.pad.z), 5.0, { kind: 'c8ship', label: 'p_board' });
+    if (f.c8_relay && f.c8_vesk && sp) consider(dist(sp.pad.x, sp.pad.z) - SHIP_HULL, 5.0 - SHIP_HULL, { kind: 'c8ship', label: 'p_board' });   // (FULL-TEST: ranked by the distance to the hull, not its centre — Pema at the hose no longer takes the prompt from the ship he walks up to)
     void g;
   }
   interact(it) {
@@ -207,12 +241,31 @@ export class Evacuation extends ChapterBase {
     switch (it.kind) {
       case 'c8lever':
         h.act('use', 1.0, () => {
+          // (PUZZLES phase 2: dry, the lever drops and springs back with a gurgle; said once, then only the gurgle)
+          if ((f.c8_pump || 0) < 3) {
+            this.lever.rotation.z = 0.6; this.leverBack = 0.45;
+            g.audio.play('clunk'); g.audio.play('trickle'); this.leverAt = g.time;
+            if (!f.c8_dry) { f.c8_dry = true; this.chain([['hero', 'c8_lever_dry']], () => g.updateObjective()); }
+            return;
+          }
           f.c8_fort = true; this.lever.rotation.z = 1.0; this.fortDoor.open(); g.audio.play('door'); g.camRig.shake(0.2);
+          this.drainT = 1.6;
           this.story.refreshCast({ walk: true });
-          this.chain([['hero', 'c8_lever_1'], ['hero', 'c8_shelter_fort']], () => this.progress());
+          this.chain([['hero', 'c8_lever_water'], ['hero', 'c8_shelter_fort']], () => this.progress());
         }, 0.6);
         return true;
-      case 'c8hatch': this.chain([['hero', 'c8_wheel_hint']]); return true;
+      case 'c8pump':
+        h.act('use', 0.7, () => {
+          f.c8_pump = Math.min(3, (f.c8_pump || 0) + 1); this.cisternY(f.c8_pump);
+          this.pumpHandle.rotation.x = 0.4; this.handleBack = 0.3;
+          g.audio.play('trickle'); this.leverAt = g.time;
+          g.hud.toast('c8_toast_pump', { n: f.c8_pump });
+          if (f.c8_pump >= 3) this.chain([['hero', 'c8_pump_full']], () => g.updateObjective());
+        }, 0.4);
+        return true;
+      case 'c8hatch':
+        if (f.c8_gap) { this.depotDoor.jolt(); g.audio.play('clunk'); }   // (he tugs the leaf: it jerks against the bar)
+        this.chain([['hero', f.c8_gap ? 'c8_gap_more' : 'c8_wheel_hint']]); return true;
       case 'c8ship':
         f.c8_done = true; g.save(false);
         crossByShip(g, (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then), { onward: { to: 'zeelich_port', mode: 'ship' } });   // (TRAVEL-1: the ship's departure film first; WC-1: then it is seen coming down on Zeelich Spaceport's pad, where chapter 9 starts)
@@ -224,17 +277,55 @@ export class Evacuation extends ChapterBase {
     const g = this.game, f = this.f, w = this.wheelSpot;
     if (!this.isCur() || !this.outdoors() || !f.c8_gilbert || f.c8_depot || !w) return false;
     if (Math.hypot(p.x - w.x, p.y - w.y, p.z - w.z) < 1.0) {
-      f.c8_depot = true; this.depotDoor.open(); g.audio.play('door');
-      this.chain([['hero', 'c8_shelter_depot']], () => this.progress());
+      // (MIDDLE-VARIETY: the wheel turns, the door rolls a hand's width and sticks on the bar inside; hit again, it only
+      //  jerks against it)
+      if (f.c8_gap) { if (!this.squeeze) { this.depotDoor.jolt(); g.audio.play('clunk'); g.hud.toast('c8_toast_bar'); } return true; }
+      f.c8_gap = true; this.depotDoor.ajar(GAP); g.audio.play('grind'); g.camRig.shake(0.08);
+      this.chain([['hero', 'c8_gap']], () => this.progress());
       return true;
     }
     return false;
   }
   ballTargets() {
     const f = this.f, w = this.wheelSpot;
-    return this.isCur() && this.outdoors() && f.c8_gilbert && !f.c8_depot && w ? [{ x: w.x, y: w.y, z: w.z }] : [];
+    // (still one after the door sticks: a second throw curves to it and gets its answer, the jerk against the bar)
+    return this.isCur() && this.outdoors() && f.c8_gilbert && !f.c8_depot && !this.squeeze && w ? [{ x: w.x, y: w.y, z: w.z }] : [];
+  }
+  // MIDDLE-VARIETY: Lulu goes to the gap and slips in; the bar comes up and the door rolls open with her in it
+  startSqueeze() {
+    this.squeeze = { t: 0 };
+    this.story.refreshCast({ walk: true });
+  }
+  squeezeStep(dt) {
+    const S = this.squeeze, g = this.game, f = this.f;
+    if (!S || g.state !== 'play') return;
+    S.t += dt;
+    const lu = this.npc('lulu');
+    if (lu?.present && Math.hypot(lu.pos.x - GAP_AT.x, lu.pos.z - GAP_AT.z) < 0.8) S.at ??= S.t;
+    if (!(S.at != null && S.t - S.at >= SQUEEZE_IN) && S.t < SQUEEZE_MAX) return;
+    this.squeeze = null;
+    f.c8_depot = true; this.depotDoor.open(); g.audio.play('clang'); g.audio.play('door');
+    this.story.refreshCast();   // (she is in the doorway as it opens, wherever her walk had got to)
+    this.chain([['hero', 'c8_shelter_depot'], ['lulu', 'c8_lulu_in']], () => this.progress());
   }
   progress() { this.game.updateObjective(); this.game.save(false); }
+  // MIDDLE-VARIETY: the children sent to the depot from the quay walk (index.js walkOn); a walk left behind out of view
+  // while he waits at the door (its far end seen, so never finished) is taken up again near the door, round a corner
+  // he can't see, and walked in from there
+  kidsCatchUp() {
+    const f = this.f, S = this.story, h = this.game.hero;
+    if (!f.c8_kids || f.c8_depot || this.squeeze || !this.outdoors() || this.game.state !== 'play') return;
+    if (Math.hypot(h.pos.x - DEPOT_C.x, h.pos.z - DEPOT_C.z) > 30) return;
+    for (const id of ['tim', 'lulu']) {
+      const n = this.npc(id), p = this.place(id);
+      if (!n?.present || !p || Math.hypot(n.pos.x - p.x, n.pos.z - p.z) < 12 || S.seen(n.pos)) continue;   // (the corners below are all nearer than 12 m)
+      const from = [[-3, 6], [-3, -7], [6, 8], [6, -9]].map(([a, b]) => DEPOT_F.at(a, b)).find((q) => !S.seen(q));
+      S.moving?.delete(n); n.track = null;
+      if (!from) { n.placeAt(p); continue; }
+      n.placeAt({ x: from.x, z: from.z, a: Math.atan2(p.x - from.x, p.z - from.z) });
+      if (!S.walkOn(n, p, true)) n.placeAt(p);
+    }
+  }
 
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id;
@@ -245,13 +336,24 @@ export class Evacuation extends ChapterBase {
       if (f.c8_zoeStart && !f.c8_zoeDone && !f['c8_' + id]) return c([[id, 'c8_' + ['f1', 'f2', 'f3'][FARMS.indexOf(farm)] + '_1']], () => { f['c8_' + id] = true; this.setOff(npc, FARMS.indexOf(farm)); this.progress(); });
       return c([[id, 'c8_' + ['f1', 'f2', 'f3'][FARMS.indexOf(farm)] + '_1']]);
     }
+    // MIDDLE-VARIETY: the depot's door stuck on its bar: the children (on the quay, or by the door with Pippa's cart)
+    if ((id === 'tim' || id === 'lulu') && f.c8_gap && !f.c8_depot) {
+      if (this.squeeze) return true;
+      if (!this.kidsAtDepot()) return c([['hero', 'c8_tw_kids'], ['lulu', 'c8_lulu_q'], ['tim', 'c8_tim_q']], () => { f.c8_kids = true; this.story.refreshCast({ walk: true }); this.progress(); });
+      // (caught up with on their way from the quay, away from the door: they run on ahead)
+      const h = g.hero;
+      if (Math.hypot(h.pos.x - DEPOT_C.x, h.pos.z - DEPOT_C.z) > 15) return c([['tim', 'c8_tim_q']]);
+      return c(f.c8_kids ? [['lulu', 'c8_lulu_bar']] : [['hero', 'c8_tw_bar'], ['tim', 'c8_tim_bar'], ['lulu', 'c8_lulu_bar']], () => this.startSqueeze());
+    }
     switch (id) {
       case 'zoe':
         if (!f.c8_home) return c([['zoe', 'c8_zoe_1'], ['arthur', 'c8_ar_1'], ['zoe', 'c8_zoe_2'], ['hero', 'c8_tw_z1'], ['zoe', 'c8_zoe_3'], ['arthur', 'c8_ar_2'], ['zoe', 'c8_zoe_4'],
           ...(this.ev.on && f.ev_cart ? [['hero', 'ev_tw_cart'], ['zoe', 'ev_zoe_cart']] : [])], () => { f.c8_home = true; this.progress(); });   // (CAMPAIGN-6: the cart he saw)
         if (this.townDone() && !f.c8_zoeStart) return c([['hero', 'c8_tw_z2'], ['zoe', 'c8_zoe_5']], () => this.startZoe());
-        return c([['zoe', 'c8_zoe_4']]);
-      case 'arthur': return c([['arthur', 'c8_ar_2']]);
+        // (P81: asked again: who to ask, on its own — c8_zoe_4 answered Arthur's line in the first talk; at the lighthouse
+        //  once her part is done, her own business there)
+        return c([['zoe', f.c8_zoeDone ? 'c8_zoe_done' : 'c8_zoe_wait']]);
+      case 'arthur': return c([['arthur', f.c8_gilbert ? 'c8_ar_after' : 'c8_ar_2']]);   // (P81: once Gilbert has told)
       case 'gilbert':
         if (f.c8_home && !f.c8_gilbert) return c([['gilbert', 'c8_gil_1'], ['hero', 'c8_tw_g1'], ['gilbert', 'c8_gil_2'], ['gilbert', 'c8_gil_3']], () => { f.c8_gilbert = true; this.story.refreshCast({ walk: true }); this.progress(); });
         return c([['gilbert', f.c8_gilbert ? 'c8_gil_after' : 'c8_gil_1']]);
@@ -367,9 +469,18 @@ export class Evacuation extends ChapterBase {
     void g;
   }
   update(dt = 1 / 60) {
+    // (PUZZLES phase 2: the cistern drains as the door opens; tried dry and a while with nothing done: the pump)
+    if (this.drainT > 0) { this.drainT -= dt; this.cisternY?.(Math.max(0, 3 * this.drainT / 1.6)); }
+    if (this.leverBack > 0 && (this.leverBack -= dt) <= 0 && !this.f.c8_fort) this.lever.rotation.z = 0;
+    if (this.handleBack > 0 && (this.handleBack -= dt) <= 0) this.pumpHandle.rotation.x = 1.1;
+    this.nudge(dt, 'c8pump', this.isCur() && !!this.f.c8_dry && !this.f.c8_fort && (this.f.c8_pump || 0) < 3 && this.game.time - (this.leverAt ?? -1e9) > 15, 30, 'c8_nudge_pump');
     const g = this.game, f = this.f, h = g.hero;
     if (!this.isCur()) return;
     this.marchStep(dt);
+    this.squeezeStep(dt);
+    this.kidsCatchUp();
+    // (MIDDLE-VARIETY: stuck at the depot's gap for a while: who is small enough; never while he is getting on with it)
+    this.nudge(dt, 'c8gap', !!(f.c8_gap && !f.c8_depot && !this.squeeze && this.outdoors()), 45, 'c8_nudge_kids');
     this.ev.update(dt);
     if (f.c8_zoeStart && !f.c8_zoeDone && this.farmsDone() >= 3 && this.outdoors() && g.state === 'play' && !this.ending && Math.hypot(h.pos.x - GATHER.x, h.pos.z - GATHER.z) < 6) { this.ending = true; this.endZoe(); }
   }
@@ -389,7 +500,11 @@ export class Evacuation extends ChapterBase {
     W.station?.setActive?.(false);
     W.ferry?.setVisible?.(true);
     if (f.c8_fort) { this.fortDoor.open(true); this.lever.rotation.z = 1.0; }
+    this.cisternY?.(f.c8_fort ? 0 : (f.c8_pump || 0));   // (PUZZLES phase 2: the cistern as the pump left it; drained once the door opened)
+    // (MIDDLE-VARIETY: the depot's door stuck ajar on its bar; a squeeze cut off by a load is not half done)
+    this.squeeze = null;
     if (f.c8_depot) this.depotDoor.open(true);
+    else { this.depotDoor.close(); if (f.c8_gap) this.depotDoor.ajar(GAP, true); }
     this.finishMarch();
     // a save during Zoé's run resumes before it
     if (f.c8_zoeStart && !f.c8_zoeDone) { f.c8_zoeStart = false; for (const p of FARMS) f['c8_' + p.id] = false; }
@@ -402,7 +517,7 @@ export class Evacuation extends ChapterBase {
     if (f.c8_relay) return this.goal('c8_obj_control');
     if (f.c8_zoeStart) { const n = this.farmsDone(); return n >= 3 ? this.goal('c8_obj_lighthouse') : this.goal('c8_obj_farms', { n }); }
     if (this.townDone()) return this.goal('c8_obj_zoe');
-    if (f.c8_home) return this.goal('c8_obj_shelters') + this.sub(!!f.c8_gilbert, 'c8_sub_gilbert') + (f.c8_gilbert ? this.sub(!!f.c8_fort, 'c8_sub_fort') + this.sub(!!f.c8_depot, 'c8_sub_depot') : '') + this.sub(!!f.c8_mira, 'c8_sub_mira') + this.sub(!!f.c8_pippa, 'c8_sub_pippa');
+    if (f.c8_home) return this.goal('c8_obj_shelters') + this.sub(!!f.c8_gilbert, 'c8_sub_gilbert') + (f.c8_gilbert ? this.sub(!!f.c8_fort, 'c8_sub_fort') + this.sub(!!f.c8_depot, f.c8_gap && !f.c8_depot ? 'c8_sub_bar' : 'c8_sub_depot') : '') + this.sub(!!f.c8_mira, 'c8_sub_mira') + this.sub(!!f.c8_pippa, 'c8_sub_pippa');
     return this.goal('c8_obj_home');
   }
   items() { return this.f.c8_mira ? [{ id: 'valvekey', icon: 'key' }] : []; }
@@ -415,7 +530,7 @@ export class Evacuation extends ChapterBase {
     const f = this.f;
     return [
       { key: 'c8_j_home', done: !!f.c8_home },
-      { key: 'c8_j_shelters', done: this.townDone() },
+      { key: f.c8_gap ? 'c8_j_shelters2' : 'c8_j_shelters', done: this.townDone() },   // (MIDDLE-VARIETY: Lulu and the bar)
       { key: 'c8_j_farms', done: !!f.c8_zoeDone },
       { key: 'c8_j_relay', done: !!f.c8_relay },
       { key: 'c8_j_vesk', done: !!f.c8_vesk },

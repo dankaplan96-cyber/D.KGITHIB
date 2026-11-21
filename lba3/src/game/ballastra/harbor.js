@@ -58,6 +58,7 @@ import { esmerShuttle } from '../shuttle.js';
 import { Gulls } from '../gulls.js';
 import { WATER_FLOOR } from '../../engine/physics.js';
 import { mergeStatic } from '../../engine/merge.js';
+import { cloneTex } from '../../engine/textures.js';
 
 export { BALLASTRA };
 export const HARBOR_AT = BALLASTRA_AT.ballastra;
@@ -353,7 +354,7 @@ export function* buildBallastraSteps(scene, physics) {
   }
   cwG.position.set(CWB.x, CW_Y[2], CWB.z);
   // chains: a strip of links per chain (two on the deck, one on the counterweight), scrolled as their length changes
-  const chainMat = (key) => { const t = chainTex().clone(); t.needsUpdate = true; t.wrapT = THREE.RepeatWrapping; const m = new THREE.MeshStandardMaterial({ map: t, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.6, metalness: 0.4, color: '#9a9ca4' }); m.name = key; return m; };
+  const chainMat = (key) => { const t = cloneTex(chainTex()); t.wrapT = THREE.RepeatWrapping; const m = new THREE.MeshStandardMaterial({ map: t, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.6, metalness: 0.4, color: '#9a9ca4' }); m.name = key; return m; };
   const chainG = cached('blchainstrip', () => { const a = new THREE.PlaneGeometry(0.16, 1), b = new THREE.PlaneGeometry(0.16, 1).rotateY(Math.PI / 2); return compose([[a], [b]]); });
   const deckChainM = chainMat('bl_deckChain'), cwChainM = chainMat('bl_cwChain');
   const deckChains = [-1, 1].map((s) => { const m = new THREE.Mesh(chainG, deckChainM); m.position.x = s * (cw / 2 - 0.1); m.position.z = CWB.z; m.castShadow = true; m.userData.keep = true; group.add(m); return m; });

@@ -1,0 +1,12 @@
+waited 5s for other browsers; load 3.72 3.34 1.78
+PASS recolor: 6 parts in 2 colours → one vertex-coloured mesh holding both colours; textured parts merge by material; emissive and keep stay 
+PASS cell: a 60 m group merged per 20 m cell → 3 meshes 
+PASS Kit: flat colours → 1 mesh, painted colours → 1 mesh, the glow keeps its own (3 meshes) 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 3 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+another browser ran beside it for 2s; load 3.66 3.33 1.79

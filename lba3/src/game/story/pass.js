@@ -156,8 +156,24 @@ export class Pass extends ChapterBase {
     const g = this.game, f = this.f, M = this.M;
     if (!this.isCur() || !this.inM()) return false;
     for (const tg of M.ballTargets) {
-      if (tg.done || Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) > (tg.r || 0.8) + 0.2) continue;
-      if (tg.tree && f.c6_started) { tg.done = true; f.c6_bridge = true; M.gorge.tree.fell(); g.audio.play('break'); g.camRig.shake(0.3); this.chain([['narrator', 'c6_bridge']], () => { g.updateObjective(); g.save(false); }); return true; }
+      // (PUZZLES phase 2: the pole is hit anywhere along it: a capsule, not a point)
+      const near = tg.prop ? Math.hypot(p.x - tg.x, p.z - tg.z) < 0.9 && p.y > M.gorge.prop.y0 - 0.2 && p.y < tg.y + 0.9 : Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) <= (tg.r || 0.8) + 0.2;
+      if ((tg.done && !(tg.prop && !f.c6_bridge)) || !near) continue;
+      // (PUZZLES phase 2: the tree leans out over the gorge on an old prop. A ball on the tree rocks it, and it settles back
+      //  on the pole (said once); a ball on the pole knocks it out, and the tree falls across)
+      if (tg.tree && f.c6_started && !f.c6_bridge) {
+        M.gorge.tree.rock?.(); g.audio.play('hitWood'); this.treeAt = g.time;
+        for (const t of M.ballTargets) { if (t.tree) t.done = true; if (t.prop) t.done = false; }   // (now the ball's help goes to the pole)
+        if (!f.c6_rocked) { f.c6_rocked = true; this.chain([['hero', 'c6_tree_rock']]); }
+        return true;
+      }
+      if (tg.prop && f.c6_started && !f.c6_bridge) {
+        for (const t of M.ballTargets) if (t.tree || t.prop) t.done = true;
+        f.c6_bridge = true; M.gorge.prop?.knock(); g.audio.play('break');
+        this.fellAt = 0.35;   // (the pole kicks out first; the tree goes a moment later: update)
+        this.chain([['narrator', 'c6_bridge2']], () => { g.updateObjective(); g.save(false); });
+        return true;
+      }
       if (tg.kite && f.c6_kiteAsk) { tg.done = true; f.c6_kite = true; M.kite.setVisible(false); g.audio.play('bounce'); this.chain([['hero', 'c6_kite']], () => { g.updateObjective(); g.save(false); }); return true; }
     }
     return false;
@@ -197,6 +213,12 @@ export class Pass extends ChapterBase {
     if (!this.isCur() || !M) return;
     this.ps.update(dt);
     M.snow.focus = h.pos;
+    // (PUZZLES phase 2: the pole knocked out, the tree goes a moment later; the gorge seen from the near bank, said once;
+    //  a while after rocking it with nothing else hit, a nudge at the pole)
+    if (this.fellAt > 0 && (this.fellAt -= dt) <= 0) { M.gorge.tree.fell(); g.camRig.shake(0.3); }
+    const tr = M.gorge?.tree;
+    if (tr && f.c6_started && !f.c6_bridge && !f.c6_gorgeSeen && g.state === 'play' && Math.hypot(h.pos.x - tr.x, h.pos.z - tr.z) < 14) { f.c6_gorgeSeen = true; this.chain([['hero', 'c6_gorge']]); }
+    this.nudge(dt, 'c6prop', !!f.c6_rocked && !f.c6_bridge && g.time - (this.treeAt ?? -1e9) > 15, 40, 'c6_nudge_prop');
     if (this.thawT > 0 && (this.thawT -= dt) <= 0) {
       f.c6_thawed = true; M.lift.thaw(); g.audio.play('break'); this.story.refreshCast({ walk: true });
       // (CAMPAIGN-5: and the line kicks as he looks at it: the lamps, the cable)
@@ -238,7 +260,8 @@ export class Pass extends ChapterBase {
   applyHamalayi() {
     const f = this.f, M = this.M;
     if (f.c6_rope || this.story.index > this.pos) this.cutRope(true);
-    if (f.c6_bridge) { M.gorge.tree.fell(true); for (const tg of M.ballTargets) if (tg.tree) tg.done = true; }
+    if (f.c6_bridge) { M.gorge.tree.fell(true); for (const tg of M.ballTargets) if (tg.tree || tg.prop) tg.done = true; }
+    else if (f.c6_rocked) for (const tg of M.ballTargets) { if (tg.tree) tg.done = true; if (tg.prop) tg.done = false; }
     if (f.c6_kite) { M.kite.setVisible(false); for (const tg of M.ballTargets) if (tg.kite) tg.done = true; }
     if (f.c6_heat) { M.heatPost.setOn(true); if (!f.c6_thawed) f.c6_thawed = true; }
     if (f.c6_thawed) M.lift.thaw();

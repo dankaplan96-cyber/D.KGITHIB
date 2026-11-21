@@ -26,6 +26,7 @@
 //    only changes with distance, so a turning camera never sees one late).
 import * as THREE from 'three';
 import { MW } from './drawcull.js';
+import { runFor } from './drawbatch.js';
 
 export const SMALL_FAR = { high: 24, medium: 18, low: 18 };
 export const MIN_PX = { high: 0, medium: 4, low: 7 };
@@ -57,29 +58,43 @@ const keptIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if 
 const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
 
 class Area {
-  constructor(root, cell = CELL) {
+  // ARRIVAL-STEPS: `staged` — the build is a generator (this.gen) its owner runs in time-bounded slices (ShadowCull.slice),
+  // one per black frame of a scene change; otherwise it runs to the end here, as before. The same pieces, cells and
+  // batches either way: the steps are the build's own loops, cut between pieces and between cells.
+  constructor(root, cell = CELL, staged = false) {
     this.root = root; this.cell = cell; this.cells = new Map(); this.members = []; this.solo = []; this.proxies = []; this.tick = 0; this.quiet = []; this.ids = 0;
+    this.gen = this.make();
+    if (!staged) { while (!this.gen.next().done); this.gen = null; }
+  }
+  *make() {
+    const root = this.root;
     root.updateMatrixWorld(true);
     const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
     this.inv = inv;
     // (distance detail for a piece that is not a member: a plain mesh, culled by its own bounds as three does)
     const quiet = (o, C) => { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh && o.frustumCulled !== false && Number.isFinite(C.r)) this.quiet.push(C); };
-    root.traverse((o) => {
-      if (!o.isMesh || o.userData.shadowProxy) return;
+    const list = [];
+    root.traverse((o) => { if (o.isMesh && !o.userData.shadowProxy) list.push(o); });
+    yield 'scan';
+    let k = 0;
+    for (const o of list) {
+      if ((++k & 31) === 0) yield 'pieces';
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
-      if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) return;
+      if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) continue;
       const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true, next: -0.5, mwF: -1 };   // (next / mwF: PERF-CPU's distance detail; numbers from the start, so V8 keeps them unboxed)
-      if (!o.castShadow) { quiet(o, C); return; }
+      if (!o.castShadow) { quiet(o, C); continue; }
       // (PERF-CPU: a builder's moving or toggling part — userData.keep, as drawbatch.js reads it: a dog, a boat, the cargo
       //  lift, crates that break — casts on its own: in a batch, its first move rebuilt the batch and the static shadow cache)
-      if (!batchable(o) || keptIn(o, root) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
+      if (!batchable(o) || keptIn(o, root) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } continue; }
       const m = o.material;
       C.side = m.side; C.shadowSide = m.shadowSide; C.mat = o.matrixWorld.clone();
       this.assign(C);
       this.members.push(C);
       o.castShadow = false;
-    });
-    for (const cell of this.cells.values()) this.build(cell);
+      if (C.parts.size > 1 || C.parts.values().next().value) yield 'large piece';   // (a large piece, cut triangle by triangle)
+    }
+    yield 'pieces';
+    for (const cell of this.cells.values()) { yield* this.buildSteps(cell); yield 'cell'; }
   }
   // PERF-BATTERY: the cells a piece's triangles go to. A piece up to half a cell across goes whole into the cell of its
   // centre (as before); a larger one triangle by triangle, each to the cell of its own centre. C.parts: cell id →
@@ -111,7 +126,10 @@ class Area {
     }
     for (const [cell, L] of lists) { C.parts.set(cell.id, Int32Array.from(L)); C.cells.push(cell); cell.list.push(C); }
   }
-  build(cell) {
+  build(cell) { const it = this.buildSteps(cell); while (!it.next().done); }
+  // (ARRIVAL-STEPS: a cell's build as a generator — a step after every ~4 000 vertices — for the staged build: one of the
+  //  desert's cells took 36 ms here. The cell has no batch until its last step; nothing is drawn meanwhile)
+  *buildSteps(cell) {
     if (cell.mesh) { cell.mesh.geometry.dispose(); this.root.remove(cell.mesh); this.proxies.splice(this.proxies.indexOf(cell.mesh), 1); cell.mesh = null; }
     cell.dirty = false;
     if (!cell.list.length) return;
@@ -125,6 +143,7 @@ class Area {
       const map = new Int32Array(cnt).fill(-1), from = [];
       for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = I ? I.getX(T[k] * 3 + j) : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
       parts.push({ C, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
+      if (T.length > 4096) yield 'cell part';
     }
     if (!ni) return;
     const pos = new Float32Array(nv * 3), idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
@@ -147,8 +166,10 @@ class Area {
       if (!Number.isFinite(X + Y + Z)) { X = 0; Y = 0; Z = 0; }
       pos[k * 3] = X; pos[k * 3 + 1] = Y; pos[k * 3 + 2] = Z;
     };
+    let acc = 0;
     for (const { C, T, map, from, vo } of parts) {
       const g = C.o.geometry, I = g.index, P = g.attributes.position;
+      if ((acc += from ? from.length : P.count) > 4096) { acc = 0; yield 'cell part'; }
       _m.multiplyMatrices(this.inv, C.o.matrixWorld);
       const flip = _m.determinant() < 0;
       const raw = !P.normalized && !P.isInterleavedBufferAttribute && P.itemSize === 3 ? P.array : null;
@@ -196,6 +217,22 @@ class Area {
     }
     for (const cell of this.cells.values()) if (cell.dirty) this.build(cell);
   }
+  // ARRIVAL-STEPS: watch(true) behind a scene change's black, in steps: every batched piece's world matrix brought up to
+  // date (nothing is drawn in the hold, so the frame's update has not), a piece the hold's frames moved leaves its batch,
+  // its cells rebuilt a part at a time — not on the first frame drawn
+  *settle() {
+    let k = 0;
+    for (const C of this.members) {
+      if (!C || C.solo) continue;
+      if ((++k & 63) === 0) yield 'check';
+      C.o.updateWorldMatrix(true, false);
+      if (C.o.matrixWorld.equals(C.mat) && shownIn(C.o, this.root) && C.o.parent) continue;
+      C.solo = true; C.o.castShadow = true; this.left = (this.left || 0) + 1;
+      for (const cell of C.cells) { cell.dirty = true; cell.list.splice(cell.list.indexOf(C), 1); }
+      this.solo.push(C);
+    }
+    for (const cell of this.cells.values()) if (cell.dirty) { yield* this.buildSteps(cell); yield 'cell'; }
+  }
   restore() {
     const on = (o) => { if (!o.userData.drawBatched) o.layers.enable(0); };   // (a draw batch's piece stays out of the main pass)
     for (const C of this.members) { if (!C.solo) C.o.castShadow = true; on(C.o); }
@@ -231,20 +268,49 @@ export class ShadowCull {
   // (PERF-HIGH) the cell size; a change rebuilds every area's batches on its next update. The pieces cast on their own
   // only until then: the update that rebuilds the area on show comes before the frame's render, where the draw batches
   // check their pieces (drawbatch.js: one that casts leaves its batch), so they find them as they were.
-  setCell(c) { if (c === this.cell) return false; this.cell = c; if (this.areas.size) this.reset(); return true; }
+  setCell(c) { if (c === this.cell) return false; this.cell = c; if (this.areas.size || this.pending?.size) this.reset(); return true; }
   // (PERF-HIGH) an area's batches built now rather than on its next visit (the benchmark, after a preset change: its
   // routes then measure the areas as a player who keeps one preset finds them)
-  prepare(root) { if (this.enabled && root && !this.areas.has(root)) this.areas.set(root, this.build(root)); }
+  prepare(root) { if (this.enabled && root && this.pending?.has(root)) this.slice(root); if (this.enabled && root && !this.areas.has(root)) this.areas.set(root, this.build(root)); }
   // (I-11: an area's batches, timed and counted for the benchmark's hitch notes)
   build(root) { const t0 = performance.now(), A = new Area(root, this.cell); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + performance.now() - t0; return A; }
+  // ARRIVAL-STEPS: an area's batches built in slices behind a scene change's black (main.js prepSteps): stage() starts the
+  // build, slice(root, ms) runs it until `ms` have passed (a slice ends after the piece or cell that crosses it) and
+  // returns true while more is left. The finished area is the same as build()'s. While a build is staged, update()
+  // leaves the area out (`defer()`: nothing is drawn behind the black) or, if a frame is drawn first, finishes it.
+  stage(root) {
+    if (!this.enabled || !root || this.areas.has(root)) return false;
+    const P = (this.pending ??= new Map());
+    if (!P.has(root)) { const t0 = performance.now(); P.set(root, new Area(root, this.cell, true)); this.buildMs = (this.buildMs || 0) + performance.now() - t0; }
+    return true;
+  }
+  slice(root, ms = Infinity) {
+    const A = this.pending?.get(root); if (!A) return false;
+    const t0 = performance.now(), done = runFor(A.gen, ms, this).done;
+    this.buildMs = (this.buildMs || 0) + performance.now() - t0;
+    if (!done) return true;
+    A.gen = null; this.pending.delete(root); this.areas.set(root, A); this.builds = (this.builds || 0) + 1;
+    return false;
+  }
+  // ARRIVAL-STEPS: the area's settle (Area.settle) in slices of `ms`; true while more is left. A frame's update finishes
+  // one it overtakes
+  settleSlice(root, ms = Infinity) {
+    const A = this.areas.get(root); if (!A || !this.enabled) return false;
+    A.settling ??= A.settle();
+    if (!runFor(A.settling, ms, this).done) return true;
+    A.settling = null;
+    return false;
+  }
   // (all pieces cast on their own again; batches removed: the benchmark's comparisons, or switching it off)
-  reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; }
+  reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; if (this.pending) { for (const A of this.pending.values()) A.restore(); this.pending.clear(); } }
   // (PERF-CPU: pieces that left a shadow batch so far, for the scene change's settle frames: Game.updateTransition)
   get left() { let n = 0; for (const A of this.areas.values()) n += A.left || 0; return n; }
   update(root, camera, focus) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return; }
     let A = this.areas.get(root);
+    if (!A && this.pending?.has(root)) { if (this.defer?.()) { this.hide(); this.area = null; return; } this.slice(root); A = this.areas.get(root); }   // (ARRIVAL-STEPS: staged)
     if (!A) { A = this.build(root); this.areas.set(root, A); }
+    if (A.settling) { if (this.defer?.()) { this.hide(); this.area = null; return; } const it = A.settling; A.settling = null; while (!it.next().done); }   // (ARRIVAL-STEPS: a settle in its steps behind the black waits for them; one a drawn frame overtakes is finished)
     this.area = A;
     this.hide();
     // PERF-CPU: without the sun's shadow pass (Low, Auto's no-shadow profiles) what only decides who casts — the pieces

@@ -76,7 +76,7 @@ export class LiftThread {
     if (!this.open || this.busy) return;
     if (!f.zt_bell && up) {
       if (!f.zt_hook) consider(dist(L.hook.x, L.hook.z), 1.3, { kind: 'zt_hook', label: 'p_hook' });
-      consider(dist(L.bell.x, L.bell.z), 1.3, { kind: 'zt_bell', label: 'p_bell' });
+      consider(dist(L.bell.x, L.bell.z), 1.3, { kind: 'zt_bell', label: 'p_zt_bell' });
     }
     if (f.zt_bell && !f.zt_feed && down) consider(dist(L.feed.x, L.feed.z), 1.4, { kind: 'zt_feed', label: 'p_feed' });
     if (f.zt_feed && !f.zt_ride && !L.moving && Math.abs(L.deckY - L.low) < 0.05 && h.pos.y < L.y0 + 0.6) consider(dist(L.deck.x, L.deck.z), 2.3, { kind: 'zt_ride', label: 'p_ride' });
@@ -153,7 +153,7 @@ export class LiftThread {
         if (!f.zt_brel) return c([['zl_brel', 'zt_brel_1'], ['zl_brel', 'zt_brel_2']], () => { f.zt_brel = true; g.updateObjective(); g.save(false); });
         return c([['zl_brel', f.zt_water ? (f.zt_bench ? 'zt_brel_after' : 'zt_brel_water') : 'zt_brel_3']]);
       case 'zl_kell':
-        if (!cur) return c([['zl_kell', this.on ? 'zt_kell_later' : 'zt_kell_idle']]);
+        if (!cur) return c([['zl_kell', this.story.cur?.key === 'home' ? 'zt_kell_home' : this.on ? 'zt_kell_later' : 'zt_kell_idle']]);   // (DIALOGUE-2: the epilogue's word)
         if (!f.zt_kell && !f.zt_bell) return c([['zl_kell', 'zt_kell_1'], ['hero', 'zt_tw_kell'], ['zl_kell', 'zt_kell_2'], ['zl_kell', 'zt_kell_3']], () => { f.zt_kell = true; g.updateObjective(); g.save(false); });
         if (!f.zt_bell) return c([['zl_kell', 'zt_kell_wait']]);
         if (!f.zt_feed) return c([['zl_kell', 'zt_kell_wait2']]);
@@ -161,7 +161,7 @@ export class LiftThread {
         if (!f.zt_kellThanks) return c([['zl_kell', 'zt_kell_done']], () => { f.zt_kellThanks = true; g.save(false); });
         return c([['zl_kell', f.c2_veskDown ? 'zt_kell_later' : 'zt_kell_after']]);
       case 'zl_irsa':
-        if (!cur) return c([['zl_irsa', this.on ? 'zt_irsa_later' : 'zt_irsa_idle']]);
+        if (!cur) return c([['zl_irsa', this.story.cur?.key === 'home' ? 'zt_irsa_home' : this.on ? 'zt_irsa_later' : 'zt_irsa_idle']]);
         if (f.zt_bench) return c([['zl_irsa', f.c2_veskDown ? 'zt_irsa_later' : 'zt_irsa_after']]);
         if (!f.zt_water) { if (f.zt_irsa) return c([['zl_irsa', 'zt_irsa_wait']]); return c([['zl_irsa', 'zt_irsa_1'], ['zl_irsa', 'zt_irsa_2']], () => { f.zt_irsa = true; g.updateObjective(); g.save(false); }); }
         if (!f.zt_irsa2) return c([['zl_irsa', 'zt_irsa_3'], ['zl_irsa', 'zt_irsa_4']], () => { f.zt_irsa2 = true; g.updateObjective(); g.save(false); });

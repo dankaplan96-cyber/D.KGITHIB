@@ -1665,6 +1665,21 @@ and 0 FAIL. Re-run with 4000 s: PASS. chapter1 twice timed out on a page load (i
 Not verified: whether a first-time player notices the three moments and feels they earned them. Those are design
 judgements until a fresh player tries them.
 
+### HIDDEN-TRIS (P85): hidden triangles around Twinsen's house (docs/lba3-performance/HIDDEN-TRIS.md)
+
+`tests/hidden-tris.mjs` (+ `tests/lib/hiddentris.js`), SwiftShader, 1280×720, Medium, Follow camera; an id render of
+every submitted triangle from each view (2× with 4 jitters), classified and named; a prototype cut checked by pixels.
+A diagnostic: no game file changed.
+
+| Check | Result |
+|---|---|
+| Outdoors, 72 views (yard → lane → square) | 60 % of the judged main-pass triangles never seen; 20 % never visible from anywhere (buried 12 %, inside solids 5 %, bottoms 3 %) |
+| The house, 20 views | 74 % never seen; 20 % never visible from anywhere (furniture inside furniture 18 %) |
+| Cut "geo" (never visible from anywhere) | outdoors 607k → 561k triangles, pixels ≤ 0.16 % changed, SwiftShader −8 %; house 226k → 176k, ≤ 0.03 %, −31 % |
+| Cut "all" (every never-seen triangle, an oracle) | outdoors −33 % triangles, −3.7 % draws, ≤ 0.34 % pixels, SwiftShader −24 % |
+| Buried at every instance (a build-time trim) | ~8k triangles a view (~1.5 %): not worth it |
+| Verdict | PASS (probe runs: outdoors, house, buried, x-ray). Real GPU ≲ 1 ms of the laptop's frame: INFERRED, NOT VERIFIED |
+
 ### Not tested / blocked
 - HOUSE-FIX on a real GPU and by the user's eye: NOT DONE (SwiftShader captures; self-reviewed, no independent review).
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).

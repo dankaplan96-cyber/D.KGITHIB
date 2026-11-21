@@ -31,7 +31,11 @@ export class Council extends ChapterBase {
   get C() { return this.game.rooms.council; }
   get A() { return this.game.rooms.archive; }
   room() { return this.game.room?.id; }
-  millsFree() { return (this.Z?.mills || []).filter((m) => this.f['c9_free_' + m.id]).length; }
+  // (MILLS: a mill let go in chapter 3, once the shield was open (c2_free_<mill>), is free already: never freed twice)
+  freeNow(m) { return !!(this.f['c9_free_' + m.id] || this.f['c2_free_' + m.id]); }
+  millsFree() { return (this.Z?.mills || []).filter((m) => this.freeNow(m)).length; }
+  // all three let go in chapter 3: Oku remembers, and stamps without his errand
+  early() { return ['north', 'east', 'south'].every((id) => this.f['c2_free_' + id]); }
   stamps() { return (this.f.c9_nara ? 1 : 0) + (this.f.c9_oku ? 1 : 0); }
 
   npcDefs() {
@@ -82,7 +86,7 @@ export class Council extends ChapterBase {
     this.chain([['narrator', 'c9_narr'], ['hero', 'c9_tw_arrive']], () => { this.f.c9_started = true; g.updateObjective(); g.save(false); });
   }
   // the mills are still braked from chapter 3 unless Oku's errand freed them
-  freezeMills() { for (const m of this.Z?.mills || []) m.setSpinning(!!this.f['c9_free_' + m.id]); }
+  freezeMills() { for (const m of this.Z?.mills || []) m.setSpinning(this.freeNow(m)); }
 
   doors() {
     const Z = this.game.regions.built('zeelich');   // (doors on Zeelich: once it is built)
@@ -178,7 +182,7 @@ export class Council extends ChapterBase {
     const f = this.f;
     if (!this.isCur() || this.room() !== 'zeelich' || !f.c9_okuAsk || f.c9_oku) return false;
     for (const m of this.Z.mills) {
-      if (f['c9_free_' + m.id]) continue;
+      if (this.freeNow(m)) continue;
       if (Math.hypot(p.x - m.brake.x, p.y - m.brake.y, p.z - m.brake.z) < 0.9) {
         const g = this.game;
         f['c9_free_' + m.id] = true; m.setSpinning(true);
@@ -192,7 +196,7 @@ export class Council extends ChapterBase {
   ballTargets() {
     const f = this.f;
     if (!this.isCur() || this.room() !== 'zeelich' || !f.c9_okuAsk || f.c9_oku) return [];
-    return this.Z.mills.filter((m) => !f['c9_free_' + m.id]).map((m) => ({ x: m.brake.x, y: m.brake.y, z: m.brake.z }));
+    return this.Z.mills.filter((m) => !this.freeNow(m)).map((m) => ({ x: m.brake.x, y: m.brake.y, z: m.brake.z }));
   }
 
   talk(npc) {
@@ -209,6 +213,11 @@ export class Council extends ChapterBase {
         if (f.c9_form && !f.c9_nara) return c([['nara', 'c9_nara_1'], ['hero', 'c9_tw_n1'], ['nara', 'c9_nara_2'], ['narrator', 'c9_nara_stamp']], () => { f.c9_nara = true; g.audio.play('select'); ok(); });
         return c([['nara', f.c9_nara ? 'c9_nara_after' : 'c9_nara_1']]);
       case 'oku':
+        // (MILLS: he let go of the grievance when Twinsen let go of the brakes in chapter 3: the stamp, no errand)
+        if (this.early() && !f.c9_oku) {
+          if (!f.c9_form) return c([['oku', 'c9_oku_r1']]);
+          return c([['oku', 'c9_oku_r1'], ['oku', 'c9_oku_r2'], ['narrator', 'c9_oku_stamp']], () => { f.c9_okuAsk = true; f.c9_oku = true; g.audio.play('select'); ok(); });
+        }
         if (f.c9_form && !f.c9_okuAsk) return c([['oku', 'c9_oku_1'], ['oku', 'c9_oku_2']], () => { f.c9_okuAsk = true; ok(); });
         if (f.c9_okuAsk && !f.c9_oku && this.millsFree() >= 3) return c([['oku', 'c9_oku_3'], ['narrator', 'c9_oku_stamp']], () => { f.c9_oku = true; g.audio.play('select'); ok(); });
         if (f.c9_oku) return c([['oku', 'c9_oku_after']]);
@@ -324,7 +333,7 @@ export class Council extends ChapterBase {
     { const tm = this.thread.markers(); if (tm) return tm; }
     if (this.stamps() >= 2 || f.c9_clerk) return this.stars(Z.councilDoor);
     if (f.c9_form) {
-      const mills = f.c9_okuAsk && !f.c9_oku && this.millsFree() < 3 ? Z.mills.filter((m) => !f['c9_free_' + m.id]).map((m) => m.brake) : [];
+      const mills = f.c9_okuAsk && !f.c9_oku && this.millsFree() < 3 ? Z.mills.filter((m) => !this.freeNow(m)).map((m) => m.brake) : [];
       return this.stars(!f.c9_nara && this.starNpc('nara'), !f.c9_oku && !mills.length && this.starNpc('oku'), mills);
     }
     return this.stars(Z.workshopDoor);
@@ -356,6 +365,7 @@ export class Council extends ChapterBase {
     const f = this.f;
     return [
       { key: 'c9_j_petition', done: !!f.c9_form },
+      { key: this.early() ? 'c9_j_oku_r' : 'c9_j_oku', done: !!f.c9_oku },   // (MILLS: the two ways to Oku's stamp)
       { key: 'c9_j_heard', done: !!f.c9_heard },
       ...(this.thread.on ? this.thread.journal().filter((l) => ['cn_j_order', 'cn_j_kell'].includes(l.key)) : []),
       { key: 'c9_j_plans', done: !!f.c9_plans && f.cn_log !== true },

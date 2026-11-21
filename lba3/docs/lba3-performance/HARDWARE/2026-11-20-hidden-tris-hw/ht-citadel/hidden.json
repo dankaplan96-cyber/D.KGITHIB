@@ -1,0 +1,272 @@
+{
+ "setup": {
+  "drawables": 1072,
+  "triangles": 1774827,
+  "skipped": {
+   "skinned": 35,
+   "skinnedTris": 120518,
+   "skinnedDs": 115474,
+   "batchedMesh": 2,
+   "batchedTris": 108506,
+   "groups": 1,
+   "other": 3
+  },
+  "off": {
+   "f": -7.989528227732698,
+   "r": 4.892175085395137e-16,
+   "y": 4.967903964271239
+  },
+  "cam": {
+   "fov": 50,
+   "near": 1,
+   "far": 2500,
+   "pitch": -0.426
+  },
+  "rt": [
+   960,
+   540
+  ],
+  "byKind": {
+   "mesh": 1000912,
+   "instanced": 120083,
+   "mesh/ds": 1748,
+   "instanced/ds": 31128,
+   "mesh/ds/tr": 98,
+   "mesh/tr": 24928,
+   "instanced/ds/tr": 16,
+   "batch": 595190,
+   "batch/ds": 24,
+   "instanced/tr": 700
+  }
+ },
+ "spots": 274,
+ "views": 4384,
+ "outsideArea": 1111389,
+ "triangles": 663438,
+ "hidden": 418850,
+ "hiddenPct": 63.1,
+ "dsTris": 31070,
+ "dsBackNeverSeen": 22860,
+ "byKind": {
+  "mesh": {
+   "tris": 334382,
+   "hidden": 268926
+  },
+  "instanced": {
+   "tris": 20565,
+   "hidden": 14132
+  },
+  "mesh/ds": {
+   "tris": 710,
+   "hidden": 1
+  },
+  "instanced/ds": {
+   "tris": 30336,
+   "hidden": 22408
+  },
+  "mesh/ds/tr": {
+   "tris": 0,
+   "hidden": 0
+  },
+  "mesh/tr": {
+   "tris": 2230,
+   "hidden": 1537
+  },
+  "instanced/ds/tr": {
+   "tris": 0,
+   "hidden": 0
+  },
+  "batch": {
+   "tris": 274711,
+   "hidden": 111832
+  },
+  "batch/ds": {
+   "tris": 24,
+   "hidden": 0
+  },
+  "instanced/tr": {
+   "tris": 480,
+   "hidden": 14
+  }
+ },
+ "top": [
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 25914,
+   "hidden": 25914,
+   "ds": false
+  },
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 22032,
+   "hidden": 22032,
+   "ds": false
+  },
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 20980,
+   "hidden": 20980,
+   "ds": false
+  },
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 18032,
+   "hidden": 18032,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 36108,
+   "hidden": 17727,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 45327,
+   "hidden": 16820,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 32274,
+   "hidden": 11360,
+   "ds": false
+  },
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 11068,
+   "hidden": 11068,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 29005,
+   "hidden": 11044,
+   "ds": false
+  },
+  {
+   "name": "smallPool",
+   "kind": "instanced",
+   "tris": 13968,
+   "hidden": 10672,
+   "ds": true
+  },
+  {
+   "name": "harbour-zeelich",
+   "kind": "mesh",
+   "tris": 8980,
+   "hidden": 8980,
+   "ds": false
+  },
+  {
+   "name": "containers",
+   "kind": "mesh",
+   "tris": 7280,
+   "hidden": 7280,
+   "ds": false
+  },
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 7208,
+   "hidden": 7208,
+   "ds": false
+  },
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 7008,
+   "hidden": 7008,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 9540,
+   "hidden": 6669,
+   "ds": false
+  },
+  {
+   "name": "smallPool",
+   "kind": "instanced",
+   "tris": 8940,
+   "hidden": 6551,
+   "ds": true
+  },
+  {
+   "name": "containers",
+   "kind": "mesh",
+   "tris": 6340,
+   "hidden": 6340,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 9546,
+   "hidden": 5918,
+   "ds": false
+  },
+  {
+   "name": "smallPool",
+   "kind": "instanced",
+   "tris": 7248,
+   "hidden": 5185,
+   "ds": true
+  },
+  {
+   "name": "merged",
+   "kind": "mesh",
+   "tris": 5112,
+   "hidden": 5112,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 21262,
+   "hidden": 5023,
+   "ds": false
+  },
+  {
+   "name": "smallPool",
+   "kind": "instanced",
+   "tris": 4944,
+   "hidden": 4944,
+   "ds": false
+  },
+  {
+   "name": "statue figures",
+   "kind": "mesh",
+   "tris": 13766,
+   "hidden": 4792,
+   "ds": false
+  },
+  {
+   "name": "drawBatch",
+   "kind": "batch",
+   "tris": 11814,
+   "hidden": 4680,
+   "ds": false
+  },
+  {
+   "name": "harbour-zeelich",
+   "kind": "mesh",
+   "tris": 4468,
+   "hidden": 4468,
+   "ds": false
+  }
+ ],
+ "geoStripped": 339,
+ "geoGroups": 41,
+ "trisRemovedPerGeometry": 374283
+}

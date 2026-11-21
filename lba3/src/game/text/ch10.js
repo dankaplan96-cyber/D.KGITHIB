@@ -11,12 +11,12 @@ Object.assign(STR.en, {
 
   c10_narr: "Baldino's workshop, hours later. Every bench is covered in wire.",
   c10_narr_exp: "Baldino's workshop again. Every bench is covered in wire.",   // (EXP-1: after chapter 10 "Borrowed Time" of the expanded campaign)
-  c10_bal_1: "Five stations. Five places where the project's old machines can still be made to talk: the mains under Citadel, the lighthouse transmitter, my mill on Zeelich, the bore on Desert Island, and Sefa's dome on the Hamalayi.",
-  c10_bal_2: "My relays: the test pair from my table, grown up. Each one hooks into a station's old machine and talks through it. When all five hear each other at once, the shaft's blast doors will hear them too.",
-  c10_bal_3: "Now the limits. Each relay runs on power from where it stands: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by.",
+  c10_bal_1: "Five stations, five friends, one minute. The mains under Citadel, the lighthouse, my mill on Zeelich, the bore on Desert Island, and Sefa's dome.",
+  c10_bal_2: "My relays hook into each station's old machine and talk through it. When all five talk at once, the shaft's blast doors hear them too.",
+  c10_bal_3: "Each one runs on what's there: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by it.",
   c10_tw_b1: "Then we need friends at five stations, and a way to reach them all.",
-  c10_bal_pulse1: "Oh, and before I forget. Take this. My pulse tool: a little thunder in a box. It jams anything with gears or wires for a few seconds. Drones, automatons, mills, doors.",
-  c10_bal_pulse2: "It does nothing at all to anything alive, and it needs a few seconds to recharge. Don't wave it at mites and expect miracles.",
+  c10_bal_pulse1: "And take this: my pulse tool. A little thunder in a box. It stops anything with gears or wires for a few seconds.",
+  c10_bal_pulse2: "Nothing alive, mind, and it needs a moment to recharge. Don't wave it at mites and expect miracles.",
   c10_toast_pulse: 'Pulse Tool: hold {k} to choose it',
   c10_bal_4: "The way is already here. Listen.",
   c10_hesk_1: "Hesk here! I got the council's message. Take the spaceship to Citadel and find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind: she's a glider.",
@@ -29,6 +29,10 @@ Object.assign(STR.en, {
   // Zeelich: Oku's mill
   c10_oku_1: "Baldino's relay on the old mill? The wind's the only power up there. I'll hold her steady while you climb, but you'll have to put the brake on first. You know how.",
   c10_oku_brake: "That's it. Up you go, and don't look at the clouds.",
+  // (PUZZLES phase 2: the second climb is a choice: the stones, or the hop-pack every other stone)
+  c10_oku_hop: "Or use Baldino's hop-pack. Jump from a stone and hold it: every other stone, and your knees will thank you.",
+  c10_oku_peg: "Baldino's hop-pack is on the peg by his door, if your knees would rather fly. The stones work too.",
+  c10_oku_2hop: "Up in four hops. My grandmother would have called that cheating. I'll stay by her, in case the wind drops.",
   c10_relay_mill: "Twinsen sets the relay on the mill's balcony and runs its wire to the sail shaft. The little lamp glows as the sails take up the wind again.",
   c10_oku_2: "I'll stay by her. If the wind drops, I'll turn the sails by hand. My grandmother did it once, in the year of the long calm.",
 
@@ -57,12 +61,12 @@ Object.assign(STR.en, {
   c10_ilka_2: "Set it on the bore's frame. And keep your ball handy: the project's drones don't like anything they didn't build.",
   c10_relay_bore: 'The relay clicks onto the bore\'s frame. Steam rattles through its little pipe, and the lamp lights up.',
   c10_drones: 'Drones! Three of them, coming in low over the post.',
-  c10_ilka_w2: "Drones down! But Vesk's men are coming out of the cabins, and the sentry's awake at the gate. Catch your breath, then take them one at a time.",
+  c10_ilka_w2: "Drones down! But one of FunFrock's old clone soldiers is out by the cabins, and his sentry's awake at the gate. They take orders from nobody alive. Catch your breath, then one at a time.",
   c10_ilka_3: "That's the last of them. Dallan and I will keep the vent clear. Go, go!",
   c10_ilka_water: "You look like the desert chewed you up. Here, my canteen: the vent's water, clean and warm.",
   c10_toast_water: "Ilka's canteen: life restored",
-  c10_dallan_1: "I spent a year guarding this bore for the project. I can guard it a little longer for everyone else.",
-  c10_dallan_stand: "Bren! Rifle down. The council has ordered the bore reversed, and you were on my roster for a year. Back inside.",
+  c10_dallan_1: "I spent a year running this bore for the project. I can guard it a little longer for everyone else.",
+  c10_dallan_stand: "Bren! Rifle down. The council speaks for the project now, and you were on my roster for a year. Back inside.",
   c10_guard_stand: "The guard looks from Dallan to the bore. He lowers his rifle and walks back to his cabin.",
   c10_tw_stand: "(The clone and the sentry won't listen. They're FunFrock's machines, still keeping old orders.)",
 

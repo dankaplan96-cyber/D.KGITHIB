@@ -8,7 +8,7 @@ Object.assign(STR.en, {
   chapter_steam: 'Steam and Sand', chapter_pass: 'The Pass', chapter_observatory: 'The Observatory', chapter_evacuation: 'Evacuation',
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   // (EXP-PLAN §2.1: the expanded campaign's four chapters between the council and the network)
-  chapter_throttle: 'Borrowed Time', chapter_survey: 'Under the Well', chapter_ballastra: 'Ballastra', chapter_balances: 'The House of Balances',
+  chapter_throttle: 'Borrowed Time', chapter_survey: 'The Cradles', chapter_ballastra: 'Ballastra', chapter_balances: 'The House of Balances',
   idle_generic: 'Hello, Twinsen.',
   // Joe the Elf (LBA2), still in town
   asy_register1: '(The asylum\'s old register. The workers keep it on the shelf like a relic. The last page: "Patient: Twinsen. Diagnosis: dreams of a goddess. Cell 2." Someone has drawn a moustache on FunFrock\'s signature.)',
@@ -45,7 +45,7 @@ Object.assign(STR.en, {
   toast_crystal: 'Singing crystal ({n}/{max}). Max health up',
   res_label: 'Resolution', res_auto: 'Auto', res_full: 'Full',
   aa_label: 'Edges', aa_msaa: 'Smooth', aa_fxaa: 'Fast',
-  fps_label: 'Frame Rate Limit', fps_auto: 'Off', fps_60: '60', fps_30: '30',
+  fps_label: 'Frame Rate', fps_auto: 'Unlimited', fps_60: '60', fps_30: '30',
   // the settings screen (SETTINGS-UI): pages, the fold, and the one-line hints under a few rows
   set_game: 'Game', set_controls: 'Controls', set_display: 'Display', set_sound: 'Sound', set_advanced: 'Advanced',
   set_keys: 'Keys', set_keys_go: 'Change', voice_vol: 'Voices', rebind_hint: 'Pick an action, then press its new key. Esc cancels.',
@@ -68,7 +68,7 @@ Object.assign(STR.en, {
   set_h_aa: 'How far an attack turns toward a nearby enemy.',
   set_h_lm_toggle: '{k} locks onto a target. Press it again to let go.', set_h_lm_hold: 'Stays locked onto a target while {k} is held.',
   set_h_q_hand: 'Kept as chosen. Lower runs faster on slower computers.',
-  set_h_fps_auto: 'Draws as often as the screen allows.', set_h_fps_60: 'At most 60 frames a second.', set_h_fps_30: 'A steady 30 frames a second: even motion on a laptop on battery, cooler and quieter.',
+  set_h_fps_auto: 'Draws as often as the screen allows.', set_h_fps_60: 'At most 60 frames a second.', set_h_fps_30: 'An even 30 frames a second: less work for the computer (a laptop on battery runs cooler and quieter). The game runs at the same speed; motion is less fluid than at 60.',
   set_h_vis_2026: 'Full lighting and view distance.', set_h_vis_1997: 'Low resolution, near fog and hard camera cuts, as in 1997.',
   set_h_hud_lba: 'Life, magic and kashes appear only when they change.', set_h_hud_modern: 'Life, magic, minimap, behaviours and weapon stay on screen.',
   set_h_wx_on: 'Outdoors, rain, wind and the light of the day change as you play.', set_h_wx_off: 'Clear skies and steady light.',
@@ -89,7 +89,7 @@ Object.assign(STR.en, {
   ct_attack: 'Attack (hold: charge, or a heavy sword strike)', ct_focus: 'Focus on a target', ct_next: 'Next target',
   ct_swap: 'Next weapon (hold: back to the Magic Ball)', ct_pause: 'Pause menu',
   ct_pad: 'Gamepad', ct_pad_text: 'Left stick: move · right stick: camera · D-pad: the four behaviours (↑ Normal, → Athletic, ↓ Aggressive, ← Discreet) · A: action / talk · X: attack · Y: ball · B: dodge · View: inventory · LT: holomap · RT: weapon wheel · LB: next weapon (hold: the ball) · RB: focus · R3: next target · L3: camera distance · Menu: pause',
-  bench: 'Benchmark', bench_auto: 'Benchmark: Auto as played', bench_title: 'Benchmark results', bench_copy: 'Copy', bench_copied: 'Copied', bench_route: 'Benchmark {n}/{of}',
+  bench: 'Benchmark', bench_auto: 'Benchmark: Auto as played', bench_fps: 'Benchmark: Frame Rates', bench_title: 'Benchmark results', bench_copy: 'Copy', bench_copied: 'Copied', bench_route: 'Benchmark {n}/{of}',
   crystal_first: '(It hums, like the crystals in the well. A splinter of something much bigger.)',
   crystal_all: '(Now they hum together, one note: the same one I heard when Sendell spoke.)',
   it_crystals: 'Singing Crystals', itd_crystals: 'Splinters that hum like the crystals in the well. Each one makes me a little tougher.',
@@ -115,6 +115,26 @@ Object.assign(STR.en, {
   it_evacplan: 'Evacuation Plan', itd_evacplan: "Vesk's plan. It covers only 30% of the people.",
   pr_j_well: 'The well in the square has run dry.', pr_j_key: 'Mira gave me the key to the well lid.', pr_j_rope: 'Xil gave me a rope ladder.',
   pr_j_cave: 'At the bottom of the well: warm water, crystals and crystal mites.', pr_j_sendell: 'Sendell spoke to me: "Someone has reached her."',
+  // P83 / S-2: "What we know", one line at the top of each chapter's journal page: the mechanism that chapter showed,
+  // once it has shown it (story/index.js KNOW). No spoilers past the chapter.
+  know_well: 'What we know: something deep under Citadel is warming the water, and humming crystals grow where it is warm. Sendell says someone has reached "her".',
+  know_project: 'What we know: the project\'s bore took our water to get at the planet\'s heat, and the bypass valves gave it back hot. Its sensors show a "shell" under the bore, and its ships carry three people in ten.',
+  know_zeelich: "What we know: Vesk's bore is drilling into a shell under Twinsun; backed out halfway it cracks it, run backwards it patches it. He steers it from his platform on Zeelich, behind a shield the three mills feed, and Baldino's override key opens it once they are braked.",
+  know_zeelich_done: "What we know: Vesk's bore is drilling into a shell under Twinsun; backed out halfway it cracks it, run backwards it patches it. The shaft at our station is sealed from below, and only a code sent by every project station at once opens it.",
+  know_dig: 'What we know: the shell breathes out its heat through five vents. The project is closing them by drawing all the heat to Citadel; open them, and the shell can breathe.',
+  know_steam: "What we know: the desert vent comes up under Dallan's capped test bore. Opened fast, its steam would boil the oasis, so FunFrock's old condensers take it instead.",
+  know_pass: 'What we know: the same heat reaches the Hamalayi, and the ice is melting from below. The second vent is under it, near the old Observatory.',
+  know_observatory: 'What we know: Sendell has been holding the shell together alone, with her own light, and she is fading. Each vent we open eases the quakes for a while.',
+  know_evacuation: "What we know: Vesk is sending every watt to the bore: full depth in three days. Only Zeelich's council can overrule him, and Zoé's lighthouse transmitter reaches their chamber.",
+  know_council: "What we know: a stop holds the drill and buys us some days, but it heals nothing, and the knocking goes on. Only the bore's own switch, at the bottom of the shaft, can run it backwards, and its blast doors open to a code from every station at once.",
+  know_council_b: "What we know: only the console at the bottom of the shaft can switch the bore. The shaft's doors open only to a code from every project station at once.",
+  know_throttle: 'What we know: since the stop nothing evens out the kicks, but Oren, the voice in the Balance Works governors, can hold water still. The B-7 lets a station refuse the control room, as long as a hand stays on its lever.',
+  know_ballastra: "What we know: Oren keeps Ballastra's water, and the lower row's young ones sleep in his keeping. Someone here buys every Balance Works coil for the project and none of the regulators the network needs.",
+  know_balances: "What we know: Vesk's standing order buys the coils and none of the regulators, though the House's own bench passed the B-7. Tessa's B-8 has a plain brass lever that Oren can't hold, so each band is set by hand, from its neighbour's need.",
+  know_survey: 'What we know: Oren keeps the 304 sleepers warm. One wakes when the family asks: the keepers shut the ring, Oren warms, and hands take turns on the lever for an hour.',
+  know_network: "What we know: five relays, each run on what its station has, must hold one signal together for a minute to open the shaft's blast doors. Each needs a friend standing by it.",
+  know_shell: 'What we know: a child of this world sleeps under the shell, not ready to wake. A stop only holds her cracks; the bore turned into a shield closes them.',
+  know_core: "What we know: three pylons around the core turn the bore into a shield, each powered from above: Zoé's signal, Mira's valves and Oku's mills.",
 });
 
 // DIALOGUE-EDIT: Citadel's people in the chapters that have no line of their own for them (prologue.js baseTalk reads
@@ -123,7 +143,7 @@ Object.assign(STR.en, {
 Object.assign(STR.en, {
   idle_zoe_dig: "Half the island stops me in the street since the broadcast. The other half crosses it. Did you find your professor?",
   idle_zoe_steam: "Mira has me copying out who isn't on the project's list. My handwriting is better. Hers is faster.",
-  idle_zoe_pass: "Take the thick scarf. Grandpa's charts say the Hamalayi wind goes straight through wool.",
+  idle_zoe_pass: "Take the thick scarf. Gilbert's old charts say the Hamalayi wind goes straight through wool.",
   idle_zoe_observatory: "Arthur keeps the radio on his pillow in case you call. I've stopped telling him off for it.",
   idle_zoe_council: "The council heard every word and formed a committee? Then go and stand in front of the committee.",
   idle_arthur_dig: "Is Desert Island really all sand? Bring me some. Not a lot. A jar.",

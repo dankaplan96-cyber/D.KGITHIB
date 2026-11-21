@@ -190,7 +190,7 @@ Object.assign(STR.en, {
   rs_esren_f0: 'Your departures board is very calm. Ours on Zeelich flashes. I think I prefer calm.',
   rs_esren_f1: 'I came to see your two suns from the ground. It is very bright down here.',
 
-  rs_gunda_work: "That case has everything in it. Twice. Except the snacks.",
+  rs_gunda_work: "That case has everything in it. Except the snacks.",
   rs_gunda_f0: "Our first trip with the little one. I've packed everything twice and forgotten the snacks once.",
   rs_gunda_f1: "Don't run near the pad! ...Sorry. That was for him, not you.",
   rs_gunda_e0: "We're on the list, the two of us. I've checked it four times. I'll check it again.",

@@ -8,29 +8,34 @@
 //
 // CONTRACT for src/game/story/steam.js. Every x/z is a WORLD coordinate; y is world height.
 //   all rooms  R.spawn {x,z,a}, R.exits [{x,z,r,to}], R.ballTargets, R.searches, R.updaters
-//   condA      R.valves [{id:1..4, x,z, open, setOpen(b)}]; R.gauges.set([0..1, 0..1, 0..1]) (three condensers)
+//   condA      R.valves [{id:1..4, x,z, open, setOpen(b), shaking, setShaking(b)}]; R.gauges.set([aquifer, cond 3, cond 4] 0..1,
+//              [flutter…]) (each gauge over its own branch: valves 2, 3, 4), R.gauges.read()
 //              R.diagram {x,z}; R.hangarDoor {x,z, isOpen, open()}; R.patrol [[x,z]…]
 //              exits 'cond-out' (up to the dunes), 'cond-b' (the hangar, behind the door)
-//   condB      R.glider {x,z, uncover()}; R.hatch {isOpen, open()}; R.ballSwitch {x,y,z, on, setOn(b)}
-//              (ballTargets entry {…, hatch:true}); R.condensers [{setSteam(0..1)}]; exit 'cond-a'
+//   condB      R.glider {x,z, uncover()}; R.hatch {isOpen, open()}; R.ballSwitch {x,y,z, on, setOn(b)} (ballTargets entry
+//              {…, hatch:true}); R.ventHatch, R.ventSwitch the same for the condensers' vent hatch ({…, ventHatch:true});
+//              R.condensers [{setSteam(0..1)}]; exit 'cond-a'
 import * as THREE from 'three';
 import { RoomBuilder, glowSprite } from './interiors.js';
 import { MAT, M, rbox, plane, cyl, sphere, torus, pipe, canvasTex } from './props.js';
 
+// (PUZZLES P-A: the diagram shows where each branch goes, never how to set it: the needles over the branches are the
+//  answer. Before, its dots were coloured open/shut and it named a valve 5 the hall does not have)
 const diagramTex = () => canvasTex(512, 320, (x, W, H) => {
   x.fillStyle = '#e8dcc0'; x.fillRect(0, 0, W, H);
   x.strokeStyle = '#7a1a1a'; x.lineWidth = 8; x.strokeRect(6, 6, W - 12, H - 12);
   x.fillStyle = '#3a2a1a'; x.font = 'bold 26px sans-serif'; x.fillText('CONDENSER LINE  ·  F.F. WORKS', 24, 44);
   x.lineWidth = 10; x.strokeStyle = '#3a4a5a';
   const pipeTo = (pts) => { x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.stroke(); };
-  pipeTo([[40, 170], [460, 170]]); pipeTo([[150, 170], [150, 260]]); pipeTo([[250, 170], [250, 90]]); pipeTo([[350, 170], [350, 90]]); pipeTo([[440, 170], [440, 90]]);
+  pipeTo([[40, 170], [460, 170]]); pipeTo([[150, 170], [150, 260]]); pipeTo([[300, 170], [300, 90]]); pipeTo([[420, 170], [420, 90]]);
+  const arrow = (ax, ay, dir) => { x.fillStyle = '#3a4a5a'; x.beginPath(); x.moveTo(ax - 14, ay); x.lineTo(ax + 14, ay); x.lineTo(ax, ay + dir * 20); x.closePath(); x.fill(); };
+  arrow(150, 262, 1); arrow(300, 92, -1); arrow(420, 92, -1);
   x.font = 'bold 22px sans-serif'; x.fillStyle = '#3a2a1a';
   x.fillText('BORE', 18, 160);
-  const valve = (vx, vy, n, open) => { x.fillStyle = open ? '#2a8a3a' : '#c02a2a'; x.beginPath(); x.arc(vx, vy, 16, 0, 7); x.fill(); x.fillStyle = '#fff'; x.fillText(n, vx - 7, vy + 8); };
-  valve(100, 170, '1', true); valve(150, 215, '2', false); valve(250, 130, '3', true); valve(350, 130, '4', true);
-  x.fillStyle = '#3a2a1a'; x.font = '18px sans-serif';
-  x.fillText('2: BYPASS TO AQUIFER', 120, 290); x.fillText('3, 4: CONDENSERS', 270, 70);
-  x.fillStyle = '#7a1a1a'; x.font = 'bold 18px sans-serif'; x.fillText('(5: SPARE, KEEP SHUT)', 360, 300);
+  const valve = (vx, vy, n) => { x.fillStyle = '#f2ead8'; x.strokeStyle = '#3a2a1a'; x.lineWidth = 4; x.beginPath(); x.arc(vx, vy, 16, 0, 7); x.fill(); x.stroke(); x.fillStyle = '#3a2a1a'; x.fillText(n, vx - 7, vy + 8); };
+  valve(100, 170, '1'); valve(150, 215, '2'); valve(300, 130, '3'); valve(420, 130, '4');
+  x.fillStyle = '#3a2a1a'; x.font = 'bold 18px sans-serif';
+  x.fillText('AQUIFER', 180, 300); x.fillText('CONDENSERS', 300, 70);
 });
 const gaugeFace = () => canvasTex(128, 128, (x, W) => {
   x.fillStyle = '#f2ead8'; x.beginPath(); x.arc(64, 64, 60, 0, 7); x.fill();
@@ -81,11 +86,27 @@ function buildValveHall(scene, physics) {
     for (let s = 0; s < 4; s++) k.add(cyl(0.02, 0.02, 0.62, 5), valveM, vx, 1.45, -1.75, 0, { rz: s * Math.PI / 4 });
     const plate = k.mesh(plane(0.34, 0.24), MAT.map(canvasTex(64, 48, (x) => { x.fillStyle = '#e8dcc0'; x.fillRect(0, 0, 64, 48); x.fillStyle = '#3a2a1a'; x.font = 'bold 36px sans-serif'; x.fillText(String(i + 1), 22, 38); })), vx, 0.55, -1.86, 0);
     void plate;
-    const V = { id: i + 1, x: B.cx + vx, z: B.cz - 1.2, open: false, setOpen(b) { this.open = !!b; wl.rotation.z = b ? Math.PI / 2 : 0; wl.material = b ? MAT.paint('#2a8a3a', 0.4) : valveM; } };
+    // (PUZZLES P-A: a branch with steam in it and nowhere to go shudders: its wheel judders and puffs at the stem)
+    const V = { id: i + 1, x: B.cx + vx, z: B.cz - 1.2, open: false, shaking: false, wx: vx, setOpen(b) { this.open = !!b; wl.rotation.z = b ? Math.PI / 2 : 0; wl.material = b ? MAT.paint('#2a8a3a', 0.4) : valveM; },
+      wheel: wl, setShaking(b) { this.shaking = !!b; if (!b) { wl.position.x = vx; wl.position.y = 1.45; } } };
     valves.push(V);
   });
   R.valves = valves;
-  // three gauges above the manifold (one per condenser line, plus the aquifer), needles move with the routing
+  {
+    let puffT = 0;
+    R.updaters.push((dt, t, fx) => {
+      puffT -= dt;
+      const puff = puffT <= 0;
+      if (puff) puffT = 0.55;
+      for (const V of valves) {
+        if (!V.shaking) continue;
+        V.wheel.position.x = V.wx + Math.sin(t * 61) * 0.025;
+        V.wheel.position.y = 1.45 + Math.sin(t * 47 + V.id) * 0.02;
+        if (puff && fx) fx.burst(B.cx + V.wx, 1.75, B.cz - 1.75, '#f4f4f0', 5, 1.2);
+      }
+    });
+  }
+  // three gauges above the manifold, over valves 2, 3 and 4 (the aquifer, the two condenser lines)
   const needles = [];
   for (let i = 0; i < 3; i++) {
     const gx = -1.6 + i * 2.6;
@@ -95,7 +116,15 @@ function buildValveHall(scene, physics) {
     n.geometry = rbox(0.04, 0.26, 0.02, 0.005).clone().translate(0, 0.12, 0);
     needles.push(n);
   }
-  R.gauges = { set(vals) { vals.forEach((v, i) => { if (needles[i]) needles[i].rotation.z = Math.PI * 0.75 - v * Math.PI * 1.5 + Math.PI / 2; }); } };
+  // (PUZZLES P-A: each gauge reads the branch under it: over valve 2 the aquifer, over 3 and 4 their condensers. A needle
+  //  pinned in the red flutters; read() gives the values and flutters, for the tests)
+  const vals = [0, 0, 0], flutter = [false, false, false];
+  const pose = (i, j = 0) => { if (needles[i]) needles[i].rotation.z = Math.PI * 0.75 - (vals[i] + j) * Math.PI * 1.5 + Math.PI / 2; };
+  R.gauges = {
+    set(v, fl = []) { v.forEach((x, i) => { vals[i] = x; flutter[i] = !!fl[i]; pose(i); }); },
+    read() { return { vals: [...vals], flutter: [...flutter] }; },
+  };
+  R.updaters.push((dt, t) => { for (let i = 0; i < 3; i++) if (flutter[i]) pose(i, Math.sin(t * 37 + i * 2) * 0.035); });
   R.gauges.set([0, 0, 0]);
   // the diagram on the left wall
   k.add(plane(2.4, 1.5), MAT.map(diagramTex()), -W / 2 + 0.05, 2.2, 1.6, Math.PI / 2);
@@ -163,18 +192,29 @@ function buildHangar(scene, physics) {
   // (DESERT-BAR: gone(): flown north at the end of chapter 5: the hall is open in later chapters, story/desertlife.js;
   //  its tarp with it)
   R.glider = { x: B.cx + 2.5, z: B.cz + 2.8 + 2.0, uncover() { tarp.visible = false; }, gone() { gl.visible = false; for (const c of glCols) c.enabled = false; } };
-  // a gantry along the right side with a ball switch for the roof hatch
+  // a gantry along the right side with two ball switches, each level with the roof hatch it opens (PUZZLES phase 2: which
+  // one is over the glider is the question; the room's cut-away shows the switches, the glider and the condensers, and an
+  // opened hatch shows where it is by its shaft of daylight). The near one (z 2.8) is the glider's hatch; the far one
+  // (z −4.6) the condensers' old vent hatch: opened, daylight falls on them and their steam goes up through it
   const gy = 4.2;
   k.add(rbox(1.2, 0.12, D - 2, 0.02), MAT.tread('#5a5a5a'), W / 2 - 1.0, gy, 0);
   for (const z of [-5, -1.5, 2, 5]) k.add(rbox(0.14, gy, 0.14, 0.02), MAT.iron(), W / 2 - 1.5, gy / 2, z);
-  const sw = k.mesh(cyl(0.32, 0.32, 0.14, 18), MAT.paint('#c8302a', 0.4), W / 2 - 0.6, gy + 0.9, 0.5, 0, { rz: Math.PI / 2 });
-  R.ballSwitch = { x: B.cx + W / 2 - 0.6, y: gy + 0.9, z: B.cz + 0.5, on: false, setOn(b) { this.on = !!b; sw.material = b ? MAT.glow('#9fffa0', '#40ff60', 1.6) : MAT.paint('#c8302a', 0.4); } };
+  const lightShaft = (x, z) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, H, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#fff2d0', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); s.position.set(x, H / 2, z); B.group.add(s); return s; };
+  const switchAt = (z) => {
+    const m = k.mesh(cyl(0.32, 0.32, 0.14, 18), MAT.paint('#c8302a', 0.4), W / 2 - 0.6, gy + 0.9, z, 0, { rz: Math.PI / 2 });
+    k.add(rbox(0.1, 0.9, 0.1, 0.01), MAT.iron(), W / 2 - 0.6, gy + 0.45, z);
+    return { x: B.cx + W / 2 - 0.6, y: gy + 0.9, z: B.cz + z, on: false, setOn(b) { this.on = !!b; m.material = b ? MAT.glow('#9fffa0', '#40ff60', 1.6) : MAT.paint('#c8302a', 0.4); } };
+  };
+  R.ballSwitch = switchAt(2.8);
+  R.ventSwitch = switchAt(-4.6);
   R.ballTargets.push({ x: R.ballSwitch.x, y: R.ballSwitch.y, z: R.ballSwitch.z, r: 0.75, hatch: true });
+  R.ballTargets.push({ x: R.ventSwitch.x, y: R.ventSwitch.y, z: R.ventSwitch.z, r: 0.75, ventHatch: true });
   // the roof hatch: a light shaft falls in when it opens
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, H, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#fff2d0', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-  shaft.position.set(2.5, H / 2, 2.8); B.group.add(shaft);
+  const shaft = lightShaft(2.5, 2.8);
   const sun = B.light('#fff0c8', 0, 14, 2.5, H - 0.5, 2.8);
   R.hatch = { isOpen: false, open() { this.isOpen = true; shaft.material.opacity = 0.16; sun.userData.base = 14; sun.intensity = 14; } };
+  const vShaft = lightShaft(0, -4.6);
+  R.ventHatch = { isOpen: false, open() { this.isOpen = true; vShaft.material.opacity = 0.12; for (const c of condensers) c.setSteam(1); } };
   B.light('#ffd8a0', 7, 12, -3, 5.5, 0); B.light('#ffd8a0', 5, 10, 5, 5.5, -2);
   // crates and drums
   for (const [x, z, s] of [[-7, 4.5, 1.0], [-6, 4.8, 0.8], [-7.2, 3.4, 0.8]]) { k.add(rbox(s, s, s, 0.03), MAT.planks('honey'), x, s / 2, z); B.col(x, z, s / 2, s / 2, s); }

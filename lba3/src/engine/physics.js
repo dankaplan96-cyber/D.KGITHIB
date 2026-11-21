@@ -250,8 +250,12 @@ export class Physics {
       if (p.y - g > 0.6) { actor.onGround = false; actor.vy = 0; }
       else { p.y = g; actor.vy = 0; return false; }
     }
-    actor.vy -= (actor.gravity || GRAVITY) * dt;
-    p.y += actor.vy * dt;
+    // FPS30: the fall as a 60 fps step makes it, at any step: 60's step (vy -= g·h; y += vy·h, h = 1/60) is the exact arc
+    // of a take-off g/120 slower, so y += (vy − g·(dt + 1/60)/2)·dt is that arc exactly — identical to before at 60 fps,
+    // and a jump at 30 (or 144) rises as high and lands when it does at 60 (at 30 it was 5 cm lower, at 144 3 cm higher)
+    const gr = actor.gravity || GRAVITY;
+    p.y += (actor.vy - gr * (dt + 1 / 60) * 0.5) * dt;
+    actor.vy -= gr * dt;
     if (p.y <= g) {
       p.y = g;
       const impact = actor.vy;

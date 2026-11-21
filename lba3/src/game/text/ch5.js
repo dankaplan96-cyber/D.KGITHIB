@@ -7,8 +7,10 @@ Object.assign(STR.en, {
 
   // later in Kesh: the plan, then the setback
   c5_narr: 'Later, in Kesh.',
-  c5_ilka_1: "The test bore is the vent. If we open it fast, the steam goes down into the aquifer and boils the oasis.",
+  c5_ilka_1: "The vent comes up under the test bore. If we open it fast, the steam goes down into the aquifer and boils the oasis.",
   c5_ilka_2: 'FunFrock built condensers here to cool his own steam engines. If they still work, we can send the steam through them and let it out slowly.',
+  c5_ilka_relief: "The condensers are ready. Now the relief valve at the post, slowly. Dallan's on the gate, and he has read my reports, whatever he says.",   // (P81)
+  c5_ilka_after: "The vent is breathing and the oasis is cold. I'm writing it all down before somebody tells me it never happened.",   // (P81)
   c5_hesk_1: "The old hall under the dunes, east of the camp road. Half buried. My grandfather worked there. He hated it.",
   c5_tarra_1: 'Then open it. Kesh has been thirsty long enough.',
   c5_dallan_1: 'Attention, Kesh. By order of the Joint Project, the ferry at the pier is requisitioned for the evacuation.',
@@ -26,12 +28,16 @@ Object.assign(STR.en, {
   c5_toast_water: 'Jar of water',
   c5_trader_2: 'Lovely. A fair trade. Bring the shovel back. Or don\'t, it\'s an old shovel.',
   c5_toast_shovel: 'Shovel',
-  c5_trader_wait: 'The oasis, the jar, the water. Then the shovel.',
+  c5_trader_wait: "Fill the jar at the oasis first. Then we talk shovels.",
   c5_dug: 'Sand, more sand, and then a rusted door with a wheel. It turns.',
 
   // the valve hall
   c5_hall_in: 'FunFrock\'s condenser hall. And his old security drones are still awake.',
-  c5_diagram: 'A diagram: 1 from the bore, open. 2 is a bypass to the aquifer, shut. 3 and 4 feed the condensers, open.',
+  // (PUZZLES P-A: where each branch goes, not how to set it: the needles over the valves answer)
+  c5_diagram: "The manifold's diagram. Steam comes in from the bore at 1. Branch 2 goes down to the aquifer; 3 and 4 go up to the condensers.",
+  c5_press: "The steam's in, and the shut branches are shaking. It has nowhere to go.",
+  c5_nudge_gauges: 'The needle over each valve shows what its branch is doing.',
+  c5_nudge_route: 'In from the bore, up to the condensers. Never down to the aquifer.',
   c5_toast_valve: 'Valve {v}: {state}',
   c5_open: 'open', c5_shut: 'shut',
   c5_valve_aquifer: 'The aquifer gauge jumps into the red. Not that one.',
@@ -39,12 +45,13 @@ Object.assign(STR.en, {
   c5_hangar_in: 'A hangar. Three condensers, and something big under a tarp.',
   c5_glider_1: 'A FunFrock cargo glider. The wings are sound. Hesk would know what to do with it.',
   c5_hatch: 'The roof hatch grinds open. Daylight pours in.',
+  c5_hatch_vent: "A hatch grinds open, but over the condensers: their steam goes up through it. The glider's further along.",
 
   // the relief valve
   c5_dallan_gate1: 'Twinsen. I suppose you want me to look the other way.',
   c5_tw_gate1: "I want you to look at the gauges. Open the relief valve slowly, and the steam goes through FunFrock's condensers instead of under Kesh.",
   c5_dallan_gate2: 'My orders say the bore stays capped, and Kesh is not on the list.',
-  c5_tw_gate2: 'Your orders say sixty people stay behind. You knew that on Zeelich.',
+  c5_tw_gate2: "Your orders say sixty people stay behind. 'Thirty percent. I know.' Your words, at the dig.",
   c5_dallan_gate3: '...The gate is open. I didn\'t see you. Be quick, the pressure is higher than the reports say.',
   c5_relief_1: 'The wheel is stiff. One turn. Two. The ground starts to shake.',
   c5_vent_1: 'Geysers burst through the pad, then fall back. Far to the south, two white plumes rise from the dunes. The condensers are working.',
@@ -54,14 +61,14 @@ Object.assign(STR.en, {
   c5_kesh_1: 'Kesh is celebrating. Tarra wants to see you.',
   c5_tarra_2: 'You gave us water twice. Take this. It is for luck, and you will need it.',
   c5_toast_clover: 'Clover leaf',
-  c5_ilka_radio: 'Twinsen! Zoé is on my radio. I sent her the carving.',
-  c5_zoe_radio1: "Twinsen? Ilka's map matches Grandpa's old charts. The second vent is in the Hamalayi. Under the ice, near an old observatory.",
+  c5_ilka_radio: "Twinsen! Zoé is on my radio. I've told her about the carving.",
+  c5_zoe_radio1: "Twinsen? Ilka's map matches Gilbert's old charts, from his FunFrock days. The second vent is in the Hamalayi. Under the ice, near an old observatory.",
   c5_zoe_radio2: "The ice up there is melting from below. The villages are cut off. Nobody's on the project's list.",
   c5_tw_radio: "Then that's where I'm going. How's Arthur?",
   c5_zoe_radio3: "Building a radio for every house on Bug Street. Three of them work. Go on, Twinsen.",
   c5_dallan_k1: 'The ferry left without me. Project headquarters recalled it. I am not on the list either, it seems.',
   c5_ilka_k1: 'Welcome to Kesh, Dallan. The water is free.',
-  c5_hesk_k1: "The ferry's gone. But that glider in the hangar... it can glide, it can't climb. Launch it from the hangar roof into the wind and we'll reach the Hamalayi foothills.",
+  c5_hesk_k1: "The ferry's gone. But that glider in the hangar... it can glide, it can't climb. Launch it from the hangar roof into the wind and, if the wind likes us, we'll reach the Hamalayi foothills.",
   c5_hesk_k2: 'Meet me in the hangar. Bring a coat. It gets cold up north.',
   c5_board_1: "Hesk pulls the tarp away. The glider rolls out under the open hatch, into a gust of hot wind.",
   c5_hesk_board: "Hold on. And if you know any prayers to Sendell, now's the time.",

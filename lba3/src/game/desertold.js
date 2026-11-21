@@ -68,6 +68,18 @@ export function rillAt(x, z) { return rectW(RILL, x, z, 0.7); }
 // the islet's cove floor (0..1; its door is cut, the cove stays): held at 0.75 m, above the water and the cliff-foot rule (desert.js groundGrid)
 export function coveAt(x, z) { return rectW(COVE, x, z, 1.0); }
 
+// Tali's court (U-3, offwall.js) on the School's back terrace (P83, the user, 20.11: "the court moves with the School").
+// It stood on the sandy terrace behind the pool mask (the School's place until 15.11), against the two white blocks; it
+// moves as one piece, unturned, (dx, dz) to the terrace behind S28's ridge, north-west of the mask, off the sand tracks
+// and the yacht's line. Everything of the court keeps its place relative to the others (the blocks, the rock on its
+// east side and the boulder at its corner are built here as they stood there), so every throw flies as it did. The
+// island's ground is held level at g over the yard (courtAt, desert.js heightFn) and kept clear of rocks and plants.
+export const COURT = { dx: 70.6, dz: 98.4, g: 4.6 };
+const YARD = { x0: -10.6, x1: 0.6, z0: 13.2, z1: 30.6 };            // the levelled yard: the court, its two blocks and the rock (local, as built)
+export function courtAt(x, z) { return rectW(YARD, x, z, 2.0); }
+export function courtClear(x, z, r = 0) { return inRect(YARD, x, z, r + 0.4); }
+export const COURT_ROCKS = [[-71.7 + COURT.dx, -77.7 + COURT.dz, 1.9, 0.4]];   // (the boulder at the court's south-east corner: the old court's, moved)
+
 // the sides of a building, in worldfit's convention: the front is local +z; (u along the wall from its middle, v out)
 const SIDE = {
   front: { at: (b, u, v) => [u, b.d / 2 + v], yaw: 0, half: (b) => b.w / 2 },
@@ -399,6 +411,25 @@ export function buildOldPlaces(C) {
     C.schoolSpot = { x: dx, z: dz };
     // twelve years on: the School's board at the valley's mouth, where the way up from the coast comes in
     C.signAt('SCHOOL OF MAGIC', -7.2, -21.0, Math.PI, '#6a4a2a');   // (on the valley's west side: the floor stays clear)
+  }
+  // ================================================================ the pupils' yard behind the School: Tali's court (P83)
+  // (COURT above: the old court's walls, moved with it. Two whitewashed blocks as the pool mask's (bodies 46, which stay
+  //  there), their faces the court's wall; on its east side a rock in the School's old rock wall's stone, where that
+  //  wall closed the old court, and the boulder at its corner (COURT_ROCKS, drawn with the island's rocks). In the
+  //  island's batch, with its own materials: no draw call added)
+  {
+    const at = (x, z) => [x + COURT.dx, z + COURT.dz], g = COURT.g, rock = M.cliff;   // (the old School rock wall's own material: no new draw call)
+    for (const [x0, z0] of [[-74.7, -72.4], [-78.2, -72.7]]) {
+      const [bx, bz] = at(x0, z0);
+      B.add(bbox(2.95, 2.95, 3.93, 0.08, 1.5), M.white, bx, g + 1.2, bz); B.add(bbox(3.15, 0.2, 4.13, 0.04, 1), M.stone, bx, g + 2.75, bz);
+      col({ type: 'box', x: bx, z: bz, hw: 1.5, hd: 2.0, top: g + 2.85 });
+    }
+    { const [x0, z0] = at(-72.7, -77.345), [x1, z1] = at(-70.1, -68.055), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;   // (the old rock wall's face on the court, x −72.7)
+      B.add(bbox(x1 - x0 + 0.06, 4.0, z1 - z0, 0.2, TILE.cliff), rock, cx - 0.03, g + 1.6, cz);
+      // (its top stepped and turned a little: a rock, not a box)
+      B.add(bbox(1.8, 1.5, 4.6, 0.25, TILE.cliff), rock, cx + 0.35, g + 3.9, cz + 1.4, 0.05, 0.1, -0.06);
+      B.add(bbox(1.5, 1.0, 2.6, 0.2, TILE.cliff), rock, cx + 0.2, g + 3.7, cz - 2.6, -0.04, -0.15, 0.05);
+      col({ type: 'box', x: cx, z: cz, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, top: g + 3.6 }); }
   }
   for (const [x, z] of [[-55.45, -73.9], [-58.1, -74.1]]) {   // (PLACE-3: the first 0.25 m east: it stood 9 cm in the planter's box)
     const g = H(x, z); B.add(lathe([[0.01, 0], [0.26, 0.05], [0.34, 0.4], [0.2, 0.75], [0.17, 0.86], [0.2, 0.92]], 12, 0), pm('#c86a3a', 0.85), x, g, z); col({ type: 'cyl', x, z, r: 0.35, top: g + 0.9, noStand: true, seeThrough: true }); }

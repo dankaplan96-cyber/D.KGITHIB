@@ -1,0 +1,154 @@
+ROTATE-STALL arrival · medium · battery false · camera free · zeelich → citadel × 1
+zeelich (cold): 163 frames, 110700 ms in all, 109445 ms of it with the screen black
+    0    15 ms view  op 0.10 calls 184 uploads 26 (51 KB)
+    1    12 ms view  op 0.19 calls 184 uploads 26 (51 KB)
+    2     9 ms view  op 0.29 calls 184 uploads 26 (51 KB)
+    3    10 ms view  op 0.38 calls 184 uploads 26 (51 KB)
+    4    15 ms view  op 0.48 calls 184 uploads 26 (51 KB)
+    5    16 ms view  op 0.57 calls 184 uploads 26 (51 KB)
+    6    10 ms view  op 0.67 calls 184 uploads 26 (51 KB)
+    7     9 ms view  op 0.76 calls 184 uploads 26 (51 KB)
+    8     8 ms view  op 0.86 calls 184 uploads 26 (51 KB)
+    9     7 ms view  op 0.95 calls 184 uploads 26 (51 KB)
+   10     3 ms BLACK op 1.00 calls 0 hold 
+   11    18 ms BLACK op 1.00 calls 0 hold STEP shadow batches 17 [unit large piece 4.1]
+   12    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13
+   13    14 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13
+   14    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13 [unit cell 4.9]
+   15    14 ms BLACK op 1.00 calls 0 hold STEP shadow batches 13
+   16    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12
+   17    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12
+   18     6 ms BLACK op 1.00 calls 0 hold shadow batches built 4 ms, STEP shadow batches 4
+   19 107868 ms BLACK op 1.00 calls 0 hold 71 pieces left shadow batches, STEP texture layers 107826
+   20    21 ms BLACK op 1.00 calls 0 hold STEP texture layers 19
+   21    17 ms BLACK op 1.00 calls 0 hold STEP texture layers 13
+   22    18 ms BLACK op 1.00 calls 0 hold STEP texture layers 15
+   23    15 ms BLACK op 1.00 calls 0 hold STEP texture layers 13
+   24    10 ms BLACK op 1.00 calls 0 hold STEP texture layers 8
+   25    20 ms BLACK op 1.00 calls 0 hold STEP draw batches 19 [unit parts 8.7]
+   26    14 ms BLACK op 1.00 calls 0 hold STEP draw batches 13
+   27    21 ms BLACK op 1.00 calls 0 hold STEP draw batches 15
+   28    14 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit parts 11.8]
+   29    14 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit place 7.3]
+   30    20 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit place 5]
+   31    40 ms BLACK op 1.00 calls 0 hold STEP draw batches 38 [unit array 28.3], uploads 1 (12288 KB), 1 first uploads by draws behind black: tex 512x512 outside a draw
+   32    87 ms BLACK op 1.00 calls 0 hold STEP draw batches 24 [unit array 24.3], uploads 1 (9984 KB), 1 first uploads by draws behind black: tex 256x256 outside a draw
+   33    16 ms BLACK op 1.00 calls 0 hold +1 textures, STEP draw batches 15 [unit cell 5.1], uploads 2 (2304 KB), 2 first uploads by draws behind black: tex 128x128 outside a draw · tex 64x64 outside a draw
+   34    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit cell part 5.7]
+   35    18 ms BLACK op 1.00 calls 0 hold STEP draw batches 17
+   36    15 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit cell 11.4]
+   37    20 ms BLACK op 1.00 calls 0 hold STEP draw batches 16 [unit cell part 5.1]
+   38    24 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit cell 6.8]
+   39    19 ms BLACK op 1.00 calls 0 hold STEP draw batches 14 [unit cell 11.1]
+   40    19 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit cell 9.3]
+   41    29 ms BLACK op 1.00 calls 0 hold STEP draw batches 22 [unit cell part 16.4]
+   42    72 ms BLACK op 1.00 calls 0 hold STEP draw batches 59 [unit cell part 58.7]
+   43    61 ms BLACK op 1.00 calls 0 hold STEP draw batches 27 [unit cell 23.7]
+   44    19 ms BLACK op 1.00 calls 0 hold STEP draw batches 18 [unit cell 9.9]
+   45    14 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit cell part 4.1]
+   46    15 ms BLACK op 1.00 calls 0 hold STEP draw batches 14 [unit cell 6]
+   47    15 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit cell part 8.3]
+   48     3 ms BLACK op 1.00 calls 0 hold draw batches built 2 ms, STEP draw batches 2
+   49     9 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   50    65 ms BLACK op 1.00 calls 0 hold +92 geometries, STEP geometry 64, uploads 326 (7885 KB)
+   51    17 ms BLACK op 1.00 calls 0 hold +18 geometries, STEP geometry 16, uploads 57 (591 KB)
+   52    14 ms BLACK op 1.00 calls 0 hold +58 geometries, STEP geometry 13, uploads 178 (4092 KB)
+   53    35 ms BLACK op 1.00 calls 0 hold +96 geometries, STEP geometry 33, uploads 488 (43707 KB)
+   54     8 ms BLACK op 1.00 calls 0 hold STEP geometry 7, uploads 1 (22 KB)
+   55    18 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 17 [unit cell part 5.9], 68 first uploads by draws behind black: 2× left draw batch: Mesh:zeelich at 2390.8,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.7,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2389.6,12.7,11.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2389.2,12.7,11.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color f0c8c0 emissive 000000 · left draw batch: Mesh:zeelich at 2376.0,6.5,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2376.0,7.8,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2393.7,19.6,-16.9 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.0,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,11.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   56    21 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 20 [unit cell part 8.9]
+   57    22 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 18 [unit cell part 11]
+   58    14 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 13 [unit cell part 11.4]
+   59    26 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 17 [unit cell part 9.2]
+   60    15 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 15 [unit cell part 7.4]
+   61    14 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 13 [unit cell part 6.9]
+   62    24 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 17 [unit cell part 12.3]
+   63    14 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 14 [unit cell part 11.2]
+   64    16 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 15 [unit cell part 10.1]
+   65    17 ms BLACK op 1.00 calls 0 hold -2 geometries, STEP draw batches settle 16 [unit cell part 8.7], 1 first uploads by draws behind black: left draw batch: Mesh:zeelich at 2388.0,6.0,12.2 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   66    16 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 16 [unit cell part 14.3]
+   67    21 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 19 [unit cell 8.7]
+   68    20 ms BLACK op 1.00 calls 0 hold -3 geometries, STEP draw batches settle 19 [unit cell part 9.7]
+   69    34 ms BLACK op 1.00 calls 0 hold +4 geometries, 68 pieces left draw batches, STEP draw batches settle 14 [unit cell 11], uploads 70 (13229 KB)
+   70     1 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 1
+   71     3 ms BLACK op 1.00 calls 0 hold STEP batch meshes 0
+   72    18 ms BLACK op 1.00 calls 0 hold +79 textures, STEP textures 18, uploads 81 (13181 KB), 79 first uploads by draws behind black: 3× tex 512x512 outside a draw · 16× tex 128x128 outside a draw · 3× tex 64x64 outside a draw · 7× tex 256x256 outside a draw · 2× tex 512x384 outside a draw · 2× tex 256x160 outside a draw · 2× tex 256x128 outside a draw · tex 256x96 outside a draw · tex 128x160 outside a draw · 3× tex 128x64 outside a draw · tex 256x80 outside a draw · tex 512x256 outside a draw
+   73     1 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   74    30 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 22 [unit compile 11]
+   75    25 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 18 [unit compile 8.9]
+   76    19 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 18 (+1 prog) [unit compile 9.3]
+   77    15 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 14 [unit compile 14]
+   78    23 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 17 [unit compile 10.4]
+   79    23 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 14 [unit compile 14.3]
+   80    27 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 25 [unit compile 13.4]
+   81    15 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 12 [unit compile 12.2]
+   82     8 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 3
+   83     1 ms BLACK op 1.00 calls 0 hold 
+   84     3 ms BLACK op 1.00 calls 0 hold 
+   85     1 ms BLACK op 1.00 calls 0 hold 
+   86     7 ms BLACK op 1.00 calls 0 hold 
+   87     1 ms BLACK op 1.00 calls 0 hold 
+   88     4 ms BLACK op 1.00 calls 0 hold 
+   89     4 ms BLACK op 1.00 calls 0 hold 
+   90   110 ms BLACK op 1.00 calls 212 cache full build, +16 geometries, +1 textures, uploads 228 (4265 KB), 1 first uploads by draws behind black: tex 8052x1 drawing Skinned:?
+   91    12 ms BLACK op 1.00 calls 174 uploads 15 (39 KB)
+   92    11 ms view  op 0.90 calls 174 uploads 15 (39 KB)
+   93    22 ms view  op 0.81 calls 174 uploads 15 (39 KB)
+   94    11 ms view  op 0.71 calls 174 uploads 15 (39 KB)
+   95     8 ms view  op 0.62 calls 174 uploads 15 (39 KB)
+   96     8 ms view  op 0.52 calls 174 uploads 15 (39 KB)
+   97     7 ms view  op 0.43 calls 174 uploads 15 (39 KB)
+   98     4 ms view  op 0.33 calls 174 uploads 15 (39 KB)
+   99     4 ms view  op 0.24 calls 174 uploads 15 (39 KB)
+  100     6 ms view  op 0.14 calls 174 uploads 15 (39 KB)
+citadel (cold): 112 frames, 89900 ms in all, 6341 ms of it with the screen black
+    0 25705 ms view  op 0.10 calls 175 uploads 18 (78 KB)
+    1     6 ms view  op 0.19 calls 175 uploads 18 (78 KB)
+    2     7 ms view  op 0.29 calls 175 uploads 18 (78 KB)
+    3 28925 ms view  op 0.38 calls 175 uploads 18 (78 KB)
+    4    16 ms view  op 0.48 calls 175 uploads 18 (78 KB)
+    5     7 ms view  op 0.57 calls 175 uploads 18 (78 KB)
+    6     6 ms view  op 0.67 calls 175 uploads 18 (78 KB)
+    7     9 ms view  op 0.76 calls 175 uploads 18 (78 KB)
+    8     4 ms view  op 0.86 calls 175 uploads 18 (78 KB)
+    9     4 ms view  op 0.95 calls 175 uploads 18 (78 KB)
+   10     2 ms BLACK op 1.00 calls 0 hold 
+   11     2 ms BLACK op 1.00 calls 0 hold STEP shadow batches 0
+   12    14 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches back 13 [unit cell part 8.3]
+   13    17 ms BLACK op 1.00 calls 0 hold STEP draw batches back 8
+   14     2 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   15    14 ms BLACK op 1.00 calls 0 hold +1 geometries, STEP geometry 10, uploads 29 (385 KB)
+   16     9 ms BLACK op 1.00 calls 0 hold STEP geometry 8, uploads 6 (39 KB)
+   17     8 ms BLACK op 1.00 calls 0 hold +26 geometries, STEP geometry 6, uploads 36 (1377 KB)
+   18     9 ms BLACK op 1.00 calls 0 hold +43 geometries, STEP geometry 8, uploads 58 (5884 KB)
+   19     7 ms BLACK op 1.00 calls 0 hold STEP geometry 6, uploads 4 (39 KB)
+   20     3 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 2
+   21    11 ms BLACK op 1.00 calls 0 hold STEP batch meshes 6, uploads 3 (39 KB)
+   22     5 ms BLACK op 1.00 calls 0 hold STEP textures 4, uploads 2 (1 KB)
+   23     1 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   24    16 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 15 [unit compile 4.5]
+   25    13 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 13 [unit compile 4.6]
+   26    15 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 14 (+1 prog) [unit program 11.7]
+   27    16 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 14 [unit compile 4]
+   28     1 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 0
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30     1 ms BLACK op 1.00 calls 0 hold 
+   31     3 ms BLACK op 1.00 calls 0 hold 
+   32     1 ms BLACK op 1.00 calls 0 hold 
+   33     1 ms BLACK op 1.00 calls 0 hold 
+   34     1 ms BLACK op 1.00 calls 0 hold 
+   35     1 ms BLACK op 1.00 calls 0 hold 
+   36     1 ms BLACK op 1.00 calls 0 hold 
+   37     1 ms BLACK op 1.00 calls 0 hold 
+   38     1 ms BLACK op 1.00 calls 0 hold 
+   39     1 ms BLACK op 1.00 calls 0 hold 
+   40  6168 ms BLACK op 1.00 calls 275 cache full build, -1 geometries, 12 pieces left draw batches, uploads 94 (5666 KB), 13 first uploads by draws behind black: left draw batch: Mesh:station at -24.5,18.8,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -24.5,24.6,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color f0c040 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -76.0,0.0,-101.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:pipeline at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · 2× left draw batch: Mesh:harbour-zeelich at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   41    18 ms view  op 0.90 calls 228 uploads 27 (57 KB)
+   42    96 ms view  op 0.81 calls 228 uploads 27 (57 KB)
+   43    11 ms view  op 0.71 calls 228 uploads 27 (57 KB)
+   44    15 ms view  op 0.62 calls 228 uploads 27 (57 KB)
+   45    14 ms view  op 0.52 calls 228 uploads 27 (57 KB)
+   46    10 ms view  op 0.43 calls 228 uploads 27 (57 KB)
+   47    11 ms view  op 0.33 calls 228 uploads 27 (57 KB)
+   48     8 ms view  op 0.24 calls 228 uploads 27 (57 KB)
+   49    11 ms view  op 0.14 calls 228 uploads 27 (57 KB)

@@ -89,7 +89,7 @@ if (!ONLY || ONLY === 'A') {
   await start('new-04');
   is('A0 the save: chapter 2, the water back, the thread on, the objective sends him home, no door at the station yet',
     await ev(() => { const f = game.flags, L = game.story.cur.line; return [f.chapterKey, !!f.c1_water, L.on, L.open, game.story.doors().some((d) => d.room === 'control'), document.querySelector('#objective').textContent]; }),
-    (v) => v[0] === 'project' && v[1] && v[2] && v[3] && v[4] === false && /tap/i.test(v[5]));
+    (v) => v[0] === 'project' && v[1] && v[2] && v[3] && v[4] === false && /home/i.test(v[5]) && /Zo/.test(v[5]));   // (DIALOGUE-2: "Go home and talk to Zoé")
   is('A1 home: Zoé (the square is full, our tap is not); his own hand on the tap: dry', await ev(() => {
     const r = P.talk('zoe', { run: true }); const H = game.story.chapters[0].home.parts.house, h = game.hero;
     const t = P.use(H.spout.x, H.spout.z, { near: 1.2, kind: 'ct_tap' }); for (let i = 0; i < 40 && (h.steer || h.actT > 0); i++) game.step(0.25); P.settle();
@@ -667,7 +667,10 @@ if (!ONLY || ONLY === 'J' || ONLY === 'C') {
 
 // ------------------------------------------------------------------ K: chapter 9's thread (CAMPAIGN-7)
 if (!ONLY || ONLY === 'K') {
-  await start('new-12-heard');
+  const kstart = async (n) => { await start(n); await ev(() => { game.flags.exp_base = 1; delete game.flags.exp; }); };   // (each of the section's saves)
+  await kstart('new-12-heard');
+  // (the base campaign's chapter 10 is the network: these saves are from before format 6, which now sends a council save on
+  //  into the expanded campaign's "Borrowed Time" (main.js v5→v6); the section is about the base game's lane → network)
   is('K0 the save: chapter 9 after the hearing, in the chamber; the archive\'s door read: shut by the order; Kell asked: the deck comes down for them', await ev(() => {
     const G = game, f = G.flags; P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); const closed = f.cn_closed;
     P.exitTo('up-down'); const r = P.talk('zl_kell', { run: true }); for (let i = 0; i < 60 && G.story._cn.kell.busy; i++) G.step(0.1);
@@ -690,7 +693,7 @@ if (!ONLY || ONLY === 'K') {
   }), (v) => v[0] < 1 && v[1][0] === 'archive' && v[1][1] > 2 && v[2] === 'zeelich' && v[3][0] === 'zeelich' && Math.abs(v[3][1]) < 0.3 && v[4][0] === 'archive' && /plans/i.test(v[5]));
   await shot('K2-gallery');
   await browser.close();
-  await start('new-12-drawer');
+  await kstart('new-12-drawer');
   is('K3 the save: the BORE drawer open (the log, the order that cut it), the carbon still in his pocket; the archivist off his watch; the objective the comparison', await ev(() => {
     const G = game, f = G.flags; return [G.room?.id, !!f.cn_drawer, !!f.cn_log, G.rooms.archive.drawer.open, !!G.story.cur.watcher?.active, G.story.items().some((i) => i.id === 'tstrip'), document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'archive' && v[1] && !v[2] && v[3] && !v[4] && v[5] && /carbon/i.test(v[6]));
@@ -699,7 +702,7 @@ if (!ONLY || ONLY === 'K') {
     return [r.target?.kind, f.cn_log, !!f.c9_plans, G.story.items().some((i) => i.id === 'tstrip'), document.querySelector('#objective').textContent];
   }), (v) => v[0] === 'cn_compare' && v[1] === true && v[2] && !v[3] && /council/i.test(v[4]));
   await browser.close();
-  await start('new-12-vote');
+  await kstart('new-12-vote');
   is('K5 the save: the stop ordered; the guard stands aside (his line); the stop thrown at the console: the BORE needle down, the GROUND needle still kicking; Mill Lane dry (the cart half way, no water)', await ev(() => {
     const G = game, f = G.flags, S = G.rooms.zeelich.platform.stop, L = G.rooms.zeelich.lift; if (G.room?.id === 'council') P.exitTo('council-out'); if (G.room?.id === 'upper') P.exitTo('up-down'); const g = P.talk('guard', { run: true });
     const r = P.use(S.x, S.z, { kind: 'cn_stop', near: 0.8, run: true }); for (let i = 0; i < 200 && !(f.cn_stop && G.state === 'play' && !G.story._cn.busy); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
@@ -712,7 +715,7 @@ if (!ONLY || ONLY === 'K') {
   }), (v) => v[0] && v[1] > 1.5 && v[1] < 2.5 && !v[2] && v[3] === 'use' && v[4] === 'talked' && v[5]);
   await shot('K6-dry');
   await browser.close();
-  await start('new-12-stop');
+  await kstart('new-12-stop');
   is('K7 the save: after the stop; the bench: Baldino hands over the isolator; on the first relay it holds that one (the other jumps)', await ev(() => {
     const G = game, f = G.flags; P.enter('workshop', { run: true }); P.settle(); const T = G.rooms.workshop.life.terminals, S = G.rooms.workshop.life.state;
     const r = P.use(T.A.x, T.A.z, { kind: 'cn_iso', near: 0.6 }); for (let i = 0; i < 60 && !f.cn_isoA; i++) { G.step(0.1); P.settle(); }
@@ -920,7 +923,7 @@ if (!ONLY || ONLY === 'O') {
     const G = game, f = G.flags; const st = [G.room?.id, !!G.room?.seal?.shut]; const j = G.story.journal().find((c) => /Shell/.test(c.title));
     const e = G.room.exits.find((x) => x.to === 'c3-core'); P.through(e.x, e.z, { fight: false }); for (let i = 0; i < 80 && f.chapterKey !== 'core'; i++) G.step(0.1); P.settle();
     return [...st, j?.lines.length, f.chapterKey];
-  }), (v) => v[0] === 'c3sendell' && v[1] && v[2] === 7 && v[3] === 'core');
+  }), (v) => v[0] === 'c3sendell' && v[1] && v[2] === 8 && v[3] === 'core');   // (P83 S-2: the chapter's "What we know" line heads the page)
   await browser.close();
 }
 

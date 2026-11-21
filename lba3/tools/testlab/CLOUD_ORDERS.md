@@ -596,3 +596,240 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
        the setting — never change system power settings yourself.
     Report as PERF-1050-BATTERY in WORLD_ART_REQUESTS.md with the raw logs in docs/lba3-performance/HARDWARE/. Fixes you can
     prove go as requests/*.diff; the cloud applies them with its own performance worker.
+55. **FPS30-HW (the user, 19.11, v100 in Chrome: "the game does not lock to 30 fps when I choose it"; P70, docs/lba-maturity/FPS30.md).**
+    The cloud found and fixed two defects of the 30 limit by measurement on a synthetic display (rAF timestamps that jitter
+    over 1.5 ms gave 50/16.7 ms pairs; a frame a refresh late was followed by a 16.7 ms catch-up frame) — it could not see
+    the user's machine. On THIS machine (GTX 1050), in Chrome against the artifact or the repo served locally at the FPS30 tip:
+    1. Record: Chrome version, chrome://gpu (WebGL hardware-accelerated or not, the GPU in use — Windows' per-app GPU
+       preference), the display's refresh rate (Windows: Settings → Display → Advanced), window size, devicePixelRatio,
+       Windows' power mode and battery saver, Chrome's Energy Saver (chrome://settings/performance) on/off.
+    2. Pause → **Benchmark: Frame Rates** (new: street, interior, combat, arrival at Unlimited / 60 / 30, ~2.5 minutes), once
+       plugged in and once on battery, Quality as played (Auto) and once at Medium chosen by hand. Paste each report whole
+       (its "frame callbacks" line says whether Chrome's frame timestamps jitter; its 30 lines give the on-pace share, the
+       50/66.7 ms frames and the catch-ups; GPU/CPU ms per second compare the load at each limit).
+    3. Play 3 minutes at Frame Rate 30 with F9 on (the overlay's new line: limit · refresh · on pace %): the house, the
+       square running while turning the camera, a fight with ball throws, a door in and out. Note the lowest "on pace" seen
+       and anything that looks uneven; if possible a 240 fps phone video of the screen for 10 s at 30 and at 60.
+    4. Also on the same build, with Chrome's own FPS meter (DevTools → Rendering → Frame Rendering Stats) at 30: if it
+       shows ~60 while the game's F9 shows 30, say so (the compositor drawing HUD animations — not the game's frames).
+    Report as FPS30-HW in WORLD_ART_REQUESTS.md, the raw reports in docs/lba3-performance/HARDWARE/<date>-gtx1050-fps30/. Never
+    change system power settings yourself.
+56. **ARRIVAL-STEPS-HW (REPAIR-PASS-18-11 phase 5; docs/lba3-performance/PERFORMANCE_REPORT.md).** The cloud cut a scene
+    change's preparation behind the black (shadow batches, draw batches, their settle and return, the shader warm-ups) into
+    slices of at most 12 ms a black frame (a slice ends after the piece, cell part or program that crosses it; the warm-up
+    compiles a never-compiled material on its own). Measured on SwiftShader only. On THIS machine, in Chrome against the
+    artifact or the repo served at the ARRIVAL-STEPS tip:
+    1. Record the GPU Chrome actually uses (chrome://gpu; the user's 19.11 run reported the Intel UHD 620, 18.11's the
+       GTX 1050 — say which, and Windows' per-app GPU preference), power (AC / battery), window, devicePixelRatio.
+    2. Pause → **Benchmark** (Quality Auto as played): on the GTX 1050 on battery, and on the UHD 620 if Chrome uses it. Paste
+       each report whole: its "scene changes' preparation behind the black" line gives each step kind's count / longest /
+       total ms (shadow batches, texture layers, draw batches, draw batches settle, draw batches back, geometry, shader
+       warm-up); the arrival route's frames over 33 ms behind the black; any frame over 33 ms in view in the first 6 s
+       after an arrival (18.11: one of 34 ms at 5.6 s).
+    3. Pause → **Benchmark: Frame Rates**, once on battery: whether the arrival's black frames stay near one or two
+       refreshes at 60 and at 30.
+    4. A fixed **High** benchmark on battery on the GTX 1050 (Pause → Benchmark, Quality High chosen by hand): the evidence
+       Auto's first guess needs (today battery → Medium; the cost model, from the Vega 8, puts High's GPU time at ~1.8×
+       Medium's; the GTX 1050's plugged-in runs of 10.11 measured ~1×).
+    Report as ARRIVAL-STEPS-HW in WORLD_ART_REQUESTS.md, the raw reports in docs/lba3-performance/HARDWARE/<date>-arrival-steps/.
+    Never change system power or GPU settings yourself.
+57. **JOINTS-BLENDER (the user, 20.11, to the local agent; status.md P82).** "Use the locally installed Blender to improve
+    character joints and animation. Edit the actual character assets, export them through the project's pipeline, and
+    integrate them into the playable game. The player's complaint is specific: arms and legs still read as connected tubes.
+    The goal is a character who feels like one body in motion while retaining the stylized proportions and charm of LBA2.
+    Start with Twinsen's magic-ball throw; once that works, apply the lessons to Zoé and the rest of the cast."
+    **What the cloud already knows (read before starting):**
+    - The game displays `assets/poly/<name>.json` (characters.js `polyCharacter`: unindexed skinned triangles, bones by
+      name, `eyes`/`mouths` entries), built by the generators in `tools/blender/`: `twinsen_poly.py`, `zoe_poly.py`,
+      `cast_poly.py` (the rest of the cast, present), `baldino_poly.py` (the Grobo), `lbapoly.py` (shared). A look with no
+      JSON falls back to the procedural sculpt (characters.js `buildCharacter`, engine/sculpt.js) — check none of the four
+      falls back. **The user plays the artifact in Chrome** (no desktop build is shipped); verify there, or the repo served.
+    - CHAR-FORM (cloud, 18.11, docs/lba-maturity/CHAR-FORM.md) already reshaped Twinsen and Zoé in the generators (flags
+      `TW_FORM`, `ZOE_FORM`, on; `=0` rebuilds the previous model byte for byte): Twinsen's shoulder line, cape folds, robe
+      over hips/knees, shins; Zoé's trousers, knees, hem, arms. The user still sees tubes — start from the result in game,
+      not from that doc's claims.
+    - **The animation is procedural**: the poses and timing (walk, run, throw, sword, landing, pickup, talk) are code in
+      `src/engine/rig.js` (Rig.update, the action poses), not Blender clips; the ball's release is a gameplay event in
+      `src/game/combat.js` / `actors.js` (released at ~0.18 s, FPS30.md: the same at 30 and 60). Performance changes
+      (the throw's three moments: weight set and hand drawn back; torso and shoulder lead into release; follow-through and
+      settle) are made there, keeping input response and the release frame where the ball visibly leaves the hand.
+    - Faces (FACE-1.md): keep the `eyes`/`mouths` entries and their pivots; the brows are found at runtime as a pair of
+      small separate pieces over the eyes (characters.js `autoBrowIdx`) — keep each brow its own piece, alike left and
+      right, or that character loses its brow expressions.
+    **The brief, in its order:** (1) find the models the game displays — trace Twinsen, Zoé, Arthur and one non-human
+    resident (a Grobo) from spawn to mesh, skeleton and animator; edit the authoritative source (the generator), or a
+    reproducible import/edit/export path verified by an unchanged round trip first; keep bone names, attachment points,
+    facial data and bindings. (2) Diagnose Twinsen with one repeatable shot: the throw from the normal gameplay camera and a
+    closer three-quarter view (wind-up, release, follow-through), a bent elbow, a crouch, one full stride; for each defect
+    find its cause first — cylindrical at rest → reshape (distinct widths and profiles for upper arm, elbow, forearm,
+    wrist); good at rest but collapsing when bent → joint pivot, mesh round the bend, weights; hand/boot separating →
+    attachment and overlap through the motion (keep rigid pieces rigid); joints hold but motion mechanical → timing and
+    poses, not geometry. (3) Repair in Blender: the shoulder first (torso → shoulder → sleeve: no dent, gap or peg when the
+    arm lifts; keep the tunic and broad sleeves); elbows and knees with enough geometry round the bend (inside compresses,
+    outside keeps its shape), weights painted locally and checked in real poses front/side/rear, belt, shoes and equipment
+    holding their shape; wrist and ankle (hand out of the cuff, leg into the shoe at every angle); the neck turning to speak,
+    the hips crouching; move vertices before raising the budget; a helper bone or corrective shape only for a specific
+    defect still visible in game and only if the runtime supports it. (4) Performance: the throw's three moments (above);
+    the same joints in a sword swing, a jump landing, walk-to-stop and a pickup; planted feet against a fixed ground point —
+    fix sliding without changing speed or collision. Zoé: a real conversation and her reach toward the tap (shoulder, gaze,
+    wrist, sleeve together); Arthur: a quick turn toward a parent and his shorter stride; a Grobo: the trunk against the
+    chest walking and turning. Keep each body's proportions; shared fixes where the defect is shared, not the same motion
+    on every body. (5) Prove it in the game: rebuild the assets, run the game, matched before/after clips (same camera,
+    action, lighting, speed) including the normal gameplay distance; confirm the updated asset loads (no silent fallback);
+    the throw and landing at 30 and 60 FPS; equipment, faces, ground contact and transitions intact; compare triangles,
+    skinned vertices, bones, materials, draw calls; frame time in the same populated street before/after, naming the
+    machine (no Vega 8 / GTX 1050 claim unless measured there).
+    **Deliver**: the edited generators (or the editable Blender source), the rebuilt `assets/poly/*.json`, rig.js changes,
+    matched clips in `captures/joints-blender/`, and a short report `docs/lba-maturity/JOINTS-BLENDER.md` (which joints
+    were fixed, what was verified in play). Continue through every character without waiting for review of each.
+    **Coordination**: work on a branch from `ccr-c1c2c4b9-dep6ed`, push it as `joints-blender` (not to the cloud's branch);
+    cloud workers are meanwhile editing story files (ballastra, network, epilogue, openingsteps, tutorial, prologue,
+    middle-chapter quests) — stay out of those; rig.js and characters.js are yours for this order (tell the cloud in
+    WORLD_ART_REQUESTS.md as JOINTS-BLENDER when you start and when done). Never commit LBA1/LBA2 files. Test lightly
+    (the user: minimal tests while working; one full test at the end).
+
+58. **POLISH-SWEEP (the user, 20.11, to the local agent; status.md P84): "verify that everything is in its place, there are no
+    problems with where things are positioned, and everything looks polished."** Play the whole game world with the real GPU
+    and the normal gameplay camera, find every placement defect a player would notice, fix it, and prove each fix in a
+    matched before/after capture.
+    **What counts as a defect** (in order of how much a player notices it):
+    - Objects floating above the ground or floor, sunk into it, or half inside a wall, rock, fence or another object.
+    - People (NPCs) standing inside walls, furniture, doors or each other; people whose feet are not on the ground;
+      people facing a wall while they talk; a working person whose hands are far from what they work on.
+    - Doors, gates and exits whose frame, landing or step does not meet the ground or the path; stairs, ramps and
+      bridges not joined to what they lead to (the cave in upper Citadel was this kind: "the stairs in the air, not
+      connected").
+    - Gaps or seams in the terrain, cliffs, paths, walls and roofs (light showing through, a visible hole or step).
+    - Overlapping surfaces that flicker (z-fighting), stretched or misaligned textures, signs or posters floating off
+      their wall.
+    - Things that block the way or the camera in an unpolished way: a crate in a doorway, a prop on a path, a lamp post
+      through a roof.
+    - Inconsistencies between visits: a thing that moves or disappears between chapters without a story reason.
+    **How:**
+    1. Interiors first: run `tests/place-scan.mjs` (it builds every room and judges inside/wall/float/sunk/back/facing/
+       door/adrift; see its head). Then look at each room yourself in the game camera, because the scan only knows boxes.
+    2. Outdoors: walk each region along its paths and around its buildings: Citadel (upper and lower, the harbour, the
+       lighthouse, the spaceport), Zeelich (the street, the mills, Mill Lane, the council), Desert Island (Kesh, the bore),
+       the Hamalayi (Lhar, the monastery, the observatory), Ballastra. Write a small outdoor scan like place-scan
+       (props and NPCs against the ground height and colliders) if that finds faster than eyes.
+    3. The chapters change the world: check each region in at least one early and one late chapter, using the saves
+       in `tests/fixtures/campaign/`.
+    4. For each defect: record it with a capture (game camera), its cause, and fix it at its source (the region or room
+       builder, the NPC's spot or round, the prop's offset). Do not hide a defect by moving the camera. Keep old saves
+       loading.
+    **Leave out:**
+    - The School of Magic's exterior and Tali's court: P41, the user approved moving them together, to be done separately.
+    - Zeelich Spaceport's layout: P26, to get Citadel's terminal layout, separately.
+    - The cloud is editing story text, `src/main.js`, `src/game/story/balances.js` and the campaign tests; stay out of
+      those.
+    - `rig.js` and `characters.js` belong to JOINTS-BLENDER (order 57). If both orders are yours, do them one after the
+      other.
+    **Deliver:**
+    - Work on a branch from `ccr-c1c2c4b9-dep6ed`, pushed as `polish-sweep`.
+    - Matched before/after captures in `captures/polish-sweep/` (same camera, same spot).
+    - A report `docs/lba-maturity/POLISH-SWEEP.md`: a table of each defect, where, its cause and the fix, plus what
+      was checked and found fine.
+    - Say POLISH-SWEEP in WORLD_ART_REQUESTS.md when you start and when you are done.
+    - Measure frame time in one populated street before and after, naming the machine. No visible change may cost
+      performance.
+    - Never commit LBA1/LBA2 files. Test lightly; the cloud runs the full test.
+
+59. **HIDDEN-TRIS-HW (the user, 20.11, to the local agent; status.md P85): "check whether there are hidden triangles in a
+    small part of the game, to see whether it weighs on the game."** Triangles drawn that a player can never see, from any
+    reachable spot:
+    - under the terrain or floor;
+    - inside walls, rocks or other solids;
+    - the hidden halves of overlapping props;
+    - bottoms of things resting on the ground;
+    - back sides drawn because a material is double-sided;
+    - backs of buildings against a cliff;
+    - far props at full detail.
+
+    The cloud has a worker finding the hidden set in software (no real GPU there). It will write
+    `docs/lba3-performance/HIDDEN-TRIS.md` (method, the list of sources, a SwiftShader-only estimate). Your part is
+    **the real cost on a real GPU**, which the cloud cannot measure:
+    1. **Area:** Citadel round Twinsen's house (the yard, the lane, the square with the well); then one busy area of your
+       choice (Zeelich's street or Kesh).
+    2. **Find the hidden set.** If HIDDEN-TRIS.md is merged, use its method and list. If not yet, find it yourself with
+       an ID render: each piece in its own colour, from many reachable camera spots and headings, read back; pieces or
+       triangles never seen are hidden. Count double-sided backs separately.
+    3. **Measure on this machine's GPU:**
+       - with the hidden set drawn, and with it removed (hidden or skipped in its batches), at the same camera points;
+       - frame time p50/p95, GPU time if available, triangles and draw calls (`renderer.info`);
+       - at Medium and High, plugged in.
+       Name the machine and GPU. Never write a GTX 1050 or UHD 620 number unless measured on that machine.
+    4. **Verdict, with numbers:** does it weigh on the game? How much of the frame does it cost? The cheapest fix if it
+       is worth it, for example:
+       - drop buried faces at build time;
+       - single-sided materials where double isn't needed;
+       - trim bottoms;
+       - a per-area "never visible" list.
+       Implement only a fix with a clear measured win and no visible change.
+
+    **Deliver:**
+    - Work on a branch from `ccr-c1c2c4b9-dep6ed`, pushed as `hidden-tris-hw`.
+    - A section "Real GPU" in `docs/lba3-performance/HIDDEN-TRIS.md` (create the file if the cloud's isn't merged yet),
+      with the numbers table and the verdict.
+    - Say HIDDEN-TRIS-HW in WORLD_ART_REQUESTS.md when you start and when you are done.
+
+    **Order with the other jobs:** do this before POLISH-SWEEP (58), because it is short; JOINTS-BLENDER (57) as it stands.
+    Never commit LBA1/LBA2 files. Test lightly.
+
+60. **The user, 21.11 morning: "give the local agent tasks".** State: artifact **v113** (stamp commit "Build stamp for
+    artifact v113"). Tonight the cloud published v110 FACE-2 (dialogue camera, `docs/lba-maturity/FACE-2.md`), v111
+    ARRIVAL-2, v112 P87b and v113 P87c (`docs/lba3-performance/PERF_ARRIVAL.md` §ARRIVAL-2/P87b/P87c). Every number
+    there is SwiftShader only. Work these one at a time, in this order:
+
+    0. **FPS30-PRESENT — first, before everything else (the user, 21.11, P88: "30fps is still not even and doesn't look
+       good, still jumps, not steady at 30").** Order 55 (FPS30-HW) was never reported; do it now with the real
+       presented frames, on this laptop (GTX 1050), in Chrome, the artifact build (v113) served directly and inside
+       claude.ai's frame:
+       - Note the screen's refresh rate (Windows display settings), plugged in vs battery, Chrome's Energy Saver state,
+         and whether the GTX or the Intel GPU draws Chrome (chrome://gpu). Do not change OS power or GPU settings.
+       - Pause → Benchmark: Frame Rates, plugged in and on battery; paste both reports.
+       - At Settings → Display → Frame Rate 30, record a Chrome Performance trace (DevTools or Playwright CDP
+         `Tracing` with the `devtools.timeline` and `disabled-by-default-devtools.timeline.frame` categories) for 20 s:
+         square running while turning the camera, then the house. From it: the rAF callback intervals, the
+         **presented / dropped frames** (the Frames track), main-thread time per frame and GPU time per frame. The
+         question is whether rAF is an even 33.3 ms while presentation is not (the compositor showing a frame one
+         refresh late when the GPU time crosses a refresh), or rAF itself is uneven.
+       - The F9 overlay's pacing line at 30 (on pace %, ≥1.5× count) in the same walk.
+       - Then the same at 60 for comparison.
+       Report as FPS30-PRESENT in WORLD_ART_REQUESTS.md with the numbers and the trace files (zipped, under
+       `docs/lba-maturity/fps30-present/`). **Measure only, no code change**; the cloud will fix from your numbers.
+       Never write a number not measured on this machine.
+    1. **ARRIVAL-HW (short, measure only).** On this machine's real GPU, in Chrome, plugged in, Medium and High:
+       Zeelich arrival from Citadel, the tavern from the street, and the return to Citadel from Zeelich. Base
+       `a4e1fb45` (v109) against `ccr-c1c2c4b9-dep6ed` (v113). Use `tests/arrival-steps.mjs` and the probes in
+       `docs/lba3-performance/ARRIVAL-2/probes/`. Report the longest frame, p95 frame time and any visible hitch for
+       each. Name the machine and GPU; never write a GTX 1050 or UHD 620 number unless measured on that machine. Add a
+       "Real GPU" section to PERF_ARRIVAL.md. No code change.
+    2. **FACE-2-HW (look and report).** Play the chapter-1 talk with Zoé in the yard, Granny Ume, Maro and Tilde, and
+       one later talk of your choice (chapters 1–2 only in anything shown to the user). Record frames or a short clip
+       at the dialogue camera. Judge the cuts between speakers (the 2.2 s hold), whether a face is ever covered, and
+       whether the head posture (curious tilt, concerned head down) reads. Report as FACE-2-HW in
+       WORLD_ART_REQUESTS.md with captures in `captures/face-2-hw/`. **No code change:** the cloud owns
+       `src/engine/camera.js` today (FACE-2 leftovers).
+    3. **P58 (Twinsen hidden at the station).** The cloud's AUDIT-FIX tried 351 spots and found him hidden only at the
+       fort wall's corner near the station. With the real GPU, walk the station area at the play camera (Follow
+       mode, and also Fixed) and look for spots where Twinsen is hidden by a roof, wall or hut. For each, record the
+       spot (x, z), the camera mode and a capture. Fix only at the world's side (a wall's or roof's fade/cut in
+       `src/game/roomocc.js`, or the piece's placement); do not touch `camera.js`. Report as P58-HW.
+    4. **JOINTS-BLENDER (order 57) continues:** sword, landing, walk-to-stop, pickup.
+    **Deliver:** each job on its own branch from `ccr-c1c2c4b9-dep6ed` (`arrival-hw`, `face-2-hw`, `p58-hw`, and
+    `joints-blender` as before), pushed, plus a line in WORLD_ART_REQUESTS.md when you start and finish each. Stay out
+    of `camera.js`, `rig.js` (except order 57), `src/game/story/*` and `src/game/text/*`: the cloud works there.
+    Never commit LBA1/LBA2 files. Test lightly; the cloud runs the full test.
+
+61. **SMOOTH-HW (the user, 21.11: "make movement, camera rotation and combat feel smoother without sacrificing the art";
+    status.md P89).** The cloud worker SMOOTH-1 is writing `tests/smooth-routes.mjs` (three scripted routes in loaded
+    scenes, Follow camera, 1366×768: Citadel street run/turn/stop/camera sweep over the harbour; combat strafe + two ball
+    throws; Mill Lane beside the moving lift and cart while rotating the camera) and `docs/lba3-performance/SMOOTH-1.md`
+    with the exact local procedure. When it is merged on `ccr-c1c2c4b9-dep6ed` (the coordinator will say so in
+    WORLD_ART_REQUESTS.md), run it on this laptop, headed Chrome, before (base = the commit before SMOOTH-1's merge) and
+    after, **3 runs each**, separately **on battery** and **plugged in**, at 60 and at 30, Medium (and High plugged in);
+    note which GPU Chrome uses (chrome://gpu). If the GPU is over budget on a route: the same route at 100 % vs 90 % world
+    resolution, then edge smoothing on/off, separately. Report frame p95/p99, stalls > 50 ms, CPU and GPU ms/frame, and
+    whether the motion looks even at a stable frame time (a short clip per route). Do not change OS power or GPU settings.
+    Measure only; report as SMOOTH-HW with numbers in SMOOTH-1.md's "Real hardware" section on a branch `smooth-hw`.
+    Order: after 60.0 FPS30-PRESENT, before 60.1.

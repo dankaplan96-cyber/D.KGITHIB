@@ -94,7 +94,8 @@ await ev(() => { for (let i = 0; i < 120 && game.state !== 'play'; i++) game.ste
 is('after Continue: the water flows, the station gate opens, an objective set', await ev(() => [game.flags.c1_water, game.world.gate.open, T.obj()]), (v) => v[0] === true && v[1] === true && v[2].length > 0);
 // CAMPAIGN-2 (story/pumpline.js): the square has water, the lane has none — the station waits until the wrong pipe is
 // found in the pump room on the lane (the steps by the E key at each thing; the walk between them by T.tp)
-is("the lane is still dry: the station's door waits, the objective sends him to his own tap", await ev(() => { const L = game.story.cur.line; return [L.on, L.open, game.story.doors().some((d) => d.room === 'control'), T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2] === false && /tap/i.test(v[3]));
+// (DIALOGUE-2, 19.11: the objective sends him home to Zoé, who tells him the tap is dry — ct_obj_home; it named the tap before)
+is("the lane is still dry: the station's door waits, the objective sends him home to Zoé", await ev(() => { const L = game.story.cur.line; return [L.on, L.open, game.story.doors().some((d) => d.room === 'control'), T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2] === false && /home/i.test(v[3]) && /Zoé/.test(v[3]));
 await ev(() => {
   const G = game, h = G.hero;
   // (a remark that starts as he arrives — the bypass seen behind the pier, an object's box — is heard out first)

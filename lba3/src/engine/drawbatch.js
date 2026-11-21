@@ -28,7 +28,7 @@
 import * as THREE from 'three';
 import { plain, texOnly, twinOf } from './merge.js';
 import { MW, walkCheckNote } from './drawcull.js';
-import { TEXARRAY, arrayable, layerOf, arrayTwinOf, keyOf, flushArrays } from './texarray.js';
+import { TEXARRAY, arrayable, layerOf, arrayTwinOf, keyOf, flushArraysSteps } from './texarray.js';
 
 export const CELL = 48;
 // PERF-CPU, tried: lone pieces gathered per LOOSE.n × CELL
@@ -39,6 +39,12 @@ export const LOOSE = { n: typeof location !== 'undefined' && /[?&]loose/.test(lo
 export const OVERLAP = { on: !(typeof location !== 'undefined' && /[?&]nooverlap/.test(location.search)) };
 const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
 const _m = new THREE.Matrix4(), _nm = new THREE.Matrix3(), _v = new THREE.Vector3(), _c = new THREE.Vector3();
+// ARRIVAL-2: the start of the unit runFor is running (Infinity outside one: a build run to its end never yields early).
+// The builds' long loops (overlapRuns' fixed draws, parts and placing, the pieces, a cell's merge) also end their unit
+// once it has run UNIT.ms, whatever their count: under load one 32-part placing unit was 113 ms here (Zeelich), a
+// cut piece's vertices 34 ms (the tavern). The same work in the same order; only where the slices fall moves.
+export const UNIT = { t0: Infinity, ms: 4 };
+const long = () => performance.now() - UNIT.t0 > UNIT.ms;
 const BASE_OBR = THREE.Object3D.prototype.onBeforeRender;
 
 const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
@@ -174,22 +180,35 @@ class PlaneSet {
 }
 const keepOne = (C) => C.sortId !== undefined && C.list[0].fold?.ord !== C.list[0].o.material.id;
 class Area {
-  constructor(root, cell, fold = true, arrays = false, loose = LOOSE.n, exactArr = true) {
+  // ARRIVAL-STEPS: `staged` — the build is a generator (this.gen) its owner runs in time-bounded slices (DrawBatch.slice),
+  // one per black frame of a scene change; otherwise it runs to the end here, as before. The same pieces, cells and
+  // batches either way: the steps are the build's own loops, cut between pieces and between cells.
+  constructor(root, cell, fold = true, arrays = false, loose = LOOSE.n, exactArr = true, staged = false) {
     this.root = root; this.cells = new Map(); this.members = []; this.ms = 0; this.cell = cell; this.ids = 0; this.loose = loose;
     const t0 = performance.now();
+    this.gen = this.make(fold, arrays, exactArr);
+    if (!staged) { while (!this.gen.next().done); this.gen = null; this.ms = performance.now() - t0; }
+  }
+  *make(fold, arrays, exactArr) {
+    const root = this.root, t0 = performance.now();
     root.updateMatrixWorld(true);
     this.inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
     const rootFlip = root.matrixWorld.determinant() < 0;
     const pieces = [], found = [];
     const kindKey = (o, F, flip) => [(F ? F.twin : o.material).uuid, F ? (F.arr ? 'fold:arr' : F.tex ? 'fold:uv' : 'fold') : attrSig(o.geometry) + (o.geometry.index ? '|i' : ''), o.receiveShadow, o.renderOrder, flip].join('|');
-    root.traverse((o) => {
-      if (!eligible(o, root)) return;
+    const scan = [];
+    root.traverse((o) => { if (eligible(o, root)) scan.push(o); });
+    yield 'scan';
+    let y = 0;
+    for (const o of scan) {
+      if ((++y & 31) === 0 || long()) yield 'pieces';
+      if (!o.parent || !eligible(o, root)) continue;   // (removed or changed since the list was made: as if not met)
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       _c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
-      if (!Number.isFinite(_c.x + _c.z)) return;
+      if (!Number.isFinite(_c.x + _c.z)) continue;
       const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F0 = fold ? recipe(o, false) : null;
       found.push({ o, flip, F0, cx: _c.x, cz: _c.z });
-    });
+    }
     const P = this.prof = { scan: performance.now() - t0, order: 0, assign: 0, arrays: 0, build: 0, pieces: found.length };   // (PERF-CALLS: where an area's first build goes)
     let tq = performance.now();
     // PERF-CPU, arrays: where two pieces' faces coincide, the one drawn later shows, and three orders opaque draws by
@@ -203,12 +222,13 @@ class Area {
       const n = new Map(), keyOf0 = (e) => kindKey(e.o, e.F0, e.flip) + '|' + Math.floor(e.cx / this.cell) + ',' + Math.floor(e.cz / this.cell);
       for (const e of found) { const k = keyOf0(e); n.set(k, (n.get(k) || 0) + 1); }
       for (const e of found) {
+        if ((++y & 31) === 0 || long()) yield 'order';
         const g = e.o.geometry, nt = Math.floor((g.index ? g.index.count : g.attributes.position.count) / 3);
         const cut = nt >= SPLIT_TRIS && g.boundingSphere.radius * e.o.matrixWorld.getMaxScaleOnAxis() > this.cell * SPLIT;
         const F = recipe(e.o, true);
         if (F?.arr) { F.ord = e.F0 && (cut || n.get(keyOf0(e)) > 1) ? e.F0.twin.id : e.o.material.id; e.F = F; }
       }
-      if (OVERLAP.on) this.overlapRuns(found, root, kindKey);
+      if (OVERLAP.on) yield* this.overlapRuns(found, root, kindKey);
       else {
       // The ids of every material this area still draws with (its other pieces' own materials and twins) cut the order
       // into gaps; pieces whose `ord` falls in one gap share a batch, drawn at that place (`__sortId`, renderer.js's
@@ -232,7 +252,9 @@ class Area {
       }
     }
     P.order = performance.now() - tq; tq = performance.now();
+    yield 'order';
     for (const { o, flip, F0, F: F1 } of found) {
+      if ((++y & 15) === 0 || long()) yield 'assign';
       const g = o.geometry, F = arrays && TEXARRAY.on && fold ? (exact ? F1 || F0 : recipe(o, true)) : F0;
       const mat = F ? F.twin : o.material, sig = F ? (F.arr ? 'fold:arr' + (F.gap !== undefined ? ':' + F.gap : '') : F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
       const M = { o, fold: F, pre: F?.pre || null, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, lv: F ? lookVer(o.material, -1) : 0, okF: -1, own: ownUpdate(o, root), geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
@@ -261,12 +283,14 @@ class Area {
     //  now in other runs: drawn alone it would sort at its own material's id; as a batch of one, at its run's place)
     for (const [k, C] of this.cells) if (C.list.length < 2 && !(C.list.length === 1 && (C.list[0].cells.length > 1 || keepOne(C)))) { for (const M of C.list) M.cells = []; this.cells.delete(k); }
     for (const M of pieces) if (M.cells.length) { this.members.push(M); M.o.layers.disable(0); M.o.userData.drawBatched = true; watchGeo(M.geo); }
-    P.assign = performance.now() - tq; tq = performance.now();
-    flushArrays();   // (PERF-CPU: an array that took this area's new textures, before its batches are drawn)
-    P.arrays = performance.now() - tq; tq = performance.now();
-    for (const C of this.cells.values()) this.build(C);
-    P.build = performance.now() - tq;
-    this.ms = performance.now() - t0;
+    P.assign = performance.now() - tq;
+    yield 'assign';
+    tq = performance.now();
+    for (const _ of flushArraysSteps()) yield 'array';   // (PERF-CPU: an array that took this area's new textures, before its batches are drawn; ARRIVAL-STEPS: one a step)
+    P.arrays = performance.now() - tq;
+    tq = performance.now();
+    for (const C of this.cells.values()) { yield* this.buildSteps(C); yield 'cell'; }
+    P.build = performance.now() - tq;   // (staged: the phases' times include the frames between their slices)
   }
   // PERF-CALLS: the order kept only where it can show. Opaque draws are depth-tested, so the order of two draws changes
   // a pixel only where their surfaces lie at exactly the same depth (coincident faces), which needs their boxes to
@@ -283,7 +307,7 @@ class Area {
   // across cells): its batch sorts at its own first `ord` — pieces of one kind meet across a cell line edge to edge.
   // A large piece's parts (cut per cell, as assign() does) are placed part by part with each part's own box. Draws
   // with another renderOrder never interleave (three sorts by it first); see-through draws come after all of them.
-  overlapRuns(found, root, kindKey) {
+  *overlapRuns(found, root, kindKey) {
     const cell = this.cell, G = 8, grid = new Map(), EPS = 1e-3;
     const boxOf = (o) => { const g = o.geometry; if (!g) return null; let b;
       if (o.isInstancedMesh) { if (!o.boundingBox) o.computeBoundingBox(); b = o.boundingBox?.clone(); }
@@ -307,18 +331,24 @@ class Area {
     // the draws that stay where they are
     const arr = new Set(); for (const e of found) if (e.F?.arr) arr.add(e.o);
     const twinIds = new Map(); for (const e of found) if (!e.F?.arr && e.F0) twinIds.set(e.o, e.F0.twin.id);
-    root.traverse((o) => {
-      if (arr.has(o) || !(o.isMesh || o.isLine || o.isPoints) || !o.material) return;
-      const box = boxOf(o); if (!box) return;
+    // (ARRIVAL-2: the objects listed first, in the walk's order, then their boxes in units: Zeelich's walk was one unit)
+    const fixed = []; root.traverse((o) => { if (!arr.has(o) && (o.isMesh || o.isLine || o.isPoints) && o.material) fixed.push(o); });
+    for (let i = 0; i < fixed.length; i++) {
+      if ((i & 63) === 63 && long()) yield 'fixed draws';
+      const o = fixed[i], box = boxOf(o); if (!box) continue;
       const ids = []; for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (!m.transparent) ids.push(m.id);
       if (twinIds.has(o)) ids.push(twinIds.get(o));
       for (const id of ids) put({ fixed: true, ord: id, box, ro: o.renderOrder, seen: 0 });
-    });
-    D.fixedMs = performance.now() - tp; tp = performance.now();
+    }
+    D.fixedMs = performance.now() - tp;
+    yield 'fixed draws';
+    tp = performance.now();
     // the texture-array pieces, part by part (a part: the piece in one cell, or its triangles there when it is cut)
     const parts = [];
+    let y = 0;
     for (const e of found) {
       if (!e.F?.arr) continue;
+      if ((++y & 15) === 0 || long()) yield 'parts';
       const o = e.o, g = o.geometry, W = o.matrixWorld, I = g.index, Pp = g.attributes.position, nt = Math.floor((I ? I.count : Pp.count) / 3);
       const key = kindKey(o, e.F, e.flip); e.F.pre = [];
       if (!(nt >= SPLIT_TRIS && g.boundingSphere.radius * W.getMaxScaleOnAxis() > cell * SPLIT)) {
@@ -329,9 +359,10 @@ class Area {
       // (the same rule and cells as assign(); the vertices in world space once, without allocations)
       const n = Pp.count, X = new Float64Array(n * 3), el = W.elements, Ia = I?.array;
       const raw = !Pp.normalized && Pp.itemSize === 3 ? Pp.array : null;
-      for (let i = 0; i < n; i++) { const x = raw ? raw[i * 3] : Pp.getX(i), y = raw ? raw[i * 3 + 1] : Pp.getY(i), z = raw ? raw[i * 3 + 2] : Pp.getZ(i); X[i * 3] = el[0] * x + el[4] * y + el[8] * z + el[12]; X[i * 3 + 1] = el[1] * x + el[5] * y + el[9] * z + el[13]; X[i * 3 + 2] = el[2] * x + el[6] * y + el[10] * z + el[14]; }
+      for (let i = 0; i < n; i++) { if ((i & 4095) === 4095 && long()) yield 'parts'; const x = raw ? raw[i * 3] : Pp.getX(i), y = raw ? raw[i * 3 + 1] : Pp.getY(i), z = raw ? raw[i * 3 + 2] : Pp.getZ(i); X[i * 3] = el[0] * x + el[4] * y + el[8] * z + el[12]; X[i * 3 + 1] = el[1] * x + el[5] * y + el[9] * z + el[13]; X[i * 3 + 2] = el[2] * x + el[6] * y + el[10] * z + el[14]; }
       const lists = new Map();
       for (let t = 0; t < nt; t++) {
+        if ((t & 8191) === 8191 || ((t & 1023) === 1023 && long())) yield 'parts';   // (ARRIVAL-STEPS: a large piece's triangles, in steps)
         const a = Ia ? Ia[t * 3] : t * 3, b = Ia ? Ia[t * 3 + 1] : t * 3 + 1, c = Ia ? Ia[t * 3 + 2] : t * 3 + 2;
         let x = (X[a * 3] + X[b * 3] + X[c * 3]) / 3, z = (X[a * 3 + 2] + X[b * 3 + 2] + X[c * 3 + 2]) / 3;
         if (!Number.isFinite(x + z)) { x = e.cx; z = e.cz; }
@@ -385,7 +416,9 @@ class Area {
     D.partsMs = performance.now() - tp; tp = performance.now();
     parts.sort((a, b) => a.ord - b.ord);
     const open = new Map(); let runs = 0;
+    yield 'parts';
     for (const p of parts) {
+      if ((++y & 31) === 0 || long()) yield 'place';
       const gk = p.key + '|' + p.cc;
       let R = open.get(gk);
       D.parts++;
@@ -446,7 +479,10 @@ class Area {
     }
     for (const [C, L] of lists) { M.parts.set(C.id, Int32Array.from(L)); M.cells.push(C); C.list.push(M); }
   }
-  build(C) {
+  build(C) { const it = this.buildSteps(C); while (!it.next().done); }
+  // (ARRIVAL-STEPS: a cell's build as a generator — a step after every ~4 000 vertices merged — for the staged builds:
+  //  one of Zeelich's cells took 77 ms here. The cell has no mesh until its last step; nothing is drawn meanwhile)
+  *buildSteps(C) {
     if (C.mesh) { C.mesh.geometry.dispose(); this.root.remove(C.mesh); C.mesh = null; }
     C.dirty = false; this._meshes = null;
     if (!C.list.length || (C.list.length === 1 && C.list[0].cells.length < 2 && !keepOne(C))) { for (const M of [...C.list]) this.release(M); C.list.length = 0; C.dirty = false; return; }
@@ -460,6 +496,7 @@ class Area {
     //  where two pieces' faces coincide exactly the later one shows: a batch's triangles keep that order. `ord`: the
     //  id of the material the piece was drawn with before: its 2D twin, or its own)
     const LIST = fold?.arr ? [...C.list].sort((a, b) => a.fold.ord - b.fold.ord) : C.list;
+    let acc = 0;
     for (const M of LIST) {
       const g = M.geo, I = g.index, T = M.parts.get(C.id), cnt = g.attributes.position.count;
       if (T === undefined) continue;
@@ -467,19 +504,25 @@ class Area {
       const map = new Int32Array(cnt).fill(-1), from = [], IA = I ? I.array : null;
       for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = IA ? IA[T[k] * 3 + j] : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
       parts.push({ M, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
+      if ((acc += T.length) > 4096 || long()) { acc = 0; yield 'cell part'; }
     }
-    const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; }
+    // (ARRIVAL-2: a large cell's arrays made one a unit once the unit is long: fresh memory, megabytes at a time)
+    const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; if (nv > 4096 && long()) yield 'cell part'; }
     const index = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
     let io = 0;
     for (const { M, T, map, from, vo } of parts) {
       const g = M.geo, I = g.index, IA = I ? I.array : null, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
+      if ((acc += nf) > 4096 || long()) { acc = 0; yield 'cell part'; }
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
+      // (ARRIVAL-STEPS: a large piece's attributes one a step, its matrices its own meanwhile; ARRIVAL-2: a piece of 1 024
+      //  vertices or more also between its attributes once the unit is long)
+      const big = nf >= 8192, part = nf >= 1024, Mm = part ? _m.clone() : _m, Nm = part ? _nm.clone() : _nm;
       for (const n of names) {
         const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
         // (PERF-CALLS: positions and normals without a call per vertex — three's own arithmetic, in its order, so the
         //  same floats: the first build on an arrival was ~300 ms on the user's laptop, most of it here)
         if ((n === 'position' || n === 'normal') && !a.normalized && a.itemSize === 3) {
-          const A = a.array, e = n === 'position' ? _m.elements : _nm.elements;
+          const A = a.array, e = n === 'position' ? Mm.elements : Nm.elements;
           if (n === 'position') {
             const w = e[3] === 0 && e[7] === 0 && e[11] === 0 && e[15] === 1;
             for (let k = 0; k < nf; k++) {
@@ -496,8 +539,8 @@ class Area {
             }
           }
         }
-        else if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(_m); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
-        else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(_nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(Mm); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(Nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
         else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, vo * 2, (vo + nf) * 2);   // (a plain piece: the white layer, anywhere)
         else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
         else if (fold && n === 'em') { const e = m.emissive, k = m.emissiveIntensity ?? 1, r = e ? e.r * k : 0, gg = e ? e.g * k : 0, b = e ? e.b * k : 0; for (let q = 0; q < nf; q++) { d[(vo + q) * 3] = r; d[(vo + q) * 3 + 1] = gg; d[(vo + q) * 3 + 2] = b; } }
@@ -513,6 +556,7 @@ class Area {
         else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
         else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
         else { const sz = a.itemSize, A = a.array; for (let k = 0; k < nf; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
+        if (big || (part && long())) yield 'cell part';
       }
       if (!T) {
         if (I) { const X = I.array, n = I.count - (I.count % 3); for (let i = 0; i < n; i += 3) { index[io + i] = X[i] + vo; index[io + i + 1] = X[C.flip ? i + 2 : i + 1] + vo; index[io + i + 2] = X[C.flip ? i + 1 : i + 2] + vo; } io += n; }
@@ -524,6 +568,7 @@ class Area {
         index[io] = map[a] + vo; index[io + 1] = map[C.flip ? c : b] + vo; index[io + 2] = map[C.flip ? b : c] + vo; io += 3;
       }
     }
+    if (nv > 4096) yield 'cell part';   // (the bounds of a large batch: a step of their own)
     const geo = new THREE.BufferGeometry();
     for (const n of names) geo.setAttribute(n, new THREE.BufferAttribute(out[n].data, out[n].size, out[n].norm));
     geo.setIndex(new THREE.BufferAttribute(index, 1));
@@ -579,6 +624,30 @@ class Area {
     if (left) { for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; } if (!any) break; } (this.outs ??= []).push(...this.members.filter((M) => M.out)); this.members = this.members.filter((M) => !M.out); }
     return left;
   }
+  // ARRIVAL-STEPS: watch()'s full check (its slow path: nothing taken from a frame's shown-world update) behind a scene
+  // change's black, after the world matrices were brought up to date: a piece the area's first moments moved (a mill's
+  // sail, a boat, a door) leaves its batch there, its cells rebuilt one per step, instead of on the first frame drawn
+  // (the arrivals here: 46–67 pieces left on that frame, its cells rebuilt in it). A generator (Area.settling); a frame
+  // drawn before it is done finishes it first (DrawBatch.update).
+  *settle() {
+    const root = this.root, up = (p) => { for (let x = p; x && x !== root; x = x.parent) if (!x.visible) return false; return true; };
+    let left = 0, k = 0;
+    for (const M of this.members) {
+      if (M.out) continue;
+      const o = M.o, g = o.geometry;
+      if ((++k & 63) === 0) yield 'check';
+      o.updateWorldMatrix(true, false);   // (its world matrix as the next frame's update will make it; nothing is drawn in the hold)
+      if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
+        && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookOf(o.material) === M.look)) { M.okF = -1; continue; }
+      this.release(M); left++;
+    }
+    yield 'check';
+    if (left) {
+      for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { yield* this.buildSteps(C); any = true; yield 'cell'; } if (!any) break; }
+      (this.outs ??= []).push(...this.members.filter((M) => M.out)); this.members = this.members.filter((M) => !M.out);
+    }
+    return left;
+  }
   // CPU-WALK `?walkcheck`: every piece still in a batch after watch() checked in full, with nothing taken from the
   // shown-world update (the slow path's tests: its world matrix, every parent shown, its material, geometry, flags and look)
   verify(K) {
@@ -597,7 +666,9 @@ class Area {
   // colour changed and back) were drawn on their own for good: a long visit kept collecting draws. At a scene change
   // into the area (behind its black), a piece that is back exactly as it was batched — same place, same material and
   // look, same geometry, shown, not casting its own shadow — goes back into its cells, which are rebuilt then.
-  readmit() {
+  readmit() { const it = this.readmitSteps(); let r; while (!(r = it.next()).done); return r.value; }
+  // (ARRIVAL-STEPS: the same, a generator: its cells rebuilt one per step — Citadel's return: 38–72 ms in one black frame here)
+  *readmitSteps() {
     if (!this.outs?.length) return 0;
     const root = this.root, back = [];
     root.updateMatrixWorld(true);
@@ -613,7 +684,8 @@ class Area {
       for (const C of M.cells) if (!C.list.includes(M)) { C.list.push(M); C.dirty = true; }
       this.members.push(M);
     }
-    for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; } if (!any) break; }
+    yield 'rejoin';
+    for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { yield* this.buildSteps(C); any = true; yield 'cell'; } if (!any) break; }
     // (a piece whose cell is still too empty without the others is drawn on its own again, kept for the next time)
     for (const M of this.members) if (M.out) this.outs.push(M);
     this.members = this.members.filter((M) => !M.out);
@@ -639,16 +711,48 @@ export class DrawBatch {
   update(root) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return null; }
     let A = this.areas.get(root);
+    if (!A && this.pending?.has(root)) { this.slice(root); A = this.areas.get(root); }   // (ARRIVAL-STEPS: a staged build a drawn frame needs now: finished)
     if (!A) { A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
+    if (A.readmitting) { const it = A.readmitting; A.readmitting = null; let r; while (!(r = it.next()).done); if (r.value) this.readmitted = (this.readmitted || 0) + r.value; }   // (ARRIVAL-STEPS: a rejoin or a settle a drawn frame overtook)
+    if (A.settling) { const it = A.settling; A.settling = null; let r; while (!(r = it.next()).done); this.left += r.value || 0; }
     this.left += A.watch();
     if (MW.check) A.verify(MW.check);
     return A;
   }
   has(root) { return this.areas.has(root); }
+  // ARRIVAL-STEPS: an area's batches built in slices behind a scene change's black (main.js prepSteps): stage() starts the
+  // build, slice(root, ms) runs it until `ms` have passed (a slice ends after the piece or cell that crosses it) and
+  // returns true while more is left; the finished area is the same as update()'s first build. A frame drawn before it is
+  // done finishes it (update). Nothing is drawn behind the black, so the pieces moved out of the main pass meanwhile
+  // (their batches not built yet) are never seen missing.
+  stage(root) {
+    if (!this.enabled || !root || this.areas.has(root)) return false;
+    const P = (this.pending ??= new Map());
+    if (!P.has(root)) { const t0 = performance.now(), A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact, true); A.ms = performance.now() - t0; this.buildMs = (this.buildMs || 0) + A.ms; P.set(root, A); }
+    return true;
+  }
+  // ARRIVAL-STEPS: the area's settle (Area.settle) in slices of `ms`; true while more is left
+  settleSlice(root, ms = Infinity) {
+    const A = this.areas.get(root); if (!A || !this.enabled) return false;
+    A.settling ??= A.settle();
+    const r = runFor(A.settling, ms, this);
+    if (!r.done) return true;
+    A.settling = null; if (r.value) { this.left += r.value; this.settled = (this.settled || 0) + r.value; }
+    return false;
+  }
+  slice(root, ms = Infinity) {
+    const A = this.pending?.get(root); if (!A) return false;
+    const t0 = performance.now(), done = runFor(A.gen, ms, this).done;
+    const dt = performance.now() - t0; A.ms += dt; this.buildMs = (this.buildMs || 0) + dt;
+    if (!done) return true;
+    A.gen = null; this.pending.delete(root); this.areas.set(root, A); this.builds = (this.builds || 0) + 1;
+    return false;
+  }
   // FIRST-BUILD: an area's batches built now, while it is not on show (the loading screen: the room New Game or the
   // save starts in), without the frame's check of its pieces — that runs on its first frame drawn, as for any area,
   // and a piece changed since leaves its batch then. The same build as update()'s first one.
   prepare(root) {
+    if (this.enabled && root && this.pending?.has(root)) this.slice(root);
     if (!this.enabled || !root || this.areas.has(root)) return null;
     const A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact);
     this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms;
@@ -656,10 +760,36 @@ export class DrawBatch {
   }
   // (PERF-CALLS: behind a scene change's black, the pieces that are back as they were rejoin their batches)
   readmit(root) { const A = this.areas.get(root); if (!A || !this.enabled) return 0; const t0 = performance.now(), n = A.readmit(); if (n) { this.readmitted = (this.readmitted || 0) + n; this.readmitMs = (this.readmitMs || 0) + performance.now() - t0; } return n; }
+  // ARRIVAL-STEPS: the same in slices of `ms` (behind the black); true while more is left. A drawn frame finishes it (update)
+  readmitSlice(root, ms = Infinity) {
+    const A = this.areas.get(root); if (!A || !this.enabled) return false;
+    A.readmitting ??= A.readmitSteps();
+    const t0 = performance.now(), r = runFor(A.readmitting, ms, this);
+    this.readmitMs = (this.readmitMs || 0) + performance.now() - t0;
+    if (!r.done) return true;
+    A.readmitting = null; if (r.value) this.readmitted = (this.readmitted || 0) + r.value;
+    return false;
+  }
   meshes(root) { return this.areas.get(root)?.meshes() ?? []; }
   // every piece drawn on its own again, batches removed (A/B comparisons, or switching it off)
-  reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); }
+  reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); if (this.pending) { for (const A of this.pending.values()) A.restore(); this.pending.clear(); } }
   stats() { const s = {}; for (const [r, A] of this.areas) s[r.name || r.uuid.slice(0, 6)] = A.stats(); return s; }
+}
+
+// ARRIVAL-STEPS: runs a build's generator until `ms` have passed (a slice ends after the unit — a piece, a cell — that
+// crosses it); `out.unit`: the slice's longest unit and its label, for the scene change's step log
+export function runFor(it, ms, out) {
+  const t0 = performance.now();
+  let um = 0, ul = '', r;
+  try {
+    for (;;) {
+      const u0 = (UNIT.t0 = performance.now()); r = it.next(); const du = performance.now() - u0;
+      if (du > um) { um = du; ul = r.done ? 'end' : r.value || '?'; }
+      if (r.done || performance.now() - t0 >= ms) break;
+    }
+  } finally { UNIT.t0 = Infinity; }
+  if (out) out.unit = { ms: +um.toFixed(1), label: ul };
+  return r;
 }
 
 // TITLE-LOAD: the texture layers an area's batches will read (texarray.js layerOf: a painted canvas read back each, the

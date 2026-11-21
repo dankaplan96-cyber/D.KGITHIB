@@ -1,0 +1,9 @@
+UNIT shadow build cell>cell part 25.6  | GC overlap: none
+UNIT shadow build cell part>cell 26.4  | GC overlap: none
+UNIT shadow build cell part>cell 37.1  | GC overlap: none
+UNIT shadow build cell part>cell part 25.1  | GC overlap: none
+UNIT shadow build cell part>cell 30.9  | GC overlap: MinorGC 3.1, V8.GCScavenger 2.9, V8.GC_SCAVENGER 2.8, V8.GC_SCAVENGER_SCAVENGE 2.8, V8.GC_SCAVENGER_SCAVENGE_PARALLEL_PHASE 2.4
+UNIT draw build order>fixed draws 43.3  | GC overlap: V8.GC_MC_BACKGROUND_MARKING 105.5, V8.GCIncrementalMarking 33.0, V8.GC_MC_INCREMENTAL 13.7, V8.GCIncrementalMarkingStart 5.2, V8.GC_MC_INCREMENTAL_START 4.5
+UNIT draw build fixed draws>parts 29.4  | GC overlap: V8.GC_MC_BACKGROUND_MARKING 80.7, V8.GCIncrementalMarking 14.5, V8.GC_MC_INCREMENTAL 8.5, V8.GC_MC_INCREMENTAL_EMBEDDER_TRACING 1.2
+UNIT draw build cell part>cell 28.0  | GC overlap: MinorGC 25.2, V8.GCScavenger 24.9, V8.GC_TIME_TO_SAFEPOINT 23.6, V8.GC_BACKGROUND_UNPARK 21.7, V8.GC_SCAVENGER 1.2
+UNIT draw build cell part>cell part 28.7  | GC overlap: MinorGC 23.9, V8.GCScavenger 17.7, V8.GC_BACKGROUND_SAFEPOINT 8.9, V8.GC_TIME_TO_SAFEPOINT 8.7, V8.GC_BACKGROUND_UNPARK 4.3

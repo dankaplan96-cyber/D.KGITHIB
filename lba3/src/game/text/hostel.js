@@ -16,7 +16,7 @@ Object.assign(STR.en, {
   // ---- the foreman (his office, by the old clone statues)
   hs_foreman_v: [
     "Twinsen! The Twinsen? Ordo, foreman. Forty of my people sleep here between shifts. Mind the rope round your old cell, they're proud of it.",
-    "The store below is the project's. Mr Vesk's own men keep it. Pipe fittings, they tell me. Nobody of mine goes down there.",
+    "The store below is the project's. The chief engineer's own men keep it. Pipe fittings, they tell me. Nobody of mine goes down there.",
     "The Council sealed this place before any of us came. The diggers broke in, the project needed beds, and here we are.",
   ],
   hs_foreman_u: [
@@ -44,7 +44,7 @@ Object.assign(STR.en, {
     "Children first, then the old ones, then you. There is enough. I make there be enough.",
   ],
   hs_cook_l: [
-    "When this is all done I'm cooking for the whole town. You'll come. Bring your boy, the one with the radio.",
+    "Soon I cook for the whole town. A feast, not shelter soup. You'll come. Bring your boy, the one with the radio.",
   ],
   hs_cook_heal: 'Here. Eat it all. Hero or no hero, nobody leaves my kitchen hungry.',
   hs_cook_full: "You've eaten already. Come back when you look tired.",

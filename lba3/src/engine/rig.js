@@ -12,6 +12,26 @@ import { textures } from './textures.js';
 import { plain, twinOf } from './merge.js';
 import { restoreJoints } from './handik.js';
 
+// FACE-1 (P67 phase 4): the expressions. up/cross/sad: the brows' three morphs (raised; drawn down and in; inner ends up);
+// lid: the eyes' opening (1 open; the blink is 0.12); smile: the mouth's corners (+ up, − down); wide: its width.
+// The brief's five — neutral, curious, concerned, pleased, determined/annoyed — and the voice's other intentions
+// (voicemeta.js) mapped onto them: uncertain (a softer concern), urgent (determined), relieved (pleased).
+// FACE-2 (P86): the expression carried by the head and the chest as well, for the dialogue camera's ~120 px head (radians,
+// added to the standing poses only — idle, talk, listen —, eased in and out with the face; Rig.update):
+// nod: the head down (+) or the chin up (−); tilt: the head to one side; bow: the chest forward (+) or drawn up (−).
+// Curious: a tilt; concerned: the head and the chest down; determined: the chin and the chest up; pleased: a small lift.
+// And the brows, eyes and mouth a little stronger where curious and concerned were alike at that size.
+export const FACES = {
+  neutral: { up: 0, cross: 0, sad: 0, lid: 1, smile: 0, wide: 1, nod: 0, tilt: 0, bow: 0 },
+  curious: { up: 1, cross: 0, sad: 0, lid: 1.16, smile: 0.18, wide: 0.92, nod: -0.04, tilt: 0.2, bow: 0.03 },
+  concerned: { up: 0.25, cross: 0, sad: 1, lid: 0.9, smile: -0.95, wide: 0.92, nod: 0.2, tilt: -0.04, bow: 0.08 },
+  uncertain: { up: 0.4, cross: 0, sad: 0.6, lid: 1, smile: -0.35, wide: 0.95, nod: 0.08, tilt: -0.12, bow: 0.03 },
+  pleased: { up: 0.35, cross: 0, sad: 0, lid: 0.84, smile: 1, wide: 1.12, nod: -0.08, tilt: 0.06, bow: -0.04 },
+  determined: { up: 0, cross: 0.85, sad: 0, lid: 0.82, smile: -0.2, wide: 0.92, nod: -0.13, tilt: 0, bow: -0.06 },
+  annoyed: { up: 0, cross: 1, sad: 0, lid: 0.74, smile: -0.6, wide: 0.9, nod: -0.06, tilt: -0.07, bow: -0.03 },
+};
+FACES.urgent = FACES.determined; FACES.relieved = FACES.pleased;
+
 // ------------------------------------------------------------------ blob shadow
 // LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
 let blobGeo = null, blobMat = null;
@@ -38,7 +58,7 @@ const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach',
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 // the actions in which the player's character keeps his feet planted (Rig._plant)
-const PLANT = new Set(['idle', 'talk', 'listen', 'found', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search', 'jumpPrep']);   // (ANIM-POLISH-2: the jump's crouch too: its soles slid and sank 4 cm)
+const PLANT = new Set(['idle', 'talk', 'listen', 'found', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search', 'jumpPrep', 'action']);   // (ANIM-POLISH-2: the jump's crouch too: its soles slid and sank 4 cm; JOINTS-BLENDER: the Normal mode's hop too, LBA2's anim 17: its crouch and squat put the soles 6 cm into the ground and slid them up to 31 cm)
 // (ANIM-POLISH-3) the other characters' planted actions (plantLite: the townsfolk, the story's people, Vesk's guards): standing,
 // talking, listening, turning on the spot, searching and the guards' aim; their walk holds the stance foot too. Their strikes,
 // hit reactions, story poses and everything else keep their own legs, as before
@@ -369,6 +389,9 @@ export class Rig {
     this.combatLook = null;   // the player's locked target: the head and chest turn to it (when nothing else is looked at)
     this.mouth = null;        // (FACES-HANDS) a poly model's talking mouth: a small mesh on the head (characters.js polyCharacter)
     this.mOpen = 0; this.mRound = 0; this.mTarget = 0; this.mTargetRound = 0;
+    // (FACE-1) the expression now (eased toward `faceTo`), how long it holds, where the eyes look (a world point or null)
+    this.face = { ...FACES.neutral }; this.faceTo = FACES.neutral; this.faceName = 'neutral'; this.faceHold = 0;
+    this.gazeAt = null; this.gazeT = 0; this.gx = 0; this.gy = 0; this.gxTo = 0; this.gyTo = 0; this.sacT = 1 + Math.random() * 2;
     // (ANIM-POLISH-3) the other characters' feet: plantLite plants the walk's stance foot, the stops and the turns on the spot through
     // the hero's own code (Rig._plant), in PLANT_LITE's actions, near the camera and in view (PLANT_VIEW)
     this.plantLite = false;
@@ -385,6 +408,69 @@ export class Rig {
   // FACES-HANDS: ask for the talking mouth this open (0 shut .. 1 wide) and this round (+ pursed, - spread) for this frame;
   // the voice's syllables drive it (voice.js driveMouth). A frame nobody asks, it eases shut.
   speakMouth(open, round = 0) { this.mTarget = open; this.mTargetRound = round; }
+  // FACE-1: an expression (FACES' names) at this strength (0..1) for `hold` seconds (Infinity: until asked again), then
+  // it eases back to neutral. The talking mouth is separate: it opens with the voice over whatever shape this gives it.
+  setFace(name, strength = 1, hold = Infinity) {
+    const F = FACES[name] || FACES.neutral, N = FACES.neutral;
+    this.faceName = FACES[name] ? name : 'neutral';
+    this.faceTo = strength >= 1 ? F : Object.fromEntries(Object.keys(N).map((k) => [k, N[k] + (F[k] - N[k]) * strength]));
+    this.faceHold = hold;
+  }
+
+  // FACE-1: the expression eased toward its target (about a third of a second), and back to neutral when its hold ends;
+  // the brows' morphs (a model with them: characters.js addBrowMorphs) follow
+  _faceStep(dt) {
+    if (this.faceHold !== Infinity && (this.faceHold -= dt) <= 0 && this.faceName !== 'neutral') this.setFace('neutral');
+    const F = this.face, T = this.faceTo, k = Math.min(1, dt * 7);
+    let moved = false;
+    for (const key in T) { const d = T[key] - F[key]; if (Math.abs(d) > 1e-4) { F[key] += d * k; moved = true; } }
+    const m = this.mesh, inf = m?.morphTargetInfluences;
+    if (inf && inf.length >= 3 && (moved || this._browSet !== true)) { inf[0] = F.up; inf[1] = F.cross; inf[2] = F.sad; this._browSet = true; }
+  }
+  // FACE-1: where the eyes look: at `gazeAt` (a world point: in a conversation, the one speaking or spoken to), else small
+  // glances now and then about straight ahead. Only the iris and pupil move, a fraction of the eye's width
+  _gazeStep(dt) {
+    const eyes = this.j.eyes;
+    if (!eyes?.length || !eyes[0].userData.iris) return;
+    if (this.gazeAt && (this.gazeT -= dt) <= 0) this.gazeAt = null;
+    if (this.gazeAt && this.j.head) {
+      const v = (this._gv ||= new THREE.Vector3()).copy(this.gazeAt);
+      this.j.head.worldToLocal(v);
+      const z = Math.max(0.25, v.z);
+      this.gxTo = Math.max(-1, Math.min(1, v.x / z * 1.6)); this.gyTo = Math.max(-1, Math.min(1, (v.y - 0.05) / z * 1.6));
+    } else if ((this.sacT -= dt) <= 0) {
+      this.sacT = 1.2 + Math.random() * 3;
+      const r = Math.random();
+      this.gxTo = r < 0.5 ? 0 : (Math.random() * 2 - 1) * 0.6; this.gyTo = r < 0.5 ? 0 : (Math.random() * 2 - 1) * 0.25;
+    }
+    const k = Math.min(1, dt * 18), gx0 = this.gx, gy0 = this.gy;
+    this.gx += (this.gxTo - this.gx) * k; this.gy += (this.gyTo - this.gy) * k;
+    if (Math.abs(this.gx - gx0) < 1e-4 && Math.abs(this.gy - gy0) < 1e-4 && this._gazeDone) return;
+    this._gazeDone = true;
+    for (const e of eyes) {
+      const I = e.userData.iris, mesh = e.children[0];
+      if (!I || !mesh) continue;
+      const P = mesh.geometry.attributes.position, a = P.array, dx = this.gx * I.w * 0.1, dy = this.gy * I.w * 0.05;
+      for (const i of I.idx) { a[i * 3] = I.base[i * 3] + dx; a[i * 3 + 1] = I.base[i * 3 + 1] + dy; }
+      P.needsUpdate = true;
+    }
+  }
+  // FACE-1: the mouth's shape under the expression: its corners turned up (a smile) or down, and a little wider or
+  // narrower; drawn into the mouth's own vertices, the bend divided by the mouth's current height so a talking mouth
+  // keeps the same curve. Rewritten only when the shape or the opening changes (48–96 vertices)
+  _mouthShape(mo) {
+    const u = mo.userData, F = this.face;
+    if (!u.base) return;
+    const sm = F.smile, sy = mo.scale.y || 1;
+    mo.scale.x = (1 - 0.2 * this.mRound * this.mOpen) * F.wide;
+    if (Math.abs(sm - (u.sm ?? 0)) < 2e-3 && Math.abs(sy - (u.sy ?? sy)) < 2e-3 && u.sm != null) return;
+    u.sm = sm; u.sy = sy;
+    const mesh = mo.children[0], P = mesh?.geometry.attributes.position;
+    if (!P) return;
+    const a = P.array, b = u.base, hw = u.hw, amp = hw * 0.28 * sm / sy;
+    for (let i = 0; i < a.length; i += 3) { const x = b[i] / hw; a[i + 1] = b[i + 1] + amp * x * x; }
+    P.needsUpdate = true;
+  }
 
   play(anim) {
     // (NO-AIR: a hand action with nothing there to do it on — `standFor`, set by the game's hands-on-things layer,
@@ -499,9 +585,13 @@ export class Rig {
       }
     } else if (a === 'reach' || a === 'tapTurn') {
       // reach out to a tap or a handle at chest height; tapTurn twists it (forearm rolls back and forth)
-      const k = ease(t / 0.35);
-      p.hipsY = 0.95 + b; p.torsoX = 0.1 * k; p.headX = 0.12 * k;
-      T.armR = -1.35 * k; T.elR = -0.55 * k; T.armL = 0.04; T.elL = -0.25;
+      // (JOINTS-BLENDER, order 57: Zoé's reach toward the tap. Every joint went on one curve over 0.35 s, the arm swinging up
+      // stiff as a lever. Now the eyes go first, the chest leans after them, the shoulder lifts the arm with the elbow folded
+      // in, and the forearm opens toward the tap last; the free hand eases back a little. The end pose is the one it was,
+      // reached 0.03 s later, so the hand meets the tap where it did)
+      const k = ease(t / 0.35), kh = ease(t / 0.2), kt = ease((t - 0.04) / 0.3), ka = ease((t - 0.05) / 0.3), ke = ease((t - 0.13) / 0.25);
+      p.hipsY = 0.95 + b; p.torsoX = 0.1 * kt; p.headX = 0.12 * kh;
+      T.armR = -1.35 * ka; T.elR = -0.55 * ke - 0.6 * Math.max(0, ka - ke); T.armL = 0.04 + 0.1 * kt; T.elL = -0.25 - 0.1 * kt;
       T.legL = -0.12 * k; T.legR = 0.08 * k; T.kneeL = 0.08; T.kneeR = 0.05;
       if (a === 'tapTurn') { const w = Math.sin(t * 9); T.elR += w * 0.12; p.torsoY = -0.06 * k + w * 0.02; }
     } else if (a === 'touchWater') {
@@ -1032,7 +1122,10 @@ export class Rig {
         // LBA2's athletic run, from its six key poses (1.94 body heights per cycle): the body leans well into
         // it, the knee drives high in front, the heel kicks up behind on the pass, the arms pump bent
         const H = this.hipsRest * this.root.scale.y / 0.46;
-        this.phase += (speed * dt / (1.94 * H)) * Math.PI * 2 - dph;
+        // (JOINTS-BLENDER: a robe's run swings the thighs × 0.75 (below), so its stride is shorter than LBA2's 1.94 H; at that cycle
+        // the standing foot slid forward along the ground at ~0.7 m/s of his 5 (measured, the hero). The cycle is the shorter
+        // stride's, ROBE_RUN_CYC × 1.94 H: more steps a second at the same speed, the foot keeping its place)
+        this.phase += (speed * dt / (1.94 * H * (this.robeLegs ? (this.robeRunCyc ?? ROBE_RUN_CYC) : 1))) * Math.PI * 2 - dph;
         const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1, q = (p + 0.5) % 1;
         const R = RUN_KEYS;
         T.legL = key(R.thigh, p); T.kneeL = key(R.knee, p); T.footL = key(R.foot, p);
@@ -1544,6 +1637,9 @@ export class Rig {
     j.hips.position.y = damp(j.hips.position.y, this.hipsRest + (hipsY - 0.95) * (this.hipsRest / 0.95), R, dt);
     this.hipsRestZ ??= j.hips.position.z;
     j.hips.position.z = damp(j.hips.position.z, this.hipsRestZ + hipsZ * (this.hipsRest / 0.95), R, dt);
+    // (FACE-2: the expression's head and chest, standing only — idle, talk, listen; eased in and out as it stands or moves)
+    this._faceW = damp(this._faceW || 0, a === 'idle' || a === 'talk' || a === 'listen' ? 1 : 0, 6, dt);
+    if (this._faceW > 1e-3) { const F = this.face, w = this._faceW; headX += F.nod * w; headZ += F.tilt * w; torsoX += F.bow * w; }
     set(j.torso, torsoX, 'x', Ru); set(j.torso, torsoY, 'y', Ru); set(j.torso, torsoZ, 'z', 8);
     set(j.head, headX, 'x', 10); set(j.head, headY, 'y', 8); set(j.head, headZ, 'z', 8);
     set(j.body, bodyRotX, 'x', ko ? 40 : 8);
@@ -1592,7 +1688,10 @@ export class Rig {
     this.blinkT -= dt;
     const blink = this.blinkT < 0.12 || this.anim === 'doze' || this.anim === 'sleep';   // (asleep: the eyes shut)
     if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
-    for (const e of j.eyes) e.scale.y = blink ? 0.12 : 1;
+    this._faceStep(dt);
+    const lid = this.face.lid;
+    for (const e of j.eyes) e.scale.y = blink ? 0.12 : lid;
+    this._gazeStep(dt);
 
     // the talking mouth (FACES-HANDS): a thin closed line at rest; open, it is taller, a touch narrower when pursed (o, u) and
     // wider when spread (i, e), and drops a little with the jaw. Eased, so a syllable is a soft open-and-close, not a flicker.
@@ -1606,6 +1705,7 @@ export class Rig {
       mo.position.y = u.y0 + u.drop * o; mo.rotation.x = u.tilt * o;
     }
     this.mTarget = 0; this.mTargetRound = 0;
+    if (mo) this._mouthShape(mo);
 
     // a Grobo's ears and trunk (Baldino; his clips 715/717/718 swing both): the ears turn on their roots — a slow
     // waft at rest (1.6 s), two flaps in each talk loop, a swing with every step — and the trunk sways from side to
@@ -1810,26 +1910,30 @@ function keyH(ts, vs, t) {
 // (× pelvis height / 0.95, as hipsY). The legs are what the planted (standing) throw does; on the move only the upper
 // body plays, over the walk. (The back leg's keys only say where its foot stands: under the pelvis as it shifts, so it
 // stays put; foot planting bends its knee as the body drops. The feet start and end in the ball's stance, GUARD.ball.)
+// (JOINTS-BLENDER, the user 20.11: "the throw should feel like one body in motion"; the sleeves stay LBA2's wing, the
+//  user's choice): the wind-up loads the back leg (its knee bends, the pelvis sets back over it); a key at 0.135 between
+//  the loaded pose and the release lets the chest, the pelvis and the free arm lead while the throwing arm and its
+//  cocked elbow lag behind — the whip comes from the body into the hand. The release (0.16) and every later key unchanged.
 const THROW = {
-  t: [0, 0.04, 0.08, 0.115, 0.16, 0.21, 0.30, 0.42, 0.62],
-  armR: [0.06, -1.3, -2.75, -2.95, -2.1, -1.2, -0.6, -0.35, 0.06],
-  elR: [-0.18, -1.0, -1.9, -2.05, -0.45, -0.2, -0.35, -0.35, -0.18],
-  outR: [0, 0.6, 0.3, 0.25, 0.05, -0.25, -0.3, -0.12, 0],
-  armL: [0.06, -0.6, -1.25, -1.35, 0.2, 0.4, 0.35, 0.2, 0.06],
-  elL: [-0.18, -0.3, -0.35, -0.35, -1.1, -1.2, -1.0, -0.6, -0.18],
-  outL: [0, 0.1, 0.15, 0.15, 0.25, 0.2, 0.1, 0.05, 0],
-  torsoX: [0, -0.04, -0.1, -0.14, 0.2, 0.5, 0.72, 0.42, 0],
-  torsoY: [0, -0.25, -0.55, -0.65, 0.2, 0.5, 0.45, 0.25, 0],
-  headX: [0, 0.02, 0.05, 0.05, -0.1, -0.4, -0.6, -0.35, 0],
-  headY: [0, 0.22, 0.5, 0.58, -0.15, -0.42, -0.38, -0.22, 0],
-  legL: [-0.16, -0.25, -0.5, -0.6, -0.45, -0.65, -0.75, -0.5, -0.16],
-  kneeL: [0.03, 0.35, 0.8, 0.95, 0.3, 0.65, 0.85, 0.5, 0.03],
-  footL: [0, 0.15, 0.35, 0.35, 0.2, 0.2, 0.15, 0.1, 0],
-  legR: [0.12, 0.12, 0.08, 0.07, 0.24, 0.31, 0.32, 0.24, 0.12],
-  kneeR: [0.03, 0.03, 0.04, 0.05, 0.06, 0.08, 0.1, 0.06, 0.03],
-  footR: [0, 0, 0, 0, -0.1, -0.15, -0.15, -0.1, 0],
-  hipsY: [0.95, 0.94, 0.93, 0.925, 0.92, 0.88, 0.86, 0.9, 0.95],
-  hipsZ: [0, -0.01, -0.03, -0.04, 0.1, 0.16, 0.17, 0.1, 0],
+  t: [0, 0.04, 0.08, 0.115, 0.135, 0.16, 0.21, 0.3, 0.42, 0.62],
+  armR: [0.06, -1.3, -2.75, -2.95, -2.9, -2.1, -1.2, -0.6, -0.35, 0.06],
+  elR: [-0.18, -1, -1.9, -2.05, -1.95, -0.45, -0.2, -0.35, -0.35, -0.18],
+  outR: [0, 0.6, 0.3, 0.25, 0.161, 0.05, -0.25, -0.3, -0.12, 0],
+  armL: [0.06, -0.6, -1.25, -1.35, -0.3, 0.2, 0.4, 0.35, 0.2, 0.06],
+  elL: [-0.18, -0.3, -0.35, -0.35, -0.8, -1.1, -1.2, -1, -0.6, -0.18],
+  outL: [0, 0.1, 0.15, 0.15, 0.194, 0.25, 0.2, 0.1, 0.05, 0],
+  torsoX: [0, -0.04, -0.1, -0.14, 0.05, 0.2, 0.5, 0.72, 0.42, 0],
+  torsoY: [0, -0.25, -0.55, -0.65, 0, 0.2, 0.5, 0.45, 0.25, 0],
+  headX: [0, 0.02, 0.05, 0.05, -0.017, -0.1, -0.4, -0.6, -0.35, 0],
+  headY: [0, 0.22, 0.5, 0.58, 0.12, -0.15, -0.42, -0.38, -0.22, 0],
+  legL: [-0.16, -0.25, -0.5, -0.6, -0.533, -0.45, -0.65, -0.75, -0.5, -0.16],
+  kneeL: [0.03, 0.35, 0.8, 0.95, 0.661, 0.3, 0.65, 0.85, 0.5, 0.03],
+  footL: [0, 0.15, 0.35, 0.35, 0.283, 0.2, 0.2, 0.15, 0.1, 0],
+  legR: [0.12, 0.12, 0.08, 0.07, 0.146, 0.24, 0.31, 0.32, 0.24, 0.12],
+  kneeR: [0.03, 0.08, 0.16, 0.18, 0.054, 0.06, 0.08, 0.1, 0.06, 0.03],
+  footR: [0, 0, 0, 0, -0.044, -0.1, -0.15, -0.15, -0.1, 0],
+  hipsY: [0.95, 0.94, 0.93, 0.925, 0.923, 0.92, 0.88, 0.86, 0.9, 0.95],
+  hipsZ: [0, -0.025, -0.06, -0.07, 0.05, 0.1, 0.16, 0.17, 0.1, 0],
 };
 const THROW_REACH = { t: [0.08, 0.13, 0.16, 0.24], v: [0, 0.8, 1, 0] };
 const THROW_UPPER = ['armR', 'elR', 'outR', 'armL', 'elL', 'outL', 'torsoX', 'torsoY', 'headX', 'headY'];
@@ -1944,6 +2048,7 @@ const WALK_KEYS = {
 };
 // The athletic run, six keys per cycle starting at this leg's knee drive (thighs absolute: LBA2 tilts the pelvis
 // 11-36° forward and the legs with it); arms relative to the torso; the lean is the pelvis plus the torso.
+const ROBE_RUN_CYC = 0.82;   // (JOINTS-BLENDER: measured on the hero at 4.96 m/s, the standing foot's slide 0.72 → 0.27 m/s; 0.75-0.9 tried)
 const RUN_KEYS = {
   thigh: [-62 * D, -33 * D, 23 * D, 33 * D, -12 * D, -58 * D],
   knee: [8 * D, 2 * D, 4 * D, 47 * D, 102 * D, 90 * D],

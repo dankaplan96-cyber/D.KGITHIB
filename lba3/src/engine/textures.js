@@ -624,6 +624,14 @@ function islandTextures(T) {
 let cache = null;
 export const textures = () => (cache ??= makeTextures());
 
+// P87b: a copy of a shared texture (its own wrap, repeat, offset) on the same pixels. three's clone() (its copy() sets
+// needsUpdate) and the builders' own needsUpdate each move the shared source's version, as if its canvas had been
+// repainted: three sent the canvas again, and every batched piece with that texture in an area already built left its
+// draw batch on that area's next frame (a first visit to Desert Island, the sewers or Ballastra: two of Zeelich's water
+// pieces each time). The source's version is kept as it was, as merge.js twinOf does (ARRIVAL-2): the pixels did not
+// change; the copy's own version still makes three set it up (a new wrap gets its own GPU texture, uploaded then).
+export function cloneTex(t) { const v = t.source.version, c = t.clone(); c.needsUpdate = true; c.source.version = v; return c; }
+
 // PERF-ARRIVAL: the JSON of a material cache key's options, a texture in them standing for itself by its identity and
 // settings. JSON.stringify of a THREE.Texture calls its toJSON, which encodes the whole image as a PNG data URL
 // (canvas.toDataURL) on every call: the builders' pm(color, rough, { map }) did that thousands of times at startup

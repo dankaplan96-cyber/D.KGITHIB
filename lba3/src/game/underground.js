@@ -39,6 +39,7 @@ import { RoomBuilder, glowSprite, twoSided, sag } from './interiors.js';
 import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, canvasTex } from './props.js';
 import * as P from './props.js';
 import { rng, smoothstep, lerp } from '../engine/math.js';
+import { cloneTex } from '../engine/textures.js';
 
 // ================================================================ shared kit
 const GC = new Map();
@@ -56,7 +57,7 @@ const tiled = (t, rx = 1, ry = 1) => { t.wrapS = t.wrapT = THREE.RepeatWrapping;
 const stdM = (o, tile = 0, extra = {}) => { const m = new THREE.MeshStandardMaterial({ roughness: 0.85, ...o }); m.userData.tile = tile; Object.assign(m.userData, extra); return m; };
 
 // --- faceted rock (LBA2 cave rock: flat facets, stratified paint, a flat base sitting on the floor)
-function rockGeo(seed, { detail = 1, rough = 0.32, flat = 0.3, freq = 1.4 } = {}) {
+export function rockGeo(seed, { detail = 1, rough = 0.32, flat = 0.3, freq = 1.4 } = {}) {
   return cached(`rk${seed}|${detail}|${rough}|${flat}|${freq}`, () => {
     const g = new THREE.IcosahedronGeometry(1, detail);
     const p = g.attributes.position, v = new THREE.Vector3();
@@ -78,7 +79,7 @@ function rockGeo(seed, { detail = 1, rough = 0.32, flat = 0.3, freq = 1.4 } = {}
     return g;
   });
 }
-const rockTex = () => M('ugrocktex', () => tiled(canvasTex(256, 256, (x, W, H) => {
+export const rockTex = () => M('ugrocktex', () => tiled(canvasTex(256, 256, (x, W, H) => {
   const r = rng(31);
   x.fillStyle = '#8c857f'; x.fillRect(0, 0, W, H);
   // strata: soft bands of lighter and darker rock, slightly wavy
@@ -92,9 +93,9 @@ const rockTex = () => M('ugrocktex', () => tiled(canvasTex(256, 256, (x, W, H) =
   for (let i = 0; i < 26; i++) { const px = r() * W, py = r() * H; x.strokeStyle = 'rgba(25,25,35,0.45)'; x.lineWidth = 1 + r(); x.beginPath(); x.moveTo(px, py); let cx = px, cy = py; for (let j = 0; j < 5; j++) { cx += (r() - 0.5) * 24; cy += r() * 14; x.lineTo(cx, cy); } x.stroke(); }
   for (let i = 0; i < 700; i++) { x.fillStyle = r() < 0.5 ? 'rgba(220,225,240,0.25)' : 'rgba(20,20,30,0.3)'; x.fillRect(r() * W, r() * H, 1.5, 1.5); }
 })));
-const rockMat = (color = '#8a90a4') => M('ugrock' + color, () => stdM({ map: rockTex(), color, vertexColors: true, roughness: 0.93, flatShading: true }, 2.2));
+export const rockMat = (color = '#8a90a4') => M('ugrock' + color, () => stdM({ map: rockTex(), color, vertexColors: true, roughness: 0.93, flatShading: true }, 2.2));
 // natural cave floor: pale-dark rock with soft patches, cracks and grit (1 tile = 4 m)
-const floorTex = (base, alt, key) => M('ugfloortex' + key, () => tiled(canvasTex(512, 512, (x, W, H) => {
+export const floorTex = (base, alt, key) => M('ugfloortex' + key, () => tiled(canvasTex(512, 512, (x, W, H) => {
   const r = rng(key.length * 13 + 5);
   x.fillStyle = base; x.fillRect(0, 0, W, H);
   for (let i = 0; i < 60; i++) {
@@ -691,7 +692,9 @@ const flowTex = () => M('ugflow', () => tiled(canvasTex(256, 64, (x, W, H) => {
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   for (let i = 0; i < 9; i++) { const px = (i / 9) * W + (i % 3) * 7, gg = x.createLinearGradient(px, 0, px + 26, 0); gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(0.6, 'rgba(230,255,255,0.9)'); gg.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gg; x.fillRect(px, H * 0.25, 26, H * 0.5); }
 }), 1, 1));
-// the cooling circuit as painted on the wall plate (the clue: A and C feed the exchanger, B dumps to the drain)
+// the cooling circuit as painted on the wall plate: where each pipe runs (one pump: the bore's drive, and A and C into the
+// exchanger; B out of it to the drain). PUZZLES P-C: no longer the drain crossed out in red; phase 2: the drive's branch
+// drawn too (the pump keeps the drive and the exchanger only while nothing runs down the drain)
 const diagramTex = () => M('ugdiagram', () => canvasTex(768, 512, (x, W, H) => {
   x.fillStyle = '#e8e0c8'; x.fillRect(0, 0, W, H);
   const r = rng(5);
@@ -724,10 +727,13 @@ const diagramTex = () => M('ugdiagram', () => canvasTex(768, 512, (x, W, H) => {
   valve(90, 360, 'A', true); valve(190, 110, 'C'); valve(590, 420, 'B');
   x.fillStyle = '#4a4a50'; x.font = "bold 20px 'Arial Narrow', Arial, sans-serif";
   x.fillText('FLOOR', 40, 470); x.fillText('CATWALK', 150, 160); x.fillText('DRAIN', 690, 486);
-  // the drain, crossed out in red
+  // (PUZZLES P-C 2) the pump at the foot of A's riser, and its other branch along the bottom to the bore's drive
+  pipeL([[90, 440], [90, 482], [470, 482]], '#2a7a9a', 10);
+  x.fillStyle = '#2a7a9a'; x.save(); x.translate(470, 482); x.beginPath(); x.moveTo(-14, -14); x.lineTo(16, 0); x.lineTo(-14, 14); x.fill(); x.restore();
+  x.fillStyle = '#3f8a86'; x.strokeStyle = '#1e3a38'; x.lineWidth = 3; x.beginPath(); x.arc(90, 440, 24, 0, 7); x.fill(); x.stroke();
+  x.fillStyle = '#1e1e22'; x.font = "bold 22px 'Arial Narrow', Arial, sans-serif"; x.fillText('PUMP', 122, 446); x.fillText('DRIVE', 380, 470);
+  // the drain
   x.strokeStyle = '#4a4a50'; x.lineWidth = 4; x.beginPath(); x.arc(660, 470, 22, 0, 7); x.stroke();
-  x.strokeStyle = '#d02a20'; x.lineWidth = 12; x.lineCap = 'round';
-  x.beginPath(); x.moveTo(612, 380); x.lineTo(708, 476); x.moveTo(708, 380); x.lineTo(612, 476); x.stroke();
 }));
 // distant passage painted behind a doorway (rock tunnel, a glow at its end)
 const passageView = (glow, key) => M('ugpass' + key, () => { const t = canvasTex(256, 256, (x, W, H) => {
@@ -759,7 +765,7 @@ function buildDeep(scene, physics) {
 
   // --- coolant materials, one per valve (dark when shut, flowing cyan when open)
   const flowMats = {};
-  const flowMat = (id) => (flowMats[id] ??= (() => { const tx = flowTex().clone(); tx.needsUpdate = true; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; const m = stdM({ color: '#28343a', emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0, roughness: 0.25, metalness: 0.3 }); m.userData.flow = tx; return m; })());
+  const flowMat = (id) => (flowMats[id] ??= (() => { const tx = cloneTex(flowTex()); tx.wrapS = tx.wrapT = THREE.RepeatWrapping; const m = stdM({ color: '#28343a', emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0, roughness: 0.25, metalness: 0.3 }); m.userData.flow = tx; return m; })());
   const glassPipe = (pts, r, id) => {
     const g = pipe(pts, r, 0.25, 10).clone(), L = pts.reduce((a, p, i) => a + (i ? Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1], p[2] - pts[i - 1][2]) : 0), 0);
     const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * L * 0.6);
@@ -858,13 +864,17 @@ function buildDeep(scene, physics) {
   for (const [id, p, y, wy] of vdefs) {
     R.valves.push({ id, ...B.world(p.x, p.z), y, wheelY: wy, open: false, turn: 0, setOpen(b) { this.open = !!b; refresh(); } });
   }
+  // PUZZLES P-C (phase 2): one pump feeds the bore's drive and the exchanger. With both feeds open while B runs the
+  // exchanger's coolant down the drain, the pump can't keep up and the drive starves (it slows, its lamp goes red): the
+  // drill must not stop halfway. Shut the drain and the loop closes: the drive keeps turning and the exchanger cools.
+  R.coolState = () => { const st = Object.fromEntries(R.valves.map((v) => [v.id, v.open])); return { good: !!(st.A && st.C && !st.B), starve: !!(st.A && st.C && st.B), feeds: +!!st.A + +!!st.C }; };
+  let driveGoal = 1;
   const refresh = () => {
-    const st = Object.fromEntries(R.valves.map((v) => [v.id, v.open]));
-    const good = st.A && st.C && !st.B;
-    for (const m of sight) { m.emissive.set(good ? '#40e8ff' : st.A || st.C ? '#ffb040' : '#ff5a20'); m.color.set(good ? '#103a48' : '#401810'); }
-    exLight.color.set(good ? '#60e0ff' : '#ff8a40');
+    const c = R.coolState();
+    for (const m of sight) { m.emissive.set(c.good ? '#40e8ff' : c.feeds ? '#ffb040' : '#ff5a20'); m.color.set(c.good ? '#103a48' : '#401810'); }
+    exLight.color.set(c.good ? '#60e0ff' : '#ff8a40');
+    driveGoal = c.starve ? 0.1 : 1;
   };
-  refresh();
 
   // --- the catwalk along the back wall (deck at UY), the hinged stair, the gantry with the ball switch
   const CW = { x0: LX, x1: 0.6, z0: BZ, z1: BZ + 2.3 };
@@ -947,7 +957,7 @@ function buildDeep(scene, physics) {
     // CAMPAIGN-9 (story/answer.js): the heat comes back and the shutter starts down; her crystal grows up at its posts and holds it
     // at 2.15 m (the way stays open). instant: as held (a load)
     held: false, hold(instant = false) { this.held = true; this.isOpen = true; doorCol.enabled = false; holdT = instant ? 9 : 0; lamp.material.emissive.set('#ffb030'); R.holdCols?.forEach((c) => { c.enabled = true; }); } };
-  k.add(plane(2.6, 1.8), M('ughatch', () => stdM({ map: tiled(P.TEX.hazard().clone(), 3, 2), roughness: 0.6 })), doorX, 0.008, BZ + 1.2, 0, { rx: -Math.PI / 2 });
+  k.add(plane(2.6, 1.8), M('ughatch', () => stdM({ map: tiled(cloneTex(P.TEX.hazard()), 3, 2), roughness: 0.6 })), doorX, 0.008, BZ + 1.2, 0, { rx: -Math.PI / 2 });
   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.8, to: 'c3-gallery' });
   R.exits.push({ ...B.world(LX + 0.45, entZ), r: 0.75, to: 'c3-shaft' });
   R.spawn = { ...B.world(LX + 1.7, entZ), a: Math.PI / 2 };
@@ -985,6 +995,10 @@ function buildDeep(scene, physics) {
 
   // --- the bore's transmission in the corner: the drill string coming down, a ring gear and its motor
   const TX = { x: 9.5, z: -6.2 };
+  // (PUZZLES P-C 2) the drive's lamp on its motor's front: green while it turns at speed, red while it starves
+  const driveLamp = new THREE.Mesh(sphere(0.09, 10, 8), stdM({ color: '#c8ffd0', emissive: '#30e060', emissiveIntensity: 2.2 }, 0, { noShadow: true }));
+  driveLamp.position.set(TX.x - 1.65, 1.55, TX.z + 1.04); B.group.add(driveLamp);
+  R.drive = { speed: 1, get starved() { return driveGoal < 1; } };
   const tstring = new THREE.Group(); tstring.position.set(TX.x, 0, TX.z); B.group.add(tstring);
   { const sm = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 12, 18, 1, true), M('ugstring', () => { const m = stdM({ map: drillTex(), roughness: 0.4, metalness: 0.55 }); m.map.repeat.set(2, 9); return m; })); sm.position.y = 6; sm.castShadow = false; tstring.add(sm); }
   const gear = new THREE.Mesh(P.gearGeo(1.35, 36, 0.3, 0.4), brass()); gear.rotation.x = -Math.PI / 2; gear.position.y = 1.45; tstring.add(gear);
@@ -1140,10 +1154,17 @@ function buildDeep(scene, physics) {
   }
 
   flushNoShadow(kt);
-  let wasFlow = '';
+  let wasFlow = '', driveA = 0;
+  refresh();
   R.updaters.push((dt, tt) => {
-    tstring.rotation.y = tt * 1.1;
-    pin.rotation.z = -tt * 1.1 * (1.35 / 0.45);
+    // (PUZZLES P-C 2: the drive at the pump's mercy: it winds down while starved, back up once fed; a judder at a crawl)
+    const D = R.drive; D.speed += (driveGoal - D.speed) * Math.min(1, dt * 0.8);
+    driveA += dt * 1.1 * D.speed;
+    tstring.rotation.y = driveA + (D.speed < 0.5 ? Math.sin(tt * 40) * 0.02 : 0);
+    pin.rotation.z = -driveA * (1.35 / 0.45);
+    const red = D.speed < 0.6;
+    driveLamp.material.emissive.set(red ? '#ff3020' : '#30e060'); driveLamp.material.color.set(red ? '#ffd0c0' : '#c8ffd0');
+    driveLamp.material.emissiveIntensity = red ? 1.2 + Math.max(0, Math.sin(tt * 6)) * 1.6 : 2.2;
     // stair and shutter animation
     if (stairT < stairGoal) { stairT = Math.min(1, stairT + dt / 1.6); const e = stairT * stairT * (3 - 2 * stairT); flight.rotation.x = STOW * (1 - e); placeChains(); }
     else if (stairT >= 1 && flight.rotation.x !== 0) { flight.rotation.x = 0; placeChains(); }

@@ -24,7 +24,7 @@ import { ISLES, BOARD_NAME, hasIsland } from './zislands.js';
 import { DESERT_DOCK } from './desert.js';
 import { HAMALAYI_FIELD } from './hamalayi.js';
 import { ZEELICH } from './zeelich.js';
-import { buildZTerminalOutside } from './zterminal.js';
+import { buildZTerminalOutside, ZPORT_TERMINAL, zportSaneSpot } from './zterminal.js';
 import { ORDER } from './story/index.js';
 import { ctex, cached, bbox, cyl, lathe, pm, tm, brassM, Batch } from './kit.js';
 import { t } from './i18n.js';
@@ -53,7 +53,9 @@ export const lastOutdoorPos = () => lastPos;
 
 // ================================================================== the travel points
 // (world coordinates; Zeelich's spaceport is ours: a deck over the clouds off the terminal island's south shore)
-const ZPORT = { x0: -14, x1: 6, z0: 33, z1: 51, bridge: { x: -4, z0: 26.0, z1: 33, hw: 1.8 }, pad: { x: -4, z: 44 } };
+// (P83: the terminal stands across the bridge's end, zterminal.js ZPORT_TERMINAL: the bridge runs into its north face at
+//  z 31, its gate opens on the deck at z 36; he steps off a ship 1.4 m before the gate, facing it: `land`)
+const ZPORT = { x0: -14, x1: 6, z0: 33, z1: 51, bridge: { x: -4, z0: 26.0, z1: 33, hw: 1.8 }, pad: { x: -4, z: 44 }, land: 37.4 };
 // (HARBOUR-ONE: the Citadel ferry board faces east, toward the quay and the way from town, where the play camera looks
 // from: facing the pier, only its blank back was ever seen; same place, same collider (an unturned box))
 const CIT = { ferry: { x: -115.5, z: 43, board: [-112.2, 40.6, Math.PI / 2], land: { x: -113.6, z: 44.2, a: -Math.PI / 2 } },
@@ -131,7 +133,7 @@ export function buildTravel(game) {
   { const f = DES.ferry; pt('desert_ferry', { region: 'desert', mode: 'ferry', x: f.x, z: f.z, r: 3.4, landing: { ...DESERT_DOCK }, name: 'tr_desert_pier' }); }
   { const g = DES.glider; pt('desert_glider', { region: 'desert', mode: 'glider', x: g.x, z: g.z, r: 4.0, landing: g.land, name: 'tr_desert_field' }); }
   { const F = HAMALAYI_FIELD; pt('hamalayi_glider', { region: 'hamalayi', mode: 'glider', x: F.glider.x, z: F.glider.z, r: 4.5, landing: { ...F.landing }, name: 'tr_hamalayi_field' }); }
-  { const o = ZEELICH, p = ZPORT.pad; pt('zeelich_port', { region: 'zeelich', mode: 'ship', x: o.x + p.x, z: o.z + p.z, r: 6.4, landing: { x: o.x + p.x, z: o.z + p.z - 7.2, a: Math.PI }, name: 'tr_zeelich_port' }); }
+  { const o = ZEELICH, p = ZPORT.pad; pt('zeelich_port', { region: 'zeelich', mode: 'ship', x: o.x + p.x, z: o.z + p.z, r: 6.4, landing: { x: o.x + p.x, z: o.z + ZPORT.land, a: Math.PI }, name: 'tr_zeelich_port' }); }
   later(pt('zeelich_shuttle', { region: 'zeelich', mode: 'shuttle', r: 5.0, name: 'isle_zeelich' }));
   // (EXP-2: Float Harbor's pad on Ballastra, the freighter's stop; its region is built when he first lands there)
   pt('ballastra_port', { region: 'ballastra', mode: 'ship', x: HARBOR_PAD.x, z: HARBOR_PAD.z, r: 6.4, landing: { ...HARBOR_PAD.landing }, name: 'tr_ballastra_port' });
@@ -205,13 +207,19 @@ export function travelRegion(game, id) {
     const o = Z.group.position, Y = 6.0, B = new Batch(Z.group), deck = tm('deck', { color: '#e4e2e8', rough: 0.65, metal: 0.25 }), brass = tm('teal', { rough: 0.55, metal: 0.3 }), stone = tm('stone', { color: '#d6d2cc' });
     const p = ZPORT, br = p.bridge;
     const wbox = (x0, x1, z0, z1, top, extra = {}) => P.add({ type: 'box', x: o.x + (x0 + x1) / 2, z: o.z + (z0 + z1) / 2, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, top, ...extra });
-    // the deck on stilts into the clouds, the footbridge from the shore
+    // the deck on stilts into the clouds, the footbridge from the shore; P83: the terminal's floor out over the clouds to
+    // the bridge (TB: zterminal.js), on stilts of its own; the bridge from the shore to its door
+    const TB = ZPORT_TERMINAL;
     B.add(bbox(p.x1 - p.x0, 0.45, p.z1 - p.z0, 0.06, 2), deck, (p.x0 + p.x1) / 2, Y - 0.225, (p.z0 + p.z1) / 2);
     wbox(p.x0, p.x1, p.z0, p.z1, Y, { bottom: Y - 0.6 });
-    B.add(bbox(br.hw * 2, 0.35, br.z1 - br.z0 + 0.4, 0.05, 2), deck, br.x, Y - 0.165, (br.z0 + br.z1) / 2);   // (WORLD-FIX: 1 cm proud of the turf and the deck, whose planes it shared)
-    wbox(br.x - br.hw, br.x + br.hw, br.z0, br.z1 + 0.3, Y, { bottom: Y - 0.6 });
+    B.add(bbox(TB.x1 - TB.x0 + 0.3, 0.45, p.z0 - TB.z0 + 0.3, 0.06, 2), deck, (TB.x0 + TB.x1) / 2, Y - 0.23, (TB.z0 - 0.3 + p.z0) / 2);
+    B.add(bbox(br.hw * 2, 0.35, TB.z0 - br.z0 + 0.4, 0.05, 2), deck, br.x, Y - 0.165, (br.z0 + TB.z0) / 2);   // (WORLD-FIX: 1 cm proud of the turf and the deck, whose planes it shared)
+    wbox(br.x - br.hw, br.x + br.hw, br.z0, TB.z0 + 0.3, Y, { bottom: Y - 0.6 });
     for (let x = p.x0 + 1; x <= p.x1 - 1; x += 6) for (let z = p.z0 + 1; z <= p.z1 - 1; z += 5.6) B.add(cyl(0.25, 0.32, 14, 8), stone, x, Y - 7.4, z);
-    // rails all round (open to the bridge), along the bridge
+    for (const x of [TB.x0 + 0.6, TB.x1 - 0.6]) B.add(cyl(0.25, 0.32, 14, 8), stone, x, Y - 7.4, TB.z0 + 0.6);
+    // rails all round; along the north edge from the deck's corners to the terminal's walls (P83: the deck is airside, shut
+    // from the bridge: SPACEPORT-2's rule), along the bridge into the terminal's north face. Each rail's collider runs
+    // 0.1 m past its ends: into the wall it meets
     const rail = (ax, az, bx2, bz2) => {
       const len = Math.hypot(bx2 - ax, bz2 - az), n = Math.max(1, Math.round(len / 1.6)), ry = Math.atan2(-(bz2 - az), bx2 - ax);
       for (let i = 0; i <= n; i++) B.add(cached('zprail', () => cyl(0.05, 0.06, 1.1, 6)), brass, ax + (bx2 - ax) * i / n, Y + 0.55, az + (bz2 - az) * i / n);
@@ -219,8 +227,10 @@ export function travelRegion(game, id) {
       P.add({ type: 'box', x: o.x + (ax + bx2) / 2, z: o.z + (az + bz2) / 2, hw: len / 2 + 0.1, hd: 0.12, rot: ry, top: Y + 1.1, bottom: Y - 1.5, noStand: true, seeThrough: true });
     };
     rail(p.x0, p.z1, p.x1, p.z1); rail(p.x0, p.z0, p.x0, p.z1); rail(p.x1, p.z0, p.x1, p.z1);
-    rail(p.x0, p.z0, br.x - br.hw, p.z0); rail(br.x + br.hw, p.z0, p.x1, p.z0);
-    rail(br.x - br.hw, br.z0 + 1.2, br.x - br.hw, p.z0); rail(br.x + br.hw, br.z0 + 1.2, br.x + br.hw, p.z0);
+    rail(p.x0, p.z0, TB.x0 - 0.06, p.z0); rail(TB.x1 + 0.06, p.z0, p.x1, p.z0);
+    rail(br.x - br.hw, br.z0 + 1.2, br.x - br.hw, TB.z0 - 0.06); rail(br.x + br.hw, br.z0 + 1.2, br.x + br.hw, TB.z0 - 0.06);
+    // (the terminal's floor out over the clouds: its rims either side of the block, where the deck's edge was)
+    for (const [x0, x1] of [[TB.x0 - 0.15, TB.x0], [TB.x1, TB.x1 + 0.15]]) wbox(x0, x1, TB.z0, p.z0, Y + 1.1, { noStand: true, seeThrough: true });
     // the pad and the starship (a bigger Esmer craft, for the long crossing), lamps, the board
     const pd = new THREE.Mesh(cached('zppad', () => new THREE.CylinderGeometry(5.6, 5.8, 0.14, 32)), pm('#8a8f9a', 0.7, { metalness: 0.2 })); pd.position.set(p.pad.x, Y + 0.07, p.pad.z); pd.receiveShadow = true; Z.group.add(pd);
     const ring = new THREE.Mesh(cached('zpring', () => new THREE.TorusGeometry(5.1, 0.08, 6, 40)), pm('#e8c040', 0.5)); ring.rotation.x = Math.PI / 2; ring.position.set(p.pad.x, Y + 0.15, p.pad.z); Z.group.add(ring);
@@ -231,10 +241,21 @@ export function travelRegion(game, id) {
       B.add(cached('zplampglobe', () => new THREE.SphereGeometry(0.22, 12, 8)), pm('#fff4d8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), lx, Y + 3.3, lz);
     }
     B.build();
-    const b = boardMesh(Z.group, br.x + 3.4, Y, p.z0 + 2.2, Math.PI * 0.75, { title: 'ZEELICH SPACEPORT', lines: ['TWINSUN: CITADEL', 'BY SPACESHIP'], frame: '#2f6f78', bg: '#1c2a30', ink: '#f0c040' });
-    void b; P.add({ type: 'box', x: o.x + br.x + 3.4, z: o.z + p.z0 + 2.2, hw: 1.1, hd: 0.15, rot: Math.PI * 0.75, top: Y + 2.7, noStand: true });
-    buildZTerminalOutside(Z.group, P, Y);   // (SPACEPORT-1: the terminal's pavilion beside the bridge's end; its hall is zterminal.js)
-    Z.spaceport = { pad: { x: o.x + p.pad.x, z: o.z + p.pad.z, y: Y }, landing: { x: o.x + p.pad.x, z: o.z + p.pad.z - 7.2, a: Math.PI }, deck: { x0: o.x + p.x0, x1: o.x + p.x1, z0: o.z + p.z0, z1: o.z + p.z1, y: Y } };
+    // (P83: the port's board went landside with the terminal's door: on the shore by the bridge's foot, read from the
+    //  way down to it; it stood on the deck where the terminal stands now)
+    const bdx = br.x + 3.2, bdz = br.z0 - 1.6, bry = Math.PI * 0.85;
+    const b = boardMesh(Z.group, bdx, gy(o.x + bdx, o.z + bdz), bdz, bry, { title: 'ZEELICH SPACEPORT', lines: ['TWINSUN: CITADEL', 'BY SPACESHIP'], frame: '#2f6f78', bg: '#1c2a30', ink: '#f0c040' });
+    void b; P.add({ type: 'box', x: o.x + bdx, z: o.z + bdz, hw: 1.1, hd: 0.15, rot: bry, top: gy(o.x + bdx, o.z + bdz) + 2.7, noStand: true });
+    buildZTerminalOutside(Z.group, P, Y);   // (SPACEPORT-1, P83: the terminal across the bridge's end; its hall is zterminal.js)
+    const inBlock = (x, z, m = 0) => x > TB.x0 - m && x < TB.x1 + m && z > TB.z0 - m && z < TB.z1 + m;
+    Z.spaceport = { pad: { x: o.x + p.pad.x, z: o.z + p.pad.z, y: Y }, landing: { x: o.x + p.pad.x, z: o.z + p.land, a: Math.PI }, deck: { x0: o.x + p.x0, x1: o.x + p.x1, z0: o.z + p.z0, z1: o.z + p.z1, y: Y },
+      // P83 (SPACEPORT-2's contract on Zeelich): the terminal's block, its door (north face) and gate (south face), the
+      // bridge; airside(x, z): on the deck past the terminal; saneSpot(at): a spot of an older build inside its walls ->
+      // before the door on the bridge or before the gate on the deck (world coordinates)
+      terminal: { x0: o.x + TB.x0, x1: o.x + TB.x1, z0: o.z + TB.z0, z1: o.z + TB.z1 }, door: { x: o.x + br.x, z: o.z + TB.z0 }, gate: { x: o.x + br.x, z: o.z + TB.z1 },
+      bridge: { x: o.x + br.x, z0: o.z + br.z0, z1: o.z + TB.z0, hw: br.hw },
+      airside: (x, z) => x > o.x + p.x0 && x < o.x + p.x1 && z > o.z + p.z0 - 0.5 && z < o.z + p.z1 + 0.5 && !inBlock(x - o.x, z - o.z),
+      saneSpot: (at) => { if (!at || !Number.isFinite(at.x) || !Number.isFinite(at.z) || !inBlock(at.x - o.x, at.z - o.z, 0.5)) return at; const q = zportSaneSpot({ x: at.x - o.x, z: at.z - o.z }); return { x: q.x + o.x, z: q.z + o.z, a: q.a }; } };
     pt('zeelich_port', { region: 'zeelich', mode: 'ship', x: Z.spaceport.pad.x, z: Z.spaceport.pad.z, r: 6.4, landing: Z.spaceport.landing, name: 'tr_zeelich_port' });
     if (!Z.shuttlePad) drop('zeelich_shuttle');
     if (Z.shuttlePad) {

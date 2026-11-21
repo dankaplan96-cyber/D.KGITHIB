@@ -11,7 +11,8 @@ the ferry and Hesk's glider work on Twinsun only, the Esmer shuttles between Zee
 light, a ferry that runs on light around Twinsun, jobs on Zeelich). It is also cracking the shell around a being Sendell
 protects ("her"), which is waking too early. Vesk, the project's chief engineer and the story's villain, learns
 what lies under the shell and wants its power for the project: he hides the danger and plans a selective
-evacuation (the thirty percent he chose) instead of stopping. Stopping the drill now would crack the shell anyway.
+evacuation (the thirty percent he chose) instead of stopping. The bore's rule (decided 20.11, P83): a stop holds the drill, and the shell
+survives it for days but stays strained; backing the drill out halfway cracks it; only running the bore in reverse heals it.
 The solution: turn the project's own installations into a stabilising shield, using parts and people the
 player already knows.
 
@@ -75,7 +76,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 ### 3 — Zeelich ✅ (ending changes)
 - **Wants:** reach Baldino, stop Vesk. **The other side:** Zeelich lives on the project. **Setback:** the plan
   is confiscated by a project guard who meets the ship on Zeelich Spaceport, recovered in the depot. **Revelation (Baldino):** the shell
-  around Twinsun; Vesk's bore at Citadel's station is drilling through it, stopping halfway cracks it, and Vesk steers
+  around Twinsun; Vesk's bore at Citadel's station is drilling through it, backing it out halfway cracks it (a stop only holds it), and Vesk steers
   the whole bore from his platform on Zeelich. **Does:** mill cog, code cylinder, three mill brakes; Zoé tunes the lighthouse.
 - **Ending (SHAFT-CITADEL, the user's decision of 2.11.2026: the planets are joined by spaceship only):** the shield
   drops; Vesk will not listen, takes the platform's lift down to his ship's berth under the deck and **flies home to
@@ -91,8 +92,9 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **Place:** a dry island of mesas and wind; a village around a dying oasis; the project's research post at an
   old excavation; FunFrock-era ruins half buried in sand.
 - **People:** Professor Ilka (Rabbibunny geologist, found the first crystals, sacked by the project for asking
-  questions); Hesk (Grobo caravan driver, sand-yacht); Mother Tarra (village elder); project foreman Dallan (the
-  guard who confiscated the plan on Zeelich, now running the post: follows rules, hard but not cruel).
+  questions); Hesk (Grobo caravan driver, sand-yacht); Mother Tarra (village elder); project foreman Dallan (project
+  security who has guarded the dig for a year and runs the post: follows rules, hard but not cruel; he is not the
+  unnamed guard who took the plan on Zeelich, though he wears the same uniform — STORY-FIX 19.11).
 - **Does:** gets the oasis pump running again (ADV-2: Brosk blames the test bore's tremors, Sani hears from the roof
   that two gears clack and one grinds; at the tower a gust shows which, the ball knocks it loose, and the pipe joint
   the tremors shook apart is pushed home), then rides Hesk's sand-yacht; enters the dig's gate code himself (the
@@ -184,7 +186,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 | **Zoé** | the truth; family safe | being told to stay home | town gossip, how to sneak | finds the plan, broadcasts the warning, playable twice | from worried to the one who moves the island |
 | **Arthur** | to be included | being treated as a baby | radios, kids' secrets | fixes the radio, hears Vesk's ship land in the old fort on the project's channel (ch. 3), relays in the finale | gets his real job, not a chosen-one moment |
 | **Baldino** | to build the thing that works | being ignored | the shell, machines | inventions with limits (override key; the network) | proves the reversal works |
-| **Vesk** (villain) | the power under the shell, for the project and Zeelich's upper districts | losing control, being made small | the readings, and what they mean | charming and useful at first (valves, water, the project's ferry round Twinsun), then obstructs (link cut, guards, the evacuation he chose) | does not turn: overloads the guardian in the core, is beaten and handed to the joint council |
+| **Vesk** (villain) | the power under the shell, for the project and Zeelich's upper districts | losing control, being made small | the readings, and what they mean | charming and useful at first (valves, water, the project's ferry round Twinsun), then obstructs (link cut, guards, the evacuation he chose) | believes only he should decide who gets the heat: overloads the guardian in the core when the field would give every station a say; when Irsa reports Mill Lane running without him he turns his key and shows the lock — but does not repent, and is handed to the joint council with the falsified records and the excluded residents on his account (VESK.md, 20.11) |
 | **Sendell** | to protect "her" | waking her too soon | everything below | warnings, then the plain truth | asks for help instead of saving everyone |
 | **Doran** | to sleep, to sail | fuss | the sea, the ferry | stamp; flies the project's ship to Zeelich with Baldino's start code, then the ferry to Desert Island | sails, then flies, into the unknown |
 | **Mira** | rules followed, credit for the office | blame | every pipe on the island | lid key, valve map, opens the valves in the finale | from bureaucrat to hero of the report |
@@ -301,6 +303,10 @@ goal. Important scenes are played, not narrated.
 - Twinsun ⇄ Zeelich only by spaceship (Citadel Spaceport ⇄ Zeelich Spaceport). The project's ferry runs on light
   on Twinsun's seas (Citadel ⇄ Desert Island); Doran can sail it, and fly the project's ship; Baldino sent him the
   start code.
+- The project's vehicles (P83): the ferry on light runs between Twinsun's islands only; Vesk's own ship waits above
+  Citadel, reached by the beam pad at the station; the project keeps a ship at Citadel Spaceport, which Doran flies
+  (Doran tells them apart in chapter 2, `c1_doran_ships`). The Joint Project has run on Zeelich for ten years (its
+  mills, pumps and platform); its Citadel half (the bore, the ferry, the heat posts) is new (Nara, `c2_nara_2`).
 - The evacuation plan: Citadel town centre and Zeelich upper districts; ship capacity 30%.
 - Zoé's lighthouse dials: sun, wave, star.
 - The platform shield is fed by Zeelich's three mills; the override key = old mill cog + project code cylinder.

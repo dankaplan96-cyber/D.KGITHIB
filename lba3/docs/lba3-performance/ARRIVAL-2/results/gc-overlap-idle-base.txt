@@ -1,0 +1,11 @@
+UNIT draw build order>fixed draws 13.2  | GC overlap: V8.GCHandleGCRequest 8.9, MajorGC 8.9, V8.GCFinalizeMC 8.8, V8.GC_MARK_COMPACTOR 8.7, V8.GC_MC_BACKGROUND_MARKING 6.1
+UNIT draw build assign>array 20.3  | GC overlap: none
+UNIT draw build array>array 27.0  | GC overlap: none
+UNIT shadow build large piece>large piece 15.2  | GC overlap: MinorGC 0.8, V8.GCScavenger 0.7, V8.GC_SCAVENGER 0.7, V8.GC_SCAVENGER_SCAVENGE 0.7, V8.GC_SCAVENGER_SCAVENGE_PARALLEL_PHASE 0.4
+UNIT shadow build cell part>cell part 13.2  | GC overlap: none
+UNIT draw build parts>parts 14.4  | GC overlap: V8.GC_MC_BACKGROUND_MARKING 14.3, V8.GCIncrementalMarking 7.2, V8.GC_MC_INCREMENTAL 7.2, V8.GC_BACKGROUND_SAFEPOINT 6.8, V8.GCIncrementalMarkingStart 4.4
+UNIT draw build assign>array 15.5  | GC overlap: V8.GC_MC_BACKGROUND_MARKING 46.5
+UNIT draw build array>array 29.3  | GC overlap: V8.GC_MC_BACKGROUND_MARKING 87.6
+UNIT draw build cell part>cell part 25.8  | GC overlap: V8.GC_MC_BACKGROUND_MARKING 22.5, V8.GC_MC_BACKGROUND_SWEEPING 11.0, V8.GC_BACKGROUND_SAFEPOINT 10.8, V8.GCHandleGCRequest 10.2, MajorGC 10.1
+UNIT draw build cell part>cell part 16.4  | GC overlap: V8.GC_HEAP_EXTERNAL_PROLOGUE 8.8, MinorGC 2.1, V8.GCScavenger 1.6, V8.GC_SCAVENGER 1.3, V8.GC_SCAVENGER_SCAVENGE 1.3
+UNIT draw build cell part>cell part 18.2  | GC overlap: V8.GC_HEAP_EXTERNAL_PROLOGUE 9.7, MinorGC 2.4, V8.GCScavenger 1.7, V8.GC_SCAVENGER 1.6, V8.GC_SCAVENGER_SCAVENGE 1.5

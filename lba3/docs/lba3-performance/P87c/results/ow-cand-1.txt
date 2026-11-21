@@ -1,0 +1,32 @@
+load before 2.27 3.62 3.53; other gpu-processes 0
+P87c off-the-wall probe · medium · start room desert · chapter dig · court open true
+school    first   (was unloaded): OW calls 2, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 76120 ms, 103 frames
+desert    revisit (was cached): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 338 ms, 83 frames
+wtent     first   (was unloaded): OW calls 2, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 174580 ms, 93 frames
+desert    revisit (was cached): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 18 ms, 67 frames
+zeelich   first   (was unloaded): OW calls 2, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 1616 ms, 183 frames
+sewer     first   (was unloaded): OW calls 2, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 80388 ms, 93 frames
+zeelich   revisit (was cached): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 24 ms, 83 frames
+desert    revisit (was cached): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 24447 ms, 83 frames
+citadel   first   (was built): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 14580 ms, 104 frames
+tavern    first   (was unloaded): OW calls 2, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 199427 ms, 103 frames
+citadel   revisit (was built): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 10309 ms, 67 frames
+bazoo     first   (was unloaded): OW calls 2, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 94979 ms, 93 frames
+citadel   revisit (was built): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 448 ms, 67 frames
+desert    revisit (was cached): OW calls 0, repaints 0, 0.0 ms in them (max 0.0), canvases sent 0 (0 KB, 0.0 ms) · worst frame 5337 ms, 67 frames
+ROUTE TOTAL: OW calls 12, repaints 0, 0.0 ms in them, canvases sent 0 (0 KB, 0.0 ms)
+after route: slate 48a0ce6d sand 867d63e4 · flags {}
+applyWorld, nothing changed: OW calls 2, repaints 0 (0.0 ms), sent 0 (0 KB, 0.0 ms) · slate 48a0ce6d sand 867d63e4
+board moved (court, 4 rings): OW calls 2, repaints 2 (0.4 ms), sent 2 (1558 KB, 4.5 ms) · slate 6a718ecf sand 9ed2e4ee
+a ring counted (5): OW calls 1, repaints 1 (0.3 ms), sent 1 (640 KB, 1.7 ms) · slate 3c52e64f sand 9ed2e4ee
+applyWorld again, nothing changed: OW calls 2, repaints 0 (0.0 ms), sent 0 (0 KB, 0.0 ms) · slate 3c52e64f sand 9ed2e4ee
+an area built (story.decorate): OW calls 20, repaints 0 (0.0 ms), sent 0 (0 KB, 0.0 ms) · slate 3c52e64f sand 9ed2e4ee
+  callers: 9x OffTheWall.applyWorld game/story/offwall.js:135:47 < OffTheWall.decorate game/story/offwall.js:112:10 < Story.decorate game/story/index.js:191:242 < main.js:802:18 < Regions.peek game/regions.js:194:102
+           9x OffTheWall.applyWorld game/story/offwall.js:136:7 < OffTheWall.decorate game/story/offwall.js:112:10 < Story.decorate game/story/index.js:191:242 < main.js:802:18 < Regions.peek game/regions.js:194:102
+           1x OffTheWall.applyWorld game/story/offwall.js:135:47 < OffTheWall.decorate game/story/offwall.js:112:10 < Story.decorate game/story/index.js:191:242 < eval (eval at evaluate (:311:30), <anonymous>:63:81 < act (eval at evaluate (:311:30), <anonymous>:57:44
+           1x OffTheWall.applyWorld game/story/offwall.js:136:7 < OffTheWall.decorate game/story/offwall.js:112:10 < Story.decorate game/story/index.js:191:242 < eval (eval at evaluate (:311:30), <anonymous>:63:81 < act (eval at evaluate (:311:30), <anonymous>:57:44
+board spot moved: OW calls 2, repaints 0 (0.0 ms), sent 0 (0 KB, 0.0 ms) · slate 3c52e64f sand 9ed2e4ee
+back to the save state (by flags): OW calls 2, repaints 2 (0.2 ms), sent 2 (1558 KB, 2.9 ms) · slate 9f2d04b7 sand b7d8dd04
+one repaint: score median 0.10 ms, max 0.10 ms · marks median 0.00 ms, max 0.10 ms
+frame on the island, render + gl.finish: with both repainted and sent median 5.7 ms [6 6 6 5 5 5], without median 3.5 ms [4 4 4 3 3 3] · room desert
+exit 0 load after 3.68 3.87 3.88
