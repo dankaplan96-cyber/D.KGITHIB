@@ -113,7 +113,7 @@ On this branch, SwiftShader, the machine under load (load 6–13, another worker
 | hamalayi-life, desert-life, isles-bar, desert-bar, island-people, overlaps, work-step | PASS |
 | slidetraps | FAIL: the Citadel's spots near (-32.7, -25.8). The base build d6551c8d fails identically (same spots, same counts), and nothing in the Citadel changed |
 | world-consistency | FAIL: a static check of `story/balances.js:144` (a `startTransition` not on its allow-list). No story file changed here |
-| save-migration | see the commit that records its rerun: the first run hit a 40-min limit under load while still loading fixtures |
+| save-migration | PASS (the rerun, 65 min under load; the first run hit my 40-min limit while still loading its first fixture) |
 
 Performance: no draw call, mesh or material added. The cart, the gate and the posts keep their parts; dryWall's segments
 are merged as before (more distinct geometries in the merge, not more draws); the seating changes move existing pieces.
