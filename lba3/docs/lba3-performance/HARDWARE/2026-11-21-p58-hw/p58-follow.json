@@ -1,0 +1,630 @@
+{
+ "mode": "follow",
+ "frames": 18287,
+ "hiddenFrames": 2030,
+ "findings": [
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -2.17,
+   "cam": [
+    -34.7,
+    19.61,
+    -59.06
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 450,
+   "secs": 4.03,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -8.45,
+   "cam": [
+    -34.7,
+    19.61,
+    -59.06
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 754,
+   "secs": 0.8,
+   "shot": true
+  },
+  {
+   "x": -34.12,
+   "z": -60.14,
+   "heading": -11.12,
+   "cam": [
+    -38.98,
+    20.39,
+    -59.05
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 850,
+   "secs": 0.77,
+   "shot": true
+  },
+  {
+   "x": -37.54,
+   "z": -59.87,
+   "heading": -6.86,
+   "cam": [
+    -31.55,
+    23.32,
+    -59.74
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 2491,
+   "secs": 0.43,
+   "shot": true
+  },
+  {
+   "x": -37.64,
+   "z": -59.81,
+   "heading": -13.32,
+   "cam": [
+    -35.18,
+    19.31,
+    -59.45
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 2876,
+   "secs": 0.6,
+   "shot": true
+  },
+  {
+   "x": -37.6,
+   "z": -59.84,
+   "heading": -14.52,
+   "cam": [
+    -34.86,
+    19.48,
+    -59.37
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 3019,
+   "secs": 0.57,
+   "shot": true
+  },
+  {
+   "x": -37.6,
+   "z": -59.84,
+   "heading": -14.7,
+   "cam": [
+    -35.22,
+    19.31,
+    -59.14
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 3043,
+   "secs": 0.9,
+   "shot": true
+  },
+  {
+   "x": -37.39,
+   "z": -59.96,
+   "heading": -27.04,
+   "cam": [
+    -35.42,
+    19.31,
+    -58.46
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 5301,
+   "secs": 0.57,
+   "shot": true
+  },
+  {
+   "x": -37.39,
+   "z": -60.05,
+   "heading": -39.46,
+   "cam": [
+    -35.33,
+    19.31,
+    -58.67
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 5682,
+   "secs": 0.83,
+   "shot": true
+  },
+  {
+   "x": -35.73,
+   "z": -58.31,
+   "heading": -31.07,
+   "cam": [
+    -37.67,
+    19.51,
+    -60.37
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 6507,
+   "secs": 0.43,
+   "shot": true
+  },
+  {
+   "x": -37.35,
+   "z": -59.8,
+   "heading": -43.34,
+   "cam": [
+    -36.91,
+    20.84,
+    -67.52
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 7644,
+   "secs": 1.43,
+   "shot": true
+  },
+  {
+   "x": -37.43,
+   "z": -60.11,
+   "heading": -46.3,
+   "cam": [
+    -35.52,
+    19.31,
+    -58.53
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 7726,
+   "secs": 0.6,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -52.4,
+   "cam": [
+    -35.35,
+    19.31,
+    -58.86
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 7947,
+   "secs": 0.5,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -52.4,
+   "cam": [
+    -34.89,
+    19.5,
+    -59.2
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 7973,
+   "secs": 4.03,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -108.94,
+   "cam": [
+    -35.38,
+    19.31,
+    -58.79
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 13454,
+   "secs": 0.47,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -108.94,
+   "cam": [
+    -34.93,
+    19.48,
+    -59.22
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 13478,
+   "secs": 4.17,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -115.23,
+   "cam": [
+    -35.38,
+    19.31,
+    -58.79
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 13759,
+   "secs": 0.47,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -115.23,
+   "cam": [
+    -34.93,
+    19.48,
+    -59.22
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 13783,
+   "secs": 3.4,
+   "shot": true
+  },
+  {
+   "x": -34.17,
+   "z": -60.49,
+   "heading": -117.84,
+   "cam": [
+    -38.74,
+    20.37,
+    -58.7
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 13954,
+   "secs": 0.9,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -121.58,
+   "cam": [
+    -34.93,
+    19.73,
+    -59.04
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 14534,
+   "secs": 4,
+   "shot": true
+  },
+  {
+   "x": -37.63,
+   "z": -59.81,
+   "heading": -127.78,
+   "cam": [
+    -35.38,
+    19.54,
+    -58.79
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 14809,
+   "secs": 4.27,
+   "shot": true
+  },
+  {
+   "x": -40.02,
+   "z": -63.82,
+   "heading": -122.26,
+   "cam": [
+    -39.85,
+    23.73,
+    -63.15
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 15133,
+   "secs": 0.53,
+   "shot": true
+  },
+  {
+   "x": -39.58,
+   "z": -63.6,
+   "heading": -121.8,
+   "cam": [
+    -37.71,
+    19.91,
+    -62.62
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 15142,
+   "secs": 0.43,
+   "shot": true
+  },
+  {
+   "x": -40.03,
+   "z": -63.62,
+   "heading": -122.24,
+   "cam": [
+    -39.71,
+    23.73,
+    -63.2
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 15306,
+   "secs": 1.13,
+   "shot": true
+  },
+  {
+   "x": -40.25,
+   "z": -63.8,
+   "heading": -128.69,
+   "cam": [
+    -39.36,
+    23.73,
+    -62.04
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 15421,
+   "secs": 0.97,
+   "shot": true
+  },
+  {
+   "x": -39.84,
+   "z": -63.6,
+   "heading": -134.54,
+   "cam": [
+    -38.1,
+    18.21,
+    -61.01
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 15523,
+   "secs": 1,
+   "shot": true
+  },
+  {
+   "x": -18.39,
+   "z": -53.65,
+   "heading": -134.13,
+   "cam": [
+    -18.11,
+    23.1,
+    -53.58
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 16221,
+   "secs": 1,
+   "shot": true
+  },
+  {
+   "x": -18.27,
+   "z": -53.63,
+   "heading": -141.95,
+   "cam": [
+    -18.33,
+    23.1,
+    -53.35
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 16359,
+   "secs": 0.43,
+   "shot": true
+  },
+  {
+   "x": -18.37,
+   "z": -53.64,
+   "heading": -146.54,
+   "cam": [
+    -18.09,
+    23.1,
+    -53.62
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 16618,
+   "secs": 1.07,
+   "shot": true
+  },
+  {
+   "x": -17.97,
+   "z": -54.12,
+   "heading": -151.81,
+   "cam": [
+    -17.65,
+    23.1,
+    -54.33
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 16710,
+   "secs": 0.6,
+   "shot": true
+  },
+  {
+   "x": -35.85,
+   "z": -59.01,
+   "heading": -137.47,
+   "cam": [
+    -37.47,
+    19.54,
+    -60.88
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 17236,
+   "secs": 0.6,
+   "shot": true
+  },
+  {
+   "x": -35.85,
+   "z": -58.79,
+   "heading": -137.47,
+   "cam": [
+    -37.92,
+    23.26,
+    -60.8
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 17388,
+   "secs": 0.8,
+   "shot": true
+  },
+  {
+   "x": -36.84,
+   "z": -61.46,
+   "heading": -134.51,
+   "cam": [
+    -36.56,
+    23.25,
+    -56.17
+   ],
+   "by": "station",
+   "mode": "follow",
+   "t": 17625,
+   "secs": 0.53,
+   "shot": true
+  },
+  {
+   "x": -39.96,
+   "z": -63.91,
+   "heading": -133.56,
+   "cam": [
+    -38.28,
+    19.81,
+    -62.45
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 17691,
+   "secs": 0.73,
+   "shot": true
+  },
+  {
+   "x": -40.05,
+   "z": -63.91,
+   "heading": -126.25,
+   "cam": [
+    -38.03,
+    22.73,
+    -64.11
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 17817,
+   "secs": 0.7,
+   "shot": true
+  },
+  {
+   "x": -39.99,
+   "z": -63.62,
+   "heading": -127.91,
+   "cam": [
+    -39.95,
+    23.73,
+    -61.65
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 17899,
+   "secs": 0.97,
+   "shot": true
+  },
+  {
+   "x": -40.25,
+   "z": -63.87,
+   "heading": -133.78,
+   "cam": [
+    -38.25,
+    19.81,
+    -62.89
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 18009,
+   "secs": 0.7,
+   "shot": true
+  },
+  {
+   "x": -40.18,
+   "z": -63.86,
+   "heading": -141.32,
+   "cam": [
+    -39.46,
+    23.73,
+    -62.19
+   ],
+   "by": "BufferGeometry",
+   "mode": "follow",
+   "t": 18139,
+   "secs": 1.67,
+   "shot": true
+  }
+ ],
+ "walks": {
+  "officeCW": [
+   "timeout",
+   "arrived",
+   "stuck",
+   "timeout",
+   "timeout"
+  ],
+  "controlCW": [
+   "arrived",
+   "arrived",
+   "timeout",
+   "timeout",
+   "arrived"
+  ],
+  "officeCCW": [
+   "timeout",
+   "timeout",
+   "timeout",
+   "arrived",
+   "timeout"
+  ],
+  "controlCCW": [
+   "arrived",
+   "stuck",
+   "timeout",
+   "arrived",
+   "arrived"
+  ],
+  "between": [
+   "arrived",
+   "stuck",
+   "arrived"
+  ],
+  "behind": [
+   "timeout",
+   "timeout",
+   "timeout"
+  ],
+  "front": [
+   "timeout",
+   "arrived",
+   "timeout"
+  ],
+  "wide": [
+   "timeout",
+   "arrived",
+   "timeout",
+   "timeout",
+   "timeout"
+  ]
+ },
+ "errs": []
+}

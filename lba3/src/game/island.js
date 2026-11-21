@@ -2042,6 +2042,15 @@ function buildStation(W0, root, r) {
     pipeRun(B, [[PX - 0.35, g + 0.85, PZ - 0.2], [PX - 1.0, g + 0.85, PZ - 0.2], [PX - 1.0, g + 2.9, PZ - 0.2], [33.4, g + 2.9, PZ - 0.2]], 0.26);
     P.add({ type: 'box', x: PX, z: PZ, hw: 1.35, hd: 1.15, rot: 0, top: g + 1.6, noStand: true, seeThrough: true });
     vents.push({ x: PX + 0.2, y: g + 1.5, z: PZ - 0.2, small: true });
+    // P58-HW (the user, 17.11, "Twinsen is hidden" at the station; found on the GTX 1050, 21.11): the big main and the pump's
+    // riser gave the camera no shape, so a shot stood behind them with him only as his outline — in the corner between the
+    // main's drop, the barrels and the fort wall (Follow: up to 4 s), and along the main and the riser in the Fixed view
+    // (up to 16 s). Their shapes now, as the huts': the camera rises over them by LBA2's rule. The bridge over the gate lane
+    // is passed through while he walks under it (occlude.js: volumes he stands under are left out).
+    addOccluder(W, { kind: 'box', x: MX, z: 35.5, hw: 0.4, hd: 6.2, y0: yB - 0.4, y1: yB + 0.35, name: 'station main, the bridge' });
+    addOccluder(W, { kind: 'box', x: MX, z: 41.4, hw: 0.4, hd: 0.4, y0: g, y1: yB + 0.35, name: 'station main, the drop' });
+    addOccluder(W, { kind: 'box', x: PX - 1.0, z: PZ - 0.2, hw: 0.35, hd: 0.35, y0: g, y1: g + 3.2, name: 'pump riser' });
+    addOccluder(W, { kind: 'box', x: (PX - 1.0 + 33.4) / 2, z: PZ - 0.2, hw: (PX - 1.0 - 33.4) / 2 + 0.3, hd: 0.35, y0: g + 2.55, y1: g + 3.25, name: 'pump riser, the run west' });
   }
 
   // --- office and control buildings, doors facing the yard (north)

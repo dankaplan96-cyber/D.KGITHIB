@@ -1,0 +1,42 @@
+[0s +0s] continue (Desert Island): {"room":"desert","chapter":"steam"} | desert [3351.5,5,1.5] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[1s +0s] Mother Tarra: {"r":"talked","to":"tarra","state":"play","lines":2,"speakers":["tarra"],"task":true,"fail":null} | desert [3351.39,5,9.87] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":2.2,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":9,"says":1,"walked":8,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[1s +0s] the pump's jammed gear (ball, from the west where its face looks): {"gears":[true],"state":"running","fail":null} | desert [3351.39,5,9.87] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":1.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[31s +29s] the pipe joint pushed home: {"r":"used","target":null,"state":"play","lines":0,"pump":true,"fail":null} | desert [3367.91,4.07,-12.12] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":18.9,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":37,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[32s +1s] Tarra trusts him: {"r":"talked","to":"tarra","state":"play","lines":2,"speakers":["tarra"],"trust":true,"fail":null} | desert [3355.28,5,11.48] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":9.4,"dialog":0.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":9,"says":1,"walked":37,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[34s +1s] Hesk: {"r":"talked","to":"hesk","state":"play","lines":2,"speakers":["hesk"],"ask":true} | desert [3373.49,4.72,12.78] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":15.1,"dialog":0.3,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":1,"words":20,"says":1,"walked":22,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[35s +1s] the rope from the pier: {"r":"used","target":null,"state":"play","lines":0,"rope":true,"fail":null} | desert [3300.45,2,3] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":17.7,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":75,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[36s +1s] the sand-yacht to the camp: {"r":"talked","to":"hesk","state":"play","lines":2,"speakers":["hesk"],"yacht":"camp","fail":null} | desert [3372.85,4.78,12.82] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":16.4,"dialog":0.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":20,"says":1,"walked":74,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+[37s +1s] Ilka: {"r":"talked","to":"ilka","state":"play","lines":14,"speakers":["ilka","hero"],"ilka":true,"fail":null} | desert [3353.86,5,3.73] hp 10 | Get into FunFrock's condenser hall
+  stats: {"play":5.6,"dialog":2.1,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":7,"words":91,"says":7,"walked":21,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+the notebook (in a sandstorm): ERROR page.evaluate: TypeError: G.story.cur.deskSpot is not a function
+FAIL the segment ran every step to its end "the notebook (in a sandstorm): ERROR page.evaluate: TypeError: G.story.cur.deskSpot is not a function"
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[42.1] stuck at (10898.4, -999.8): replan
+[42.5] go: transition (ih_kesh_house3 → ih_kesh_house3, trans true) at (10898.41, -999.87)
+[43.9] go → (3374.5, 13.2) plan ok=true pts=2 left=0.57
+[49.3] go → (3300.0, 2.8) plan ok=true pts=7 left=0.29
+[65.9] go → (3300.0, 2.8) plan ok=true pts=2 left=0.27
+[66.3] go → (3300.0, 2.8) plan ok=true pts=2 left=0.2
+[66.3] go → (3300.0, 2.8) plan ok=true pts=2 left=0.2
+[67.1] go → (3374.5, 13.2) plan ok=true pts=6 left=0.88
+[83.7] go → (3352.2, 3.0) plan ok=true pts=3 left=0.69
+[94.7] go → (3431.2, -21.0) plan ok=true pts=10 left=0.54
+[242.4] go → (3436.6, -27.9) plan ok=true pts=2 left=0.21
+[247.1] go: transition (desert → desert, trans true) at (3436.26, -27.12)
+stats total: {"play":239,"dialog":3.2,"trans":2.1,"scene":3.4,"menu":0,"other":0,"lines":11,"words":149,"says":11,"walked":371,"hpLost":0,"deaths":0,"rooms":3,"chapter":"steam","coinsNow":12,"hpNow":10,"cloversNow":3,"revives":0}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 1 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     9 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional)
+1 FAILED

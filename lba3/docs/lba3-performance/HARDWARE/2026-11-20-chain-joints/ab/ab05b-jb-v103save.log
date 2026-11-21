@@ -1,0 +1,46 @@
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-54.5,18.81,-36.5] hp 4 | The square has water. Go home and talk to Zoé
+[9s +9s] home: Zoé — the square is full, our tap is not: {"r":"talked","to":"zoe","state":"play","lines":8,"speakers":["zoe","hero","arthur"],"room":"house","fail":null} | house [998.1,0,-0.67] hp 2 | Find where the houses lost their water (the pump room on the lane)
+[12s +2s] his own tap: dry, knocking: {"r":"used","target":{"kind":"ct_tap","id":"p_tap","label":"p_tap"},"state":"play","lines":2,"stream":false,"fail":null} | house [997.75,0,-2.46] hp 2 | Find where the houses lost their water (the pump room on the lane)
+[13s +1s] the lane: the worker has opened two pipes: {"r":"talked","to":"worker","state":"play","lines":6,"speakers":["worker","hero"],"fail":null} | citadel [-45.93,2.33,68.62] hp 2 | Find where the houses lost their water (the pump room on the lane)
+[22s +9s] down into the pump room: {"r":"transition","from":"citadel","to":"pumproom","room":"pumproom","fail":null} | pumproom [9696.3,0,602.3] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+[22s +0s] the wall diagram: two pipes: {"r":"used","target":{"kind":"ct_diagram","id":"p_read","label":"p_read"},"state":"play","lines":2,"fail":null} | pumproom [9696.75,0,596.65] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+[23s +1s] three pipes felt: the copper one shivers: {"upper":"ct_feel","lower":"ct_feel","copper":"ct_feel","fail":null} | pumproom [9700.28,0,597.07] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+[23s +0s] behind the pier: the bypass: {"seen":true,"x":9703.7,"fail":null} | pumproom [9703.7,0,597.79] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+[23s +0s] the wrong cock: the square again (one knock): {"r":"used","target":{"kind":"ct_cock","id":"p_cock_sq","label":"p_cock_sq"},"state":"play","lines":4,"wrong":1,"open":false,"fail":null} | pumproom [9704.04,0,597.33] hp 2 | The pump room: find the pipe that takes the water◆ The wall diagram◆ Three pipes: which one is the new one?◆ Behind the 
+[24s +0s] the right cock: the houses' line (two knocks): {"r":"used","target":{"kind":"ct_cock","id":"p_cock_ho","label":"p_cock_ho"},"state":"play","lines":0,"fail":null} | pumproom [9704.79,0,597.33] hp 2 | The pump room: find the pipe that takes the water◆ Behind the brick pier: open the houses' line◆ The gauge's paper strip
+[24s +0s] the door waits for the strip and the plate: {"r":"state:dialog","from":"pumproom","to":"pumproom","room":"pumproom","fail":null} | pumproom [9695.53,0,601.84] hp 2 | The pump room: find the pipe that takes the water◆ Behind the brick pier: open the houses' line◆ The gauge's paper strip
+[25s +1s] the gauge's strip: {"r":"used","target":{"kind":"ct_strip","id":"p_strip","label":"p_strip"},"state":"play","lines":2,"fail":null} | pumproom [9704.35,0,601.84] hp 2 | The pump room: find the pipe that takes the water◆ Behind the brick pier: open the houses' line◆ The gauge's paper strip
+[25s +0s] the pump's plate: Irsa's Pump Works, Zeelich: {"r":"used","target":{"kind":"ct_plate","id":"p_plate","label":"p_plate"},"state":"play","lines":2,"done":true,"fail":null} | pumproom [9704.16,0,601.85] hp 2 | The taps run. Back home to Zoé
+[34s +9s] up: the garden tap runs: {"r":"used","target":{"kind":"ct_yard","id":"p_look","label":"p_look"},"state":"play","lines":2,"runs":true,"fail":null} | citadel [-43.53,2.33,75.21] hp 2 | The taps run. Back home to Zoé
+[36s +2s] home: the tap Arthur left open runs cold under his hand: {"r":"talked","to":"zoe","state":"play","lines":4,"speakers":["zoe","arthur"],"ran":true,"felt":true,"fail":null} | house [997.75,0,-2.46] hp 2 | Visit Vesk at the old fortress
+[44s +8s] Vesk: the tour: {"r":"talked","to":"vesk","state":"play","lines":18,"speakers":["vesk","hero"],"fail":null} | control [1400.36,0,-1.05] hp 2 | Meet Zoé at the station gate
+[45s +1s] Zoé at the gate: {"r":"talked","to":"zoe","state":"play","lines":10,"speakers":["zoe","hero"],"room":"projoffice","body":"zoe","fail":null} | projoffice [1304.8,0,-3.7] hp 2 | Zoé: find the plan without being seen
+[47s +2s] Zoé: the lockers (stealth): {"plan":true,"tries":["arrived"],"fail":null} | projoffice [1299.14,0,-3.68] hp 2 | Zoé: get out with the plan
+[48s +1s] Zoé: out: {"zoeDone":true,"body":"twinsen","fail":null} | citadel [-25.08,15.88,-60.2] hp 2 | Confront Vesk at the beam pad
+[49s +1s] Vesk: the confrontation: {"r":"talked","to":"vesk","state":"play","lines":20,"speakers":["zoe","vesk","hero"],"gone":true,"fail":null} | house [1001.2,0,9.9] hp 2 | Go home. Arthur is calling you
+[55s +6s] home: Arthur's radio: {"r":"talked","to":"arthur","state":"play","lines":18,"speakers":["arthur","?","hero","zoe"],"radio":true,"fail":null} | citadel [-42.98,2.34,77.2] hp 2 | Talk to Doran at the harbour
+[57s +2s] Doran at the harbour: {"r":"talked","to":"doran","state":"play","lines":8,"speakers":["doran","hero"],"ship":true,"fail":null} | citadel [-116.39,1.8,44.37] hp 2 | Sign the flight form at the spaceport's ticket counter
+[62s +4s] the project's ship at the spaceport → Zeelich: {"r":"used","target":{"kind":"c1ship","id":"p_board","label":"p_board"},"state":"play","lines":16,"chapter":"zeelich","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 11 | Find Irsa's pump works (ask at the dock)
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[441.0] go: transition (house → house, trans true) at (1001.08, 10.66)
+[441.9] go → (-118.0, 45.2) plan ok=true pts=9 left=0.73
+[462.9] go: through the spaceport's terminal (onto the deck)
+[462.9] go → (-14.3, 40.0) plan ok=true pts=10 left=0.05
+[486.9] go → (-14.3, 40.0) plan ok=true pts=2 left=0.26
+[489.8] go: transition (citadel → citadel, trans true) at (-15.16, 39.92)
+[490.7] go → (8604.5, -2.4) plan ok=true pts=2 left=0.16
+[495.4] go → (8593.6, -5.5) plan ok=true pts=7 left=0.24
+[500.4] stuck at (8598.7, -5.6): replan
+[505.9] go: transition (terminal → terminal, trans true) at (8593.69, -4.82)
+[506.7] go → (0.3, 41.0) plan ok=true pts=2 left=0.34
+[507.8] go → (0.3, 41.0) plan ok=true pts=2 left=0.25
+kept abb-1.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

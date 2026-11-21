@@ -486,3 +486,41 @@ once.
   check is on Citadel, where nothing of the off-the-wall court is, so it is taken as a load-related flake (INFERRED).
 - NOT TESTED: a 30-minute session; any hardware. Only one sample of the probe for each build (the counts are exact;
   the ms are single samples).
+
+## Real GPU (ARRIVAL-HW, CLOUD_ORDERS 60.1; the desktop, 21.11)
+
+**Machine:** the Acer laptop, NVIDIA GeForce GTX 1050 (WebGL through ANGLE D3D11, as the page reports it; an Intel
+UHD 630 drives the panel), Chrome 158 (Playwright's channel, a fresh profile), window 1536×864 at devicePixelRatio 1.25,
+**plugged in** (37 → 57 %, charging), the Windows plan Balanced. Base **`a4e1fb45`** (v109) against
+**`1dd2c638`** (`ccr-c1c2c4b9-dep6ed`, v113 + this order), each served from its own worktree.
+
+**Method (`ARRIVAL-2/probes/arrhw.mjs`):**
+- The game's own loop runs in real time; the probe does not step it.
+- A new game goes out of the house onto the street. Then four transitions, cold (the first visits after the page
+  loaded) and then warm: Citadel → Zeelich, Zeelich → Citadel, the street → the tavern, and out again. Each is the
+  game's own transition, `enterRoom` / `exitRoom`, not instant.
+- Every frame's interval comes from rAF timestamps. "Black" means `#fade` is opaque.
+- In view is the 6 s after the fade has cleared: p95, the longest frame, and the frames over 33 / 50 ms (a visible
+  hitch).
+- Quality is Medium and High by hand, 3 rounds each, base and candidate interleaved; every round is a fresh page.
+- Raw data: `ARRIVAL-2/results/real-gpu-gtx1050/`.
+
+| Visit | Quality | v109 longest frame (black) | v113 longest frame (black) | v109 black time | v113 black time | In view, 6 s: p95 / longest / >33 ms, both builds |
+|---|---|---|---|---|---|---|
+| Zeelich from Citadel, cold | Medium | 167 / 183 / 183 ms | **150 / 150 / 150** | 2.32 s (87 frames) | **2.00 s** (76) | 16.8–16.9 / ≤ 17.0 / 0 |
+| Zeelich from Citadel, cold | High | 217 / 183 / 183 | **183 / 183 / 183** | 2.43 s (84) | **2.29 s** (82) | 16.8–16.9 / v109 one 33.4 ms frame (round 1), v113 ≤ 17.0 / 0 |
+| Citadel, the return, cold | Medium | 33 / 17 / 33 | 17 / 17 / 17 | 0.48 s | 0.47 s | 16.8–16.9 / ≤ 17.0 / 0 |
+| Citadel, the return, cold | High | 17 / 17 / 17 | 17 / 17 / 17 | 0.56 s | 0.53 s | 16.9 / ≤ 17.1 / 0 |
+| The tavern from the street, cold | Medium | 100 / 67 / 83 | **67 / 67 / 67** | 0.74 s | 0.63 s | 16.7–16.9 / ≤ 17.0 / 0 |
+| The tavern from the street, cold | High | 83 / 83 / 84 | 83 / 100 / 83 | 0.68 s | 0.65 s | 16.8–16.9 / ≤ 17.0 / 0 |
+| Every warm visit (all three) | both | ≤ 17.1 | ≤ 17.0 | 0.30–0.37 s | 0.30–0.37 s | 16.8–16.9 / ≤ 17.0 / 0 |
+
+**Verdict on this machine, plugged in:**
+- Every long frame is behind the black. Nothing visible hitches in view in v113, and only one 33 ms frame did in
+  v109 (High, the first Zeelich round).
+- v113 shortens the cold Zeelich arrival's longest black frame: by 17–33 ms at Medium, by up to 33 ms at High. The
+  black itself is 0.3 s shorter at Medium and 0.15 s shorter at High.
+- The cold tavern is steadier at Medium (always 67 ms); High is unchanged.
+- Warm visits and the return to Citadel were already clean, and stay so.
+- Not measured here: battery (GTX1050-BATTERY in `tools/testlab/WORLD_ART_REQUESTS.md`: the panel's pace falls to
+  41–48 Hz there, which would make these numbers the display's, not the game's).

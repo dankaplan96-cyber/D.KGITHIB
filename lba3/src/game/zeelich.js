@@ -11,7 +11,9 @@
 //   R.mills [{id, x, z, brake:{x,y,z}, spinning, setSpinning(b)}]  three wind-mills, a ball target (brake) each
 //   R.millTop {x,y,z}         the cog on top of the old mill (reached by jumping up its stair-stones)
 //   R.fountain {x,y,z,running} the plaza fountain: runs while all three mills turn (MILLS: story/chapter2.js)
-//   R.depot {x, z, patrol:[[x,z],...], locker:{x,z}}  the project depot (drones patrol it), locker holds the code cylinder
+//   R.depot {x, z, patrol:[[x,z],...], beats, locker:{x,z}, door}  the project depot (drones patrol it), locker holds the code cylinder;
+//                             beats: {drones:[[x,z]...], guard:[[x,z]...], dogPost:{x,z,a}} each one's round (P93);
+//                             door: the red container's loose leaf {x,y,z, stand:{x,z}, knock(w), onClack, hitBy(p)} (P93)
 //   R.platform {x, z, gate:{x,z}, console:{x,z}, shield:{on, setOn(b)}, pad:{x,z}, lift:{lower(cb)}}
 //   R.cloudY                  height of the cloud sea
 //   R.life                    the street twelve years on (zeelife.js: the watch house bakery, heat posts, burrow, scaffold)
@@ -1881,35 +1883,73 @@ export function* buildZeelichSteps(scene, physics) {
       B.add(cached('gcap', () => lathe([[0, 0], [0.4, 0], [0.4, 0.12], [0.22, 0.3], [0.08, 0.5], [0, 0.55]], 12)), brassM(), gx, Y0 + 3.0, D.z0);
       B.add(cached('gglobe', () => new THREE.SphereGeometry(0.14, 12, 8)), glowCyan(), gx, Y0 + 3.6, D.z0);
       B.add(emq(), emblemMaterial(), gx, Y0 + 2.1, D.z0 - 0.285, 0, Math.PI, 0, 0.42);
-      col({ type: 'box', x: gx, z: D.z0, hw: 0.3, hd: 0.3, rot: 0, top: Y0 + 3.0 });
+      // (P93 DEPOT: up to the cap; the ball flew through the cap and the globe)
+      col({ type: 'box', x: gx, z: D.z0, hw: 0.3, hd: 0.3, rot: 0, top: Y0 + 3.55 });
     }
     B.add(boxUV(bbox(D.gate[1] - D.gate[0] + 0.5, 0.3, 0.3, 0.05, 1), TILE.hazard), tm('hazard', { rough: 0.6 }), (D.gate[0] + D.gate[1]) / 2, Y0 + 3.2, D.z0);
+    // (P93 DEPOT: the hazard beam over the gate had nothing behind it: a high lob went through it. Above anyone's head)
+    col({ type: 'box', x: (D.gate[0] + D.gate[1]) / 2, z: D.z0, hw: (D.gate[1] - D.gate[0] + 0.5) / 2, hd: 0.15, rot: 0, bottom: Y0 + 3.05, top: Y0 + 3.35 });
     // concrete yard floor
     B.add(slabGeo([[D.x0 + 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z1 - 0.15], [D.x0 + 0.15, D.z1 - 0.15]], 0.04, TILE.concrete), tm('concrete', { color: '#e8dcd8' }), 0, Y0, 0);
     // containers
-    const container = (x, z, ry, color) => {
-      const C = cached('container', () => {
+    // (P93 DEPOT: loose — the red container's west door leaf is unlatched and hangs on its hinge: built apart from the
+    //  merged body so it can swing; see swingLeaf below)
+    let looseDoor = null;
+    const container = (x, z, ry, color, loose = false) => {
+      const C = cached(loose ? 'containerLoose' : 'container', () => {
         const L = 6.0, Wd = 2.44, Hh = 2.6, body = [], frameP = [];
         body.push([boxUV(bbox(L - 0.2, Hh - 0.24, Wd - 0.12, 0.02, 1), 2.6), 0, Hh / 2, 0]);
         for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { frameP.push([bbox(0.16, Hh, 0.16, 0.02, 1), sx * (L / 2 - 0.08), Hh / 2, sz * (Wd / 2 - 0.08)]); frameP.push([bbox(0.2, 0.16, 0.2, 0.02, 1), sx * (L / 2 - 0.09), Hh - 0.08, sz * (Wd / 2 - 0.09)]); }
         for (const s of [-1, 1]) for (const y of [0.1, Hh - 0.1]) frameP.push([bbox(L - 0.3, 0.14, 0.1, 0.02, 1), 0, y, s * (Wd / 2 - 0.05)]);
         for (let xx = -L / 2 + 0.3; xx < L / 2 - 0.25; xx += 0.27) for (const s of [-1, 1]) body.push([boxUV(bbox(0.13, Hh - 0.38, 0.06, 0.015, 1), 2.6), xx, Hh / 2, s * (Wd / 2 - 0.04)]);
-        for (const s of [-1, 1]) body.push([boxUV(bbox(0.06, Hh - 0.36, Wd / 2 - 0.16, 0.015, 1), 2.6), L / 2 - 0.02, Hh / 2, s * (Wd / 4 - 0.02)]);
-        for (const zz of [-0.85, -0.35, 0.35, 0.85]) body.push([cyl(0.025, 0.025, Hh - 0.3, 6), L / 2 + 0.05, Hh / 2, zz]);
-        return { body: compose(body), frame: compose(frameP) };
+        const panel = () => boxUV(bbox(0.06, Hh - 0.36, Wd / 2 - 0.16, 0.015, 1), 2.6), rod = () => cyl(0.025, 0.025, Hh - 0.3, 6);
+        for (const s of [-1, 1]) if (!loose || s > 0) body.push([panel(), L / 2 - 0.02, Hh / 2, s * (Wd / 4 - 0.02)]);
+        for (const zz of [-0.85, -0.35, 0.35, 0.85]) if (!loose || zz > 0) body.push([rod(), L / 2 + 0.05, Hh / 2, zz]);
+        // the loose leaf about its hinge (the leaf's outer edge, lz -1.14): the panel and its two locking rods
+        const leaf = loose ? compose([[panel(), 0, Hh / 2, 0.55], [rod(), 0.07, Hh / 2, 0.79], [rod(), 0.07, Hh / 2, 0.29]]) : null;
+        return { body: compose(body), frame: compose(frameP), leaf };
       });
-      B.add(C.body, tm('metal', { color, rough: 0.6, metal: 0.25 }), x, Y0, z, 0, ry, 0);
+      const bodyM = tm('metal', { color, rough: 0.6, metal: 0.25 });
+      B.add(C.body, bodyM, x, Y0, z, 0, ry, 0);
       B.add(C.frame, tm('metal', { color: new THREE.Color(color).multiplyScalar(0.7).getStyle(), rough: 0.55, metal: 0.3 }), x, Y0, z, 0, ry, 0);
       const f = frame(x, z, ry);
       for (const s of [-1, 1]) { const [ex, ez] = f(0.4, s * 1.245); B.add(emq(), emblemMaterial(), ex, Y0 + 1.4, ez, 0, ry + (s > 0 ? 0 : Math.PI), 0, 1.1); }
       col({ type: 'box', x, z, hw: 3.05, hd: 1.25, rot: ry, top: Y0 + 2.6 });
+      if (loose) looseDoor = swingLeaf(C.leaf, bodyM, x, z, ry);
     };
+    // P93 DEPOT: the loose leaf. A gust (or a ball) swings it out and it bangs shut again (story/chapter2.js: the guard's ear).
+    // knock(w): swing it out at w rad/s; onClack(v): each time it bangs shut, with its speed; hitBy(p): is a point (the ball)
+    // against these doors? stand: where a man looks them over from (in the yard, clear of the barrels); x, y, z: the leaf
+    function swingLeaf(geo, mat, x, z, ry) {
+      const L = 6.0, cg = new THREE.Group(); cg.position.set(x, Y0, z); cg.rotation.y = ry; group.add(cg);
+      const pivot = new THREE.Group(); pivot.position.set(L / 2 - 0.02, 0, -1.14); cg.add(pivot); cg.userData.keep = true;   // (it moves: kept out of the merged batches)
+      const leaf = new THREE.Mesh(geo, mat); leaf.castShadow = leaf.receiveShadow = true; pivot.add(leaf);
+      const f = frame(x, z, ry), c = Math.cos(ry), sn = Math.sin(ry), at = (lx, lz) => { const [wx, wz] = f(lx, lz); return { x: wx + ox, z: wz + oz }; };
+      const S = { ...at(L / 2, -0.59), y: Y0 + 1.3, stand: at(L / 2 + 1.4, -1.1), angle: 0, w: 0, onClack: null, knocks: 0, leaf,
+        knock(w = 2.4) { S.w = Math.max(S.w, 0) + w; S.knocks++; },
+        hitBy(p) {
+          const dx = p.x - (x + ox), dz = p.z - (z + oz), lx = c * dx - sn * dz, lz = sn * dx + c * dz;
+          return lx > L / 2 - 0.3 && lx < L / 2 + 0.55 && Math.abs(lz) < 1.45 && p.y > Y0 + 0.05 && p.y < Y0 + 2.75;   // (the end face and its corners, the ball's reach)
+        } };
+      updaters.push((dt) => {
+        if (S.angle <= 0 && S.w <= 0) return;
+        // the gust's push falls off and it swings back (a spring, a little drag); the frame stops it shut
+        const n = Math.max(1, Math.ceil(dt / 0.01)), h = dt / n;
+        for (let i = 0; i < n; i++) {
+          S.w += (-14 * S.angle - 1.0 * S.w) * h;
+          S.angle += S.w * h;
+          if (S.angle < 0) { const v = -S.w; S.angle = 0; S.w = v > 0.4 ? v * 0.35 : 0; if (v > 0.4) S.onClack?.(v); }
+        }
+        pivot.rotation.y = S.angle;
+      });
+      return S;
+    }
     // (DEPOT-CORNER, release audit v75: along the back fence the container, the two crate stacks and the shed each left a
     //  slot 0.5–0.7 m wide, narrower than Twinsen (0.8 m): walked into, he was wedged between the fence and a crate and
     //  could not move. Each now stands against the fence (and the west stack against the container's end), so the slots
     //  are shut, and the way between the stacks and the locker stays 1–2 m wide)
     container(8.2, 23.8, 0, '#3a8a86');
-    container(22.3, 15.6, Math.PI / 2, '#d86a5a');
+    container(22.3, 15.6, Math.PI / 2, '#d86a5a', true);
     // the teal shed (Zeelich-tech module) in the south-east corner
     {
       const x = 20.6, z = 23.0, w = 4.2, d = 3.6, h = 2.6, G = new THREE.Group(); G.position.set(x, Y0, z); G.rotation.y = Math.PI; group.add(G);
@@ -1960,12 +2000,22 @@ export function* buildZeelichSteps(scene, physics) {
       B.add(lathe([[0, 0], [0.4, 0], [0.4, 0.12], [0.15, 0.2], [0.1, 6.5], [0.15, 6.6], [0, 6.65]], 12, TILE.teal), tealM(), x, Y0, z);
       B.add(bbox(1.4, 0.12, 0.16, 0.03, 1), brassM(), x, Y0 + 6.5, z, 0, Math.atan2(14 - x, 17 - z) + Math.PI / 2, 0);
       for (const s of [-0.5, 0.5]) { const a = Math.atan2(14 - x, 17 - z); B.add(cached('flood', () => lathe([[0, 0], [0.12, 0], [0.18, 0.18], [0.18, 0.22], [0, 0.22]], 12).rotateX(Math.PI / 2 + 0.5)), brassM(), x + Math.cos(a) * s, Y0 + 6.72, z - Math.sin(a) * s, 0, a, 0); B.add(cached('floodL', () => new THREE.CircleGeometry(0.17, 14).translate(0, 0, 0.225).rotateX(0.5)), pm('#fffbe8', 0.3, { emissive: '#fff4c8', emissiveIntensity: 2.0 }), x + Math.cos(a) * s, Y0 + 6.72, z - Math.sin(a) * s, 0, a, 0); }
-      col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 6.5, seeThrough: true });
+      // (P93 DEPOT: the ball bounced off thin air round the pole: the mast's 0.4 m collider is its foot's, the pole is 0.1–0.15 m.
+      //  The foot's radius still keeps people off it; the ball stops at the pole)
+      col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 6.5, seeThrough: true, noBall: true });
+      col({ type: 'cyl', x, z, r: 0.16, top: Y0 + 6.5, seeThrough: true });
     }
     placeTag(null);
     keepClear(D.x0 - 1, D.z0 - 1, D.x1 + 1, D.z1 + 1);
     const patrol = [[7.2, 13.8], [13.5, 12.2], [18.6, 12.8], [18.8, 19.2], [13.2, 20.6], [7.4, 19.0]];
-    return { ...W((D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: patrol.map(([x, z]) => [x + ox, z + oz]), locker: W(LK.x, LK.z - 0.75) };
+    // P93 DEPOT: each of the watch its own beat (story/chapter2.js enemyDefs). All four walked the one loop above, round
+    // the middle of the yard, so the way from the gate to the locker crossed all four twice: in Discreet no gap in 120 s
+    // was long enough (docs/lba-maturity/DEPOT.md). Now the two drones fly the east half between the way and the red
+    // container, the dog keeps its post by the shed, and the Grobo guard walks the middle, gate to locker: the one who
+    // stands in the way, and the one the loose door can call off. (`patrol` stays for the old contract.)
+    const loc = (P) => P.map(([x, z]) => [x + ox, z + oz]);
+    const beats = { drones: loc([[18.0, 14.6], [20.0, 14.6], [20.0, 20.0], [17.8, 20.2]]), guard: loc([[12.6, 11.4], [14.4, 21.2]]), dogPost: { ...W(21.6, 20.2), a: -Math.PI / 2 } };
+    return { ...W((D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: loc(patrol), beats, locker: W(LK.x, LK.z - 0.75), door: looseDoor };
   }
 
   // ================================================================ the drill platform, its gate and shield
