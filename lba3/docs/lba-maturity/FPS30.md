@@ -252,3 +252,79 @@ part A, then passed three times with identical numbers). Automated runtime only 
 Not explained by this, still open: at 30 the report's GPU time per frame on the street and arrival routes is 17–18.5 ms
 (p50) — more than one refresh — so the compositor may show some frames a refresh late even with even rAF. That needs the
 presented frames on the user's machine (order 60.0 FPS30-PRESENT). Note the report ran on the Intel UHD 620, not the GTX.
+
+---
+
+## 8. Real hardware — FPS30-FEEL (order 62), "before" · the desktop, 21.11 evening
+
+**Where:** the GTX 1050 Acer (the Intel UHD 630 drives the panel; Windows reports it at 60 Hz, and rAF ran at 16.7 ms
+throughout, on battery too). **The desktop app's Electron 43.7.9 (Chrome 150)**, the packaged build (`desktop/`,
+`copy-game.mjs`) of **`a333b00d`** = `ccr-c1c2c4b9-dep6ed` before P94, version 0.49.0, a fresh profile. The game's
+canvas on the **NVIDIA GTX 1050 (D3D11)**, GPU timer yes. Citadel street (fixture `new-11-town`), loaded and played
+past its first seconds. Follow, Medium (no Auto), world resolution 100 %, devicePixelRatio 1.25, window 1368×770 (the
+nearest the app's window gives to 1366×768 at 1.25). Same save and settings for every run. **On battery first**
+(97 → 83 %), then **plugged in** (83 → 85 %). OS power and GPU settings untouched.
+
+**Method** (`fps30-feel/fps30feel.mjs`, Playwright `_electron`; inputs on game time through `tests/lib/smoothrec.js` as
+SMOOTH-1 does; one warm-up pass, then 3 recorded runs):
+- **T1 pan:** standing still, Classic Right held 5 s, so the Follow camera sweeps round at a constant speed past the
+  street's house fronts. (The Follow camera takes no turn keys of its own: `camera.js` consumes them outside the free
+  orbit, so the sweep comes from his turn on the spot.)
+- **T2 run–stop–reverse:** Modern controls, Up 2.5 s along the street, 1 s still, Down 2.5 s back, 1 s still; camera untouched.
+- **T3 aim:** Modern controls, a mite placed on the street 7 m ahead as the small target (no bell in view there): lock
+  on, strafe right round it 1.4 s, lock off, turn (Left, then Up), lock again, charge the ball 1 s (F held), release,
+  1.6 s of the throw.
+- **What each number measured:**
+  - **rAF:** every requestAnimationFrame callback's timestamp (the browser's frame clock);
+  - **drawn:** the game's drawn frames (smoothrec's record of each `renderer.render`: its rAF time);
+  - **images shown:** for each drawn frame, the first frame Chrome reports as presented (CDP trace, `PipelineReporter`
+    PRESENTED_ALL/PARTIAL) whose begin time is at or after that drawn frame's — the interval between new game images
+    reaching the screen. A dropped frame shows in the next presented one;
+  - **GPU:** the game's timer query, every frame;
+  - **CPU work:** the game's simulation + render submission per drawn frame;
+  - **motion spikes:** smoothrec's measure — the speed of the camera position and of the view direction, against
+    their two neighbours' mean, more than 1.5× either way while moving.
+- No `PresentationFeedback` or swap timestamps: the trace's presented frames are the platform's timing used here.
+
+| Test · power · limit | rAF p50 / p95 / max (ms) | drawn p50 / p95 / p99 / max | **images shown** p50 / p95 / p99 / max | shown ≥ 45 ms (3 runs) | shown < 25 ms | GPU p50 / p95 | CPU work p50 / p95 | motion spikes cam · view (per run) |
+|---|---|---|---|---|---|---|---|---|
+| T1 pan · battery · 30 | 16.7 / 16.8–16.9 / 33.3–33.4 | 33.3 / 33.5 / 33.5–33.6 / 33.5–33.7 | 33.3 / 33.4 / 33.5 / 33.5–33.7 | 0 | 2 | 13.7–14.2 / 18.6–19.9 | 14.9–15.1 / 20–20.4 | 0·0, 0·0, 0·0 of ~163·162 |
+| T2 run–stop–reverse · battery · 30 | 16.7 / 16.8 / 33.4 | 33.3 / 33.5 / 33.5 / 33.6–33.7 | 33.3 / 33.4 / 33.4–33.5 / 33.5–33.7 | 0 | 2 | 14.5–15.1 / 17.7–18.3 | 14.9–15.6 / 17.6–18.3 | 0·0, 0·0, 0·0 of ~153·0 |
+| T3 aim · battery · 30 | 16.7 / 16.8 / 17–50 | 33.3 / 33.5 / 33.5–33.6 / 33.5–50 | 33.3 / 33.4 / 33.5 / 33.5–50 | 1 | 3 | 13.2–14.9 / 17.6–19.2 | 15.8–16.8 / 21.1–21.8 | 7·4, 12·7, 4·6 of ~191·185 |
+| T1 pan · plugged in · 30 | 16.7 / 16.8–16.9 / 16.9–17 | 33.3 / 33.5 / 33.5 / 33.5–33.6 | 33.3 / 33.5 / 33.5 / 33.5–33.6 | 0 | 0 | 11.3–11.6 / 14.4–15.5 | 7.1–7.2 / 9.1–9.4 | 0·0, 0·0, 0·0 of ~163·162 |
+| T2 run–stop–reverse · plugged in · 30 | 16.7 / 16.9 / 16.9–17 | 33.3 / 33.5 / 33.5–33.6 / 33.5–33.6 | 33.3 / 33.5 / 33.5 / 33.5–33.6 | 0 | 0 | 12.3–12.5 / 13.7–13.9 | 7.2–7.4 / 8.3–8.8 | 0·0, 0·0, 0·0 of ~153·0 |
+| T3 aim · plugged in · 30 | 16.7 / 16.8–16.9 / 16.9–17 | 33.3 / 33.5 / 33.5–33.6 / 33.5–33.6 | 33.3 / 33.5 / 33.5 / 33.5 | 0 | 2 | 10.9–12.3 / 13.6–15 | 7.5–7.6 / 10–11.6 | 14·11, 8·7, 13·7 of ~177·141 |
+| T3 aim · battery · 60 | 16.7 / 16.8 / 33.3–33.4 | 16.7 / 16.8 / 16.9–17 / 33.3–33.4 | 16.7 / 16.8 / 16.9 / 33.3–33.4 | 0 | – (every interval is one refresh at 60) | 14.6–15 / 18–18.4 | 12.9–13.8 / 17.3–18.4 | 5·6, 6·2, 7·2 of ~391·325 |
+| T3 aim · plugged in · 60 | 16.7 / 16.8 / 16.9 | 16.7 / 16.8 / 16.9 / 16.9 | 16.7 / 16.8 / 16.8 / 16.8–16.9 | 0 | – | 13.1–13.8 / 15.8–16.1 | 6.3–7.1 / 8.5–9 | 12·11, 8·7, 6·8 of ~383·331 |
+
+(ranges over the 3 runs; at 30, `shown < 25 ms` is at most one per run, at the recording's first frame, where the trace window starts —
+an edge of the measurement, not a frame shown early: the drawn intervals there are even.)
+
+**The answer, before P94:**
+- **At 30 the delivery holds on this machine, battery and plugged in:** one new image every 2 refreshes (33.3 ms p50,
+  p99 33.5), the drawn frames at 33.3 ms, each shown in its own frame. In 18 runs (T1–T3, both power states) one
+  interval of 50 ms: T3, battery, run 1, a drawn frame late by one refresh during the strafe. No interval ≥ 45 ms
+  plugged in.
+- **T1 and T2 move evenly:** 0 camera and 0 view spikes. T2's 0 of 153 for Twinsen and the camera.
+- **T3 is where it is not even, at a stable frame time:** 4–14 camera-position and 4–11 view-direction spikes in
+  ~190 / ~150 moving frames at 30, and 5–12 · 2–11 at 60. Same at 60, same plugged in, so it is the lock-on
+  camera's motion, not pacing. This is what the user feels while aiming — P94's ground.
+- **On battery the frame is still within budget, but nearer:**
+  - CPU work doubles (15–17 ms p50 against 7–7.6 ms plugged in; the CPU slowed on battery, as in FPS30-PRESENT);
+  - the GPU rises 11–12.5 → 13–15 ms p50.
+  - At 30 both stay under 33 ms; at 60 on battery CPU p95 reaches 17–18 ms, and T3 at 60 showed images at 16.7 (p99 16.9) with one 33.3 ms interval (a missed refresh) per battery run, none plugged in.
+- The panel did not drop below 60 Hz during these runs (the 40–48 Hz seen in GTX1050-BATTERY did not recur).
+
+**Not done (this round):**
+- the 60 FPS capture of T2 and T3 (a phone filming the screen): the desktop agent cannot film; the user can, or it
+  waits for "after";
+- the mouse and a controller for T3: the runs are scripted on the keyboard;
+- the bank-shot puzzle at 60 (Off the Wall): to run with the "after", when P94's release change is in;
+- Chrome: the packaged build built, so Electron was used as the order asks.
+
+**Caution for anyone measuring the desktop app by script:** an Electron window that is not focused puts the game in
+its background mode (BG_FPS 8: `main.js` setBackground) and the first trial here read 24 ms rAF and 480 ms gaps. The
+runner keeps the window always on top and focused; a run whose game went to the background would be marked.
+
+**After:** when the coordinator writes "P94 merged" in WORLD_ART_REQUESTS.md, the same runner on the merge, both
+power states, plus the bank shot at 60; the result goes into this section next to these rows.
