@@ -328,3 +328,10 @@ runner keeps the window always on top and focused; a run whose game went to the 
 
 **After:** when the coordinator writes "P94 merged" in WORLD_ART_REQUESTS.md, the same runner on the merge, both
 power states, plus the bank shot at 60; the result goes into this section next to these rows.
+
+**Addendum, 21.11 night (from SMOOTH-HW, `smooth-hw` branch, SMOOTH-1.md §8):** the rows above were taken while the
+frame clock ran a true 60 Hz. Later the same evening the machine's clock ran at 17.4–17.8 ms (57 Hz) for long stretches
+(cause not found; no settings touched), and in that state T2 at 30 in this same Electron build showed **2–3 rAF gaps of
+420–460 ms per run** and ~1 in 8 frames one refresh early (`smooth-hw/diag/electron-30-night`). With a 1 px element
+changed on every callback (diagnosis only) the gaps vanished (`diag/electron-30-night-dmg`). So "before" at 30 is even
+here only while the clock is 60 Hz; the "after" should be run in both states.
