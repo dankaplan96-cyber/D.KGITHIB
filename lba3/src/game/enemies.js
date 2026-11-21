@@ -267,8 +267,11 @@ export class Mite extends Actor {
         && g.physics.lineOfSight(this.pos.x, this.pos.y + 0.4, this.pos.z, hero.pos.x, hero.pos.y + 0.4, hero.pos.z) && (g.combatDir?.canAttack(this) ?? true);
       if (may) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
       else if (slide) { this.state = 'slidewind'; this.stateT = 0; this.slideAng = this.angleTo(hero); g.audio.play('zap', this.pos); }
-      else if (d > 2.6) sp = 2.5;
-      else { side = this.circle * 1.4; sp = d < 2.0 ? -0.8 : 0; if (Math.random() < dt * 0.4) this.circle *= -1; }
+      // (SMOOTH-1: closing in, it keeps on until 2.4 m before it circles again — one threshold at 2.6 m flipped it between
+      //  a frame of closing at 2.5 m/s and frames of circling while he strafed at about that distance: a stop-go buzz of
+      //  2 cm on, 2 mm back, every 2-3 frames at 59.9 and 120 Hz; tests/smooth-routes.mjs combat, SMOOTH-1.md)
+      else if (d > (this.closing ? 2.4 : 2.6)) { sp = 2.5; this.closing = true; }
+      else { this.closing = false; side = this.circle * 1.4; sp = d < 2.0 ? -0.8 : 0; if (Math.random() < dt * 0.4) this.circle *= -1; }
       // too far from home, or he got away: go back
       if (d > 14 || Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 20) { this.state = 'idle'; g.combatDir?.done(this); }
     } else if (this.state === 'windup') {

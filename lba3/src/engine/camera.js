@@ -1585,8 +1585,10 @@ export class CameraRig {
         // a step over his head out of a crown or an eave came to 4.6 m in a frame; nothing it passes stands in anything,
         // and his outline shows for the two or three frames it takes)
         let aa = a, qq = q;
-        const far = _b.distanceTo(cam.position);
-        if (far > CH_OVER_SEE_STEP) for (let g = CH_OVER_SEE_STEP / far; g < 1; g += 0.1) {
+        // (SMOOTH-1: CH_OVER_SEE_STEP per 1/60 s of play, so the same speed at any frame rate — it was per frame: twice as
+        //  fast at 120 Hz, half at an uncapped 30; at 60 Hz, and under the 30 limit's 60 Hz steps, exactly as before)
+        const far = _b.distanceTo(cam.position), stepMax = CH_OVER_SEE_STEP * Math.min(2, dt * 60);
+        if (far > stepMax) for (let g = stepMax / far; g < 1; g += 0.1) {
           const ga = lerp(a1, a, g), gq = lerp(q1, q, g);
           at(_os, yaw, ga, T, gq); _os.y += this._groundNeed(_os.x, _os.y, _os.z, T, true);
           if (this._solidAt(_os, CH_INSIDE)) continue;
