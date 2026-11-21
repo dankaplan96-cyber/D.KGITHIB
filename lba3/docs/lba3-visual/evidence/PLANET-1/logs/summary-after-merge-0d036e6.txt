@@ -1,0 +1,10 @@
+travel rc=0 564s
+chapter10 rc=0 197s
+chapter1 rc=0 344s
+chapter2 rc=0 383s
+spaceport rc=0 287s
+zeelich-life rc=1 985s
+opening rc=1 1203s
+stability rc=1 3000s
+chapter8 rc=0 99s
+chapter9 rc=0 65s

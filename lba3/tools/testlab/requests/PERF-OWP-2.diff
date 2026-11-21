@@ -1,0 +1,40 @@
+diff --git a/lba3/src/game/workhands.js b/lba3/src/game/workhands.js
+index 7f121319..4390618e 100644
+--- a/lba3/src/game/workhands.js
++++ b/lba3/src/game/workhands.js
+@@ -265,6 +265,13 @@ function ahead(spec, p, sc, fx, fz) {
+ const sig = (g) => { const f = g.flags || {}; let n = 0; for (const k in f) if (f[k]) n++; return (f.chapter | 0) * 4096 + n; };
+ export const storySig = sig;
+ 
++// (PERF-OWP-2: a fresh look at what stands there walks the scene and plans the palms: 10-16 ms for one person on the
++//  UHD 630. On an arrival the area's people start their stops together, so two or three did it in one frame — a 30-40 ms
++//  frame half a second after the black. One fresh look a frame: a second person who needs one waits a frame, posed as
++//  it is, its hands not yet on the thing)
++let _lookAt = -1e9;
++const lookBusy = () => performance.now() - _lookAt < 12;
++const looked = () => { _lookAt = performance.now(); };
+ function touch(g, a, rig, dt) {
+   const spec = ACTS[rig.anim], S = a._wh || (a._wh = { key: '', P: null, w: 0, pre: '', why: '', sig: -1, plans: new Map() });
+   if (!spec || rig.handsFree || !rig.root.visible || (rig.lodN | 0) > 1) { S.w = 0; if (!spec) { S.key = ''; S.pre = ''; S.P = null; } return; }
+@@ -285,16 +292,18 @@ function touch(g, a, rig, dt) {
+       S.pre = key;
+       const k = known();
+       if (k === null) { rig.standFor = rig.anim; S.P = null; S.w = 0; return; }
+-      if (k === undefined) { root.updateMatrixWorld(true); look(); if (!ahead(spec, p, sc, fx, fz)) { S.plans.set(key, null); S.why = 'nothing ahead'; rig.standFor = rig.anim; S.P = null; S.w = 0; return; } }
++      if (k === undefined && lookBusy()) { S.pre = ''; S.w = 0; return; }   // (PERF-OWP-2: next frame)
++      if (k === undefined) { root.updateMatrixWorld(true); look(); looked(); if (!ahead(spec, p, sc, fx, fz)) { S.plans.set(key, null); S.why = 'nothing ahead'; rig.standFor = rig.anim; S.P = null; S.w = 0; return; } }
+     }
+     if (live <= 0) { S.P = null; S.key = ''; S.w = 0; return; }
+     if (!S.P && S.key !== key) { if (live < 0.6) return; fresh = true; }
+   } else if (S.key !== key) fresh = true;
+   root.updateMatrixWorld(true);
+   if (fresh) {
+-    S.key = key; S.w = 0;
+     let P = known();
+-    if (P === undefined) { look(); P = plan(rig, spec, S, p.y, sc, fx, fz); S.plans.set(key, P); }
++    if (P === undefined && lookBusy()) { S.w = 0; return; }   // (PERF-OWP-2: another person looked this frame: next frame)
++    S.key = key; S.w = 0;
++    if (P === undefined) { look(); P = plan(rig, spec, S, p.y, sc, fx, fz); S.plans.set(key, P); looked(); }
+     S.P = P;
+     // nothing there, or out of reach: the hands do not work on the air — the person stands
+     if (!P) { rig.standFor = rig.anim; S.key = ''; }

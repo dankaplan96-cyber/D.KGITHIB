@@ -1,0 +1,13 @@
+JS self time over 15.45 s of street walking (sampled every 0.5 ms; (idle) = waiting for the next frame / the GPU)
+(idle) 4854.3 ms
+shownTree /src/engine/drawcull.js:56 1666 ms
+Ye /vendor/three/build/three.module.min.js:6 779.8 ms
+(program) 638.4 ms
+(anonymous) /vendor/three/build/three.module.min.js:6 555.3 ms
+watch /src/engine/drawbatch.js:496 472.3 ms
+update /vendor/three/build/three.module.min.js:6 288.8 ms
+update /src/engine/shadowcull.js:244 236.2 ms
+update /src/engine/rig.js:642 235 ms
+renderBufferDirect /vendor/three/build/three.module.min.js:6 216.3 ms
+multiplyMatrices /vendor/three/build/three.core.min.js:6 211.6 ms
+applyMatrix4 /vendor/three/build/three.core.min.js:6 198.8 ms

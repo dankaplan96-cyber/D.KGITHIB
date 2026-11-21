@@ -1,0 +1,16 @@
+PASS out in the yard "out"
+PASS the talk with Zoé is open "dialog"
+PASS lines from both of them were heard ["zoe:npc","zoe:npc","hero:hero","zoe:npc"]
+PASS Zoé speaking: the shot favours her, her head 100-170 px tall, her face turned under 75° from the lens, over the box [["npc",{"px":133,"x":837,"bottom":284,"top":151,"turn":32},552],["npc",{"px":132,"x":842,"bottom":283,"top":151,"turn":32},552],["npc",{"px":132,"x":901,"bottom":317,"top":185,"turn":54},534]]
+PASS Twinsen speaking: his face is seen (the shot on his face, turned under 75° from the lens, 100-170 px, over the box) [["hero",{"px":135,"x":355,"bottom":330,"top":196,"turn":52},552]]
+PASS calm: no more cuts than changes of speaker, plus the one back at the end [[456,1.95,1],[720,1.26,1]]
+PASS between the cuts the view glides (no frame moves it more than 0.6 m) {"frames":1189,"cuts":[[456,1.95,1],[720,1.26,1]],"maxMovePerFrame":0.179,"solidFrames":0}
+PASS the camera is never in anything solid, in the talk or after it 0
+PASS after the talk: back on his side, and to the chase once he walks {"state":"play","fav":"npc","keep":true,"talk":0}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 9 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     12 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

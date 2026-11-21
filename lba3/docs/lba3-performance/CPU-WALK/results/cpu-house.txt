@@ -1,0 +1,5 @@
+CPU-WALK interior (follow) · medium · 10 blocks × 60 frames per variant, alternating · ms a frame (min / median of block means)
+  old: shown-world update 0.157 / 0.193 · draw-batch check 0.032 / 0.057 · objects walked 622 · in frozen subtrees 0 (polled 0) · pieces checked 80
+  new: shown-world update 0.092 / 0.157 · draw-batch check 0.023 / 0.055 · objects walked 94.6 · in frozen subtrees 527.4 (polled 527.5) · pieces checked 80
+{"sum":{"old":{"walk":{"min":0.157,"med":0.193},"db":{"min":0.032,"med":0.057},"visited":622,"frozen":0,"polled":0,"watched":80},"new":{"walk":{"min":0.092,"med":0.157},"db":{"min":0.023,"med":0.055},"visited":94.6,"frozen":527.4,"polled":527.5,"watched":80}}}
+(128.4 s)

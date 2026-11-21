@@ -1,0 +1,2 @@
+[ { "op": "script", "name": "zoe ZOE_LOOK_OLD=1 (must equal the shipped model)", "script": "tools/blender/zoe_poly.py",
+    "args": ["C:/Users/dan/lba3-pk19/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-pk19/lba3/art/blender/characters/zoe38/source/zoe.old-flag.json"] } ]

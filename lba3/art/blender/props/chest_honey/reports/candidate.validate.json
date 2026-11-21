@@ -1,0 +1,104 @@
+{
+  "file": "art/blender/props/chest_honey/export/chest_honey.candidate.polyprop.json",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.836, 0.6103, 0.5043], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "size matches expected",
+      "status": "pass",
+      "detail": "size [0.836, 0.6103, 0.5043] vs [0.836, 0.6103, 0.5043] (max diff 0.0000)"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y -0.0050"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "material slots <= 4 (one draw call each in the game)",
+      "status": "pass",
+      "detail": "3: brass, iron, wood:honey"
+    },
+    {
+      "check": "materials carry a game recipe (lba3_material)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "triangles <= 4000",
+      "status": "pass",
+      "detail": "1104"
+    }
+  ],
+  "totals": {
+    "objects": 3,
+    "meshes": 3,
+    "triangles": 1104,
+    "materials": 3,
+    "images": 3,
+    "estTextureMemoryBytes": 524287,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.418,
+        -0.005,
+        -0.2521
+      ],
+      "max": [
+        0.418,
+        0.6053,
+        0.2521
+      ],
+      "size": [
+        0.836,
+        0.6103,
+        0.5043
+      ]
+    }
+  },
+  "passed": true
+}

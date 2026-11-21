@@ -1,0 +1,31 @@
+start [ 'steam', 'desert', 'play', "Get into FunFrock's condenser hall" ]
+jar [
+  true,
+  "Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk"
+]
+fill [ true ]
+shovel [
+  true,
+  "Get into FunFrock's condenser hall◆ Fill the jar at the oasis◆ Get a shovel from Brosk"
+]
+dig out [ true, 'Route the steam through the condensers◆ Read the diagram' ]
+into hall condA
+diagram true
+trooper down
+valves [
+  '{"1":true,"3":true,"4":true}',
+  true,
+  "Open the test bore's relief valve at the post"
+]
+hangar condB
+glider true
+hatch [ 'thrown', true ]
+out desert
+dallan [ true, true, "Open the test bore's relief valve at the post" ]
+relief [ true, 'Get out of the post!' ]
+vent [ true, 'Go back to Kesh' ]
+tarra [ true, true, 'Ask Hesk about a way north' ]
+hesk [ true, 'Meet Hesk in the hangar' ]
+to hangar condB
+board [ true, 'pass', 'hamalayi' ]
+no errors

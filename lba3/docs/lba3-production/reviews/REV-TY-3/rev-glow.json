@@ -1,0 +1,90 @@
+{
+ "loaded": {
+  "cs": "tripped",
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -104.55,
+   2.12,
+   36.59
+  ],
+  "hp": 10,
+  "chapter": "project",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)"
+ },
+ "nell + bench": {
+  "r": "used",
+  "cs": "bench"
+ },
+ "at bench h05": {
+  "heat": 0.05,
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-104.5,5.2,34.8",
+   "front_s": "HIDDEN by TWINSEN @-102.9,4.0,33.9",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-104.5,5.2,34.9",
+   "back_n": "HIDDEN by BufferGeometry @-102.3,3.6,33.1"
+  }
+ },
+ "at bench h50": {
+  "heat": 0.5,
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-104.4,5.3,35.0",
+   "front_s": "HIDDEN by BufferGeometry @-104.5,5.2,35.2",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-104.4,5.3,35.1",
+   "back_n": "HIDDEN by BufferGeometry @-104.5,5.2,34.9"
+  }
+ },
+ "at bench h90": {
+  "heat": 0.9,
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-104.4,5.3,35.0",
+   "front_s": "HIDDEN by BufferGeometry @-104.5,5.2,35.2",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-104.4,5.3,35.1",
+   "back_n": "HIDDEN by BufferGeometry @-104.5,5.2,34.9"
+  }
+ },
+ "take/barrel/back (reset)": "hot",
+ "place again": "tripped",
+ "stepped back h05": {
+  "heat": 0.94,
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-101.2,4.4,32.6",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-101.2,4.4,32.5",
+   "side_e": "seen",
+   "back_n": "HIDDEN by BufferGeometry @-101.3,4.2,32.5"
+  }
+ },
+ "stepped back h50": {
+  "heat": 0.94,
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-101.2,4.4,32.6",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-101.2,4.4,32.5",
+   "side_e": "seen",
+   "back_n": "HIDDEN by BufferGeometry @-101.3,4.2,32.5"
+  }
+ },
+ "stepped back h90": {
+  "heat": 0.94,
+  "v": {
+   "top": "HIDDEN by BufferGeometry @-101.2,4.4,32.6",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-101.2,4.4,32.5",
+   "side_e": "seen",
+   "back_n": "HIDDEN by BufferGeometry @-101.3,4.2,32.5"
+  }
+ },
+ "jump the pipe": {
+  "crossed": false,
+  "end": [
+   -42.94,
+   2.24
+  ],
+  "maxY": 2.24,
+  "y0": 2.24
+ }
+}

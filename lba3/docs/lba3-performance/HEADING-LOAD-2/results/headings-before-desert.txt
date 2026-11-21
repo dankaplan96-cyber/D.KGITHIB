@@ -1,0 +1,56 @@
+heading 0 (0°, camera yaw 4.71): main 61 calls 319k tris · shadow 2 calls 0k tris
+   terrain 4/180k · scenery 36/103k · trees 4/24k · characters 6/11k · transparent 8/0k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/90 · scenery 0/9/1/42/50 · trees 0/0/0/1/23 · characters 6/0/5/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 1/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 4/180.0k · drawBatch:desert@desert 17/98.8k · BatchedMesh:lodBatch@desert 3/21.4k · Skinned:?@actors 4/11.3k · Mesh:desert@desert 27/4.6k · Instanced:desert@desert 1/2.9k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 52 calls 308k tris · shadow 2 calls 0k tris  (Δ main -9 calls -11.5k tris)
+      terrain 4/180k · scenery 36/103k · trees 4/24k · transparent 8/0k
+heading 1 (45°, camera yaw 5.50): main 63 calls 286k tris · shadow 2 calls 0k tris
+   terrain 3/135k · scenery 38/119k · trees 4/20k · characters 7/11k · transparent 8/0k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/45 · scenery 0/9/1/42/67 · trees 0/0/0/1/20 · characters 6/0/6/0/0 · transparent 0/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 1/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 3/135.0k · drawBatch:desert@desert 18/114.9k · BatchedMesh:lodBatch@desert 3/17.6k · Skinned:?@actors 4/11.3k · Mesh:desert@desert 28/4.1k · Instanced:desert@desert 1/2.9k · Mesh:head@actors 3/0.1k · Instanced:blobBatch 1/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 53 calls 274k tris · shadow 2 calls 0k tris  (Δ main -10 calls -11.5k tris)
+      terrain 3/135k · scenery 38/119k · trees 4/20k · transparent 8/0k
+heading 2 (90°, camera yaw 6.28): main 30 calls 227k tris · shadow 2 calls 0k tris
+   terrain 3/135k · scenery 16/72k · trees 4/14k · characters 4/6k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/45 · scenery 8/1/19/13/31 · trees 0/0/0/1/13 · characters 6/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 0/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 3/135.0k · drawBatch:desert@desert 9/70.3k · BatchedMesh:lodBatch@desert 3/11.5k · Skinned:?@actors 2/5.9k · Instanced:desert@desert 1/2.9k · Mesh:desert@desert 7/1.4k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 23 calls 221k tris · shadow 2 calls 0k tris  (Δ main -7 calls -6.0k tris)
+      terrain 3/135k · scenery 16/72k · trees 4/14k
+heading 3 (135°, camera yaw 7.07): main 22 calls 150k tris · shadow 1 calls 0k tris
+   terrain 2/90k · scenery 9/50k · characters 4/6k · trees 4/4k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/0 · scenery 8/1/0/30/11 · characters 6/0/0/0/0 · trees 0/0/0/1/3 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 0/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 2/90.0k · drawBatch:desert@desert 7/50.2k · Skinned:?@actors 2/5.9k · Instanced:desert@desert 1/2.9k · BatchedMesh:lodBatch@desert 3/0.9k · Mesh:desert@desert 2/0.1k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 15 calls 144k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.0k tris)
+      terrain 2/90k · scenery 9/50k · trees 4/4k
+heading 4 (180°, camera yaw 7.85): main 19 calls 118k tris · shadow 2 calls 0k tris
+   terrain 2/90k · scenery 6/19k · characters 4/6k · trees 4/3k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/0 · scenery 8/1/0/2/8 · characters 6/0/0/0/0 · trees 0/0/0/1/2 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 0/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 2/90.0k · drawBatch:desert@desert 4/18.7k · Skinned:?@actors 2/5.9k · Instanced:desert@desert 1/2.9k · Mesh:desert@desert 2/0.1k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k · BatchedMesh:lodBatch@desert 3/0.0k
+   [no characters+no particles/blobs] main 12 calls 112k tris · shadow 2 calls 0k tris  (Δ main -7 calls -6.0k tris)
+      terrain 2/90k · scenery 6/19k · trees 4/3k
+heading 5 (225°, camera yaw 8.64): main 20 calls 136k tris · shadow 1 calls 0k tris
+   terrain 2/90k · scenery 7/37k · characters 4/6k · trees 4/3k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/0 · scenery 8/1/0/20/8 · characters 6/0/0/0/0 · trees 0/0/0/1/2 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 0/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 2/90.0k · drawBatch:desert@desert 5/37.2k · Skinned:?@actors 2/5.9k · Instanced:desert@desert 1/2.9k · Mesh:desert@desert 2/0.1k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k · BatchedMesh:lodBatch@desert 3/0.0k
+   [no characters+no particles/blobs] main 13 calls 130k tris · shadow 1 calls 0k tris  (Δ main -7 calls -6.0k tris)
+      terrain 2/90k · scenery 7/37k · trees 4/3k
+heading 6 (270°, camera yaw 9.42): main 24 calls 197k tris · shadow 2 calls 0k tris
+   terrain 3/135k · scenery 10/48k · trees 4/8k · characters 4/6k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/45 · scenery 9/0/9/22/8 · trees 0/0/0/1/7 · characters 6/0/0/0/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 0/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 3/135.0k · drawBatch:desert@desert 8/47.4k · Skinned:?@actors 2/5.9k · BatchedMesh:lodBatch@desert 3/5.2k · Instanced:desert@desert 1/2.9k · Mesh:desert@desert 2/0.1k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 17 calls 191k tris · shadow 2 calls 0k tris  (Δ main -7 calls -6.0k tris)
+      terrain 3/135k · scenery 10/48k · trees 4/8k
+heading 7 (315°, camera yaw 10.21): main 38 calls 276k tris · shadow 2 calls 0k tris
+   terrain 3/135k · scenery 23/111k · trees 4/21k · characters 5/8k · particles 3/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): terrain 0/0/0/90/45 · scenery 1/8/20/10/72 · trees 0/0/0/1/20 · characters 6/0/0/3/0 · particles 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): Instanced:desert@desert #ffffff cast 0/3 · Instanced:blobBatch #ffffff 0/0
+   top: Mesh:terrain@desert 3/135.0k · drawBatch:desert@desert 14/109.5k · BatchedMesh:lodBatch@desert 3/18.1k · Skinned:?@actors 3/8.4k · Instanced:desert@desert 1/2.9k · Mesh:desert@desert 9/1.9k · Instanced:blobBatch 1/0.1k · Mesh:head@actors 2/0.1k · Points:desert@desert 1/0.0k · Mesh:softParticles 1/0.0k
+   [no characters+no particles/blobs] main 30 calls 267k tris · shadow 2 calls 0k tris  (Δ main -8 calls -8.5k tris)
+      terrain 3/135k · scenery 23/111k · trees 4/21k

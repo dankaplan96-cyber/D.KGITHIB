@@ -1,0 +1,54 @@
+{
+ "room": "desert",
+ "chapterKey": "dig",
+ "hero": [
+  3292,
+  4
+ ],
+ "esmers": [
+  {
+   "id": "sc_master",
+   "char": "magus",
+   "x": 3344.4,
+   "z": -78.2
+  },
+  {
+   "id": "sc_pupc",
+   "char": "desertkid",
+   "x": 3340.7,
+   "z": -76
+  },
+  {
+   "id": "oni",
+   "char": "desertkid",
+   "x": 3330.6,
+   "z": -67
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 3338.566666666667,
+   "z": -66.73333333333333,
+   "a": 3.141592653589793
+  },
+  "centre": [
+   3338.566666666667,
+   -73.73333333333333
+  ],
+  "n": 3,
+  "info": {
+   "calls": 145,
+   "triangles": 223808
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  }
+ },
+ "gpu": false,
+ "dialogue": "sc_master",
+ "errors": [],
+ "at": "2026-11-08T06:59:21.114Z",
+ "candidates": {}
+}

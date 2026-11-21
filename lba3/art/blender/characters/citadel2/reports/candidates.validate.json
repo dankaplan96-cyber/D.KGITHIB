@@ -1,0 +1,1484 @@
+{
+  "file": "art/blender/characters/citadel2/work/cast_poly_citadel2.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [1.7463, 2.3031, 1.2334], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "warn",
+      "detail": "min y -0.0120"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "291"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: bram_belt -> bramRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_brows -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_coat -> bramRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_coat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_cuffL -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_cuffR -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_ear -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_ear.001 -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_earIn -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_earIn.001 -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_foreL -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_foreR -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_handL -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_handR -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_hat -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_hat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_hatPeak -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_hatPeak",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_head -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_neck -> bramRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_shinL -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_shinR -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_shoeL -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_shoeR -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_shoulderL -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_shoulderR -> bramRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_trousers -> bramRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_trousers",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_trunk -> bramRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_trunk",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_upperL -> bramRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: bram_upperR -> bramRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: bram_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_belt -> miraRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_brows -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_cuffL -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_cuffR -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_ear -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_ear.001 -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_earIn -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_earIn.001 -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_foreL -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_foreR -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_glasses -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_glasses",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_handL -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_handR -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_head -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_hemBand -> miraRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_neck -> miraRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_neckBand -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_nose -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_shinL -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_shinR -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_shoeL -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_shoeR -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_shoulderL -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_shoulderR -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_skirt -> miraRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_soleL -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_soleR -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_teeth -> miraRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_teeth",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_thighL -> miraRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_thighR -> miraRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_torso -> miraRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_upperL -> miraRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: mira_upperR -> miraRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: mira_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_apron -> nellRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_apron",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_apronHem -> nellRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_apronHem",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_apronPocket -> nellRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_apronPocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_apronStrap -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_apronStrap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_apronStrap.001 -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_apronStrap.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_belt -> nellRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_brows -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_buckle -> nellRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_buckle",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_cuffL -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_cuffR -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_foreL -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_foreR -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_goggleGlass -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_goggleGlass",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_goggles -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_goggles",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_hair -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_handL -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_handR -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_head -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_hemBand -> nellRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_neck -> nellRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_neckBand -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_neckBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_nose -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_pocket -> nellRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_pocket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_pocketFlap -> nellRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_pocketFlap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_shinL -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_shinR -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_shoeL -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_shoeR -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_shoulderL -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_shoulderR -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_skirt -> nellRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_soleL -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_soleR -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_strap -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_strap",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_tail0 -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_tail0",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_tail1 -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_tail1",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_tail2 -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_tail2",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_thighL -> nellRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_thighR -> nellRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_tie -> nellRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_tie",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_torso -> nellRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_upperL -> nellRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: nell_upperR -> nellRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: nell_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_belt -> odileRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_brows -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_brows",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_buckle -> odileRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_buckle",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_buttons -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_buttons",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_collar -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_collar",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_cuffL -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_cuffR -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_cuffR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_ear -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_ear.001 -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_earIn -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_earIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_earIn.001 -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_earIn.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_foreL -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_foreR -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_foreR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_handL -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_handR -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_hat -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_hat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_hatBand -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_hatBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_hatPeak -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_hatPeak",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_head -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_hemBand -> odileRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_hemBand",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_neck -> odileRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_nose -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_shinL -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_shinR -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_shoeL -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_shoeR -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_shoulderL -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_shoulderL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_shoulderR -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_shoulderR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_skirt -> odileRig",
+      "status": "pass",
+      "detail": "6 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_skirt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_soleL -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_soleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_soleR -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_soleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_teeth -> odileRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_teeth",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_thighL -> odileRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_thighL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_thighR -> odileRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_thighR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_torso -> odileRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_torso",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_upperL -> odileRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: odile_upperR -> odileRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: odile_upperR",
+      "status": "pass",
+      "detail": "0"
+    }
+  ],
+  "totals": {
+    "objects": 181,
+    "meshes": 177,
+    "triangles": 11922,
+    "materials": 67,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 4,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.8731,
+        -0.012,
+        -0.3829
+      ],
+      "max": [
+        0.8731,
+        2.2911,
+        0.8506
+      ],
+      "size": [
+        1.7463,
+        2.3031,
+        1.2334
+      ]
+    }
+  },
+  "passed": true
+}

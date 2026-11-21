@@ -1,0 +1,359 @@
+diff --git a/lba3/tools/blender/baldino_poly.py b/lba3/tools/blender/baldino_poly.py
+index ffc1359a..56eae5eb 100644
+--- a/lba3/tools/blender/baldino_poly.py
++++ b/lba3/tools/blender/baldino_poly.py
+@@ -107,6 +107,11 @@ MOUTH = [(-0.081, 0.592), (0.081, 0.592), (0.0, 0.558)]     # byte 144: a small
+ # z 0.053) to a top tip (0.242, 0.888) and a long lower tip (0.296, 0.538); in his clips they rest turned 15-46° back
+ EAR = [(0.175, 0.807), (0.242, 0.888), (0.268, 0.80), (0.296, 0.538), (0.173, 0.645)]
+ EAR_Z, EAR_BACK, EAR_T = 0.053, math.radians(32), 0.011
++# CAST-POLISH-NAMED (BALDINO_OLD=1 builds the ears, strap, goggles and collar as before): the ears' corners cut a little
++# (most at the outer corner, least at the tips), their root edge at x 0.155 (inside the head: it stood 2.6 cm off its side), the half-thickness at the
++# rim, through the middle and behind the centre (H)
++OLD = os.environ.get('BALDINO_OLD') == '1'
++EAR_ROUND, EAR_ROOT_X, EAR_RIM, EAR_MID, EAR_CEN = (0.0, 0.07, 0.2, 0.05, 0.0), 0.155, 0.004, 0.009, 0.007   # (the cut per corner: the tips keep their height)
+ # the goggles: two hexagonal lenses (x 0.086-0.162, y 0.700-0.780) on the face's plane z 0.199, a strap (byte 160)
+ # across the brow over their tops (y 0.780-0.796) to the head's sides (±0.162, 0.78, 0.171); the eyes behind them at
+ # (±0.118, 0.732)
+@@ -127,6 +132,16 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
+ b = Builder('baldino', B)
+ 
+ 
++def lerp2(a, c, t):
++    return (a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t)
++
++
++def shade(hexc, k):
++    """a darker shade (k < 1) of a colour (the same multiple as cast_poly.py shade)"""
++    c = [min(255, int(int(hexc.lstrip('#')[i:i + 2], 16) * k)) for i in (0, 2, 4)]
++    return '#%02x%02x%02x' % tuple(c)
++
++
+ def lerp_rows(rows, y):
+     for a, c in zip(rows, rows[1:]):
+         if a[0] <= y <= c[0]:
+@@ -286,43 +301,135 @@ for s_, sx in (('L', 1), ('R', -1)):
+         dx, dz = x - root.x, z - root.z
+         # (turn the ear's outer edge back about the vertical through its root: Ry(+θ) on the left, mirrored)
+         return (root.x + dx * ca + sx * dz * sa, y, root.z - sx * dx * sa + dz * ca)
+-    ear = b.P('ear' + s_, COL['skin'], lambda p, s_=s_, sx=sx: {'head': 1 - smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH), 'ear' + s_: smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH)}, 35)
+-    front = [m(rot(sx * x, y, EAR_Z + EAR_T / 2)) for x, y in EAR]
+-    back = [m(rot(sx * x, y, EAR_Z - EAR_T / 2)) for x, y in EAR]
+-    n = len(EAR)
+-    vv = front + back
+-    ff = [list(range(n)) if sx > 0 else list(reversed(range(n))), [n + i for i in (reversed(range(n)) if sx > 0 else range(n))]]
+-    ff += [[i, (i + 1) % n, n + (i + 1) % n, n + i] if sx < 0 else [(i + 1) % n, i, n + i, n + (i + 1) % n] for i in range(n)]
++    w_ear = lambda p, s_=s_, sx=sx: {'head': 1 - smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH), 'ear' + s_: smooth(0.0, 0.03 * BH, sx * p[0] - EAR[0][0] * BH)}
++    ear = b.P('ear' + s_, COL['skin'], w_ear, 35)
++    if OLD:
++        front = [m(rot(sx * x, y, EAR_Z + EAR_T / 2)) for x, y in EAR]
++        back = [m(rot(sx * x, y, EAR_Z - EAR_T / 2)) for x, y in EAR]
++        n = len(EAR)
++        vv = front + back
++        ff = [list(range(n)) if sx > 0 else list(reversed(range(n))), [n + i for i in (reversed(range(n)) if sx > 0 else range(n))]]
++        ff += [[i, (i + 1) % n, n + (i + 1) % n, n + i] if sx < 0 else [(i + 1) % n, i, n + i, n + (i + 1) % n] for i in range(n)]
++        ear.add(vv, ff)
++        continue
++    # CAST-POLISH-NAMED (BALDINO-EARS): the ears were flat five-sided boards 2.2 cm thick with square edges, standing 2.6 cm
++    # off the side of the head (paper from the side and in the close shot). The same measured kite with its corners cut
++    # (EAR_ROUND; the two tips nearly kept), now a cushion: 1.6 cm at the rounded rim, 3.6 cm through the middle, about
++    # 5 cm at the root, the root sunk into the head, a very shallow dish on the front a shade darker than the skin; still
++    # one plate on its ear bone.
++    out_ = []
++    for k_ in range(len(EAR) - 1):
++        p0, p1 = EAR[k_], EAR[k_ + 1]
++        r0, r1 = EAR_ROUND[k_], EAR_ROUND[k_ + 1]   # (the cut at this edge's two corners)
++        out_ += ([p0] if k_ == 0 else []) + [lerp2(p0, p1, r0) if k_ else None, lerp2(p0, p1, 1 - r1)]
++    out_ = [p for p in out_ if p is not None] + [EAR[-1]]
++    out_ = [((EAR_ROOT_X if k_ in (0, len(out_) - 1) else x), y) for k_, (x, y) in enumerate(out_)]
++    cx_ = sum(x for x, _ in out_) / len(out_)
++    cy_ = sum(y for _, y in out_) / len(out_)
++    n = len(out_)
++
++    def lv(s, w, cx_=cx_, cy_=cy_, rot=rot, sx=sx):
++        """the ring at s (1 = the rim, 0 = the centre), w H in front (+) or behind (−) the ear's plane; thicker at the root"""
++        pts = []
++        for x, y in out_:
++            px, py = cx_ + (x - cx_) * s, cy_ + (y - cy_) * s
++            root_ = 1 + 0.45 * smooth(EAR[0][0] + 0.04, EAR_ROOT_X, px)
++            pts.append(m(rot(sx * px, py, EAR_Z + w * root_)))
++        return pts
++    vv = lv(1.0, EAR_RIM) + lv(1.0, -EAR_RIM) + lv(0.82, EAR_MID) + lv(0.82, -EAR_MID) + lv(0.6, EAR_MID * 0.95)
++    vv.append(m(rot(sx * cx_, cy_, EAR_Z - EAR_CEN)))
++    iRf, iRb, iMf, iMb, iDf, iCb = 0, n, 2 * n, 3 * n, 4 * n, 5 * n
++    q = lambda a, c_: [[a + i, a + (i + 1) % n, c_ + (i + 1) % n, c_ + i] for i in range(n)]
++    ff = q(iRb, iRf) + q(iRf, iMf) + q(iMf, iDf) + q(iMb, iRb) + [[iMb + i, iCb, iMb + (i + 1) % n] for i in range(n)]
+     ear.add(vv, ff)
++    dish = b.P('earDish' + s_, shade(COL['skin'], 0.9), w_ear, 35)
++    dish.add(lv(0.6, EAR_MID * 0.95) + [m(rot(sx * cx_, cy_, EAR_Z + EAR_MID * 0.75))], [[i, (i + 1) % n, n] for i in range(n)])
++    cen_ = Vector(m(rot(sx * cx_, cy_, EAR_Z)))
++    npl_ = (Vector(m(rot(sx * cx_, cy_, EAR_Z + 1.0))) - cen_).normalized()   # (the ear's front, out of its plane)
++    for prt_ in (ear, dish):   # (each face wound to face out of the cushion, whichever way the outline runs on this side)
++        for f_ in prt_.f:
++            a_, b_, c_ = (Vector(prt_.v[i]) for i in f_[:3])
++            d_ = sum((Vector(prt_.v[i]) for i in f_), Vector()) / len(f_) - cen_
++            out_dir = npl_ if prt_ is dish else d_ + npl_ * d_.dot(npl_) * 20
++            if (b_ - a_).cross(c_ - a_).dot(out_dir) < 0:
++                f_.reverse()
+ 
+ # the goggles: a hexagonal lens on each eye standing a little proud of the face (the original's are transparent:
+ # opaque here, a dark sea-blue), the eye a small bright dot just in front of the glass (it blinks)
++
++
++def orient(part, start, want):
++    """wind the part's faces from `start` on so that each faces `want(centre)` (a direction)"""
++    for f_ in part.f[start:]:
++        a_, b_, c_ = (Vector(part.v[i]) for i in f_[:3])
++        fc_ = sum((Vector(part.v[i]) for i in f_), Vector()) / len(f_)
++        if (b_ - a_).cross(c_ - a_).dot(want(fc_)) < 0:
++            f_.reverse()
++
++
++frame = None if OLD else b.P('frame', COL['frame'], 'head', 30)
+ for s_, sx in (('L', 1), ('R', -1)):
+     hexa = [(sx * x, y) for x, y in LENS]
+     lz = max(max(on_face(x, y, 0.0)[2] for x, y in hexa) / BH + 0.006, LENS_Z)
+     lens = b.P('lens' + s_, COL['lens'], 'head', 30)
+     K = len(hexa)
+-    vv = [m((x, y, lz)) for x, y in hexa] + [on_face(x, y, -0.004) for x, y in hexa]
+-    ff = [list(range(K)), ]
+-    ff += [[k, K + k, K + (k + 1) % K, (k + 1) % K] for k in range(K)]
+-    # (wound to face out: the front cap counter-clockwise seen from the front)
+-    if (Vector(vv[1]) - Vector(vv[0])).cross(Vector(vv[2]) - Vector(vv[0])).z < 0:
+-        ff = [list(reversed(f)) for f in ff]
+-    lens.add(vv, ff)
++    if OLD:
++        vv = [m((x, y, lz)) for x, y in hexa] + [on_face(x, y, -0.004) for x, y in hexa]
++        ff = [list(range(K)), ]
++        ff += [[k, K + k, K + (k + 1) % K, (k + 1) % K] for k in range(K)]
++        # (wound to face out: the front cap counter-clockwise seen from the front)
++        if (Vector(vv[1]) - Vector(vv[0])).cross(Vector(vv[2]) - Vector(vv[0])).z < 0:
++            ff = [list(reversed(f)) for f in ff]
++        lens.add(vv, ff)
++    else:
++        # CAST-POLISH-NAMED (BALDINO-GOGGLES): the lenses were bare blue hexagonal blocks on the face. LBA2 draws a dark teal
++        # frame (byte 160, y 0.70-0.79) round its transparent lenses: here each glass sits in a frame 1.8 cm wide and 0.9 cm
++        # proud of it, its outer wall down to the face, its inner wall down to the glass.
++        gx_, gy_ = sum(x for x, _ in hexa) / K, sum(y for _, y in hexa) / K
++        outer = [(gx_ + (x - gx_) * 1.24, gy_ + (y - gy_) * 1.24) for x, y in hexa]
++        lens.add([m((x, y, lz)) for x, y in hexa], [list(range(K))])
++        orient(lens, 0, lambda c: Vector((0, 0, 1)))
++        zr = lz + 0.0045
++        outer = [(max(-0.165, min(0.165, x)), y) for x, y in outer]   # (no wider than the head there: it turns back)
++        o_back = [on_face(max(-0.157, min(0.157, x)), y, -0.004) for x, y in outer]
++        o_back = [(x * BH, y * BH, max(z_, (zr - 0.024) * BH)) for (x, y), (_, _, z_) in zip(outer, o_back)]   # (at most 5 cm deep)
++        vv = [m((x, y, zr)) for x, y in outer] + [m((x, y, zr)) for x, y in hexa] + [m((x, y, lz - 0.0005)) for x, y in hexa] + o_back
++        q_ = lambda a, c: [[a + k, a + (k + 1) % K, c + (k + 1) % K, c + k] for k in range(K)]
++        gc_ = Vector(m((gx_, gy_, zr)))
++        radial = lambda fc, gc_=gc_: Vector((fc.x - gc_.x, fc.y - gc_.y, 0))
++        for faces_, want in ((q_(0, K), lambda fc: Vector((0, 0, 1))),               # (the frame's front)
++                             (q_(K, 2 * K), lambda fc, r=radial: -r(fc)),              # (its inner wall, down to the glass)
++                             (q_(3 * K, 0), radial)):                                  # (its outer wall, down to the face)
++            f0 = len(frame.f)
++            frame.add(vv, faces_)
++            orient(frame, f0, want)
+     ex, ey = sx * EYE_C[0], EYE_C[1]
+     b.eye(m((ex, ey, lz + 0.003)), [([m((ex + EYE_R * math.cos(2 * math.pi * k / 8), ey + EYE_R * math.sin(2 * math.pi * k / 8), lz + 0.003)) for k in range(8)], COL['eye'])])
+-# the strap: a band laid on the brow from one side of the head to the other, between the lenses' tops
+ st = b.P('strap', COL['frame'], 'head', 40)
+-xs = [-0.164 + 0.328 * k / 16 for k in range(17)]
+ y0, y1 = 0.776, 0.794
+-vv = []
+-for x in xs:
+-    if abs(x) > 0.155:      # (round the side of the head: back to z 0.15)
+-        p0, p1 = m((x, y0, 0.16)), m((x, y1, 0.15))
+-        vv += [p0, p1]
+-    else:
+-        vv += [on_face(x, y0, 0.005), on_face(x, y1, 0.005)]
+-st.add(vv, [[2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1] for i in range(len(xs) - 1)])
++if OLD:
++    # the strap: a band laid on the brow from one side of the head to the other, between the lenses' tops
++    xs = [-0.164 + 0.328 * k / 16 for k in range(17)]
++    vv = []
++    for x in xs:
++        if abs(x) > 0.155:      # (round the side of the head: back to z 0.15)
++            p0, p1 = m((x, y0, 0.16)), m((x, y1, 0.15))
++            vv += [p0, p1]
++        else:
++            vv += [on_face(x, y0, 0.005), on_face(x, y1, 0.005)]
++    st.add(vv, [[2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1] for i in range(len(xs) - 1)])
++else:
++    # CAST-POLISH-NAMED (BALDINO-STRAP): the strap was a single sheet 1 cm off the brow, cut off at the sides of the head
++    # (and its edge zigzagged over the faceted face). Now a band 1.2 cm proud of the head's own sections, closed along
++    # its top and bottom edges, all the way round (under the ears' roots), so it reads from the side and from behind.
++    def head_ring(y, d):
++        hw, zf, zb = lerp_rows(HEAD, y)
++        return ring(y * BH, (hw + d) * BH, (zf + d) * BH, (zb - d) * BH, HN, 0.7)
++    rows_ = [head_ring(y0, -0.002), head_ring(y0, 0.006), head_ring(y1, 0.006), head_ring(y1, -0.002)]
++    vv = [p for r_ in rows_ for p in r_]
++    st.add(vv, [[j * HN + i, j * HN + (i + 1) % HN, (j + 1) * HN + (i + 1) % HN, (j + 1) * HN + i] for j in range(3) for i in range(HN)])
++    hc_ = Vector((0, (y0 + y1) / 2 * BH, 0.03 * BH))
++    orient(st, 0, lambda fc: Vector((fc.x - hc_.x, 0, fc.z - hc_.z)) + Vector((0, (fc.y - hc_.y) * 4, 0)))
+ 
+ # ------------------------------------------------------------------ the collar: standing up round the back of the head
+ headY = bp('head')[1]
+@@ -337,6 +444,7 @@ col = b.P('collar', COL['collar'], w_collar, 60)
+ col.normal = UP
+ CK = 14
+ cv = []
++CT = 0.0 if OLD else 0.011   # (CAST-POLISH-NAMED, BALDINO-COLLAR: its thickness, H)
+ for k in range(CK + 1):
+     a = math.pi * 0.42 + (math.pi * 1.16) * k / CK          # from the left front round the back to the right front
+     s, c = math.sin(a), math.cos(a)
+@@ -346,6 +454,23 @@ for k in range(CK + 1):
+     cz = 0.0
+     cv += [m((s * rx, ybot, cz + c * rz)), m((s * (rx - 0.012), ytop, cz + c * (rz - 0.005)))]
+ col.add(cv, [[2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1] for i in range(CK)])
++if not OLD:
++    # CAST-POLISH-NAMED (BALDINO-COLLAR): the stand-up collar was one sheet (a white line seen edge-on from the side, paper
++    # at its top and front ends). Now 2.2 cm thick: the same outside, an inside a shade darker, the top edge and the two
++    # front ends closed; still drawn flat (one constant shade, as the original's solid polygon).
++    cin = b.P('collarIn', shade(COL['collar'], 0.8), w_collar, 60)
++    cin.normal = UP
++    iv = []
++    for k in range(CK + 1):
++        a = math.pi * 0.42 + (math.pi * 1.16) * k / CK
++        s, c = math.sin(a), math.cos(a)
++        ytop = COLLAR_BACK - (COLLAR_BACK - COLLAR_SIDE) * abs(s)
++        ybot = 0.673 - (0.673 - 0.540) * abs(s)
++        iv += [m((s * (0.19 - CT), ybot, c * (0.178 - CT))), m((s * (0.19 - 0.012 - CT), ytop - 0.002, c * (0.178 - 0.005 - CT)))]
++    cin.add(iv, [[2 * i + 1, 2 * i + 3, 2 * i + 2, 2 * i] for i in range(CK)])
++    o_ = len(col.v)   # (add() counts from the new vertices: the outside's are at −o_ from them)
++    col.add(iv, [[2 * i + 1 - o_, 2 * i + 3 - o_, 2 * i + 3, 2 * i + 1] for i in range(CK)] +
++            [[0 - o_, 1 - o_, 1, 0], [2 * CK + 1 - o_, 2 * CK - o_, 2 * CK, 2 * CK + 1]])   # (the top edge; the front ends)
+ 
+ os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
+ tris = b.export(OUT)
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index f1b98052..009a6886 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -35,6 +35,7 @@ TW_Y0, TW_Y1, TW_W, TW_Z0, TW_Z1 = 0.799, 0.956, 0.077, -0.026, 0.153
+ # a robe or coat that is round (a mole's, an elf's, a trooper's: Twinsen's cape and robe have 24), a Grobo's body (a metre
+ # across) and its ear flaps
+ BODY_N, BLOB_N, EAR_N = 20, 20, 24
++GCOAT_SKIRT = float(os.environ.get('GCOAT_SKIRT', '0.35'))   # (CAST-POLISH-NAMED: a Grobo's long coat, the skirt bones' share at its hem)
+ 
+ 
+ def shade(hexc, k):
+@@ -72,7 +73,7 @@ CAST = {
+     'vguardG': dict(trim='#c8a050', epaulette='#c8a050', strap='#8a6a30', glove='#16141a', mouthLift=-0.4, browS=1.8, browTilt=-0.5),
+     # ---- the Desert Island and Zeelich
+     'ilka': dict(browTilt=0.3, mouthLift=0.9, earBend=(0.0, 0.4), earLen=1.0, pockets=True, pocketY=0.08),
+-    'hesk': dict(browS=1.9, browTilt=-0.3, mouthLift=0.6, mouthW=1.0, earS=1.05),
++    'hesk': dict(browS=1.9, browTilt=-0.3, mouthLift=0.6, mouthW=1.0, earS=1.05, gogglesUp=True),   # (CAST-POLISH-NAMED: GOGGLES-HESK)
+     'tarra': dict(browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.95, lip='#8a4a4a', hemH=0.06),
+     'dallan': dict(browS=1.6, browTilt=-0.3, mouthLift=-0.3, mouthY=0.834, pockets=True, pocketY=0.12),
+     'desertkid': dict(browS=0.8, mouthW=1.2, mouthLift=1.5, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hem=0.5, noseS=1.0),
+@@ -80,13 +81,13 @@ CAST = {
+     'desertTrader': dict(hatStyle='straw', browS=1.5, mouthLift=1.2, earS=0.95),
+     'weaver': dict(cheekS=1.2, earBend=(0.0, 0.5), mouthLift=1.0, browTilt=0.2, earInCol='#e8a8b8'),
+     'councilB': dict(browS=1.0, browTilt=-0.1, lashes=True, mouthLift=0.5, lip='#a83a5a', hemH=0.07, glassesRim=True),   # (GLASSES-SELA)
+-    'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
++    'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0, coatLong=0.3),   # (CAST-POLISH-NAMED: GROBO-COAT, his robe below the knee)
+     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
+     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
+     'worker_b': dict(browS=1.6, browTilt=-0.15, mouthLift=0.5, mouthW=1.1, noseS=1.1, pockets=True, pocketY=0.1, rolled=True,
+                      moustacheSwept=True, gogglesGlass=True, gogglesN=8, gogglesRimN=4),   # (CAST-POLISH-UNDERGROUND: bare-headed, goggles up, heavier)
+     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
+-    'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
++    'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95, coatLong=0.28),   # (CAST-POLISH-NAMED: GROBO-COAT, the felt coat below the knee)
+     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
+     'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1, moustacheSwept=True),   # (MOUSTACHE-LHAR)
+     'lharMan_b': dict(browS=1.8, browTilt=-0.1, mouthLift=0.5, mouthW=1.1, pockets=True, pocketY=0.06, moustacheSwept=True, noseS=1.1),   # (CAST-POLISH-HAMALAYI)
+@@ -317,6 +318,38 @@ def build(name):
+                 return bodyR[-1][1:]
+             loft(b.P('belt', L['belt'], w_blob, 50), [ring(y_, max(hw_ * 1.012, hw0) * slim, max(zf_ * 1.012, zf0) + belly, min(zb_ * 1.012, zb0), BLOB_N, 0.7)
+                                                       for y_, hw0, zf0, zb0 in ((cut - 0.004, 0.495, 0.475, -0.376), (cut + 0.05, 0.5, 0.481, -0.381)) for hw_, zf_, zb_ in [blob_at(y_)]])
++        if cp.get('coatLong') and L.get('belt'):
++            # CAST-POLISH-NAMED (GROBO-COAT): every Grobo had the same body, the coat cut at the hips over round trousers, so the
++            # looks written as long coats and robes (Yorna's felt coat, Councillor Brum's robe) were Doran's and Hesk's shape in
++            # other colours. Now the coat goes on from under the belt as a skirt, flaring a little and falling in soft folds to
++            # the hem (CAST coatLong = its height), finished with a rolled hem band in the trim colour; the round body stays
++            # inside it. It goes with the hips; toward the hem a share of it (GCOAT_SKIRT, 35 %) follows the skirt bones.
++            gh_ = cp['coatLong']
++            y_top = cut - 0.004
++            hw_, zf_, zb_ = blob_at(y_top)
++
++            def w_gcoat(p):
++                x, y, z = p
++                k = GCOAT_SKIRT * smooth(y_top, gh_ + 0.1, y)   # (more, and the walk kicked its back hem up, a seat folded its front into the body)
++                a = math.atan2(x, z - 0.02)
++                ca_, sa_ = math.cos(a), math.sin(a)
++                w = {bn: v * (1 - k) for bn, v in w_blob(p).items()}
++                for bn, v in (('skirtF', max(0, ca_) ** 2), ('skirtB', max(0, -ca_) ** 2), ('skirtL', max(0, sa_) ** 2), ('skirtR', max(0, -sa_) ** 2)):
++                    if v > 0:
++                        w[bn] = w.get(bn, 0) + k * v
++                return {bn: v for bn, v in w.items() if v > 1e-4}
++            secs_ = [(y_top, max(hw_ * 1.006, 0.49), max(zf_ * 1.006, 0.47), min(zb_ * 1.006, -0.37), 0.0),
++                     (y_top + (gh_ - y_top) * 0.45, 0.505, 0.485, -0.39, 0.012),
++                     (gh_ + 0.03, 0.52, 0.5, -0.405, 0.028)]
++
++            def fold_ring(y, hw, zf, zb, amp, d=0.0):
++                r_ = ring(y, (hw + d) * slim, zf + belly + d, zb - d, BLOB_N, 0.7)
++                return [(x * (1 + amp * math.sin(6 * 2 * math.pi * k / BLOB_N + 0.4)), yy, z * (1 + amp * math.sin(6 * 2 * math.pi * k / BLOB_N + 0.4))) for k, (x, yy, z) in enumerate(r_)]
++            loft(b.P('coatSkirt', tunic, w_gcoat, 50), [fold_ring(*s_) for s_ in secs_])
++            # the hem band: from just above the skirt's foot, over its edge and back in under it (1.2 cm proud, 2.2 cm thick)
++            hy_, hw2, zf2, zb2, a2 = secs_[-1]
++            loft(b.P('coatHem', trim, w_gcoat, 50), [fold_ring(hy_ + 0.035, hw2, zf2, zb2, a2, 0.001), fold_ring(hy_ + 0.012, hw2, zf2, zb2, a2, 0.012),
++                                                    fold_ring(hy_ - 0.008, hw2, zf2, zb2, a2, 0.008), fold_ring(hy_ - 0.012, hw2, zf2, zb2, a2, -0.01)])
+     else:
+         gown = outfit == 'gown'  # (LBA2's Zoé: a fitted red outfit, deep V neckline, bare arms, the legs separate)
+         torso = b.P('torso', skin if gown else tunic, w_torso, 50)
+@@ -1155,7 +1188,56 @@ def build(name):
+                 tube(ht, (0, c[1] + R * 0.78, c[2]), (0, c[1] + R * 1.25, c[2]), R * 0.55, R * 0.5, 10)
+                 disc(ht, (0, c[1] + R * 0.8, c[2]), R * 0.95, 12, 'y', 0.015)
+                 tube(b.P('hatBand', shade(L['hat'], 0.6), head_w, 30), (0, c[1] + R * 0.8, c[2]), (0, c[1] + R * 0.9, c[2]), R * 0.57, R * 0.56, 12, cap=False)
+-        if L.get('goggles'):   # (Hesk: goggles pushed up on his brow, a strap round the head)
++        if L.get('goggles') and cp.get('gogglesUp'):
++            # CAST-POLISH-NAMED (GOGGLES-HESK): his driving goggles were two flat gold drums facing forward off his brow, and
++            # the "strap round the head" a stick between them poking out at the sides. Now they sit pushed up on the dome of
++            # his head, turned up with it: brass cups with a rolled rim round dark glass (a darker shade of the brass, Nell's),
++            # a bridge between them, and a leather band from the cups' outer sides round the back of his head.
++            gg = b.P('goggles', '#c89a48', head_w, 40)
++            gls_ = b.P('goggleGlass', shade('#c89a48', 0.28), head_w, 60)
++            hs3 = (1.0, 0.92, 1.08)
++            def on_head(th, dy, out=0.0):
++                """the point of the head's ellipsoid at height dy (from its centre) and angle th round from the front, `out` off it"""
++                k_ = math.sqrt(max(0.0, 1 - (dy / (R * hs3[1])) ** 2))
++                p_ = Vector((R * k_ * math.sin(th), dy, R * hs3[2] * k_ * math.cos(th)))
++                n_ = Vector((p_.x / hs3[0] ** 2, p_.y / hs3[1] ** 2, p_.z / hs3[2] ** 2)).normalized()
++                return Vector(c) + p_ + n_ * out, n_
++            gn_, gr_ = 10, R * 0.15
++            inner_ = []
++            for sxx in (1, -1):
++                th_ = sxx * math.atan2(R * 0.3, R * 0.8)
++                base_, n_ = on_head(th_, R * 0.6, -0.004)
++                e_ = base_ + n_ * 0.034
++                tube(gg, tuple(base_), tuple(e_), gr_ * 0.92, gr_, gn_, cap=False)
++                u_ = n_.cross(Vector((0, 1, 0)) if abs(n_.y) < 0.9 else Vector((1, 0, 0))).normalized()
++                w_ = n_.cross(u_).normalized()
++                cord(gg, [tuple(e_ + u_ * (gr_ * 1.02 * math.cos(2 * math.pi * k / gn_)) + w_ * (gr_ * 1.02 * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)], R * 0.022, 5, True)
++                lc_ = e_ - n_ * 0.005
++                gls_.add([tuple(lc_ + u_ * (gr_ * 0.95 * math.cos(2 * math.pi * k / gn_)) + w_ * (gr_ * 0.95 * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)] + [tuple(lc_ + n_ * 0.003)],
++                         [[k, (k + 1) % gn_, gn_] for k in range(gn_)], 180)
++                inner_.append(e_ - n_ * 0.012 - Vector((sxx * gr_, 0, 0)))
++            cord(gg, [tuple(inner_[0]), tuple((inner_[0] + inner_[1]) / 2 + Vector((0, 0.006, 0.006))), tuple(inner_[1])], R * 0.02, 5, False)   # (the bridge)
++            # the band: from one cup's outer side round the back of the head to the other's, rising to the cups in front
++            st_ = b.P('strap', '#3a2a20', head_w, 40)
++            th0, NS = math.atan2(R * 0.3, R * 0.8) + 0.12, 18
++            rows_ = []
++            for j_, (dyy, oo) in enumerate(((-0.012, -0.003), (-0.012, 0.009), (0.012, 0.009), (0.012, -0.003))):
++                row_ = []
++                for i_ in range(NS + 1):
++                    th_ = th0 + (2 * math.pi - 2 * th0) * i_ / NS
++                    dy_ = R * (0.43 + 0.17 * math.cos(th_)) + dyy
++                    row_.append(tuple(on_head(th_, dy_, oo)[0]))
++                rows_.append(row_)
++            m_ = NS + 1
++            st_.add([p for r_ in rows_ for p in r_], [[j * m_ + i, j * m_ + i + 1, (j + 1) * m_ + i + 1, (j + 1) * m_ + i] for j in range(3) for i in range(NS)])
++            for fi_, f_ in enumerate(st_.f):   # (wound to face out of the band: its outside out, its edges up and down)
++                i_ = fi_ % NS
++                bc_ = sum((Vector(rows_[j][i]) for j in range(4) for i in (i_, i_ + 1)), Vector()) / 8
++                a_, b_, c_ = (Vector(st_.v[i]) for i in f_[:3])
++                fc_ = sum((Vector(st_.v[i]) for i in f_), Vector()) / len(f_) - bc_
++                if (b_ - a_).cross(c_ - a_).dot(fc_) < 0:
++                    f_.reverse()
++        elif L.get('goggles'):   # (Hesk: goggles pushed up on his brow, a strap round the head)
+             gg = b.P('goggles', '#c89a48', head_w, 40)
+             for sxx in (1, -1):
+                 disc(gg, (sxx * R * 0.3, c[1] + R * 0.62, c[2] + R * 0.8), R * 0.15, 10, 'z', R * 0.09)

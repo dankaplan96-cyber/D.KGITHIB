@@ -1,0 +1,22 @@
+{
+ "to done + cleared": {
+  "cs": "done",
+  "cleared": true,
+  "coins": 4
+ },
+ "nell pays, then quit at once": {
+  "c0": 4,
+  "c1": 4,
+  "loose": 3,
+  "paid": true
+ },
+ "after continue": {
+  "coins": 4,
+  "loose": 0,
+  "paid": true
+ },
+ "nell again": {
+  "coins": 4
+ },
+ "errors": []
+}

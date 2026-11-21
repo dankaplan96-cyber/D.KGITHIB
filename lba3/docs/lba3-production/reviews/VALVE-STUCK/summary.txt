@@ -1,0 +1,6 @@
+combat exit 0 49s VERDICT: PASS
+containers exit 0 249s VERDICT: PASS
+chapter2 exit 0 207s VERDICT: PASS
+chapter3 exit 0 152s VERDICT: PASS
+stability exit 0 79s VERDICT: PASS
+worldfit exit 0 64s VERDICT: PASS

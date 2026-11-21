@@ -1,0 +1,2 @@
+[{ "op": "script", "name": "hands-36 (old): keeper (.blend)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-cast3/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-cast3/lba3/art/blender/characters/hands/source", "keeper"] },
+ { "op": "preview", "name": "keeper views (old)", "input": "art/blender/characters/hands/work/keeper-old.blend", "output": "art/blender/characters/hands/previews/keeper-old", "options": { "resolution": 640, "modes": ["neutral", "textured"], "orthoScale": 2.6 } }]

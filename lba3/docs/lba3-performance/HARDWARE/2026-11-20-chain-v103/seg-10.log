@@ -1,0 +1,50 @@
+[0s +0s] continue: {"chapter":"observatory","room":"hamalayi"} | hamalayi [4334,21.84,-38] hp 9 | Climb the ridge to the observatory
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[4s +3s] into the observatory: {"r":"transition","from":"hamalayi","to":"obsv","snow":true,"fail":null} | obsv [4596.23,0,4.81] hp 9 | Climb the ridge to the observatory
+  stats: {"play":55.1,"dialog":3.5,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":18,"says":1,"walked":114,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[4s +0s] the keeper: {"r":"talked","to":"keeper","state":"play","lines":12,"speakers":["keeper","hero"],"keeper":true,"fail":null} | obsv [4596.23,0,4.81] hp 9 | Carry both suns' light to the crystal
+  stats: {"play":1,"dialog":1.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":6,"words":113,"says":6,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[5s +0s] the frozen window (ball): {"ice":true,"fail":null} | obsv [4603.79,0,-3.07] hp 9 | Carry both suns' light to the crystal
+  stats: {"play":6.6,"dialog":1.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":15,"says":1,"walked":11,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[7s +2s] the mirrors: {"lit":true,"fail":null} | obsv [4603.93,0,-1.89] hp 9 | Set the telescope to its fourth setting
+  stats: {"play":39.4,"dialog":2.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":10,"words":143,"says":10,"walked":24,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[7s +0s] the telescope: the fourth setting: {"set":4,"followed":true,"fail":null} | obsv [4602.77,0,3.62] hp 9 | Read where the telescope points
+  stats: {"play":5.4,"dialog":0.2,"trans":0,"scene":6.4,"menu":0,"other":0,"lines":1,"words":12,"says":1,"walked":5,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[7s +0s] the telescope: read the ring: {"dir":true,"fail":null} | obsv [4602.79,0,3.91] hp 9 | Turn the telescope
+  stats: {"play":1.8,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":68,"says":4,"walked":1,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[8s +1s] the telescope: {"r":"used","target":{"kind":"c7scope","id":"p_scope","label":"p_scope"},"state":"play","lines":4,"scope":true,"fail":null} | obsv [4603.03,0,3.29] hp 9 | Destroy the heavy drone at the vent
+  stats: {"play":7,"dialog":0.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":42,"says":2,"walked":3,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[9s +1s] out: {"r":"transition","from":"obsv","to":"hamalayi"} | hamalayi [4286,30.11,-63.03] hp 9 | Destroy the heavy drone at the vent
+  stats: {"play":4.9,"dialog":0,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":8,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[10s +1s] the heavy drone at the vent: {"left":0,"dead":false,"hp":9,"t":11.6,"drone":false,"fail":null} | hamalayi [4254.99,15.84,-58.34] hp 9 | Open the vent in the glacier
+  stats: {"play":16.2,"dialog":0.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":17,"says":2,"walked":37,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":13,"hpNow":9,"cloversNow":4,"revives":0}
+[11s +1s] the seal's warm discs (ball): {"n":3,"tries":3,"fail":null} | hamalayi [4245.89,16.14,-53.64] hp 9 | Open the vent in the glacier
+  stats: {"play":15.7,"dialog":1.6,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":15,"says":1,"walked":40,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[22s +11s] the vent: {"r":"used","target":{"kind":"c7vent","id":"p_vent","label":"p_vent"},"state":"play","lines":16,"vent":true,"fail":null} | hamalayi [4253.92,16.08,-48.26] hp 9 | Meet Hesk at the monastery
+  stats: {"play":15.2,"dialog":2.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":8,"words":114,"says":8,"walked":13,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+[24s +2s] the monastery gate → chapter 8: {"chapter":"evacuation","fail":null} | citadel [-105.2,16,-64.6] hp 9 | Go home to Zoé
+  stats: {"play":27.2,"dialog":1.2,"trans":0.7,"scene":12.7,"menu":0,"other":0,"lines":5,"words":103,"says":5,"walked":94,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[155.3] fight heavydrone d=4.6 st=chase aim=it e@4254.5,16.1,-52.8 me@4255.0,15.8,-58.3 ball=idle hp 8→5 me 9 mp 11
+[156.5] fight heavydrone d=5.5 st=chase aim=it e@4254.5,16.1,-52.4 me@4255.0,15.8,-58.3 ball=idle hp 5→2 me 9 mp 10
+[157.7] fight heavydrone d=6.0 st=dead aim=it e@4254.5,16.1,-52.1 me@4255.0,15.8,-58.3 ball=impact hp 2→-1 me 9 mp 9
+[157.9] grab: 0 pickups, hp 9
+[158.0] go → (4250.2, -41.0) plan ok=true pts=3 left=0.18
+[164.8] go → (4254.0, -53.8) plan ok=true pts=3 left=0.21
+[170.4] go → (4245.7, -53.6) plan ok=true pts=2 left=0.17
+[175.2] go → (4252.8, -48.0) plan ok=false pts=4 left=1.09
+[181.7] go → (4252.8, -48.0) plan ok=false pts=2 left=1.08
+[184.2] stuck at (4253.9, -48.1): replan
+[192.8] go → (4334.0, -32.0) plan ok=true pts=11 left=0.55
+[202.9] stuck at (4274.5, -60.0): replan
+stats total: {"play":195.6,"dialog":17.5,"trans":2.1,"scene":19.1,"menu":0,"other":0,"lines":41,"words":660,"says":41,"walked":350,"hpLost":0,"deaths":0,"rooms":3,"chapter":"evacuation","coinsNow":14,"hpNow":9,"cloversNow":4,"revives":0}
+kept save-10.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     13 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

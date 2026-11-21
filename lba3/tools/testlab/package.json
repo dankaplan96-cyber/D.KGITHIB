@@ -1,0 +1,30 @@
+{
+  "name": "lba3-test-lab",
+  "productName": "LBA3 Test Lab",
+  "version": "0.1.0",
+  "description": "Local testing companion for LBA3: The Awakening: launches the real game, runs repeatable tests, captures evidence, writes reports.",
+  "private": true,
+  "type": "module",
+  "main": "app/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "quick": "node engine/cli.mjs quick",
+    "full": "node engine/cli.mjs full",
+    "selftest": "node engine/cli.mjs selftest",
+    "dist": "electron-builder --win portable --publish never"
+  },
+  "dependencies": {
+    "playwright": "1.64.1"
+  },
+  "devDependencies": {
+    "electron": "43.7.9",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "org.lba3fan.testlab",
+    "productName": "LBA3 Test Lab",
+    "files": ["app/**", "engine/**", "package.json"],
+    "directories": { "output": "dist" },
+    "win": { "target": "portable", "artifactName": "LBA3-Test-Lab-${version}-portable.${ext}" }
+  }
+}

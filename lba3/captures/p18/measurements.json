@@ -1,0 +1,1201 @@
+{
+ "note": "Automated runtime only; nothing listened to (SwiftShader / headless Chromium, OfflineAudioContext at 48 kHz, the game's voice bus).",
+ "lines": [],
+ "speakers": {
+  "twinsen": {
+   "classic": {
+    "ebu": {
+     "lufs": -17.5,
+     "truePeak": -2.2
+    },
+    "rows": [
+     {
+      "text": "I fixed that yesterday.",
+      "typingSec": 0.46,
+      "voiceSec": 0.88,
+      "peakDb": -2.3,
+      "rmsDb": -15.2,
+      "f0": 118,
+      "rangeSt": 5.1,
+      "clickCrest": 6.7,
+      "maxJump": 0.1433,
+      "above3k": 0.004,
+      "above5k": 0.0005,
+      "centroidHz": 472,
+      "modDb": 16.5,
+      "peaks": 6,
+      "joins": 5,
+      "dipMedianDb": -9.2,
+      "deepJoins": 0.2,
+      "ioiMs": 141,
+      "ioiCv": 0.44,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 0.42,
+      "jumpsPerSec": 0,
+      "stepSt": 2,
+      "voicedShare": 0.48
+     },
+     {
+      "text": "Next door's kettle furred up with these since breakfast. Pipes don't do that.",
+      "typingSec": 1.54,
+      "voiceSec": 3.35,
+      "peakDb": -2.2,
+      "rmsDb": -15.2,
+      "f0": 125,
+      "rangeSt": 5.1,
+      "clickCrest": 6,
+      "maxJump": 0.1373,
+      "above3k": 0.007,
+      "above5k": 0.0014,
+      "centroidHz": 428,
+      "modDb": 21.2,
+      "peaks": 20,
+      "joins": 15,
+      "dipMedianDb": -6.7,
+      "deepJoins": 0.2,
+      "ioiMs": 152,
+      "ioiCv": 0.45,
+      "pauses": 1,
+      "pauseMedianMs": 300,
+      "voicedSec": 1.06,
+      "jumpsPerSec": 0,
+      "stepSt": 1.3,
+      "voicedShare": 0.32
+     }
+    ],
+    "syllables": 20,
+    "renderMs": 267
+   },
+   "words": {
+    "ebu": {
+     "lufs": -16.6,
+     "truePeak": -3.2
+    },
+    "rows": [
+     {
+      "text": "I fixed that yesterday.",
+      "typingSec": 0.46,
+      "voiceSec": 1.09,
+      "peakDb": -3.9,
+      "rmsDb": -14.8,
+      "f0": 130,
+      "rangeSt": 6.8,
+      "clickCrest": 5.9,
+      "maxJump": 0.0913,
+      "above3k": 0,
+      "above5k": 0.0001,
+      "centroidHz": 409,
+      "modDb": 15.6,
+      "peaks": 6,
+      "joins": 5,
+      "dipMedianDb": -6.5,
+      "deepJoins": 0.4,
+      "ioiMs": 158,
+      "ioiCv": 0.41,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 0.88,
+      "jumpsPerSec": 0,
+      "stepSt": 0.67,
+      "voicedShare": 0.81
+     },
+     {
+      "text": "Next door's kettle furred up with these since breakfast. Pipes don't do that.",
+      "typingSec": 1.54,
+      "voiceSec": 3.14,
+      "peakDb": -3.2,
+      "rmsDb": -14.8,
+      "f0": 132,
+      "rangeSt": 5,
+      "clickCrest": 5.9,
+      "maxJump": 0.0859,
+      "above3k": 0,
+      "above5k": 0.0001,
+      "centroidHz": 391,
+      "modDb": 18.1,
+      "peaks": 16,
+      "joins": 14,
+      "dipMedianDb": -8,
+      "deepJoins": 0.5,
+      "ioiMs": 173,
+      "ioiCv": 0.41,
+      "pauses": 1,
+      "pauseMedianMs": 220,
+      "voicedSec": 2.66,
+      "jumpsPerSec": 0,
+      "stepSt": 0.48,
+      "voicedShare": 0.85
+     }
+    ],
+    "syllables": 17,
+    "renderMs": 256
+   },
+   "chain": {
+    "ebu": {
+     "lufs": -17.9,
+     "truePeak": -2.7
+    },
+    "rows": [
+     {
+      "text": "I fixed that yesterday.",
+      "typingSec": 0.46,
+      "voiceSec": 1.07,
+      "peakDb": -3.8,
+      "rmsDb": -15.1,
+      "f0": 132,
+      "rangeSt": 6.4,
+      "clickCrest": 4.2,
+      "maxJump": 0.0344,
+      "above3k": 0,
+      "above5k": 0,
+      "centroidHz": 214,
+      "modDb": 19.8,
+      "peaks": 5,
+      "joins": 4,
+      "dipMedianDb": -14.8,
+      "deepJoins": 0.5,
+      "ioiMs": 200,
+      "ioiCv": 0.17,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 0.96,
+      "jumpsPerSec": 0,
+      "stepSt": 0.42,
+      "voicedShare": 0.9
+     },
+     {
+      "text": "Next door's kettle furred up with these since breakfast. Pipes don't do that.",
+      "typingSec": 1.54,
+      "voiceSec": 3.11,
+      "peakDb": -2.7,
+      "rmsDb": -15.3,
+      "f0": 133,
+      "rangeSt": 4,
+      "clickCrest": 4.8,
+      "maxJump": 0.0514,
+      "above3k": 0.001,
+      "above5k": 0.0001,
+      "centroidHz": 211,
+      "modDb": 22.6,
+      "peaks": 15,
+      "joins": 12,
+      "dipMedianDb": -9.9,
+      "deepJoins": 0.5,
+      "ioiMs": 178,
+      "ioiCv": 0.42,
+      "pauses": 1,
+      "pauseMedianMs": 275,
+      "voicedSec": 2.22,
+      "jumpsPerSec": 0,
+      "stepSt": 0.4,
+      "voicedShare": 0.71
+     }
+    ],
+    "syllables": 17,
+    "renderMs": 229
+   }
+  },
+  "zoe": {
+   "classic": {
+    "ebu": {
+     "lufs": -16.4,
+     "truePeak": -2.9
+    },
+    "rows": [
+     {
+      "text": "Twinsen. The tap's stopped again.",
+      "typingSec": 0.66,
+      "voiceSec": 1.32,
+      "peakDb": -3.2,
+      "rmsDb": -13.6,
+      "f0": 186,
+      "rangeSt": 9.5,
+      "clickCrest": 6.2,
+      "maxJump": 0.1243,
+      "above3k": 0.004,
+      "above5k": 0.001,
+      "centroidHz": 371,
+      "modDb": 22.2,
+      "peaks": 6,
+      "joins": 4,
+      "dipMedianDb": -1.3,
+      "deepJoins": 0.25,
+      "ioiMs": 160,
+      "ioiCv": 0.48,
+      "pauses": 1,
+      "pauseMedianMs": 305,
+      "voicedSec": 0.78,
+      "jumpsPerSec": 0,
+      "stepSt": 0.9,
+      "voicedShare": 0.59
+     },
+     {
+      "text": "That's warm. It's never warm.",
+      "typingSec": 0.58,
+      "voiceSec": 1.83,
+      "peakDb": -2.9,
+      "rmsDb": -14,
+      "f0": 225,
+      "rangeSt": 4,
+      "clickCrest": 5.6,
+      "maxJump": 0.1544,
+      "above3k": 0.003,
+      "above5k": 0.001,
+      "centroidHz": 396,
+      "modDb": 25,
+      "peaks": 9,
+      "joins": 5,
+      "dipMedianDb": -6.2,
+      "deepJoins": 0.2,
+      "ioiMs": 148,
+      "ioiCv": 0.38,
+      "pauses": 1,
+      "pauseMedianMs": 315,
+      "voicedSec": 0.98,
+      "jumpsPerSec": 0,
+      "stepSt": 1.28,
+      "voicedShare": 0.53
+     }
+    ],
+    "syllables": 12,
+    "renderMs": 289
+   },
+   "words": {
+    "ebu": {
+     "lufs": -16.6,
+     "truePeak": -3.8
+    },
+    "rows": [
+     {
+      "text": "Twinsen. The tap's stopped again.",
+      "typingSec": 0.66,
+      "voiceSec": 1.65,
+      "peakDb": -3.8,
+      "rmsDb": -14.8,
+      "f0": 207,
+      "rangeSt": 10.5,
+      "clickCrest": 5.5,
+      "maxJump": 0.1043,
+      "above3k": 0.001,
+      "above5k": 0.0003,
+      "centroidHz": 475,
+      "modDb": 18.6,
+      "peaks": 8,
+      "joins": 6,
+      "dipMedianDb": -5.2,
+      "deepJoins": 0.17,
+      "ioiMs": 140,
+      "ioiCv": 0.38,
+      "pauses": 1,
+      "pauseMedianMs": 165,
+      "voicedSec": 1.41,
+      "jumpsPerSec": 0,
+      "stepSt": 0.46,
+      "voicedShare": 0.86
+     },
+     {
+      "text": "That's warm. It's never warm.",
+      "typingSec": 0.58,
+      "voiceSec": 1.93,
+      "peakDb": -4.2,
+      "rmsDb": -14.8,
+      "f0": 204,
+      "rangeSt": 3.4,
+      "clickCrest": 5.7,
+      "maxJump": 0.1017,
+      "above3k": 0,
+      "above5k": 0.0002,
+      "centroidHz": 510,
+      "modDb": 15.5,
+      "peaks": 10,
+      "joins": 8,
+      "dipMedianDb": -0.9,
+      "deepJoins": 0.25,
+      "ioiMs": 134,
+      "ioiCv": 0.5,
+      "pauses": 1,
+      "pauseMedianMs": 160,
+      "voicedSec": 1.71,
+      "jumpsPerSec": 0,
+      "stepSt": 0.38,
+      "voicedShare": 0.89
+     }
+    ],
+    "syllables": 12,
+    "renderMs": 168
+   },
+   "chain": {
+    "ebu": {
+     "lufs": -19.3,
+     "truePeak": -5.5
+    },
+    "rows": [
+     {
+      "text": "Twinsen. The tap's stopped again.",
+      "typingSec": 0.66,
+      "voiceSec": 1.65,
+      "peakDb": -5.6,
+      "rmsDb": -17,
+      "f0": 208,
+      "rangeSt": 11.3,
+      "clickCrest": 4.3,
+      "maxJump": 0.0546,
+      "above3k": 0.003,
+      "above5k": 0.0004,
+      "centroidHz": 398,
+      "modDb": 20.3,
+      "peaks": 8,
+      "joins": 6,
+      "dipMedianDb": -10.4,
+      "deepJoins": 0.17,
+      "ioiMs": 144,
+      "ioiCv": 0.45,
+      "pauses": 1,
+      "pauseMedianMs": 170,
+      "voicedSec": 1.28,
+      "jumpsPerSec": 0,
+      "stepSt": 0.45,
+      "voicedShare": 0.78
+     },
+     {
+      "text": "That's warm. It's never warm.",
+      "typingSec": 0.58,
+      "voiceSec": 1.91,
+      "peakDb": -5.5,
+      "rmsDb": -17.1,
+      "f0": 204,
+      "rangeSt": 3.3,
+      "clickCrest": 4.6,
+      "maxJump": 0.0537,
+      "above3k": 0.001,
+      "above5k": 0.0001,
+      "centroidHz": 390,
+      "modDb": 17,
+      "peaks": 12,
+      "joins": 10,
+      "dipMedianDb": -0.8,
+      "deepJoins": 0.2,
+      "ioiMs": 117,
+      "ioiCv": 0.47,
+      "pauses": 1,
+      "pauseMedianMs": 195,
+      "voicedSec": 1.62,
+      "jumpsPerSec": 0,
+      "stepSt": 0.3,
+      "voicedShare": 0.85
+     }
+    ],
+    "syllables": 12,
+    "renderMs": 155
+   }
+  },
+  "arthur": {
+   "classic": {
+    "ebu": {
+     "lufs": -16.5,
+     "truePeak": -2.4
+    },
+    "rows": [
+     {
+      "text": "Dad, can I fix the next radio too?",
+      "typingSec": 0.68,
+      "voiceSec": 2.08,
+      "peakDb": -2.9,
+      "rmsDb": -13.7,
+      "f0": 247,
+      "rangeSt": 5.9,
+      "clickCrest": 7.1,
+      "maxJump": 0.088,
+      "above3k": 0.001,
+      "above5k": 0.0001,
+      "centroidHz": 551,
+      "modDb": 19.5,
+      "peaks": 15,
+      "joins": 9,
+      "dipMedianDb": -3.3,
+      "deepJoins": 0,
+      "ioiMs": 98,
+      "ioiCv": 0.14,
+      "pauses": 2,
+      "pauseMedianMs": 145,
+      "voicedSec": 1.38,
+      "jumpsPerSec": 0,
+      "stepSt": 1.45,
+      "voicedShare": 0.66
+     },
+     {
+      "text": "Dad? Dad! It's Arthur. Mum's busy. Everyone's busy!",
+      "typingSec": 1.02,
+      "voiceSec": 3.75,
+      "peakDb": -2.4,
+      "rmsDb": -14.1,
+      "f0": 290,
+      "rangeSt": 9.5,
+      "clickCrest": 6.2,
+      "maxJump": 0.1634,
+      "above3k": 0.001,
+      "above5k": 0.0003,
+      "centroidHz": 608,
+      "modDb": 21,
+      "peaks": 15,
+      "joins": 6,
+      "dipMedianDb": -2,
+      "deepJoins": 0.33,
+      "ioiMs": 109,
+      "ioiCv": 0.28,
+      "pauses": 5,
+      "pauseMedianMs": 300,
+      "voicedSec": 1.49,
+      "jumpsPerSec": 0.67,
+      "stepSt": 2.62,
+      "voicedShare": 0.4
+     }
+    ],
+    "syllables": 22,
+    "renderMs": 249
+   },
+   "words": {
+    "ebu": {
+     "lufs": -16.5,
+     "truePeak": -2.8
+    },
+    "rows": [
+     {
+      "text": "Dad, can I fix the next radio too?",
+      "typingSec": 0.68,
+      "voiceSec": 2.32,
+      "peakDb": -3.6,
+      "rmsDb": -14.6,
+      "f0": 275,
+      "rangeSt": 2.7,
+      "clickCrest": 3.9,
+      "maxJump": 0.1116,
+      "above3k": 0.002,
+      "above5k": 0.0001,
+      "centroidHz": 681,
+      "modDb": 18.3,
+      "peaks": 12,
+      "joins": 10,
+      "dipMedianDb": -8.9,
+      "deepJoins": 0.4,
+      "ioiMs": 171,
+      "ioiCv": 0.52,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 2.16,
+      "jumpsPerSec": 0,
+      "stepSt": 0.49,
+      "voicedShare": 0.93
+     },
+     {
+      "text": "Dad? Dad! It's Arthur. Mum's busy. Everyone's busy!",
+      "typingSec": 1.02,
+      "voiceSec": 3.39,
+      "peakDb": -2.8,
+      "rmsDb": -15.2,
+      "f0": 275,
+      "rangeSt": 5.8,
+      "clickCrest": 5.1,
+      "maxJump": 0.107,
+      "above3k": 0.002,
+      "above5k": 0.0001,
+      "centroidHz": 677,
+      "modDb": 16.7,
+      "peaks": 15,
+      "joins": 10,
+      "dipMedianDb": -5.2,
+      "deepJoins": 0.3,
+      "ioiMs": 159,
+      "ioiCv": 0.37,
+      "pauses": 4,
+      "pauseMedianMs": 115,
+      "voicedSec": 3.1,
+      "jumpsPerSec": 0,
+      "stepSt": 0.71,
+      "voicedShare": 0.91
+     }
+    ],
+    "syllables": 22,
+    "renderMs": 216
+   },
+   "chain": {
+    "ebu": {
+     "lufs": -19,
+     "truePeak": -3.2
+    },
+    "rows": [
+     {
+      "text": "Dad, can I fix the next radio too?",
+      "typingSec": 0.68,
+      "voiceSec": 2.3,
+      "peakDb": -6.4,
+      "rmsDb": -17.3,
+      "f0": 275,
+      "rangeSt": 2.8,
+      "clickCrest": 4.5,
+      "maxJump": 0.0595,
+      "above3k": 0.001,
+      "above5k": 0.0001,
+      "centroidHz": 575,
+      "modDb": 20.1,
+      "peaks": 13,
+      "joins": 11,
+      "dipMedianDb": -6.9,
+      "deepJoins": 0.18,
+      "ioiMs": 154,
+      "ioiCv": 0.41,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 2.13,
+      "jumpsPerSec": 0,
+      "stepSt": 0.47,
+      "voicedShare": 0.93
+     },
+     {
+      "text": "Dad? Dad! It's Arthur. Mum's busy. Everyone's busy!",
+      "typingSec": 1.02,
+      "voiceSec": 3.36,
+      "peakDb": -3.2,
+      "rmsDb": -17,
+      "f0": 279,
+      "rangeSt": 5.1,
+      "clickCrest": 4.5,
+      "maxJump": 0.0685,
+      "above3k": 0.002,
+      "above5k": 0.0001,
+      "centroidHz": 543,
+      "modDb": 16.2,
+      "peaks": 13,
+      "joins": 7,
+      "dipMedianDb": -11.6,
+      "deepJoins": 0.29,
+      "ioiMs": 191,
+      "ioiCv": 0.26,
+      "pauses": 4,
+      "pauseMedianMs": 150,
+      "voicedSec": 2.98,
+      "jumpsPerSec": 1.01,
+      "stepSt": 0.69,
+      "voicedShare": 0.89
+     }
+    ],
+    "syllables": 22,
+    "renderMs": 201
+   }
+  },
+  "joss-quetch-resident": {
+   "classic": {
+    "ebu": {
+     "lufs": -17.1,
+     "truePeak": -2.2
+    },
+    "rows": [
+     {
+      "text": "The goats are back in their field. They won't look at the lighthouse. Can't blame them.",
+      "typingSec": 1.74,
+      "voiceSec": 3.3,
+      "peakDb": -2.2,
+      "rmsDb": -14.7,
+      "f0": 119,
+      "rangeSt": 7.8,
+      "clickCrest": 5.6,
+      "maxJump": 0.1057,
+      "above3k": 0.003,
+      "above5k": 0.0015,
+      "centroidHz": 344,
+      "modDb": 21.3,
+      "peaks": 19,
+      "joins": 15,
+      "dipMedianDb": -6.6,
+      "deepJoins": 0.07,
+      "ioiMs": 123,
+      "ioiCv": 0.35,
+      "pauses": 2,
+      "pauseMedianMs": 295,
+      "voicedSec": 0.99,
+      "jumpsPerSec": 0,
+      "stepSt": 2.07,
+      "voicedShare": 0.3
+     }
+    ],
+    "syllables": 11,
+    "renderMs": 189
+   },
+   "words": {
+    "ebu": {
+     "lufs": -16.8,
+     "truePeak": -3.1
+    },
+    "rows": [
+     {
+      "text": "The goats are back in their field. They won't look at the lighthouse. Can't blame them.",
+      "typingSec": 1.74,
+      "voiceSec": 3.52,
+      "peakDb": -3.1,
+      "rmsDb": -14.9,
+      "f0": 116,
+      "rangeSt": 3.6,
+      "clickCrest": 5.9,
+      "maxJump": 0.0853,
+      "above3k": 0,
+      "above5k": 0.0001,
+      "centroidHz": 338,
+      "modDb": 15.1,
+      "peaks": 18,
+      "joins": 15,
+      "dipMedianDb": -10.7,
+      "deepJoins": 0.27,
+      "ioiMs": 149,
+      "ioiCv": 0.42,
+      "pauses": 2,
+      "pauseMedianMs": 215,
+      "voicedSec": 2.83,
+      "jumpsPerSec": 0,
+      "stepSt": 0.44,
+      "voicedShare": 0.8
+     }
+    ],
+    "syllables": 13,
+    "renderMs": 152
+   },
+   "chain": {
+    "ebu": {
+     "lufs": -17.8,
+     "truePeak": -2.5
+    },
+    "rows": [
+     {
+      "text": "The goats are back in their field. They won't look at the lighthouse. Can't blame them.",
+      "typingSec": 1.74,
+      "voiceSec": 3.5,
+      "peakDb": -2.5,
+      "rmsDb": -15,
+      "f0": 116,
+      "rangeSt": 2.8,
+      "clickCrest": 4.1,
+      "maxJump": 0.0448,
+      "above3k": 0,
+      "above5k": 0,
+      "centroidHz": 182,
+      "modDb": 19.1,
+      "peaks": 16,
+      "joins": 11,
+      "dipMedianDb": -6.1,
+      "deepJoins": 0.27,
+      "ioiMs": 170,
+      "ioiCv": 0.5,
+      "pauses": 2,
+      "pauseMedianMs": 275,
+      "voicedSec": 2.62,
+      "jumpsPerSec": 0,
+      "stepSt": 0.41,
+      "voicedShare": 0.75
+     }
+    ],
+    "syllables": 13,
+    "renderMs": 155
+   }
+  },
+  "nara-esmer": {
+   "classic": {
+    "ebu": {
+     "lufs": -16.2,
+     "truePeak": -3.1
+    },
+    "rows": [
+     {
+      "text": "Need anything?",
+      "typingSec": 0.28,
+      "voiceSec": 0.48,
+      "peakDb": -3.1,
+      "rmsDb": -14.2,
+      "f0": 368,
+      "rangeSt": 8.1,
+      "clickCrest": 4.3,
+      "maxJump": 0.1138,
+      "above3k": 0.011,
+      "above5k": 0.0023,
+      "centroidHz": 535,
+      "modDb": 22.5,
+      "peaks": 3,
+      "joins": 2,
+      "dipMedianDb": -1.5,
+      "deepJoins": 0,
+      "ioiMs": 100,
+      "ioiCv": 0.25,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 0.34,
+      "jumpsPerSec": 0,
+      "stepSt": 2.6,
+      "voicedShare": 0.7
+     },
+     {
+      "text": "Esmer goods. That pistol came off the shuttle yard's bench: it runs on a crystal cell, or on your own magic if it has to.",
+      "typingSec": 2.42,
+      "voiceSec": 3.71,
+      "peakDb": -3.3,
+      "rmsDb": -14.1,
+      "f0": 256,
+      "rangeSt": 6.7,
+      "clickCrest": 5.7,
+      "maxJump": 0.1413,
+      "above3k": 0.005,
+      "above5k": 0.0012,
+      "centroidHz": 548,
+      "modDb": 22.2,
+      "peaks": 24,
+      "joins": 19,
+      "dipMedianDb": -4,
+      "deepJoins": 0.21,
+      "ioiMs": 124,
+      "ioiCv": 0.48,
+      "pauses": 3,
+      "pauseMedianMs": 210,
+      "voicedSec": 2.32,
+      "jumpsPerSec": 0.86,
+      "stepSt": 1.82,
+      "voicedShare": 0.63
+     }
+    ],
+    "syllables": 20,
+    "renderMs": 226
+   },
+   "words": {
+    "ebu": {
+     "lufs": -15.9,
+     "truePeak": -4.4
+    },
+    "rows": [
+     {
+      "text": "Need anything?",
+      "typingSec": 0.28,
+      "voiceSec": 0.79,
+      "peakDb": -4.4,
+      "rmsDb": -14.8,
+      "f0": 242,
+      "rangeSt": 5.8,
+      "clickCrest": 5,
+      "maxJump": 0.0969,
+      "above3k": 0.001,
+      "above5k": 0.0001,
+      "centroidHz": 507,
+      "modDb": 12.2,
+      "peaks": 5,
+      "joins": 4,
+      "dipMedianDb": -0.8,
+      "deepJoins": 0,
+      "ioiMs": 144,
+      "ioiCv": 0.36,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 0.77,
+      "jumpsPerSec": 0,
+      "stepSt": 0.77,
+      "voicedShare": 0.97
+     },
+     {
+      "text": "Esmer goods. That pistol came off the shuttle yard's bench: it runs on a crystal cell, or on your own magic if it has to.",
+      "typingSec": 2.42,
+      "voiceSec": 4.69,
+      "peakDb": -4.4,
+      "rmsDb": -14.8,
+      "f0": 240,
+      "rangeSt": 5,
+      "clickCrest": 4.9,
+      "maxJump": 0.0862,
+      "above3k": 0,
+      "above5k": 0.0001,
+      "centroidHz": 544,
+      "modDb": 10.6,
+      "peaks": 30,
+      "joins": 27,
+      "dipMedianDb": -6,
+      "deepJoins": 0.04,
+      "ioiMs": 132,
+      "ioiCv": 0.4,
+      "pauses": 1,
+      "pauseMedianMs": 150,
+      "voicedSec": 4.53,
+      "jumpsPerSec": 0,
+      "stepSt": 0.38,
+      "voicedShare": 0.97
+     }
+    ],
+    "syllables": 24,
+    "renderMs": 174
+   },
+   "chain": {
+    "ebu": {
+     "lufs": -16.4,
+     "truePeak": -3.4
+    },
+    "rows": [
+     {
+      "text": "Need anything?",
+      "typingSec": 0.28,
+      "voiceSec": 0.77,
+      "peakDb": -3.7,
+      "rmsDb": -15.3,
+      "f0": 243,
+      "rangeSt": 4.3,
+      "clickCrest": 4.3,
+      "maxJump": 0.0832,
+      "above3k": 0.003,
+      "above5k": 0.0001,
+      "centroidHz": 476,
+      "modDb": 13.6,
+      "peaks": 3,
+      "joins": 2,
+      "dipMedianDb": -6.6,
+      "deepJoins": 0,
+      "ioiMs": 233,
+      "ioiCv": 0.4,
+      "pauses": 0,
+      "pauseMedianMs": 0,
+      "voicedSec": 0.77,
+      "jumpsPerSec": 0,
+      "stepSt": 0.33,
+      "voicedShare": 1.01
+     },
+     {
+      "text": "Esmer goods. That pistol came off the shuttle yard's bench: it runs on a crystal cell, or on your own magic if it has to.",
+      "typingSec": 2.42,
+      "voiceSec": 4.65,
+      "peakDb": -3.5,
+      "rmsDb": -15.1,
+      "f0": 241,
+      "rangeSt": 4.7,
+      "clickCrest": 4.2,
+      "maxJump": 0.0896,
+      "above3k": 0.003,
+      "above5k": 0.0002,
+      "centroidHz": 472,
+      "modDb": 11.1,
+      "peaks": 29,
+      "joins": 26,
+      "dipMedianDb": -5.9,
+      "deepJoins": 0.23,
+      "ioiMs": 136,
+      "ioiCv": 0.34,
+      "pauses": 2,
+      "pauseMedianMs": 170,
+      "voicedSec": 4.43,
+      "jumpsPerSec": 0.45,
+      "stepSt": 0.38,
+      "voicedShare": 0.95
+     }
+    ],
+    "syllables": 24,
+    "renderMs": 294
+   }
+  }
+ },
+ "conversation": {
+  "seconds": 76.81,
+  "lines": 15,
+  "classic": {
+   "voice": {
+    "lufs": -16.7,
+    "truePeak": -2.2
+   },
+   "mix": {
+    "lufs": -16.9,
+    "truePeak": -1.7
+   },
+   "peakDbMax": -2.2,
+   "clickCrestMax": 9.1,
+   "maxJump": 0.1746
+  },
+  "words": {
+   "voice": {
+    "lufs": -16.3,
+    "truePeak": -2.7
+   },
+   "mix": {
+    "lufs": -16.3,
+    "truePeak": -2.4
+   },
+   "peakDbMax": -2.7,
+   "clickCrestMax": 6,
+   "maxJump": 0.1066
+  }
+ },
+ "page": {
+  "corpus": {
+   "hero": {
+    "f0": 130,
+    "pace": 5.41,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1.02,
+     "median": 1.07,
+     "p90": 1.32,
+     "max": 2.35
+    },
+    "wordsOverTyping": {
+     "median": 2.23,
+     "p90": 2.86
+    },
+    "classicOverTyping": {
+     "median": 2.02,
+     "p90": 2.69
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.8,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.3,
+     "p99": 5.3
+    }
+   },
+   "zoe": {
+    "f0": 206,
+    "pace": 4.4,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1.03,
+     "median": 1.08,
+     "p90": 1.36,
+     "max": 2.41
+    },
+    "wordsOverTyping": {
+     "median": 2.52,
+     "p90": 3.13
+    },
+    "classicOverTyping": {
+     "median": 2.23,
+     "p90": 2.9
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.8,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.3,
+     "p99": 2
+    }
+   },
+   "arthur": {
+    "f0": 274,
+    "pace": 5.59,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1,
+     "median": 1.07,
+     "p90": 1.22,
+     "max": 2.04
+    },
+    "wordsOverTyping": {
+     "median": 2.2,
+     "p90": 2.79
+    },
+    "classicOverTyping": {
+     "median": 2.03,
+     "p90": 2.64
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.82,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.3,
+     "p99": 3.2
+    }
+   },
+   "farmer1": {
+    "f0": 115,
+    "pace": 5.43,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1.04,
+     "median": 1.08,
+     "p90": 1.4,
+     "max": 2.61
+    },
+    "wordsOverTyping": {
+     "median": 2.15,
+     "p90": 2.69
+    },
+    "classicOverTyping": {
+     "median": 1.92,
+     "p90": 2.5
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.79,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.4,
+     "p99": 3.6
+    }
+   },
+   "nara": {
+    "f0": 238,
+    "pace": 4.83,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1.04,
+     "median": 1.1,
+     "p90": 1.5,
+     "max": 2.57
+    },
+    "wordsOverTyping": {
+     "median": 2.18,
+     "p90": 2.88
+    },
+    "classicOverTyping": {
+     "median": 1.8,
+     "p90": 2.72
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.8,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.3,
+     "p99": 2.5
+    }
+   },
+   "vesk": {
+    "f0": 93,
+    "pace": 4.89,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1.01,
+     "median": 1.07,
+     "p90": 1.29,
+     "max": 2.32
+    },
+    "wordsOverTyping": {
+     "median": 2.19,
+     "p90": 2.76
+    },
+    "classicOverTyping": {
+     "median": 2.01,
+     "p90": 2.6
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.79,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.3,
+     "p99": 2.3
+    }
+   },
+   "sendell": {
+    "f0": 262,
+    "pace": 3.5,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1.05,
+     "median": 1.48,
+     "p90": 2.25,
+     "max": 4.87
+    },
+    "wordsOverTyping": {
+     "median": 3.53,
+     "p90": 4.43
+    },
+    "classicOverTyping": {
+     "median": 2.34,
+     "p90": 3.99
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.75,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.5,
+     "p99": 2.9
+    }
+   },
+   "baldino": {
+    "f0": 140,
+    "pace": 4.92,
+    "lines": 3588,
+    "wordsOverClassic": {
+     "p10": 1.07,
+     "median": 1.31,
+     "p90": 1.69,
+     "max": 2.96
+    },
+    "wordsOverTyping": {
+     "median": 2.48,
+     "p90": 2.98
+    },
+    "classicOverTyping": {
+     "median": 1.86,
+     "p90": 2.47
+    },
+    "writtenSyllablesSpoken": {
+     "median": 0.75,
+     "p10": 0.71
+    },
+    "planMs": {
+     "median": 0.4,
+     "p99": 2.9
+    }
+   }
+  },
+  "cost": {
+   "hero: I fixed that yesterday.": {
+    "sec": 1.52,
+    "ms": 18.7,
+    "msPerSec": 12.26
+   },
+   "hero: Next door's kettle furred up w": {
+    "sec": 3.7,
+    "ms": 24.5,
+    "msPerSec": 6.62
+   },
+   "hero: Five stations. Five places whe": {
+    "sec": 8.64,
+    "ms": 44.4,
+    "msPerSec": 5.14
+   },
+   "zoe: I fixed that yesterday.": {
+    "sec": 1.7,
+    "ms": 19.9,
+    "msPerSec": 11.72
+   },
+   "zoe: Next door's kettle furred up w": {
+    "sec": 4.38,
+    "ms": 15.8,
+    "msPerSec": 3.61
+   },
+   "zoe: Five stations. Five places whe": {
+    "sec": 9.75,
+    "ms": 47.8,
+    "msPerSec": 4.9
+   },
+   "sendell: I fixed that yesterday.": {
+    "sec": 2.46,
+    "ms": 8.2,
+    "msPerSec": 3.34
+   },
+   "sendell: Next door's kettle furred up w": {
+    "sec": 4.52,
+    "ms": 14.2,
+    "msPerSec": 3.14
+   },
+   "sendell: Five stations. Five places whe": {
+    "sec": 14.2,
+    "ms": 75.9,
+    "msPerSec": 5.35
+   }
+  },
+  "example": {
+   "text": "Have you seen the pump?",
+   "phones": [
+    "h ae v | y uw | s iy1 n | dh ax | p ah1 m p"
+   ],
+   "spoken": "hev yu sin dhax puhmt"
+  },
+  "consonantsAsWritten": 0.41,
+  "workerRoundTripMs": 32
+ }
+}

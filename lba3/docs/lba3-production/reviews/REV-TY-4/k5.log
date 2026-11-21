@@ -1,0 +1,24 @@
+start: {"room":"desert","ch":"steam","k":{},"cowl":2,"jars":5,"ferry":false,"items":["evacplan"],"coins":11,"hp":"9/11","pos":[3351.5,5,1.5],"lying":[],"state":"play"}
+sani (ch5, nothing done): "talked"
+sani lines: ["n_dkid: Hesk says the pump's wheel always looks into the wind. And his flags point where the wind goes."]
+lumi (ch5): "talked"
+lumi lines: ["n_weaver: The storm tore the screen off the cool room's wind-catcher. I wove a new one.","n_weaver: Tie it over the mouth and keep the mouth into the wind, or it's just a chimney. My knees don't do that stair.","TOAST k_toast_screen"]
+items: ["evacplan","kscreen"]
+brosk (ch5, before jar): {"r":"talked","jar":true,"ask":true}
+brosk lines: ["n_dtrader: A shovel? Water first. Fill this jar at the oasis, and the shovel's yours. Business is business.","TOAST c5_toast_jar"]
+door: "p_look"
+door lines: ["n_hero: Kesh's cool room. It was one of FunFrock's blockhouses. Kesh dug the door out of the dune and built a wind-catcher on the roof.","n_hero: Inside: water jars, Brosk's dates, Lumi's wool. And air like soup.","n_hero: (Up on the roof, the wind-catcher's mouth is turned the wrong way.)"]
+brosk again (jar in hand, no water): {"r":"talked","ask":true}
+brosk 2 lines: ["n_dtrader: The oasis, the jar, the water. Then the shovel."]
+fit (screen first): {"label":"p_fit","fit":true}
+fit lines: ["n_hero: Lumi's screen, tied over the mouth.","n_hero: Now the mouth goes into the wind."]
+turn: {"label":"p_turn","dir":3,"done":false,"sand":false}
+turn lines: ["n_hero: Side-on to the wind. Barely a breath."]
+turn: {"label":"p_turn","dir":0,"done":true,"sand":false}
+turn lines: ["n_hero: Air pours down the tower through the screen. Below, the curtain in the door lifts.","TOAST k_toast_cool"]
+sani spot ch5: {"d":0,"anim":"kneelWork"}
+brosk (done, no water yet): {"r":"talked","paid":false,"owe":0,"jar":true}
+brosk 3 lines: ["n_dtrader: The oasis, the jar, the water. Then the shovel."]
+end: {"room":"desert","ch":"steam","k":{"k_screen":true,"k_ask":true,"k_doorSeen":true,"k_fit":true,"k_dir":0,"k_turns":2,"k_done":true},"cowl":0,"jars":5,"ferry":false,"items":["evacplan","jar"],"journal":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":false}],"coins":11,"hp":"9/11","pos":[3350.64,5,-3.94],"lying":[],"state":"play"}
+kept save-k5x.json
+no errors

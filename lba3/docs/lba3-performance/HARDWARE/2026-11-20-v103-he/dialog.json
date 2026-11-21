@@ -1,0 +1,27 @@
+{
+ "lines": 470,
+ "enOnly": 0,
+ "bad": [],
+ "badN": 0,
+ "longest": [
+  {
+   "k": "c2_j_bal",
+   "len": 323,
+   "h": 633
+  },
+  {
+   "k": "c2_j_sealed",
+   "len": 232,
+   "h": 486
+  },
+  {
+   "k": "c2_j_vesk",
+   "len": 173,
+   "h": 339
+  }
+ ],
+ "font": "50.6px",
+ "dir": "ltr",
+ "align": "start",
+ "errs": []
+}

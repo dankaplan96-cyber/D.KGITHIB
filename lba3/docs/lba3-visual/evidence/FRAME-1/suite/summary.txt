@@ -1,0 +1,29 @@
+== stability 08:20:39 load 8.73
+no errors ALL PASSED 
+== transitions 08:22:20 load 13.35
+no errors ALL PASSED 
+== transitions 08:23:49 load 13.59
+no errors ALL PASSED 
+== transitions 08:25:20 load 12.70
+no errors ALL PASSED 
+== dynres 08:26:46 load 12.24
+no errors ALL PASSED 
+== doorcull 08:29:02 load 9.40
+no errors ALL PASSED 
+== occluders 08:44:17 load 8.04
+no errors ALL PASSED 
+== camclear 08:53:59 load 9.49
+no errors ALL PASSED 
+== opening 09:06:14 load 3.25
+no errors ALL PASSED 
+== deaths 09:13:18 load 2.81
+no errors ALL PASSED 
+== menus 09:14:04 load 2.82
+no errors ALL PASSED 
+== timing 09:15:28 load 3.38
+no errors ALL PASSED 
+== chapter4 09:16:13 load 3.19
+no errors 1 FAILED 
+== perfbudget 09:25:52 load 4.06
+no errors 4 FAILED 
+suite done 09:32:29

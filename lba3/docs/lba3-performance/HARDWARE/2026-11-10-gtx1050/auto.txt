@@ -1,0 +1,51 @@
+ran in: Chrome 157.0.8103.51 (Playwright, fresh profile, window 1536x788 @ dpr 1.25, ?nocine, New Game), NOT the desktop app · development build served from http://127.0.0.1:53890/ · game.version 0.49.0
+GPU (a fresh WebGL2 context): ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)
+GPU (the game's canvas): ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)
+power: plugged in (AC), 77 % at start, plugged in (AC), 79 % at end
+nvidia-smi (util, memory, temp): 1 %, 0 MiB, 58 before · 35 %, 1010 MiB, 67 after
+settings at start: quality high, Quality Auto on (fresh profile defaults)
+pace check before the run: 60 animation frames in 998 ms
+mode auto · camera orbit · started 2026-11-10T17:25:46.228Z · benchmark took 2.2 min
+
+LBA3: The Awakening benchmark — Quality Auto as played · build 0.49.0 · 2026-11-10 17:28
+GPU (as reported by the browser): NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11 · power: plugged in · window 1536×788 · devicePixelRatio 1.25 · frame-rate limit off
+camera: orbit (the benchmark's free orbit)
+benchmark preparation before the first route (not measured; each step its own task, ms): arena 10 · zeelich 472 (15 steps, longest 86) · desert 821 (7 steps, longest 635) · hamalayi 584 (7 steps, longest 333) · shadow programs 455 · 2904 ms in all
+  scene changes' preparation behind the black (a step per black frame; count / longest / total ms): shadow batches 19 / 0 / 0 · draw batches back 16 / 61 / 81 · geometry 114 / 52 / 251 · batch meshes 19 / 0 / 0 · textures 19 / 14 / 61 · shadow programs 19 / 0 / 0 · shader warm-up 19 / 122 / 333 · shader warm-up (early) 3 / 46 / 135 · texture layers 3 / 23 / 46 · draw batches 3 / 215 / 396
+Auto at the start: High (gpu undefined · cpu undefined; guess) · GPU timer: yes
+
+route        fps   frame p50 / p95 / p99 / max ms   >33 / >50 / >100 (behind black)   GPU p50 / p95   CPU work p50 / p95   state at start -> end
+  street      59.5   16.7 / 16.9 / 16.9 / 199.8   1 / 1 / 1 (0)   7.03 / 14.69   7.3 / 9.3   High -> High
+      frames at each state: High 100 % · calls 203 (shadow 43) · triangles 900k · CPU probe 4.6 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.4 (p95 0.5) ms · uploads a frame p50 27 (63 KB)
+      every frame over 33 ms: 200@9.7s [frame before: work 210 ms, 1 shader program compiled] {main thread 218 ms: user-callback FrameRequestCallback src/main.js:178840 210 ms}
+      CPU by section, p50 / mean ms (calls a frame): people 0.9 / 0.95 (145.4) · hero 0.3 / 0.26 (1) · enemies 0.1 / 0.14 (35.1) · physics 0.3 / 0.32 (283.4) · interact 0.1 / 0.13 (1) · camera 0.1 / 0.13 (2) · other sim 1.1 / 1.08 (0) · submit other 1.2 / 1.28 (1) · submit main 2.1 / 2.62 (1) · submit shadow 0.5 / 0.55 (15) · submit post 0.2 / 0.19 (1)
+  interior      60   16.7 / 16.8 / 16.9 / 17   0 / 0 / 0 (0)   5.96 / 6.86   3.2 / 4.2   High -> High
+      frames at each state: High 100 % · calls 70 (shadow 5) · triangles 417k · CPU probe 4.4 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.4 (p95 0.5) ms · uploads a frame p50 3 (9 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0.1 / 0.22 (145) · hero 0.2 / 0.26 (1) · enemies 0 / 0.05 (31.1) · physics 0.1 / 0.15 (105.9) · interact 0 / 0.04 (1) · camera 0 / 0.02 (2) · other sim 0.6 / 0.66 (0) · submit other 0.5 / 0.55 (1) · submit main 1 / 1.02 (1) · submit shadow 0.1 / 0.15 (15) · submit post 0.2 / 0.19 (1)
+  combat        60   16.7 / 16.8 / 16.9 / 33.3   0 / 0 / 0 (0)   5.91 / 7.07   3.9 / 4.8   High -> High
+      frames at each state: High 100 % · calls 167 (shadow 58) · triangles 235k · CPU probe 4.3 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.4 (p95 0.5) ms · uploads a frame p50 9 (52 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0.1 / 0.16 (145) · hero 0.3 / 0.29 (1) · enemies 0.3 / 0.33 (40) · physics 0.2 / 0.28 (340.7) · interact 0 / 0.05 (1) · camera 0 / 0.02 (2) · other sim 0.7 / 0.68 (0) · submit other 0.6 / 0.57 (1) · submit main 1 / 1.07 (1) · submit shadow 0.3 / 0.32 (15) · submit post 0.2 / 0.18 (1)
+  transition    60   16.7 / 16.8 / 16.9 / 16.9   0 / 0 / 0 (0)   6.02 / 7.45   3.2 / 5.4   High -> High
+      frames at each state: High 100 % · calls 68 (shadow 5) · triangles 417k · CPU probe 4.2 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.3 (p95 0.5) ms · uploads a frame p50 3 (9 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0 / 0.1 (77.8) · hero 0.1 / 0.12 (0.5) · enemies 0 / 0.09 (19) · physics 0.1 / 0.11 (74.3) · interact 0 / 0.04 (0.5) · camera 0.1 / 0.07 (2) · other sim 0.6 / 0.65 (0) · submit other 0.7 / 0.81 (0.9) · submit main 1.1 / 1 (0.9) · submit shadow 0.2 / 0.29 (13.4) · submit post 0.2 / 0.16 (0.9)
+  arrival     52.7   16.7 / 16.9 / 83.3 / 399.8   28 / 20 / 8 (11)   6.38 / 14.04   6.2 / 18.3   High -> High
+      frames at each state: High 100 % · calls 151 (shadow 24) · triangles 663k · CPU probe 4.5 ms · pacing: on the refresh 96 % · 17.2–20 ms 0 % · longer 4 % · callback late p50 0.3 (p95 8.5) ms · uploads a frame p50 20 (60 KB)
+      every frame over 33 ms: 66@0.5s black [frame before: work 70 ms, shadow batches built 68 ms] 50@0.6s black [frame before: work 47 ms] 83@0.6s black [frame before: work 87 ms, draw batches built 70 ms, +0 geometries, +1 textures on the GPU] 50@0.7s black [frame before: work 57 ms, +63 geometries, +0 textures on the GPU, geometry upload] 50@0.8s black [frame before: work 52 ms] 67@0.9s black [frame before: work 81 ms] 67@3.5s black [frame before: work 67 ms, shadow batches built 65 ms] 117@3.7s black [frame before: work 111 ms, draw batches built 110 ms, +0 geometries, +2 textures on the GPU] {main thread 111 ms: user-callback FrameRequestCallback src/main.js:178840 111 ms} 50@3.9s black [frame before: work 53 ms] 100@6.8s black [frame before: work 113 ms, geometry upload] 33@6.8s black [frame before: work 32 ms] 50@7.0s [frame before: work 51 ms] … +16
+      CPU by section, p50 / mean ms (calls a frame): people 0.2 / 0.63 (99.2) · hero 0.2 / 0.21 (0.7) · enemies 0 / 0.09 (22.4) · physics 0.1 / 0.25 (139.9) · interact 0.1 / 0.1 (0.7) · camera 0.1 / 0.14 (2.1) · other sim 1.3 / 2.65 (0) · submit other 0.7 / 1.09 (0.9) · submit main 1.9 / 2.56 (0.9) · submit shadow 0.4 / 0.5 (13.8) · submit post 0.2 / 0.25 (0.9)
+  hamalayi      60   16.7 / 16.8 / 16.9 / 16.9   0 / 0 / 0 (0)   5.85 / 6.88   3.2 / 3.8   High -> High
+      frames at each state: High 100 % · calls 51 (shadow 8) · triangles 249k · CPU probe 4.4 ms · pacing: on the refresh 100 % · 17.2–20 ms 0 % · longer 0 % · callback late p50 0.3 (p95 0.4) ms · uploads a frame p50 11 (8 KB)
+      CPU by section, p50 / mean ms (calls a frame): people 0.1 / 0.14 (145) · hero 0.2 / 0.23 (1) · enemies 0 / 0.05 (31) · physics 0.1 / 0.09 (110) · interact 0.1 / 0.07 (1) · camera 0.1 / 0.13 (2) · other sim 0.5 / 0.51 (0) · submit other 0.8 / 0.8 (1) · submit main 0.7 / 0.76 (1) · submit shadow 0.3 / 0.28 (15) · submit post 0.2 / 0.16 (1)
+
+draw batches: 6 area builds, 1072 ms in all · pieces in batches now 1403, left and drawn on their own 173, rejoined at scene changes 14 · shadow batches: 6 area builds, 512 ms
+
+Auto's decisions during the run (s since the page opened · what · why -> the state after):
+       77.2 s · settled: High held — evaluation passed: 59.4 fps over 61 s · frame p90 ≤ 16.9 ms · CPU p90 ≤ 14.3 ms · GPU p90 ≤ 16.7 ms · missed 0 % → High
+
+Auto now: High
+  runs: High: resolution 100 %, MSAA 4×, bloom, soft shadows, shadow map 4096, High's small shadows, 8 lamps, High's grass distance, full-rate animation, full far detail
+  start: guess · nothing cached for this machine · key NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11|mains|1536x864@1.25
+  last window: ok · 60 fps · frame p90 16.8 ms · CPU p90 3.5 ms · GPU p90 6.9 ms · missed 0 %
+
+Frame time includes the GPU (the browser waits for it); "CPU work" is the game's own simulation + render submission per frame; "GPU" the GPU's own time (timer query, every other frame).
+
+no page errors

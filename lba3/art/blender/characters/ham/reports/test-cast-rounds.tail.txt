@@ -1,0 +1,6 @@
+functional: 203 passed, 6 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     22 capture(s) written for review, not judged here
+VERDICT: FAIL (6 functional)
+6 FAILED

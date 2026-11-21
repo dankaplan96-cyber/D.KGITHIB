@@ -1,0 +1,36 @@
+{
+ "before": false,
+ "at": "2026-11-09T20:42:40.014Z",
+ "renderer": {
+  "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "quality": "medium",
+  "bloom": false
+ },
+ "idle": {
+  "frames": 119,
+  "mean": 101.08,
+  "p50": 60.5,
+  "p95": 442.9,
+  "p99": 569.5,
+  "max": 767,
+  "over33": 106
+ },
+ "throw": {
+  "frames": 120,
+  "mean": 100.33,
+  "p50": 54.3,
+  "p95": 446.4,
+  "p99": 535.8,
+  "max": 536.7,
+  "over33": 107
+ },
+ "sword": {
+  "frames": 136,
+  "mean": 89.35,
+  "p50": 53.3,
+  "p95": 285,
+  "p99": 464.2,
+  "max": 519.2,
+  "over33": 121
+ }
+}

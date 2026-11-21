@@ -1,0 +1,4 @@
+street-traversal, battery, Auto Medium, game 0.43.3 (build 292), 2026-10-31T15:20:16.923Z
+fps 46.2 · GPU p50 17.3 ms · CPU work p50 13.3 ms
+GPU by pass (p50 ms): {"scene":16.39,"shadow map":0.92,"output":0}
+settings: Auto Medium · pixel ratio 1 · scale 1 → 1 · MSAA 0 · shadows true · lamps 2 · battery true

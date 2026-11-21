@@ -1,0 +1,12 @@
+PASS talks held (4 of 5 tried) ["bram:interrupted","ume:ume/npc","tilde:tilde/npc","maro:maro/npc","cs_corla:cs_corla/"]
+PASS the camera is never in anything solid in a talk []
+PASS calm: the cuts no more than the changes of speaker plus the way in and out of each talk {"cuts":[],"changes":8}
+PASS an NPC speaking out of doors: the shot favours them, head 100-170 px, face under 75° from the lens, over the box (most lines) [["ume","npc",124,49,[0.9,1,0.3,-1,0.3,0.49]],["tilde","npc",134,72,[0.9,1,0.2,1,0.42,0.7]],["maro","npc",128,34,[0.62,1,0.3,-1,0.3,0.45]],["cs_corla","",74,36,null]]
+PASS Twinsen speaking out of doors: his face seen where the line was long enough to cut to it []
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 5 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     4 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

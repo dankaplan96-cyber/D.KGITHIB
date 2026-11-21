@@ -1,0 +1,2 @@
+[{ "op": "script", "name": "hands-36 (old): ztri1 (.blend)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-cast3/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-cast3/lba3/art/blender/characters/hands/source", "ztri1"] },
+ { "op": "preview", "name": "ztri1 views (old)", "input": "art/blender/characters/hands/work/ztri1-old.blend", "output": "art/blender/characters/hands/previews/ztri1-old", "options": { "resolution": 640, "modes": ["neutral", "textured"], "orthoScale": 2.6 } }]

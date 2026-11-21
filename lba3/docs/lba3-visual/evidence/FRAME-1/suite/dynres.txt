@@ -1,0 +1,10 @@
+PASS every drawn frame through 15 forced resolution steps has picture (drawing buffer read back before and after each step) 
+PASS the canvas, its drawing buffer and the render targets keep their size and objects (nothing disposed) 
+PASS at 0.6 the picture fills the screen and matches the full-resolution one (8×6 blocks: mean brightness difference < 12, none black) 
+PASS a 30 fps frame time steps the resolution down to the floor (0.6) and no further 
+PASS holding 60 for three windows steps it back up one step 
+PASS a step up that fails at once is undone and not retried for a while (no see-saw) 
+PASS quality changes (Low ↔ Medium ↔ High): the next drawn frame has picture 
+PASS a window resize is applied with the next drawn frame (picture, new size) 
+no errors
+ALL PASSED

@@ -1,0 +1,17 @@
+port 8238  03:31:06 up  3:30,  0 user,  load average: 6.96, 7.81, 7.93
+low {"yaw1.4":{"simMs":3.4,"renderMs":13.6,"calls":470},"yaw2.2":{"simMs":3.4,"renderMs":13.6,"calls":517},"yaw2.45":{"simMs":2.9,"renderMs":13.4,"calls":574}}
+port 8238  03:34:05 up  3:33,  0 user,  load average: 9.17, 8.35, 8.11
+medium {"yaw1.4":{"simMs":5.2,"renderMs":19.1,"calls":548},"yaw2.2":{"simMs":3.4,"renderMs":17.7,"calls":571},"yaw2.45":{"simMs":3.3,"renderMs":19.7,"calls":632}}
+port 8237  03:40:34 up  3:40,  0 user,  load average: 8.74, 8.19, 8.10
+low {"yaw1.4":{"simMs":2.8,"renderMs":9.1,"calls":294},"yaw2.2":{"simMs":3.5,"renderMs":9,"calls":299},"yaw2.45":{"simMs":3.1,"renderMs":8.8,"calls":310}}
+port 8237  03:43:57 up  3:43,  0 user,  load average: 8.91, 8.54, 8.25
+medium {"yaw1.4":{"simMs":3.9,"renderMs":13.4,"calls":345},"yaw2.2":{"simMs":3.5,"renderMs":12.1,"calls":351},"yaw2.45":{"simMs":3.4,"renderMs":11.7,"calls":375}}
+port 8238  03:51:08 up  3:50,  0 user,  load average: 9.50, 9.14, 8.65
+low {"yaw1.4":{"simMs":3,"renderMs":13.7,"calls":470},"yaw2.2":{"simMs":2.2,"renderMs":10.7,"calls":517},"yaw2.45":{"simMs":2.3,"renderMs":11.7,"calls":574}}
+port 8238  03:53:30 up  3:52,  0 user,  load average: 6.24, 8.36, 8.46
+medium {"yaw1.4":{"simMs":2.5,"renderMs":13.9,"calls":518},"yaw2.2":{"simMs":2.9,"renderMs":14,"calls":570},"yaw2.45":{"simMs":3.1,"renderMs":14,"calls":632}}
+port 8237  03:57:24 up  3:56,  0 user,  load average: 4.34, 6.09, 7.49
+low {"yaw1.4":{"simMs":3.2,"renderMs":6.1,"calls":294},"yaw2.2":{"simMs":2.3,"renderMs":5.8,"calls":299},"yaw2.45":{"simMs":2.5,"renderMs":6,"calls":310}}
+port 8237  03:59:15 up  3:58,  0 user,  load average: 3.95, 5.40, 7.08
+medium {"yaw1.4":{"simMs":2.4,"renderMs":9.1,"calls":345},"yaw2.2":{"simMs":3,"renderMs":7.5,"calls":351},"yaw2.45":{"simMs":3,"renderMs":8.3,"calls":375}}
+FIN

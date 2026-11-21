@@ -1,0 +1,45 @@
+{
+ "archivist": {
+  "look": "archivist",
+  "body": "archivist",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 973754
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 968846
+   },
+   "heroCalls": 4,
+   "heroTris": 4908
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4908,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T06:50:53.844Z",
+ "candidates": {
+  "CAND_archivist": "C:/Users/dan/AppData/Local/Temp/claude/deb53b226b83eb12/5ab6eb84-7519-44bc-bb3c-9b5d6a3ccabd/scratchpad/z28/orig3/archivist.committed.json"
+ }
+}

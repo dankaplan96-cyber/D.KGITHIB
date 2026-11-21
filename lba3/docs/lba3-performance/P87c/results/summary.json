@@ -1,0 +1,36 @@
+{
+  "label": "Automated runtime only (SwiftShader): headless Chromium, ANGLE on SwiftShader, shared 4-core container, Medium, 1366x768",
+  "probe": "P87c/probes/run_ow.mjs + q_ow.js, save tests/fixtures/campaign/base-07-dig (chapter 4 on Desert Island, court open), areas built on first visit",
+  "route": "desert(start) > school > desert > wtent > desert > zeelich > sewer > zeelich > desert > citadel > tavern > citadel > bazoo > citadel > desert",
+  "base": {
+    "commit": "70eaf3c6",
+    "raw": "P87c/results/ow-base-1.txt",
+    "first_visit_builds": 6,
+    "ow_calls": 12,
+    "repaints": 12,
+    "returns_to_desert": 4,
+    "canvases_sent_again": 8,
+    "kb_sent_again_mip0": 6234,
+    "unchanged_applyWorld": { "repaints": 2, "kb_sent": 1558 },
+    "board_moved": { "repaints": 2, "kb_sent": 1558 },
+    "ring_counted": { "repaints": 1, "kb_sent": 640 }
+  },
+  "candidate": {
+    "raw": "P87c/results/ow-cand-1.txt",
+    "first_visit_builds": 6,
+    "ow_calls": 12,
+    "repaints": 0,
+    "returns_to_desert": 4,
+    "canvases_sent_again": 0,
+    "kb_sent_again_mip0": 0,
+    "unchanged_applyWorld": { "repaints": 0, "kb_sent": 0 },
+    "board_moved": { "repaints": 2, "kb_sent": 1558 },
+    "ring_counted": { "repaints": 1, "kb_sent": 640 }
+  },
+  "cost_of_one_repaint": {
+    "cpu_ms_in_score_or_marks": "0.0-0.4 per call (canvas commands are recorded, rasterised later)",
+    "cpu_ms_in_texImage2D": "0.0-0.1 per return in the route; 1.7-8.1 ms when sent on the island right after the change",
+    "frame_on_island_render_plus_glFinish_ms": { "with_both_repainted_and_sent_median": 5.7, "without_median": 3.5, "samples": 6, "measured_on": "candidate, content alternated so that each call paints" }
+  },
+  "images": "slate and sand canvases pixel-identical base vs candidate after the route (save state) and after the story's change (court, TWINSEN 5): P87c/probes/pngcmp.py"
+}

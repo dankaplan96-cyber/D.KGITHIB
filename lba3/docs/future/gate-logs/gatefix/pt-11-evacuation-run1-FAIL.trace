@@ -1,0 +1,35 @@
+[0.3] go → (-46.1, 77.2) plan ok=true pts=20 left=0.29
+[32.9] go: transition (citadel → citadel, trans true) at (-45.71, 76.46)
+[33.8] go → (997.7, -2.6) plan ok=true pts=4 left=0.89
+[42.3] go → (1001.2, 11.3) plan ok=true pts=5 left=0.29
+[46.3] go: transition (house → house, trans true) at (1001.44, 10.72)
+[47.1] go → (-38.5, 4.0) plan ok=true pts=8 left=0.88
+[64.2] go → (-33.0, -70.0) plan ok=true pts=11 left=0.36
+[82.1] threat: fight
+[83.3] dodge a bolt
+[86.3] dodge a bolt
+[86.5] fight ccg2 d=2.5 st=recover aim=it e@-38.0,15.9,-69.2 me@-37.9,15.9,-62.1 ball=fly hp 5→5 me 7 mp 11.326666666666668
+[86.5] go → (-38.0, -69.2) plan ok=true pts=2 left=3.32
+[86.7] hurt 7→6 at (-38.0, 15.9, -61.9) near: cc2:patrol,ccg2:recover 
+[88.9] dodge a bolt
+[91.8] dodge a bolt
+[94.5] fight ccg2 d=5.9 st=chase aim=it e@-38.0,15.9,-69.2 me@-37.7,15.9,-60.1 ball=idle hp 5→5 me 5 mp 11.326666666666668
+[94.5] go → (-38.0, -69.2) plan ok=true pts=3 left=3.35
+[96.8] go → (-38.0, -69.3) plan ok=true pts=3 left=0.38
+[101.0] fight ccg2 d=6.0 st=hurt aim=other:cc2@-37.7,-70.9 d2.2 e@-38.1,15.9,-69.6 me@-37.1,15.9,-68.7 ball=idle hp 5→1 me 5 mp 12
+[102.3] dodge a bolt
+[103.3] fight ccg2 d=1.3 st=chase aim=it e@-37.6,15.9,-69.3 me@-36.4,15.9,-68.1 ball=idle hp 1→1 me 3 mp 12
+[104.3] dodge a bolt
+[106.8] dodge a bolt
+[107.2] dodge a bolt
+[107.5] dodge a bolt
+[110.4] dodge a bolt
+[111.6] fight ccg2 d=1.7 st=aim aim=it e@-33.8,15.9,-65.7 me@-29.0,15.9,-61.6 ball=idle hp 1→1 me 1 mp 12
+[112.4] dodge a bolt
+[112.8] fight ccdog d=2.5 st=dead aim=it e@-30.7,15.9,-63.7 me@-27.6,15.9,-60.1 ball=idle hp 3→0 me 1 mp 11.344166666666668
+[113.4] dodge a bolt
+[114.0] fight ccg1 d=6.8 st=chase aim=it e@-31.1,15.9,-64.9 me@-27.3,15.9,-59.2 ball=idle hp 3→3 me 0 mp 11.76416666666667
+[115.1] dodge a bolt
+[115.8] fight ccg1 d=6.8 st=dead aim=it e@-30.4,15.9,-63.9 me@1404.3,0.0,-2.4 ball=idle hp 3→0 me 12 mp 11.134166666666667
+[115.8] fight → {"left":0,"dead":false,"hp":12,"t":29.3}
+[115.8] go: transition (citadel → control, trans true) at (1404.30, -2.42)

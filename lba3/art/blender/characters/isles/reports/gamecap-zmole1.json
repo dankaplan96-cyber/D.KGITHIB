@@ -1,0 +1,80 @@
+{
+ "zmole1": {
+  "look": "zmole1",
+  "body": "zmole1",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 189,
+    "triangles": 973550
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 968362
+   },
+   "heroCalls": 3,
+   "heroTris": 5188
+  },
+  "rig": {
+   "meshes": 3,
+   "tris": 5188,
+   "materials": 3
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "zmole1_b": {
+  "look": "zmole1_b",
+  "body": "zmole1_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 192,
+    "triangles": 975148
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 969336
+   },
+   "heroCalls": 3,
+   "heroTris": 5812
+  },
+  "rig": {
+   "meshes": 3,
+   "tris": 5812,
+   "materials": 3
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T05:51:00.796Z",
+ "candidates": {}
+}

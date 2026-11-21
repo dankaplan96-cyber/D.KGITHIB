@@ -1,0 +1,445 @@
+{
+ "odile+crate+nell": {
+  "open": true,
+  "cs": "hand"
+ },
+ "SE: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -102.04,
+   2.37,
+   35.08
+  ],
+  "before": "hand",
+  "cs": "bench",
+  "t": 1.47,
+  "at": [
+   -103.05,
+   2.42,
+   33.92
+  ],
+  "cam": [
+   -103,
+   10.4,
+   44.7
+  ],
+  "hero": [
+   -103.05,
+   33.92
+  ],
+  "yawDeg": 360
+ },
+ "  SE h05": {
+  "heat": 0.13,
+  "stage": 0,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE h30": {
+  "heat": 0.3,
+  "stage": 1,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE h60": {
+  "heat": 0.6,
+  "stage": 2,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE h115": {
+  "heat": 1.12,
+  "stage": 3,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  SE far view": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "S: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -102.72,
+   2.4,
+   34.93
+  ],
+  "before": "tripped",
+  "cs": "bench",
+  "t": 1.17,
+  "at": [
+   -103.05,
+   2.42,
+   33.92
+  ],
+  "cam": [
+   -103,
+   10.4,
+   44.7
+  ],
+  "hero": [
+   -103.05,
+   33.92
+  ],
+  "yawDeg": 360
+ },
+ "  S h05": {
+  "heat": 0.13,
+  "stage": 0,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  S h30": {
+  "heat": 0.3,
+  "stage": 1,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  S h60": {
+  "heat": 0.6,
+  "stage": 2,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  S h115": {
+  "heat": 1.12,
+  "stage": 3,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  S far view": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "W: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -103.14,
+   2.44,
+   34.48
+  ],
+  "before": "tripped",
+  "cs": "bench",
+  "t": 0.87,
+  "at": [
+   -103.05,
+   2.42,
+   33.92
+  ],
+  "cam": [
+   -103.1,
+   10.4,
+   44.7
+  ],
+  "hero": [
+   -103.05,
+   33.92
+  ],
+  "yawDeg": 360
+ },
+ "  W h05": {
+  "heat": 0.13,
+  "stage": 0,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  W h30": {
+  "heat": 0.3,
+  "stage": 1,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  W h60": {
+  "heat": 0.6,
+  "stage": 2,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  W h115": {
+  "heat": 1.12,
+  "stage": 3,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  W far view": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "E: placed": {
+  "g0": "arrived",
+  "go": "arrived",
+  "from": [
+   -101.28,
+   2.37,
+   34.39
+  ],
+  "before": "tripped",
+  "cs": "bench",
+  "t": 1.73,
+  "at": [
+   -103.05,
+   2.42,
+   33.92
+  ],
+  "cam": [
+   -103,
+   10.4,
+   44.7
+  ],
+  "hero": [
+   -103.05,
+   33.92
+  ],
+  "yawDeg": 360
+ },
+ "  E h05": {
+  "heat": 0.13,
+  "stage": 0,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  E h30": {
+  "heat": 0.3,
+  "stage": 1,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  E h60": {
+  "heat": 0.6,
+  "stage": 2,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  E h115": {
+  "heat": 1.12,
+  "stage": 3,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "  E far view": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "path points": [
+  [
+   30,
+   6,
+   -99.8,
+   39.1
+  ],
+  [
+   330,
+   6,
+   -105.8,
+   39.1
+  ]
+ ],
+ "path-30-eastbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -116.4,
+   10.3,
+   37.6
+  ],
+  "hero": [
+   -100.08,
+   39.18
+  ],
+  "yawDeg": 264,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.2,3.6,33.3"
+  }
+ },
+ "path-30-eastbound far": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "path-30-westbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -83.4,
+   10.3,
+   38.6
+  ],
+  "hero": [
+   -99.52,
+   39.21
+  ],
+  "yawDeg": 93,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "path-30-westbound far": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.1,3.6,33.2",
+   "side_e": "seen"
+  }
+ },
+ "path-330-eastbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -122.2,
+   9.9,
+   38.5
+  ],
+  "hero": [
+   -106.07,
+   39.15
+  ],
+  "yawDeg": 267,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.3,3.5,33.3"
+  }
+ },
+ "path-330-eastbound far": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "HIDDEN by BufferGeometry @-102.1,3.6,33.2"
+  }
+ },
+ "path-330-westbound": {
+  "at": {
+   "r0": "arrived",
+   "r": "arrived"
+  },
+  "heat": 0.6,
+  "cam": [
+   -89.4,
+   10,
+   38.5
+  ],
+  "hero": [
+   -105.51,
+   39.18
+  ],
+  "yawDeg": 93,
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "HIDDEN by BufferGeometry @-102.0,3.6,33.3",
+   "side_e": "seen"
+  }
+ },
+ "path-330-westbound far": {
+  "v": {
+   "top": "seen",
+   "front_s": "seen",
+   "side_w": "seen",
+   "side_e": "seen"
+  }
+ },
+ "errors": []
+}

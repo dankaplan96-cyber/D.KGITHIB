@@ -1,0 +1,8 @@
+loaded: {"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":true,"pair":false,"paid":false,"owe":0,"trips":2,"room":"workshop","coins":7,"lying":0,"state":"play","chapter":"zeelich"}
+switch on: {"r":"used","tgt":"wlever","label":"p_switch_on"}
+to tap: {"sync":0.29,"target":"wtap"}
+press at sync >= 0.985: {"s0":0.985,"tg":"wtap","pairAtPress":false,"pair":true,"on":false,"up":true,"tap":true,"lift":1}
+lines: ["Both lamps hold steady. The little panel fills, one light at a time.","n_baldino: Listen to that! They hear each other. Ilo owes me a dinner.","n_baldino: The shuttle yard pays for every pair that works. Half is yours.","TOAST w_toast_pair"]
+state after: {"st":{"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"owe":1,"trips":2,"room":"workshop","coins":7,"lying":1,"state":"play","chapter":"zeelich"},"L":{"on":false,"up":true,"tap":true,"heat":0.18,"sync":1,"done":true,"pulse":true}}
+after Continue: {"st":{"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"owe":0,"trips":2,"room":"workshop","coins":12,"lying":0,"state":"play","chapter":"zeelich"},"L":{"on":false,"up":true,"tap":true,"heat":0.18,"sync":1,"done":true,"pulse":true}}
+no errors

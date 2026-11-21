@@ -1,0 +1,345 @@
+ROTATE-STALL arrival · medium · battery false · camera free · zeelich → desert → hamalayi → citadel × 2
+zeelich (cold): 113 frames, 99221 ms in all, 68254 ms of it with the screen black
+    0    18 ms view  op 0.10 calls 184 uploads 26 (51 KB)
+    1    16 ms view  op 0.19 calls 184 uploads 26 (51 KB)
+    2    15 ms view  op 0.29 calls 184 uploads 26 (51 KB)
+    3    18 ms view  op 0.38 calls 184 uploads 26 (51 KB)
+    4    20 ms view  op 0.48 calls 184 uploads 26 (51 KB)
+    5     7 ms view  op 0.57 calls 184 uploads 26 (51 KB)
+    6     8 ms view  op 0.67 calls 184 uploads 26 (51 KB)
+    7     8 ms view  op 0.76 calls 184 uploads 26 (51 KB)
+    8     6 ms view  op 0.86 calls 184 uploads 26 (51 KB)
+    9    15 ms view  op 0.95 calls 184 uploads 26 (51 KB)
+   10   118 ms BLACK op 1.00 calls 0 hold shadow batches built 112 ms
+   11     3 ms BLACK op 1.00 calls 0 hold 
+   12 67435 ms BLACK op 1.00 calls 0 hold 71 pieces left shadow batches
+   13    32 ms BLACK op 1.00 calls 0 hold 
+   14     6 ms BLACK op 1.00 calls 0 hold 
+   15   337 ms BLACK op 1.00 calls 0 hold draw batches built 333 ms, +1 textures, uploads 4 (24576 KB), 4 first uploads by draws behind black: tex 512x512 outside a draw · tex 256x256 outside a draw · tex 128x128 outside a draw · tex 64x64 outside a draw
+   16     2 ms BLACK op 1.00 calls 0 hold 
+   17    29 ms BLACK op 1.00 calls 0 hold +93 geometries, uploads 329 (7484 KB)
+   18     9 ms BLACK op 1.00 calls 0 hold +20 geometries, uploads 63 (599 KB)
+   19     9 ms BLACK op 1.00 calls 0 hold +56 geometries, uploads 174 (4091 KB)
+   20    17 ms BLACK op 1.00 calls 0 hold +95 geometries, uploads 475 (42739 KB)
+   21     9 ms BLACK op 1.00 calls 0 hold uploads 1 (22 KB)
+   22     1 ms BLACK op 1.00 calls 0 hold 
+   23     7 ms BLACK op 1.00 calls 0 hold +77 textures, uploads 79 (12541 KB), 77 first uploads by draws behind black: 3× tex 512x512 outside a draw · 16× tex 128x128 outside a draw · 3× tex 64x64 outside a draw · 7× tex 256x256 outside a draw · 2× tex 512x384 outside a draw · 2× tex 256x160 outside a draw · 2× tex 256x128 outside a draw · tex 256x96 outside a draw · tex 128x160 outside a draw · 3× tex 128x64 outside a draw · tex 256x80 outside a draw · tex 512x256 outside a draw
+   24     2 ms BLACK op 1.00 calls 0 hold 
+   25    48 ms BLACK op 1.00 calls 0 hold +1 programs
+   26     2 ms BLACK op 1.00 calls 0 hold 
+   27     1 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30     1 ms BLACK op 1.00 calls 0 hold 
+   31     2 ms BLACK op 1.00 calls 0 hold 
+   32     1 ms BLACK op 1.00 calls 0 hold 
+   33     1 ms BLACK op 1.00 calls 0 hold 
+   34     1 ms BLACK op 1.00 calls 0 hold 
+   35     1 ms BLACK op 1.00 calls 0 hold 
+   36     1 ms BLACK op 1.00 calls 0 hold 
+   37     1 ms BLACK op 1.00 calls 0 hold 
+   38     1 ms BLACK op 1.00 calls 0 hold 
+   39     1 ms BLACK op 1.00 calls 0 hold 
+   40   170 ms BLACK op 1.00 calls 211 cache full build, +12 geometries, 67 pieces left draw batches, uploads 295 (15627 KB), 68 first uploads by draws behind black: 2× left draw batch: Mesh:zeelich at 2390.8,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.7,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2390.8,9.0,8.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · left draw batch: Mesh:zeelich at 2389.6,12.7,11.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2389.3,12.7,11.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color f0c8c0 emissive 000000 · left draw batch: Mesh:zeelich at 2376.0,6.5,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2376.0,7.8,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · left draw batch: Mesh:zeelich at 2393.7,19.6,-16.9 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.0,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,13.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:zeelich at 2450.0,11.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   41    10 ms BLACK op 1.00 calls 176 uploads 15 (39 KB)
+   42    15 ms view  op 0.90 calls 176 uploads 15 (39 KB)
+   43    10 ms view  op 0.81 calls 176 uploads 15 (39 KB)
+   44     6 ms view  op 0.71 calls 176 uploads 15 (39 KB)
+   45     6 ms view  op 0.62 calls 176 uploads 15 (39 KB)
+   46     5 ms view  op 0.52 calls 176 uploads 15 (39 KB)
+   47     5 ms view  op 0.43 calls 176 uploads 15 (39 KB)
+   48     5 ms view  op 0.33 calls 176 uploads 15 (39 KB)
+   49     5 ms view  op 0.24 calls 176 uploads 15 (39 KB)
+   50    13 ms view  op 0.14 calls 176 uploads 15 (39 KB)
+desert (cold): 113 frames, 89841 ms in all, 87455 ms of it with the screen black
+    0     5 ms view  op 0.10 calls 177 uploads 18 (78 KB)
+    1     6 ms view  op 0.19 calls 177 uploads 18 (78 KB)
+    2     4 ms view  op 0.29 calls 177 uploads 18 (78 KB)
+    3  1343 ms view  op 0.38 calls 177 uploads 18 (78 KB)
+    4     7 ms view  op 0.48 calls 177 uploads 18 (78 KB)
+    5    13 ms view  op 0.57 calls 177 uploads 18 (78 KB)
+    6     5 ms view  op 0.67 calls 177 uploads 18 (78 KB)
+    7     6 ms view  op 0.76 calls 177 uploads 18 (78 KB)
+    8     5 ms view  op 0.86 calls 177 uploads 18 (78 KB)
+    9     6 ms view  op 0.95 calls 177 uploads 18 (78 KB)
+   10   106 ms BLACK op 1.00 calls 0 hold shadow batches built 102 ms
+   11     2 ms BLACK op 1.00 calls 0 hold 
+   12 86878 ms BLACK op 1.00 calls 0 hold 40 pieces left shadow batches
+   13    36 ms BLACK op 1.00 calls 0 hold 
+   14    17 ms BLACK op 1.00 calls 0 hold 
+   15   176 ms BLACK op 1.00 calls 0 hold draw batches built 174 ms, +1 textures, uploads 4 (15232 KB), 4 first uploads by draws behind black: tex 256x256 outside a draw · tex 128x128 outside a draw · tex 64x64 outside a draw · tex 1024x256 outside a draw
+   16     1 ms BLACK op 1.00 calls 0 hold 
+   17    41 ms BLACK op 1.00 calls 0 hold +28 geometries, uploads 94 (5573 KB)
+   18    13 ms BLACK op 1.00 calls 0 hold +38 geometries, uploads 114 (651 KB)
+   19    10 ms BLACK op 1.00 calls 0 hold +66 geometries, uploads 96 (3581 KB)
+   20    22 ms BLACK op 1.00 calls 0 hold +94 geometries, uploads 329 (27861 KB)
+   21    11 ms BLACK op 1.00 calls 0 hold uploads 6 (42 KB)
+   22     1 ms BLACK op 1.00 calls 0 hold 
+   23     8 ms BLACK op 1.00 calls 0 hold +64 textures, uploads 64 (6859 KB), 64 first uploads by draws behind black: 3× tex 256x96 outside a draw · 18× tex 64x64 outside a draw · 2× tex 128x96 outside a draw · 7× tex 128x128 outside a draw · tex 512x64 outside a draw · tex 256x64 outside a draw · tex 256x80 outside a draw · tex 640x96 outside a draw · tex 256x256 outside a draw · 2× tex 128x256 outside a draw · tex 1024x256 outside a draw · 2× tex 128x64 outside a draw
+   24     1 ms BLACK op 1.00 calls 0 hold 
+   25    50 ms BLACK op 1.00 calls 0 hold +1 programs
+   26     1 ms BLACK op 1.00 calls 0 hold 
+   27     1 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     0 ms BLACK op 1.00 calls 0 hold 
+   30     1 ms BLACK op 1.00 calls 0 hold 
+   31     1 ms BLACK op 1.00 calls 0 hold 
+   32     1 ms BLACK op 1.00 calls 0 hold 
+   33     1 ms BLACK op 1.00 calls 0 hold 
+   34     1 ms BLACK op 1.00 calls 0 hold 
+   35     1 ms BLACK op 1.00 calls 0 hold 
+   36     1 ms BLACK op 1.00 calls 0 hold 
+   37     0 ms BLACK op 1.00 calls 0 hold 
+   38     0 ms BLACK op 1.00 calls 0 hold 
+   39     0 ms BLACK op 1.00 calls 0 hold 
+   40    69 ms BLACK op 1.00 calls 135 cache full build, -1 geometries, 46 pieces left draw batches, uploads 157 (10899 KB), 47 first uploads by draws behind black: left draw batch: Mesh:desert at 3369.4,14.5,-7.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color 4a4440 emissive 000000 · left draw batch: Mesh:desert at 3369.4,14.5,-7.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color d8d0c0 emissive 000000 · left draw batch: Mesh:desert at 3368.3,6.5,-8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color b88a3a emissive 000000 · left draw batch: Mesh:desert at 3368.3,6.5,-7.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color b88a3a emissive 000000 · left draw batch: Mesh:desert at 3368.2,6.5,-7.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color d2b07a emissive 000000 · left draw batch: Mesh:desert at 3368.3,6.5,-5.7 [moved] mat MeshStandardMaterial opacity 1 transparent false color b88a3a emissive 000000 · left draw batch: Mesh:esmerShuttle<desert at 3509.6,29.2,43.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color b82a24 emissive 000000 · left draw batch: Mesh:esmerShuttle<desert at 3509.7,30.0,43.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color f2dcae emissive 000000 · left draw batch: Mesh:esmerShuttle<desert at 3509.7,30.2,43.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color e8b04a emissive 000000 · left draw batch: Mesh:esmerShuttle<desert at 3509.8,31.2,43.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color 5ab0e0 emissive 1a5a8a · left draw batch: Mesh:esmerShuttle<desert at 3510.4,31.4,41.5 [moved] mat MeshStandardMaterial opacity 1 transparent false color 8a8a90 emissive 000000 · left draw batch: Mesh:esmerShuttle<desert at 3509.9,30.0,46.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color fff2c0 emissive ffb040
+   41     6 ms BLACK op 1.00 calls 112 uploads 16 (56 KB)
+   42     5 ms view  op 0.90 calls 112 uploads 16 (56 KB)
+   43     5 ms view  op 0.81 calls 112 uploads 16 (56 KB)
+   44     8 ms view  op 0.71 calls 112 uploads 16 (56 KB)
+   45     4 ms view  op 0.62 calls 112 uploads 16 (56 KB)
+   46     4 ms view  op 0.52 calls 112 uploads 16 (56 KB)
+   47     4 ms view  op 0.43 calls 112 uploads 16 (56 KB)
+   48     4 ms view  op 0.33 calls 112 uploads 16 (56 KB)
+   49    14 ms view  op 0.24 calls 112 uploads 16 (56 KB)
+   50     6 ms view  op 0.14 calls 112 uploads 16 (56 KB)
+hamalayi (cold): 113 frames, 179618 ms in all, 178800 ms of it with the screen black
+    0     4 ms view  op 0.10 calls 114 uploads 16 (56 KB)
+    1     4 ms view  op 0.19 calls 114 uploads 16 (56 KB)
+    2     4 ms view  op 0.29 calls 114 uploads 16 (56 KB)
+    3     4 ms view  op 0.38 calls 114 uploads 16 (56 KB)
+    4     4 ms view  op 0.48 calls 114 uploads 16 (56 KB)
+    5     4 ms view  op 0.57 calls 114 uploads 16 (56 KB)
+    6     4 ms view  op 0.67 calls 114 uploads 16 (56 KB)
+    7     4 ms view  op 0.76 calls 114 uploads 16 (56 KB)
+    8     3 ms view  op 0.86 calls 114 uploads 16 (56 KB)
+    9     4 ms view  op 0.95 calls 114 uploads 16 (56 KB)
+   10    96 ms BLACK op 1.00 calls 0 hold shadow batches built 93 ms
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12 178220 ms BLACK op 1.00 calls 0 hold 
+   13    33 ms BLACK op 1.00 calls 0 hold 
+   14    17 ms BLACK op 1.00 calls 0 hold 
+   15   222 ms BLACK op 1.00 calls 0 hold draw batches built 220 ms, +2 textures, uploads 5 (27744 KB), 5 first uploads by draws behind black: tex 512x512 outside a draw · tex 256x256 outside a draw · tex 128x128 outside a draw · tex 128x256 outside a draw · tex 128x32 outside a draw
+   16     1 ms BLACK op 1.00 calls 0 hold 
+   17    39 ms BLACK op 1.00 calls 0 hold +19 geometries, uploads 65 (3916 KB)
+   18    12 ms BLACK op 1.00 calls 0 hold +13 geometries, uploads 42 (649 KB)
+   19    11 ms BLACK op 1.00 calls 0 hold +17 geometries, uploads 38 (1582 KB)
+   20    27 ms BLACK op 1.00 calls 0 hold +87 geometries, uploads 354 (35436 KB)
+   21    11 ms BLACK op 1.00 calls 0 hold uploads 5 (39 KB)
+   22     1 ms BLACK op 1.00 calls 0 hold 
+   23     7 ms BLACK op 1.00 calls 0 hold +34 textures, uploads 34 (5573 KB), 34 first uploads by draws behind black: tex 128x256 outside a draw · tex 128x32 outside a draw · tex 192x192 outside a draw · 4× tex 256x256 outside a draw · tex 64x64 outside a draw · tex 512x512 outside a draw · 3× tex 128x128 outside a draw · tex 512x560 outside a draw · 2× tex 512x352 outside a draw · 4× tex 160x140 outside a draw · tex 256x128 outside a draw · 2× tex 20x20 outside a draw
+   24     0 ms BLACK op 1.00 calls 0 hold 
+   25    48 ms BLACK op 1.00 calls 0 hold 
+   26     1 ms BLACK op 1.00 calls 0 hold 
+   27     0 ms BLACK op 1.00 calls 0 hold 
+   28     0 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30     1 ms BLACK op 1.00 calls 0 hold 
+   31     0 ms BLACK op 1.00 calls 0 hold 
+   32     0 ms BLACK op 1.00 calls 0 hold 
+   33     2 ms BLACK op 1.00 calls 0 hold 
+   34     0 ms BLACK op 1.00 calls 0 hold 
+   35     0 ms BLACK op 1.00 calls 0 hold 
+   36     0 ms BLACK op 1.00 calls 0 hold 
+   37     0 ms BLACK op 1.00 calls 0 hold 
+   38     0 ms BLACK op 1.00 calls 0 hold 
+   39     0 ms BLACK op 1.00 calls 0 hold 
+   40    43 ms BLACK op 1.00 calls 99 cache full build, +1 textures, uploads 100 (2792 KB), 1 first uploads by draws behind black: tex 256x256 drawing Batched:terrain<terrain
+   41     4 ms BLACK op 1.00 calls 78 uploads 18 (60 KB)
+   42     4 ms view  op 0.90 calls 78 uploads 18 (60 KB)
+   43     3 ms view  op 0.81 calls 78 uploads 18 (60 KB)
+   44     3 ms view  op 0.71 calls 78 uploads 18 (60 KB)
+   45    11 ms view  op 0.62 calls 78 uploads 18 (60 KB)
+   46     3 ms view  op 0.52 calls 78 uploads 18 (60 KB)
+   47     6 ms view  op 0.43 calls 78 uploads 18 (60 KB)
+   48     4 ms view  op 0.33 calls 78 uploads 18 (60 KB)
+   49     2 ms view  op 0.24 calls 78 uploads 18 (60 KB)
+   50     3 ms view  op 0.14 calls 78 uploads 18 (60 KB)
+citadel (cold): 102 frames, 66321 ms in all, 41681 ms of it with the screen black
+    0     3 ms view  op 0.10 calls 82 uploads 18 (60 KB)
+    1     3 ms view  op 0.19 calls 82 uploads 18 (60 KB)
+    2     2 ms view  op 0.29 calls 82 uploads 18 (60 KB)
+    3     2 ms view  op 0.38 calls 82 uploads 18 (60 KB)
+    4     3 ms view  op 0.48 calls 82 uploads 18 (60 KB)
+    5     2 ms view  op 0.57 calls 82 uploads 18 (60 KB)
+    6     2 ms view  op 0.67 calls 82 uploads 18 (60 KB)
+    7     2 ms view  op 0.76 calls 82 uploads 18 (60 KB)
+    8     3 ms view  op 0.86 calls 82 uploads 18 (60 KB)
+    9     2 ms view  op 0.95 calls 82 uploads 18 (60 KB)
+   10     2 ms BLACK op 1.00 calls 0 hold 
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12    12 ms BLACK op 1.00 calls 0 hold -1 geometries
+   13     4 ms BLACK op 1.00 calls 0 hold 
+   14    16 ms BLACK op 1.00 calls 0 hold +1 geometries, uploads 37 (399 KB)
+   15     9 ms BLACK op 1.00 calls 0 hold uploads 6 (39 KB)
+   16     8 ms BLACK op 1.00 calls 0 hold +27 geometries, uploads 37 (1377 KB)
+   17    14 ms BLACK op 1.00 calls 0 hold +42 geometries, uploads 57 (5891 KB)
+   18    13 ms BLACK op 1.00 calls 0 hold uploads 4 (39 KB)
+   19     8 ms BLACK op 1.00 calls 0 hold uploads 3 (39 KB)
+   20    13 ms BLACK op 1.00 calls 0 hold uploads 2 (1 KB)
+   21     1 ms BLACK op 1.00 calls 0 hold 
+   22    51 ms BLACK op 1.00 calls 0 hold 
+   23     2 ms BLACK op 1.00 calls 0 hold 
+   24     1 ms BLACK op 1.00 calls 0 hold 
+   25     1 ms BLACK op 1.00 calls 0 hold 
+   26     1 ms BLACK op 1.00 calls 0 hold 
+   27     1 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30 41522 ms BLACK op 1.00 calls 270 cache full build, -1 geometries, 12 pieces left draw batches, uploads 90 (5660 KB), 13 first uploads by draws behind black: left draw batch: Mesh:station at -24.5,18.8,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -24.5,24.6,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color f0c040 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · left draw batch: Mesh:station at -76.0,0.0,-101.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · left draw batch: Mesh:pipeline at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · 2× left draw batch: Mesh:harbour-zeelich at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   31    19 ms view  op 0.90 calls 223 uploads 27 (57 KB)
+   32     8 ms view  op 0.81 calls 223 uploads 27 (57 KB)
+   33     7 ms view  op 0.71 calls 223 uploads 27 (57 KB)
+   34     6 ms view  op 0.62 calls 223 uploads 27 (57 KB)
+   35    11 ms view  op 0.52 calls 223 uploads 27 (57 KB)
+   36     7 ms view  op 0.43 calls 223 uploads 27 (57 KB)
+   37     7 ms view  op 0.33 calls 223 uploads 27 (57 KB)
+   38     6 ms view  op 0.24 calls 223 uploads 27 (57 KB)
+   39     6 ms view  op 0.14 calls 223 uploads 27 (57 KB)
+zeelich (repeat): 103 frames, 60674 ms in all, 105 ms of it with the screen black
+    0  1665 ms view  op 0.10 calls 220 uploads 28 (59 KB)
+    1    19 ms view  op 0.19 calls 220 uploads 28 (59 KB)
+    2    22 ms view  op 0.29 calls 220 uploads 28 (59 KB)
+    3    15 ms view  op 0.38 calls 220 uploads 28 (59 KB)
+    4    12 ms view  op 0.48 calls 220 uploads 28 (59 KB)
+    5     7 ms view  op 0.57 calls 220 uploads 28 (59 KB)
+    6     8 ms view  op 0.67 calls 220 uploads 28 (59 KB)
+    7     7 ms view  op 0.76 calls 220 uploads 28 (59 KB)
+    8     7 ms view  op 0.86 calls 220 uploads 28 (59 KB)
+    9     5 ms view  op 0.95 calls 220 uploads 28 (59 KB)
+   10     2 ms BLACK op 1.00 calls 0 hold 
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12     2 ms BLACK op 1.00 calls 0 hold 1 first uploads by draws behind black: left draw batch: Mesh:zeelich at 2388.0,6.0,12.2 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   13     1 ms BLACK op 1.00 calls 0 hold 
+   14     0 ms BLACK op 1.00 calls 0 hold 
+   15     1 ms BLACK op 1.00 calls 0 hold 
+   16     1 ms BLACK op 1.00 calls 0 hold 
+   17     3 ms BLACK op 1.00 calls 0 hold 
+   18     1 ms BLACK op 1.00 calls 0 hold 
+   19     1 ms BLACK op 1.00 calls 0 hold 
+   20     5 ms BLACK op 1.00 calls 0 hold 
+   21     0 ms BLACK op 1.00 calls 0 hold 
+   22    45 ms BLACK op 1.00 calls 0 hold 
+   23     1 ms BLACK op 1.00 calls 0 hold 
+   24     2 ms BLACK op 1.00 calls 0 hold 
+   25     1 ms BLACK op 1.00 calls 0 hold 
+   26     0 ms BLACK op 1.00 calls 0 hold 
+   27     0 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30    19 ms BLACK op 1.00 calls 204 cache full build, uploads 22 (39 KB)
+   31    20 ms BLACK op 1.00 calls 174 uploads 15 (39 KB)
+   32    10 ms view  op 0.90 calls 174 uploads 15 (39 KB)
+   33    12 ms view  op 0.81 calls 174 uploads 15 (39 KB)
+   34     7 ms view  op 0.71 calls 174 uploads 15 (39 KB)
+   35    12 ms view  op 0.62 calls 174 uploads 15 (39 KB)
+   36     9 ms view  op 0.52 calls 174 uploads 15 (39 KB)
+   37    13 ms view  op 0.43 calls 174 uploads 15 (39 KB)
+   38     9 ms view  op 0.33 calls 174 uploads 15 (39 KB)
+   39     5 ms view  op 0.24 calls 174 uploads 15 (39 KB)
+   40     5 ms view  op 0.14 calls 174 uploads 15 (39 KB)
+desert (repeat): 96 frames, 72537 ms in all, 73 ms of it with the screen black
+    0     8 ms view  op 0.10 calls 177 uploads 18 (78 KB)
+    1     4 ms view  op 0.19 calls 177 uploads 18 (78 KB)
+    2     4 ms view  op 0.29 calls 177 uploads 18 (78 KB)
+    3     4 ms view  op 0.38 calls 177 uploads 18 (78 KB)
+    4     4 ms view  op 0.48 calls 177 uploads 18 (78 KB)
+    5     4 ms view  op 0.57 calls 177 uploads 18 (78 KB)
+    6     4 ms view  op 0.67 calls 177 uploads 18 (78 KB)
+    7     8 ms view  op 0.76 calls 177 uploads 18 (78 KB)
+    8     8 ms view  op 0.86 calls 177 uploads 18 (78 KB)
+    9     8 ms view  op 0.95 calls 177 uploads 18 (78 KB)
+   10    14 ms BLACK op 1.00 calls 0 hold 
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12     2 ms BLACK op 1.00 calls 0 hold 1 first uploads by draws behind black: left draw batch: Mesh:desert at 3330.3,7.5,-3.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   13     1 ms BLACK op 1.00 calls 0 hold 
+   14    13 ms BLACK op 1.00 calls 0 hold 
+   15     1 ms BLACK op 1.00 calls 0 hold 
+   16     1 ms BLACK op 1.00 calls 0 hold 
+   17     1 ms BLACK op 1.00 calls 0 hold 
+   18     0 ms BLACK op 1.00 calls 0 hold 
+   19     1 ms BLACK op 1.00 calls 0 hold 
+   20     9 ms BLACK op 1.00 calls 0 hold 
+   21     1 ms BLACK op 1.00 calls 0 hold 
+   22     1 ms BLACK op 1.00 calls 0 hold 
+   23    23 ms BLACK op 1.00 calls 137 cache full build, uploads 20 (57 KB)
+   24     7 ms BLACK op 1.00 calls 114 uploads 16 (56 KB)
+   25     4 ms view  op 0.90 calls 114 uploads 16 (56 KB)
+   26     4 ms view  op 0.81 calls 114 uploads 16 (56 KB)
+   27     4 ms view  op 0.71 calls 114 uploads 16 (56 KB)
+   28     7 ms view  op 0.62 calls 114 uploads 16 (56 KB)
+   29     7 ms view  op 0.52 calls 114 uploads 16 (56 KB)
+   30     8 ms view  op 0.43 calls 114 uploads 16 (56 KB)
+   31     5 ms view  op 0.33 calls 114 uploads 16 (56 KB)
+   32     4 ms view  op 0.24 calls 114 uploads 16 (56 KB)
+   33     4 ms view  op 0.14 calls 114 uploads 16 (56 KB)
+hamalayi (repeat): 96 frames, 53565 ms in all, 28 ms of it with the screen black
+    0     3 ms view  op 0.10 calls 116 uploads 16 (56 KB)
+    1     3 ms view  op 0.19 calls 116 uploads 16 (56 KB)
+    2     4 ms view  op 0.29 calls 116 uploads 16 (56 KB)
+    3   340 ms view  op 0.38 calls 116 uploads 16 (56 KB)
+    4     6 ms view  op 0.48 calls 116 uploads 16 (56 KB)
+    5     9 ms view  op 0.57 calls 116 uploads 16 (56 KB)
+    6     5 ms view  op 0.67 calls 116 uploads 16 (56 KB)
+    7     3 ms view  op 0.76 calls 116 uploads 16 (56 KB)
+    8     3 ms view  op 0.86 calls 116 uploads 16 (56 KB)
+    9     3 ms view  op 0.95 calls 116 uploads 16 (56 KB)
+   10     1 ms BLACK op 1.00 calls 0 hold 
+   11     0 ms BLACK op 1.00 calls 0 hold 
+   12     0 ms BLACK op 1.00 calls 0 hold 
+   13     0 ms BLACK op 1.00 calls 0 hold 
+   14     0 ms BLACK op 1.00 calls 0 hold 
+   15     0 ms BLACK op 1.00 calls 0 hold 
+   16     0 ms BLACK op 1.00 calls 0 hold 
+   17     0 ms BLACK op 1.00 calls 0 hold 
+   18     0 ms BLACK op 1.00 calls 0 hold 
+   19     0 ms BLACK op 1.00 calls 0 hold 
+   20     8 ms BLACK op 1.00 calls 0 hold 
+   21     0 ms BLACK op 1.00 calls 0 hold 
+   22     2 ms BLACK op 1.00 calls 0 hold 
+   23    11 ms BLACK op 1.00 calls 101 cache full build, uploads 22 (61 KB)
+   24     3 ms BLACK op 1.00 calls 80 uploads 18 (60 KB)
+   25     3 ms view  op 0.90 calls 80 uploads 18 (60 KB)
+   26     3 ms view  op 0.81 calls 80 uploads 18 (60 KB)
+   27     2 ms view  op 0.71 calls 80 uploads 18 (60 KB)
+   28 17410 ms view  op 0.62 calls 80 uploads 18 (60 KB)
+   29     4 ms view  op 0.52 calls 80 uploads 18 (60 KB)
+   30     3 ms view  op 0.43 calls 80 uploads 18 (60 KB)
+   31     3 ms view  op 0.33 calls 80 uploads 18 (60 KB)
+   32     3 ms view  op 0.24 calls 80 uploads 18 (60 KB)
+   33     2 ms view  op 0.14 calls 80 uploads 18 (60 KB)
+citadel (repeat): 96 frames, 190433 ms in all, 19831 ms of it with the screen black
+    0     5 ms view  op 0.10 calls 82 uploads 18 (60 KB)
+    1     3 ms view  op 0.19 calls 82 uploads 18 (60 KB)
+    2     2 ms view  op 0.29 calls 82 uploads 18 (60 KB)
+    3     3 ms view  op 0.38 calls 82 uploads 18 (60 KB)
+    4     2 ms view  op 0.48 calls 82 uploads 18 (60 KB)
+    5     2 ms view  op 0.57 calls 82 uploads 18 (60 KB)
+    6  1122 ms view  op 0.67 calls 82 uploads 18 (60 KB)
+    7 17477 ms view  op 0.76 calls 82 uploads 18 (60 KB)
+    8     4 ms view  op 0.86 calls 82 uploads 18 (60 KB)
+    9     4 ms view  op 0.95 calls 82 uploads 18 (60 KB)
+   10     2 ms BLACK op 1.00 calls 0 hold 
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12    77 ms BLACK op 1.00 calls 0 hold -4 geometries
+   13     1 ms BLACK op 1.00 calls 0 hold 
+   14     1 ms BLACK op 1.00 calls 0 hold 
+   15     1 ms BLACK op 1.00 calls 0 hold 
+   16     1 ms BLACK op 1.00 calls 0 hold 
+   17     1 ms BLACK op 1.00 calls 0 hold 
+   18     1 ms BLACK op 1.00 calls 0 hold 
+   19    14 ms BLACK op 1.00 calls 0 hold +5 geometries, uploads 53 (11126 KB)
+   20     5 ms BLACK op 1.00 calls 0 hold 
+   21     1 ms BLACK op 1.00 calls 0 hold 
+   22     1 ms BLACK op 1.00 calls 0 hold 
+   23 19712 ms BLACK op 1.00 calls 265 cache full build, uploads 34 (155 KB)
+   24    13 ms BLACK op 1.00 calls 218 uploads 31 (98 KB)
+   25     7 ms view  op 0.90 calls 218 uploads 31 (98 KB)
+   26    11 ms view  op 0.81 calls 218 uploads 31 (98 KB)
+   27     9 ms view  op 0.71 calls 218 uploads 31 (98 KB)
+   28     9 ms view  op 0.62 calls 218 uploads 31 (98 KB)
+   29     9 ms view  op 0.52 calls 218 uploads 33 (98 KB)
+   30 40900 ms view  op 0.43 calls 218 uploads 31 (98 KB)
+   31   606 ms view  op 0.33 calls 218 uploads 31 (98 KB)
+   32    14 ms view  op 0.24 calls 217 uploads 31 (98 KB)
+   33    16 ms view  op 0.14 calls 217 uploads 28 (59 KB)

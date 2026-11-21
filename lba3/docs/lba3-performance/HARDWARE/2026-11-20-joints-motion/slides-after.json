@@ -1,0 +1,132 @@
+{
+ "sword.L": {
+  "contacts": 8,
+  "maxSlideCm": 16.5,
+  "lowestOverGroundCm": 0
+ },
+ "sword.R": {
+  "contacts": 6,
+  "maxSlideCm": 7.1,
+  "lowestOverGroundCm": 0
+ },
+ "hop.L": {
+  "contacts": 2,
+  "maxSlideCm": 4.6,
+  "lowestOverGroundCm": 0
+ },
+ "hop.R": {
+  "contacts": 4,
+  "maxSlideCm": 1.8,
+  "lowestOverGroundCm": 0
+ },
+ "jumpS.L": {
+  "contacts": 2,
+  "maxSlideCm": 0.8,
+  "lowestOverGroundCm": 0
+ },
+ "jumpS.R": {
+  "contacts": 2,
+  "maxSlideCm": 3.2,
+  "lowestOverGroundCm": 0
+ },
+ "jumpS-land.L": {
+  "contacts": 2,
+  "maxSlideCm": 1.2,
+  "lowestOverGroundCm": 0
+ },
+ "jumpS-land.R": {
+  "contacts": 1,
+  "maxSlideCm": 0,
+  "lowestOverGroundCm": 0
+ },
+ "jumpW-up.L": {
+  "contacts": 2,
+  "maxSlideCm": 10.9,
+  "lowestOverGroundCm": 0
+ },
+ "jumpW-up.R": {
+  "contacts": 1,
+  "maxSlideCm": 0.8,
+  "lowestOverGroundCm": 0
+ },
+ "jumpW.L": {
+  "contacts": 2,
+  "maxSlideCm": 0,
+  "lowestOverGroundCm": 0
+ },
+ "jumpW.R": {
+  "contacts": 0,
+  "maxSlideCm": 0,
+  "lowestOverGroundCm": 0
+ },
+ "jumpW-land.L": {
+  "contacts": 2,
+  "maxSlideCm": 1.2,
+  "lowestOverGroundCm": 0
+ },
+ "jumpW-land.R": {
+  "contacts": 1,
+  "maxSlideCm": 5.5,
+  "lowestOverGroundCm": 0
+ },
+ "jumpR-up.L": {
+  "contacts": 4,
+  "maxSlideCm": 5.2,
+  "lowestOverGroundCm": 0
+ },
+ "jumpR-up.R": {
+  "contacts": 5,
+  "maxSlideCm": 20.4,
+  "lowestOverGroundCm": 0
+ },
+ "jumpR.L": {
+  "contacts": 0,
+  "maxSlideCm": 0,
+  "lowestOverGroundCm": 0
+ },
+ "jumpR.R": {
+  "contacts": 2,
+  "maxSlideCm": 0,
+  "lowestOverGroundCm": 0
+ },
+ "jumpR-land.L": {
+  "contacts": 1,
+  "maxSlideCm": 1.1,
+  "lowestOverGroundCm": 0
+ },
+ "jumpR-land.R": {
+  "contacts": 1,
+  "maxSlideCm": 3.1,
+  "lowestOverGroundCm": 0
+ },
+ "walk.L": {
+  "contacts": 3,
+  "maxSlideCm": 16.9,
+  "lowestOverGroundCm": 0
+ },
+ "walk.R": {
+  "contacts": 2,
+  "maxSlideCm": 1.8,
+  "lowestOverGroundCm": 0
+ },
+ "stop.L": {
+  "contacts": 1,
+  "maxSlideCm": 0.6,
+  "lowestOverGroundCm": 0
+ },
+ "stop.R": {
+  "contacts": 1,
+  "maxSlideCm": 4.7,
+  "lowestOverGroundCm": 0
+ },
+ "pickup.L": {
+  "contacts": 3,
+  "maxSlideCm": 1.7,
+  "lowestOverGroundCm": 0
+ },
+ "pickup.R": {
+  "contacts": 1,
+  "maxSlideCm": 0,
+  "lowestOverGroundCm": 0
+ }
+}

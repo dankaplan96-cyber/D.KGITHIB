@@ -1,0 +1,184 @@
+{
+ "url": "http://127.0.0.1:8993/",
+ "env": {
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "quality": "high",
+  "dpr": 1.25,
+  "inner": [
+   1536,
+   864
+  ]
+ },
+ "browser": "158.0.8127.36",
+ "visits": [
+  {
+   "name": "cold zeelich (from Citadel)",
+   "frames": 535,
+   "longest": 183.3,
+   "black": {
+    "n": 93,
+    "longest": 183.3,
+    "ms": 2633
+   },
+   "fadeLongest": 16.9,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.9,
+    "longest": 16.9,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "zeelich"
+  },
+  {
+   "name": "cold citadel (the return)",
+   "frames": 599,
+   "longest": 17.1,
+   "black": {
+    "n": 33,
+    "longest": 16.8,
+    "ms": 550
+   },
+   "fadeLongest": 16.9,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.9,
+    "longest": 17.1,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "citadel"
+  },
+  {
+   "name": "cold tavern (from the street)",
+   "frames": 474,
+   "longest": 83.3,
+   "black": {
+    "n": 43,
+    "longest": 83.3,
+    "ms": 800
+   },
+   "fadeLongest": 17,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.9,
+    "longest": 17,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "tavern"
+  },
+  {
+   "name": "cold street (out of the tavern)",
+   "frames": 480,
+   "longest": 17,
+   "black": {
+    "n": 20,
+    "longest": 16.8,
+    "ms": 334
+   },
+   "fadeLongest": 16.9,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.9,
+    "longest": 17,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "citadel"
+  },
+  {
+   "name": "warm zeelich (from Citadel)",
+   "frames": 600,
+   "longest": 17,
+   "black": {
+    "n": 20,
+    "longest": 16.8,
+    "ms": 333
+   },
+   "fadeLongest": 17,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.9,
+    "longest": 17,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "zeelich"
+  },
+  {
+   "name": "warm citadel (the return)",
+   "frames": 600,
+   "longest": 17,
+   "black": {
+    "n": 18,
+    "longest": 16.8,
+    "ms": 300
+   },
+   "fadeLongest": 16.9,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.9,
+    "longest": 17,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "citadel"
+  },
+  {
+   "name": "warm tavern (from the street)",
+   "frames": 480,
+   "longest": 16.9,
+   "black": {
+    "n": 19,
+    "longest": 16.8,
+    "ms": 317
+   },
+   "fadeLongest": 16.9,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.8,
+    "longest": 16.9,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "tavern"
+  },
+  {
+   "name": "warm street (out of the tavern)",
+   "frames": 480,
+   "longest": 17,
+   "black": {
+    "n": 19,
+    "longest": 16.8,
+    "ms": 316
+   },
+   "fadeLongest": 16.9,
+   "view6s": {
+    "n": 360,
+    "p50": 16.7,
+    "p95": 16.9,
+    "longest": 17,
+    "over33": 0,
+    "over50": 0,
+    "hitches": []
+   },
+   "endRoom": "citadel"
+  }
+ ],
+ "errs": []
+}

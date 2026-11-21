@@ -1,0 +1,43 @@
+{
+ "label": "before2",
+ "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "settings": {
+  "quality": "medium",
+  "res": "auto",
+  "fps": "auto",
+  "camDist": "medium"
+ },
+ "runs": {
+  "twinsen": {
+   "frames": 245,
+   "meanMs": 82.08,
+   "p50": 36.2,
+   "p95": 213.1,
+   "p99": 374.7,
+   "max": 1601.1,
+   "info": {
+    "calls": 143,
+    "triangles": 450351,
+    "programs": 86,
+    "geometries": 1149,
+    "textures": 326
+   }
+  },
+  "zoe": {
+   "frames": 454,
+   "meanMs": 44.11,
+   "p50": 35.4,
+   "p95": 141.7,
+   "p99": 195.6,
+   "max": 265.8,
+   "info": {
+    "calls": 135,
+    "triangles": 454757,
+    "programs": 86,
+    "geometries": 1151,
+    "textures": 327
+   }
+  }
+ },
+ "errors": []
+}

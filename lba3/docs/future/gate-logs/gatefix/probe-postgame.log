@@ -1,0 +1,13 @@
+PROBE {
+ "r0": {
+  "chapter": "home",
+  "room": "house",
+  "state": "play",
+  "obj": "Explore Citadel Island"
+ },
+ "r1": {
+  "exit": "arrived",
+  "room": "citadel",
+  "state": "play"
+ }
+}

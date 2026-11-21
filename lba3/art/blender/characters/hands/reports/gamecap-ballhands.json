@@ -1,0 +1,117 @@
+{
+ "farmerA": {
+  "look": "farmerA",
+  "body": "farmerA",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 973070
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967774
+   },
+   "heroCalls": 4,
+   "heroTris": 5296
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5296,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "farmerC": {
+  "look": "farmerC",
+  "body": "farmerC",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 975920
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968748
+   },
+   "heroCalls": 4,
+   "heroTris": 7172
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 7172,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "desertkid": {
+  "look": "desertkid",
+  "body": "desertkid",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 191,
+    "triangles": 973316
+   },
+   "withoutHero": {
+    "calls": 187,
+    "triangles": 968348
+   },
+   "heroCalls": 4,
+   "heroTris": 4968
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4968,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T19:58:35.915Z",
+ "candidates": {}
+}

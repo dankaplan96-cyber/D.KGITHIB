@@ -1,0 +1,36 @@
+load before 1.34 1.34 2.13; other gpu-processes 0
+PASS chapter 2: no travel menu anywhere (the spaceport's shuttle reads the grounded notice; ferry, gliders, Zeelich's pads closed) 
+PASS chapter 4: the ferry runs (Citadel → Desert Island only); every glider field is closed 
+PASS chapter 5: the project has taken the ferry: no ferry menu on Desert Island's pier 
+PASS chapter 6: the glider joins Desert Island and the Hamalayi; Citadel's field still closed 
+PASS PLANET-1: every travel route between planets is a spaceship (Citadel ⇄ Zeelich Spaceport; EXP-2: Float Harbor on Ballastra ⇄ both) and every one on Zeelich a shuttle; no ferry, glider or boat route reaches Zeelich or Ballastra 
+PASS chapter 2: Doran at the harbour takes Baldino's start code and sets off for the spaceport; no crossing from the harbour; when Twinsen gets to the spaceport Doran is waiting by the ship (INPUT) 
+PASS chapter 2 → 3: E at the project's ship on Citadel Spaceport's pad (INPUT) flies him to Zeelich: chapter 3 starts on Zeelich Spaceport's deck, the plan confiscated there; the sky-ferry at Zeelich's dock (U-1: the old line's ferry, there from chapter 3 on) 
+PASS chapter 8 → 9: no ship at the harbour's quay; E at the project ship on Citadel Spaceport's pad (INPUT) → chapter 9 on Zeelich Spaceport's deck 
+PASS chapter 10: no Hesk on Zeelich; the spaceship takes him to Citadel; Hesk's glider menu there names only Twinsun (Citadel, Desert Island, the Hamalayi), never Zeelich (INPUT) 
+PASS Twinsun: Citadel ⇄ Desert Island ⇄ the Hamalayi, every region from every other by ferry or glider, by input (8 legs) 
+PASS Twinsun's ferry and glider menus name only Twinsun places (no Zeelich, no spaceship) 
+PASS Citadel Spaceport's menu lists only Zeelich Spaceport; the spaceship lands him on Zeelich's spaceport deck 
+PASS on Zeelich he walks from the spaceport deck over the footbridge to the shuttle pad; its menu: the spaceport island (here) and the 9 islands, nothing of Twinsun 
+PASS every Zeelich place reached by shuttle, pad to pad (9 islands: DECLUTTER cut the CX islet and Tralu Rock), and back to the spaceport island; no Twinsun stop on any menu 
+PASS Zeelich Spaceport's menu lists only Twinsun: Citadel Spaceport 
+PASS the spaceship flies back: Zeelich Spaceport → Citadel Spaceport, on the deck in play 
+PASS the Holomap shows the planet he is on (Twinsun: Citadel, Desert Island, the Hamalayi; Zeelich: its spaceport island and islands) with his dot on the map 
+PASS TRAVEL-1 ship: every route both ways shows its craft leaving and arriving (with the cabin and its passengers); he lands on the landing spot, on the ground, in no collider, in the right region, in play; Save → Continue keeps it (6 rides) 
+PASS TRAVEL-1 ferry: every route both ways shows its craft leaving and arriving; he lands on the landing spot, on the ground, in no collider, in the right region, in play; Save → Continue keeps it (2 rides) 
+PASS TRAVEL-1 glider: every route both ways shows its craft leaving and arriving; he lands on the landing spot, on the ground, in no collider, in the right region, in play; Save → Continue keeps it (6 rides) 
+PASS TRAVEL-1 shuttle: every route both ways shows its craft leaving and arriving; he lands on the landing spot, on the ground, in no collider, in the right region, in play; Save → Continue keeps it (90 rides) 
+PASS TRAVEL-1: every route of the network was ridden both ways 
+PASS TRAVEL-1 skip: holding E in the ship's cabin ends the journey's film (no arrival film); he lands on Zeelich Spaceport's deck in play, nothing of the film left 
+PASS TRAVEL-1 skip: holding E during the arrival puts him on the landing spot at once, in play 
+PASS TRAVEL-1 skip: holding E as the ferry leaves the quay: he lands on Desert Island's pier in play 
+PASS TRAVEL-1: a short press (0.3 s) does not skip the film 
+PASS TRAVEL-1: no journey starts mid-dialogue (E at the stop reads the line on; no menu, no film) 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 27 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+exit 0 load after 1.62 1.48 1.71

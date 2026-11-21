@@ -1,0 +1,6 @@
+[
+  { "op": "validate", "name": "zoe ZOE-LOOK-38 baseline checks", "input": "art/blender/characters/zoe38/source/zoe.rebuilt.blend", "output": "art/blender/characters/zoe38/reports/baseline.validate.json",
+    "options": { "target": "character", "maxMaterials": 40, "maxTriangles": 7100, "groundedAtZero": true } },
+  { "op": "validate", "name": "zoe ZOE-LOOK-38 candidate checks", "input": "art/blender/characters/zoe38/work/zoe_poly.blend", "output": "art/blender/characters/zoe38/reports/candidate.validate.json",
+    "options": { "target": "character", "maxMaterials": 40, "maxTriangles": 7100, "groundedAtZero": true } }
+]

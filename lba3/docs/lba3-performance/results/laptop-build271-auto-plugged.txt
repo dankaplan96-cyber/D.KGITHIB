@@ -1,0 +1,15 @@
+LBA3 benchmark — Quality Auto as played · build 0.40.0 (build 271) · 2026-10-30 08:27 · the user's Vega 8 laptop, PLUGGED IN
+Auto: Medium (power change, nothing cached) → settled Medium held at 157.8 s (59.9 fps over 60 s, CPU p90 14.5, GPU p90 10.6)
+
+route       fps   p50/p95/max     GPU p50  CPU work p50  calls (shadow)
+street      57    16.7/16.9/966.7  9.59     10.0          149 (20)   ← one 967 ms frame in view at 1.0 s: work 262 ms, shadow cache rebuilt,
+                                                                        1 shader program compiled, +15 geometries; then GC −77/−70 MB (50, 33 ms)
+interior    60    16.7/16.8/17.5   9.43     3.4           49 (0)
+combat      59.8  16.7/16.8/66.6   8.83     4.4           150 (54)   (one 67 ms frame)
+transition  60    16.7/16.8/17.3   9.39     4.6           49 (4)
+arrival     56.2  16.7/16.8/500    9.05     9.6           126 (0)    (433 and 500 ms behind black: batches 189/273 + shadow batches 109/105 ms;
+                                                                        then 133 and 117 ms IN VIEW: shadow cache rebuilt, +29/+7 geometries, +13/+14 textures)
+hamalayi    60    16.7/16.9/17.5   9.4      4.5           35 (0)
+draw batches: 6 area builds 2526 ms · 1336 pieces batched, 171 alone, 33 rejoined · shadow batches 8 builds 1151 ms
+READING: plugged in, Medium holds 57–60 everywhere (arrival calls 126, was ~300). Left: the first street frame in view (967 ms) and the
+first frame after each arrival's black (117–133 ms: the shadow cache rebuild and uploads land one frame too late), plus GC spikes.

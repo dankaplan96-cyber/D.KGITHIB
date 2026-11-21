@@ -1,0 +1,33 @@
+From 2006e3f523cc2dc4356a9d08a6db59a94d581923 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 12:08:24 +0000
+Subject: [PATCH 06/10] Epilogue: a save from before the dinner sits him at the
+ table for it, not in the doorway
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/src/game/story/epilogue.js | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/lba3/src/game/story/epilogue.js b/lba3/src/game/story/epilogue.js
+index 28f02783..1d741733 100644
+--- a/lba3/src/game/story/epilogue.js
++++ b/lba3/src/game/story/epilogue.js
+@@ -101,7 +101,12 @@ export class Epilogue extends ChapterBase {
+     if (this.on() && (!this.f.ep_dinner || this.tap.open)) this.sheathe();   // (still at the family's table: the kitchen's step too)
+     // (CAMPAIGN-10: a save from the epilogue's start, made before the dinner: the dinner again, in the house, once play is on.
+     //  Before, it loaded into a quiet house with "Dinner is waiting" and no end screen ever came)
+-    if (this.resumeDinner && g.state === 'play' && !g.trans && !g.cutscene && g.room?.id === 'house') { this.resumeDinner = false; this.story.refreshCast(); this.dinner(); }
++    if (this.resumeDinner && g.state === 'play' && !g.trans && !g.cutscene && g.room?.id === 'house') {
++      this.resumeDinner = false;
++      // (sat down at the table for it, as when the epilogue begins: not left in the doorway the save had)
++      const s = this.tap.heroSpot(), h = g.hero; if (s) { h.pos.set(s.x, h.pos.y, s.z); h.angle = s.a; h.vel.set(0, 0);   /* (the house's floor is level) */ }
++      this.story.refreshCast(); this.dinner();
++    }
+     this.tap.update(dt);
+   }
+   showEnd() {
+-- 
+2.43.0
+

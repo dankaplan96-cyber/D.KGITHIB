@@ -1,0 +1,142 @@
+From 1a1499513fcda2239e549bc799926e095d9fee8d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 13:09:41 +0000
+Subject: [PATCH 09/10] CAMPAIGN-STRENGTHEN: wave 8 (5h draft, the epilogue's
+ ledger row, sections 1, 2 and 6)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/docs/lba-maturity/CAMPAIGN-STRENGTHEN.md | 89 ++++++++++++++++++-
+ 1 file changed, 86 insertions(+), 3 deletions(-)
+
+diff --git a/lba3/docs/lba-maturity/CAMPAIGN-STRENGTHEN.md b/lba3/docs/lba-maturity/CAMPAIGN-STRENGTHEN.md
+index 51116f97..b54cf122 100644
+--- a/lba3/docs/lba-maturity/CAMPAIGN-STRENGTHEN.md
++++ b/lba3/docs/lba-maturity/CAMPAIGN-STRENGTHEN.md
+@@ -29,7 +29,7 @@ steps in `tests/playthrough/07…14`).
+ | 10 Baldino's Network (`network`, network.js + netline.js) | Oku | five legs in any order: the old mill's relay (brake, climb) · ● Mill Lane on the way to the port: the isolator off Kell's feed box (Irsa takes the switch) · Citadel's valve room (● Mira reads her gauge first; three valves, ● she takes the wheel he holds) and the lighthouse dials (● Zoé takes the bank) · Desert Island's bore relay (● the relief wheel, Ilka takes it as the drones come; Dallan at the relay after) · the Hamalayi's dome (● the lever to SUNS, Yorna takes it; Pim at a mirror) · ● the code line's joint at the station: the isolator clipped on in the rest after the fourth knock | ● Arthur at home on the radio counts the kitchen pipe: four now · the allies answer at each station (radio; Irsa and Arthur too) | the shaft's blast doors open |
+ | 11 The Shell (`shell`, chapter3.js) | the lift down | the cooling diagram, valves A and C, the ball switch for the ladder · a patrol drone · the galleries: three pillars (ball), stepping stones | Sendell explains what is under the shell (told) · Baldino on the radio | he walks from Sendell's chamber into the core |
+ | 12 The Core (`core`, chapter3.js ChapterCore) | Vesk speaks, the guardian comes | three pylons converted by shots banked off copper plates while the guardian fights · the bleed valve · Vesk's coil broken (three hits) · the bore switched to shield mode | Zoé, Mira and Oku power the pylons (radio) · the council's guards take Vesk | the shell holds |
+-| Epilogue (`home`, epilogue.js) | dinner at home | Keep Exploring (free roam) | the ending | — |
++| Epilogue (`home`, epilogue.js + hometap.js) | dinner at home | ● after the dinner, the kitchen tap turned by his hand (cold, no knock, Arthur's cup filled under it) · ● a word with Zoé · Keep Exploring (free roam) | the dinner; Arthur's "just in case" | Zoé's word brings the end screen |
+ 
+ Implemented but not on the base route: the Oren expansion (`expansion/ballastra`, gated: `docs/future/OREN_PROGRESS.md`).
+ It is not in the base campaign and is not touched here. Design only: everything in section 5 below.
+@@ -56,7 +56,7 @@ base game's own presence under the shell ("her", the young being Sendell watches
+ | 8 Below the shell — someone answers | 11 The Shell | the machinery, the galleries, Sendell | the three-and-a-rest knock is answered: a mechanism replies to a pattern he did not send, he repeats it and gets a different reply, and steers by it; a failing passage is held open for him, later a door is sealed "for his protection" (shown before it is explained). It is "her", not a new guardian; Sendell stays distinct → **built (wave 7, section 5g)**: the damper's two, the knocker, the vents she latches; the shutter held by her crystal, the arch shut behind him, explained by Sendell |
+ | 11 The deep installation — reach the controls | 11 The Shell (its second half) and 12's approach | the catwalk, the ball switch, the stepping stones, the banked shots of chapter 12 | one sustained run: the pulse read to cross moving machinery, a banked throw taught safely before it is needed, a way back opened from the far side, the allies heard, a checkpoint before Vesk → **built (wave 7, 5g)**: the bank shot tried on the crew's test receiver, then needed for the third heart; the steam read and passed by her answers; the checkpoint in Sendell's chamber |
+ | 12 The decision — keep the water running | 12 The Core | the pylons, the coil, shield mode, the guards | the last act made specific: one branch rerouted, Irsa's confirmation, the central lock released, Zoé's signal; Vesk's choice is seen and the falsified log and the list are named when the guards take him → **built (wave 7, 5g)** |
+-| Playable aftermath | Epilogue | dinner, the end, Keep Exploring | the kitchen: the player turns the tap (cold), Arthur's cup stands under it "just in case", a moment with Zoé |
++| Playable aftermath | Epilogue | dinner, the end, Keep Exploring | the kitchen: the player turns the tap (cold), Arthur's cup stands under it "just in case", a moment with Zoé → **built (wave 8, section 5h)** |
+ 
+ ## 3. The measurement (the main route; side content, idle, loading and repeated failures left out)
+ 
+@@ -240,6 +240,21 @@ act: the fight is the base's, and the segment's pylon step now has an ISO fallba
+ above). Logs `/dev/shm/w7/pt14-*.log`, `pt15-*.log`, stats `/dev/shm/w7/st14-*.json`, `st15-*.json` (the session's scratch, not in
+ the repository).
+ 
++**The epilogue, wave 8** (13.11; base = this branch at `516f6145` before the wave, served as its own build beside the wave's;
++both runs by the same bot, ASSIST=1, from the same save `new-15-last` — chapter 12's last act, made on the build before the
++wave —, segment 14's last-act steps and its epilogue steps (the base its own file, the wave its own), each in one piece by input;
++no death, no ISO assist in either):
++
++| Ch | bot s of free play: base → wave 8 | of which the new steps | lines · words | scenes (not counted) | est. first play (min): base → wave 8 | what the seconds are |
++|---|---|---|---|---|---|---|
++| Epilogue | 0 → **14.4** (the step after the signal: the dinner, the kitchen, the end) | 14.4 (the walk from the table to the tap and his hand on its knob, the water's two seconds, the shut; the walk to Zoé) | 14 · 164 → 17 · 197 at the dinner, then 0 → 10 · 80 (the tap's five lines, Zoé's word) | the end screen | 0.9 → **about 2.0** | the tap and the word with Zoé |
++
++The minutes are **estimates**: the 9.11 estimate moved by 1.8 × the new step's bot seconds (14.4 s: +0.4 min) and the new
++reading (+113 words at 200 a minute, +13 lines at 0.6 s: +0.7 min); no deduction step (the tap is the first thing the player
++learned to use). Not a chapter: the aftermath, measured for the ledger only. The base's dinner line count (14 · 164) includes the
++signal step's own lines; the wave's three more (17 · 197) are the narrator's "Later" and Arthur's and Zoé's call to the tap.
++Logs `/dev/shm/tail-*.log`, stats `/dev/shm/st-tail-*.json` (the session's scratch, not in the repository).
++
+ ## 4. The missing playable step, chapter by chapter
+ 
+ Did the player discover the problem, test an idea and see the result — or did a person do all three?
+@@ -909,6 +924,74 @@ covers it, logged. Chapter 12 is still under the 75 % line by the estimate (abou
+ The epilogue (wave 8: the tap) is untouched; the shut arch opens again once the shield holds, so the epilogue's crew walk
+ through as before. `chapter10.mjs` was not rerun (no file of chapter 10 was touched).
+ 
++## 5h. Wave 8, as built (the treatment's playable aftermath, in the epilogue)
++
++**Status (13.11): Automated runtime only.** Built and verified by the bot and the suites on SwiftShader; nobody has played it,
++nothing was listened to (the valve, the running water and the shut are the game's existing synthesized sounds), no frame rate
++measured. The first worker on this wave was lost with its session (its commit and its uncommitted test edits survived in the
++worktree); the wave was finished, verified and written up in a second session.
++
++**Wave 8's verification** (port 8920 snapshot of this branch, the base `516f6145` on 8921; one suite at a time):
++
++SUITE_TABLE
++
++| Chapter | Before (base) | Now: what the player does | Where |
++|---|---|---|---|
++| Epilogue | the dinner (seven lines at the table), then at once the end screen; Keep Exploring. The kitchen tap of chapter 1 was never turned again. A save made at the epilogue's start (before the dinner) loaded into a quiet house with "Go home. Dinner is waiting" and no end screen ever came | The dinner as it was, at the table (he sits down for it, not in the hall's doorway). Then "Later. Empty plates, and most of the story told." Arthur: "Dad! Come and turn the tap. I want to hear the pipe." Zoé: "He's had his ear on that pipe for four days. Go on." **Control in the kitchen**: Arthur by the dresser beside the sink, listening; Zoé by the table, drying her hands; Arthur's cup under the spout, empty. The objective: "Turn the kitchen tap. Arthur is listening". The door holds ("Arthur is waiting by the tap."); Zoé: "The tap first. He won't let anyone else near it." **The tap**: his hand on the cross's knob turns it (the handle turns under it), the water runs cold into the cup and fills it, and the wall stays quiet (no knock is played). The first time, a short close look from over the stove, along the wall, at the spout, the stream and the cup (off under `?nocine`). "(Cold. And not one knock in the wall.)" Arthur: "Nothing! Not three, not four. It just runs." "My cup stays under it, though. Just in case." "In case of what?" "In case it stops. Then I'll know first." He shuts it again (his hand on the knob once more); the cup stays full under the spout. **Zoé's word**: "Bram came by. The lane runs cold too. Hedda is washing everything she owns." "Then it's done." "Nearly. You told us everything, slowly. Except the guardian. You went very fast over the guardian." "It was a very fast guardian." "Sit down. Start there." → the end screen. After Keep Exploring the tap is still a tap: "(Cold. Still quiet.)" | `story/hometap.js` (`EpilogueTap`), `story/epilogue.js`, `interiors.js` (the tap's handle), `text/thread.js` |
++
++**Why this shape.** The campaign opened on a dry tap that knocked: the player turned it by hand, carried Arthur's cup from the
++wrong pipe to the right one, and followed the knock out of the house (wave 1); Arthur counted it in chapter 10 and heard the
++signal in chapter 12. The ending pays that off in the same room, with the same hand action and the same cup, and the change is
++unmistakable without a speech: the water is cold and the wall is quiet. Arthur's "just in case" keeps him the boy who listens to
++the pipe, not a hero; Zoé's word closes the lane she saved in chapter 8 (Bram, Hedda) and sends the player back to the table,
++warm and ordinary. Short: three lines to set it up, five at the tap, five with Zoé. No new region, no new person, no new voice,
++no night words (the dinner's lines had none either).
++
++**New flags only** (old saves load and go on): `ep_v ep_tap ep_word`. `ep_v` is set when the epilogue begins, or on loading
++an epilogue save from before whose dinner is still ahead (`base-16`): such a save now plays the dinner (it loaded into a quiet
++house before, with no end screen) and the kitchen's step after it. A save from before past the dinner (`base-16-end`,
++`base-16-free`) has no `ep_v`: the step counts as done, the door is open, the objective is "See how everyone is doing", and the
++tap is there to turn (cold, quiet); the cup stands under it. Saved: after the setup lines (the kitchen's step), after the tap,
++after Zoé's word.
++
++**Hands.** One new hand action, through `story/reach.js` (`touchWater` at the cross's height): his hand on the knob toward the
++room, to turn the tap open and again to shut it. The handle stood 0.73 m over the sink's back, out of his reach from the
++cupboard's front; it is now on a short stem at the end of the pipe's run (5.5 cm lower, 6 cm nearer the room); the spout has
++not moved. The opening film's tap (Zoé's hand, `opening.js`) reads the handle's position, so it follows. Measured in
++`tests/campaign-hands.mjs`: 0.2 cm opened, 0.2 cm shut. Zoé's apron wipe is her own body's surface (listed, as `no-air.mjs`).
++
++**Vega 8 budget** (draw calls and triangles of one frame, all passes, 960×540, Medium; SwiftShader: counts only, no timing; the
++same saves on both builds and the same spot, the hero in the dinner's seat at the table unless said; the probe a script in the
++session's scratch):
++
++| Spot (save) | draw calls: base → wave 8 | triangles: base → wave 8 |
++|---|---|---|
++| the house as a save from before the dinner loads (`base-16`; the hero in the hall's doorway on both: the base in play, the wave at the dinner's first line) | 58 → 60 | 227,247 → 227,433 |
++| the house after the dinner, at the table (`base-16-end`) | 62 → 62 | 229,299 → 229,299 |
++| the kitchen's step, at the table (`new-16-kitchen`, wave 8 only) | — → 56 | — → 228,269 |
++| the kitchen's step, at the tap (wave 8 only) | — → 54 | — → 228,265 |
++| the tap running into the cup (wave 8 only) | — → 61 | — → 228,295 |
++| the tap turned, Zoé ahead, at the table (`new-16-tap`, wave 8 only) | — → 57 | — → 228,283 |
++
++No cost at rest: the house after the dinner draws the same. The cup's water is one small disc in the stream's own material (no new
++program), drawn only when the cup has water; the stream is the kitchen's own. The running tap adds the stream, the water and the
++splash particles while it runs (+5 over the step's 56 at rest). The doorway spot's +2 is the dinner's dialogue frame on the wave's
++build against play on the base (the base had no dinner there), not a cost of the wave.
++
++**Files.** `src/game/story/hometap.js` (`EpilogueTap`: the step's places, the cup and its water, the tap's turn and stream, the
++close look, the door, the objective, the journal line, Zoé's word), `src/game/story/epilogue.js` (the step owned as `this.tap` and
++asked first; the dinner at the table; a save from before the dinner plays it; `canExit`), `src/game/interiors.js` (the handle's
++stem and the knob's and watering can's points), `src/game/story/kit2.js` (Arthur's present call waits until the step is over),
++`src/game/text/thread.js` (the lines). `voice.js` and the other `voice*.js`, `answer.js`, `netline.js`, `cnline.js`, `laneline.js`,
++`passline.js` are not touched (no new speaker: the narrator, Twinsen, Arthur and Zoé have their voices); no new transition.
++Tests: `tests/epilogue-home.mjs` (the step by E), `tests/playthrough/14-shell.mjs` (its epilogue step by input), `tests/chapter3.mjs`
++(the end of the suite), `campaign-thread.mjs` Q (Q1–Q8: the saves from before, the step by input with Save & quit → Continue before
++and after the tap), `campaign-hands.mjs` (`ep_tap`; `ONLY16=1`), `no-air.mjs` (state 33: the kitchen's step), `save-migration.mjs`
++(5 new); fixtures `tests/fixtures/campaign/base-16`, `base-16-end`, `base-16-free` (made on the build before the wave) and
++`new-16-kitchen`, `new-16-tap`. Pictures (for the coordinator only): `captures/campaign-wave8/x-*.jpg`.
++
++LEFT_OPEN
++
+ ## 6. The next waves (chapters 4–12 and the aftermath)
+ 
+ Rules for every wave: new flags only, a marker per thread as above (a save from before counts the step as done); every
+@@ -925,6 +1008,6 @@ them all is the one wave 1 started: **three kicks and a rest**, first heard in t
+ | 5 (**built**, 5e) | 9 The Council (the evidence, the failed shutdown) | `council.js` + `zeelift.js` (Kell): the archive is closed to Twinsen by Vesk's standing order, read on its door; Kell takes him up the cistern lift's service landing to the archive's back gallery (only if the lift was mended on the main route: it always was); the BORE cabinet holds the uncut log (two traces) and the order that cut it, with Vesk's reason in his hand. After the hearing the council orders the stop: the player throws it at the platform's console; the bore's needle falls, the pulse's does not, Mill Lane's taps fail (Kell's lift stops, Brel's jug); Baldino's isolator on the Test Pair bench (`workshop.js`) holds one relay steady at a time: tried by hand | `cn_v cn_closed cn_kell cn_log cn_stop cn_iso` | `tests/playthrough/12`; `tests/chapter8.mjs`; `zeelich-life.mjs` (Mill Lane's states) |
+ | 6 (**built**, 5f) | 10 Baldino's Network | `network.js` + `story/netline.js` + `codejoint.js`: at each leg the ally walks to the station and takes its handle as the player lets go (seen before he leaves: Irsa at Mill Lane's bypass, Mira at the valve room's wheels, Zoé at the lighthouse dials, Ilka and Dallan at the vent, Yorna and Pim at the dome); Arthur, at home on the radio, counts the knocking (three and a rest, then four): Mira reads the same on the valve room's gauge before anyone acts on it. The hardest station (the damaged connection at the station's code box) stays Twinsen's | `nw_v nw_irsa nw_mira nw_zoe nw_ilka nw_yorna nw_arthur` (as built: also `nw_old nw_irsaTold nw_gauge nw_wheel nw_jointTold nw_kick nw_joint`) | `tests/playthrough/13`; `tests/chapter10.mjs` (the chapter suite of Baldino's Network); `campaign-thread.mjs` L, M; `campaign-hands.mjs`; `cast-rounds.mjs` (the allies' places) |
+ | 7 (**built**, 5g) | 11 The Shell, 12 The Core | `chapter3.js` + a new `story/answer.js`: in the machinery a damper answers three and a rest with a pattern of its own; the player repeats it at a knocker (a real lever), gets a second reply, and the replies mark the safe catwalks; a failing shutter is held open for him, later the gallery's door is shut behind him (shown first, explained by Sendell after). The banked throw is taught on a safe plate before the stepping stones need it; a checkpoint (autosave) before the core. Chapter 12: the last act in four steps he has done before (reroute one branch at a cock, Irsa's "holding" on the radio, the central lock, the signal to Zoé); Vesk chooses in view; the guards name the cut log and the list | `sh_v sh_knock sh_reply sh_held sh_shut co_branch co_irsa co_lock co_signal` | `tests/playthrough/14`; `tests/chapter10.mjs`; `under-bar.mjs` |
+-| 8 | Epilogue | `epilogue.js` + `hometap.js` (its parts): after the dinner, control in the kitchen: the tap turned by hand runs cold, Arthur's cup stands under it "just in case", a word with Zoé, then the end screen | `ep_tap` | `tests/epilogue-home.mjs`; `tests/playthrough/14` (its last step); a fresh run 01–14 |
++| 8 (**built**, 5h) | Epilogue | `epilogue.js` + `hometap.js` (its parts): after the dinner, control in the kitchen: the tap turned by hand runs cold, Arthur's cup stands under it "just in case", a word with Zoé, then the end screen | `ep_tap` (as built: also `ep_v ep_word`) | `tests/epilogue-home.mjs`; `tests/playthrough/14` (its last step); a fresh run 01–14 |
+ 
+ After the last wave: a fresh chain 01–14 from a new game, by input, with its numbers in the table of section 3.
+-- 
+2.43.0
+

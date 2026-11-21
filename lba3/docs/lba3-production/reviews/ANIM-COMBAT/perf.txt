@@ -1,0 +1,19 @@
+{
+ "stance, planting": {
+  "medianMs": 0.02,
+  "p95Ms": 0.03
+ },
+ "stance, no planting": {
+  "medianMs": 0.005,
+  "p95Ms": 0.03
+ },
+ "slash1, planting": {
+  "medianMs": 0.02,
+  "p95Ms": 0.035
+ },
+ "slash1, no planting": {
+  "medianMs": 0.01,
+  "p95Ms": 0.015
+ }
+}
+no errors

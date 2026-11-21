@@ -1,0 +1,14 @@
+PASS A staged batches = one-step batches (Desert Island: shadow cells, members, vertices, indices; draw batches, pieces, vertices, indices) {"staged":{"shadowCells":107,"shadowMembers":287,"shadowSolo":56,"shadowVerts":410056,"shadowIdx":548655,"drawBatches":39,"drawPieces":323,"drawVerts":396078,"drawIdx":522930},"one":{"shadowCells":107,"shadowMembers":287,"shadowSolo":56,"shadowVerts":410056,"shadowIdx":548655,"drawBatches":39,"drawPieces":323,"drawVerts":396078,"drawIdx":522930},"slices":{"shadow":34,"shadowMax":48,"draw":24,"drawMax":4317},"oneStepMs":{"shadow":102,"draw":116}}
+PASS A the staged builds came in several slices {"shadow":34,"shadowMax":48,"draw":24,"drawMax":4317}
+  tavern: 83 frames, 52 black · 38 steps · shadow batches 5×, longest 325 ms · texture layers 5×, longest 64998 ms · draw batches 13×, longest 63 ms · geometry 6×, longest 59 ms · draw batches settle 1×, longest 1 ms · batch meshes 1×, longest 0 ms · textures 1×, longest 2 ms · shadow programs 1×, longest 108 ms · shader warm-up 5×, longest 33 ms (+1 with programs)
+    steps that compiled programs: shader warm-up 16 ms (+1 program)
+PASS B tavern: the arrival came through (in the area, the screen revealed) {"room":"tavern","revealed":true}
+FAIL B tavern: every batch / settle / layer / warm-up slice ≤ 40 ms ["shadow batches 58","shadow batches 325","draw batches 63"]
+PASS B tavern: no batch build or piece leaving a batch on the first 30 frames in view []
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 4 passed, 1 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional)
+1 FAILED

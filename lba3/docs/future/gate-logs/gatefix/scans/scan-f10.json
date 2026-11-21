@@ -1,0 +1,249 @@
+{
+ "chapter": "evacuation",
+ "start": "citadel",
+ "scenes": [
+  {
+   "scene": "citadel@xil",
+   "people": [
+    [
+     "xil",
+     -113.5,
+     42.5,
+     0.462
+    ],
+    [
+     "tim",
+     -115.5,
+     45,
+     0.369
+    ],
+    [
+     "lulu",
+     -115.5,
+     46.2,
+     0.346
+    ]
+   ],
+   "things": 1,
+   "rows": [
+    {
+     "thing": "isleShuttle:p_ferry",
+     "verdict": "NEAR",
+     "useCells": 1366,
+     "reach0": 1362,
+     "reach1": 1156,
+     "minGapToPerson": -0.79
+    }
+   ]
+  },
+  {
+   "scene": "citadel@tim",
+   "people": [
+    [
+     "xil",
+     -113.5,
+     42.5,
+     0.462
+    ],
+    [
+     "tim",
+     -115.5,
+     45,
+     0.369
+    ],
+    [
+     "lulu",
+     -115.5,
+     46.2,
+     0.346
+    ]
+   ],
+   "things": 1,
+   "rows": [
+    {
+     "thing": "isleShuttle:p_ferry",
+     "verdict": "NEAR",
+     "useCells": 1356,
+     "reach0": 1351,
+     "reach1": 1145,
+     "minGapToPerson": -0.79
+    }
+   ]
+  },
+  {
+   "scene": "citadel@lulu",
+   "people": [
+    [
+     "xil",
+     -113.5,
+     42.5,
+     0.462
+    ],
+    [
+     "tim",
+     -115.5,
+     45,
+     0.369
+    ],
+    [
+     "lulu",
+     -115.5,
+     46.2,
+     0.346
+    ]
+   ],
+   "things": 1,
+   "rows": [
+    {
+     "thing": "isleShuttle:p_ferry",
+     "verdict": "NEAR",
+     "useCells": 1159,
+     "reach0": 1154,
+     "reach1": 948,
+     "minGapToPerson": -0.79
+    }
+   ]
+  },
+  {
+   "scene": "citadel@bram",
+   "people": [
+    [
+     "bram",
+     -42.3,
+     62.9,
+     0.608
+    ]
+   ],
+   "things": 2,
+   "rows": [
+    {
+     "thing": "lpump:p_look",
+     "verdict": "NEAR",
+     "useCells": 474,
+     "reach0": 474,
+     "reach1": 405,
+     "minGapToPerson": -0.94
+    }
+   ]
+  },
+  {
+   "scene": "house",
+   "people": [
+    [
+     "zoe",
+     997.68,
+     -2.62,
+     0.45
+    ],
+    [
+     "arthur",
+     1002.15,
+     2.15,
+     0.45
+    ]
+   ],
+   "things": 2,
+   "rows": [
+    {
+     "thing": "a_conch:p_take",
+     "verdict": "NEAR",
+     "useCells": 142,
+     "reach0": 142,
+     "reach1": 118,
+     "minGapToPerson": -0.51
+    }
+   ]
+  },
+  {
+   "scene": "office",
+   "people": [
+    [
+     "mira",
+     1198.8,
+     0.95,
+     0.368
+    ]
+   ],
+   "things": 1,
+   "rows": [
+    {
+     "thing": "roomsearch:pipemap",
+     "verdict": "NEAR",
+     "useCells": 192,
+     "reach0": 192,
+     "reach1": 192,
+     "minGapToPerson": 0.68
+    }
+   ]
+  },
+  {
+   "scene": "wtent",
+   "people": [
+    [
+     "bersimon",
+     5400.2,
+     -2.15,
+     0.496
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "school",
+   "people": [
+    [
+     "magus",
+     5605.2,
+     -4.1,
+     0.496
+    ],
+    [
+     "keraooc",
+     5593.1,
+     2.2,
+     0.495
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  }
+ ],
+ "rooms": [
+  "house",
+  "well",
+  "office",
+  "projoffice",
+  "control",
+  "workshop",
+  "lighttop",
+  "cellar",
+  "c3shaft",
+  "c3deep",
+  "c3gallery",
+  "c3sendell",
+  "c3core",
+  "condA",
+  "condB",
+  "butemple",
+  "wtent",
+  "school",
+  "asylum",
+  "bumaze",
+  "buhalls",
+  "obsv",
+  "upper",
+  "council",
+  "archive",
+  "valves",
+  "arena",
+  "sewer",
+  "sewervault",
+  "tavern",
+  "bazoo",
+  "ticket",
+  "pharmacy",
+  "nbrhouse",
+  "nellhouse"
+ ]
+}

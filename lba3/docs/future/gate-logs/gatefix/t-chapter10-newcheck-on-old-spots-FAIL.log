@@ -1,0 +1,40 @@
+PASS chapter 10 (network) starts in Baldino's workshop, the relays objective set ["network","workshop",true,"Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)◆ (the spaceship to Citadel, then Hesk's glider)"]
+PASS Oku on Zeelich asks for the mill braked ["zeelich",true]
+PASS the mill brake hit (the mill stops) ["thrown",false]
+PASS the old mill's relay set (1/5); the mill turns again [true,true,"Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"]
+PASS Hesk is not on Zeelich (no glider to another planet) [false,"zeelich"]
+PASS the spaceship to Citadel ["out",["Twinsun: Citadel Spaceport"]]
+PASS Mira sends him to the valve room ["office",true,"valves"]
+PASS the valve room's relay: the three gauges level [[2,2,2],true]
+PASS out of the valve room and the office ["office","out"]
+at the dial nearest Zoé, facing her, E is for {
+  nearest: 'dial1',
+  d: 0.74,
+  e: 'zoe',
+  room: 'lighttop',
+  at: [ 1601.41, -0.16 ]
+}
+PASS Zoé at the lighthouse top asks for the dials (walked to from the stair top, by input) ["lighttop",[true,1598.5,-0.6,"play"],"play",true,"talked","zoe",1598.9,0.3]
+FAIL B-1: every lighthouse dial is walked to from the stairs by input and turns (E), with Zoé and Arthur standing by {"people":[["zoe",true,1598.48,-0.55],["arthur",true,1599.76,-0.3]],"out":[{"dial":1,"r":"used","target":"npc","from":1.42,"turned":false},{"dial":2,"r":"used","target":"npc","from":1.74,"turned":false},{"dial":3,"r":"used","target":"npc","from":2.16,"turned":false}],"trace":["[47.7] go → (1598.5, -0.6) plan ok=true pts=4 left=0.8","[50.4] go → (1598.5, -0.6) plan ok=true pts=2 left=0.16","[51.9] go → (1599.0, -1.1) plan ok=true pts=2 left=0.23","[52.6] go → (1599.5, -1.3) plan ok=true pts=3 left=0.17","[53.5] go → (1600.1, -1.5) plan ok=true pts=3 left=0.46","[56.0] stuck at (1598.9, 0.2): re
+FAIL the lighthouse dials set by input, the relay (3/5) [null,null,"Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"]
+PASS B-1: after the relay, down the stairs from the dial bank by input [[1601.36,-0.14],"transition","out"]
+PASS Hesk's glider to Desert Island "desert"
+PASS Ilka; the bore relay set; the drones come [true,true,1]
+PASS wave 1 (the drones) beaten: wave 2 is on, the station is not done yet [["ndrone0: thrown (2 throws)","ndrone1: thrown (1 throws)","ndrone2: thrown (1 throws)"],[],[false,false,false],true,null]
+PASS the break: a heart and a flask lie by him, the clone is out of the cabin, the guard follows, the sentry holds the gate {"lk":["heart:c10-bore-heart","flask:c10-bore-flask"],"vis":{"nclone":true,"nguard":false,"nsentry":true},"sentryAtGate":true}
+PASS wave 2 (clone, guard, sentry) beaten, the bore relay done (4/5) [["nclone: thrown (1 throws)","nguard: thrown (2 throws)","nsentry: thrown (4 throws)"],[],[false,false,false,false,false,false],true,"Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"]
+PASS the glider to the Hamalayi "hamalayi"
+PASS Yorna and Pim [true]
+PASS the dome's relay (5/5), an objective set ["hamalayi",true,true,true,"Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"]
+PASS the glider and the spaceship back to Zeelich ["out",["zeelich",["Zeelich Spaceport"]],"Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"]
+console [ undefined, 'network', 'zeelich' ]
+PASS at a dial within Zoé's reach, facing her, E is for Zoé (none within her reach: no dial takes her prompt) {"nearest":"dial1","d":0.74,"e":"zoe","room":"lighttop","at":[1601.41,-0.16]}
+FAIL chapter 10 done at the platform console: the next chapter (shell) set [null,"network","zeelich"]
+PASS every ball target hit by a real throw (an ISO assist is not a pass) []
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 22 passed, 3 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     9 capture(s) written for review, not judged here
+VERDICT: FAIL (3 functional)
+3 FAILED

@@ -1,0 +1,25 @@
+doors 16 checks 192 meshes per door (median) 24
+  culled: {"cam":"lba","door":"citadel/twinsen","dist":2,"q":"medium","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/twinsen","dist":2,"q":"low","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/twinsen","dist":6,"q":"medium","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/twinsen","dist":6,"q":"low","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/twinsen","dist":12,"q":"medium","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/twinsen","dist":12,"q":"low","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/bug","dist":2,"q":"medium","n":24,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/bug","dist":2,"q":"low","n":24,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/bug","dist":6,"q":"medium","n":24,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/bug","dist":6,"q":"low","n":24,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/bug","dist":12,"q":"medium","n":24,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/bug","dist":12,"q":"low","n":24,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/stone","dist":2,"q":"medium","n":19,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/stone","dist":2,"q":"low","n":19,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/stone","dist":6,"q":"medium","n":19,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/stone","dist":6,"q":"low","n":19,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/stone","dist":12,"q":"medium","n":19,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/stone","dist":12,"q":"low","n":19,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/shop","dist":2,"q":"medium","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+  culled: {"cam":"lba","door":"citadel/shop","dist":2,"q":"low","n":25,"lost":["Mesh(MeshStandardMaterial)"]}
+FAIL Citadel house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera) [{"cam":"lba","door":"citadel/twinsen","dist":2,"q":"medium","n":25,"lost":["Mesh(MeshStandardMaterial)"]},{"cam":"lba","door":"citadel/twinsen","dist":2,"q":"low","n":25,"lost":["Mesh(MeshStandardMaterial)"]},{"cam":"lba","door":"citadel/twinsen","dist":6,"q":"medium","n":25,"lost":["Mesh(MeshStandardMaterial)"]},{"cam":"lba","door":"citadel/twinsen","dist":6,"q":"low","n":25,"lost":["Mesh(MeshStandardMaterial)"]},{"cam":"lba","door":"citadel/twinsen","dist":12,"q":"medium","n":25,"lost":["Mesh(MeshStandardMaterial)"]}]
+FAIL Zeelich house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera) [{"cam":"lba","door":"zeelich/zhouse4","dist":2,"q":"low","n":20,"lost":["Mesh(MeshStandardMaterial)","Mesh(MeshStandardMaterial)"]},{"cam":"lba","door":"zeelich/zhouse4","dist":6,"q":"low","n":20,"lost":["Mesh(MeshStandardMaterial)","Mesh(MeshStandardMaterial)"]},{"cam":"lba","door":"zeelich/zhouse4","dist":12,"q":"medium","n":20,"lost":["Mesh(MeshStandardMaterial)"]},{"cam":"lba","door":"zeelich/zhouse4","dist":12,"q":"low","n":20,"lost":["Mesh(MeshStandardMaterial)","Mesh(MeshStandardMaterial)"]},{"cam":"free","door":"zeelich/zhouse4","dist":6,"q":"low","n":20,"lost":["Mesh(MeshStandardMate
+no errors
+2 FAILED

@@ -1,0 +1,10 @@
+desert: 1 batches (terrain 4) — the terrain: squares vs its tiles
+heading 0°: pixels differ 0 · main 55 calls 261k tris (batches, culled) vs 58 calls 321k (InstancedMeshes, as before)
+heading 45°: pixels differ 0 · main 58 calls 241k tris (batches, culled) vs 61 calls 332k (InstancedMeshes, as before)
+heading 90°: pixels differ 0 · main 27 calls 135k tris (batches, culled) vs 29 calls 229k (InstancedMeshes, as before)
+heading 135°: pixels differ 0 · main 21 calls 80k tris (batches, culled) vs 22 calls 149k (InstancedMeshes, as before)
+heading 180°: pixels differ 0 · main 18 calls 36k tris (batches, culled) vs 19 calls 115k (InstancedMeshes, as before)
+heading 225°: pixels differ 0 · main 19 calls 65k tris (batches, culled) vs 20 calls 134k (InstancedMeshes, as before)
+heading 270°: pixels differ 0 · main 22 calls 99k tris (batches, culled) vs 24 calls 194k (InstancedMeshes, as before)
+heading 315°: pixels differ 0 · main 33 calls 224k tris (batches, culled) vs 36 calls 319k (InstancedMeshes, as before)
+worst 0 pixels differ

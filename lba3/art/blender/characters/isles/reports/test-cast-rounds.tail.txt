@@ -1,0 +1,4 @@
+resources:  no required file missing, 0 optional
+visual:     22 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

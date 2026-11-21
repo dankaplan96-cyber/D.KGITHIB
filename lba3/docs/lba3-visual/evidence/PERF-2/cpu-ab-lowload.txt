@@ -1,0 +1,8 @@
+8238 avg: 3.03, 3.99, 5.91
+low {"yaw1.4":{"simMs":2.5,"renderMs":11.4,"calls":470},"yaw2.2":{"simMs":2.3,"renderMs":10.3,"calls":517},"yaw2.45":{"simMs":2.4,"renderMs":10.8,"calls":574}}
+8237 avg: 3.92, 3.92, 5.65
+low {"yaw1.4":{"simMs":2.4,"renderMs":5.9,"calls":294},"yaw2.2":{"simMs":2.4,"renderMs":5.7,"calls":299},"yaw2.45":{"simMs":2.4,"renderMs":5.7,"calls":310}}
+8238 avg: 3.81, 3.81, 5.40
+medium {"yaw1.4":{"simMs":3.3,"renderMs":15.3,"calls":518},"yaw2.2":{"simMs":3.1,"renderMs":13.6,"calls":570},"yaw2.45":{"simMs":3.2,"renderMs":14.8,"calls":632}}
+8237 avg: 4.30, 3.99, 5.11
+medium {"yaw1.4":{"simMs":3.1,"renderMs":9.2,"calls":345},"yaw2.2":{"simMs":3,"renderMs":8.4,"calls":351},"yaw2.45":{"simMs":3,"renderMs":7.8,"calls":375}}

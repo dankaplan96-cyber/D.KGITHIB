@@ -1,0 +1,12 @@
+- [Measure in the desktop app](lba3-measure-in-desktop-app.md) — default runner is the installed app with a separate profile; Chrome only for branch A/B
+- [Local setup](lba3-local-setup.md) — repo paths (game folder now lba3), Test Lab in lba3/tools/testlab, portable builds, game quirks
+- [World Art role](lba3-world-art-role.md) — since 31.10 also the World Art agent: files I own, approval with Citadel before/after, commit trailer with session link
+- [Twelve years later, 80 % similar](lba3-twelve-years.md) — differences from LBA2 are expected; target 80 % likeness as in WORLD_SIMILARITY.md, never 100 %
+- [Structure over fps](lba3-structure-over-fps.md) — since 31.10 evening: no more fps chasing on this weak laptop; focus on buildings/world structure, light perf checks only
+- [Expansion World Builder](lba3-expansion-world-builder.md) — W-1, W-2, W-3 accepted (W-3 "Looks good" 9.11); W-4 waits for the cloud to order it
+- [Layout like the original](lba3-layout-like-original.md) — LBA places keep the original's layout (stairs, upper floor, windows, bar, door) ~80%; 12-years changes are details on top
+- [Request diffs that apply](lba3-request-diffs.md) — diffs against origin, apply --check on a clean checkout, no pipes hiding failures; shared cached geometry
+- [No dome](lba3-no-dome.md) — user doesn't want LBA2's dome (scene 26); don't build or propose it
+- [Purpose before building](lba3-purpose-before-building.md) — ask the cloud if a place has a story purpose first; 2.11 answers (school yes, temple later, Hamalayi/desert interiors no)
+- [Maturity Agent Pack](lba3-maturity-pack.md) — 7.11 the user's 16-agent pack; the cloud assigns it, don't run its coordinator locally; 85/100 rubric, 2 workers
+- [Zeelich's hub is a new city](lba3-zeelich-new-city.md) — 7.11 the user: not an LBA2 place; judge by Zeelich's style (Esmer shapes, palette, clouds, people), not layout

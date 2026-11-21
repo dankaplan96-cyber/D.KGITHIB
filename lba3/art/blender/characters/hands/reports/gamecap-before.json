@@ -1,0 +1,121 @@
+{
+ "keeper": {
+  "look": "keeper",
+  "body": "keeper",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 971406
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967774
+   },
+   "heroCalls": 4,
+   "heroTris": 3632
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3632,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "oku_b": {
+  "look": "oku_b",
+  "body": "oku_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 972924
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968748
+   },
+   "heroCalls": 4,
+   "heroTris": 4176
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4176,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "ztri1": {
+  "look": "ztri1",
+  "body": "ztri1",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 191,
+    "triangles": 971566
+   },
+   "withoutHero": {
+    "calls": 187,
+    "triangles": 968348
+   },
+   "heroCalls": 4,
+   "heroTris": 3218
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 3218,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T19:36:12.837Z",
+ "candidates": {
+  "CAND_keeper": "C:/Users/dan/lba3-cast3/lba3/art/blender/characters/hands/source/keeper.committed.json",
+  "CAND_oku_b": "C:/Users/dan/lba3-cast3/lba3/art/blender/characters/hands/source/oku_b.committed.json",
+  "CAND_ztri1": "C:/Users/dan/lba3-cast3/lba3/art/blender/characters/hands/source/ztri1.committed.json"
+ }
+}

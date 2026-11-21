@@ -1,0 +1,41 @@
+== zeelich
+steps: shadow batches 23 [large piece 6.7] | shadow batches 25 [large piece 24.1] | shadow batches 23 [large piece 17.8] | shadow batches 23 [large piece 12.5] | shadow batches 25 [cell part 13.5] | shadow batches 13 [cell part 6.2] | shadow batches 15 [cell part 5.8] | shadow batches 15 [cell 8.4] | shadow batches 16 [cell part 4.6] | shadow batches 37 [cell part 25.7] | shadow batches 28 [cell 26.6] | shadow batches 16 [cell 5.7] | shadow batches 13 [cell part 8.3] | shadow batches 41 [cell 37.1] | shadow batches 27 [cell part 25.1] | shadow batches 117 [cell 114.8] | shadow batches 12 [cell 4] | shadow batches 12 [cell 4.9] | shadow batches 12 [cell 5] | texture layers 71833 | texture layers 15 | texture layers 15 | texture layers 12 | texture layers 16 | texture layers 9 | draw batches 50 [fixed draws 43.5] | draw batches 29 [parts 29.4] | draw batches 21 [parts 12.1] | draw batches 28 [parts 16.2] | draw batches 14 [parts 4.3] | draw batches 13 [parts 4.8] | draw batches 14 [place 8.1] | draw batches 12 [place 3.2] | draw batches 17 [array 14.2] | draw batches 18 [array 18] | draw batches 20 [cell 18.3] | draw batches 14 [cell part 12.9] | draw batches 12 [cell part 8.6] | draw batches 13 [cell 7.7] | draw batches 14 [cell 7.5] | draw batches 20 [cell part 12.7] | draw batches 30 [cell 28.1] | draw batches 22 [cell 18] | draw batches 15 [cell part 7.3] | draw batches 18 [cell part 17.8] | draw batches 29 [cell part 28.7] | draw batches 20 [cell part 8.2] | draw batches 22 [cell 11.3] | draw batches 13 [cell 5.5] | draw batches 13 [cell part 4.4] | draw batches 12 [cell part 4.4] | draw batches 4 [cell 2.9] | geometry 0 | geometry 64 | geometry 19 | geometry 7 | geometry 22 | geometry 6 | draw batches settle 28 [cell part 17.3] | draw batches settle 19 [cell part 10] | draw batches settle 12 [cell part 8.7] | draw batches settle 12 [cell 5.8] | draw batches settle 12 [cell part 6] | draw batches settle 16 [cell part 4.6] | draw batches settle 14 [cell part 5.5] | draw batches settle 0 [check 0.1] | batch meshes 0 | textures 17 | shadow programs 0 | shader warm-up 18 [compile 9.2] | shader warm-up 17 [compile 16.9] | shader warm-up 12 +1p [compile 9.6] | shader warm-up 13 [compile 8] | shader warm-up 13 [compile 5.3] | shader warm-up 29 [compile 17.4] | shader warm-up 0 [ 0]
+place parts > 2 ms: {"ms":3.8,"planeMs":3.7,"planeTris":7560,"cb":23,"sq":[1,0],"T":-1,"name":"","big":1,"grid":857}
+   {"ms":2.4,"planeMs":2.4,"planeTris":1336,"cb":16,"sq":[1,1],"T":-1,"name":"","big":1,"grid":857}
+dbg {"parts":634,"joined":555,"fresh":53,"byFixed":19,"byPlaced":7,"big":1,"planeMs":13.200000017881393,"planeTris":47239,"fixedMs":43.29999999701977,"partsMs":234.10000000149012,"placeMs":21.899999998509884}
+units >= MINU:
+  {"area":"zeelich","tag":"draw build","from":"order","to":"fixed draws","ms":43.3,"cell":null}
+  {"area":"zeelich","tag":"shadow build","from":"cell part","to":"cell","ms":37.1,"cell":{"tag":"shadow","key":"148,1|0|null","n":24,"mesh":11633}}
+  {"area":"zeelich","tag":"shadow build","from":"cell part","to":"cell","ms":30.9,"cell":{"tag":"shadow","key":"150,-1|0|null","n":20,"mesh":70016}}
+  {"area":"zeelich","tag":"draw build","from":"fixed draws","to":"parts","ms":29.4,"cell":null}
+  {"area":"zeelich","tag":"draw build","from":"cell part","to":"cell part","ms":28.7,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":25}}
+  {"area":"zeelich","tag":"draw build","from":"cell part","to":"cell","ms":28,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":175,"mesh":73866}}
+  {"area":"zeelich","tag":"shadow build","from":"cell part","to":"cell","ms":26.4,"cell":{"tag":"shadow","key":"150,1|0|null","n":15,"mesh":34120}}
+  {"area":"zeelich","tag":"shadow build","from":"cell","to":"cell part","ms":25.6,"cell":{"tag":"shadow","key":"150,1|0|null","n":15}}
+  {"area":"zeelich","tag":"shadow build","from":"cell part","to":"cell part","ms":25.1,"cell":{"tag":"shadow","key":"150,-1|0|null","n":20}}
+  {"area":"zeelich","tag":"shadow build","from":"large piece","to":"large piece","ms":24.1,"cell":null}
+  {"area":"zeelich","tag":"draw build","from":"array","to":"cell","ms":18.3,"cell":{"tag":"draw","key":"305bb734-27e8-40fa-8ce2-2c19a7d27538|fold:arr|true|0|false","n":2,"mesh":3160}}
+  {"area":"zeelich","tag":"draw build","from":"array","to":"array","ms":18,"cell":null,"arrays":"512x512|4:12 256x256|4:39 128x16|1:3 128x128|4:35 64x64|4:4"}
+  {"area":"zeelich","tag":"draw build","from":"cell part","to":"cell","ms":18,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":28,"mesh":37883}}
+  {"area":"zeelich","tag":"shadow build","from":"large piece","to":"large piece","ms":17.8,"cell":null}
+  {"area":"zeelich","tag":"draw build","from":"cell part","to":"cell part","ms":17.8,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":25}}
+  {"area":"zeelich","tag":"draw settle","from":"cell part","to":"cell part","ms":17.3,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":58}}
+  {"area":"zeelich","tag":"draw build","from":"parts","to":"parts","ms":16.2,"cell":null}
+  {"area":"zeelich","tag":"draw build","from":"assign","to":"array","ms":14.2,"cell":null,"arrays":"512x512|4:12 256x256|4:39 128x16|1:3 128x128|4:35 64x64|4:4"}
+  {"area":"zeelich","tag":"shadow build","from":"cell","to":"cell part","ms":13.5,"cell":{"tag":"shadow","key":"147,-1|0|null","n":36}}
+  {"area":"zeelich","tag":"draw build","from":"cell part","to":"cell part","ms":12.9,"cell":{"tag":"draw","key":"305bb734-27e8-40fa-8ce2-2c19a7d27538|fold:arr|true|0|false","n":3}}
+  {"area":"zeelich","tag":"draw build","from":"cell part","to":"cell part","ms":12.7,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":175}}
+  {"area":"zeelich","tag":"shadow build","from":"large piece","to":"large piece","ms":12.5,"cell":null}
+  {"area":"zeelich","tag":"draw build","from":"parts","to":"parts","ms":12.1,"cell":null}
+  {"area":"zeelich","tag":"draw build","from":"cell part","to":"cell","ms":11.3,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":24,"mesh":83968}}
+  {"area":"zeelich","tag":"draw settle","from":"cell part","to":"cell part","ms":10,"cell":{"tag":"draw","key":"a6db982a-a9b2-4257-b317-1ff78e3b1eed|fold:arr|true|0|false","n":28}}
+frames > 40 ms: #24 41B shadow batches 41 [cell 37.1]
+   #26 164B shadow batches 117 [cell 114.8]
+   #30 71865B texture layers 71833
+   #36 51B draw batches 50 [fixed draws 43.5]
+   #64 68B geometry 64
+   #100 323B 
+   #113 52V 
+   #118 50V 
+   #119 124V 
+black frames 92, longest black 71865, longest in view 124

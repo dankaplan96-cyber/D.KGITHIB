@@ -1,0 +1,66 @@
+[0s +0s] continue: {"chapter":"network","room":"workshop","nw":1} | workshop [1502.75,0,-1.95] hp 9 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":9,"cloversNow":4,"revives":0}
+[1s +1s] Oku: {"r":"talked","to":"oku","state":"play","lines":2,"speakers":["oku"],"ask":true} | zeelich [2377.71,6,6.86] hp 9 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":4.5,"dialog":0.3,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":32,"says":1,"walked":10,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":9,"cloversNow":4,"revives":0}
+[3s +1s] brake the old mill (ball): {"braked":true,"fail":null} | zeelich [2397.61,6,-10.58] hp 9 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":7.7,"dialog":1.1,"trans":0,"scene":0,"menu":0,"other":0,"lines":1,"words":11,"says":1,"walked":27,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":9,"cloversNow":4,"revives":0}
+[22s +18s] climb the old mill (jumps): {"heights":[7.09,8.19,9.28,10.38,11.47,12.56,12.56,7.09,8.19,9.28,10.38,11.47,12.56,12.56,7.09,8.19,9.28,10.38,11.47,12.56,13.66,14.75],"y":14.75,"top":true,"fail":null} | zeelich [2395.06,14.75,-21.28] hp 5 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":167.8,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":112,"hpLost":4,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[23s +1s] the mill relay: {"r":"used","target":{"kind":"c10mill","id":"p_relay","label":"p_relay"},"state":"play","lines":4,"mill":true,"fail":null} | zeelich [2397.49,14.75,-16.78] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":4.7,"dialog":0.5,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":54,"says":2,"walked":6,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[25s +2s] down from the mill: {"r":"arrived","t":3.9666666666666623,"hops":[14.75,13.66,13.66,12.56,12.56,12.56,12.56],"y":6,"fail":null} | zeelich [2400.13,6,-14.49] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":17.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":21,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[48s +23s] Mill Lane: the isolator off, Irsa on the switch: {"r":"used","target":"nw_unclip","waited":26,"irsa":true,"at":[2389.74,19.11,"tinker"],"iso":true,"fail":null} | zeelich [2391.23,6,18.39] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":12.2,"dialog":1.2,"trans":0,"scene":3.4,"menu":0,"other":0,"lines":5,"words":70,"says":5,"walked":38,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[306s +258s] the spaceship to Citadel: {"r":"picked","state":"play","room":"citadel","waited":0,"arthur":true,"fail":null} | citadel [-1.7,2.47,39.5] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":38.3,"dialog":1.5,"trans":0.7,"scene":0,"menu":0.3,"other":0,"lines":5,"words":97,"says":5,"walked":35,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[309s +2s] Mira: the valve room: {"r":"talked","to":"mira","state":"play","lines":4,"speakers":["mira"],"room":"valves","ask":true,"gauge":true} | valves [4995.8,0,2.5] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":21.4,"dialog":1.7,"trans":2.8,"scene":0,"menu":0,"other":0,"lines":6,"words":131,"says":6,"walked":81,"hpLost":0,"deaths":0,"rooms":3,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[310s +1s] the three valves: {"valves":true,"levels":[2,2,2],"mira":true,"at":[5001.4,-3.22,"use"],"fail":null} | valves [5002.15,0,-2.37] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":14.4,"dialog":0.4,"trans":0,"scene":0,"menu":0,"other":0,"lines":2,"words":35,"says":2,"walked":12,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[310s +0s] out: {"room":"citadel"} | citadel [-62.58,2.33,11] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":7.9,"dialog":0,"trans":1.4,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":10,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[314s +3s] the lighthouse: Zoé: {"r":"talked","to":"zoe","state":"play","lines":4,"speakers":["zoe"],"ask":true,"room":"lighttop"} | lighttop [1601.07,0,-0.26] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":26.3,"dialog":0.6,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":2,"words":48,"says":2,"walked":119,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[315s +1s] the dials: {"dials":[2,0,1],"light":true,"zoe":true,"at":[1598.51,-1.25,"tinker"],"fail":null} | lighttop [1599.75,0,-1.16] hp 5 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":20.5,"dialog":0.8,"trans":0,"scene":0,"menu":0,"other":0,"lines":3,"words":24,"says":3,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[323s +8s] fly to Desert Island: {"r":"picked","state":"play","room":"desert","fail":null} | desert [3320,4.74,4] hp 5 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":64.3,"dialog":0.5,"trans":1.4,"scene":0,"menu":0.2,"other":0,"lines":2,"words":8,"says":2,"walked":236,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":5,"cloversNow":4,"revives":0}
+[347s +24s] Ilka: the bore relay: {"r":"used","target":{"kind":"c10bore","id":"p_relay","label":"p_relay"},"state":"play","lines":2,"relay":true,"ilka":true} | desert [3439.8,1.6,-19.23] hp 12 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":40.7,"dialog":3.2,"trans":0,"scene":3.5,"menu":0,"other":0,"lines":12,"words":184,"says":12,"walked":139,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[353s +5s] the drones: {"left":0,"dead":false,"t":51.4,"assisted":0,"waves":[{"wave":1,"hp":6}],"hp":6,"minHp":6,"breakHp":12,"w2":true,"bore":true,"fail":null} | desert [3427.2,1.6,-16.68] hp 6 | Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":66,"dialog":2.9,"trans":0,"scene":0,"menu":0,"other":0,"lines":6,"words":123,"says":6,"walked":79,"hpLost":6,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":6,"cloversNow":4,"revives":0}
+[356s +2s] fly to the Hamalayi: {"r":"picked","state":"play","room":"hamalayi","fail":null} | hamalayi [4332.6,21.93,-30.2] hp 6 | Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":26.5,"dialog":0.6,"trans":0.7,"scene":0,"menu":0.1,"other":0,"lines":2,"words":8,"says":2,"walked":118,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":6,"cloversNow":4,"revives":0}
+[357s +0s] Pim (Yorna): {"r":"talked","to":"yorna","state":"play","lines":8,"speakers":["yorna","pim"],"pim":true} | hamalayi [4334.67,21.86,-37.45] hp 12 | Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Mill Lane: Baldino's isolator (Irsa)◆ Cita
+  stats: {"play":2.2,"dialog":1.2,"trans":0,"scene":0,"menu":0,"other":0,"lines":4,"words":65,"says":4,"walked":7,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[363s +6s] the dome: {"room":"obsv","pim":true,"keeper":true,"kt":"talked","relay":true,"r1":"used","r2":"used","dome":true,"yorna":true,"at":["tinker","tinker"],"fail":null} | obsv [4601.83,0,3.05] hp 12 | Meet Baldino at the bore in the station on Citadel
+  stats: {"play":81.6,"dialog":5.1,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":8,"words":135,"says":8,"walked":104,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[364s +1s] fly to Citadel: {"glider":"citadel","fail":null} | citadel [-58,15.88,-60] hp 12 | Meet Baldino at the bore in the station on Citadel
+  stats: {"play":17.4,"dialog":0.6,"trans":1.4,"scene":0,"menu":0.1,"other":0,"lines":2,"words":8,"says":2,"walked":64,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+[422s +58s] the code box at the station's bore → chapter 11: {"tries":[{"p":2.27,"ok":true}],"told":true,"r0":"arrived","joint":true,"chapter":"shell","room":"c3shaft","fail":null} | c3shaft [1797.9,0,-1.5] hp 12 | Find the bore's machinery◆ Try the crew's test receiver (bounce the ball)
+  stats: {"play":22.2,"dialog":6.1,"trans":0.7,"scene":3.7,"menu":0,"other":0,"lines":21,"words":334,"says":21,"walked":38,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[650.5] go → (4604.0, 4.0) plan ok=false pts=1 left=1.2
+[650.5] go → (4604.0, 4.0) plan ok=false pts=1 left=1.2
+[653.0] stuck at (4602.8, 3.8): replan
+[662.6] go → (4594.0, 4.5) plan ok=true pts=2 left=0.28
+[667.0] go: transition (obsv → obsv, trans true) at (4594.72, 4.21)
+[667.9] go → (4331.0, -31.0) plan ok=true pts=6 left=0.59
+[682.1] go → (-23.7, -65.7) plan ok=true pts=4 left=0.29
+[690.1] go → (-23.4, -66.3) plan ok=false pts=3 left=0.48
+[690.3] go → (-23.4, -66.3) plan ok=false pts=2 left=0.46
+[695.4] go → (-23.4, -66.3) plan ok=false pts=1 left=0.5
+[696.7] go → (-23.4, -66.3) plan ok=false pts=1 left=0.5
+[699.2] stuck at (-23.8, -66.2): replan
+stats total: {"play":663.8,"dialog":28.3,"trans":11.2,"scene":10.6,"menu":0.7,"other":0,"lines":84,"words":1367,"says":84,"walked":1263,"hpLost":10,"deaths":0,"rooms":11,"chapter":"shell","coinsNow":17,"hpNow":12,"cloversNow":4,"revives":0}
+kept save-13.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     21 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

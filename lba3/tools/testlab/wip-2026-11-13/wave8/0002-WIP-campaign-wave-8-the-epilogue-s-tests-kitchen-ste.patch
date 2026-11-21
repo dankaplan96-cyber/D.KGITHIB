@@ -1,0 +1,360 @@
+From d1433a692d5b09f184cfaadf73ae4da08c7bcba4 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 10:33:30 +0000
+Subject: [PATCH 02/10] WIP campaign wave 8: the epilogue's tests (kitchen
+ step, thread Q, save-migration, hands, no-air)
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/tests/campaign-hands.mjs       | 38 ++++++++++++------
+ lba3/tests/campaign-thread.mjs      | 60 ++++++++++++++++++++++++++++-
+ lba3/tests/chapter3.mjs             |  8 +++-
+ lba3/tests/epilogue-home.mjs        | 21 ++++++++--
+ lba3/tests/no-air.mjs               |  3 ++
+ lba3/tests/playthrough/14-shell.mjs | 18 ++++++++-
+ lba3/tests/save-migration.mjs       | 22 ++++++++++-
+ 7 files changed, 148 insertions(+), 22 deletions(-)
+
+diff --git a/lba3/tests/campaign-hands.mjs b/lba3/tests/campaign-hands.mjs
+index d00df1df..e718e6b0 100644
+--- a/lba3/tests/campaign-hands.mjs
++++ b/lba3/tests/campaign-hands.mjs
+@@ -7,8 +7,9 @@
+ // new-07-notebook), chapter 5: the heat line (new-08-routed), and Dallan at the stand's wire both times; CAMPAIGN-5,
+ // chapter 6: the winch's crank started in the green (fixture new-09-lift, the riders boarded first), the upper brake
+ // (new-09-top), chapter 7: the telescope's setting lever (new-10-lit); CAMPAIGN-6, chapter 8: the culvert's cock in the
+-// pump room (new-11-landing; turned until it opens, a kicked-back turn measured too). HAND (default 0.05 m) is the limit, as
+-// tests/no-air.mjs. Automated runtime only.
++// pump room (new-11-landing; turned until it opens, a kicked-back turn measured too). CAMPAIGN-10, the epilogue: the kitchen
++// tap's handle, turned open and shut again by his hand on its knob (new-16-kitchen), within about 1 cm; Zoé clearing the
++// table. HAND (default 0.05 m) is the limit, as tests/no-air.mjs. Automated runtime only.
+ import { launch, open, menu, checker } from './lib/boot.mjs';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -49,8 +50,8 @@ const person = (id) => ev((id) => {
+   return { id, want, now, stood, R: gap('R'), L: gap('L') };
+ }, id);
+ 
+-// (ONLY10=1: chapter 10's part alone, while working on it; ONLY11=1: chapters 11–12's)
+-if (!process.env.ONLY10 && !process.env.ONLY11) {
++// (ONLY10=1: chapter 10's part alone, while working on it; ONLY11=1: chapters 11–12's; ONLY16=1: the epilogue's)
++if (!process.env.ONLY10 && !process.env.ONLY11 && !process.env.ONLY16) {
+ // chapter 1: a new game, in the kitchen
+ await start(null);
+ take(await use('h_tap', 'game.story.chapters[0].home.parts.house.spout', 1.2));
+@@ -164,7 +165,7 @@ await browser.close();
+ 
+ }
+ 
+-if (!process.env.ONLY11) {
++if (!process.env.ONLY11 && !process.env.ONLY16) {
+ // chapter 10 (CAMPAIGN-8, story/netline.js): his hand on each handle as a friend takes it over — the isolator off Kell's
+ // feed box (base-13, a save from before the wave at the chapter's start: Mill Lane), the valve wheel he holds and the dial
+ // (new-13-cit), the bore's relief wheel (new-13-desert), the telescope's lever (new-13-ham), the joint (new-13-five) —, and
+@@ -210,7 +211,7 @@ await browser.close();
+ // chapters 11–12 (CAMPAIGN-9, story/answer.js; ONLY11=1: this part alone): the fitters' knocker on the catwalk (new-14-deep);
+ // in the last act (new-15-last) the branch cock (turned until it holds: a kicked-back turn is measured too), the central lock's
+ // bar (until it stays up), the main's knocker; Vesk's hands on his key once he has turned it
+-if (!process.env.ONLY10) {
++if (!process.env.ONLY10 && !process.env.ONLY16) {
+ const SWAIT = 'const G = game; for (let i = 0; i < 500 && (G.story._sh?.busy || G.state === "dialog" || G.hero.actT > 0 || G.hero.steer || G.trans || G.story._sh?.msg); i++) { if (G.state === "dialog") P.settle(); else G.step(0.1); } P.settle();';
+ const shWait = () => ev((c) => { new Function(c)(); }, SWAIT);
+ await start('new-14-deep');
+@@ -238,21 +239,34 @@ take(await use('co_knock', 'game.room.coreKnocker', 0.8));
+ await browser.close();
+ }
+ 
++// the epilogue (CAMPAIGN-10, story/hometap.js EpilogueTap): after the dinner, the kitchen tap's handle by his hand on its knob,
++// turned open and (after the lines) shut again; Zoé clearing the table
++if (!process.env.ONLY10 && !process.env.ONLY11) {
++await start('new-16-kitchen');
++people.push(await person('zoe'));
++await ev(() => { window.KIND = 'ep_tap'; const G = game, K = G.rooms.house.kitchen; P.use(K.knob.x, K.knob.z, { near: 1.2, kind: 'ep_tap' }); for (let i = 0; i < 300 && !G.flags.ep_tap; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle(); });
++take(await ev(() => window.GAPS.filter((g) => g.kind === 'ep_tap')));
++await browser.close();
++}
++
+ for (const p of people) console.log(`PERSON ${p.id} ${p.want} → ${p.now}${p.stood ? ' (stood down)' : ''}: R ${(p.R * 100).toFixed(1)} cm, L ${(p.L * 100).toFixed(1)} cm`);
+ check('the thread\'s people: a working hand is on a thing (or the person stands)', people.every((p) => p.absent || !p.want || p.stood || (p.want === 'touchWater' ? p.R : Math.max(p.R, p.L)) <= HAND), people);
+ // (CAMPAIGN-8: the friends who take a handle over in chapter 10 must not be stood down: their hands are on it, within 1 cm)
+ const NW = ['zl_irsa', 'mira', 'zoe', 'ilka', 'dallan', 'yorna', 'pim', 'arthur'], NWHAND = +(process.env.NWHAND || 0.012);
+ const nwp = people.filter((p) => NW.includes(p.id) && !p.absent);
+-check(`chapter 10's friends at their handles: each working, both hands within ${NWHAND * 100} cm of the handle (not stood down)`, process.env.ONLY11 ? true : nwp.length >= 7 && nwp.every((p) => p.want && !p.stood && Math.max(p.R, p.L) <= NWHAND), nwp);
++check(`chapter 10's friends at their handles: each working, both hands within ${NWHAND * 100} cm of the handle (not stood down)`, process.env.ONLY11 || process.env.ONLY16 ? true : nwp.length >= 7 && nwp.every((p) => p.want && !p.stood && Math.max(p.R, p.L) <= NWHAND), nwp);
+ for (const r of rows) console.log(`HAND ${r.kind} ${r.anim}: ${(r.d * 100).toFixed(1)} cm${r.on ? ' from ' + r.on : ''}`);
+-const kinds0 = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip', 'nw_unclip', 'nw_wheel', 'nw_dial', 'nw_relief', 'nw_lever', 'nw_joint', 'sh_knock', 'co_cock', 'co_lock', 'co_knock'];
+-const kinds = process.env.ONLY10 ? kinds0.filter((k) => k.startsWith('nw_')) : process.env.ONLY11 ? kinds0.filter((k) => /^(sh|co)_/.test(k)) : kinds0;
++const kinds0 = ['h_tap', 'h_cup', 'ct_tap', 'ct_feel', 'ct_cock', 'ct_strip', 'zt_hook', 'zt_bell', 'zt_feed', 'zt_cart', 'zt_cock', 'zt_dial', 'zt_crank', 'dt_cut', 'dt_strip', 'dt_heat', 'ps_winch', 'ps_brake', 'ob_set', 'ev_cock', 'cn_service', 'cn_compare', 'cn_stop', 'cn_iso', 'cn_clip', 'nw_unclip', 'nw_wheel', 'nw_dial', 'nw_relief', 'nw_lever', 'nw_joint', 'sh_knock', 'co_cock', 'co_lock', 'co_knock', 'ep_tap'];
++const kinds = process.env.ONLY10 ? kinds0.filter((k) => k.startsWith('nw_')) : process.env.ONLY11 ? kinds0.filter((k) => /^(sh|co)_/.test(k)) : process.env.ONLY16 ? ['ep_tap'] : kinds0;
+ check('every campaign hand action was reached and measured', kinds.every((k) => rows.some((r) => r.kind === k)), { missing: kinds.filter((k) => !rows.some((r) => r.kind === k)) });
+ const nwRows = rows.filter((r) => r.kind.startsWith('nw_'));
+-check(`chapter 10's hand actions (CAMPAIGN-8) each within ${NWHAND * 100} cm of the handle`, process.env.ONLY11 ? true : nwRows.length >= 6 && nwRows.every((r) => r.d <= NWHAND), nwRows);
++check(`chapter 10's hand actions (CAMPAIGN-8) each within ${NWHAND * 100} cm of the handle`, process.env.ONLY11 || process.env.ONLY16 ? true : nwRows.length >= 6 && nwRows.every((r) => r.d <= NWHAND), nwRows);
+ // (CAMPAIGN-9: chapters 11–12's hand actions and Vesk at his key, within about 1 cm)
+ const shRows = rows.filter((r) => /^(sh|co)_/.test(r.kind)), vk = people.find((p) => p.id === 'vesk');
+-check(`chapters 11–12's hand actions (CAMPAIGN-9) each within ${NWHAND * 100} cm of the thing`, process.env.ONLY10 ? true : shRows.length >= 4 && shRows.every((r) => r.d <= NWHAND), shRows);
+-check(`Vesk at his central lock: working, both hands within ${NWHAND * 100} cm of his key (not stood down)`, process.env.ONLY10 ? true : !!vk && !vk.absent && vk.want && !vk.stood && Math.max(vk.R, vk.L) <= NWHAND, vk);
++check(`chapters 11–12's hand actions (CAMPAIGN-9) each within ${NWHAND * 100} cm of the thing`, process.env.ONLY10 || process.env.ONLY16 ? true : shRows.length >= 4 && shRows.every((r) => r.d <= NWHAND), shRows);
++check(`Vesk at his central lock: working, both hands within ${NWHAND * 100} cm of his key (not stood down)`, process.env.ONLY10 || process.env.ONLY16 ? true : !!vk && !vk.absent && vk.want && !vk.stood && Math.max(vk.R, vk.L) <= NWHAND, vk);
++// (CAMPAIGN-10: the epilogue's tap, opened and shut again, within about 1 cm of its handle's knob)
++const epRows = rows.filter((r) => r.kind === 'ep_tap');
++check(`the epilogue's tap (CAMPAIGN-10), opened and shut, each within ${NWHAND * 100} cm of the handle`, process.env.ONLY10 || process.env.ONLY11 ? true : epRows.length >= 2 && epRows.every((r) => r.d <= NWHAND), epRows);
+ check(`no campaign hand action in the air (each within ${HAND * 100} cm of a drawn surface)`, rows.length > 0 && rows.every((r) => r.d <= HAND), rows.filter((r) => r.d > HAND));
+ done();
+diff --git a/lba3/tests/campaign-thread.mjs b/lba3/tests/campaign-thread.mjs
+index a90ab142..651c6b5c 100644
+--- a/lba3/tests/campaign-thread.mjs
++++ b/lba3/tests/campaign-thread.mjs
+@@ -62,7 +62,13 @@
+ //   P  chapter 12's last act (fixture new-15-last: after the coil and Vesk's choice): the cock kicked back in a knock and
+ //      turned in the rest, Irsa, Vesk's key; a Save & quit; the bar slammed back in the gap and lifted after her two; three
+ //      knocks (not ours) and two (the signal), the shield, the guard, the epilogue
+-// ONLY=A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
++//   Q  the epilogue's kitchen (CAMPAIGN-10, story/hometap.js EpilogueTap): base-16, a save from before wave 8 at the epilogue's
++//      start (before the dinner): the dinner plays again, then the kitchen's step; the door holds, Zoé sends him to the tap; a
++//      Save & quit before the tap; the tap by input (his hand on its knob): cold into Arthur's cup, no knock in the wall; a Save
++//      & quit with the tap turned (the cup still full under it); the tap again; Zoé's word → the end screen, Keep Exploring, the
++//      door open, back in, the tap still a tap. base-16-end (just after the dinner) and base-16-free (out in the town), from
++//      before: no thread, the step counts as done, free play as before, the tap there to turn
++// ONLY=A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q runs one part. SHOTS=<dir> writes a picture of each beat (deviceScaleFactor 1).
+ import { launch, open, menu, quitAndKeep, checker } from './lib/boot.mjs';
+ import fs from 'node:fs';
+ import path from 'node:path';
+@@ -954,5 +960,57 @@ if (!ONLY || ONLY === 'P') {
+   }), (v) => v[0] === null && v[1] === true && v[2] === true && v[3] === 'home' && v[4] && v[5]);
+   await browser.close();
+ }
++
++// ------------------------------------------------------------------ Q: the epilogue's kitchen (CAMPAIGN-10)
++// (EPI: what was said and which sounds played, recorded from here on; EP_TAP: the tap by input, from where his hand meets its
++//  knob, waited out to the end of its lines; EP_STATE: the kitchen's state)
++const EPI = () => ev(() => { const G = game; window.EP = { said: [], sounds: [] }; const say = G.say.bind(G); G.say = (n, t, ...r) => { window.EP.said.push(String(t)); return say(n, t, ...r); };
++  const play = G.audio.play.bind(G.audio); G.audio.play = (k, ...r) => { window.EP.sounds.push(k); return play(k, ...r); }; });
++const EP_TAP = () => ev(() => { const G = game, f = G.flags, K = G.rooms.house.kitchen, tp = G.story.cur.tap; window.EP.said.length = 0; window.EP.sounds.length = 0;
++  const was = f.ep_tap ?? null; let turned = 0, ran = false;
++  const r = P.use(K.knob.x, K.knob.z, { near: 1.2, kind: 'ep_tap' });
++  for (let i = 0; i < 300 && (tp.busy || G.state === 'dialog'); i++) { turned = Math.min(turned, K.handle.rotation.y); ran ||= K.stream.visible; if (G.state === 'dialog') P.settle(); else G.step(0.1); }
++  P.settle(); return { use: r.r, was, tap: f.ep_tap ?? null, turned: +turned.toFixed(2), ran, shut: +K.handle.rotation.y.toFixed(2), off: !K.stream.visible, fill: tp.fill, said: window.EP.said.join(' | '), knocks: window.EP.sounds.filter((k) => k === 'pipeKnock').length, water: window.EP.sounds.includes('waterRun') }; });
++const EP_STATE = () => ev(() => { const G = game, f = G.flags, H = G.rooms.house, tp = G.story.cur.tap, P0 = tp.P, n = (id) => { const x = P.npc(id); return x?.present ? [+x.pos.x.toFixed(2), +x.pos.z.toFixed(2)] : null; };
++  const u = P0 ? tp.underAt() : null, cup = P0 ? +Math.hypot(P0.cup.position.x - u.x, P0.cup.position.z - u.z).toFixed(3) : null;
++  return { key: f.chapterKey, state: G.state, room: G.room?.id ?? 'citadel', v: f.ep_v ?? null, dinner: f.ep_dinner ?? null, tap: f.ep_tap ?? null, word: f.ep_word ?? null, free: f.ep_free ?? null, obj: P.state().obj, cupUnder: cup, cupFull: !!P0?.cupWater?.visible,
++    arthurSink: n('arthur') && H?.kitchen ? +Math.hypot(P.npc('arthur').pos.x - H.kitchen.basin.x, P.npc('arthur').pos.z - H.kitchen.basin.z).toFixed(2) : null, zoe: n('zoe') }; });
++if (!ONLY || ONLY === 'Q') {
++  // (no settle on Continue here: the dinner it plays again is the thing looked at)
++  ({ browser, context, page } = await launch({ storageState: save('base-16') })); await open(page, '?nocine'); await menu(page, 'continue');
++  is('Q1 a save from before wave 8 at the epilogue\'s start (before the dinner): it loads, the dinner plays again (it loaded into a quiet house before); after it the kitchen is his: the tap\'s objective, Arthur by the sink, the cup under the spout, empty', await ev(() => {
++    const G = game, f = G.flags; for (let i = 0; i < 20 && G.state !== 'dialog'; i++) G.step(0.1);
++    const s0 = [f.ep_v ?? null, f.ep_dinner ?? null, G.state, document.querySelector('#dialog .text')?.textContent?.slice(0, 40) || ''];
++    for (let i = 0; i < 100 && !(f.ep_dinner && G.state === 'play'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
++    return s0; }).then(async (s0) => [...s0, await EP_STATE()]), (v) => v[0] === 1 && v[1] === null && v[2] === 'dialog' && /Four days later/.test(v[3]) && v[4].dinner === true && v[4].state === 'play' && v[4].room === 'house' && /tap/i.test(v[4].obj) && v[4].arthurSink < 2 && v[4].cupUnder < 0.01 && !v[4].cupFull);
++  await shot('Q1-kitchen');
++  await EPI();
++  is('Q2 the door holds before the tap (said); Zoé sends him to the tap first', await ev(() => {
++    const G = game, R = G.room, e = R.exits.find((x) => !x.room); P.go(e.x, e.z, { tol: 0.25, stopOnTrans: true, maxT: 30 }); let t = 0; while (G.state !== 'dialog' && t < 3) { G.step(0.1); t += 0.1; } const said = []; const room = G.room?.id; P.settle();
++    const z = P.talk('zoe'); return [room, window.EP.said.slice(), z.r, G.flags.ep_tap ?? null]; }), (v) => v[0] === 'house' && v[1].some((x) => /waiting by the tap/.test(x)) && v[1].some((x) => /tap first/i.test(x)) && v[3] === null);
++  await handover();
++  await EPI();
++  is('Q3 after Save & quit → Continue: still the kitchen\'s step, the tap ahead, Arthur by the sink', await EP_STATE(), (v) => v.room === 'house' && v.v === 1 && v.dinner === true && v.tap === null && /tap/i.test(v.obj) && v.arthurSink < 2 && v.cupUnder < 0.01);
++  is('Q4 the tap by input: his hand on the knob turns it, the water runs (cold, said) into Arthur\'s cup and fills it; no knock in the wall; Arthur keeps his cup there, just in case; shut again; Zoé next', await EP_TAP().then(async (r) => [r, await EP_STATE()]), (v) => v[0].was === null && v[0].tap === true && v[0].turned < -1.2 && v[0].ran && v[0].shut > -0.05 && v[0].off && v[0].fill === 1 && /Cold/.test(v[0].said) && /Just in case/.test(v[0].said) && v[0].knocks === 0 && v[0].water && /Zoé/.test(v[1].obj));
++  await shot('Q4-tap');
++  await handover();
++  await EPI();
++  is('Q5 after Save & quit → Continue: the cup still full under the spout; the tap again: cold, still quiet, no knock', await EP_STATE().then(async (s) => [s, await EP_TAP()]), (v) => v[0].tap === true && v[0].cupFull && v[0].cupUnder < 0.01 && /Zoé/.test(v[0].obj) && v[1].tap === true && /Still quiet/.test(v[1].said) && v[1].knocks === 0 && v[1].ran && v[1].off);
++  is('Q6 Zoé\'s word (Bram, the lane runs cold too) brings the end screen; Keep Exploring: the door opens now; back in, the tap is still a tap', await ev(() => {
++    const G = game, f = G.flags; window.EP.said.length = 0; P.talk('zoe'); for (let i = 0; i < 40 && G.state !== 'ending'; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
++    const st = [G.state, f.ep_word ?? null, window.EP.said.some((x) => /Bram/.test(x)), document.querySelector('#ending p')?.textContent?.slice(0, 40) || ''];
++    const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); G.step(0.5); P.settle();
++    const e = G.room?.exits?.find((x) => !x.room); const out = e ? P.through(e.x, e.z) : null; const outside = G.room?.id ?? 'citadel';
++    P.enter('house'); P.settle(); return [...st, f.ep_free ?? null, outside, G.room?.id]; }).then(async (s) => [s, await EP_TAP()]), (v) => v[0][0] === 'ending' && v[0][1] === true && v[0][2] && /bore/.test(v[0][3]) && v[0][4] === true && v[0][5] === 'citadel' && v[0][6] === 'house' && /Still quiet/.test(v[1].said) && v[1].knocks === 0);
++  await browser.close();
++  await start('base-16-end');
++  await EPI();
++  is('Q7 a save from before wave 8, just after the dinner: no thread (the step counts as done), free play; the tap is there to turn (cold, quiet); the door is open', await EP_STATE().then(async (s) => [s, await EP_TAP(), await ev(() => { const e = game.room?.exits?.find((x) => !x.room); return e ? P.through(e.x, e.z).to : null; })]), (v) => v[0].v === null && v[0].dinner === true && v[0].room === 'house' && /everyone/i.test(v[0].obj) && /Still quiet/.test(v[1].said) && v[1].knocks === 0 && v[2] === 'citadel');
++  await browser.close();
++  await start('base-16-free');
++  await EPI();
++  is('Q8 a save from before wave 8, out in the town: no thread, free play as before; at home the cup stands under the spout and the tap is there to turn', await ev(() => { P.enter('house'); P.settle(); }).then(async () => [await EP_STATE(), await EP_TAP()]), (v) => v[0].v === null && v[0].free === true && v[0].room === 'house' && v[0].cupUnder < 0.01 && /Still quiet/.test(v[1].said) && v[1].knocks === 0);
++  await browser.close();
++}
+ done();
+ fs.rmSync(TMP, { recursive: true, force: true });
+diff --git a/lba3/tests/chapter3.mjs b/lba3/tests/chapter3.mjs
+index cdcc7b84..3489b590 100644
+--- a/lba3/tests/chapter3.mjs
++++ b/lba3/tests/chapter3.mjs
+@@ -207,8 +207,12 @@ is('two knocks on the main: the signal, the shield, the guard; the chapter ends'
+   for (let i = 0; i < 400 && G.flags.chapterKey === 'core'; i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); } return [G.flags.co_signal, G.flags.c3_done, G.flags.chapterKey]; }), (v) => v[0] === true && v[1] === true && v[2] === 'home');
+ is('the chapter ends: the epilogue (after chapter 12, home) reached', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state, game.flags.chapterKey]; }), (v) => v[0] === true && v[1] === true && v[2] === 12 && v[5] === 'home');
+ 
+-// epilogue: dinner → end screen
+-is("the epilogue's dinner, then the end screen", await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); } return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent]; }), (v) => v[1] === true && v[2] === 'ending');
++// epilogue: dinner → (CAMPAIGN-10) the kitchen tap, Zoé's word → end screen
++is("the epilogue's dinner, the kitchen tap (E from where his hand meets its knob), Zoé's word, then the end screen", await ev(() => { const G = game, f = G.flags; for (let i = 0; i < 10 && !(f.ep_dinner && G.state === 'play') && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); }
++  const tp = G.story.cur.tap;
++  if (f.ep_v && G.state === 'play') { const p = tp.touch(); T.tp(p.front.x, p.front.z, p.a); G.step(0.3); T.press('KeyE'); for (let i = 0; i < 300 && !f.ep_tap; i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); }
++    const z = G.npcs.find((n) => n.def.id === 'zoe'); T.tp(z.pos.x - 0.9, z.pos.z - 0.9, Math.atan2(0.9, 0.9)); G.step(0.3); T.press('KeyE'); for (let i = 0; i < 40 && G.state !== 'ending'; i++) { G.step(0.2); if (G.state === 'dialog') T.talkAll(); } }
++  return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent, f.ep_tap ?? null, f.ep_word ?? null]; }), (v) => v[1] === true && v[2] === 'ending' && v[4] === true && v[5] === true);
+ await shot('C3-07-end.png');
+ const buttons = await ev(() => [...document.querySelectorAll('#ending button')].filter((b) => b.offsetParent).map((b) => b.textContent.trim()));
+ is('the end screen offers buttons (Keep Exploring)', buttons, (v) => v.length >= 2);
+diff --git a/lba3/tests/epilogue-home.mjs b/lba3/tests/epilogue-home.mjs
+index f04e6164..88675c5d 100644
+--- a/lba3/tests/epilogue-home.mjs
++++ b/lba3/tests/epilogue-home.mjs
+@@ -5,6 +5,8 @@
+ // Doran, Baldino, Nara and Oku were not in the world at all; the allies away from Citadel only said "Hello, Twinsen."
+ // A LOGIC test: the chapters before are set by flags (ISO), the epilogue is played from its start (the dinner, the end
+ // screen, Keep Exploring), the regions are reached by the travel network's own move (ISO), the talks by E.
++// CAMPAIGN-10 (wave 8): between the dinner and the end screen, the kitchen's step: the door holds, the tap turned by E from
++// where his hand meets its handle (cold, quiet, Arthur's cup filled under it), then Zoé's word brings the end screen.
+ import { launch, open, menu, checker } from './lib/boot.mjs';
+ const { browser, page } = await launch({ width: 960, height: 540 });
+ const { check, done } = checker({ info: 'always' });
+@@ -43,7 +45,7 @@ await ev(() => {
+ });
+ 
+ // ISO: the story through chapter 12, with the states that moved people: the shelters, the hill families, the relays
+-is('ISO: the chapters before set by flags; the epilogue begins (the dinner, the end screen; the card remembers that Vesk was pulled clear)', await ev(() => {
++is('ISO: the chapters before set by flags; the epilogue begins (the dinner, then the kitchen is his: the tap\'s objective)', await ev(() => {
+   const G = game; T.talkAll();
+   Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 11, chapterKey: 'core',
+     c1_started: true, c1_done: true, c1_water: true, c1_radio: true, c1_veskGone: true, c1_plan: true, c2_shield: true, c2_veskDown: true,
+@@ -55,8 +57,21 @@ is('ISO: the chapters before set by flags; the epilogue begins (the dinner, the
+     c3_turned: true, c3_done: true, c3_veskHelped: true });   // (VESK-CHOICE: he pulled Vesk clear)
+   G.hero.hasBall = true; G.story.nextChapter();
+   for (let i = 0; i < 20 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); }
+-  return [G.flags.chapterKey, G.flags.ep_dinner, G.state, document.querySelector('#ending p')?.textContent || ''];
+-}), (v) => v[0] === 'home' && v[1] === true && v[2] === 'ending' && /readings/.test(v[3]) && !/\{vesk\}/.test(v[3]));
++  return [G.flags.chapterKey, G.flags.ep_dinner, G.state, G.flags.ep_v, document.querySelector('#objective')?.textContent || '', G.room?.id];
++}), (v) => v[0] === 'home' && v[1] === true && v[2] === 'play' && v[3] === 1 && /tap/i.test(v[4]) && v[5] === 'house');
++// (CAMPAIGN-10) the kitchen's step
++is('the kitchen: the door holds; Zoé sends him to the tap; the tap turned by E (his hand on its knob): cold, quiet, the cup filled; then Zoé\'s word and the end screen (the card remembers that Vesk was pulled clear)', await ev(() => {
++  const G = game, f = G.flags, h = G.hero, R = G.room, K = R.kitchen, tp = G.story.cur.tap;
++  const e = R.exits.find((x) => !x.room) || R.exits[0]; h.pos.set(e.x, h.pos.y, e.z); G.step(1.0); const door = G.room?.id; T.talkAll();
++  const z0 = T.talk('zoe');
++  const p = tp.touch(); h.pos.set(p.front.x, h.pos.y, p.front.z); h.angle = p.a; h.vel?.set?.(0, 0); G.step(0.3);
++  const prompt = G.findInteractable()?.kind; T.said.length = 0; T.tap('KeyE');
++  for (let i = 0; i < 300 && !f.ep_tap; i++) { if (G.state === 'dialog') T.talkAll(); else G.step(0.1); }
++  const tapSaid = T.said.join(' '), fill = tp.fill, quiet = !/knock/i.test(tapSaid.replace(/not one knock/i, ''));
++  const z1 = T.talk('zoe');
++  for (let i = 0; i < 20 && G.state !== 'ending'; i++) { G.step(0.3); if (G.state === 'dialog') T.talkAll(); }
++  return { door, z0: z0.text, prompt, tap: f.ep_tap, tapSaid: tapSaid.slice(0, 160), fill, quiet, z1: z1.text, word: f.ep_word, state: G.state, end: document.querySelector('#ending p')?.textContent || '' };
++}), (v) => v.door === 'house' && /tap first/i.test(v.z0) && v.prompt === 'ep_tap' && v.tap === true && /Cold/.test(v.tapSaid) && /Just in case/.test(v.tapSaid) && v.fill === 1 && v.quiet && /Bram/.test(v.z1) && v.word === true && v.state === 'ending' && /readings/.test(v.end) && !/\{vesk\}/.test(v.end));
+ is('Keep Exploring: free roam, the objective sends him round everyone', await ev(() => {
+   const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5);
+   T.talkAll();   // (EQUIP-2a: home in the house, Arthur calls out once about his present; heard out before the door)
+diff --git a/lba3/tests/no-air.mjs b/lba3/tests/no-air.mjs
+index edc5f137..0bd569a5 100644
+--- a/lba3/tests/no-air.mjs
++++ b/lba3/tests/no-air.mjs
+@@ -68,6 +68,9 @@ const STATES = [
+   ['shell', { c3_started: true, sh_v: 1, nw_v: 1, nw_irsa: true }],
+   ['core', { c3_started: true, c3_cooled: true, c3_sendell: true, c3_fight: true, c3_pylon0: true, c3_pylon1: true, c3_pylon2: true, c3_overload: true, c3_bleed: true, c3_coil: 3, c3_turned: true, c3_veskHelped: true,
+     sh_v: 1, co_v: 1, co_go: true, co_branch: true, co_irsa: true, co_vesk: true, co_lock: true, co_signal: true }],
++  // CAMPAIGN-10 (story/hometap.js EpilogueTap): the epilogue after the dinner, the kitchen's step: Zoé drying her hands at the
++  // table, Arthur by the sink listening to the pipe (33)
++  ['home', { c3_done: true, c3_turned: true, ep_v: 1, ep_dinner: true }],
+ ];
+ 
+ // a fresh page every PER states: with every area built and visited the page grows (a 15-state run ran out of memory)
+diff --git a/lba3/tests/playthrough/14-shell.mjs b/lba3/tests/playthrough/14-shell.mjs
+index 3e5e971b..5daaffa2 100644
+--- a/lba3/tests/playthrough/14-shell.mjs
++++ b/lba3/tests/playthrough/14-shell.mjs
+@@ -5,7 +5,8 @@
+ // machinery the damper's answer, up the catwalk to the fitters' knocker, two knocks, her reply, on to valve C; the shutter held
+ // as he reaches it; the third pillar from the middle stone's plate off the survey mirror; the arch shut behind him; after the
+ // coil, Vesk's choice, the last act: Mill Lane's branch cock in the rest, Irsa and Vesk, the central lock after her two, two
+-// knocks on the main for Zoé.
++// knocks on the main for Zoé. CAMPAIGN-10 (wave 8, story/hometap.js EpilogueTap), by input: after the dinner the kitchen tap,
++// turned by his hand on its knob, then the word with Zoé that brings the end screen.
+ export const steps = [
+   ['continue', () => { P.settle();
+     // (SWAIT: the thread's scenes in play — her answers, Irsa, Vesk's walk — waited out, reading what is said, as a player would)
+@@ -107,6 +108,19 @@ export const steps = [
+   ['the signal to Zoé (two knocks)', () => { const G = game, f = G.flags, K = G.room.coreKnocker, h = G.hero; if (!f.co_v) return { r: 'no thread' };
+     for (let k = 0; k < 3 && !f.co_signal; k++) { P.use(K.x, K.z, { near: 0.8, kind: 'co_knock' }); P.tap('KeyE', 0.05); for (let w = 0; w < 60 && (h.steer || h.actT > 0); w++) G.step(0.05); SWAIT(200, () => !G.story._sh?.msg && !G.story._sh?.busy); }
+     return { signal: f.co_signal ?? null, fail: f.co_signal ? null : 'signal' }; }],
+-  ['the epilogue', () => { const G = game; let t = 0, choice = null, answers = null; while (G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'shop' && !choice) { choice = document.querySelector('#shop h2')?.textContent || 'menu'; answers = [...document.querySelectorAll('#shop button')].map((b) => b.textContent); P.tap('KeyE', 0.2); } if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); } return { state: G.state, choice, answers, helped: G.flags.c3_veskHelped, title: document.querySelector('#ending h1')?.textContent, fail: G.state !== 'ending' ? 'no ending' : (answers && answers.length !== 2) ? 'the choice is not two answers' : null }; }],
++  // (CAMPAIGN-10, wave 8: after the dinner the kitchen is his: the tap turned by his hand on its knob, the water cold into
++  //  Arthur's cup and the wall quiet; then a word with Zoé, and the end screen)
++  ['the epilogue (the dinner, the tap, Zoé)', () => { const G = game, f = G.flags; let t = 0, choice = null, answers = null;
++    while (!(f.ep_dinner && G.state === 'play') && G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'shop' && !choice) { choice = document.querySelector('#shop h2')?.textContent || 'menu'; answers = [...document.querySelectorAll('#shop button')].map((b) => b.textContent); P.tap('KeyE', 0.2); } if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); }
++    const kitchen = { room: G.room?.id ?? null, obj: P.state().obj, v: f.ep_v ?? null };
++    let tap = null, word = null;
++    if (f.ep_v && G.state === 'play') {
++      const K = G.room.kitchen; tap = P.use(K.knob.x, K.knob.z, { near: 1.2, kind: 'ep_tap' });
++      for (let i = 0; i < 300 && !f.ep_tap; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
++      word = P.talk('zoe');
++      for (let i = 0; i < 100 && G.state !== 'ending'; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
++    }
++    return { state: G.state, choice, answers, helped: G.flags.c3_veskHelped, kitchen, tap: f.ep_tap ?? null, tapUse: tap?.r, word: f.ep_word ?? null, zoe: word?.r, title: document.querySelector('#ending h1')?.textContent,
++      fail: G.state !== 'ending' ? 'no ending' : (answers && answers.length !== 2) ? 'the choice is not two answers' : (f.ep_v && !(f.ep_tap && f.ep_word)) ? 'the kitchen\'s step' : null }; }],
+   ['Keep Exploring', () => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); P.settle(); return { state: game.state, free: game.flags.ep_free, obj: P.state().obj }; }],
+ ];
+diff --git a/lba3/tests/save-migration.mjs b/lba3/tests/save-migration.mjs
+index 34d18dda..4fb69b9b 100644
+--- a/lba3/tests/save-migration.mjs
++++ b/lba3/tests/save-migration.mjs
+@@ -11,6 +11,10 @@
+ // CAMPAIGN-9: saves made on the build before wave 7 (base-14 chapter 11 in the shaft, base-14-deep in the machinery,
+ // base-14-gal in the galleries, base-15 chapter 12 in the fight) load without an error; the shell's thread and the last act's
+ // are on, the steps a save is past counted as done.
++// CAMPAIGN-10: saves made on the build before wave 8 (base-16 the epilogue at its start, before the dinner; base-16-end just
++// after the dinner, at the end screen; base-16-free out in the town after Keep Exploring) and the wave's own (new-16-kitchen
++// after the dinner, new-16-tap with the tap turned) load without an error. The one before the dinner plays the dinner again
++// (it loaded into a quiet house before) with the kitchen's step after it; those past the dinner count the step as done.
+ import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+ import { watch, checker, expectError } from './lib/boot.mjs';
+ import fs from 'node:fs';
+@@ -38,6 +42,8 @@ async function run(name, save) {
+       sh: [game.flags.sh_v ?? null, game.flags.sh_bank ?? null, game.flags.sh_knock ?? null, game.flags.sh_reply ?? null, game.flags.sh_held ?? null, game.flags.sh_shut ?? null],
+       co: [game.flags.co_v ?? null, game.flags.co_go ?? null, game.flags.co_branch ?? null, game.flags.co_lock ?? null, !!game.flags.c3_fight],
+       cn: [game.flags.cn_v ?? null, game.flags.cn_closed ?? null, game.flags.cn_kell ?? null, game.flags.cn_log ?? null, !!game.flags.c9_vote, !!game.rooms.upper?.order?.shown],
++      ep: [game.flags.ep_v ?? null, game.flags.ep_dinner ?? null, game.flags.ep_tap ?? null, game.flags.ep_word ?? null, !!game.flags.ep_free],
++      line: document.querySelector('#dialog .text')?.textContent?.slice(0, 60) || null, obj: document.querySelector('#objective')?.textContent?.slice(0, 60) || null,
+       bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
+   });
+   results.push([name, r, errs.length ? errs : 'no errors']);
+@@ -81,6 +87,11 @@ await run('wave-7 base: chapter 11 in the shaft', fixture('base-14'));
+ await run('wave-7 base: chapter 11 in the machinery', fixture('base-14-deep'));
+ await run('wave-7 base: chapter 11 in the galleries, cooled', fixture('base-14-gal'));
+ await run('wave-7 base: chapter 12 in the fight', fixture('base-15'));
++await run('wave-8 base: the epilogue at its start, before the dinner', fixture('base-16'));
++await run('wave-8 base: the epilogue just after the dinner (the end screen)', fixture('base-16-end'));
++await run('wave-8 base: the epilogue, out in the town after Keep Exploring', fixture('base-16-free'));
++await run('wave-8: the epilogue after the dinner, the kitchen ahead', fixture('new-16-kitchen'));
++await run('wave-8: the epilogue, the tap turned, Zoé ahead', fixture('new-16-tap'));
+ for (const r of results) console.log(JSON.stringify(r));
+ const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street], [, f6, f6e], [, f6t, f6te], [, f7s, f7se], [, g8, g8e], [, g8t, g8te], [, g8r, g8re], [, h9, h9e], [, h9h, h9he], [, h9p, h9pe]] = results;
+ check('a chapter-9 save from before wave 5, at its start, loads without an error; the stop is ahead, so the thread is on, none of its steps past', ['play', 'dialog'].includes(h9.state) && h9.cur === 'council' && h9.cn[0] === 1 && !h9.cn[1] && !h9.cn[2] && !h9.cn[3] && h9e === 'no errors', [h9, h9e]);
+@@ -104,16 +115,23 @@ check('a v5 save on Zeelich\'s drill platform during The Shell comes out on Cita
+ check('a v5 save in the shaft\'s room stays there, in chapter 11', ['play', 'dialog'].includes(e5shaft.state) && e5shaft.room === 'c3shaft' && e5shaft.cur === 'shell', e5shaft);
+ check('a v5 save in Zeelich\'s street during The Shell stays on Zeelich (only the platform moved)', e5street.state === 'play' && e5street.room === 'zeelich' && e5street.cur === 'shell', e5street);
+ // CAMPAIGN-8 (wave 6): saves made on the build before it (tests/fixtures/campaign base-13, base-13-cit, base-13-desert)
+-const [[, n10, n10e], [, n10c, n10ce], [, n10d, n10de]] = results.slice(-7, -4);
++const [[, n10, n10e], [, n10c, n10ce], [, n10d, n10de]] = results.slice(-12, -9);
+ check('a chapter-10 save from before wave 6, at its start (the workshop), loads without an error; the thread is on, nothing of it past (Irsa\'s lane, Arthur\'s count, every friend\'s takeover ahead)', ['play', 'dialog'].includes(n10.state) && n10.cur === 'network' && n10.nw[0] === 1 && n10.nw.slice(1, 7).every((x) => x === null) && n10e === 'no errors', [n10, n10e]);
+ check('a chapter-10 save from before wave 6, on Citadel with the mill done, loads without an error; Mill Lane counts as done (past: he has left Zeelich), Arthur\'s count and the Citadel stations ahead', ['play', 'dialog'].includes(n10c.state) && n10c.cur === 'network' && n10c.nw[0] === 1 && n10c.nw[1] === 'past' && n10c.nw[2] === null && n10c.nw[3] === null && n10ce === 'no errors', [n10c, n10ce]);
+ check('a chapter-10 save from before wave 6, three stations done, loads without an error; Mira, Zoé (Arthur with her in the lamp room) and Ilka count as done (past), the dome ahead', ['play', 'dialog'].includes(n10d.state) && n10d.cur === 'network' && n10d.nw[0] === 1 && n10d.nw[2] === 'past' && n10d.nw[3] === 'past' && n10d.nw[4] === 'past' && n10d.nw[5] === null && n10de === 'no errors', [n10d, n10de]);
+ // CAMPAIGN-9 (wave 7): saves made on the build before it
+-const [[, o11, o11e], [, o11d, o11de], [, o11g, o11ge], [, o12, o12e]] = results.slice(-4);
++const [[, o11, o11e], [, o11d, o11de], [, o11g, o11ge], [, o12, o12e]] = results.slice(-9, -5);
+ check('a chapter-11 save from before wave 7, in the shaft, loads without an error; the thread is on, nothing of it past', ['play', 'dialog'].includes(o11.state) && o11.cur === 'shell' && o11.room === 'c3shaft' && o11.sh[0] === 1 && o11.sh.slice(1).every((x) => x === null) && o11e === 'no errors', [o11, o11e]);
+ check('a chapter-11 save from before wave 7, in the machinery, loads without an error; the test receiver is past, the damper\'s answer and the knocker ahead', ['play', 'dialog'].includes(o11d.state) && o11d.cur === 'shell' && o11d.room === 'c3deep' && o11d.sh[0] === 1 && o11d.sh[1] === 'past' && o11d.sh[2] === null && o11d.sh[3] === null && o11de === 'no errors', [o11d, o11de]);
+ check('a chapter-11 save from before wave 7, in the galleries (cooled), loads without an error; the answer, the knocker and the held shutter count as done (past), the shut arch ahead', ['play', 'dialog'].includes(o11g.state) && o11g.cur === 'shell' && o11g.room === 'c3gallery' && o11g.sh[2] === 'past' && o11g.sh[3] === 'past' && o11g.sh[4] === 'past' && o11g.sh[5] === null && o11ge === 'no errors', [o11g, o11ge]);
+ check('a chapter-12 save from before wave 7, in the fight, loads without an error; the fight resumes, the last act\'s thread is on, none of it past', ['play', 'dialog'].includes(o12.state) && o12.cur === 'core' && o12.room === 'c3core' && o12.co[0] === 1 && o12.co[1] === null && o12.co[2] === null && o12e === 'no errors', [o12, o12e]);
++// CAMPAIGN-10 (wave 8)
++const [[, p16, p16e], [, p16n, p16ne], [, p16f, p16fe], [, p16k, p16ke], [, p16t, p16te]] = results.slice(-5);
++check('an epilogue save from before wave 8, made before the dinner, loads without an error; the dinner plays again (it loaded into a quiet house before) and the kitchen\'s step is on, none of it past', p16.state === 'dialog' && p16.cur === 'home' && p16.room === 'house' && p16.ep[0] === 1 && p16.ep[1] === null && p16.ep[2] === null && /Four days later/.test(p16.line || '') && p16e === 'no errors', [p16, p16e]);
++check('an epilogue save from before wave 8, just after the dinner, loads without an error; the step counts as done (no thread): free play in the house, the tap there to turn', ['play', 'dialog'].includes(p16n.state) && p16n.cur === 'home' && p16n.room === 'house' && p16n.ep[0] === null && p16n.ep[1] === true && /everyone/i.test(p16n.obj || '') && p16ne === 'no errors', [p16n, p16ne]);
++check('an epilogue save from before wave 8, out in the town, loads without an error; no thread, free play as before', p16f.state === 'play' && p16f.cur === 'home' && p16f.room === null && p16f.ep[0] === null && p16f.ep[4] && p16fe === 'no errors', [p16f, p16fe]);
++check('the wave\'s epilogue save after the dinner loads into the kitchen\'s step: the tap ahead (the objective), the end screen not yet', p16k.state === 'play' && p16k.cur === 'home' && p16k.room === 'house' && p16k.ep[0] === 1 && p16k.ep[1] === true && p16k.ep[2] === null && /tap/i.test(p16k.obj || '') && p16ke === 'no errors', [p16k, p16ke]);
++check('the wave\'s epilogue save with the tap turned loads with Zoé\'s word ahead', p16t.state === 'play' && p16t.cur === 'home' && p16t.room === 'house' && p16t.ep[2] === true && p16t.ep[3] === null && /Zoé/.test(p16t.obj || '') && p16te === 'no errors', [p16t, p16te]);
+ const fails = done();
+ await browser.close();
+ process.exit(fails ? 1 : 0);
+-- 
+2.43.0
+

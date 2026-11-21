@@ -1,0 +1,22 @@
+bram: {"anim":null,"pos":[-42.3,62.9],"char":"bram"}
+bram screen: {"x":631.9237090362283,"y":666.2438293457295}
+odile: {"anim":null,"pos":[-110.7,36.25],"char":"odile"}
+odile screen: {"x":851.2654603865973,"y":290.90002299562633}
+nell: {"anim":null,"pos":[-104.75,36],"char":"nell"}
+nell screen: {"x":552.1981062665438,"y":306.58651889069523}
+errors: []
+[176.7] go → (-103.2, 37.6) plan ok=false pts=1 left=0.71
+[179.2] stuck at (-102.5, 37.4): replan
+[181.2] go → (-103.2, 37.6) plan ok=false pts=1 left=0.85
+[183.7] stuck at (-102.3, 37.4): replan
+[185.6] go → (-103.2, 37.6) plan ok=false pts=2 left=0.59
+[188.1] stuck at (-102.6, 37.5): replan
+[190.1] go → (-103.2, 37.6) plan ok=false pts=1 left=0.71
+[192.6] stuck at (-102.5, 37.4): replan
+[194.5] go → (-103.2, 37.6) plan ok=false pts=2 left=0.84
+[198.6] go → (-103.2, 37.6) plan ok=false pts=1 left=0.85
+[201.1] stuck at (-102.3, 37.4): replan
+[203.0] go → (-103.2, 37.6) plan ok=false pts=2 left=0.59
+[205.5] stuck at (-102.6, 37.5): replan
+[207.5] go → (-103.2, 37.6) plan ok=false pts=1 left=0.71
+[210.0] stuck at (-102.5, 37.5): replan

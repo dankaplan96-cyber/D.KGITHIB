@@ -1,0 +1,230 @@
+diff --git a/lba3/src/game/baggage.js b/lba3/src/game/baggage.js
+new file mode 100644
+index 0000000..7b52d90
+--- /dev/null
++++ b/lba3/src/game/baggage.js
+@@ -0,0 +1,136 @@
++// LBA-CITADEL-8 (night mode: "work to the plan"): the baggage claim, after LBA2's scene 5. In LBA2 its door is where
++// our 'bug' house stands in Bug Street (WORLD-80 step 2 placed it for that door); the house had no inside.
++// Our own geometry, from a study of the original's layout (numbers and descriptions only; nothing copied):
++//   - a long building of about 16 × 44 of the original's cells (≈ 7.8 × 21 m) of pale grey stone blocks on two levels
++//   - as the game's camera sees it, from the back: the claim hall, 1.5 m up, with the luggage belt along the back wall,
++//     red benches beside it, cardboard boxes and dark teal crates in the corner, a small window; a wall with two stone
++//     arches; the office (a table with papers, a red stool, crates); the upper level's edge with a teal balustrade and
++//     white globe lamps; a stair down at the left to the lower front hall: barrels, a small railed platform, black
++//     arrows on the floor pointing the way, the door at the front of the left wall
++// Twelve years on (ours): the belt carries parcels for and from Zeelich now (teal cargo crates with brass bands among
++// the cases); a notice board for unclaimed parcels by the stair.
++//
++// CONTRACT
++//   BAGGAGE_AT                 where the room stands (regions.js)
++//   buildBaggageRoom(scene, physics) → { baggage }   (regions.js group 'baggage')
++//   baggageDoors(W) / baggageExit(to, W)   the 'bug' house's door leads in; 'baggage-out' leads back out before it
++//   R.npcSpots.clerk            at the office table (the story layer may put the clerk there)
++import * as THREE from 'three';
++import { RoomBuilder } from './interiors.js';
++import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, noticeBoard } from './props.js';
++
++export const BAGGAGE_AT = { x: 8200, z: 0 };
++
++const RED = () => MAT.paint('#b0302c', 0.45), TEAL = () => MAT.paint('#2f6f74', 0.5), METAL = () => MAT.paint('#cfcdd6', 0.35), DARK = () => MAT.paint('#7c7a86', 0.4);
++
++function bench(k) {   // a red padded bench on chrome legs
++  k.add(rbox(1.6, 0.16, 0.5, 0.08), RED(), 0, 0.45, 0);
++  k.add(rbox(1.6, 0.4, 0.14, 0.07), RED(), 0, 0.72, -0.2);
++  for (const sx of [-0.65, 0.65]) k.add(cyl(0.03, 0.03, 0.4, 6), MAT.steel(), sx, 0.2, 0);
++  return { hw: 0.8, hd: 0.28, top: 0.9 };
++}
++function crate(k, s = 0.7, zeelich = false) {
++  k.add(rbox(s, s, s, 0.02), MAT.paint(zeelich ? '#2f8a9a' : '#2c4a4c', 0.7), 0, s / 2, 0);
++  for (const y of [0.14, s - 0.14]) k.add(rbox(s + 0.02, 0.05, s + 0.02, 0.01), zeelich ? MAT.brass() : MAT.paint('#1e3436', 0.7), 0, y, 0);
++  return { hw: s / 2, hd: s / 2, top: s };
++}
++function drum(k) {
++  k.add(lathe([[0.001, 0], [0.3, 0], [0.33, 0.1], [0.34, 0.45], [0.33, 0.8], [0.3, 0.9], [0.001, 0.9]], 14), MAT.paint('#8a8892', 0.35), 0, 0, 0);
++  k.add(cyl(0.26, 0.26, 0.03, 14), MAT.paint('#8a3a2a', 0.6), 0, 0.91, 0);
++  return { r: 0.34, top: 0.92 };
++}
++// the luggage belt: a long table of rollers on two drums, cases riding on it
++function belt(k, w) {
++  for (const sx of [-1, 1]) k.add(cyl(0.22, 0.22, 0.7, 14), DARK(), sx * (w / 2 - 0.3), 0.35, 0);
++  k.add(rbox(w, 0.1, 1.0, 0.03), METAL(), 0, 0.75, 0);
++  for (let i = 0; i < Math.floor(w / 0.22); i++) k.add(cyl(0.035, 0.035, 0.95, 8), MAT.steel(), -w / 2 + 0.15 + i * 0.22, 0.82, 0, 0, { rx: Math.PI / 2 });
++  return { hw: w / 2, hd: 0.5, top: 0.85 };
++}
++// a short post with a white globe
++function postLamp(k) {
++  k.add(cyl(0.035, 0.045, 0.9, 8), TEAL(), 0, 0.45, 0);
++  k.add(sphere(0.16, 14, 10), MAT.glow('#fff8ee', '#ffe8c0', 1.2), 0, 1.0, 0);
++}
++
++export function buildBaggageRoom(scene, physics) {
++  const B = new RoomBuilder(scene, physics, 'baggage', BAGGAGE_AT.x, BAGGAGE_AT.z);
++  const R = B.room, k = B.k;
++  const W = 7.8, D = 21, H = 5.0;
++  R.view = 18; R.follow = 0.35; R.music = 'home';
++  // (the tavern's pale grey blocks: Citadel's stone inside)
++  const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
++  const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4), floor = MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 6);
++  const LX = -W / 2, BZ = -D / 2, UY = 1.5, UZ1 = 1.0, DOORZ = 8.6;
++  B.shell({ floor, slab: rough, body: stone, low: stone, rail: MAT.iron(), cap, H, t: 0.55, dado: 1.0, rimH: 0.45, rimMat: rough, W, D,
++    left: [{ at: DOORZ, w: 1.4, h: 2.5, y0: 0, kind: 'door' }, { kind: 'window', at: -8.4, w: 0.8, h: 0.9, y0: UY + 1.1 }] });
++  R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'baggage-out' });
++  R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
++
++  // --- the upper level: the claim hall and the office, 1.5 m up over the back of the building
++  k.add(rbox(W, UY, UZ1 - BZ, 0.02), stone, 0, UY / 2, (BZ + UZ1) / 2);
++  k.add(rbox(W + 0.04, 0.12, UZ1 - BZ + 0.04, 0.02), cap, 0, UY - 0.06, (BZ + UZ1) / 2);
++  k.add(plane(W - 0.1, UZ1 - BZ - 0.1), floor, 0, UY + 0.004, (BZ + UZ1) / 2, 0, { rx: -Math.PI / 2 });
++  B.col(0, (BZ + UZ1) / 2, W / 2, (UZ1 - BZ) / 2, UY);
++  // the stair down at the left, from the upper level's edge to the front hall
++  const SX0 = LX + 0.15, SX1 = LX + 1.55, N = 5, run = 0.52, rise = UY / N;
++  for (let i = 0; i < N; i++) {
++    const top = rise * (N - i), z = UZ1 + (i + 0.5) * run;
++    k.add(rbox(SX1 - SX0, top, run + 0.02, 0.015), stone, (SX0 + SX1) / 2, top / 2, z);
++    k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), cap, (SX0 + SX1) / 2, top - 0.025, z);
++    B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.08, top, { stair: true });   // (+0.08: the steps overlap under groundAt's 5 cm shrink)
++  }
++  // the balustrade along the upper level's edge (open over the stair), the stair's own rail, globe lamps at the ends
++  k.at(0, UY, 0, 0, () => railing(k, [[SX1 + 0.05, UZ1 - 0.06], [W / 2 - 0.1, UZ1 - 0.06]], { h: 0.95, mat: TEAL(), step: 0.42 }));
++  B.col((SX1 + W / 2) / 2, UZ1 - 0.06, (W / 2 - SX1) / 2, 0.06, UY + 1.0, { seeThrough: true, noStand: true });
++  railing(k, [[SX1 + 0.05, UZ1], [SX1 + 0.05, UZ1 + N * run]], { h: 0.95 + UY / 2, mat: TEAL(), step: 0.45 });
++  B.col(SX1 + 0.05, UZ1 + N * run / 2, 0.06, N * run / 2, UY + 1.0, { seeThrough: true, noStand: true });
++  for (const x of [SX1 + 0.05, W / 2 - 0.15]) k.at(x, UY, UZ1 - 0.06, 0, () => postLamp(k));
++  // the wall with two arches between the office and the claim hall
++  const AZ = -4.5, AT = 0.5, archs = [{ x: -1.5, w: 1.2 }, { x: 2.0, w: 1.2 }], AH = 2.3, WH = H - UY;
++  let x0 = LX;
++  for (const a of archs.concat([{ x: W / 2 + 0.6, w: 1.2 }])) {
++    const x1 = a.x - a.w / 2; if (x1 - x0 > 0.05) { k.add(rbox(x1 - x0, WH, AT, 0.02), stone, (x0 + x1) / 2, UY + WH / 2, AZ); B.col((x0 + x1) / 2, AZ, (x1 - x0) / 2, AT / 2, H); }
++    if (a.x < W / 2) {
++      k.add(rbox(a.w, WH - AH, AT, 0.02), stone, a.x, UY + AH + (WH - AH) / 2, AZ);
++      k.add(new THREE.TorusGeometry(a.w / 2, 0.09, 6, 14, Math.PI), cap, a.x, UY + AH - a.w / 2 + 0.05, AZ + AT / 2 + 0.02);
++    }
++    x0 = a.x + a.w / 2;
++  }
++  // --- the claim hall: the belt along the back wall with cases and Zeelich parcels on it, red benches, boxes and crates
++  k.at(1.4, UY, BZ + 0.8, 0, () => { belt(k, 4.0); const cases = [[-1.4, '#7a4a2a'], [-0.6, '#2f8a9a'], [0.3, '#a8302a'], [1.1, '#2f8a9a']]; cases.forEach(([x, c]) => k.add(rbox(0.5, 0.3, 0.38, 0.04), MAT.paint(c, 0.55), x, 1.0, 0)); });
++  B.col(1.4, BZ + 0.8, 2.0, 0.5, UY + 0.9, { noStand: true });
++  B.put(-2.4, BZ + 0.55, 0, (kk) => bench(kk), { y: UY });
++  B.put(3.3, -6.6, -Math.PI / 2, (kk) => bench(kk), { y: UY });
++  B.put(LX + 0.55, -6.2, 0, (kk) => { kk.add(rbox(0.6, 0.5, 0.5, 0.02), MAT.paint('#b88a5a', 0.8), 0, 0.25, 0); kk.add(rbox(0.55, 0.45, 0.45, 0.02), MAT.paint('#c89a6a', 0.8), 0.02, 0.73, 0); kk.add(rbox(0.5, 0.4, 0.4, 0.02), MAT.paint('#b88a5a', 0.8), -0.03, 1.15, 0); return { hw: 0.3, hd: 0.25, top: 1.35 }; }, { y: UY });
++  B.put(LX + 1.35, -6.4, 0.1, (kk) => crate(kk, 0.7, true), { y: UY });
++  // --- the office: the table with papers and a red stool, crates by the right wall
++  B.put(0.4, -1.6, 0.05, (kk) => { kk.add(rbox(1.3, 0.05, 0.8, 0.01), METAL(), 0, 0.76, 0); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) kk.add(cyl(0.025, 0.025, 0.74, 6), DARK(), sx * 0.58, 0.37, sz * 0.34); for (let i = 0; i < 3; i++) kk.add(rbox(0.24, 0.01, 0.32, 0.003), MAT.paint(['#f2ead6', '#e8d8a8', '#f2ead6'][i], 0.7), -0.3 + i * 0.05, 0.79 + i * 0.01, 0.05); return { hw: 0.65, hd: 0.4, top: 0.8 }; }, { y: UY });
++  B.put(0.5, -0.8, 0, (kk) => { kk.add(lathe([[0.001, 0], [0.19, 0], [0.2, 0.04], [0.17, 0.09], [0.001, 0.1]], 14), RED(), 0, 0.55, 0); kk.add(cyl(0.035, 0.035, 0.55, 8), MAT.steel(), 0, 0.275, 0); return { r: 0.22, top: 0.65 }; }, { y: UY });
++  for (const [x, z] of [[3.2, -3.4], [3.2, -2.5]]) B.put(x, z, 0, (kk) => crate(kk, 0.7), { y: UY });
++  R.npcSpots = { clerk: { x: B.cx + 0.4, z: B.cz - 2.5, a: 0 } };
++  // --- the front hall: barrels, a small railed platform with a lamp, the black arrows on the floor, the notice board
++  for (const [x, z] of [[-2.7, 5.4], [-2.0, 5.9]]) B.put(x, z, 0, (kk) => drum(kk));
++  k.add(rbox(2.6, 0.9, 2.6, 0.02), stone, 2.5, 0.45, 4.2); k.add(rbox(2.64, 0.08, 2.64, 0.02), cap, 2.5, 0.88, 4.2);
++  B.col(2.5, 4.2, 1.3, 1.3, 0.9);
++  k.at(0, 0.9, 0, 0, () => railing(k, [[1.25, 5.45], [1.25, 2.95], [3.75, 2.95]], { h: 0.9, mat: TEAL(), step: 0.45 }));
++  k.at(3.5, 0.9, 5.2, 0, () => postLamp(k));
++  B.put(2.2, 4.3, 0, (kk) => crate(kk, 0.7), { y: 0.9 });
++  const arrow = (x, z, a) => { const s = new THREE.Shape(); s.moveTo(-0.15, -0.35); s.lineTo(0.15, -0.35); s.lineTo(0.15, 0.05); s.lineTo(0.32, 0.05); s.lineTo(0, 0.4); s.lineTo(-0.32, 0.05); s.lineTo(-0.15, 0.05); s.closePath(); k.add(new THREE.ShapeGeometry(s), MAT.paint('#26262c', 0.6), x, 0.012, z, a, { rx: -Math.PI / 2 }); };
++  arrow(-1.4, 8.2, Math.PI / 2); arrow(-0.6, 6.4, Math.PI); arrow(-2.4, 4.6, Math.PI);
++  k.at(SX1 + 0.12, 1.35, 3.0, -Math.PI / 2, () => noticeBoard(k, 0.7, 0.5, 19));
++  // wall lamps on the long wall
++  for (const z of [-8.0, -2.0, 5.0]) { k.add(sphere(0.15, 12, 8), MAT.glow('#fff4e0', '#ffd890', 1.0), LX + 0.12, z > 1 ? 2.4 : UY + 2.2, z); }
++  B.light('#ffe8c8', 5, 11, 0.5, UY + 3.0, -7.0); B.light('#ffe8c8', 4.5, 10, 0.5, UY + 3.0, -1.5); B.light('#ffe8c8', 5, 11, 0.0, 3.6, 6.0);
++  return { baggage: B.finish() };
++}
++
++// the 'bug' house's door leads in; coming out, Twinsen stands 1.2 m before it, facing away
++export function baggageDoors(W) {
++  const h = W?.houses?.find((x) => x.id === 'bug');
++  return h?.door ? [{ house: 'bug', x: h.door.x, z: h.door.z, r: 0.9, room: 'baggage' }] : [];
++}
++export function baggageExit(to, W) {
++  if (to !== 'baggage-out') return null;
++  const h = W?.houses?.find((x) => x.id === 'bug'); if (!h?.door) return null;
++  return { x: h.door.x + Math.sin(h.ry) * 1.2, z: h.door.z + Math.cos(h.ry) * 1.2, a: h.ry };
++}
+diff --git a/lba3/src/game/regions.js b/lba3/src/game/regions.js
+index 3f43cc5..6d19036 100644
+--- a/lba3/src/game/regions.js
++++ b/lba3/src/game/regions.js
+@@ -41,6 +41,7 @@ import { buildBazooRoom } from './bazoo.js';
+ import { buildTicketRoom } from './ticket.js';
+ import { buildPharmacyRoom } from './pharmacy.js';
+ import { buildNbrHouseRoom } from './nbrhouse.js';
++import { buildBaggageRoom } from './baggage.js';
+ import { buildTavCellarRoom } from './tavcellar.js';
+ import { buildNellHouseRoom } from './nellhouse.js';
+ 
+@@ -48,7 +49,7 @@ import { buildNellHouseRoom } from './nellhouse.js';
+ // scaled by how fast this computer built Citadel (Regions.speed). A wrong guess only makes the bar's pace uneven.
+ const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, workshop: 180, lighttop: 140, cellar: 70,
+   zeelich: 800, underground: 400, desert: 700, condenser: 30, butemple: 30, wtent: 20, school: 30, asylum: 150, bumaze: 170,
+-  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
++  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
+   isle_celebration: 160, isle_undergas: 320, isle_cxislet: 80, isle_platform: 180, isle_liftdock: 120, isle_tralu: 290,
+   isle_orchard: 230, isle_oldwatch: 90, isle: 250 };
+ // Where each room stands (its group's origin; an interior's centre where it differs), known before it is built: for
+@@ -58,7 +59,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
+   lighttop: [1600, 0], cellar: [1700, 0], c3shaft: [1799.2, -1], c3deep: [1899.4, -0.8], c3gallery: [1998, -2], c3sendell: [2100, 0],
+   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
+   bumaze: [7200, 0], buhalls: [7400, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
+-  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0] };
++  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0] };
+ const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
+ const isleAt = (id) => { const i = ISLES.indexOf(id.slice(5)); return i >= 0 ? [1900 + i * 330, 1800] : null; };
+ export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
+@@ -113,6 +114,7 @@ function groupDefs() {
+   add('nbrhouse', ['nbrhouse'], buildNbrHouseRoom);   // (LBA-CITADEL-5: the neighbours' house, LBA2's scene 9, in the 'nbr' house)
+   add('nellhouse', ['nellhouse'], buildNellHouseRoom);   // (LBA-CITADEL-6: Paul's house of LBA2's scene 7, now Nell's, in the 'wing2' house)
+   add('tavcellar', ['tavcellar'], buildTavCellarRoom);   // (LBA-CITADEL-7: Chez Luc's cellar, LBA2's scene 4, under the tavern)
++  add('baggage', ['baggage'], buildBaggageRoom);   // (LBA-CITADEL-8: the baggage claim, LBA2's scene 5, in the 'bug' house)
+   for (const n of ISLES) if (hasIsland(n)) add('isle_' + n, ['isle_' + n], (S, P) => ({ ['isle_' + n]: buildIsle(S, P, n) }));
+   return G;
+ }
+diff --git a/lba3/src/game/story/index.js b/lba3/src/game/story/index.js
+index a3a0b36..16f43f5 100644
+--- a/lba3/src/game/story/index.js
++++ b/lba3/src/game/story/index.js
+@@ -9,6 +9,7 @@ import { bazooDoors, bazooExit } from '../bazoo.js';
+ import { ticketDoors, ticketExit } from '../ticket.js';
+ import { pharmacyDoors, pharmacyExit } from '../pharmacy.js';
+ import { nbrhouseDoors, nbrhouseExit } from '../nbrhouse.js';
++import { baggageDoors, baggageExit } from '../baggage.js';
+ import { nellhouseDoors, nellhouseExit } from '../nellhouse.js';
+ import { t } from '../i18n.js';
+ import { CHAPTER_AREAS } from '../regions.js';
+@@ -189,9 +190,9 @@ export class Story {
+   }
+   items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items()]; }
+   // (the wizards' doors are open in every chapter: src/game/wizards.js)
+-  doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors(), ...sewerDoors(), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world)]; }
++  doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors(), ...sewerDoors(), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world), ...baggageDoors(this.game.world)]; }
+   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
+-  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
++  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world) || baggageExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
+   // the town's doors on Citadel (house, water office, control room) for chapters set there after chapter 2
+   // (chapter 2 offers the control room only until Zoé's office segment; later chapters need it again — ch. 8's relay)
+   townDoors() {
+diff --git a/lba3/src/game/tavcellar.js b/lba3/src/game/tavcellar.js
+index 7fea97b..ba51bfc 100644
+--- a/lba3/src/game/tavcellar.js
++++ b/lba3/src/game/tavcellar.js
+@@ -68,7 +68,7 @@ export function buildTavCellarRoom(scene, physics) {
+     const top = WH - rise * (i + 1), x = SX0 + (i + 0.5) * run;
+     k.add(rbox(run + 0.02, top, AZ1 - BZ, 0.015), stone, x, top / 2, (BZ + AZ1) / 2);
+     k.add(rbox(run + 0.04, 0.05, AZ1 - BZ + 0.04, 0.01), cap, x, top - 0.025, (BZ + AZ1) / 2);
+-    B.col(x, (BZ + AZ1) / 2, run / 2 + 0.04, (AZ1 - BZ) / 2, top, { stair: true });
++    B.col(x, (BZ + AZ1) / 2, run / 2 + 0.08, (AZ1 - BZ) / 2, top, { stair: true });   // (+0.08: the steps overlap under groundAt's 5 cm shrink, no seam to drop through)
+   }
+   const SX1 = SX0 + (N - 1) * run;   // (the stair's foot: the store's platform begins)
+   // --- the store: a stone platform 1 m up from the stair's foot to the right wall, a balustrade along its front
+diff --git a/lba3/src/game/tavern.js b/lba3/src/game/tavern.js
+index 671ac1e..f6eda66 100644
+--- a/lba3/src/game/tavern.js
++++ b/lba3/src/game/tavern.js
+@@ -95,7 +95,7 @@ export function buildTavernRoom(scene, physics) {
+     const top = rise * (i + 1), x = SX0 - (i + 0.5) * run;
+     k.add(rbox(run + 0.02, top, SZ1 - SZ0, 0.015), stone, x, top / 2, (SZ0 + SZ1) / 2);   // (pale stone, as the original's)
+     k.add(rbox(run + 0.04, 0.06, SZ1 - SZ0 + 0.04, 0.01), cap, x, top - 0.03, (SZ0 + SZ1) / 2);
+-    B.col(x, (SZ0 + SZ1) / 2, run / 2 + 0.04, (SZ1 - SZ0) / 2, top, { stair: true });
++    B.col(x, (SZ0 + SZ1) / 2, run / 2 + 0.08, (SZ1 - SZ0) / 2, top, { stair: true });   // (+0.08: the steps overlap under groundAt's 5 cm shrink; +0.04 left a 2 cm seam that dropped Twinsen through)
+   }
+   const LX1 = SX0 - N * run;   // (the landing: from the stair's top to the left wall, level with the gallery)
+   k.add(rbox(LX1 - GX0, GH, SZ1 - SZ0, 0.02), stone, (GX0 + LX1) / 2, GH / 2, (SZ0 + SZ1) / 2);

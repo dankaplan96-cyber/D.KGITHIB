@@ -1,0 +1,622 @@
+diff --git a/lba3/src/game/characters.js b/lba3/src/game/characters.js
+index 8c95d929..28d80e56 100644
+--- a/lba3/src/game/characters.js
++++ b/lba3/src/game/characters.js
+@@ -63,8 +63,11 @@ export const LOOKS = {
+     // ZOE-OPEN (CHAR-2): her head from designed sections at the measured size (brow, cheekbones, a rounded chin, a nose
+     // of its own), a smaller smiling mouth, white almond eyes with iris and pupil under lid lines and brows, teardrop
+     // hoops for the triangle earrings, and curled mitten hands with a thumb (docs/character-review.md §18).
+-    // The sculpt below is the fallback.
+-    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
++    // ZOE-LOOK-38 (the user, 9.11, a candidate): bigger lidded eyes with lashes, a smaller nose, fuller lips; her hair
++    // swept up into a tall ponytail in a green band (on the skeleton's tail bones), its tip curled; green trims at the
++    // top's neck and armholes, a black belt with a square silver buckle (belt: its baked hex), a green cord with a round
++    // dark pendant, green bangles, gold hoops. The sculpt below is the fallback.
++    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#2a2426', pants: '#b32b27', shoes: '#3f7b47',
+     hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
+     // CHAR-OPEN (OPEN-3 #28): her arms hang at her sides (0.08 rad out from the skeleton's rest; 0.3 held the hands
+     // 0.45 m out, the "rods standing off her sides"); the opening's pose layer was brought in by the same 0.22
+diff --git a/lba3/tools/blender/zoe_poly.py b/lba3/tools/blender/zoe_poly.py
+index 55fdc9df..d4bb3f30 100644
+--- a/lba3/tools/blender/zoe_poly.py
++++ b/lba3/tools/blender/zoe_poly.py
+@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ import bpy  # noqa: E402
+ from mathutils import Vector  # noqa: E402
+ from mathutils.bvhtree import BVHTree  # noqa: E402
+-from lbapoly import Builder, lerp, lip_band, loft, mouth_lens, ring, smooth, sphere, tube  # noqa: E402
++from lbapoly import Builder, box, catmull, lerp, lip_band, loft, mouth_lens, ring, smooth, sphere, tube  # noqa: E402
+ 
+ args = [a for a in sys.argv[1:] if not a.endswith('.py')]
+ SKEL, OUT = args[0], args[1]
+@@ -54,6 +54,23 @@ COL = {
+     'skinLine': '#a8744c',  # FACES-HANDS: the lines between the fingers (the skin, a quarter darker)
+     'white': '#e9ded2', 'iris': '#3f7480', 'pupil': '#16272b', 'mouth': '#6a1a16',
+ }
++# ZOE-LOOK-38 (CLOUD_ORDERS 38, the user 9.11: a softer, more expressive "animated feature" Zoé, as a candidate; from the
++# order's words only, no picture): bigger lidded eyes with lashes and a catch-light, thin arched brows, a smaller nose,
++# fuller lips; a tall golden ponytail swept up from the crown in a green band, its tip curled, over hair swept up from the
++# face and the nape (the bald skull with a bun is gone); green trims at the top's neck and armholes, a black belt with a
++# square silver buckle, a green cord necklace with a round dark pendant, green bangles, gold hoops; more segments on the
++# head, the hair and the arms. Her body's sections (ZOE_BODY, SRC-2) are unchanged. ZOE_LOOK_OLD=1 builds the model as
++# before (it rebuilds the shipped assets/poly/zoe.json exactly).
++LOOK38 = not os.environ.get('ZOE_LOOK_OLD')
++if LOOK38:
++    COL.update({
++        'hair': '#e3af53',      # (the LOOKS hair hex, now lit with real normals: the flat HAIR_UP disc look was for the balls)
++        'trim': '#3f7b47',      # (the LOOKS shoes hex: the trims, the hair band, the cord, the bangles; no new role colour)
++        'belt': '#2a2426', 'silver': '#c9ced4', 'gold': '#d6a23a', 'pendant': '#2d2833',
++        'iris': '#3f6f9c',      # (blue, the order's words; the old teal read grey-green at the dialogue distance)
++        'lidSkin': '#c3956d',   # (the skin x 0.9: the heavy upper lid)
++        'lash': '#2a1a12', 'catch': '#fbf6ee', 'brow': '#5a3a22',   # (the brows a dark golden brown: the lid shade read faint)
++    })
+ # A constant shade for the hair: with every normal straight up LbaMaterial gives t = n·L = 0.8 from any side
+ # (out = 1.025·base + 0.15 in linear light), the way LBA2 draws its spheres as flat unlit discs.
+ HAIR_UP = (0.0, 1.0, 0.0)
+@@ -205,6 +222,19 @@ EYE2 = (0.0265, 0.9285, 0.0098, 0.0052, 0.11)       # centre x, y, half-width, h
+ BROW = [(0.0105, 0.9425), (0.0195, 0.9465), (0.0300, 0.9475), (0.0405, 0.9445)]
+ # the earrings: a blue teardrop hoop (the original's are line triangles; the triangle frame read as a hard shape)
+ EAR2 = (0.0535, 0.9035, -0.024, 0.0068, 0.0185)   # x, hook y, z, hoop radius, drop (hook to bottom)
++if LOOK38:
++    # ZOE-LOOK-38, the face: a smaller nose (the ridge 0.72 as proud, 0.85 as wide, the tip a touch up); fuller lips
++    # (taller, a small bow in the upper lip, a little narrower, the lower one fuller and further out); bigger eyes (1.2 x
++    # as wide, 1.45 x as tall, a larger blue iris with a catch-light) under a heavy upper lid with a lash line and three
++    # lashes at the outer corner; thin, higher, arched brows; round gold hoops
++    NOSE_ROWS = [(0.9265, 0.0, 0.0036), (0.9205, 0.0023, 0.0043), (0.9145, 0.0049, 0.0049), (0.9090, 0.0078, 0.0058),
++                 (0.9050, 0.0103, 0.0068), (0.9018, 0.0086, 0.0089), (0.8990, 0.0042, 0.0100), (0.8975, 0.0, 0.0081)]
++    LIPS2_TOP = [(0.0, 0.8921), (0.0045, 0.8930), (0.0110, 0.8920), (0.0218, 0.8879)]
++    LIPS2_MID = [(0.0, 0.8866), (0.0045, 0.8866), (0.0110, 0.8868), (0.0218, 0.8879)]
++    LIPS2_LOW = [(0.0, 0.8796), (0.0050, 0.8798), (0.0120, 0.8813), (0.0218, 0.8879)]
++    EYE2 = (0.0275, 0.9290, 0.0118, 0.0076, 0.09)
++    BROW = [(0.0120, 0.9452), (0.0200, 0.9502), (0.0300, 0.9522), (0.0400, 0.9503), (0.0455, 0.9462)]
++    EAR2 = (0.0535, 0.9035, -0.024, 0.0090, 0.0)       # (x, hook y, z, hoop radius: a round hoop, no teardrop)
+ # the bun: three spheres (centre y, z, r) on the three bun groups, drawn flat; built as one mass like Twinsen's (VP-1b)
+ # CHAR-OPEN (OPEN-3 #11): as measured (ZOE_BUN_LBA2) the first ball only grazes the back of the crown and the other two
+ # hang 0.03-0.05 H behind the skull; carried by the tail bones, the follow-through then swung the mass off the head
+@@ -278,13 +308,87 @@ def split_loft(rings, field, pa, pb):
+                         part.f.append(ids)
+ 
+ 
++def ring_quads(rings):
++    n = len(rings[0])
++    return [[rings[j][i], rings[j][(i + 1) % n], rings[j + 1][(i + 1) % n], rings[j + 1][i]] for j in range(len(rings) - 1) for i in range(n)]
++
++
++def split_polys(polys, cuts, rest):
++    """ZOE-LOOK-38: split_loft for any polygons and several colours. cuts = [(field, part)], in order: each polygon's
++    piece where field > 0 (field of a point in H, linear on the edges) goes to that part, what is left goes on to the next
++    cut, and what is left after the last one to `rest`. Cut points are computed from an edge's ends in a fixed order, so
++    neighbours share them, and corners are welded per part (smooth shading across the cuts)."""
++    idx = {}
++
++    def vid(part, v):
++        k = tuple(round(c, 6) for c in v)
++        d = idx.setdefault(id(part), {})
++        if k not in d:
++            d[k] = len(part.v)
++            part.v.append(k)
++        return d[k]
++
++    def emit(part, poly):
++        if len(poly) >= 3:
++            ids = [vid(part, v) for v in poly]
++            ids = [x for k, x in enumerate(ids) if x not in ids[:k]]
++            if len(ids) >= 3:
++                part.f.append(ids)
++
++    def clip(poly, fv, sgn):
++        out, n = [], len(poly)
++        for k in range(n):
++            v0, v1, f0, f1 = poly[k], poly[(k + 1) % n], sgn * fv[k], sgn * fv[(k + 1) % n]
++            if f0 >= 0:
++                out.append(v0)
++            if (f0 >= 0) != (f1 >= 0):
++                a_, c_ = (v0, v1) if (v0 < v1) else (v1, v0)
++                fa, fc = (f0, f1) if (v0 < v1) else (f1, f0)
++                t = fa / (fa - fc)
++                out.append(tuple(round(x + (y - x) * t, 7) for x, y in zip(a_, c_)))
++        return out
++    for poly in polys:
++        cur = [tuple(v) for v in poly]
++        for field, part in cuts:
++            if len(cur) < 3:
++                break
++            fv = [field(tuple(c / ZH for c in v)) for v in cur]
++            emit(part, clip(cur, fv, 1))
++            cur = clip(cur, fv, -1)
++        emit(rest, cur)
++
++
++# ZOE-LOOK-38: the top's edges in a wide green trim (the neck's V, the straps and the open back's edges: one trim round
++# every edge of the top), cut into the same loft as a third colour (no new geometry beyond the cuts): 0.011 H (2.1 cm)
++# wide in front, 0.006 H behind, where the halter's straps are narrow
++TRIM_W = lambda p: 0.011 if p[2] > ZC else 0.006
+ ys = [0.404 + 0.014 * k for k in range(int((0.818 - 0.404) / 0.014) + 1)] + [0.818, 0.826]
+ ys = sorted(set(round(y, 4) for y in ys))
+ NB = 32
+ body_rings = [ring(y * ZH, sec(y)[0] * ZH, sec(y)[1] * ZH, sec(y)[2] * ZH, NB, 0.72) for y in ys]
+ skin = b.P('skin', COL['skin'], w_body, 50)
+ dress = b.P('dress', COL['red'], w_body, 50)
+-split_loft(body_rings, outfit_field, skin, dress)
++if LOOK38:
++    trimP = b.P('trim', COL['trim'], w_body, 50)
++    split_polys(ring_quads(body_rings), [(outfit_field, skin), (lambda p: outfit_field(p) + TRIM_W(p), trimP)], dress)
++else:
++    split_loft(body_rings, outfit_field, skin, dress)
++
++# ZOE-LOOK-38: the belt at her natural waist (0.610-0.630 H), black, 4 mm proud, with a lip turned in at the top and
++# the foot (thickness, no paper edge), and a square silver buckle in front (a frame of four bars round the belt)
++if LOOK38:
++    BELT = (0.609, 0.631, 0.0042)   # (foot, top, how far proud: m)
++
++    def belt_ring(y, o):
++        hw, zf, zb = sec(y)
++        return ring(y * ZH, hw * ZH + o, zf * ZH + o, zb * ZH - o, NB, 0.72)
++    beltP = b.P('belt', COL['belt'], w_body, 40)
++    loft(beltP, [belt_ring(BELT[0], 0.0004), belt_ring(BELT[0], BELT[2]), belt_ring(BELT[1], BELT[2]), belt_ring(BELT[1], 0.0004)])
++    bk = b.P('buckle', COL['silver'], w_body, 30)
++    by, bz = (BELT[0] + BELT[1]) / 2 * ZH, sec((BELT[0] + BELT[1]) / 2)[1] * ZH + BELT[2]
++    BO, BI, BD = 0.0225, 0.0125, 0.0045   # (outer half, inner half, depth: m)
++    for x0, x1, y0, y1 in ((-BO, BO, BI, BO), (-BO, BO, -BO, -BI), (-BO, -BI, -BI, BI), (BI, BO, -BI, BI)):
++        box(bk, x0, x1, by + y0, by + y1, bz - 0.001, bz + BD)
+ 
+ # ------------------------------------------------------------------ the trouser legs and the long pointed shoes
+ for s_, sx in (('L', 1), ('R', -1)):
+@@ -323,7 +427,9 @@ ARM = [   # (u along the arm: 0 the shoulder, 0.5 the elbow, 1 the wrist; half-w
+     (0.5, 0.034, 0.038), (0.58, 0.038, 0.041), (0.66, 0.041, 0.042), (0.8, 0.033, 0.036), (0.93, 0.023, 0.029),
+     (1.0, 0.0195, 0.026),
+ ]
+-ARM_N = 12
++ARMHOLE = (-0.06, 0.0)           # (ZOE-LOOK-38: the armhole trim along the arm, u)
++BANGLE = (0.86, 0.90, 0.0045)     # (ZOE-LOOK-38: the bangle along the forearm, u, and how far it stands off the skin: m)
++ARM_N = 14 if LOOK38 else 12   # (ZOE-LOOK-38: 14 sides, a rounder arm outline)
+ 
+ 
+ def build_hand(part, el, hd, sx, lines=None):
+@@ -453,6 +559,44 @@ for s_, sx in (('L', 1), ('R', -1)):
+     cen = sum((Vector(arm.v[i]) for i in f0), Vector()) / len(f0)
+     if (b_ - a_).cross(c_ - a_).dot(cen - along(ARM[1][0])) < 0:
+         arm.f = [list(reversed(f)) for f in arm.f]
++    if LOOK38:
++        # ZOE-LOOK-38: the armhole's green trim, a band round the top of the arm where it leaves the top (on the arm's
++        # weights, so it rides the shoulder like a cap sleeve's edge), and a green bangle on the wrist (on the forearm)
++        def arm_frame(u):
++            c = along(u)
++            d = (along(min(1.0, u + 0.06)) - along(max(-0.06, u - 0.06))).normalized()
++            across = Vector((d.y, -d.x, 0.0)).normalized()
++            dep = d.cross(across).normalized()
++            if dep.z < 0:
++                dep = -dep
++            return c, d, across, dep
++
++        def arm_r(u):
++            for a_, c_ in zip(ARM, ARM[1:]):
++                if a_[0] <= u <= c_[0]:
++                    t = (u - a_[0]) / (c_[0] - a_[0])
++                    return a_[1] + (c_[1] - a_[1]) * t, a_[2] + (c_[2] - a_[2]) * t
++            return ARM[-1][1:]
++
++        def band(part, u0, u1, out, n=ARM_N, au=None):
++            rr = []
++            for u, o in ((u0, 0.0003), (u0, out), (u1, out), (u1, 0.0003)):
++                c, d, across, dep = arm_frame(u)
++                ra, rd = arm_r(u)
++                q = [tuple(c + across * (math.cos(2 * math.pi * i / n) * (ra + o)) + dep * (math.sin(2 * math.pi * i / n) * (rd + o))) for i in range(n)]
++                if au is not None:
++                    for v in q:
++                        au[tuple(round(x, 6) for x in v)] = u
++                rr.append(q)
++            k0 = len(part.f)
++            loft(part, rr)
++            f0 = part.f[k0 + n]   # (the outer face: outward)
++            a_, b_, c_ = (Vector(part.v[i]) for i in f0[:3])
++            cen = sum((Vector(part.v[i]) for i in f0), Vector()) / len(f0)
++            if (b_ - a_).cross(c_ - a_).dot(cen - arm_frame((u0 + u1) / 2)[0]) < 0:
++                part.f = part.f[:k0] + [list(reversed(f)) for f in part.f[k0:]]
++        band(b.P('armtrim' + s_, COL['trim'], w_arm, 50), ARMHOLE[0], ARMHOLE[1], 0.0032, au=AU)
++        band(b.P('bangle' + s_, COL['trim'], 'el' + s_, 60), BANGLE[0], BANGLE[1], BANGLE[2], 12)
+     el, hd = tuple(E0), tuple(H0)
+     build_hand(b.P('hand' + s_, COL['skin'], 'hand' + s_, 55), Vector(el), Vector(hd), sx, b.P('fingers' + s_, COL['skinLine'], 'hand' + s_, 30))
+ 
+@@ -465,7 +609,7 @@ NECK_CORD_K = 5   # (NECKLACE-ZOE: the cord's points per span between its contro
+ # round the back of the neck to 0.826 H (the original's nape points are at its height, 0.834 H, but 3.5 cm further back,
+ # and its side points out on the shoulder): the nape, then the neck's side
+ NECK_CORD_BACK = [(0.012, 0.834, -0.036), (0.0235, 0.829, -0.012)]
+-HK = 13   # points per half-contour after resampling
++HK = 15 if LOOK38 else 13   # points per half-contour after resampling (ZOE-LOOK-38: 15, 28 round the head, was 24)
+ 
+ 
+ def resample(half, k):
+@@ -481,17 +625,54 @@ def resample(half, k):
+     return out
+ 
+ 
++# ZOE-LOOK-38: the hairline (H) by the angle round the head from the front (0) to the back (180 degrees): high on the
++# forehead, down past the temples, behind where the ears would be (the earrings hang in front of it) and low at the nape
++HAIRLINE = [(0, 0.958), (30, 0.956), (60, 0.949), (85, 0.937), (100, 0.925), (120, 0.905), (145, 0.889), (180, 0.881)]
++
++
++def hairline(p):
++    th = math.degrees(math.atan2(abs(p[0]), p[2] + 0.025))
++    for (a0, y0), (a1, y1) in zip(HAIRLINE, HAIRLINE[1:]):
++        if th <= a1:
++            return y0 + (y1 - y0) * (th - a0) / (a1 - a0)
++    return HAIRLINE[-1][1]
++
++
+ head_rings = []
+ for y, half in (ZOE_HEAD_LBA2 if os.environ.get('ZOE_HEAD_LBA2') else head_design()):
+     h = resample(half, HK)
+     head_rings.append([m((x, y, z)) for x, z in h] + [m((-x, y, z)) for x, z in reversed(h[1:-1])])
+ hpart = b.P('head', COL['skin'], 'head', 70)
+-loft(hpart, head_rings)
+-n_, o_ = len(head_rings[0]), len(hpart.v)
+-hpart.add([m(CHIN if os.environ.get('ZOE_HEAD_LBA2') else CHIN2), m(CROWN)], [])
+-hpart.f += [[(i + 1) % n_, i, o_] for i in range(n_)] + [[(len(head_rings) - 1) * n_ + i, (len(head_rings) - 1) * n_ + (i + 1) % n_, o_ + 1] for i in range(n_)]
++if LOOK38:
++    # ZOE-LOOK-38: her hair, swept up from the face, the temples and the nape to the tie at the crown: the head's own
++    # sections cut along a hairline into skin and hair (one surface, no shell over a bald skull), the hair side raised
++    # 3.5-5.5 mm off the skull (its thickness, rising from the hairline) and lit with real normals
++    hpart_hair = b.P('hair', COL['hair'], 'head', 70)
++    hair_field = lambda p: p[1] - hairline(p)
++    HC = Vector(m((0.0, 0.935, -0.03)))
++    for r in head_rings:
++        for i, v in enumerate(r):
++            f = hair_field(tuple(c / ZH for c in v))
++            k = smooth(-0.003, 0.012, f)
++            if k > 0:
++                d = (Vector(v) - HC).normalized()
++                lift = 0.0035 + 0.002 * smooth(0.95 * ZH, 0.99 * ZH, v[1])
++                r[i] = tuple(round(c, 6) for c in (Vector(v) + d * (lift * k)))
++    crown = Vector(m(CROWN)) + (Vector(m(CROWN)) - HC).normalized() * 0.0055
++    n_ = len(head_rings[0])
++    polys = ring_quads(head_rings)
++    polys += [[head_rings[0][(i + 1) % n_], head_rings[0][i], m(CHIN2)] for i in range(n_)]
++    polys += [[head_rings[-1][i], head_rings[-1][(i + 1) % n_], tuple(crown)] for i in range(n_)]
++    split_polys(polys, [(hair_field, hpart_hair)], hpart)
++    htree = BVHTree.FromPolygons([Vector(v) for v in hpart.v + hpart_hair.v], hpart.f + [[i + len(hpart.v) for i in f] for f in hpart_hair.f])
++else:
++    loft(hpart, head_rings)
++    n_, o_ = len(head_rings[0]), len(hpart.v)
++    hpart.add([m(CHIN if os.environ.get('ZOE_HEAD_LBA2') else CHIN2), m(CROWN)], [])
++    hpart.f += [[(i + 1) % n_, i, o_] for i in range(n_)] + [[(len(head_rings) - 1) * n_ + i, (len(head_rings) - 1) * n_ + (i + 1) % n_, o_ + 1] for i in range(n_)]
+ # the face features lie on the head's surface: ray-cast from the front onto it
+-htree = BVHTree.FromPolygons([Vector(v) for v in hpart.v], hpart.f)
++if not LOOK38:
++    htree = BVHTree.FromPolygons([Vector(v) for v in hpart.v], hpart.f)
+ 
+ 
+ def on_face(x, y, lift=0.0025):
+@@ -558,10 +739,10 @@ else:
+     full = lambda L: [(-x, y) for x, y in reversed(L[1:])] + list(L)
+     T, M, Lo = full(LIPS2_TOP), full(LIPS2_MID), full(LIPS2_LOW)
+     for k in range(len(T) - 1):
+-        for q in ([T[k], T[k + 1], M[k + 1], M[k]], [M[k], M[k + 1], Lo[k + 1], Lo[k]]):
++        for q, lift in (([T[k], T[k + 1], M[k + 1], M[k]], 0.0034), ([M[k], M[k + 1], Lo[k + 1], Lo[k]], 0.0040)):
+             q = [p for i, p in enumerate(q) if p not in q[:i]]
+             if len(q) >= 3:
+-                face_poly(lips, q, 0.003, 2)
++                face_poly(lips, q, lift if LOOK38 else 0.003, 2)   # (ZOE-LOOK-38: the lower lip fuller, further out)
+     # the line between the lips (FACES-HANDS: now her talking mouth). Its own small mesh on the head bone, drawn at its open
+     # size, a dark lens set between the two lips (the lips stay on the face, red above and below it), and scaled in y by the
+     # game to the same hair-thin line when she is silent (rest 0.16) and up while she speaks (rig.js, voice.js).
+@@ -595,7 +776,7 @@ else:
+     npart.add([p for r in nrows for p in r], nf)
+     # brows
+     for sxx in (1, -1):
+-        strip(feat('brow', COL['brown']), [(sxx * x, y) for x, y in BROW], 0.0024, 0.003)
++        strip(feat('brow', COL['brow' if LOOK38 else 'brown']), [(sxx * x, y) for x, y in BROW], 0.0021 if LOOK38 else 0.0024, 0.003)
+ for sxx in (1, -1):
+     if LBA2_FACE:
+         face_poly(feat('lid', COL['brown']), [(sxx * x, y) for x, y in LID], 0.004, 3)
+@@ -626,36 +807,77 @@ for sxx in (1, -1):
+             out.append((x, min(max(y, yc - h), yc + h)))
+         return out
+     pv = on_face(cx, ey, 0.0042)
+-    b.eye(pv, [([on_face(x, y, 0.0042) for x, y in white], COL['white']),
++    if LOOK38:
++        # ZOE-LOOK-38: the bigger eye, all in the eye's group (the blink squashes it whole, lid and lashes with it, to the
++        # line across its middle): the white, a larger blue iris looking a touch inward, the pupil, a catch-light (the
++        # same upper side on both eyes), a heavy upper lid in the skin's darker shade over the top of the white and the
++        # iris, the lash line along its edge, thickening to a flick past the outer corner, three short lashes there
++        top = lambda u: ey + eh * math.sqrt(max(0.0, 1 - u * u)) * (1 - 0.18 * u * sxx) + sl * ew * u * sxx
++        mid = lambda u: ey + sl * ew * u * sxx
++        edge = lambda u: mid(u) + (top(u) - mid(u)) * 0.5
++        outer = lambda u: max(0.0, u * sxx)
++        us = [sxx * (i / 8 * 2 - 1) for i in range(9)]          # (from the inner corner to the outer one)
++        us.sort(key=lambda u: sxx * u)
++        white = [alm(2 * math.pi * k / 18) for k in range(18)]
++        ic = (cx - sxx * 0.0008, ey + 0.0006)
++        lid_lo = [(cx + u * ew * 1.03, edge(u)) for u in us]
++        lid_hi = [(cx + u * ew * 1.06, max(top(u), edge(u)) + 0.0016) for u in us]
++        lash_lo = [(x, y - 0.0003) for x, y in lid_lo]
++        lash_hi = [(x + sxx * 0.0022 * outer(u) ** 3, y + 0.0011 + 0.0013 * outer(u) ** 2) for (x, y), u in zip(lid_lo, us)]
++        lash_lo.append((cx + sxx * ew * 1.30, ey + sl * ew * 1.2 + 0.0034))   # (the flick's point)
++        lash_hi.append(lash_lo[-1])
++        cl = (ic[0] - 0.0021, ic[1] + 0.0024)
++        quads = [([on_face(x, y, 0.0042) for x, y in white], COL['white']),
++                 ([on_face(x, y, 0.0050) for x, y in clipped(0.0064, 14)], COL['iris']),
++                 ([on_face(x, y, 0.0056) for x, y in clipped(0.0030, 10)], COL['pupil']),
++                 ([on_face(cl[0] + 0.0012 * math.cos(2 * math.pi * k / 6), cl[1] + 0.0012 * math.sin(2 * math.pi * k / 6), 0.0060) for k in range(6)], COL['catch']),
++                 ([on_face(x, y, 0.0063) for x, y in lid_lo + list(reversed(lid_hi))], COL['lidSkin'], 'strip'),
++                 ([on_face(x, y, 0.0067) for x, y in lash_lo + list(reversed(lash_hi))], COL['lash'], 'strip')]
++        for u0 in (0.45, 0.68, 0.88):   # (the lashes: short dark wedges out and up from the lid's edge)
++            u0 *= sxx
++            bx, by_ = cx + u0 * ew, edge(u0) + 0.0008
++            quads.append(([on_face(bx - 0.0008, by_, 0.0067), on_face(bx + 0.0008, by_, 0.0067),
++                           on_face(bx + sxx * (0.0016 + 0.0022 * abs(u0)), by_ + 0.0036, 0.0067)], COL['lash']))
++        b.eye(pv, quads)
++        # the lid's crease on the face above it (stays when she blinks)
++        crease = [(cx + u * ew * 0.95, top(u) + 0.0032 + 0.0006 * outer(u)) for u in us[1:]]
++        strip(feat('crease', COL['brown']), crease, 0.0007, 0.0030)
++    if not LOOK38:
++      b.eye(pv, [([on_face(x, y, 0.0042) for x, y in white], COL['white']),
+                ([on_face(x, y, 0.0050) for x, y in clipped(0.0049, 12)], COL['iris']),
+                ([on_face(x, y, 0.0056) for x, y in clipped(0.0024, 8)], COL['pupil'])])
+-    # the lid line along the almond's upper edge, a small flick out past the outer corner
+-    upper = [alm(math.pi - math.pi * k / 6) if sxx > 0 else alm(math.pi * k / 6) for k in range(7)]
+-    upper = sorted(upper, key=lambda p: sxx * p[0])
+-    upper.append((upper[-1][0] + sxx * 0.0035, upper[-1][1] + 0.0022))
+-    strip(feat('lid', COL['brown']), upper, 0.0016, 0.0047)
++      # the lid line along the almond's upper edge, a small flick out past the outer corner
++      upper = [alm(math.pi - math.pi * k / 6) if sxx > 0 else alm(math.pi * k / 6) for k in range(7)]
++      upper = sorted(upper, key=lambda p: sxx * p[0])
++      upper.append((upper[-1][0] + sxx * 0.0035, upper[-1][1] + 0.0022))
++      strip(feat('lid', COL['brown']), upper, 0.0016, 0.0047)
+     # the earring: a teardrop hoop hanging from the ear's place, in the head's side plane
+     exx, ehy, ez, er, edrop = EAR2
+     ctr_y = ehy - edrop + er
++    NE = 12 if LOOK38 else 14   # (ZOE-LOOK-38: 12 segments round the smaller-section gold hoop)
+     loop = []
+-    for k in range(14):
+-        t = 2 * math.pi * k / 14
++    for k in range(NE):
++        t = 2 * math.pi * k / NE
++        if LOOK38:   # (ZOE-LOOK-38: a round gold hoop hanging from the hook, a little off the side of the head)
++            loop.append(m((sxx * (exx + 0.0012), ehy - er + er * math.cos(t), ez + er * math.sin(t))))
++            continue
+         z, y = ez + er * math.sin(t), ctr_y - er * math.cos(t)
+         s_top = max(0.0, -math.cos(t))            # (the upper half drawn in and up to the hook)
+         z = ez + (z - ez) * (1 - 0.75 * s_top ** 1.5)
+         y = y + s_top ** 1.5 * (ehy - (ctr_y + er))
+         loop.append(m((sxx * exx, y, z)))
+-    ep = b.P('earring', COL['blue'], 'head', 60)
++    ep = b.P('earring', COL['gold' if LOOK38 else 'blue'], 'head', 60)
+     rings_e = []
+-    for k in range(14):
+-        p0, pp, pn = Vector(loop[k]), Vector(loop[k - 1]), Vector(loop[(k + 1) % 14])
++    ER = 0.0028 if LOOK38 else 0.0032
++    for k in range(NE):
++        p0, pp, pn = Vector(loop[k]), Vector(loop[k - 1]), Vector(loop[(k + 1) % NE])
+         tg = (pn - pp).normalized()
+         u = Vector((1.0, 0.0, 0.0))
+         w = tg.cross(u).normalized()
+-        rings_e.append([tuple(p0 + u * (math.cos(2 * math.pi * i / 4) * 0.0032) + w * (math.sin(2 * math.pi * i / 4) * 0.0032)) for i in range(4)])
+-    for k in range(14):
+-        a_, c_ = rings_e[k], rings_e[(k + 1) % 14]
+-        mid_ = (Vector(loop[k]) + Vector(loop[(k + 1) % 14])) / 2
++        rings_e.append([tuple(p0 + u * (math.cos(2 * math.pi * i / 4) * ER) + w * (math.sin(2 * math.pi * i / 4) * ER)) for i in range(4)])
++    for k in range(NE):
++        a_, c_ = rings_e[k], rings_e[(k + 1) % NE]
++        mid_ = (Vector(loop[k]) + Vector(loop[(k + 1) % NE])) / 2
+         for i in range(4):
+             q = [a_[i], a_[(i + 1) % 4], c_[(i + 1) % 4], c_[i]]
+             v0, v1, v2 = (Vector(x) for x in q[:3])
+@@ -664,7 +886,8 @@ for sxx in (1, -1):
+             ep.add(q, [[0, 1, 2, 3]])
+ 
+ # ------------------------------------------------------------------ the necklace: laid on the skin round the neck
+-nk = b.P('necklace', COL['blue'], lambda p: {'torso': 1 - smooth(0.80 * ZH, 0.84 * ZH, p[1]), 'neck': smooth(0.80 * ZH, 0.84 * ZH, p[1])}, 30)
++NR = 0.0038 if LOOK38 else 0.0045   # (the cord's radius; ZOE-LOOK-38: a green cord, a little finer)
++nk = b.P('necklace', COL['trim' if LOOK38 else 'blue'], lambda p: {'torso': 1 - smooth(0.80 * ZH, 0.84 * ZH, p[1]), 'neck': smooth(0.80 * ZH, 0.84 * ZH, p[1])}, 30)
+ if os.environ.get('ZOE_NECKLACE_OLD'):   # (the necklace before NECKLACE-ZOE, for comparison)
+     btree = BVHTree.FromPolygons([Vector(v) for v in skin.v + dress.v], skin.f + [[i + len(skin.v) for i in f] for f in dress.f])
+     pts = NECKLACE + [(-x, y, z) for x, y, z in reversed(NECKLACE[:-1])]
+@@ -688,8 +911,12 @@ else:
+     # of its points laid on the nearest of the neck, the skin and the dress (the cord's radius + 1.5 mm off the surface),
+     # smoothed along the cord and laid again, and swept
+     # as one 5-sided cord with no joints or end caps. The same colour, weights, width and one part as before.
+-    btree = BVHTree.FromPolygons([Vector(v) for v in skin.v + dress.v + neckP.v],
+-                                 skin.f + [[i + len(skin.v) for i in f] for f in dress.f] + [[i + len(skin.v) + len(dress.v) for i in f] for f in neckP.f])
++    surf = [skin, dress, neckP] + ([trimP] if LOOK38 else [])   # (ZOE-LOOK-38: the neck's trim is part of the top's surface)
++    sv, sf = [], []
++    for part_ in surf:
++        sf += [[i + len(sv) for i in f] for f in part_.f]
++        sv += [Vector(v) for v in part_.v]
++    btree = BVHTree.FromPolygons(sv, sf)
+     half = NECK_CORD_BACK + NECKLACE[2:]                                       # nape L, side L, collarbone L, the V (H)
+     ctrl = half + [(-x, y, z) for x, y, z in reversed(half[:-1])]              # … collarbone R, side R, nape R
+     nC = len(ctrl)
+@@ -700,7 +927,7 @@ else:
+             t = j / NECK_CORD_K
+             t2, t3 = t * t, t * t * t
+             path.append(Vector(m(tuple(0.5 * (2 * b_[q] + (c_[q] - a_[q]) * t + (2 * a_[q] - 5 * b_[q] + 4 * c_[q] - d_[q]) * t2 + (3 * b_[q] - a_[q] - 3 * c_[q] + d_[q]) * t3) for q in range(3)))))
+-    CLEAR = 0.0045 + 0.0015
++    CLEAR = NR + 0.0015
+ 
+     def lay_on(p):
+         # onto the nearest point of the neck, the skin or the dress, the cord's radius + 1.5 mm off it along the surface's
+@@ -723,7 +950,7 @@ else:
+         tng = (lay[(i + 1) % nL] - lay[(i - 1) % nL]).normalized()
+         rad = Vector((p.x, 0.0, p.z + 0.03)); rad = (rad - tng * rad.dot(tng)).normalized()   # (out from the neck's axis)
+         bi = tng.cross(rad).normalized()
+-        ringsN.append([tuple(p + rad * (0.0045 * math.cos(2 * math.pi * k / 5)) + bi * (0.0045 * math.sin(2 * math.pi * k / 5))) for k in range(5)])
++        ringsN.append([tuple(p + rad * (NR * math.cos(2 * math.pi * k / 5)) + bi * (NR * math.sin(2 * math.pi * k / 5))) for k in range(5)])
+     vN = [q for r in ringsN for q in r]
+     fN = []
+     for i in range(nL):
+@@ -736,6 +963,26 @@ else:
+     if (q0[1] - q0[0]).cross(q0[2] - q0[0]).dot((q0[0] + q0[2]) / 2 - lay[0]) < 0:
+         fN = [list(reversed(f)) for f in fN]
+     nk.add(vN, fN, angle=75)
++    if LOOK38:
++        # ZOE-LOOK-38: a round dark pendant hanging from the cord's lowest point in front, a flat lens lying on the chest
++        fr = max((p for p in lay if p.z > 0), key=lambda p: -p.y + 4 * -abs(p.x))
++        PR = 0.0115
++        c0 = fr + Vector((0.0, -PR - NR * 0.5, 0.0))
++        hit = btree.find_nearest(c0)
++        nrm = Vector(hit[1]) if hit[0] is not None else Vector((0, 0, 1))
++        if nrm.z < 0:
++            nrm = -nrm
++        c0 = (Vector(hit[0]) + nrm * (0.0045 + 0.0015)) if hit[0] is not None else c0
++        pd = b.P('pendant', COL['pendant'], 'torso', 60)
++        k0 = len(pd.v)
++        sphere(pd, (0.0, 0.0, 0.0), PR, 10, 6, s=(1.0, 1.0, 0.38))
++        # (turn it to face along the chest's normal there, then move it to its place)
++        zax = nrm.normalized()
++        xax = Vector((1.0, 0.0, 0.0))
++        yax = zax.cross(xax).normalized()
++        xax = yax.cross(zax).normalized()
++        pd.v[k0:] = [tuple(c0 + xax * v[0] + yax * v[1] + zax * v[2]) for v in pd.v[k0:]]
++        tube(pd, tuple(c0 + yax * (PR * 0.85)), tuple(fr), 0.0016, 0.0016, 5)   # (the bail up to the cord)
+ 
+ 
+ # ------------------------------------------------------------------ the bun: one golden mass through the three spheres
+@@ -782,32 +1029,121 @@ def w_bun(p):
+     return {'head': 1.0}   # (CHAR-OPEN: the bun rides the head; it was passed along tail0..2 like a ponytail)
+ 
+ 
+-bun = b.P('bun', COL['hair'], w_bun, 80)
+-bun.normal = HAIR_UP
+-stations, front, tipp = bun_sweep()
+-hv, hf, us = [], [], []
+-for (cy, cz), (ty, tz), r, u in stations:
+-    ny, nz = -tz, ty
+-    for i in range(BUN_M):
+-        a = 2 * math.pi * i / BUN_M
+-        hv.append(m((r * math.sin(a), cy + ny * r * math.cos(a), cz + nz * r * math.cos(a))))
+-        us.append(u)
+-nr = len(stations)
+-for j in range(nr - 1):
+-    for i in range(BUN_M):
+-        a, c_ = j * BUN_M + i, j * BUN_M + (i + 1) % BUN_M
+-        hf.append([a, c_, c_ + BUN_M, a + BUN_M])
+-hv.append(m((0.0, front[0], front[1])))
+-us.append(stations[0][3] - 0.0001)
+-hv.append(m((0.0, tipp[0], tipp[1])))
+-us.append(2.6)
+-f0, f1 = len(hv) - 2, len(hv) - 1
+-hf += [[f0, (i + 1) % BUN_M, i] for i in range(BUN_M)]
+-o = (nr - 1) * BUN_M
+-hf += [[f1, o + i, o + (i + 1) % BUN_M] for i in range(BUN_M)]
+-bun.add(hv, hf)
+-for p, u in zip(bun.v, us):
+-    BUN_U[tuple(round(c, 6) for c in p)] = u
++# ZOE-LOOK-38: the ponytail. Tied high at the back of the crown in a green band, it rises tall, leans a little forward at
++# the top, arcs over and falls behind her head, and its tip curls under and in. Its middle line runs past the skeleton's
++# three ponytail bones (tail0-2, children of the head, which rig.js swings with lag), so its base rides the head and the
++# rest follows through; it stays 5-8 cm clear of the back of her head at rest. (y, z, radius) in H on the middle plane.
++PONY = [(0.972, -0.060, 0.016, 0.0), (0.998, -0.066, 0.0165, 0.0), (1.020, -0.069, 0.024, 0.0), (1.038, -0.082, 0.030, 0.001),
++        (1.045, -0.104, 0.032, 0.003), (1.037, -0.126, 0.030, 0.006), (1.016, -0.143, 0.026, 0.010), (0.987, -0.155, 0.020, 0.015),
++        (0.958, -0.162, 0.015, 0.019), (0.936, -0.158, 0.010, 0.022), (0.927, -0.146, 0.0065, 0.023), (0.935, -0.135, 0.0025, 0.023)]
++# ((y, z, radius, x) in H: past the top it drifts a little to her left, so from the front it reads as a curve, not a pin)
++PONY_N, PONY_W, PONY_D = 12, 1.12, 0.9   # (sides; the section wider across than deep)
++TIE = (0.998, 0.0125, 0.0035)            # (the band: from where it starts (y, H), how long along the tail (H), how proud (m))
++
++
++def pony_build():
++    st = catmull(PONY, 2)
++    ss = [0.0]
++    for p0, p1 in zip(st, st[1:]):
++        ss.append(ss[-1] + math.dist(p0[:2], p1[:2]))
++    tg = []
++    for i in range(len(st)):
++        a_, c_ = st[max(0, i - 1)], st[min(len(st) - 1, i + 1)]
++        d = (c_[0] - a_[0], c_[1] - a_[1])
++        L = math.hypot(*d)
++        tg.append((d[0] / L, d[1] / L))
++
++    def at(sv):
++        for i in range(len(ss) - 1):
++            if ss[i] <= sv <= ss[i + 1]:
++                t = (sv - ss[i]) / (ss[i + 1] - ss[i])
++                c = tuple(st[i][k] + (st[i + 1][k] - st[i][k]) * t for k in range(4))
++                d = (tg[i][0] + (tg[i + 1][0] - tg[i][0]) * t, tg[i][1] + (tg[i + 1][1] - tg[i][1]) * t)
++                L = math.hypot(*d)
++                return c, (d[0] / L, d[1] / L)
++        return st[-1], tg[-1]
++
++    def section(c, d, r, n, x0=0.0):
++        ny, nz = -d[1], d[0]
++        return [m((x0 + r * PONY_W * math.cos(2 * math.pi * i / n), c[0] + ny * r * PONY_D * math.sin(2 * math.pi * i / n), c[1] + nz * r * PONY_D * math.sin(2 * math.pi * i / n))) for i in range(n)]
++    bonez = {k: (B[k]['p'][1] / ZH, B[k]['p'][2] / ZH) for k in ('tail0', 'tail1', 'tail2')}
++    s_of = {k: ss[min(range(len(st)), key=lambda i: math.dist(st[i][:2], q))] for k, q in bonez.items()}
++    s_tie = ss[min(range(len(st)), key=lambda i: abs(st[i][0] - TIE[0]) + (99 if i > len(st) // 2 else 0))]
++    plan = [('head', s_tie), ('tail0', s_of['tail0']), ('tail1', s_of['tail1']), ('tail2', s_of['tail2'])]
++
++    def wts(sv):
++        if sv <= plan[0][1]:
++            return {'head': 1.0}
++        for (b0, s0), (b1, s1) in zip(plan, plan[1:]):
++            if sv <= s1:
++                t = smooth(s0, s1, sv)
++                return {k: v for k, v in ((b0, 1 - t), (b1, t)) if v > 1e-4}
++        return {'tail2': 1.0}
++    PU = {}
++    pt = b.P('ponytail', COL['hair'], lambda p: PU[tuple(round(c, 6) for c in p)], 80)
++    rings_p = []
++    for (y, z, r, x0), d, sv in zip(st, tg, ss):
++        rr = section((y, z), d, r, PONY_N, x0)
++        for q in rr:
++            PU[tuple(round(c, 6) for c in q)] = wts(sv)
++        rings_p.append(rr)
++    loft(pt, rings_p, cap_top=True)
++    tip = pt.v[-1]
++    PU[tuple(round(c, 6) for c in tip)] = wts(ss[-1])
++    f0 = pt.f[PONY_N * 3]
++    a_, b_, c_ = (Vector(pt.v[i]) for i in f0[:3])
++    cen = sum((Vector(pt.v[i]) for i in f0), Vector()) / len(f0)
++    j3 = 3
++    if (b_ - a_).cross(c_ - a_).dot(cen - Vector(m((st[j3][3], st[j3][0], st[j3][1])))) < 0:
++        pt.f = [list(reversed(f)) for f in pt.f]
++    # the band: a green ring round the tail where it is tied, with a lip at either end (thickness)
++    bd = b.P('hairband', COL['trim'], lambda p: PU[tuple(round(c, 6) for c in p)], 50)   # (weighted as the tail under it)
++    rb = []
++    for sv, o in ((s_tie, 0.0004), (s_tie, TIE[2]), (s_tie + TIE[1], TIE[2]), (s_tie + TIE[1], 0.0004)):
++        c, d = at(sv)
++        rb.append(section((c[0], c[1]), d, c[2] + o / ZH, PONY_N, c[3]))
++        for q in rb[-1]:
++            PU[tuple(round(x, 6) for x in q)] = wts(sv)
++    k0 = len(bd.f)
++    loft(bd, rb)
++    f0 = bd.f[k0 + PONY_N]
++    a_, b_, c_ = (Vector(bd.v[i]) for i in f0[:3])
++    cen = sum((Vector(bd.v[i]) for i in f0), Vector()) / len(f0)
++    cc = at(s_tie + TIE[1] / 2)[0]
++    if (b_ - a_).cross(c_ - a_).dot(cen - Vector(m((cc[3], cc[0], cc[1])))) < 0:
++        bd.f = bd.f[:k0] + [list(reversed(f)) for f in bd.f[k0:]]
++    return {k: round(v, 4) for k, v in s_of.items()}, round(s_tie, 4), round(ss[-1], 4)
++
++
++if LOOK38:
++    print('ponytail (bone arc positions, tie, length; H):', pony_build())
++else:
++    bun = b.P('bun', COL['hair'], w_bun, 80)
++    bun.normal = HAIR_UP
++    stations, front, tipp = bun_sweep()
++    hv, hf, us = [], [], []
++    for (cy, cz), (ty, tz), r, u in stations:
++        ny, nz = -tz, ty
++        for i in range(BUN_M):
++            a = 2 * math.pi * i / BUN_M
++            hv.append(m((r * math.sin(a), cy + ny * r * math.cos(a), cz + nz * r * math.cos(a))))
++            us.append(u)
++    nr = len(stations)
++    for j in range(nr - 1):
++        for i in range(BUN_M):
++            a, c_ = j * BUN_M + i, j * BUN_M + (i + 1) % BUN_M
++            hf.append([a, c_, c_ + BUN_M, a + BUN_M])
++    hv.append(m((0.0, front[0], front[1])))
++    us.append(stations[0][3] - 0.0001)
++    hv.append(m((0.0, tipp[0], tipp[1])))
++    us.append(2.6)
++    f0, f1 = len(hv) - 2, len(hv) - 1
++    hf += [[f0, (i + 1) % BUN_M, i] for i in range(BUN_M)]
++    o = (nr - 1) * BUN_M
++    hf += [[f1, o + i, o + (i + 1) % BUN_M] for i in range(BUN_M)]
++    bun.add(hv, hf)
++    for p, u in zip(bun.v, us):
++        BUN_U[tuple(round(c, 6) for c in p)] = u
+ 
+ os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
+ tris = b.export(OUT)

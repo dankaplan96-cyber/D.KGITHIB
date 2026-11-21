@@ -1,0 +1,1258 @@
+{
+ "families": {
+  "ball": {
+   "before": {
+    "peak": -22.2,
+    "lufs50": -29.6,
+    "lufsM": -38.6,
+    "click": 0.025,
+    "tail": 0.0001,
+    "durMs": 10871
+   },
+   "after": {
+    "peak": -22.3,
+    "lufs50": -29.4,
+    "lufsM": -38.3,
+    "click": 0.018,
+    "tail": 0.0002,
+    "durMs": 10874
+   },
+   "events": 20
+  },
+  "sword": {
+   "before": {
+    "peak": -17.6,
+    "lufs50": -23.8,
+    "lufsM": -31.8,
+    "click": 0.026,
+    "tail": 0.0003,
+    "durMs": 9621
+   },
+   "after": {
+    "peak": -18.3,
+    "lufs50": -26.1,
+    "lufsM": -34.1,
+    "click": 0.003,
+    "tail": 0.0003,
+    "durMs": 9590
+   },
+   "events": 22
+  },
+  "moves": {
+   "before": {
+    "peak": -19,
+    "lufs50": -27.3,
+    "lufsM": -33.4,
+    "click": 0.048,
+    "tail": 0.0001,
+    "durMs": 8876
+   },
+   "after": {
+    "peak": -19.2,
+    "lufs50": -27.4,
+    "lufsM": -33.1,
+    "click": 0.01,
+    "tail": 0.0003,
+    "durMs": 11670
+   },
+   "events": 26
+  },
+  "pickups": {
+   "before": {
+    "peak": -20.7,
+    "lufs50": -26.1,
+    "lufsM": -29.5,
+    "click": 0.02,
+    "tail": 0.0001,
+    "durMs": 10620
+   },
+   "after": {
+    "peak": -20.7,
+    "lufs50": -26,
+    "lufsM": -29.4,
+    "click": 0.02,
+    "tail": 0.0021,
+    "durMs": 11690
+   },
+   "events": 21
+  }
+ },
+ "sounds": {
+  "throw": {
+   "after": {
+    "name": "throw",
+    "peak": -31,
+    "lufs50": -39.7,
+    "lufsM": -48.5,
+    "click": 0.058,
+    "tail": 0.0023,
+    "durMs": 150,
+    "spreadDb": 2.3
+   },
+   "before": {
+    "name": "throw",
+    "peak": -29.9,
+    "lufs50": -39,
+    "lufsM": -47.8,
+    "click": 0.045,
+    "tail": 0.0023,
+    "durMs": 148
+   }
+  },
+  "bounceStone": {
+   "after": {
+    "name": "bounceStone",
+    "peak": -23.9,
+    "lufs50": -31.8,
+    "lufsM": -40.8,
+    "click": 0.078,
+    "tail": 0.0001,
+    "durMs": 71,
+    "spreadDb": 2.1
+   },
+   "before": {
+    "name": "bounceGround",
+    "peak": -27,
+    "lufs50": -33.5,
+    "lufsM": -42.5,
+    "click": 0.039,
+    "tail": 0.0001,
+    "durMs": 90
+   }
+  },
+  "bounceWall": {
+   "after": {
+    "name": "bounceWall",
+    "peak": -22.4,
+    "lufs50": -29.6,
+    "lufsM": -38.7,
+    "click": 0.041,
+    "tail": 0.0001,
+    "durMs": 73,
+    "spreadDb": 1.4
+   },
+   "before": {
+    "name": "bounceWall",
+    "peak": -21.5,
+    "lufs50": -29.5,
+    "lufsM": -38.5,
+    "click": 0.053,
+    "tail": 0.0001,
+    "durMs": 69
+   }
+  },
+  "bounceWood": {
+   "after": {
+    "name": "bounceWood",
+    "peak": -23.3,
+    "lufs50": -28.8,
+    "lufsM": -37.8,
+    "click": 0.034,
+    "tail": 0.0001,
+    "durMs": 94,
+    "spreadDb": 1.3
+   },
+   "before": {
+    "name": "bounceGround",
+    "peak": -25.7,
+    "lufs50": -32.8,
+    "lufsM": -41.8,
+    "click": 0.025,
+    "tail": 0.0001,
+    "durMs": 88
+   }
+  },
+  "bounceMetal": {
+   "after": {
+    "name": "bounceMetal",
+    "peak": -24.6,
+    "lufs50": -31.5,
+    "lufsM": -40.3,
+    "click": 0.064,
+    "tail": 0.002,
+    "durMs": 135,
+    "spreadDb": 0.4
+   },
+   "before": {
+    "name": "bounceWall",
+    "peak": -22.6,
+    "lufs50": -29.4,
+    "lufsM": -38.4,
+    "click": 0.065,
+    "tail": 0.0001,
+    "durMs": 81
+   }
+  },
+  "bounceGround": {
+   "after": {
+    "name": "bounceGround",
+    "peak": -27.4,
+    "lufs50": -34.2,
+    "lufsM": -43.2,
+    "click": 0.03,
+    "tail": 0.0001,
+    "durMs": 83,
+    "spreadDb": 2
+   },
+   "before": {
+    "name": "bounceGround",
+    "peak": -26.8,
+    "lufs50": -34.1,
+    "lufsM": -43.1,
+    "click": 0.02,
+    "tail": 0.0001,
+    "durMs": 87
+   }
+  },
+  "ballReturn": {
+   "after": {
+    "name": "ballReturn",
+    "peak": -39.3,
+    "lufs50": -44.5,
+    "lufsM": -52.7,
+    "click": 0.004,
+    "tail": 0.0002,
+    "durMs": 184,
+    "spreadDb": 1.6
+   }
+  },
+  "catch": {
+   "after": {
+    "name": "catch",
+    "peak": -27.1,
+    "lufs50": -33.5,
+    "lufsM": -42.4,
+    "click": 0.055,
+    "tail": 0.0002,
+    "durMs": 88,
+    "spreadDb": 1.1
+   },
+   "before": {
+    "name": "catch",
+    "peak": -26,
+    "lufs50": -33.3,
+    "lufsM": -42.3,
+    "click": 0.021,
+    "tail": 0.0002,
+    "durMs": 83
+   }
+  },
+  "ballHit": {
+   "after": {
+    "name": "ballHit",
+    "peak": -24.8,
+    "lufs50": -30.3,
+    "lufsM": -38.8,
+    "click": 0.067,
+    "tail": 0.0002,
+    "durMs": 141,
+    "spreadDb": 0.7
+   },
+   "before": {
+    "name": "ballHit",
+    "peak": -25,
+    "lufs50": -30.7,
+    "lufsM": -39.2,
+    "click": 0.067,
+    "tail": 0.0002,
+    "durMs": 143
+   }
+  },
+  "hitFlesh": {
+   "after": {
+    "name": "hitFlesh",
+    "peak": -19,
+    "lufs50": -27.2,
+    "lufsM": -36.2,
+    "click": 0.024,
+    "tail": 0.0001,
+    "durMs": 69,
+    "spreadDb": 0.5
+   },
+   "before": {
+    "name": "hitFlesh",
+    "peak": -20.6,
+    "lufs50": -28,
+    "lufsM": -37,
+    "click": 0.026,
+    "tail": 0,
+    "durMs": 69
+   }
+  },
+  "ballSplash": {
+   "after": {
+    "name": "ballSplash",
+    "peak": -26.9,
+    "lufs50": -34.8,
+    "lufsM": -43,
+    "click": 0.054,
+    "tail": 0.0001,
+    "durMs": 172,
+    "spreadDb": 2.7
+   }
+  },
+  "throwDud": {
+   "after": {
+    "name": "throwDud",
+    "peak": -37.1,
+    "lufs50": -45.2,
+    "lufsM": -53.6,
+    "click": 0.052,
+    "tail": 0.0002,
+    "durMs": 146,
+    "spreadDb": 0.9
+   },
+   "before": {
+    "name": "throw",
+    "peak": -31.7,
+    "lufs50": -39,
+    "lufsM": -47.9,
+    "click": 0.056,
+    "tail": 0.0021,
+    "durMs": 156
+   }
+  },
+  "ballDud": {
+   "after": {
+    "name": "ballDud",
+    "peak": -26.2,
+    "lufs50": -33.7,
+    "lufsM": -42.7,
+    "click": 0.019,
+    "tail": 0,
+    "durMs": 75,
+    "spreadDb": 1.9
+   },
+   "before": {
+    "name": "bounceWall",
+    "peak": -22.4,
+    "lufs50": -29.2,
+    "lufsM": -38.2,
+    "click": 0.061,
+    "tail": 0.0001,
+    "durMs": 76
+   }
+  },
+  "swordDraw": {
+   "after": {
+    "name": "swordDraw",
+    "peak": -31.4,
+    "lufs50": -36.4,
+    "lufsM": -43.6,
+    "click": 0.005,
+    "tail": 0.0002,
+    "durMs": 449,
+    "spreadDb": 1
+   },
+   "before": {
+    "name": "equip",
+    "peak": -27.2,
+    "lufs50": -38.4,
+    "lufsM": -44.6,
+    "click": 0.053,
+    "tail": 0.0001,
+    "durMs": 114
+   }
+  },
+  "swing": {
+   "after": {
+    "name": "swing",
+    "peak": -33.7,
+    "lufs50": -41.7,
+    "lufsM": -50.6,
+    "click": 0.125,
+    "tail": 0.0003,
+    "durMs": 116,
+    "spreadDb": 4.1
+   },
+   "before": {
+    "name": "swing",
+    "peak": -28.2,
+    "lufs50": -39,
+    "lufsM": -47.9,
+    "click": 0.063,
+    "tail": 0.0002,
+    "durMs": 98
+   }
+  },
+  "swingHeavy": {
+   "after": {
+    "name": "swingHeavy",
+    "peak": -26.5,
+    "lufs50": -32.1,
+    "lufsM": -40.6,
+    "click": 0.042,
+    "tail": 0.0003,
+    "durMs": 159,
+    "spreadDb": 2.6
+   },
+   "before": {
+    "name": "swingHeavy",
+    "peak": -25.7,
+    "lufs50": -31.6,
+    "lufsM": -40.1,
+    "click": 0.052,
+    "tail": 0.0013,
+    "durMs": 165
+   }
+  },
+  "slashFlesh": {
+   "after": {
+    "name": "slashFlesh",
+    "peak": -19.7,
+    "lufs50": -27.8,
+    "lufsM": -36.8,
+    "click": 0.041,
+    "tail": 0,
+    "durMs": 70,
+    "spreadDb": 3.9
+   },
+   "before": {
+    "name": "hitFlesh",
+    "peak": -19.5,
+    "lufs50": -27.9,
+    "lufsM": -36.9,
+    "click": 0.024,
+    "tail": 0,
+    "durMs": 69
+   }
+  },
+  "hitWood": {
+   "after": {
+    "name": "hitWood",
+    "peak": -21.9,
+    "lufs50": -30.3,
+    "lufsM": -39.3,
+    "click": 0.044,
+    "tail": 0.0001,
+    "durMs": 71,
+    "spreadDb": 3
+   },
+   "before": {
+    "name": "hitWood",
+    "peak": -21.3,
+    "lufs50": -29.5,
+    "lufsM": -38.5,
+    "click": 0.042,
+    "tail": 0,
+    "durMs": 70
+   }
+  },
+  "clang": {
+   "after": {
+    "name": "clang",
+    "peak": -22.8,
+    "lufs50": -29.4,
+    "lufsM": -37.3,
+    "click": 0.145,
+    "tail": 0.0008,
+    "durMs": 234,
+    "spreadDb": 2.4
+   },
+   "before": {
+    "name": "clang",
+    "peak": -23.4,
+    "lufs50": -29.7,
+    "lufsM": -37.5,
+    "click": 0.168,
+    "tail": 0.0053,
+    "durMs": 235
+   }
+  },
+  "chargeFull": {
+   "after": {
+    "name": "chargeFull",
+    "peak": -28.2,
+    "lufs50": -32,
+    "lufsM": -37.6,
+    "click": 0.093,
+    "tail": 0.0003,
+    "durMs": 230,
+    "spreadDb": 0.1
+   },
+   "before": {
+    "name": "chargeFull",
+    "peak": -28.1,
+    "lufs50": -31.9,
+    "lufsM": -37.5,
+    "click": 0.092,
+    "tail": 0.0003,
+    "durMs": 229
+   }
+  },
+  "swordSheathe": {
+   "after": {
+    "name": "swordSheathe",
+    "peak": -26.7,
+    "lufs50": -36.7,
+    "lufsM": -45.4,
+    "click": 0.012,
+    "tail": 0.0001,
+    "durMs": 237,
+    "spreadDb": 2.9
+   },
+   "before": {
+    "name": "equip",
+    "peak": -27.8,
+    "lufs50": -38.7,
+    "lufsM": -44.9,
+    "click": 0.096,
+    "tail": 0.0001,
+    "durMs": 113
+   }
+  },
+  "equipFists": {
+   "after": {
+    "name": "equipFists",
+    "peak": -29.2,
+    "lufs50": -40.9,
+    "lufsM": -48,
+    "click": 0.04,
+    "tail": 0.0001,
+    "durMs": 123,
+    "spreadDb": 3.7
+   },
+   "before": {
+    "name": "equip",
+    "peak": -27.1,
+    "lufs50": -38.7,
+    "lufsM": -44.9,
+    "click": 0.071,
+    "tail": 0.0001,
+    "durMs": 114
+   }
+  },
+  "equip": {
+   "after": {
+    "name": "equip",
+    "peak": -27.7,
+    "lufs50": -38.6,
+    "lufsM": -45,
+    "click": 0.122,
+    "tail": 0.0001,
+    "durMs": 115,
+    "spreadDb": 1.2
+   },
+   "before": {
+    "name": "equip",
+    "peak": -26.8,
+    "lufs50": -38.9,
+    "lufsM": -45,
+    "click": 0.065,
+    "tail": 0.0001,
+    "durMs": 110
+   }
+  },
+  "wDart": {
+   "after": {
+    "name": "wDart",
+    "peak": -30.9,
+    "lufs50": -40.3,
+    "lufsM": -49.3,
+    "click": 0.159,
+    "tail": 0.0002,
+    "durMs": 63,
+    "spreadDb": 2.7
+   },
+   "before": {
+    "name": "old:dart",
+    "peak": -30.8,
+    "lufs50": -40.1,
+    "lufsM": -49.1,
+    "click": 0.315,
+    "tail": 0.0004,
+    "durMs": 58
+   }
+  },
+  "wLaser": {
+   "after": {
+    "name": "wLaser",
+    "peak": -25.5,
+    "lufs50": -32,
+    "lufsM": -40.8,
+    "click": 0.089,
+    "tail": 0.0002,
+    "durMs": 132,
+    "spreadDb": 0.8
+   },
+   "before": {
+    "name": "old:laser",
+    "peak": -26.2,
+    "lufs50": -32.3,
+    "lufsM": -41.1,
+    "click": 0.215,
+    "tail": 0.0004,
+    "durMs": 134
+   }
+  },
+  "wLightning": {
+   "after": {
+    "name": "wLightning",
+    "peak": -19.3,
+    "lufs50": -27,
+    "lufsM": -35,
+    "click": 0.085,
+    "tail": 0.0003,
+    "durMs": 209,
+    "spreadDb": 0.9
+   },
+   "before": {
+    "name": "old:lightning",
+    "peak": -17.7,
+    "lufs50": -23.6,
+    "lufsM": -31.6,
+    "click": 0.233,
+    "tail": 0.0005,
+    "durMs": 216
+   }
+  },
+  "punch": {
+   "after": {
+    "name": "punch",
+    "peak": -26.2,
+    "lufs50": -36.9,
+    "lufsM": -45.9,
+    "click": 0.124,
+    "tail": 0.0002,
+    "durMs": 58,
+    "spreadDb": 3.1
+   },
+   "before": {
+    "name": "punch",
+    "peak": -28,
+    "lufs50": -37.7,
+    "lufsM": -46.7,
+    "click": 0.094,
+    "tail": 0.0002,
+    "durMs": 56
+   }
+  },
+  "kick": {
+   "after": {
+    "name": "kick",
+    "peak": -25.6,
+    "lufs50": -33,
+    "lufsM": -42,
+    "click": 0.07,
+    "tail": 0.0001,
+    "durMs": 84,
+    "spreadDb": 2
+   },
+   "before": {
+    "name": "punch",
+    "peak": -27.2,
+    "lufs50": -36.6,
+    "lufsM": -45.6,
+    "click": 0.106,
+    "tail": 0.0001,
+    "durMs": 58
+   }
+  },
+  "equipGlove": {
+   "after": {
+    "name": "equipGlove",
+    "peak": -27.5,
+    "lufs50": -36.8,
+    "lufsM": -45.5,
+    "click": 0.008,
+    "tail": 0.0001,
+    "durMs": 191,
+    "spreadDb": 2.8
+   },
+   "before": {
+    "name": "equip",
+    "peak": -25.8,
+    "lufs50": -39.1,
+    "lufsM": -45.2,
+    "click": 0.053,
+    "tail": 0.0001,
+    "durMs": 108
+   }
+  },
+  "gloveJab": {
+   "after": {
+    "name": "gloveJab",
+    "peak": -25.3,
+    "lufs50": -32.6,
+    "lufsM": -41.6,
+    "click": 0.047,
+    "tail": 0.0001,
+    "durMs": 64,
+    "spreadDb": 1.2
+   },
+   "before": {
+    "name": "punch",
+    "peak": -27,
+    "lufs50": -36.8,
+    "lufsM": -45.8,
+    "click": 0.1,
+    "tail": 0.0002,
+    "durMs": 49
+   }
+  },
+  "gloveHeavy": {
+   "after": {
+    "name": "gloveHeavy",
+    "peak": -26,
+    "lufs50": -29.7,
+    "lufsM": -38.2,
+    "click": 0.037,
+    "tail": 0.0001,
+    "durMs": 203,
+    "spreadDb": 2
+   },
+   "before": {
+    "name": "swingHeavy",
+    "peak": -26.7,
+    "lufs50": -31.5,
+    "lufsM": -40,
+    "click": 0.026,
+    "tail": 0.0017,
+    "durMs": 163
+   }
+  },
+  "dodge": {
+   "after": {
+    "name": "dodge",
+    "peak": -35.5,
+    "lufs50": -43.2,
+    "lufsM": -51.4,
+    "click": 0.107,
+    "tail": 0.0001,
+    "durMs": 165,
+    "spreadDb": 5.1
+   },
+   "before": {
+    "name": "dodge",
+    "peak": -33.2,
+    "lufs50": -43.1,
+    "lufsM": -51.2,
+    "click": 0.094,
+    "tail": 0.0001,
+    "durMs": 170
+   }
+  },
+  "mode": {
+   "after": {
+    "name": "mode",
+    "peak": -26.2,
+    "lufs50": -33.7,
+    "lufsM": -42.6,
+    "click": 0.022,
+    "tail": 0.0001,
+    "durMs": 99,
+    "spreadDb": 0.1
+   },
+   "before": {
+    "name": "mode",
+    "peak": -26.2,
+    "lufs50": -33.8,
+    "lufsM": -42.7,
+    "click": 0.022,
+    "tail": 0.0001,
+    "durMs": 99
+   }
+  },
+  "jump": {
+   "after": {
+    "name": "jump",
+    "peak": -30.3,
+    "lufs50": -37.1,
+    "lufsM": -45.9,
+    "click": 0.027,
+    "tail": 0.0001,
+    "durMs": 115,
+    "spreadDb": 1.9
+   },
+   "before": {
+    "name": "jump",
+    "peak": -31.1,
+    "lufs50": -38.3,
+    "lufsM": -47.1,
+    "click": 0.033,
+    "tail": 0.0001,
+    "durMs": 113
+   }
+  },
+  "land": {
+   "after": {
+    "name": "land",
+    "peak": -28.6,
+    "lufs50": -33.7,
+    "lufsM": -42.7,
+    "click": 0.018,
+    "tail": 0,
+    "durMs": 97,
+    "spreadDb": 3.3
+   },
+   "before": {
+    "name": "land",
+    "peak": -24.7,
+    "lufs50": -32.9,
+    "lufsM": -41.8,
+    "click": 0.03,
+    "tail": 0,
+    "durMs": 73
+   }
+  },
+  "step-stone": {
+   "after": {
+    "name": "step-stone",
+    "peak": -32,
+    "lufs50": -43.7,
+    "lufsM": -52.7,
+    "click": 0.205,
+    "tail": 0.0003,
+    "durMs": 26,
+    "spreadDb": 3.6
+   },
+   "before": {
+    "name": "step-stone",
+    "peak": -30.9,
+    "lufs50": -45.1,
+    "lufsM": -54.2,
+    "click": 0.142,
+    "tail": 0.0003,
+    "durMs": 27
+   }
+  },
+  "landSoft": {
+   "after": {
+    "name": "landSoft",
+    "peak": -34.4,
+    "lufs50": -45.9,
+    "lufsM": -54.1,
+    "click": 0.036,
+    "tail": 0.0001,
+    "durMs": 78,
+    "spreadDb": 2.2
+   }
+  },
+  "step-sneak": {
+   "after": {
+    "name": "step-sneak",
+    "peak": -37.1,
+    "lufs50": -49.7,
+    "lufsM": -58.7,
+    "click": 0.023,
+    "tail": 0.0001,
+    "durMs": 23,
+    "spreadDb": 6.4
+   }
+  },
+  "hide": {
+   "after": {
+    "name": "hide",
+    "peak": -38.4,
+    "lufs50": -45.9,
+    "lufsM": -53.1,
+    "click": 0.01,
+    "tail": 0.0002,
+    "durMs": 231,
+    "spreadDb": 2.8
+   }
+  },
+  "coin": {
+   "after": {
+    "name": "coin",
+    "peak": -28.7,
+    "lufs50": -32.6,
+    "lufsM": -39.6,
+    "click": 0.051,
+    "tail": 0.0002,
+    "durMs": 230,
+    "spreadDb": 1.1
+   },
+   "before": {
+    "name": "coin",
+    "peak": -29,
+    "lufs50": -32.9,
+    "lufsM": -39.9,
+    "click": 0.052,
+    "tail": 0.0116,
+    "durMs": 240
+   }
+  },
+  "pickLife": {
+   "after": {
+    "name": "pickLife",
+    "peak": -25.6,
+    "lufs50": -29.4,
+    "lufsM": -35.3,
+    "click": 0.028,
+    "tail": 0.0001,
+    "durMs": 349,
+    "spreadDb": 0.2
+   },
+   "before": {
+    "name": "pickLife",
+    "peak": -25.5,
+    "lufs50": -29.2,
+    "lufsM": -35.1,
+    "click": 0.028,
+    "tail": 0.0001,
+    "durMs": 349
+   }
+  },
+  "pickMagic": {
+   "after": {
+    "name": "pickMagic",
+    "peak": -26.6,
+    "lufs50": -32.6,
+    "lufsM": -36.6,
+    "click": 0.021,
+    "tail": 0.0002,
+    "durMs": 284,
+    "spreadDb": 0.3
+   },
+   "before": {
+    "name": "pickMagic",
+    "peak": -26.9,
+    "lufs50": -32.6,
+    "lufsM": -36.6,
+    "click": 0.022,
+    "tail": 0.0002,
+    "durMs": 289
+   }
+  },
+  "pickClover": {
+   "after": {
+    "name": "pickClover",
+    "peak": -26.3,
+    "lufs50": -29.4,
+    "lufsM": -33.5,
+    "click": 0.026,
+    "tail": 0.0002,
+    "durMs": 537,
+    "spreadDb": 0.2
+   },
+   "before": {
+    "name": "pickClover",
+    "peak": -26.2,
+    "lufs50": -29.5,
+    "lufsM": -33.5,
+    "click": 0.026,
+    "tail": 0.0056,
+    "durMs": 541
+   }
+  },
+  "found": {
+   "after": {
+    "name": "found",
+    "peak": -20.8,
+    "lufs50": -26.1,
+    "lufsM": -29.5,
+    "click": 0.016,
+    "tail": 0.0027,
+    "durMs": 1104,
+    "spreadDb": 0.6
+   },
+   "before": {
+    "name": "found",
+    "peak": -20.6,
+    "lufs50": -25.9,
+    "lufsM": -29.3,
+    "click": 0.016,
+    "tail": 0.0027,
+    "durMs": 1104
+   }
+  },
+  "hurt": {
+   "after": {
+    "name": "hurt",
+    "peak": -21.6,
+    "lufs50": -29.6,
+    "lufsM": -38,
+    "click": 0.023,
+    "tail": 0.0001,
+    "durMs": 159,
+    "spreadDb": 2.8
+   },
+   "before": {
+    "name": "hurt",
+    "peak": -20.7,
+    "lufs50": -28.9,
+    "lufsM": -37.4,
+    "click": 0.029,
+    "tail": 0.0038,
+    "durMs": 148
+   }
+  },
+  "lowLife": {
+   "after": {
+    "name": "lowLife",
+    "peak": -24.9,
+    "lufs50": -29.5,
+    "lufsM": -35.8,
+    "click": 0.015,
+    "tail": 0.0023,
+    "durMs": 341,
+    "spreadDb": 0.3
+   }
+  },
+  "rummageBin": {
+   "after": {
+    "name": "rummageBin",
+    "peak": -28.7,
+    "lufs50": -38.8,
+    "lufsM": -44.8,
+    "click": 0.055,
+    "tail": 0.001,
+    "durMs": 198,
+    "spreadDb": 1
+   },
+   "before": {
+    "name": "rummage",
+    "peak": -28.9,
+    "lufs50": -38,
+    "lufsM": -42.7,
+    "click": 0.027,
+    "tail": 0.0001,
+    "durMs": 203
+   }
+  },
+  "bonus": {
+   "after": {
+    "name": "bonus",
+    "peak": -29.2,
+    "lufs50": -35.6,
+    "lufsM": -42.5,
+    "click": 0.022,
+    "tail": 0.0002,
+    "durMs": 191,
+    "spreadDb": 1.9
+   },
+   "before": {
+    "name": "bonus",
+    "peak": -27.7,
+    "lufs50": -34.2,
+    "lufsM": -41.1,
+    "click": 0.022,
+    "tail": 0.0001,
+    "durMs": 193
+   }
+  },
+  "rummageBarrel": {
+   "after": {
+    "name": "rummageBarrel",
+    "peak": -29.9,
+    "lufs50": -35,
+    "lufsM": -40.9,
+    "click": 0.021,
+    "tail": 0.0001,
+    "durMs": 209,
+    "spreadDb": 2.4
+   },
+   "before": {
+    "name": "rummage",
+    "peak": -29.5,
+    "lufs50": -38.2,
+    "lufsM": -42.5,
+    "click": 0.05,
+    "tail": 0.0001,
+    "durMs": 208
+   }
+  },
+  "rummageCrate": {
+   "after": {
+    "name": "rummageCrate",
+    "peak": -28.6,
+    "lufs50": -37.3,
+    "lufsM": -41.5,
+    "click": 0.027,
+    "tail": 0.0001,
+    "durMs": 212,
+    "spreadDb": 2.5
+   },
+   "before": {
+    "name": "rummage",
+    "peak": -28.5,
+    "lufs50": -38.3,
+    "lufsM": -42.7,
+    "click": 0.018,
+    "tail": 0.0001,
+    "durMs": 207
+   }
+  },
+  "rummageCase": {
+   "after": {
+    "name": "rummageCase",
+    "peak": -27.5,
+    "lufs50": -40.9,
+    "lufsM": -45.4,
+    "click": 0.084,
+    "tail": 0.0016,
+    "durMs": 244,
+    "spreadDb": 2.9
+   },
+   "before": {
+    "name": "rummage",
+    "peak": -27.7,
+    "lufs50": -38,
+    "lufsM": -42.4,
+    "click": 0.016,
+    "tail": 0.0001,
+    "durMs": 204
+   }
+  },
+  "rummageEmpty": {
+   "after": {
+    "name": "rummageEmpty",
+    "peak": -32.5,
+    "lufs50": -41.1,
+    "lufsM": -44.4,
+    "click": 0.024,
+    "tail": 0,
+    "durMs": 433,
+    "spreadDb": 1.3
+   }
+  },
+  "tPip": {
+   "after": {
+    "name": "tPip",
+    "peak": -38.8,
+    "lufs50": -46.3,
+    "lufsM": -55.3,
+    "click": 0.051,
+    "tail": 0.0001,
+    "durMs": 67,
+    "spreadDb": 0.1
+   }
+  },
+  "tSqueal": {
+   "after": {
+    "name": "tSqueal",
+    "peak": -29.3,
+    "lufs50": -31.7,
+    "lufsM": -36.9,
+    "click": 0.11,
+    "tail": 0.005,
+    "durMs": 465,
+    "spreadDb": 0.3
+   }
+  },
+  "tJet": {
+   "after": {
+    "name": "tJet",
+    "peak": -27.1,
+    "lufs50": -33.3,
+    "lufsM": -40.4,
+    "click": 0.01,
+    "tail": 0.0011,
+    "durMs": 226,
+    "spreadDb": 2.6
+   }
+  },
+  "tReel": {
+   "after": {
+    "name": "tReel",
+    "peak": -35.1,
+    "lufs50": -48.5,
+    "lufsM": -49.7,
+    "click": 0.044,
+    "tail": 0.0002,
+    "durMs": 285,
+    "spreadDb": 0.3
+   }
+  },
+  "tSteam": {
+   "after": {
+    "name": "tSteam",
+    "peak": -29.6,
+    "lufs50": -33.8,
+    "lufsM": -39.2,
+    "click": 0.033,
+    "tail": 0.005,
+    "durMs": 557,
+    "spreadDb": 1.7
+   }
+  },
+  "tFizz": {
+   "after": {
+    "name": "tFizz",
+    "peak": -38.1,
+    "lufs50": -42.4,
+    "lufsM": -48.1,
+    "click": 0.034,
+    "tail": 0.0073,
+    "durMs": 509,
+    "spreadDb": 2.5
+   }
+  },
+  "motor": {
+   "after": {
+    "name": "motor",
+    "peak": -32.7,
+    "lufs50": -35.9,
+    "lufsM": -39.5,
+    "click": 0.001,
+    "tail": 0.0012,
+    "durMs": 975,
+    "spreadDb": 1.9
+   }
+  },
+  "winch": {
+   "after": {
+    "name": "winch",
+    "peak": -31.4,
+    "lufs50": -38.3,
+    "lufsM": -42.4,
+    "click": 0.069,
+    "tail": 0.0001,
+    "durMs": 806,
+    "spreadDb": 2.3
+   }
+  },
+  "trickle": {
+   "after": {
+    "name": "trickle",
+    "peak": -31.5,
+    "lufs50": -40.6,
+    "lufsM": -44.9,
+    "click": 0.024,
+    "tail": 0.0026,
+    "durMs": 531,
+    "spreadDb": 1.2
+   }
+  },
+  "steam": {
+   "after": {
+    "name": "steam",
+    "peak": -30.5,
+    "lufs50": -34,
+    "lufsM": -39.6,
+    "click": 0.04,
+    "tail": 0.0054,
+    "durMs": 575,
+    "spreadDb": 1.9
+   }
+  }
+ },
+ "refs": {
+  "voice": {
+   "peak": -4.4,
+   "lufs50": -9.3,
+   "lufsM": -11.7,
+   "click": 0.001,
+   "tail": 0.0112,
+   "durMs": 2278
+  },
+  "music": {
+   "peak": -15.5,
+   "lufs50": -22.3,
+   "lufsM": -23.3,
+   "click": 0.051,
+   "tail": 0.0914,
+   "durMs": 12000
+  },
+  "musicDucked": {
+   "peak": -21.5,
+   "lufs50": -28.3,
+   "lufsM": -29.4,
+   "click": 0.051,
+   "tail": 0.0914,
+   "durMs": 12000
+  }
+ },
+ "errors": []
+}

@@ -1,0 +1,106 @@
+{
+ "start": {
+  "room": "desert",
+  "ch": "dig",
+  "k": {
+   "k_ask": true,
+   "k_doorSeen": true,
+   "k_dir": 0,
+   "k_turns": 6,
+   "k_sand": true,
+   "k_screen": true,
+   "k_fit": true,
+   "k_done": true,
+   "k_paid": true,
+   "k_n_k_brosk_done": 0,
+   "k_n_k_lumi_done": 1,
+   "k_n_k_sani_done": 1
+  },
+  "cowl": 0,
+  "jars": 5,
+  "ferry": true,
+  "items": [
+   "evacplan",
+   "notebook"
+  ],
+  "journal": [
+   {
+    "key": "k_j_cool",
+    "done": true
+   },
+   {
+    "key": "k_j_screen",
+    "done": true
+   },
+   {
+    "key": "k_j_paid",
+    "done": true
+   }
+  ],
+  "coins": 13,
+  "hp": "8/11",
+  "pos": [
+   3444.53,
+   5,
+   23.34
+  ],
+  "lying": [],
+  "state": "play"
+ },
+ "ride stopped at the pole": {
+  "riding": true,
+  "d": 1,
+  "state": "cutscene"
+ },
+ "vis": {
+  "poleFoot": "VISIBLE 15.9 m, ndc 0.39,-0.27"
+ },
+ "end": {
+  "room": "desert",
+  "ch": "dig",
+  "k": {
+   "k_ask": true,
+   "k_doorSeen": true,
+   "k_dir": 0,
+   "k_turns": 6,
+   "k_sand": true,
+   "k_screen": true,
+   "k_fit": true,
+   "k_done": true,
+   "k_paid": true,
+   "k_n_k_brosk_done": 0,
+   "k_n_k_lumi_done": 1,
+   "k_n_k_sani_done": 1
+  },
+  "cowl": 0,
+  "jars": 5,
+  "ferry": true,
+  "items": [
+   "evacplan",
+   "notebook"
+  ],
+  "journal": [
+   {
+    "key": "k_j_cool",
+    "done": true
+   },
+   {
+    "key": "k_j_screen",
+    "done": true
+   },
+   {
+    "key": "k_j_paid",
+    "done": true
+   }
+  ],
+  "coins": 13,
+  "hp": "8/11",
+  "pos": [
+   3376.85,
+   4.42,
+   12.61
+  ],
+  "lying": [],
+  "state": "play"
+ }
+}

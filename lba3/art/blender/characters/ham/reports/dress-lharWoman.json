@@ -1,0 +1,260 @@
+[
+ {
+  "n": 1,
+  "overrides": {
+   "tunic": "#502750",
+   "tunicTrim": "#f2d8a0",
+   "pants": "#502750",
+   "belt": "#26a34f",
+   "hair": "#c89a50",
+   "shoes": "#162c27"
+  },
+  "left": {
+   "tunic": {
+    "base": "#2f6a5a",
+    "to": "#502750",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "pants": {
+    "base": "#2f6a5a",
+    "to": "#502750",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "belt": {
+    "base": "#d8302a",
+    "to": "#26a34f",
+    "verticesStillBase": 0,
+    "inBase": 432
+   },
+   "hair": {
+    "base": "#1a1210",
+    "to": "#c89a50",
+    "verticesStillBase": 54,
+    "inBase": 882
+   },
+   "shoes": {
+    "base": "#3a2a1a",
+    "to": "#162c27",
+    "verticesStillBase": 0,
+    "inBase": 600
+   }
+  }
+ },
+ {
+  "n": 2,
+  "overrides": {
+   "tunic": "#667a3b",
+   "tunicTrim": "#f2d8a0",
+   "pants": "#667a3b",
+   "belt": "#a758d8",
+   "hair": "#3a2a2a",
+   "shoes": "#432140"
+  },
+  "left": {
+   "tunic": {
+    "base": "#2f6a5a",
+    "to": "#667a3b",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "pants": {
+    "base": "#2f6a5a",
+    "to": "#667a3b",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "belt": {
+    "base": "#d8302a",
+    "to": "#a758d8",
+    "verticesStillBase": 0,
+    "inBase": 432
+   },
+   "hair": {
+    "base": "#1a1210",
+    "to": "#3a2a2a",
+    "verticesStillBase": 54,
+    "inBase": 882
+   },
+   "shoes": {
+    "base": "#3a2a1a",
+    "to": "#432140",
+    "verticesStillBase": 0,
+    "inBase": 600
+   }
+  }
+ },
+ {
+  "n": 3,
+  "overrides": {
+   "tunic": "#2d405d",
+   "tunicTrim": "#f2d8a0",
+   "pants": "#2d405d",
+   "belt": "#bcaf2c",
+   "hair": "#5a3a1a",
+   "shoes": "#293319"
+  },
+  "left": {
+   "tunic": {
+    "base": "#2f6a5a",
+    "to": "#2d405d",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "pants": {
+    "base": "#2f6a5a",
+    "to": "#2d405d",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "belt": {
+    "base": "#d8302a",
+    "to": "#bcaf2c",
+    "verticesStillBase": 0,
+    "inBase": 432
+   },
+   "hair": {
+    "base": "#1a1210",
+    "to": "#5a3a1a",
+    "verticesStillBase": 54,
+    "inBase": 882
+   },
+   "shoes": {
+    "base": "#3a2a1a",
+    "to": "#293319",
+    "verticesStillBase": 0,
+    "inBase": 600
+   }
+  }
+ },
+ {
+  "n": 4,
+  "overrides": {
+   "tunic": "#6f363c",
+   "tunicTrim": "#f2d8a0",
+   "pants": "#6f363c",
+   "belt": "#43b6d3",
+   "hair": "#9a9a98",
+   "shoes": "#1e283d"
+  },
+  "left": {
+   "tunic": {
+    "base": "#2f6a5a",
+    "to": "#6f363c",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "pants": {
+    "base": "#2f6a5a",
+    "to": "#6f363c",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "belt": {
+    "base": "#d8302a",
+    "to": "#43b6d3",
+    "verticesStillBase": 0,
+    "inBase": 432
+   },
+   "hair": {
+    "base": "#1a1210",
+    "to": "#9a9a98",
+    "verticesStillBase": 54,
+    "inBase": 882
+   },
+   "shoes": {
+    "base": "#3a2a1a",
+    "to": "#1e283d",
+    "verticesStillBase": 0,
+    "inBase": 600
+   }
+  }
+ },
+ {
+  "n": 5,
+  "overrides": {
+   "tunic": "#32673c",
+   "tunicTrim": "#f2d8a0",
+   "pants": "#32673c",
+   "belt": "#cf3382",
+   "hair": "#6a4a2a",
+   "shoes": "#381c1d"
+  },
+  "left": {
+   "tunic": {
+    "base": "#2f6a5a",
+    "to": "#32673c",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "pants": {
+    "base": "#2f6a5a",
+    "to": "#32673c",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "belt": {
+    "base": "#d8302a",
+    "to": "#cf3382",
+    "verticesStillBase": 0,
+    "inBase": 432
+   },
+   "hair": {
+    "base": "#1a1210",
+    "to": "#6a4a2a",
+    "verticesStillBase": 54,
+    "inBase": 882
+   },
+   "shoes": {
+    "base": "#3a2a1a",
+    "to": "#381c1d",
+    "verticesStillBase": 0,
+    "inBase": 600
+   }
+  }
+ },
+ {
+  "n": 6,
+  "overrides": {
+   "tunic": "#3b2750",
+   "tunicTrim": "#f2d8a0",
+   "pants": "#3b2750",
+   "belt": "#41a326",
+   "hair": "#8a4a20",
+   "shoes": "#162c1b"
+  },
+  "left": {
+   "tunic": {
+    "base": "#2f6a5a",
+    "to": "#3b2750",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "pants": {
+    "base": "#2f6a5a",
+    "to": "#3b2750",
+    "verticesStillBase": 0,
+    "inBase": 1560
+   },
+   "belt": {
+    "base": "#d8302a",
+    "to": "#41a326",
+    "verticesStillBase": 0,
+    "inBase": 432
+   },
+   "hair": {
+    "base": "#1a1210",
+    "to": "#8a4a20",
+    "verticesStillBase": 54,
+    "inBase": 882
+   },
+   "shoes": {
+    "base": "#3a2a1a",
+    "to": "#162c1b",
+    "verticesStillBase": 0,
+    "inBase": 600
+   }
+  }
+ }
+]

@@ -1,0 +1,164 @@
+diff --git a/lba3/src/game/condenser.js b/lba3/src/game/condenser.js
+index e9258db..72feabc 100644
+--- a/lba3/src/game/condenser.js
++++ b/lba3/src/game/condenser.js
+@@ -40,7 +40,8 @@ const gaugeFace = () => canvasTex(128, 128, (x, W) => {
+   void W;
+ });
+ 
+-function plateWall(H) { return { floor: MAT.stone('grey', 2), slab: MAT.rubble('grey'), body: MAT.plates('#7a7464', 2), low: MAT.plates('#5a564a', 1), rail: MAT.iron(), cap: MAT.iron(), H, t: 0.45, dado: 1.1, rimH: 0.5, rimMat: MAT.plates('#5a564a', 1) }; }
++// (WORLD-ART-7: the desert works — sandstone floor under green-teal plates, a rust-brown dado, red rails, hazard rims)
++function plateWall(H) { return { floor: MAT.stone('sand', 2), slab: MAT.rubble('grey'), body: MAT.plates('#2f8a86', 2), low: MAT.plates('#6a5a48', 1), rail: MAT.paint('#a8382a', 0.5), cap: MAT.iron(), H, t: 0.45, dado: 1.1, rimH: 0.5, rimMat: MAT.hazard() }; }
+ 
+ // ================================================================== the valve hall
+ function buildValveHall(scene, physics) {
+diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
+index a7db7c0..6991a39 100644
+--- a/lba3/src/game/interiors.js
++++ b/lba3/src/game/interiors.js
+@@ -1251,7 +1251,8 @@ function buildProjOffice(scene, physics) {
+   const L = W + 2 * t, LL = D + t;
+   B.shell({
+     W, D, H, t, slabH: 0.8,
+-    floor: MAT.tiles('#8e8aa0', '#b4b0c2', '#4a4858', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
++    // (WORLD-ART-7: an office floor in terracotta and cream checker, warm against the old blue fort stone)
++    floor: MAT.tiles('#b0684a', '#d8c09a', '#5a3a2a', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
+     body: MAT.stone('blue', 2), low: MAT.plates(teal, 1), dado: 1.15, rail: brass, cap: MAT.stone('slate', 1.4), beam: MAT.iron(),
+     posts: MAT.iron(), postsAt: (len) => (len === L ? [-4.75, -1.92, 0.58, 3.2, 6.42].map((x) => x + W / 2 + t) : [-4.92, -1.2, 0.55, 3.0].map((z) => D / 2 + t - z)),
+     back: [{ kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, view: outsideView('fort'), sill: MAT.stone('slate', 1) }],
+@@ -1403,7 +1404,8 @@ function buildControl(scene, physics) {
+   const brass = MAT.brass(), teal = '#3f8a86';
+   B.shell({
+     W, D, H, t, slabH: 0.8,
+-    floor: MAT.tiles('#7a7890', '#9c9aae', '#46445a', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
++    // (WORLD-ART-7: a pale sand-and-umber checker floor, so the lavender plate walls and teal dado stand off it)
++    floor: MAT.tiles('#c8bca0', '#8a7a60', '#4a4234', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
+     body: MAT.plates('#8d8a9c', 1), low: MAT.plates(teal, 1), dado: 1.1, rail: brass, cap: MAT.iron(), beam: brass,
+     posts: MAT.iron(), postsAt: (len) => (len === W + 2 * t ? [-5.9, 1.15, 3.3, 5.92].map((x) => x + W / 2 + t) : [-4.42, -1.9, 1.2, 3.0].map((z) => D / 2 + t - z)),
+     back: [
+diff --git a/lba3/src/game/lba1places.js b/lba3/src/game/lba1places.js
+index 76eddc1..69be0a6 100644
+--- a/lba3/src/game/lba1places.js
++++ b/lba3/src/game/lba1places.js
+@@ -50,7 +50,7 @@ export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DO
+ export function buildLba1Asylum(scene, physics) {
+   const A = LBA1_AT, out = {};
+   if (hasLba1Room('asylum')) {
+-    const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, { stone: 'grey', lamp: '#e8f0ff', view: 24 });
++    const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, { stone: 'grey', lamp: '#e8f0ff', view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0' });   // (WORLD-ART-7: warm cream floors, cooler walls)
+     // the low stair-well (the original's exit to the yard) leads out; you come in at its top
+     const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);
+     R.exits.push({ x: ex.x, z: ex.z, r: 1.0, to: 'asylum-out' });
+@@ -66,7 +66,7 @@ export function buildLba1Asylum(scene, physics) {
+ export function buildLba1Temple(scene, physics) {
+   const A = LBA1_AT, out = {};
+   if (hasLba1Room('bumaze')) {
+-    const R = out.bumaze = buildLba1Room(scene, physics, 'bumaze', 'bumaze', A.bumaze.x, A.bumaze.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 9, view: 16, noCut: true, tint: 1.6 });
++    const R = out.bumaze = buildLba1Room(scene, physics, 'bumaze', 'bumaze', A.bumaze.x, A.bumaze.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 9, view: 16, noCut: true, tint: 1.6, topCol: '#f0d0a4' });   // (WORLD-ART-7: sandy worn floors against the slate walls)
+     R.cave = true; R.music = 'cave';
+     const back = R.cell(14, 1, 19.0), goal = R.cell(14, 1, 11);
+     R.exits.push({ x: back.x, z: back.z, r: 0.9, room: 'butemple' });
+@@ -74,7 +74,7 @@ export function buildLba1Temple(scene, physics) {
+     R.goal = goal;
+   }
+   if (hasLba1Room('buhalls')) {
+-    const R = out.buhalls = buildLba1Room(scene, physics, 'buhalls', 'buhalls', A.buhalls.x, A.buhalls.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 12, view: 24, tint: 1.6 });
++    const R = out.buhalls = buildLba1Room(scene, physics, 'buhalls', 'buhalls', A.buhalls.x, A.buhalls.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 12, view: 24, tint: 1.6, topCol: '#f0d0a4' });   // (WORLD-ART-7: sandy worn floors against the slate walls)
+     R.cave = true; R.music = 'cave';
+     const st = R.cell(3, 17, 3.2), far = R.cell(61, 17, 1.4), give = R.cell(61, 17, 4);
+     R.spawn = { x: st.x, z: st.z, a: 0 };
+diff --git a/lba3/src/game/lba1room.js b/lba3/src/game/lba1room.js
+index 808f31d..e4c4c0f 100644
+--- a/lba3/src/game/lba1room.js
++++ b/lba3/src/game/lba1room.js
+@@ -97,7 +97,9 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
+     top: new THREE.MeshStandardMaterial({ map: TEX.plaster('#f4f0ea'), vertexColors: true, roughness: 0.85, side: THREE.DoubleSide }),
+   };
+   // (the stone texture is darker than white: lift the side colours a little)
+-  mats.side.color.setScalar(1.6);
++  mats.side.color.set(opts.sideCol || '#ffffff').multiplyScalar(1.6);
++  // (WORLD-ART-7: opts.topCol / opts.sideCol tint floors and walls apart; the measured brick colours alone make both the same grey)
++  if (opts.topCol) mats.top.color.set(opts.topCol);
+   for (const kind of ['side', 'top']) {
+     if (!pos[kind].length) continue;
+     const g = new THREE.BufferGeometry();
+diff --git a/lba3/src/game/temple.js b/lba3/src/game/temple.js
+index c7f6754..25e6a86 100644
+--- a/lba3/src/game/temple.js
++++ b/lba3/src/game/temple.js
+@@ -64,7 +64,8 @@ function buildTempleRoom(scene, physics) {
+   const W = 22, D = 14, H = 6.5;
+   R.view = 19.5; R.follow = 0.3; R.music = 'cave'; R.cave = true;
+   const slate = MAT.stone('slate', 2), rough = MAT.rubble('slate');
+-  B.shell({ floor: MAT.stone('slate', 3), slab: rough, body: slate, low: rough, rail: MAT.iron(), cap: MAT.iron(), H, t: 0.6, dado: 1.2, rimH: 0.55, rimMat: rough, W, D,
++  // (WORLD-ART-7: slate halls kept; a paler, warmer grey floor parts it from the walls, carved sandstone bands as the one warm accent)
++  B.shell({ floor: MAT.stone('grey', 3), slab: rough, body: slate, low: rough, rail: MAT.stone('sand', 1), cap: MAT.iron(), H, t: 0.6, dado: 1.2, rimH: 0.55, rimMat: rough, W, D,
+     back: [{ at: -8.5, w: 2.2, h: 3.0, y0: 0, kind: 'door' }] });
+   const BZ = -D / 2;
+   // the way in: steps down from the project's cut (back left)
+diff --git a/lba3/src/game/upper.js b/lba3/src/game/upper.js
+index 31d1f80..b077d37 100644
+--- a/lba3/src/game/upper.js
++++ b/lba3/src/game/upper.js
+@@ -124,7 +124,8 @@ function buildArchive(scene, physics) {
+   const R = B.room, k = B.k;
+   const W = 16, D = 12, H = 5.0;
+   R.view = 16.5; R.follow = 0.3; R.music = 'stealth';
+-  B.shell({ floor: MAT.plates('#5a6a6a', 1), slab: MAT.stone('slate'), body: MAT.plates('#3f8a86', 2), low: MAT.plates('#2a5a5a', 1), rail: MAT.brass(), cap: MAT.stone('slate'), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 4.0, w: 1.8, h: 2.8, y0: 0, kind: 'door' }] });
++  // (WORLD-ART-7: a records room, not a machine room — honey boards, parchment plaster over dark panelling, sandstone)
++  B.shell({ floor: MAT.planks('honey'), slab: MAT.stone('sand'), body: MAT.plaster('#f0e4c8'), low: MAT.wainscot('dark'), rail: MAT.brass(), cap: MAT.stone('sand'), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 4.0, w: 1.8, h: 2.8, y0: 0, kind: 'door' }] });
+   R.exits.push({ x: B.cx - W / 2 + 0.5, z: B.cz + 4.0, r: 0.8, to: 'archive-out' });
+   R.spawn = { x: B.cx - W / 2 + 2, z: B.cz + 4.0, a: Math.PI / 2 };
+   // shelf rows (cover), each a long bookcase with ledgers
+diff --git a/lba3/src/game/valveroom.js b/lba3/src/game/valveroom.js
+index d5e4142..89b8808 100644
+--- a/lba3/src/game/valveroom.js
++++ b/lba3/src/game/valveroom.js
+@@ -21,7 +21,8 @@ export function buildValveRoom(scene, physics) {
+   const R = B.room, k = B.k;
+   const W = 12, D = 9, H = 4.4;
+   R.view = 12.5; R.follow = 0.3; R.music = 'facility';
+-  B.shell({ floor: MAT.tread('#7d7a8c'), slab: MAT.stone('slate'), body: MAT.plates('#5a6a72', 2), low: MAT.plates('#3a4a52', 1), rail: MAT.iron(), cap: MAT.stone('slate'), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 2.5, w: 1.6, h: 2.6, y0: 0, kind: 'door' }] });
++  // (WORLD-ART-7: FunFrock's waterworks — teal-painted plates, red steel rails, a pale lavender deck, hazard-striped rims)
++  B.shell({ floor: MAT.tread('#8d8a9c'), slab: MAT.stone('slate'), body: MAT.plates('#3f8a86', 2), low: MAT.plates('#2a5a5a', 1), rail: MAT.paint('#a8382a', 0.5), cap: MAT.stone('slate'), rimMat: MAT.hazard(), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 2.5, w: 1.6, h: 2.6, y0: 0, kind: 'door' }] });
+   R.exits.push({ x: B.cx - W / 2 + 0.5, z: B.cz + 2.5, r: 0.75, to: 'valves-out' });
+   R.spawn = { x: B.cx - W / 2 + 1.8, z: B.cz + 2.5, a: Math.PI / 2 };
+   const BZ = -D / 2;
+diff --git a/lba3/src/game/wizards.js b/lba3/src/game/wizards.js
+index eaae155..f42a7ca 100644
+--- a/lba3/src/game/wizards.js
++++ b/lba3/src/game/wizards.js
+@@ -49,10 +49,10 @@ const signTex = (text) => canvasTex(512, 128, (x, W, H) => {
+   x.fillStyle = '#f4e2b0'; x.font = 'bold 44px serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, H / 2 + 2);
+ });
+ const pentaTex = () => canvasTex(256, 256, (x, W) => {
+-  x.fillStyle = '#6a6a70'; x.fillRect(0, 0, W, W);
++  x.fillStyle = '#a8957a'; x.fillRect(0, 0, W, W);   // (WORLD-ART-7: warm sandstone slabs, lighter than the grey walls)
+   for (let i = 0; i < 400; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? '0,0,0' : '255,255,255'},${Math.random() * 0.06})`; x.fillRect(Math.random() * W, Math.random() * W, 6, 6); }
+-  x.strokeStyle = '#2e2e34'; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, W - 8);
+-  x.strokeStyle = '#3a3a42'; x.lineWidth = 5;
++  x.strokeStyle = '#4a3a2a'; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, W - 8);
++  x.strokeStyle = '#6a4a2e'; x.lineWidth = 5;
+   x.beginPath(); x.arc(W / 2, W / 2, 92, 0, 7); x.stroke();
+   x.beginPath(); for (let k = 0; k <= 5; k++) { const a = -Math.PI / 2 + k * Math.PI * 4 / 5; x.lineTo(W / 2 + Math.cos(a) * 92, W / 2 + Math.sin(a) * 92); } x.stroke();
+ });
+@@ -95,7 +95,8 @@ function buildTentRoom(scene, physics) {
+   const W = 13, D = 9.5, H = 4.6;
+   R.view = 15; R.follow = 0.3; R.music = 'home';
+   const stone = MAT.stone('grey', 2), rough = MAT.rubble('grey');
+-  B.shell({ floor: MAT.stone('grey', 3), slab: rough, body: stone, low: rough, rail: MAT.iron(), cap: MAT.iron(), H, t: 0.55, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
++  // (WORLD-ART-7: a lived-in wizard's den — warm boards under the stone walls, brass rails like the tent's gold stars)
++  B.shell({ floor: MAT.planks('honey'), slab: rough, body: stone, low: rough, rail: MAT.brass(), cap: MAT.iron(), H, t: 0.55, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
+     back: [{ at: -5.0, w: 1.8, h: 2.6, y0: 0, kind: 'door' }] });
+   const BZ = -D / 2;
+   R.exits.push({ x: B.cx - 5.0, z: B.cz + BZ + 0.5, r: 0.85, to: 'wtent-out' });
+@@ -151,7 +152,8 @@ function buildSchoolRoom(scene, physics) {
+   R.view = 19; R.follow = 0.3; R.music = 'home';
+   const stone = MAT.stone('grey', 2), rough = MAT.rubble('grey');
+   const penta = pentaTex(); penta.wrapS = penta.wrapT = THREE.RepeatWrapping; penta.repeat.set(W / 1.5, D / 1.5);   // (a pentagram on every 1.5 m slab)
+-  B.shell({ floor: MAT.map(penta, 0.85), slab: rough, body: stone, low: rough, rail: MAT.iron(), cap: MAT.iron(), H, t: 0.6, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
++  // (WORLD-ART-7: a school hall — dark wood panelling below the stone and a brass rail, over warm slabs)
++  B.shell({ floor: MAT.map(penta, 0.85), slab: rough, body: stone, low: MAT.wainscot('dark'), rail: MAT.brass(), cap: MAT.iron(), H, t: 0.6, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
+     back: [{ at: -7.4, w: 2.0, h: 2.8, y0: 0, kind: 'door' }] });
+   const BZ = -D / 2;
+   R.exits.push({ x: B.cx - 7.4, z: B.cz + BZ + 0.5, r: 0.9, to: 'school-out' });

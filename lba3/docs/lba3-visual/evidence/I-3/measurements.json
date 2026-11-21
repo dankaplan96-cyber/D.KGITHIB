@@ -1,0 +1,28 @@
+{
+  "conditions": {
+    "renderer": "SwiftShader (software) in headless Chromium, 1280x720 for the views, 1366x768 for perfbudget; counts (calls, triangles, geometries, textures) are exact, times are CPU-submission proxies only and say nothing about a Vega 8",
+    "same_for_both": "same hero places, same warm-up (exitRoom + 2.5 s of steps), same build otherwise; before = git HEAD served on another port, after = this branch",
+    "method": "renderer.info after one render() at the place, then again with the building's own meshes hidden (the difference is what the building costs); drawBatch (src/engine/drawbatch.js) folds static pieces of the same material into per-cell batches, so only a building's pieces that find no partner in their cell are drawn on their own"
+  },
+  "view_lighthouse_hero_at_-104_98": {
+    "before": { "frame_calls": 381, "frame_calls_without_building": 379, "building_calls": 2, "frame_tris": 905571, "frame_tris_without": 904915, "building_tris_in_frame": 656 },
+    "after": { "frame_calls": 378, "frame_calls_without_building": 374, "building_calls": 4, "frame_tris": 908119, "frame_tris_without": 902019, "building_tris_in_frame": 6100 }
+  },
+  "view_harbour_hero_at_-112_45": {
+    "before": { "frame_calls": 157, "frame_calls_without_building": 155, "building_calls": 2, "frame_tris": 512170, "frame_tris_without": 512146 },
+    "after": { "frame_calls": 153, "frame_calls_without_building": 150, "building_calls": 3, "frame_tris": 508494, "frame_tris_without": 508422 }
+  },
+  "geometry_built": {
+    "lighthouse": { "before": { "meshes": 9, "materials": 6, "triangles": 696 }, "after": { "meshes": 8, "materials": 7, "triangles": 6156, "note": "7 = plaster, rubble, wood, iron, glass, lamp (transparent, glow driven by the story) and the beam; only the plaster casts" } },
+    "shed": { "before": { "meshes": 2, "materials": 2, "triangles": 24 }, "after": { "meshes": 6, "materials": 4, "triangles": 1424, "cast_meshes": 2, "cast_triangles": 140, "note": "built in island.js with the quay, so mergeStatic (recolor, retex, 64 m cells) folds it into the harbour's batches" } }
+  },
+  "resources": { "textures_before": 194, "textures_after": 194, "shader_programs_before": 85, "shader_programs_after": 85, "geometries_before": 1067, "geometries_after": 1061, "new_lights": 0, "new_textures": 0 },
+  "perfbudget_medium_software": {
+    "arrival": { "before": "calls 294 (p95 321, max 346), tris 420k, submit 13.2 ms", "after": "calls 290 (p95 321, max 346), tris 420k, submit 14.7 ms" },
+    "street": { "before": "calls 192 (p95 219, max 259), tris 440k, submit 13.2 ms", "after": "calls 192 (p95 219, max 259), tris 447k, submit 12.6 ms" }
+  },
+  "collision_probe_after_vs_before": {
+    "lighthouse": "collider cyl r 3.1 unchanged: blocked at 2.8 m, free at 3.2 m; walking straight in stops at z = 3.5 (3.1 + hero radius 0.4) both; the story's door spot (-107.5, 94.2) reached (arrived, 0.44 m) both",
+    "shed": "collider box 2.6 x 2.0 unchanged (body and four corners blocked); the door's front free; barrel and the 0.62 m crate solid, the 0.5 m crate climbable; the pier end and Doran's spot reached (arrived) both"
+  }
+}

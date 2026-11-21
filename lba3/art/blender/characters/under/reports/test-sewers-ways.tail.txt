@@ -1,0 +1,25 @@
+PASS the well-house's little blue door: locked, a brass star on it (INPUT) ["A little blue door with a brass star on it. Locked."]
+PASS S-1: up the stair in the hall's south-west, through the trapdoor under the rug into Bersimon's tent (INPUT) {"r":{"r":"entered"},"w":{"room":"wtent","y":0,"d":0.77,"state":"play"},"f":true,"exits":["wtent-out","sewer"]}
+PASS Bersimon: warm air rising under the town, his globe down there; the key (INPUT) {"t":["I'm one pearl of incandescence short of a lightning spell. Twelve years short. The School of Magic keeps a jar of them, on Desert Island.","Warm air, Twinsen. Rising under the town where it shouldn't. My knees feel it before I do.","I keep a weather globe down there, in a little room off the old water hall. If that air has got to it, it'll be blind as a fog.","Down there? How do you get down there?","Under the rug. Every good tent has a trapdoor. Here's the key of the room. Go and have a look for me."],"r":{"mp":8,"max":8,"items":["sw_key"]}}
+PASS down the trapdoor: in the hall's south-west, by the west wall at z ≈ 10 (INPUT) {"r":{"r":{"r":"entered"},"loc":[-11.73,10]},"w":{"room":"sewer","y":0,"d":0.77,"state":"play"}}
+PASS the key unlocks the little blue door (INPUT) {"r":{"r":{"r":"used","target":{"kind":"swgdoor","id":"p_sw_unlock","label":"p_sw_unlock"},"state":"play","lines":2},"items":[],"exits":["sewervault","wtent","sewer-out","sewer-stoneup","sewerglobe"]},"s":["Bersimon's key fits."]}
+PASS through it: the globe's room (INPUT) {"r":"entered"}
+PASS the globe: fogged up by warm air from the pipe (INPUT) ["Bersimon's globe. All fogged up inside. That pipe's puffing warm air right at it."]
+PASS the bleed cock shut: the globe clears and shows the sky over Citadel (INPUT) {"r":{"clear":true},"s":["Shut. The fog is thinning...","Clear over Citadel. Both suns up, not a cloud.","So this is how Bersimon reads the sky from his tent."]}
+PASS Bersimon: the globe is where his magic for Twinsen comes from; he tops it up (INPUT) {"t":["You cleared my globe! I felt the weather come back into my fingers.","That's where I keep a little of it. Every time I top up your magic, that's the jar I dip into."],"r":{"mp":8,"max":8}}
+PASS out of the tent onto the plateau, into Tralu's cave (INPUT) {"r":"entered"}
+PASS Raph's guitar case (INPUT) ["A guitar case. 'RAPH' burned into the lid. The lighthouse keeper never came back for it."]
+PASS the cache under the lantern: a clover, picked up (INPUT) {"r":{"owed":0,"clovers":3},"cl0":2,"s":["Under the lantern, a tin box. Someone's rainy-day stash: a clover, pressed flat."]}
+PASS Save → Continue: the story kept; both hatches shut, as a loaded game finds them {"r":{"f":{"sw_fell":true,"sw_fosse":true,"sw_valve":true,"sw_works":true,"sw_bolt":true,"sw_trap":true,"sw_ber":true,"sw_gdoor":true,"sw_globe":true,"sw_berGlobe":true,"sw_cache":true},"open":[false,false]},"before":{"sw_fell":true,"sw_fosse":true,"sw_valve":true,"sw_works":true,"sw_bolt":true,"sw_trap":true,"sw_ber":true,"sw_gdoor":true,"sw_globe":true,"sw_berGlobe":true,"sw_cache":true}}
+PASS after the load: the trapdoor in the tent is still open (INPUT) {"r":{"r":"entered"},"exits":["wtent-out","sewer"]}
+PASS and below: the terrace lift's catch, Fosse's padlock and the blue door as left (INPUT) {"room":"sewer","bolt":true,"works":true,"globe":true,"exits":["sewervault","wtent","sewer-stoneup","sewer-out","sewerglobe"]}
+PASS an old save (no sw_ flags) loads: on the street, no door leads down, nothing owed {"room":"citadel","state":"play","chapter":"well","doors":0,"items":[]}
+PASS the terrace hatch shut from above again (its catch not drawn) (INPUT) {"r":{"r":"used","target":{"kind":"swlid","id":"p_sw_lift","label":"p_sw_lift"},"state":"play","lines":2},"s":["The lid won't lift. Something holds it from below: a catch, by the feel of it."]}
+PASS in by the street hatch: the terrace catch, the padlock and the blue door shut (INPUT) {"r":{"u":"used","t":"swdown","room":"sewer"},"room":"sewer","bolt":false,"works":false,"globe":false,"exits":["sewervault","wtent"]}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 34 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

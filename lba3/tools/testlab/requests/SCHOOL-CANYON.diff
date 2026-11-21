@@ -1,0 +1,31 @@
+diff --git a/lba3/src/game/desertold.js b/lba3/src/game/desertold.js
+index da99f325..ea5edd99 100644
+--- a/lba3/src/game/desertold.js
++++ b/lba3/src/game/desertold.js
+@@ -242,9 +242,13 @@ export function buildOldPlaces(C) {
+           at += len[i - 1];
+         }
+       };
+-      run([[-86.0, -70.9], [-78.0, -71.0], [-72.2, -70.7]], 5.5, 13.8);             // the north arm, west to the face
++      run([[-93.0, -71.4], [-86.0, -70.9], [-78.0, -71.0], [-72.2, -70.7]], 9.5, 13.8);   // (its west end runs into the island's high terrace: SCHOOL-CANYON)             // the north arm, west to the face
+       run([[-71.2, -70.3], [-71.2, -75.4]], 13.0, 13.0);                              // behind the face (its back)
+-      run([[-71.4, -76.2], [-71.6, -82.0], [-72.4, -88.5]], 14.2, 3.6);               // the south arm, falling away
++      run([[-71.4, -76.2], [-71.6, -82.6]], 14.2, 12.8);
++      // (SCHOOL-CANYON, the user, 15.11: "yes, a deep canyon": the south wall turns east along the plaza's far side, so the
++      //  School stands at the closed end of a gorge: the high terrace behind it, this wall to the south, the pool and the
++      //  hall to the north; it falls away toward the east, where the gorge opens onto the island (no ground changed)
++      run([[-71.0, -83.6], [-63.0, -84.2], [-55.0, -83.4], [-48.5, -84.6]], 12.6, 5.0);               // the south arm, falling away
+       // (each stretch a faceted rock column, the Whispering Cliffs' own shape: strata, ledges, a worn top; drawn with the
+       //  cliffs' texture and vertex tones; the columns' moss caps turned to the rock's grey: no moss in the desert)
+       const colM = tm('cliff', { vc: true, rough: 0.95, emissive: '#2c2a32', ei: 0.6 });   // (lit a little, as the mask: the wall faces away from the sun)
+@@ -261,8 +265,8 @@ export function buildOldPlaces(C) {
+         if (h > 5 && rr() < 0.7) { const sh = h * (0.35 + rr() * 0.3), o = (rr() < 0.5 ? -1 : 1) * (0.9 + rr() * 0.5); B.add(column(seed++, sh + 0.6), colM, q.x + Math.cos(ry + Math.PI / 2) * 0, by + sh, q.z, 0, ry + rr(), 0, (q.w * 0.55) / 2.6, 1, (d * 0.7) / 2.6); }
+         camVol(col({ type: 'box', x: q.x, z: q.z, hw: q.w / 2, hd: d / 2, rot: ry, top: by + h + 0.5, camSkip: true }), 'school canyon wall');
+       }
+-      // (the south arm's end: two boulders where the rock meets the terrace, so no slab's end shows)
+-      for (const [x, z, sc] of [[-72.8, -90.3, 1.5], [-71.0, -89.0, 1.0]]) B.add(column(seed++, sc * 1.6 + 0.6), colM, x, H(x, z) + sc * 1.0, z, 0, sc * 2, 0, sc * 0.9, 1, sc * 0.8);
++      // (the south wall's east end: two low rocks where it meets the sand, so no slab's end shows)
++      for (const [x, z, sc] of [[-47.2, -85.6, 1.5], [-49.0, -82.6, 1.0]]) B.add(column(seed++, sc * 1.6 + 0.6), colM, x, H(x, z) + sc * 1.0, z, 0, sc * 2, 0, sc * 0.9, 1, sc * 0.8);
+     }
+     // the mask: a broad stone egg, a wider brow over it, its chin pushed forward
+     { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 4.5, cz, 0, S.ry, 0, S.w / 2 - 0.1, 4.15, 1.45); }
