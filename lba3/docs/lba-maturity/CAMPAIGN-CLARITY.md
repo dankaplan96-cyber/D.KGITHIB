@@ -137,11 +137,19 @@ Tessa) → the ship's film Ballastra → Zeelich → `network`. Consequences: th
 (sub-objective `nwb_sub_fit` / `nwb_sub_band`); the epilogue asks `sleepersScene` (`inCampaign('survey') && wk_awake`)
 before the end card. A base-campaign save (`exp_base`) has none of it.
 
-**Automated runtime:** see the report's test table (`tests/exp-balances.mjs`, staged from chapter 11's last talk to the
-network's valve room and the epilogue's cutaway, with Save & quit / Continue at each handoff;
-`tests/playthrough/12b-throttle.mjs` from a council fixture to chapter 11's start). No playthrough segment and no fixture
-exists for chapters 11–13 themselves, so "from New Game" is verified as: the code path (Source) + segment 12b's real
-handoff into chapter 11 + the staged chapter tests.
+**Automated runtime** (21.11, this branch, SwiftShader on a shared loaded machine):
+- `tests/playthrough/12-council.mjs` from `base-12` (chapter 9's start) by input, ASSIST=1 (0 assists used) → PASS, ends
+  in `throttle`; its kept save → `12b-throttle.mjs` → PASS, ends with `chapterKey: ballastra` (the expanded campaign's
+  real handoff into chapter 11).
+- `tests/exp-ballastra.mjs` (staged: chapter 10's last step → chapter 11 → chapter 12's start) 33/33 PASS, incl. the
+  new `th_bal_exp1` wording.
+- `tests/exp-balances.mjs` (staged: chapter 11's last talk → 12 → 13 → 14's valve-room B-8 → the epilogue's Cradle Hall,
+  Save & quit / Continue at each handoff, and a legacy `exp_base` save) 30/30 PASS; Jory's card line (`wk_we_2b`) and the
+  hall's directions (`wk_we_3`) said in that order, `wk_started` set. (This run had the pause without the later
+  "wait until he is free" guard, a code-only change since.)
+No playthrough segment and no fixture exists for chapters 11–13 themselves, so "from New Game" is verified as: the code
+path (Source) + segments 12 → 12b's real handoff into chapter 11 + the staged chapter tests. **Verdict: reachable; the
+consequences show in the network (the valve room's B-8) and before the end card (the Cradle Hall).**
 
 ## 7. Dependencies for the coordinator (mechanics, not text)
 
