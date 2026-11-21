@@ -1348,7 +1348,11 @@ export function* buildWorldSteps(parentScene) {
   // (the doors' lanes, as the trees and bushes; WORLD-80: the new path, the new houses, the islet's dome and rock face;
   //  REVIEW-CITADEL: and the benches' room, as BENCHES-1 keeps it for the trees and bushes: a boulder stood where one sits
   //  down on the harbour path's bench, and Marda walked over its top to sit)
-  for (const r of rocks) if (gridPaveDist(r.x, r.z) < r.s * 1.1 || fenceDist(r.x, r.z) < r.s * 1.1 + 0.3 || doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55)) || climbClear(r.x, r.z, r.s * 1.1) || benchRoom(r.x, r.z, r.s * 1.1)) r.s = 1e-4;
+  // (TEST-DEBT, slidetraps: and every house's walls, as TREES-1 keeps the trees and bushes out of them — the scatter
+  //  checks only the new houses, so a boulder stood half inside the stone house's west corner (−31.5, −25.0), stopping
+  //  the lane round it dead and holding a slide off the terrace bank in the pocket behind it: SLIDE-RESCUE found no
+  //  footing and put him back)
+  for (const r of rocks) if (blockDist(r.x, r.z, false) < r.s * 1.1 + 0.2 || gridPaveDist(r.x, r.z) < r.s * 1.1 || fenceDist(r.x, r.z) < r.s * 1.1 + 0.3 || doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55)) || climbClear(r.x, r.z, r.s * 1.1) || benchRoom(r.x, r.z, r.s * 1.1)) r.s = 1e-4;
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();
