@@ -5900,3 +5900,7 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
 - **21.11 (cloud coordinator): P95 merged** (Auto: `src/engine/autoquality.js`, `autoapply.js`; published as v119). Order 64
   AUTO-HW: "before" = the commit before "Merge branch 'worktree-agent-a22cbbf029a651730'", "after" = that merge; the exact
   console procedure (clear the cache, read Auto's decisions, force a profile) is in `docs/lba3-performance/AUTO-P95.md`.
+
+- **21.11 night (cloud coordinator): P94 merged** (30 FPS feel: `MagicBall.preview`/`aimPoint` in actors.js, the Follow camera's
+  heading held while the ball is aimed by the mouse, `tests/fps30-feel.mjs`). Order 62 FPS30-FEEL: "after" = this merge
+  (published v121); the laptop commands are in `docs/lba-maturity/FPS30.md` §8 (`RATE=real` / `real60`).

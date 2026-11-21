@@ -32,6 +32,10 @@ await ev(() => {
   const G = window.game;
   G.settings.controls = 'modern'; G.applySettings();
   G.devArena(); G.state = 'play';
+  // (P94: the arena's enemies out, so the parts are independent of each other's order: A–C run ~40 s of play with him
+  //  standing among them; they killed him, B1 found the game over screen and D's walk, jump and throw measured a dead
+  //  hero — the "D fails only in the full run" of FPS30.md §7. D and G set their own scenes)
+  for (const e of G.enemies) if (e.id?.startsWith('a_')) e.setPresent(false);
   // the synthetic display: rAF callbacks wait in Q until tick(t) runs them with timestamp t
   const S = (window.SYN = { Q: [], drawn: [], adv: [], t: 0, on: false, raf0: window.requestAnimationFrame.bind(window) });
   window.requestAnimationFrame = (cb) => { if (!S.on) return S.raf0(cb); S.Q.push(cb); return S.Q.length; };
@@ -230,7 +234,7 @@ if (ONLY.includes('D')) {
     const seq = { 60: [1 / 60], 30: [1 / 30], 144: [1 / 144], uneven30: [0.032, 0.0346], '30cap': [1 / 30] };
     const fps0 = G.settings.fps, cap = (k) => { const v = k === '30cap' ? '30' : 'auto'; if (G.settings.fps !== v) { G.settings.fps = v; G.applySettings(); } };
     const reset = (beh = 'normal', a = 0) => {
-      h.pos.set(6190, G.physics.groundAt(6190, 8), 8); h.angle = a; h.vel?.set(0, 0); h.vy = 0; h.onGround = true; h.gravity = null; h.hp = h.maxHp; h.actT = 0; h.hurtT = 0;
+      h.pos.set(6190, G.physics.groundAt(6190, 8), 8); h.angle = a; h.vel?.set(0, 0); h.vy = 0; h.onGround = true; h.gravity = null; h.hp = h.maxHp; h.actT = 0; h.hurtT = 0; h.dead = false;
       for (const e of G.enemies) if (e.id?.startsWith('a_')) e.setPresent(false);
       G.resetCombat(); G.ball.reset?.(); G.state = 'play'; I.keys.clear(); I.taps.clear(); h.setBehaviour(beh); G.step(0.4);
     };
