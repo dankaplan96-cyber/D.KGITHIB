@@ -161,7 +161,7 @@ Object.assign(STR.en, {
   zt_irsa_6: 'Vesk signs my invoices and keeps this quarter in water. He also told me not to file what I just showed you. Take it to Baldino. He has been shouting the same thing for a year.',
   zt_irsa_after: 'Three and a rest. I have it pinned over the bench now. Somebody ought to.',
   zt_irsa_later: 'The chief kept us in water for ten years. And he knew about that kick. Both are true. I do not like it either.',
-  zt_bal_first: "Twinsen! At last! A year I've shouted at the council with nothing in my hand. You brought the strip from Irsa's pump? Then her bench first: under the brass wheel, behind my house. Bring me what her needle says!",
+  zt_bal_first: "Twinsen! At last! A year I've shouted at the council with nothing in my hand. A strip from Irsa's pump? Then her bench first, under the brass wheel behind my house. Bring me what her needle says!",
   zt_tw_bench: "Irsa's bench says it isn't her pump knocking. Something at the far end is pushing back up the pipe.",
   zt_bal_bench: "From below! And her bench says so, not just me! Ha! A year I've said it!",
   zt_note: "(AT IRSA'S BENCH IF NOT HERE. B.)",

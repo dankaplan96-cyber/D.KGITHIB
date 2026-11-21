@@ -13,13 +13,13 @@ Object.assign(STR.en, {
   c10_narr_exp: "Baldino's workshop again. Every bench is covered in wire.",   // (EXP-1: after chapter 10 "Borrowed Time" of the expanded campaign)
   c10_bal_1: "Five stations, five friends, one minute. The mains under Citadel, the lighthouse, my mill on Zeelich, the bore on Desert Island, and Sefa's dome.",
   c10_bal_2: "My relays hook into each station's old machine and talk through it. When all five talk at once, the shaft's blast doors hear them too.",
-  c10_bal_3: "Each one runs on what's there: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by it.",
+  c10_bal_3: 'Each one runs on what its station has: water, wind, steam, light. Together they hold the signal for one minute, so every station needs a friend standing by it.',
   c10_tw_b1: "Then we need friends at five stations, and a way to reach them all.",
   c10_bal_pulse1: "And take this: my pulse tool. A little thunder in a box. It stops anything with gears or wires for a few seconds.",
   c10_bal_pulse2: "Nothing alive, mind, and it needs a moment to recharge. Don't wave it at mites and expect miracles.",
   c10_toast_pulse: 'Pulse Tool: hold {k} to choose it',
   c10_bal_4: "The way is already here. Listen.",
-  c10_hesk_1: "Hesk here! I got the council's message. Take the spaceship to Citadel and find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind: she's a glider.",
+  c10_hesk_1: "Hesk here! Got the council's message. Take the ship to Citadel and find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind. She's a glider.",
   c10_bal_after: "Five relays, five friends. And Twinsen, the relays are delicate. Don't throw the ball at them.",
 
   c10_hesk_fly: 'Where to?',

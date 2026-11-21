@@ -68,7 +68,7 @@ Object.assign(STR.en, {
   c5_zoe_radio3: "Building a radio for every house on Bug Street. Three of them work. Go on, Twinsen.",
   c5_dallan_k1: 'The ferry left without me. Project headquarters recalled it. I am not on the list either, it seems.',
   c5_ilka_k1: 'Welcome to Kesh, Dallan. The water is free.',
-  c5_hesk_k1: "The ferry's gone. But that glider in the hangar... it can glide, it can't climb. Launch it from the hangar roof into the wind and, if the wind likes us, we'll reach the Hamalayi foothills.",
+  c5_hesk_k1: "The ferry's gone. But that glider in the hangar... it glides, it doesn't climb. Launch it off the hangar roof into the wind, and if the wind likes us, we reach the Hamalayi foothills.",
   c5_hesk_k2: 'Meet me in the hangar. Bring a coat. It gets cold up north.',
   c5_board_1: "Hesk pulls the tarp away. The glider rolls out under the open hatch, into a gust of hot wind.",
   c5_hesk_board: "Hold on. And if you know any prayers to Sendell, now's the time.",

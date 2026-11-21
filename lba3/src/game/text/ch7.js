@@ -27,7 +27,7 @@ Object.assign(STR.en, {
   c7_sendell_2: "Yes. I have been holding the shell together with my own light. It is not enough any more. I am fading.",
   c7_sendell_3: 'I cannot do this alone any more. You will have to help me, all of you. Open the vent below this mountain, and she will breathe easier.',
   c7_tw_s2: 'Who is she, Sendell?',
-  c7_sendell_4: "When you reach the bottom of the world, you will know her. Not before. Go.",
+  c7_sendell_4: 'She sleeps under the shell. You will meet her when you get there. Not before. Go.',
   c7_keeper_4: "The dome's big mirror can throw that light down onto the glacier. It will melt the ice over the vent. Turn the telescope, I'll do the rest.",
   c7_scope: 'The dome grinds round. A shaft of light swings out over the glacier, and the ice cap over the vent begins to steam.',
   c7_keeper_5: 'Hurry. The meltwater will fill the basin. And I see something flying down there. Something with the project\'s colours.',

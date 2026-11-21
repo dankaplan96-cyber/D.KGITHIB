@@ -21,7 +21,7 @@ Object.assign(STR.en, {
   map_to_ballastra: 'spaceship to Ballastra',
 
   // ---- chapter 10's end, in the expanded campaign once this chapter follows it (story/throttle.js)
-  th_bal_exp1: 'Twinsen! The relays are built. But a relay only passes word along. That B-7 holds a station by hand.',
+  th_bal_exp1: "Twinsen! The relays are built. But the project's control room can still overrule any station they sit on. That B-7 let one station say no.",
   th_tw_exp1: "One B-7. We'd need one at every station.",
   th_zoe_exp1: 'Then we need whoever mended it. There was a return label on that crate.',
   th_label: "(Zoé's label, torn off crate 212/3: TESSA'S FLOAT REPAIRS · FLOAT HARBOR · BALLASTRA.)",
@@ -371,7 +371,8 @@ Object.assign(STR.en, {
   // row), wk_sub_rest and wk_t_slip (hand over between Oren's strokes).
   wk_we_1: "Mags says Oren told you about the sleepers. One of them is my brother.",
   wk_tw_1: "I told Oren I'd come back for them. What's your brother's name?",
-  wk_we_2: "Jory. Nineteen when he went in, and I was nine. He left a card: wake me in ten years, or when my sister asks. I've asked twenty-four times.",
+  wk_we_2: 'Jory. He was nineteen when he went in. I was nine.',
+  wk_we_2b: "He left a card: 'Wake me in ten years, or when my sister asks.' I've asked twenty-four times.",
   wk_tw_2: "Then let's ask together.",
   wk_we_3: "The Cradle Hall is under the keepers' house, up on the terrace by the flood bell. They don't let anyone in.",
   wk_ga_1: 'No visitors. The bell stays silent and the door stays shut.',
