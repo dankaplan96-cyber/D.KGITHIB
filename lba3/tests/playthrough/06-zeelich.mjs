@@ -2,43 +2,65 @@
 // (the stair, the chain, the bell, the feed, the ride, the cart), Irsa's bench, Baldino's workshop, the depot locker (the code cylinder,
 // the plan back), Oku agrees, the cog at the top of the old mill, the three mills braked with the ball, the
 // key built, Zoé at the lighthouse (the dials: sun, wave, star), the platform shield, Vesk flies home, the console (the shaft at Citadel sealed).
+//
+// A save from before the thread (no zt_v: landed without the strip, e.g. tests/fixtures/campaign/base-05) finds the lift
+// mended and the cistern full by design (story/zeelift.js; campaign-thread C4): the Mill Lane steps then check that state
+// once and are passed over (OLD below), and the chapter plays as it did. The thread itself: from the chain's own save
+// after segment 05, or the fixture new-05.
+export const setup = () => {
+  // (a save with no Mill Lane task: the lift at the top, the cart at the filler, the cistern full, Baldino not waiting on it)
+  window.ZT_OLD = (first) => {
+    if (game.flags.zt_v) return null;
+    if (!first) return { old: true, skip: 'a save from before the thread: no Mill Lane task' };
+    const LT = game.story.cur.lift, L = LT.L;
+    const st = { old: true, on: LT.on, done: LT.done, deck: +(L.deckY - L.top).toFixed(2), cart: L.cartK, water: L.state.water };
+    return { ...st, fail: !st.on && st.done && st.deck === 0 && st.cart === 1 && st.water === true ? null : 'old save: the lift not mended' };
+  };
+};
 export const steps = [
   ['continue (arrival)', () => { P.settle(); return { started: game.flags.c2_started, taken: game.flags.c2_planTaken }; }],
   // ---- CAMPAIGN-3: Mill Lane (all by input; each step judged on its saved flag). No marker leads to the works.
-  ['Brel at the bridge: the way to the brass wheel', () => { const r = P.talk('zl_brel', { run: true }); return { ...r, markers: game.story.cur.markers().length, fail: game.flags.zt_brel && game.story.cur.markers().length === 0 ? null : 'brel' }; }],
+  ['Brel at the bridge: the way to the brass wheel', () => { const o = ZT_OLD(true); if (o) return o; const r = P.talk('zl_brel', { run: true }); return { ...r, markers: game.story.cur.markers().length, fail: game.flags.zt_brel && game.story.cur.markers().length === 0 ? null : 'brel' }; }],
   ['the lane: the lift stopped half way, Kell at the brake', () => {
+    { const o = ZT_OLD(false); if (o) return o; }
     const L = game.story.cur.lift.L; P.go(L.lane.x + 1.5, L.lane.z + 1.5, { tol: 1.0 }); game.step(0.5); P.settle(); const r = P.talk('zl_kell');
     return { ...r, seen: !!game.flags.zt_seen, fail: game.flags.zt_kell ? null : 'kell' };
   }],
   ['up the stair: the chain let down onto the cart', () => {
+    { const o = ZT_OLD(false); if (o) return o; }
     const L = game.story.cur.lift.L, f = game.flags, h = game.hero;
     P.go(L.spots.stairFoot.x, L.spots.stairFoot.z, { tol: 0.6, maxT: 60 }); const up = P.go(L.spots.stairTop.x, L.spots.stairTop.z, { tol: 0.7, maxT: 60 });
     const r = P.use(L.hook.x, L.hook.z, { near: 1.0, kind: 'zt_hook' }); for (let i = 0; i < 60 && !f.zt_hook; i++) { game.step(0.25); P.settle(); }
     return { up: up.r, y: +(h.pos.y - L.top).toFixed(2), ...r, fail: f.zt_hook ? null : 'hook' };
   }],
   ['the landing bell: Kell clears the lane, Vesk gives the mill line', () => {
+    { const o = ZT_OLD(false); if (o) return o; }
     const LT = game.story.cur.lift, L = LT.L, f = game.flags; const r = P.use(L.bell.x, L.bell.z, { near: 1.0, kind: 'zt_bell' });
     for (let i = 0; i < 60 && !f.zt_bell; i++) { game.step(0.25); P.settle(); } P.settle();
     return { ...r, fail: f.zt_bell ? null : 'bell' };
   }],
   ['down: the feed switch, the deck comes down', () => {
+    { const o = ZT_OLD(false); if (o) return o; }
     const LT = game.story.cur.lift, L = LT.L, f = game.flags;
     P.go(L.feed.front.x, L.feed.front.z - 0.5, { tol: 0.8, maxT: 90 }); const r = P.use(L.feed.x, L.feed.z, { near: 1.0, kind: 'zt_feed' });
     for (let i = 0; i < 80 && !(f.zt_feed && !LT.busy); i++) { game.step(0.25); P.settle(); }
     return { ...r, low: +(L.deckY - L.low).toFixed(2), fail: f.zt_feed && Math.abs(L.deckY - L.low) < 0.01 ? null : 'feed' };
   }],
   ['the ride up with the cart', () => {
+    { const o = ZT_OLD(false); if (o) return o; }
     const LT = game.story.cur.lift, L = LT.L, f = game.flags, h = game.hero; const r = P.use(L.deck.x, L.deck.z, { near: 1.9, kind: 'zt_ride' });
     for (let i = 0; i < 80 && !f.zt_ride; i++) { game.step(0.25); P.settle(); } P.settle();
     return { ...r, y: +(h.pos.y - L.top).toFixed(2), fail: f.zt_ride && Math.abs(h.pos.y - L.top) < 0.05 ? null : 'ride' };
   }],
   ['the cart shoved to the filler, its cock opened: the cistern fills', () => {
+    { const o = ZT_OLD(false); if (o) return o; }
     const LT = game.story.cur.lift, L = LT.L, f = game.flags;
     const r = P.use(L.cart.x, L.cart.z, { near: 1.3, kind: 'zt_cart' }); for (let i = 0; i < 60 && !(f.zt_shove && !LT.busy); i++) { game.step(0.25); P.settle(); }
     P.use(L.cock.x, L.cock.z, { near: 1.3, kind: 'zt_cock' }); for (let i = 0; i < 80 && !f.zt_water; i++) { game.step(0.25); P.settle(); } P.settle();
     return { ...r, k: L.cartK, water: L.state.water, fail: f.zt_water ? null : 'water' };
   }],
   ["Irsa's bench: the dial set to the strip, the crank", () => {
+    { const o = ZT_OLD(false); if (o) return o; }
     const LT = game.story.cur.lift, L = LT.L, f = game.flags, h = game.hero;
     const idle = () => { for (let i = 0; i < 60 && (h.steer || h.actT > 0); i++) game.step(0.25); P.settle(); };
     const r = P.talk('zl_irsa', { run: true });
