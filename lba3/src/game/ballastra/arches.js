@@ -58,7 +58,7 @@
 import * as THREE from 'three';
 import { Batch, cached, bbox, cyl, lathe, tube, compose, tint, tm, pm, ctex, boxUV } from '../kit.js';
 import { Place } from '../props-esmer.js';
-import { BM, BOB, bobbed, bobGeo, M4, deckSlab, railRun, stepsGeo, lantern, bollard, crateStack, jarCrate, sack, netPile, herbPot, ballastPot, buoyGeo } from './look.js';
+import { BM, BOB, bobbed, bobGeo, M4, deckSlab, railRun, stepsGeo, lantern, bollard, crateStack, jarCrate, sack, netPile, herbPot, ballastPot, buoyGeo, capLift } from './look.js';
 import { AM, tallHouse, tideMarks, skiffGeo, stall, gaugeTex, weedGeo } from './archhouses.js';
 import { seaSetup, setBedShape } from './sea.js';
 import { archGeo, archLine, archW } from './skyline.js';
@@ -159,11 +159,14 @@ export function* buildArchesSteps(scene, physics) {
 
   // ================================================================ stone: the quays, the ledge, the pier, the dykes, the terrace
   const pave = tm('stone', { color: '#f0e4c8', rough: 0.88 });   // (big pale flags: Ballastra's quays are laid like its ware, not cobbled)
+  // (OVERLAP-3: a cap overhangs its mass by 8 cm, so two masses side by side had their caps' tops in one plane along the
+  //  joint, and so had a parapet's at a corner: each cap now sits 5 mm over every cap it overlaps at its height — look.js capLift)
+  const lift = capLift([[STEPS.x - STEPS.r, STEPS.z - STEPS.r, STEPS.x + STEPS.r, STEPS.z + STEPS.r, QY]]);   // (the Speaking Steps' platform, at the quay's height)
   const mass = (x0, z0, x1, z1, top, { paveM = pave, bottom = -2.4, wetTop = 1.0, cap = true, colTop = true, stone = BM.stone() } = {}) => {
     const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     B.add(sb(w, wetTop - bottom, d, 1.7), BM.wet(), cx, (bottom + wetTop) / 2, cz);
     B.add(sb(w + 0.02, top - 0.14 - wetTop, d + 0.02, 1.8), stone, cx, wetTop + (top - 0.14 - wetTop) / 2, cz);
-    if (cap) B.add(sb(w + 0.16, 0.18, d + 0.16, 1.2), BM.cap(), cx, top - 0.09, cz);
+    if (cap) B.add(sb(w + 0.16, 0.18, d + 0.16, 1.2), BM.cap(), cx, top - 0.09 + lift(x0 - 0.08, z0 - 0.08, x1 + 0.08, z1 + 0.08, top), cz);
     if (paveM) B.add(sb(w - 0.12, 0.04, d - 0.12, 1.9), paveM, cx, top + 0.005, cz);
     if (colTop) box(x0, z0, x1, z1, top);
   };
@@ -172,7 +175,7 @@ export function* buildArchesSteps(scene, physics) {
   mass(-40, 0, -24, 4, QY, { cap: false });
   mass(JETTY.x0, JETTY.z0, JETTY.x1, JETTY.z1, QY);
   // the dykes that hold the basin: west of the walkway and north behind the row (no walking on them: the row's backs)
-  mass(-24, -39, -20, -30.5, QY, { colTop: false }); box(-24, -39, -20, -30.5, QY + 0.6, { block: true });
+  mass(-24, -37, -20, -30.5, QY, { colTop: false }); box(-24, -39, -20, -30.5, QY + 0.6, { block: true });   // (OVERLAP-3: from the north dyke's face: the two overlapped 4 × 2 m, every face twice)
   mass(-24, -39, 22, -37, QY, { colTop: false }); box(-24, -39, 22, -37, QY + 0.6, { block: true });
   // the landing below the west stair (stone, at the walkway's height)
   mass(-24, -30.5, -20, -28.5, WALK_Y, { paveM: tm('stone', { color: '#d8ccb0', rough: 0.9 }), wetTop: 0.9, colTop: false });
@@ -185,7 +188,8 @@ export function* buildArchesSteps(scene, physics) {
     B.add(sb(w, top + 2.4 - 0.02, d, 2.0), AM.ashlar(), cx, (top - 0.02 - 2.4) / 2, cz);
     B.add(sb(w + 0.5, 0.4, d + 0.5, 1.2), BM.cap(), cx, top - 0.2, cz);
     B.add(sb(w + 0.24, 0.24, d + 0.24, 1.2), BM.cap(), cx, QY + 1.2, cz);
-    for (const z of [z0 + 2, z1 - 2]) { B.add(sb(0.9, top - QY, 1.0, 1.6), AM.ashlar(), x1 + 0.3, QY + (top - QY) / 2, z); box(x1 - 0.2, z - 0.5, x1 + 0.75, z + 0.5, top, { block: true }); }   // (pilasters)
+    // (pilasters; OVERLAP-3: their tops 2 cm under the cornice's, not in its plane)
+    for (const z of [z0 + 2, z1 - 2]) { B.add(sb(0.9, top - QY - 0.02, 1.0, 1.6), AM.ashlar(), x1 + 0.3, QY + (top - QY - 0.02) / 2, z); box(x1 - 0.2, z - 0.5, x1 + 0.75, z + 0.5, top, { block: true }); }
     col({ type: 'box', x: cx, z: cz, hw: w / 2, hd: d / 2, top: top + 30, block: true });
   }
   // the upper terrace (dressed stone, older) and the collar round the arch's east leg
@@ -194,8 +198,8 @@ export function* buildArchesSteps(scene, physics) {
   B.add(sb(COLLAR.x1 - COLLAR.x0 + 0.3, 0.2, COLLAR.z1 - COLLAR.z0 + 0.3, 1.2), BM.cap(), (COLLAR.x0 + COLLAR.x1) / 2, COLLAR.top, (COLLAR.z0 + COLLAR.z1) / 2);
   // the terrace's parapets (where it drops to the quay, the basin, the sea), a gap at each stair head
   {
-    const par = (x0, z0, x1, z1) => { const w = Math.max(0.4, x1 - x0), d = Math.max(0.4, z1 - z0); B.add(sb(w, 0.7, d, 1.6), AM.ashlar(), (x0 + x1) / 2, TER + 0.35, (z0 + z1) / 2); B.add(sb(w + 0.12, 0.12, d + 0.12, 1.2), BM.cap(), (x0 + x1) / 2, TER + 0.76, (z0 + z1) / 2); box(x0, z0, x1, z1, TER + 0.82, { block: true }); };
-    par(20, -40, 20.4, -10); par(20, -6, 20.4, 2); par(20, -40, 40, -39.6); par(39.6, -40, 40, 6.6); par(39.6, 9.4, 40, 14); par(24, 13.6, 40, 14);
+    const par = (x0, z0, x1, z1) => { const w = Math.max(0.4, x1 - x0), d = Math.max(0.4, z1 - z0); B.add(sb(w, 0.7, d, 1.6), AM.ashlar(), (x0 + x1) / 2, TER + 0.35, (z0 + z1) / 2); B.add(sb(w + 0.12, 0.12, d + 0.12, 1.2), BM.cap(), (x0 + x1) / 2, TER + 0.76 + lift((x0 + x1 - w) / 2 - 0.06, (z0 + z1 - d) / 2 - 0.06, (x0 + x1 + w) / 2 + 0.06, (z0 + z1 + d) / 2 + 0.06, TER + 0.82), (z0 + z1) / 2); box(x0, z0, x1, z1, TER + 0.82, { block: true }); };
+    par(20, -40, 20.4, -10); par(20, -6, 20.4, 2); par(20.4, -40, 39.6, -39.6); par(39.6, -40, 40, 6.6); par(39.6, 9.4, 40, 14); par(24, 13.6, 39.6, 14);   // (OVERLAP-3: the runs along the front stop at the side runs: at the corners they were one block twice)
     par(24, 2, 24.4, 13.6);
   }
   // the quay's edges: a low kerb of cap stones along the water and the landing's drop (bollards stand on it)
@@ -387,7 +391,7 @@ export function* buildArchesSteps(scene, physics) {
     B.add(cached('blw2barrel', () => lathe([[0.001, 0], [1.25, 0], [1.3, 0.25], [1.2, 0.4], [1.2, 3.0], [1.32, 3.15], [1.0, 3.4], [0.001, 3.45]], 28, 2)), BM.celadon(), bx - 4.5, py, bz);
     for (const y of [0.6, 1.5, 2.4]) B.add(cached('blw2barrelband', () => new THREE.TorusGeometry(1.22, 0.07, 6, 28).rotateX(Math.PI / 2)), BM.bronze(), bx - 4.5, py + y, bz);
     // the A-frame of stone and the bronze beam across it, one end over the cylinder, the other out over the basin
-    for (const s of [-1, 1]) B.add(cached('blw2aframe', () => compose([[bbox(0.8, 6.0, 0.9, 0.06, 1.6), 0, 3.0, 0, 0, 0, 0.12], [bbox(0.8, 6.0, 0.9, 0.06, 1.6), 0, 3.0, 0, 0, 0, -0.12]])), AM.ashlar(), bx + 0.5, py, bz + s * 1.0);
+    for (const s of [-1, 1]) B.add(cached('blw2aframe', () => compose([[bbox(0.8, 6.0, 0.9, 0.06, 1.6), 0, 3.0, 0, 0, 0, 0.12], [bbox(0.8, 6.0, 0.86, 0.06, 1.6), 0, 3.0, 0, 0, 0, -0.12]])), AM.ashlar(), bx + 0.5, py, bz + s * 1.0);
     B.add(cached('blw2pivot', () => cyl(0.35, 0.35, 2.6, 16).rotateX(Math.PI / 2)), BM.bronze(), bx + 0.5, py + 6.0, bz);
     B.add(cached('blw2beam', () => compose([[bbox(15.5, 0.7, 0.5, 0.06, 1.2), 0, 0, 0.35], [bbox(15.5, 0.7, 0.5, 0.06, 1.2), 0, 0, -0.35], [bbox(15.2, 0.16, 1.1, 0.03, 1), 0, 0.4, 0]])), BM.bronze(), bx + 3.3, py + 6.1, bz, 0, 0, -0.06);
     for (const [ex, ey] of [[bx - 4.5, py + 6.55], [bx + 10.8, py + 5.6]]) B.add(cached('blw2beamhead', () => cyl(0.9, 0.9, 1.1, 18, 0, false).rotateX(Math.PI / 2)), BM.celadonDeep(), ex, ey, bz);
@@ -632,7 +636,7 @@ export function* buildArchesSteps(scene, physics) {
   const siltCol = physics.add({ type: 'box', x: DX + ox, z: WALK.z0 - 0.1 + oz, hw: 0.95, hd: 0.75, top: WALK_Y + 0.9, block: true });
   const doorHinge = keep(new THREE.Group()); doorHinge.name = 'bl_dunnDoor'; doorHinge.position.set(DX - 0.5, BOAT_STEP, ROW_Z + ROW_D / 2 - 0.08); group.add(doorHinge);
   {
-    const leaf = new THREE.Mesh(cached('blw2dleaf', () => compose([[bbox(0.98, 1.3, 0.07, 0.02, 0.6), 0.5, 0.65, 0], [cyl(0.49, 0.49, 0.07, 12, 0, false).rotateX(Math.PI / 2), 0.5, 1.3, 0], [bbox(0.98, 0.09, 0.1, 0.01), 0.5, 0.35, 0.03], [bbox(0.98, 0.09, 0.1, 0.01), 0.5, 1.05, 0.03]])), AM.boardStain());
+    const leaf = new THREE.Mesh(cached('blw2dleaf', () => compose([[bbox(0.98, 1.3, 0.07, 0.02, 0.6), 0.5, 0.65, 0], [cyl(0.49, 0.49, 0.06, 12, 0, false).rotateX(Math.PI / 2), 0.5, 1.3, 0], [bbox(0.98, 0.09, 0.1, 0.01), 0.5, 0.35, 0.03], [bbox(0.98, 0.09, 0.1, 0.01), 0.5, 1.05, 0.03]])), AM.boardStain());
     leaf.castShadow = true; doorHinge.add(leaf);
     const ring = new THREE.Mesh(cached('blw2dring', () => new THREE.TorusGeometry(0.07, 0.015, 4, 10)), BM.iron()); ring.position.set(0.82, 0.95, 0.07); doorHinge.add(ring);
   }

@@ -2084,8 +2084,12 @@ function buildStation(W0, root, r) {
     // them, a dialogue's two-shot frames no face through them, and a view through them to his feet counts against it as
     // the pipeline's does; the ring's opening stays open. Boxes round the ring (Rc 1.75, tube 0.27, centre padTop + 1.5):
     // its sides with the horns over them, its shoulders, its top)
+    // (P58, the station walk after P58-HW: the longest hidden spot left was 5 m south of the pad, 8.2 s in the Fixed view,
+    //  behind the arch's south side and horn: a camOnly volume is passed through by the search and the hidden test, so
+    //  no shot rose over it. The sides with their horns, 6 m tall, are scenery as the huts are: a shot rises over them.
+    //  The shoulders and the top over the ring's opening stay the camera's own)
     for (const s of [-1, 1]) {
-      addOccluder(W, { kind: 'box', camOnly: true, x: BP.x, z: BP.z + s * 1.735, hw: 0.34, hd: 0.515, y0: padTop - 0.5, y1: padTop + 5.4, name: 'beam pad arch side' });
+      addOccluder(W, { kind: 'box', x: BP.x, z: BP.z + s * 1.735, hw: 0.34, hd: 0.515, y0: padTop - 0.5, y1: padTop + 5.4, name: 'beam pad arch side' });
       addOccluder(W, { kind: 'box', camOnly: true, x: BP.x, z: BP.z + s * 1.125, hw: 0.34, hd: 0.175, y0: padTop + 2.35, y1: padTop + 3.4, name: 'beam pad arch shoulder' });
     }
     addOccluder(W, { kind: 'box', camOnly: true, x: BP.x, z: BP.z, hw: 0.34, hd: 0.95, y0: padTop + 2.75, y1: padTop + 3.6, name: 'beam pad arch top' });

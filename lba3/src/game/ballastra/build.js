@@ -10,8 +10,35 @@
 //     shutters (o.shutter)
 //   Local frame: the floor at P.y, the front (s) toward +z.
 import * as THREE from 'three';
-import { cached, bbox, cyl, panelGeo, frameGeo, fillGeo } from '../kit.js';
+import { cached, bbox, cyl, panelGeo, frameGeo, fillGeo, openingPts, toPath, boxUV, compose } from '../kit.js';
 import { BM } from './look.js';
+
+// OVERLAP-3: a wall panel (kit.js panelGeo) whose openings may run out through its bottom or top edge (a door through
+// the tiled dado, the boards over it from the door's head up; a window across the stain line). panelGeo cuts each as a
+// hole, and a hole on the edge leaves the edge's own face across it (the dado's top drawn over the doorway) and its
+// reveal in the edge's plane (the boards' door sill in the plane of the dado's top): two faces in one plane. Here such an
+// opening is a notch in the outline, or a gap when it runs through from bottom to top. Same outline, same UVs.
+export function cutPanel(len, h, t, holes = [], tile = 1) {
+  const E = 0.004, lo = (q) => !q.round && q.y <= E, hi = (q) => !q.round && q.y > E && q.y + q.h >= h - E;
+  if (!holes.some((q) => lo(q) || hi(q))) return panelGeo(len, h, t, holes, tile);
+  const gaps = holes.filter((q) => lo(q) && q.y + q.h >= h - E).map((q) => [q.x - q.w / 2, q.x + q.w / 2]).sort((a, b) => a[0] - b[0]);
+  const bottom = holes.filter((q) => lo(q) && q.y + q.h < h - E).sort((a, b) => a.x - b.x);
+  const top = holes.filter(hi).sort((a, b) => b.x - a.x), inner = holes.filter((q) => !lo(q) && !hi(q));
+  const segs = []; let a = -len / 2;
+  for (const [c0, c1] of gaps) { if (c0 > a + 0.01) segs.push([a, c0]); a = Math.max(a, c1); }
+  if (len / 2 > a + 0.01) segs.push([a, len / 2]);
+  const parts = segs.map(([x0, x1]) => {
+    const s = new THREE.Shape(), on = (q) => q.x > x0 && q.x < x1;
+    s.moveTo(x0, 0);
+    for (const q of bottom.filter(on)) for (const [px, py] of openingPts({ ...q, y: 0 })) s.lineTo(px, py);
+    s.lineTo(x1, 0); s.lineTo(x1, h);
+    for (const q of top.filter(on)) { const hw = q.w / 2; s.lineTo(q.x + hw, h); s.lineTo(q.x + hw, q.y); s.lineTo(q.x - hw, q.y); s.lineTo(q.x - hw, h); }
+    s.lineTo(x0, h); s.lineTo(x0, 0);
+    for (const q of inner.filter(on)) { const p = new THREE.Path(); if (q.round) p.absarc(q.x, q.y + q.h / 2, q.w / 2, 0, Math.PI * 2, true); else toPath(p, openingPts(q)); s.holes.push(p); }
+    return [new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false, curveSegments: 16 })];
+  });
+  return boxUV(parts.length === 1 ? parts[0][0] : compose(parts), tile);
+}
 
 const GLASS = () => BM.dark();
 export function building(P, o) {
@@ -33,9 +60,9 @@ export function building(P, o) {
     const len = k === 's' || k === 'n' ? L - 0.02 : L - 2 * t;
     // the tiled dado (cut by doors) and the boarded wall above it
     const lowHoles = holes.filter((q) => q.y < lowH).map((q) => ({ ...q, h: Math.min(q.h, lowH - q.y + 0.001) + 0.002 }));
-    put(cached(`blbw${len}|${lowH}|${t}|${JSON.stringify(lowHoles)}`, () => panelGeo(len, lowH, t + 0.03, lowHoles, 1.0)), low);
+    put(cached(`blbw${len}|${lowH}|${t}|${JSON.stringify(lowHoles)}`, () => cutPanel(len, lowH, t + 0.03, lowHoles, 1.0)), low);
     const upHoles = holes.filter((q) => q.y + q.h > lowH).map((q) => { const yy = Math.max(q.y, lowH) - lowH; return { ...q, y: yy, h: q.y + q.h - lowH - yy }; });
-    put(cached(`blbu${len}|${h - lowH}|${t}|${JSON.stringify(upHoles)}`, () => { const g = panelGeo(len, h - lowH, t, upHoles, 2.2); g.translate(0, lowH, 0); return g; }), up);
+    put(cached(`blbu${len}|${h - lowH}|${t}|${JSON.stringify(upHoles)}`, () => { const g = cutPanel(len, h - lowH, t, upHoles, 2.2); g.translate(0, lowH, 0); return g; }), up);
     // a band where the tiles meet the boards
     put(cached(`blbband${len}`, () => { const g = bbox(len + 0.04, 0.07, 0.05, 0.015, 1).clone(); g.translate(0, lowH, t + 0.02); return g; }), trim);
     // the openings: a framed reveal, a door leaf or glass and shutters

@@ -24,10 +24,11 @@
 //     marks: [y …] (old lines), weed: true, gaps: [[a, b] …] (along the run, metres, where nothing is drawn) }
 //   skiffGeo(color) · stallGeo(kind, o) · weedGeo(len, seed)
 import * as THREE from 'three';
-import { tm, pm, cached, bbox, cyl, lathe, tube, compose, tint, panelGeo, frameGeo, fillGeo, ctex } from '../kit.js';
+import { tm, pm, cached, bbox, cyl, lathe, tube, compose, tint, frameGeo, fillGeo, ctex } from '../kit.js';
 import { rng } from '../../engine/math.js';
 import { TEX } from '../props.js';
 import { BM } from './look.js';
+import { cutPanel } from './build.js';
 
 export const AM = {
   stoneStain: () => tm('stone', { color: '#aeb096', rough: 0.95 }),        // stone below the high-water line
@@ -101,13 +102,13 @@ export function tallHouse(P, o, X = {}) {
       const cut = st.stain ? Math.min(st.stain.top, h) : 0;
       if (cut > 0.02) {
         const lo = holes.filter((q) => q.y < cut).map((q) => ({ x: q.x, y: q.y, w: q.w, h: Math.min(q.h, cut - q.y + 0.001) + 0.002, arch: q.arch && q.y + q.h <= cut }));
-        put(cached(`blw2wl${len.toFixed(2)}|${cut.toFixed(2)}|${t}|${JSON.stringify(lo)}`, () => panelGeo(len, cut, t + 0.02, lo, 1.8)), st.stain.mat);
+        put(cached(`blw2wl${len.toFixed(2)}|${cut.toFixed(2)}|${t}|${JSON.stringify(lo)}`, () => cutPanel(len, cut, t + 0.02, lo, 1.8)), st.stain.mat);   // (OVERLAP-3: build.js cutPanel)
         // the salt line on the stain's top edge, round the openings
         for (const [a, b] of around(len, holes, cut)) put(cached(`blw2salt${(b - a).toFixed(2)}|${((a + b) / 2).toFixed(2)}|${cut.toFixed(2)}|${t}`, () => { const g = bbox(b - a, 0.05, 0.03, 0.01, 1).clone(); g.translate((a + b) / 2, cut, t + 0.02); return g; }), AM.salt());
       }
       if (h - cut > 0.02) {
         const up = holes.filter((q) => q.y + q.h > cut).map((q) => { const yy = Math.max(q.y, cut) - cut; return { x: q.x, y: yy, w: q.w, h: q.y + q.h - cut - yy, arch: q.arch }; });
-        put(cached(`blw2wu${len.toFixed(2)}|${(h - cut).toFixed(2)}|${t}|${JSON.stringify(up)}|${cut.toFixed(2)}`, () => { const g = panelGeo(len, h - cut, t, up, 2.2); g.translate(0, cut, 0); return g; }), st.mat);
+        put(cached(`blw2wu${len.toFixed(2)}|${(h - cut).toFixed(2)}|${t}|${JSON.stringify(up)}|${cut.toFixed(2)}`, () => { const g = cutPanel(len, h - cut, t, up, 2.2); g.translate(0, cut, 0); return g; }), st.mat);
       }
       // older water marks on this storey (dark lines with weed caught on them), round the openings
       for (const my of (o.marks || [])) {
@@ -214,7 +215,8 @@ export function tideMarks(B, f, o) {
     // green and wet from the foot to the low line, the stain to the salt line, the salt line itself
     if (o.wet != null) B.add(bbox(len, o.wet - o.bottom, 0.04, 0.01, 1.4), BM.wet(), cx, (o.bottom + o.wet) / 2, cz, 0, ry);
     if (o.salt != null && o.stain) B.add(bbox(len, o.salt - (o.wet ?? o.bottom), 0.03, 0.01, 1.6), o.stain, cx - nx * 0.005, ((o.wet ?? o.bottom) + o.salt) / 2, cz - nz * 0.005, 0, ry);
-    if (o.salt != null) B.add(bbox(len, 0.06, 0.05, 0.01, 1), AM.salt(), cx + nx * 0.005, o.salt, cz + nz * 0.005, 0, ry);
+    // (OVERLAP-3: 1 cm thinner at the back: its back face was in the stain's back face's plane)
+    if (o.salt != null) B.add(bbox(len, 0.06, 0.04, 0.01, 1), AM.salt(), cx + nx * 0.01, o.salt, cz + nz * 0.01, 0, ry);
     for (const my of o.marks || []) {
       B.add(bbox(len, 0.035, 0.035, 0.005, 1), AM.mark(), cx, my, cz, 0, ry);
       if (o.weed !== false && len > 0.8) B.add(weedGeo(Math.min(len - 0.3, 6), Math.round(my * 7 + s0)), BM.vcCloth(), cx + nx * 0.01, my, cz + nz * 0.01, 0, ry);

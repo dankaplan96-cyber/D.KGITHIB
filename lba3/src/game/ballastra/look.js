@@ -16,6 +16,7 @@
 //   bobbed(mat) / BOB.t           a twin of mat whose vertices heave and roll on the swell about their own piece's
 //                                 centre (the `aPiv` attribute: bobGeo); BOB.t is the clock (the region's updater)
 //   bobGeo(parts)                 merges [geo, matrix] parts of several floating pieces, each with its own pivot
+//   capLift(seed) → lift(x0, z0, x1, z1, top)   caps side by side, each 5 mm over those it overlaps (OVERLAP-3)
 //   the pieces: deckSlab, pileRow, railRun, ropeRail, lantern, bollard, crate, crateStack, jarCrate, sack, netPile,
 //               netRack, washingLine, herbPot, ballastPot, barrow, buoyGeo, chainGeo, stepsGeo
 import * as THREE from 'three';
@@ -55,6 +56,22 @@ export const BM = {
   vc: () => VC(),
   vcCloth: () => pm('#ffffff', 0.92, { vertexColors: true, side: THREE.DoubleSide }),
 };
+
+// ------------------------------------------------------------------ copings laid side by side
+// OVERLAP-3: a quay's or a terrace's mass has a cap that overhangs it a little, so where two masses (or two parapet runs)
+// meet, their caps overlap along the joint with their tops in one plane, and flickered there. capLift() keeps the caps
+// laid so far: each new one is raised 5 mm over every one it overlaps at its height (0, 5, 10 mm …; the pave on a mass
+// stands 25 mm over its top). seed: [[x0, z0, x1, z1, top] …] other flat tops at such heights (a platform's).
+//   const lift = capLift(seed); … lift(x0, z0, x1, z1, top) → metres to raise this cap (its footprint with the overhang)
+export function capLift(seed = []) {
+  const caps = seed.map((c) => [...c, 0]);
+  return (x0, z0, x1, z1, top) => {
+    const used = caps.filter((c) => Math.abs(c[4] - top) < 0.004 && c[0] < x1 && c[2] > x0 && c[1] < z1 && c[3] > z0).map((c) => c[5]);
+    let l = 0; while (used.some((u) => Math.abs(u - l) < 1e-6)) l += 0.005;
+    caps.push([x0, z0, x1, z1, top, l]);
+    return l;
+  };
+}
 
 // ------------------------------------------------------------------ the swell
 // (the harbour's small floating things heave and roll a little, each about its own centre, all in one draw per
