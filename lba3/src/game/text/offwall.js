@@ -88,7 +88,7 @@ Object.assign(STR.en, {
   ow_look_board_c3: "(Tali's blackboard, standing in the way. TALI 31. JOSS 2.)",
 
   // ---- the journal
-  ow_j_rule: "Tali's game by the old stone mask at the pool: ring her bell off the wall, never straight.",
+  ow_j_rule: "Tali's game behind the School: ring her bell off the wall, never straight.",
   ow_j_c2: 'Second game: off the wall and onto the bell without touching the sand.',
   ow_j_c3: "Last game: the bell beside Tali's board. From her ring there's only one way.",
   ow_j_board: 'Show Tali the ball can come off her board.',

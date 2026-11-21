@@ -6,6 +6,16 @@ listened to, no frame rate is claimed.
 
 ## Where
 
+**Moved 20.11 (P83, the user: "the court moves with the School, onto its back terrace").** Since SCHOOL-S28 the School
+of Magic is the mask in S28's canyon. The court moved with it, unturned, by (+70.6, +98.4) m (`desertold.js COURT`) to
+the terrace behind S28's ridge, north-west of the mask, west of the sand track and north of the yacht's line. Its two
+white blocks, the rock on its east side and the boulder at its corner are built there as they stood by the pool mask,
+and the ground is held level at 4.6 m over the yard (`courtAt`, desert.js), so every throw flies as before (the
+windows measured by `tests/off-the-wall.mjs` after the move: 6°, 8°, 3.5°, 8–9°). The pool mask keeps its own two
+white blocks (bodies 46). The way there: out of the canyon from the School's door and round by the sand tracks (40
+game seconds for the bot). The text below describes the court as first built, at the pool mask.
+
+
 Desert Island, from chapter 4 (`dig`) on: the sandy terrace behind the School of Magic (`desertold.js`). The island's
 ground there is flat at 1.3 m from the School's rock wall west to the slope; its south side is the two white blocks the
 original has on the mask's terrace (bodies 46): a whitewashed wall 2.85 m high. That is the pupils' yard and Tali's wall.

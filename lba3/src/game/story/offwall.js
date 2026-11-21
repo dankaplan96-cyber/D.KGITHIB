@@ -92,7 +92,7 @@ export class OffTheWall extends ChapterBase {
     const p = o ? { x: o.x + OWC.tali.x, z: o.z + OWC.tali.z, angle: this.homeA() } : { x: 0, z: 0, angle: 0, pending: true };
     return [{ id: 'ow_tali', name: 'n_ow_tali', char: 'lulu', color: COLOR, ...p }];
   }
-  homeA() { return angTo(OWC.tali, { x: -75.6, z: -75.5 }); }   // (she faces the bell's corner of the court)
+  homeA() { return angTo(OWC.tali, OWC.face); }   // (she faces the bell's corner of the court)
   place(id) {
     if (id !== 'ow_tali') return undefined;
     if (!this.open) return null;

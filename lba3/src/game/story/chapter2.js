@@ -119,7 +119,8 @@ export class Chapter2 extends ChapterBase {
       case 'guard':
         // (meets the ship: there from the landing on, while he has the plan to take. It was put there only once Doran's
         //  first lines were done, so he appeared out of nowhere beside Twinsen on the open deck)
-        if (!f.c2_planTaken && f.c1_plan) { const L = this.arrival(); return { x: L.x + 0.6, z: L.z - 1.8, a: 0 }; }
+        // (P83: beside him, facing him: 1.8 m before him is the spaceport terminal's gate now)
+        if (!f.c2_planTaken && f.c1_plan) { const L = this.arrival(); return { x: L.x + 1.6, z: L.z + 0.3, a: -Math.PI / 2 }; }
         return f.c2_shield ? { x: plat.gate.x + 0.5, z: plat.gate.z + 3.2, a: -Math.PI / 2 } : S.guard;
       case 'zoe': return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
       case 'worker': return null;

@@ -1580,7 +1580,8 @@ class Game {
     this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
     // (ROOMS-FULL: a spot saved in a room that has been drawn smaller since, now off its floor or inside its furniture:
     //  the room's own spawn instead; DECLUTTER: a save in a cut place lands at its region's spawn: migrateSave)
-    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => (!s.respawn && this.onRoomFloor(R, at) ? at : { ...(R.spawn || at) }), true);
+    // (P83: on Zeelich, a spot inside the spaceport terminal's walls, the old deck by the bridge's end: before its door or gate)
+    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => { const p = R.spaceport?.saneSpot?.(at) ?? at; return !s.respawn && this.onRoomFloor(R, p) ? p : { ...(R.spawn || p) }; }, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(this.world.spaceport?.saneSpot?.(at) ?? at, true);   // (SPACEPORT-2: not inside the terminal's walls)
     this.unwedge();

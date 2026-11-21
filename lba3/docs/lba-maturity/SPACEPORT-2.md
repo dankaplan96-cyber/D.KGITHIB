@@ -127,13 +127,13 @@ from the bridge into the bay is the game's usual respawn at the last safe spot; 
 walls are never a last safe spot), the door's opening animation (the terminal's doors are drawn shut and are walk-in
 triggers like every LBA-style door here).
 
-## Zeelich Spaceport (not changed)
+## Zeelich Spaceport (changed 20.11, P83 item 10)
 
-The same issue exists there: its footbridge comes in at x −4 from z 26 straight onto the deck (travel.js ZPORT), and
-the terminal pavilion (`zterminal.js`) stands on the deck beside it with its door on the deck; its gate exit puts him
-at the pad's landing spot. A player walks from the bridge to the pad without going through the terminal. Left as it
-is (out of this task's scope; skyferry.js is being edited by another worker); the same fix would move the pavilion
-across the bridge's end and close the deck's rail to it.
+The user approved the same layout for Zeelich Spaceport (status.md P83 (10)). Done in P83 (docs/lba-maturity/P83-WORLD.md):
+the terminal stands across the footbridge's end (`zterminal.js ZPORT_TERMINAL`, x −10…2, z 31…36 in ZPORT's frame), its
+door on the north face from the bridge, its gate on the south face onto the deck; the deck's north rail runs into its
+walls; inside, the door is in the near wall and the gate in the back wall, as in Citadel's hall. Tested by
+`tests/zport-2.mjs`.
 
 ## Open points for a human
 
@@ -145,4 +145,4 @@ across the bridge's end and close the deck's rail to it.
 - Coming out of the gate the follow camera starts over the terminal's roof (the occluder lifts it) before it settles
   behind him on the walkway; worth a look in play.
 - The hall's interior is wider than the block outside (16 × 12 m inside, 7 × 12 m outside), as before.
-- Zeelich's port (above): decide whether it gets the same treatment.
+- Zeelich's port: given the same layout on 20.11 (P83).

@@ -1244,6 +1244,7 @@ export function esmerBuilding(P, o) {
   const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: low ? 0.78 : 0.82, h: Math.min(1.25, friezeY - (low ? 0.92 : 0.96), courseY - 0.96) };
   const ops = { front: [], back: [], left: [], right: [] };
   if (hasDoor) ops.front.push({ x: doorX, y: 0, w: dw, h: dh, door: true });
+  if (hasDoor && o.backDoor) ops.back.push({ x: 0, y: 0, w: dw, h: dh, door: true });   // (P83: a second door in the back's middle: Zeelich Spaceport's gate)
   const balconySide = !solid && row2 && r() < (o.balconyP ?? 0.55) ? ['left', 'right', 'back'][Math.floor(r() * 3)] : null;
   if (!solid) for (const sd of sides) {
     if (o.blind?.includes(sd.n)) continue;   // (WORLD-FIX: a wall set into the rise behind it has no windows)
@@ -1254,6 +1255,7 @@ export function esmerBuilding(P, o) {
         const u = (q - (n - 1) / 2) * 2.1;
         if (Math.abs(u) + ww / 2 > sd.len / 2 - 0.42) continue;
         if (sd.n === 'front' && hasDoor && row === row1 && Math.abs(u - doorX) < dw / 2 + ww / 2 + 0.5) continue;
+        if (sd.n === 'back' && hasDoor && o.backDoor && row === row1 && Math.abs(u) < dw / 2 + ww / 2 + 0.5) continue;
         if (sd.n === balconySide && Math.abs(u) < 1.3) continue;   // (WORLD-FIX: the balcony's corbels hung into the window under it)
         ops[sd.n].push({ x: u, y: row.y, w: ww, h: row.h });
       }
