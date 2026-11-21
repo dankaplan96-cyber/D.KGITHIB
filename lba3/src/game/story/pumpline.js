@@ -19,6 +19,7 @@
 // ct_v: the thread counts as done (the bypass set right, the strip gone) and the chapter plays as it did.
 import { handTo } from './reach.js';
 import '../text/thread.js';
+const FEEL = { upper: 'p_feel_up', lower: 'p_feel_lo', copper: 'p_feel_cu' };   // (UI-P92: the three pipes' prompts)
 
 
 export class PumpLine {
@@ -106,7 +107,7 @@ export class PumpLine {
     const R = this.R, U = R?.pump;
     if (!U || g.room !== R) return;
     consider(dist(U.diagram.x, U.diagram.z), 1.5, { kind: 'ct_diagram', label: 'p_read' });
-    for (const k of ['upper', 'lower', 'copper']) consider(dist(U.feel[k].x, U.feel[k].z), 1.05, { kind: 'ct_feel', which: k, label: 'p_feel' });
+    for (const k of ['upper', 'lower', 'copper']) consider(dist(U.feel[k].x, U.feel[k].z), 1.05, { kind: 'ct_feel', which: k, label: FEEL[k] });   // (UI-P92: each pipe named)
     // (P39: each cock its own prompt, naming its line as its tag does; ranked by its wheel, not by where the hand goes on
     //  it — the hand is at the wheel's right, so from the lower's place the upper's hand point was as near as its own)
     if (!f.ct_bypass) for (const k of ['upper', 'lower']) { const c = U.cocks[k], w = c.wheel || c; consider(dist(w.x, w.z), 1.0, { kind: 'ct_cock', which: k, label: k === 'upper' ? 'p_cock_sq' : 'p_cock_ho' }); }

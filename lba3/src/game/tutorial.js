@@ -38,6 +38,7 @@ import { keyFor, keyLabel } from '../engine/input.js';
 import './text/opening.js';
 import './text/wswitch.js';   // (WEAPON-SWITCH / POCKET-SET: the two tips anywhere in the game)
 
+const NEAR_KEY = 3.5;        // m: a step's key line (Search, Talk, Try) shows within this of its thing (UI-P92)
 const SHOW_DELAY = 0.6;     // s eligible before the tip shows (a lesson met in passing, or done at once, never flashes up)
 const MIN_SHOW = 1.2;       // s a shown tip stays up through a flicker of its eligibility (not past its completion)
 const LOS_EVERY = 0.25;     // s between the barrels' line-of-sight tests
@@ -330,16 +331,20 @@ export class Tutorial {
       case 'ball': {
         if (!this.done.has('move')) return this.text('move');
         const sp = g.room?.searches?.find((x) => x.id === 'cupboard');
-        return sp && Math.hypot(h.pos.x - sp.x, h.pos.z - sp.z) < 3.5 ? t('t2_k_search', { k: K('interact') }) : '';
+        return sp && Math.hypot(h.pos.x - sp.x, h.pos.z - sp.z) < NEAR_KEY ? t('t2_k_search', { k: K('interact') }) : '';
       }
-      case 'zoe': return t('t2_k_talk', { k: K('interact') });
+      // (UI-P92, the HUD rule: from a distance the goal and the marker say where to go; the key for the thing comes up in
+      //  reach of it, as the cupboard's does)
+      case 'zoe': return this.nearMark(NEAR_KEY) ? t('t2_k_talk', { k: K('interact') }) : '';
       case 'inv': return t('tut_inv', { k: K('inventory') });
-      case 'tap': return t('t2_k_try', { k: K('interact') });
+      case 'tap': return this.nearMark(NEAR_KEY) ? t('t2_k_try', { k: K('interact') }) : '';
       case 'barrels': return this.text('ball');
       case 'pipe': return h.behaviour !== 'athletic' ? this.text('athletic') : t('t2_k_jump', { k: K('action') });
     }
     return '';
   }
+  // the step's marked thing within r m of Twinsen (the marker: mark(), set before the panel each frame)
+  nearMark(r) { const T = this.markAt, h = this.g.hero; return !!T && Math.hypot(h.pos.x - T.x, h.pos.z - T.z) < r; }
   // a step done: its goal with a tick, for a moment
   stepOk(id) {
     this.okHtml = `<div class="tgoal ok">✓ ${esc(t('t2_goal_' + id))}</div>`;

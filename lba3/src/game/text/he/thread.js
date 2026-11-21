@@ -4,8 +4,9 @@ import { STR } from '../../i18n.js';
 
 Object.assign(STR.he, {
   n_zl_kell: 'קל', n_zl_brel: 'ברל', n_zl_irsa: 'אירסה', n_veskhorn: 'וסק (צינור דיבור)',
-  p_tap: 'ניסיון', p_feel: 'מגע', p_listen: 'הקשבה', p_cock: 'פתיחה', p_strip: 'תלישה', p_plate: 'קריאה',
+  p_tap: 'ניסיון בברז', p_feel: 'מגע', p_listen: 'הקשבה', p_cock: 'פתיחה', p_strip: 'תלישה', p_plate: 'קריאה',
   p_cock_sq: 'פתיחת הקו של הכיכר', p_cock_ho: 'פתיחת הקו של הבתים',
+  p_feel_up: 'מגע בצינור העליון', p_feel_lo: 'מגע בצינור התחתון', p_feel_cu: 'מגע בצינור הנחושת',
   p_hook: 'לחבר שרשרת', p_bell: 'צלצול', p_zt_bell: 'לצלצל בפעמון', p_feed: 'להפעיל מנוע', p_ride: 'עלייה', p_cart: 'דחיפה', p_dial: 'סיבוב', p_crank: 'סיבוב הידית', p_enter: 'כניסה', p_draw: 'מילוי',
 
   // ------------------------------------------------------------ chapter 1: home

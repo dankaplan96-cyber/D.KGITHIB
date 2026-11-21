@@ -5,9 +5,11 @@ import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing 
 
 Object.assign(STR.en, {
   n_zl_kell: 'Kell', n_zl_brel: 'Brel', n_zl_irsa: 'Irsa', n_veskhorn: 'Vesk (speaking tube)',
-  p_tap: 'Try', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
+  p_tap: 'Try Tap', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
   // (P39: the pump room's two cocks, each its own prompt naming its line, as its tag and the wall diagram name it)
   p_cock_sq: "Open the square's line", p_cock_ho: "Open the houses' line",
+  // (UI-P92: the pump room's three pipes side by side, each its own prompt: one "Touch" for all three could not say which)
+  p_feel_up: 'Touch Upper Pipe', p_feel_lo: 'Touch Lower Pipe', p_feel_cu: 'Touch Copper Pipe',
   p_hook: 'Hook Chain', p_bell: 'Ring', p_zt_bell: 'Ring Bell', p_feed: 'Start Motor', p_ride: 'Step On', p_cart: 'Push', p_dial: 'Turn', p_crank: 'Crank', p_enter: 'Go In', p_draw: 'Draw',
 
   // ------------------------------------------------------------ chapter 1: home
