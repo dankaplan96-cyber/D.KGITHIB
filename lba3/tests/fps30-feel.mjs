@@ -31,8 +31,8 @@
 // and a CPU rasteriser — never a statement about a real screen or GPU.
 //
 // Run: cd lba3 && python3 -m http.server 8123 & node tests/fps30-feel.mjs
-// Env: GAME_URL · RUNS=3 · TESTS=T1,T2,T3 · PATHS=kbd,pad · RATES=30@60,30@59.9,60,cpu · PROBES=1 · OUT=dir (JSON) ·
-//   LABEL=text · PLAYWRIGHT=<playwright index.mjs>
+// Env: GAME_URL · RUNS=3 · TESTS=T1,T2,T3 · PATHS=kbd,pad · RATES=30@60,30@59.9,60,cpu (and real: the real draw) ·
+//   PROBES=1 · OUT=dir (JSON) · LABEL=text · PLAYWRIGHT=<playwright index.mjs> · HEADED=1 CHANNEL=chrome (a real GPU and display)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -46,7 +46,7 @@ const ORIGIN = new URL(URL0).origin;
 const RUNS = +(env.RUNS ?? 3);
 const TESTS = (env.TESTS || 'T1,T2,T3').split(',');
 const PATHS = (env.PATHS || 'kbd,pad').split(',');
-const RATES = (env.RATES || '30@60,30@59.9,60,cpu').split(',');
+const RATES = (env.RATES || '30@60,30@59.9,60,cpu').split(',');   // (also `real`: the real loop and the real draw at Frame Rate 30; `cpu60` / `real60` at 60)
 const PROBES = env.PROBES !== '0';
 const OUT = env.OUT || '', LABEL = env.LABEL || '';
 const VW = 1366, VH = 768;
@@ -165,16 +165,19 @@ async function synthPass(page, test, pathName, rate) {
     return out;
   }, { test, pathName, hz: +hzS, fpsSet });
 }
-async function cpuPass(page, test, pathName) {
+// cpu: the real loop on the browser's own requestAnimationFrame, the draw stubbed; real (draw = true): the same with the
+// real draw — for a machine with a GPU and a display (HEADED=1 CHANNEL=chrome: the local run, FPS30.md §8)
+async function cpuPass(page, test, pathName, draw = false, fps = '30') {
   await page.evaluate(() => { const S = SYN; if (S.on) { S.on = false; const q = S.Q.splice(0); for (const cb of q) S.raf0(cb); } });
-  await page.evaluate(({ test, pathName }) => {
-    const G = game; G.settings.fps = '30'; G.applySettings();
-    G.perf.reset(); window.CB.length = 0; window.CB.rec = true; window.__lt = []; window.__t0 = performance.now();
+  if (draw) await page.waitForTimeout(1500);   // (the real draw's first frames after the synthetic passes: not measured)
+  await page.evaluate(({ test, pathName, draw, fps }) => {
+    const G = game; G.settings.fps = fps; G.applySettings();
+    SM.stub = !draw; G.perf.reset(); window.CB.length = 0; window.CB.rec = true; window.__lt = []; window.__t0 = performance.now();
     SM.run(FEEL_ROUTES[test](pathName));
-  }, { test, pathName });
+  }, { test, pathName, draw, fps });
   await page.waitForFunction(() => SM.route.done, null, { polling: 250, timeout: 20 * 60000 });
   return page.evaluate(() => {
-    const G = game; window.CB.rec = false;
+    const G = game; window.CB.rec = false; SM.stub = true;
     const out = { F: SM.F, P: SM.P, CB: window.CB.slice(), refresh: G.refreshMs?.() || null, cap: G.frameCapMs || 0, longTasks: (window.__lt || []).filter((e) => e.start >= window.__t0), bg: !!G.background };
     G.settings.fps = window.__fps0; G.applySettings();
     return out;
@@ -326,7 +329,10 @@ function timing(raw) {
 
 // ------------------------------------------------------------------ run
 const t00 = Date.now();
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+// (HEADED=1: a visible window with the machine's own GPU — and CHANNEL=chrome for the installed Chrome — as tests/smooth-routes.mjs
+//  does for the laptop; otherwise headless SwiftShader)
+const browser = await chromium.launch({ headless: !env.HEADED, ...(env.CHANNEL ? { channel: env.CHANNEL } : {}),
+  args: env.HEADED ? ['--window-position=0,0', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const context = await browser.newContext({ viewport: { width: VW, height: VH }, storageState: fixture() });
 const page = await context.newPage();
 const errs = [];
@@ -355,7 +361,9 @@ const setup = await page.evaluate(() => {
 console.log(`setup: ${JSON.stringify(setup)} (${((Date.now() - t00) / 1000).toFixed(0)} s)`);
 const results = [];
 for (const test of TESTS) for (const pathName of PATHS) for (const rate of RATES) for (let k = 0; k < RUNS; k++) {
-  const raw = rate === 'cpu' ? await cpuPass(page, test, pathName) : await synthPass(page, test, pathName, rate);
+  // (cpu / real at Frame Rate 30; cpu60 / real60 at 60)
+  const loopRate = /^(cpu|real)(60)?$/.exec(rate);
+  const raw = loopRate ? await cpuPass(page, test, pathName, loopRate[1] === 'real', loopRate[2] ? '60' : '30') : await synthPass(page, test, pathName, rate);
   const row = { test, path: pathName === 'kbd' ? (test === 'T3' ? 'mouse+keys' : 'keys') : 'pad', rate, run: k + 1, timing: timing(raw), m: measure(test, raw.F), refresh: r2(raw.refresh), cap: r2(raw.cap), longTasks: raw.longTasks?.length ?? null, bg: raw.bg ?? null };
   results.push(row);
   const T = row.timing, M = row.m;
@@ -367,7 +375,7 @@ for (const test of TESTS) for (const pathName of PATHS) for (const rate of RATES
   if (OUT) fs.writeFileSync(path.join(OUT, `${test}-${pathName}-${rate}-${k + 1}.json`), JSON.stringify({ ...row, raw }));
 }
 const probeRows = [];
-if (PROBES && TESTS.includes('T3')) for (const pathName of PATHS) for (const rate of RATES.filter((r) => r !== 'cpu')) {
+if (PROBES && TESTS.includes('T3')) for (const pathName of PATHS) for (const rate of RATES.filter((r) => !/^(cpu|real)/.test(r))) {
   const p = await probes(page, pathName, rate);
   probeRows.push({ path: pathName, rate, ...p });
   console.log(`probe ${pathName} ${rate}: ${JSON.stringify(p)}`);

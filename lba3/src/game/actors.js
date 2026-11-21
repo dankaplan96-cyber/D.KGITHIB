@@ -1569,10 +1569,10 @@ export class MagicBall {
     // follow the arc in small steps to its first contact: the ground, a wall, or the target
     // (SMOOTH-1, applied and measured in P94 — FPS30.md §8: the touch-down is where the arc crosses the ground between the
     //  last two 10 ms samples, and the dots stand at even shares of the flight to it on the arc the samples trace (exact at
-    //  each sample, continuous between). They
-    //  used to sit on the samples themselves: as he strafed, the ring hopped by up to a sample's 10 ms of flight and each dot
-    //  jumped to the next sample whenever the count changed — spikes of 0.3 m in one frame against 0.02 m in the frames
-    //  around it, at a perfectly even frame time: tests/smooth-routes.mjs combat, docs/lba3-performance/SMOOTH-1.md)
+    //  each sample, continuous between). They used to sit on the samples themselves: as he strafed, the ring hopped by up
+    //  to a sample's 10 ms of flight and each dot jumped to the next sample whenever the count changed — spikes of 0.3 m in
+    //  one frame against 0.02 m in the frames around it, at a perfectly even frame time: tests/smooth-routes.mjs combat,
+    //  docs/lba3-performance/SMOOTH-1.md)
     const v = pl.vel, G = pl.grav, tp = tgt ? (tgt.pos || tgt) : null, h = 0.01;
     let x = p.x, y = p.y, z = p.z, vy = v.y, land = null, sc = 400;
     for (let i = 0; i < 400 && !land; i++) {
