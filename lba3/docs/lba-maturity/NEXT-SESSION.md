@@ -1,5 +1,7 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**21.11 07:01: v112 published** (artifact 1795244501-57a8): P87b — textures.js cloneTex at 13 first-visit clone sites; 4 canvases (2.5 MB) no longer re-sent on revisits. Next candidate: offwall.js repaints Desert Island slate/sand (2 MB) after almost every area build.
+
 **21.11 05:05: v111 published** (artifact 1795237541-4549): P87 ARRIVAL-2 — draw-batch units yield after 4 ms, texture array without a copy, the twin clone no longer re-uploads Citadel (first frame back 91→48 ms, 5.7 MB→536 KB). arrival-steps 12/12 on a quiet machine. Open: other texture clones (interiors, architecture, props-esmer) unprobed; real-GPU numbers.
 
 **21.11 04:07: v110 published** (artifact 1795234031-30ec): P86 FACE-2 — the dialogue camera favours the speaker (head 73→131–134 px), Twinsen's face seen, expressions carried by head and chest (FACE-2.md). P87 ARRIVAL-2 still running.
