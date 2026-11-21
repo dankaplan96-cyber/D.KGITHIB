@@ -245,7 +245,7 @@ const CH_CANDS = (() => {
 // CAM-CLEAR-2, a dialogue under Follow (AUDIT-CH12 #13): Twinsen and whoever talks with him framed together, the camera
 // beside his shoulder CH_TALK_ANG off the line between them (the side nearer the view first), CH_TALK_P up, far enough
 // back that everyone stands inside CH_TALK_FIT of the frame, nobody in front of him (CH_TALK_SEP apart across it); into it and back out to the chase eased (CH_TALK_W, CH_TALK_IN s)
-const CH_TALK_KEEP = 8, CH_CROWD_NEAR = 4.5;   // (CH_CROWD_NEAR: a bystander's head nearer the lens than this, in the frame, is in the way: _crowdIn)   // (CAM-AFTERTALK: the most the two-shot is kept after the dialogue while nobody moves, s: _talkShot)
+const CH_TALK_KEEP = 8, CH_HB_FIT = 0.85, CH_CROWD_NEAR = 4.5;   // (CH_HB_FIT, CAM-HANDBACK: the part of the frame a shot held after a talk keeps him inside: _framesHero)   // (CH_CROWD_NEAR: a bystander's head nearer the lens than this, in the frame, is in the way: _crowdIn)   // (CAM-AFTERTALK: the most the two-shot is kept after the dialogue while nobody moves, s: _talkShot)
 const CH_TALK_ANG = [0.75, 1.0, 0.55, 1.25, 0.35, 1.5], CH_TALK_P = 0.32, CH_TALK_FIT = 0.72, CH_TALK_W = 2.6, CH_TALK_IN = 1.1, CH_TALK_SEP = 0.22;
 // G1-CAM: where none of those is clear, the search all round them: the arm's lengths (of the first one's), its tilts, and
 // what a flaw costs (someone in front of him; a face behind a post, a rail or an arch's leg; a face hidden; the view
@@ -1364,7 +1364,7 @@ export class CameraRig {
     {
       // (also where it will be CH_LEAD s on, turning and walking: a swing toward a wall, a walk past a corner start
       // drawing it in before the wall is between them)
-      let [want, seen, tier, overQ, overArm] = armFor(yaw, T, true); const over = tier === 2;
+      let [want, seen, tier, overQ, overArm] = armFor(yaw, T, true); const over = tier === 2, seeQ = overQ;   // (seeQ: the tilt armFor found seeing him, before CAM-STEADY's hold below)
       if (over) C.overHigh = CH_HIGH_ARMS.includes(overArm);   // (CAM-STEADY: the risen longer arm, CH_HIGH_HYST)
       // (CAM-KEYWALK: what the look-ahead reads draws the arm in no shorter than MIN-VIEW's: turning on the spot by the
       // hostel's portico, a heading the turn was still on its way to read 1.6 m, and the arm came in to it at his shoulder
@@ -1486,7 +1486,10 @@ export class CameraRig {
         if (C.arm >= want - 0.05) C.quick = false;
       } else { C.armV = C.armV > 0 ? Math.max(0, C.armV - CH_OUT_A * dt) : Math.min(0, C.armV + CH_IN_A * dt); if (want <= C.arm + 0.05) C.clearT = 0; }
       W.occ = C.arm - a0; C.want = want; C.tight = tier > 0;
-      C.overSee = over && seen ? [overQ, overArm] : null;   // (CAM-OVERSIGHT: the over-his-head view that sees him, below)
+      // (CAM-OVERSIGHT: the over-his-head view that sees him, below — at the tilt armFor found, not the one CAM-STEADY holds:
+      // camfollow's full turn by the wall at -68.7, 11, the held lower tilt was the step's goal, nothing on the way to it saw
+      // him over the roof's eave, and he was unseen for a frame — the camera's own sight said so too —, until its next frame)
+      C.overSee = over && seen ? [seeQ, overArm] : null;
     }
     // (over his head: the tilt first, then the arm — out of it the arm first: the way between never crosses the eaves)
     // (CAM-STEADY: from a longer arm than the one over his head — the risen arm, CH_HIGH_* — the tilt and the arm go
@@ -1615,7 +1618,17 @@ export class CameraRig {
         // (SMOOTH-1: CH_OVER_SEE_STEP per 1/60 s of play, so the same speed at any frame rate — it was per frame: twice as
         //  fast at 120 Hz, half at an uncapped 30; at 60 Hz, and under the 30 limit's 60 Hz steps, exactly as before)
         const far = _b.distanceTo(cam.position), stepMax = CH_OVER_SEE_STEP * Math.min(2, dt * 60);
-        if (far > stepMax) for (let g = stepMax / far; g < 1; g += 0.1) {
+        // (CAM-OVERSIGHT, camfollow's full turn by the wall: the spot that sees him further than a step away, a step along
+        //  that way left him behind the eave for a frame; a tilt up at its own arm, within the step, that stands clear and
+        //  sees him is taken first — as the "tilt" rule above does out of something solid)
+        let near = false;
+        if (far > stepMax) for (let gq = q1 + 0.05; gq <= CH_RISE_Q + 1e-6; gq += 0.05) {
+          at(_os, yaw, a1, T, gq); _os.y += this._groundNeed(_os.x, _os.y, _os.z, T, true);
+          if (_os.distanceTo(cam.position) > stepMax) break;
+          if (this._solidAt(_os, CH_INSIDE) || !this._sees(_os, hero)) continue;
+          _b.copy(_os); aa = a1; qq = gq; near = true; break;
+        }
+        if (far > stepMax && !near) for (let g = stepMax / far; g < 1; g += 0.1) {
           const ga = lerp(a1, a, g), gq = lerp(q1, q, g);
           at(_os, yaw, ga, T, gq); _os.y += this._groundNeed(_os.x, _os.y, _os.z, T, true);
           if (this._solidAt(_os, CH_INSIDE)) continue;
@@ -1649,6 +1662,12 @@ export class CameraRig {
     this._talkShot(dt, hero, fresh, heroAngle, lock);
     cam.lookAt(this.look);
     this.target.copy(hero);
+  }
+
+  // CAM-HANDBACK: does a two-shot { pos, look } frame him — his waist and his head inside CH_HB_FIT of the frame, and
+  // his head or chest in sight from there?
+  _framesHero(s, hero) {
+    return this._fits(s.pos, s.look, [[hero.x, hero.y + 0.6, hero.z], [hero.x, hero.y + 1.6, hero.z]], null, CH_HB_FIT) && this._sees(s.pos, hero);
   }
 
   // CAM-CLEAR-2: a camera at p looking at L: are all of pts inside CH_TALK_FIT of the frame (and in front of it)?
@@ -1931,10 +1950,11 @@ export class CameraRig {
   _talkShot(dt, hero, fresh, heroAngle = 0, lock = false) {
     const cam = this.cam, S = (this.tk ??= { k: 0, n: 0, shot: null, pos: new THREE.Vector3(), look: new THREE.Vector3(), init: false });
     const who = this.talk?.() || null;
-    if (fresh) { S.k = 0; S.init = false; S.shot = null; S.n = 0; S.keep = null; S.fav = S.base = S.spk = null; S.props = null; }
+    if (fresh) { S.k = 0; S.init = false; S.shot = null; S.n = 0; S.keep = null; S.fav = S.base = S.spk = null; S.props = null; S.hb = null; }
     if (who && who.length && this.mode === 'follow') S.keep = { x: hero.x, z: hero.z, a: heroAngle, t: 0, who, at: who.map((p) => [p.x, p.z]) };   // (FACE-3: the hold after a talk is the chase's alone)
     else if (S.keep && (lock || !S.shot || (S.keep.t += dt) > CH_TALK_KEEP || Math.hypot(hero.x - S.keep.x, hero.z - S.keep.z) > 0.15 || Math.abs(angleDiff(S.keep.a, heroAngle)) > 0.05 || S.keep.who.some((p, i) => Math.hypot(p.x - S.keep.at[i][0], p.z - S.keep.at[i][1]) > 0.5))) S.keep = null;
     if (who && who.length) {
+      S.hb = null;
       // (worked out when the dialogue starts and whenever someone joins it)
       // (G1-CAM: a new shot more than CH_TALK_CUT round from the one it has is cut to, as a film cuts to the wider shot when
       // someone joins in: gliding half round the group took a second at speed, and its way can pass a mast or a roof)
@@ -1968,9 +1988,19 @@ export class CameraRig {
         if (ns) { cutTo(ns); if (!S.init) S.held = 0; S.shot = ns; if (S.fav !== hero) S.base = ns; }
       }
     } else {
+      const ended = S.n > 0;
       S.n = 0; S.spk = null;
       // (FACE-2: the talk over, the view goes back to his side — never eased from a shot on his face into the chase behind him)
       if (S.shot && S.fav === hero && S.base) { S.shot = S.base; S.fav = S.base.fav || null; S.init = false; }
+      // CAM-HANDBACK (camclear ch10: Oku's one line from 8.4 m by the north mill's brake): the favoured shot may be a
+      // clean single on the other's face, him behind the lens — fine while they speak, but CAM-AFTERTALK then held it
+      // up to CH_TALK_KEEP s with him out of the frame and the controls his. Held after a talk, the shot frames him:
+      // the one it has if it does, else the two-shot of them both (_talkPose, glided to; a cut if the change is one
+      // already), else none — the hold let go, eased back to the chase as without it
+      if (ended && S.keep && S.shot && !this._framesHero(S.shot, hero)) {
+        const ns = this._talkPose(hero, S.keep.who);
+        if (ns && this._framesHero(ns, hero)) { S.shot = ns; S.fav = null; S.hb = S.init ? { t: 0, pos: S.pos.clone(), look: S.look.clone() } : null; } else S.keep = null;
+      }
       if (S.k <= 0) { S.shot = null; S.fav = S.base = null; S.props = null; }
     }
     const on = !!((who && who.length) || S.keep) && !!S.shot;
@@ -1978,7 +2008,16 @@ export class CameraRig {
     if (this.cut && this.mode === 'lba') S.k = on ? 1 : 0;   // (FACE-3: the 1997 look's Fixed camera cuts, into a talk and out)
     if (S.k <= 0 || !S.shot) { S.init = false; return; }
     if (!S.init) { S.pos.copy(S.shot.pos); S.look.copy(S.shot.look); S.init = true; }
-    else if (on) {
+    else if (on && S.hb) {
+      // (CAM-HANDBACK: from the shot it had to the one that frames him, round the look-at point as below, over CH_TALK_IN s
+      // eased in and out — the glide below starts at its full speed, 0.32 m in its first frame from this shot)
+      const H = S.hb, w = smoothstep(0, 1, (H.t = Math.min(1, H.t + dt / CH_TALK_IN)));
+      const ox = H.pos.x - H.look.x, oz = H.pos.z - H.look.z, oy = H.pos.y - H.look.y, nx = S.shot.pos.x - S.shot.look.x, nz = S.shot.pos.z - S.shot.look.z, ny = S.shot.pos.y - S.shot.look.y;
+      const a0 = Math.atan2(ox, oz), a = a0 + angleDiff(a0, Math.atan2(nx, nz)) * w, r = lerp(Math.hypot(ox, oz), Math.hypot(nx, nz), w);
+      S.look.lerpVectors(H.look, S.shot.look, w);
+      S.pos.set(S.look.x + Math.sin(a) * r, S.look.y + lerp(oy, ny, w), S.look.z + Math.cos(a) * r);
+      if (H.t >= 1) S.hb = null;
+    } else if (on) {
       // (G1-CAM: round the look-at point, not straight across it: a new shot on the far side of them glides round the
       // group at the distances between, never through their heads or the arch they stand round)
       const w = 1 - Math.exp(-CH_TALK_W * dt), ox = S.pos.x - S.look.x, oz = S.pos.z - S.look.z, oy = S.pos.y - S.look.y;
