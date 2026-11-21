@@ -76,7 +76,7 @@ the same way back; the deck is closed from the bridge.
 | tests/chapter2.mjs | PASS 21/21 | |
 | tests/travel.mjs | 24/27 | the same three fail on the base f6fb06a8 (run here, 24/27): the sky-ferry at Zeelich's dock in chapter 3, chapter 8's ship prompt (an NPC ranks first), the Ballastra ship rides (no menu item) |
 | tests/spaceport-2.mjs | PASS 21/21 | Citadel's (the harness's routing changed) |
-| tests/save-migration.mjs | RESULT_SAVE | |
+| tests/save-migration.mjs | PASS 49/49 | once, at the end, on the final build |
 
 Not run: tests/spaceport.mjs (its Zeelich lines were reworded: "pavilion" → the terminal's door), interior-life.mjs,
 place-scan.mjs, door-sweep.mjs, desert-life.mjs, purposes.mjs.
