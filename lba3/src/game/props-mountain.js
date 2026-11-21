@@ -327,13 +327,17 @@ export function mountainHouse(k, o = {}) {
 // stepped segments of rubble with a batter, lumpy coping stones and snow on top. → colliders [{x,z,hw,hd,rot,top}]
 export function dryWall(k, pts, { h = 1.0, bw = 0.7, tw = 0.48, seed = 1, coping = 'stones', step = 1.7, mat = null } = {}) {
   const r = rng(seed * 13 + 1), out = [], wm = mat || MM.rubble('#d8ccb8');
+  let seg = 0;
   for (let i = 0; i < pts.length - 1; i++) {
     const [ax, ay, az] = pts[i], [bx, by, bz] = pts[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.round(L / step));
     for (let j = 0; j < n; j++) {
       const t0 = j / n, t1 = (j + 1) / n, x0 = ax + (bx - ax) * t0, z0 = az + (bz - az) * t0, x1 = ax + (bx - ax) * t1, z1 = az + (bz - az) * t1;
       const sl = L / n + 0.12, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, gy = Math.min(ay + (by - ay) * t0, ay + (by - ay) * t1) - 0.3;
       const hh = h + 0.3 + (r() - 0.5) * 0.22, ry = Math.atan2(-(bz - az), bx - ax);
-      k.add(trapGeo(sl, r2(hh), bw, tw), wm, cx, gy, cz, ry);
+      // (P65-2 OVERLAP-SWEEP: every second segment 2 cm thicker: on a straight run two segments overlap by 12 cm and
+      //  their battered faces lay in one plane there, the rubble flickering (the monastery yard's walls, worldfit))
+      const e = (seg++ % 2) * 0.02;
+      k.add(trapGeo(sl, r2(hh), bw + e, tw + e), wm, cx, gy, cz, ry);
       k.at(cx, gy + hh, cz, ry, () => {
         if (coping === 'slate') { k.add(rbox(sl + 0.04, 0.1, tw + 0.2, 0.02), MM.slate(), 0, 0.04, 0); k.add(rbox(sl, 0.1, tw + 0.1, 0.05), MM.snow(), 0, 0.12, 0); }
         else {

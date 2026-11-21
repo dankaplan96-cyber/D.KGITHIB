@@ -5880,3 +5880,4 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   - At 60 on battery, Auto dropped to Low and still missed refreshes (p99 66–83 ms).
   - On battery with the panel at 40–48 Hz (GTX1050-BATTERY) an even 30 cannot be shown at all: there 25 ms or 20.8 ms refreshes. Proposed for the cloud: a 30 limit that follows the measured refresh (20 or 40 at 40 Hz, 24 or 48 at 48 Hz), and F9's line counting presented frames, not only drawn ones.
   - Traces: `fps30-present/traces-frames-battery.zip`.
+- **21.11 (cloud coordinator): SMOOTH-1 merged** on `ccr-c1c2c4b9-dep6ed` (commit 7faa6fe6's merge). Order 61 SMOOTH-HW can run now: base = the commit before that merge, after = the merge. `tests/smooth-routes.mjs`, procedure in `docs/lba3-performance/SMOOTH-1.md` §7. Order 62 FPS30-FEEL: take its "before" now; "after" when "P94 merged" appears here.

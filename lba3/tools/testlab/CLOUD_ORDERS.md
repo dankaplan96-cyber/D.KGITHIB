@@ -833,3 +833,39 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     whether the motion looks even at a stable frame time (a short clip per route). Do not change OS power or GPU settings.
     Measure only; report as SMOOTH-HW with numbers in SMOOTH-1.md's "Real hardware" section on a branch `smooth-hw`.
     Order: after 60.0 FPS30-PRESENT, before 60.1.
+
+62. **FPS30-FEEL (the user, 21.11: "running, turning the camera and aiming the magic ball should feel steady and
+    responsive at 30, keeping the image sharp"; status.md P94).** First of the queue after 60.0 (it is the same
+    question with real presented frames). Use the packaged Electron build (`desktop/`) if it builds, else headed Chrome;
+    say which. Citadel street, already loaded (not the first seconds after arrival), 1366×768, 60 Hz, Follow camera,
+    Frame Rate 30, Medium. Record: the GPU actually used (chrome://gpu or the game's benchmark line), the display
+    refresh, the preset, render scale / world resolution, devicePixelRatio, battery vs plugged in. **On battery first,**
+    then plugged in. Same save and settings before and after. Three tests, **3 runs each**:
+    - **T1 pan:** stand still and turn the camera at a constant speed past a row of windows or fence posts (~5 s);
+    - **T2 run–stop–reverse:** run along the fence, stop, run back, camera untouched;
+    - **T3 aim:** strafe, turn, aim at a small target (a bell if one is in view) and throw the magic ball.
+    For each run: rAF intervals, intervals actually drawn (the game's `perf` counters), and presentation timing if the
+    platform shows it (Chrome trace "Frame" / `PresentationFeedback`, or the Electron `--enable-gpu-benchmarking`
+    swap times); p50/p95/p99, the longest, and the count of intervals ≥ 45 ms. Label each number with what it measured.
+    Target: one new image every 2 refreshes (33.3 ms); an average of 30 is not a pass. Also a 60 FPS capture (a phone
+    filming the screen is fine) of T2 and T3, measured separately. Mouse and, if one is at hand, a controller for T3.
+    Then the 60 FPS cap: T3 and one bank-shot puzzle, to catch regressions.
+    **Before** = the current `ccr-c1c2c4b9-dep6ed`; **after** = when the coordinator writes "P94 merged" in
+    WORLD_ART_REQUESTS.md. Measure only; no changes to OS power or GPU settings. Report as FPS30-FEEL in
+    `docs/lba-maturity/FPS30.md` §8 "Real hardware" on a branch `fps30-feel`, pushed.
+
+**21.11 afternoon (cloud coordinator):** 60.1 ARRIVAL-HW, 60.2 FACE-2-HW and 60.3 P58-HW are merged (thank you; P58's
+occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 FPS30-FEEL "before" → 61 SMOOTH-HW →
+63 DEPOT-CLIP → 60.4/57 JOINTS.** Note FACE-3 (v115) changed the talk shot at Corla's kiosk and in Fixed/Free: the
+"Corla hidden by her booth" finding is fixed from the hatch; from the kiosk's back corner it is the talk prompt's reach.
+
+63. **DEPOT-CLIP (the user, 21.11, P93: "a before/after clip if rendering is available").** The Zeelich depot
+    (chapter 2, the code cylinder) changed in v118: a loose door leaf on the red container knocks in gusts and when hit
+    by the ball; the nearest guard turns, or walks over and looks; the patrols have their own beats; the gate's colliders
+    and the ball's release at 30 were fixed (`docs/lba-maturity/DEPOT.md`). On the GTX 1050, headed Chrome, 1366×768,
+    Follow, Medium: run `tests/depot.mjs` once (HEADED=1), then record two short clips by hand or by the test's staged
+    starts, **before** (the commit before "Merge branch 'worktree-agent-a016d250d6b208b4f'") and **after**: (a) a gust:
+    the leaf swings and the guard turns and goes back; (b) a throw at the leaf from inside the gateway, the guard walks
+    over, Twinsen slips past in Discreet to the locker. Once at 60 and once at 30. Also report anything that looks wrong
+    (the leaf clipping, the guard sliding, the ball through a wall). Captures under `captures/depot-hw/` (≤ 15 MB, mp4 or
+    gif), a line in WORLD_ART_REQUESTS.md, branch `depot-hw`. No code changes unless a defect is obvious and local.

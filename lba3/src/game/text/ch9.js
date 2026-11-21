@@ -41,7 +41,7 @@ Object.assign(STR.en, {
   c9_clerk_archive: "The archive belongs to the project, not to us. Technicians only. And the archivist does not like visitors.",
 
   c9_chair_1: "Twinsen of Citadel. We know your name, and we heard your wife's broadcast. Speak.",
-  c9_tw_c1: "The bore will crack the shell around the world. Sendell is holding it together with her own light, and she is fading. Reverse the bore before it reaches full depth.",
+  c9_tw_c1: "Vesk's bore will crack the shell under Twinsun. Sendell is holding it together with her own light, and she's fading. Reverse the bore before it reaches full depth.",
   c9_councilC_1: "And when the project leaves, who heats Zeelich? The cold winds come up through the clouds every year. The project's heat posts are the first warm winter we've had.",
   c9_councilB_1: "Vesk tells us the bore is safe. He has charts. You have... a story about a fading spirit.",
   c9_chair_2: "We cannot order the project on a story, Twinsen. Bring us proof. Something the project itself wrote down.",
@@ -67,7 +67,7 @@ Object.assign(STR.en, {
   c9_councilC_2: "Not assessed is not the same as broken. Plans are not proof that the shell will crack.",
   c9_dallan_1: "Then here's the rest of it. Councillors.",
   c9_tw_d1: 'Dallan?',
-  c9_dallan_2: "Hesk flew me to Citadel, and nobody checks a foreman on a project ship. Professor Ilka sent these: her rubbings of the dig's seals and her readings from the vents. The carvings map the shell, and the bore line runs through its thinnest part.",
+  c9_dallan_2: "Hesk flew me to Citadel, and nobody checks a foreman on a project ship. Ilka sent these: rubbings of the dig's seals, and her readings from the vents. The carvings map the shell, and the bore runs through its thinnest part.",
   c9_dallan_3: "I ran that dig for a year, and its guards answered to me. I'm telling you: the professor is right, and the project knew enough to stop asking.",
   c9_councilC_3: "...My cousin works on the bore. If it cracks the shell, he's at the bottom of it.",
   c9_chair_3: "The council has heard enough. By vote of this council: the Joint Project is ordered to reverse the bore.",

@@ -13,13 +13,13 @@ Object.assign(STR.en, {
   c10_narr_exp: "Baldino's workshop again. Every bench is covered in wire.",   // (EXP-1: after chapter 10 "Borrowed Time" of the expanded campaign)
   c10_bal_1: "Five stations, five friends, one minute. The mains under Citadel, the lighthouse, my mill on Zeelich, the bore on Desert Island, and Sefa's dome.",
   c10_bal_2: "My relays hook into each station's old machine and talk through it. When all five talk at once, the shaft's blast doors hear them too.",
-  c10_bal_3: "Each one runs on what's there: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by it.",
+  c10_bal_3: 'Each one runs on what its station has: water, wind, steam, light. Together they hold the signal for one minute, so every station needs a friend standing by it.',
   c10_tw_b1: "Then we need friends at five stations, and a way to reach them all.",
   c10_bal_pulse1: "And take this: my pulse tool. A little thunder in a box. It stops anything with gears or wires for a few seconds.",
   c10_bal_pulse2: "Nothing alive, mind, and it needs a moment to recharge. Don't wave it at mites and expect miracles.",
   c10_toast_pulse: 'Pulse Tool: hold {k} to choose it',
   c10_bal_4: "The way is already here. Listen.",
-  c10_hesk_1: "Hesk here! I got the council's message. Take the spaceship to Citadel and find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind: she's a glider.",
+  c10_hesk_1: "Hesk here! Got the council's message. Take the ship to Citadel and find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind. She's a glider.",
   c10_bal_after: "Five relays, five friends. And Twinsen, the relays are delicate. Don't throw the ball at them.",
 
   c10_hesk_fly: 'Where to?',
@@ -38,7 +38,7 @@ Object.assign(STR.en, {
 
   // Citadel: Mira's valves
   c10_mira_1: "You still have my key. Good. The valve room is under this floor. The mains run to the fortress, the depot and the lighthouse: the oldest pipes on the island, and still the best.",
-  c10_mira_2: "The relay needs pressure, two marks on every gauge. Each valve feeds two of the mains. Except the fourth: that one's FunFrock's own, and it only floods the fortress. Come down, I'll show you.",
+  c10_mira_2: "The relay needs pressure, two marks on every gauge. Each valve feeds two of the mains. Except the fourth. That one's FunFrock's own, and it only floods the fortress. Come down, I'll show you.",
   c10_valves_in: 'FunFrock\'s valve room. Four wheels, three gauges. Mira watches from the stairs with her arms folded.',
   c10_valve_hint: '(Each gauge should rest on the green mark: two.)',
   c10_valves_ok: 'All three needles settle on the green mark. The pipes hum, and Baldino\'s relay on the manifold blinks awake.',
@@ -58,7 +58,7 @@ Object.assign(STR.en, {
 
   // Desert Island: the bore
   c10_ilka_1: "Twinsen! Dallan said you'd come. The bore vent is still breathing since you opened it. Steam without a pause. If your relay wants power, there's plenty.",
-  c10_ilka_2: "Set it on the bore's frame. And keep your ball handy: the project's drones don't like anything they didn't build.",
+  c10_ilka_2: "Set it on the bore's frame. And keep your ball handy. The project's drones don't like anything they didn't build.",
   c10_relay_bore: 'The relay clicks onto the bore\'s frame. Steam rattles through its little pipe, and the lamp lights up.',
   c10_drones: 'Drones! Three of them, coming in low over the post.',
   c10_ilka_w2: "Drones down! But one of FunFrock's old clone soldiers is out by the cabins, and his sentry's awake at the gate. They take orders from nobody alive. Catch your breath, then one at a time.",

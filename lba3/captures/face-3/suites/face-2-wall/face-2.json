@@ -1,0 +1,150 @@
+{
+ "W": 1280,
+ "H": 720,
+ "SPOT": "wall",
+ "wall": {
+  "a": 5.366887449882563,
+  "r": 2.5,
+  "hero": [
+   -41.77,
+   78.64
+  ]
+ },
+ "lines": [
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "line": "Same next door. Their tap ran warm, knocked thre",
+   "why": [
+    0.62,
+    1,
+    0.2,
+    1,
+    0.3,
+    0
+   ],
+   "head": {
+    "px": 132,
+    "x": 676,
+    "bottom": 345,
+    "top": 213,
+    "turn": 33
+   },
+   "other": {
+    "px": 173,
+    "x": 478,
+    "bottom": 392,
+    "top": 219,
+    "turn": 128
+   },
+   "box": 552
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "line": "And look at their kettle. Furred with these sinc",
+   "why": [
+    0.62,
+    1,
+    0.2,
+    1,
+    0.3,
+    0
+   ],
+   "head": {
+    "px": 130,
+    "x": 681,
+    "bottom": 343,
+    "top": 213,
+    "turn": 32
+   },
+   "other": {
+    "px": 174,
+    "x": 471,
+    "bottom": 396,
+    "top": 222,
+    "turn": 130
+   },
+   "box": 552
+  },
+  {
+   "who": "hero",
+   "fav": "hero",
+   "line": "(Tiny crystals. Still warm.)",
+   "why": [
+    0.62,
+    1,
+    0.2,
+    -1,
+    0.3,
+    0.15
+   ],
+   "head": {
+    "px": 129,
+    "x": 594,
+    "bottom": 340,
+    "top": 211,
+    "turn": 42
+   },
+   "other": {
+    "px": 162,
+    "x": 775,
+    "bottom": 423,
+    "top": 262,
+    "turn": 131
+   },
+   "box": 552
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "line": "Mira's got the well padlocked, and she's telling",
+   "why": [
+    0.62,
+    1,
+    0.2,
+    1,
+    0.3,
+    0
+   ],
+   "head": {
+    "px": 129,
+    "x": 683,
+    "bottom": 338,
+    "top": 209,
+    "turn": 41
+   },
+   "other": {
+    "px": 172,
+    "x": 491,
+    "bottom": 393,
+    "top": 221,
+    "turn": 130
+   },
+   "box": 534
+  }
+ ],
+ "after": {
+  "state": "play",
+  "fav": "npc",
+  "keep": true,
+  "talk": 0
+ },
+ "path": {
+  "frames": 1189,
+  "cuts": [
+   [
+    456,
+    4.01,
+    1
+   ],
+   [
+    720,
+    4.08,
+    1
+   ]
+  ],
+  "maxMovePerFrame": 0.183,
+  "solidFrames": 0
+ }
+}

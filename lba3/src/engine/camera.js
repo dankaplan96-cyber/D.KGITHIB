@@ -263,6 +263,24 @@ const CH_TALK_K = [1, 1.3, 0.8, 1.65], CH_TALK_PS = [CH_TALK_P, 0.5], CH_TALK_K_
 // FV_CHECK s into a shot it looks once more: someone who was still stepping when it was set (more than FV_MOVED m since),
 // or a face that has not turned to the talk (a pair chatting on a bench), gets the shot set again from where they are.
 const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.12, 0.9, 1.28, 1.5], FV_Q = [0.2, 0.3, 0.12], FV_FACE = 1.25, FV_NEAR = 1.7, FV_HOLD = 2.2, FV_LATE = 2.5, FV_MIX = [0.3, 0.42], FV_CHECK = 0.8, FV_MOVED = 0.3, FV_FG = 3, FV_FG_PAD = 0.45, FV_K_FG = 0.3;
+// FACE-3 (the leftovers of FACE-2):
+// (1) a prop drawn with no collider of its own — the yard's Bug St. sign: a board 1.1 m wide on a post whose collider is
+//     0.12 m round, over his chest and waist in dialogue-scenes' D2/D3 — is seen by the shot search too: the meshes drawn
+//     within FV_PROP_NEAR m of the favoured face (camRig.propsNear, main.js: none of a character's, none more than
+//     FV_PROP_R m round nor less than FV_PROP_MIN), each by its own box in its own space padded FV_PROP_PAD m, gathered
+//     once a talk (again once the face is FV_PROP_MOVE m from where they were gathered) and asked only in the shot search:
+//     along _fgClutter's foreground lines (a hit FV_K_PROP times a collider's), and along the whole line to the speaker's
+//     face (a hit there: no such shot).
+// (2) someone serving from inside a booth (Corla in the ticket kiosk, whose one collider is the whole booth, so every line
+//     to her face ended in it): a box collider round the face, no wider than FV_BOOTH_R, whose side nearest the way she
+//     keeps facing (her placement's) is taken as the open one; a shot sees her only from within FV_HATCH of that side's
+//     normal, through that side FV_HATCH_EDGE m in from its ends, and from near her face's height (tilts FV_HATCH_Q, the
+//     line rising at most FV_HATCH_RISE to the lens: the kiosk's awning hangs at her brow, the collider knows nothing of
+//     it); its lines then pass the booth's own collider.
+// (3) the Fixed (LBA2) and Free cameras: a talk out of doors takes the same favoured shot over them (_talkOver), eased in
+//     and out as under Follow (the 1997 look's cuts: cut in and out), and the camera chosen is left as it was: it runs on
+//     under the shot from its own view of the frame before, and is exactly that view again once the talk is over.
+const FV_PROP_NEAR = 7, FV_PROP_R = 1.6, FV_PROP_MIN = 0.1, FV_PROP_PAD = 0.15, FV_PROP_MOVE = 1.5, FV_K_PROP = 4, FV_BOOTH_R = 2.5, FV_HATCH = 0.75, FV_HATCH_EDGE = 0.2, FV_HATCH_Q = [0.04, 0, 0.08], FV_HATCH_RISE = 0.1;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -300,7 +318,7 @@ function outside(c, x, z) {
   const lx = dx * c.cos - dz * c.sin, lz = dx * c.sin + dz * c.cos;
   return Math.hypot(Math.max(0, Math.abs(lx) - c.hw), Math.max(0, Math.abs(lz) - c.hd));
 }
-const _seen = new Set(), _cells = [], NO_SKIP = new Set(), NONE_V = [];
+const _seen = new Set(), _cells = [], NO_SKIP = new Set(), NONE_V = [], _near3 = [];
 // G1-CAM (cost): the scenery volumes by camera.js's own grid of VG m cells (numeric keys; occlude.js's near() builds a
 // string key at every call, ~70 ns, and the Follow camera's sight lines read it at hundreds of samples a frame). Volumes
 // are added once and never move, so the grid is built again only when the list grows. Any volume whose footprint holds
@@ -334,7 +352,7 @@ const _segCols = [], _segVols = [], _segSeen = new Set();
 const _pass = [[0, false], [0, true]], SOLID_PASS = (gap) => { _pass[0][0] = gap; _pass[1][0] = gap + CH_PIPE; return _pass; };
 const RIM5 = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]], GAP4 = [[-1, -1], [1, -1], [-1, 1], [1, 1]], GAP11 = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, 0.7], [-0.7, 0, -0.7]];
 
-const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _cd = new THREE.Vector3(), _e = new THREE.Vector3(), _t = new THREE.Vector3(), _os = new THREE.Vector3();
+const _f3 = new THREE.Vector3(), _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _cd = new THREE.Vector3(), _e = new THREE.Vector3(), _t = new THREE.Vector3(), _os = new THREE.Vector3();
 // LBA2's forced camera: the look-ahead shrinks with the sine of the pitch above the view's own, to nothing at 90°
 const aheadK = (p, p0) => (p <= p0 + 1e-4 ? 1 : clamp(1 - (Math.sin(p) - Math.sin(p0)) / (1 - Math.sin(p0)), 0, 1));
 
@@ -361,7 +379,8 @@ export class CameraRig {
     this.lockOn = null;    // () → the locked target's position, or null: the Follow camera frames both (main.js)
     this.talk = null;      // () → the positions of those talking with him in a dialogue, or null: Follow frames them together (main.js)
     this.speaker = null;   // (FACE-2) () → who speaks now: 'hero', a talker's position (one of talk()'s), or null (main.js)
-    this.faceOf = null;    // (FACE-2) (position) → { x, y, z: the head's middle, s: the body's scale, yaw: the way a seated face keeps, or null: it turns to the talk } or null (main.js)
+    this.faceOf = null;    // (FACE-2) (position) → { x, y, z: the head's middle, s: the body's scale, yaw: the way a seated face keeps, or null: it turns to the talk, now: the way it faces now, home: the way its placement faces (FACE-3) } or null (main.js)
+    this.propsNear = null; // (FACE-3) (x, z, r, rMax, rMin) → the meshes drawn within r m of (x, z), rMin..rMax m round, none of a character's (main.js): the shot search's props
     this.base = new THREE.Vector3();   // (CAM-2: where the camera stands before a shake's tremor; tests/lib/camrec.js)
     // CAM-2: what moved the view this frame (tests/camsteady.mjs reads it; a few numbers, always kept)
     this.why = { mode: '', follow: 0, box: 0, swing: 0, swingBy: '', rise: 0, lift: 0, keep: 0, dist: 0, auto: 0, user: 0, occ: 0, ground: 0, snap: false };
@@ -503,9 +522,9 @@ export class CameraRig {
       return;
     }
     if (this.iso) this._iso(dt, focus);
-    else if (this.mode === 'lba') this._lba(dt, focus, heroAngle);
+    else if (this.mode === 'lba') { this._ownView(); this._lba(dt, focus, heroAngle); this._talkOver(dt, focus, heroAngle, snap); }
     else if (this.mode === 'follow') this._chase(dt, focus, heroAngle, input, snap);
-    else this._free(dt, focus, heroAngle, moving, input, snap);
+    else { this._ownView(); this._free(dt, focus, heroAngle, moving, input, snap); this._talkOver(dt, focus, heroAngle, snap); }
     this.base.copy(cam.position);
     if (this.shakeT > 0) {
       // (CAM-2: a smooth tremor, the same at any frame rate — it was a new random jump every frame)
@@ -835,7 +854,8 @@ export class CameraRig {
 
   // (is the line from p to (tx, ty, tz) clear? the end left out: what is right there; `tall`: only what stands higher
   // than that counts — CAM-ROOFEDGE)
-  _line(p, tx, ty, tz, strict = false, ground = true, tall = -Infinity) {
+  // (FACE-3: `skip`, a collider the line may pass — the booth a face is framed in through its open side, see FV_BOOTH_R)
+  _line(p, tx, ty, tz, strict = false, ground = true, tall = -Infinity, skip = null) {
     const P = this.physics, occ = this.occ?.(), T = ground ? this.terrain : null;
     const dx = tx - p.x, dy = ty - p.y, dz = tz - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
     this._segCands(p, dx, dy, dz, n, 1, n - 1, P, occ);
@@ -845,7 +865,7 @@ export class CameraRig {
       if (T && T.heightAt(x, z) > y + 0.05) return false;
       for (let ci = 0; ci < cols.length; ci++) {
         const c = cols[ci];
-        if (!c.enabled || c.fades || (c.camSkip && occ) || y >= c.top || y <= c.bottom || c.top < tall) continue;
+        if (!c.enabled || c.fades || (c.camSkip && occ) || y >= c.top || y <= c.bottom || c.top < tall || c === skip) continue;
         // (CAM-CROWN, PLAYTHROUGH PT-7: a dense crown down to the ground — the tall cypress-like trees, the pines — hides
         // him like a wall within its core, c.sight: behind one at the depot bunker's wheel and at the glider field the
         // camera kept its view and he showed as an outline through the leaves. A round tree's crown, high over its trunk,
@@ -1585,8 +1605,10 @@ export class CameraRig {
         // a step over his head out of a crown or an eave came to 4.6 m in a frame; nothing it passes stands in anything,
         // and his outline shows for the two or three frames it takes)
         let aa = a, qq = q;
-        const far = _b.distanceTo(cam.position);
-        if (far > CH_OVER_SEE_STEP) for (let g = CH_OVER_SEE_STEP / far; g < 1; g += 0.1) {
+        // (SMOOTH-1: CH_OVER_SEE_STEP per 1/60 s of play, so the same speed at any frame rate — it was per frame: twice as
+        //  fast at 120 Hz, half at an uncapped 30; at 60 Hz, and under the 30 limit's 60 Hz steps, exactly as before)
+        const far = _b.distanceTo(cam.position), stepMax = CH_OVER_SEE_STEP * Math.min(2, dt * 60);
+        if (far > stepMax) for (let g = stepMax / far; g < 1; g += 0.1) {
           const ga = lerp(a1, a, g), gq = lerp(q1, q, g);
           at(_os, yaw, ga, T, gq); _os.y += this._groundNeed(_os.x, _os.y, _os.z, T, true);
           if (this._solidAt(_os, CH_INSIDE)) continue;
@@ -1724,19 +1746,90 @@ export class CameraRig {
   // the lens, within FV_FG_PAD of a collider (a sign's post, a lamp, a fence's rail; a listener's line counts half, the
   // speaker's — faces[0] — whole): a prop big in the
   // foreground across a body (the yard's street sign over him, in dialogue-scenes' D2/D3, ghosting him)
-  _fgClutter(p, faces) {
+  _fgClutter(p, faces, props = NONE_V, skip = null) {
     const P = this.physics;
-    if (!P) return 0;
+    // (FACE-3: and the props near enough to this lens to stand in its first FV_FG m; skip: a booth framed through, FV_BOOTH_R)
+    const near = _near3; near.length = 0;
+    for (let i = 0; i < props.length; i++) { const q = props[i]; if (Math.hypot(q.c.x - p.x, q.c.y - p.y, q.c.z - p.z) < FV_FG + q.r + FV_PROP_PAD) near.push(q); }
+    if (!P && !near.length) return 0;
     let n = 0;
     for (let fi = 0; fi < faces.length; fi++) for (const dy of [0, -0.6, -1.1]) {
       const f = faces[fi];
       const tx = f.x - p.x, ty = f.y + dy * f.s - p.y, tz = f.z - p.z, L = Math.hypot(tx, ty, tz), end = Math.min(FV_FG, L - 0.6);
+      // (a collider near the line counts once; a prop drawn over it, FV_K_PROP times — the larger, wherever along the line:
+      //  the sign's post, padded, is met before its board)
+      let col = false, prop = false;
       hit: for (let d = 0.3; d < end; d += 0.25) {
-        const k = d / L, x = p.x + tx * k, y = p.y + ty * k, z = p.z + tz * k, C = P.near(x, z);
-        for (let i = 0; i < C.length; i++) { const c = C[i]; if (c.enabled && y > c.bottom - 0.1 && y < c.top + 0.35 && P._inside(c, x, z, FV_FG_PAD)) { n += fi === 0 ? 1 : 0.5; break hit; } }
+        const k = d / L, x = p.x + tx * k, y = p.y + ty * k, z = p.z + tz * k;
+        for (let i = 0; i < near.length; i++) if (this._inProp(near[i], x, y, z)) { prop = true; break hit; }
+        if (col || !P) continue;
+        const C = P.near(x, z);
+        for (let i = 0; i < C.length; i++) { const c = C[i]; if (c !== skip && c.enabled && y > c.bottom - 0.1 && y < c.top + 0.35 && P._inside(c, x, z, FV_FG_PAD)) { col = true; if (!near.length) break hit; break; } }
       }
+      if (prop || col) n += (fi === 0 ? 1 : 0.5) * (prop ? FV_K_PROP : 1);
     }
     return n;
+  }
+
+  // FACE-3: the meshes drawn round (x, z) that the shot search asks besides the colliders (see FV_PROP_*): each with the
+  // way back into its own space, its box there (padded), and its middle and radius in the world. Gathered once a talk.
+  _fvProps(x, z) {
+    const S = this.tk;
+    if (!this.propsNear) return NONE_V;
+    if (S?.props && Math.hypot(S.props.x - x, S.props.z - z) < FV_PROP_MOVE) return S.props.list;
+    const list = [];
+    for (const o of this.propsNear(x, z, FV_PROP_NEAR, FV_PROP_R, FV_PROP_MIN)) {
+      const g = o.geometry;
+      if (!g.boundingBox) g.computeBoundingBox();
+      if (!g.boundingSphere) g.computeBoundingSphere();
+      o.getWorldScale(_f3);
+      const sx = Math.abs(_f3.x) || 1, sy = Math.abs(_f3.y) || 1, sz = Math.abs(_f3.z) || 1, box = g.boundingBox.clone();
+      box.min.x -= FV_PROP_PAD / sx; box.min.y -= FV_PROP_PAD / sy; box.min.z -= FV_PROP_PAD / sz;
+      box.max.x += FV_PROP_PAD / sx; box.max.y += FV_PROP_PAD / sy; box.max.z += FV_PROP_PAD / sz;
+      list.push({ inv: o.matrixWorld.clone().invert(), box, raw: g.boundingBox, c: g.boundingSphere.center.clone().applyMatrix4(o.matrixWorld), r: g.boundingSphere.radius * Math.max(sx, sy, sz) });
+    }
+    if (S) S.props = { x, z, list };
+    return list;
+  }
+  _inProp(q, x, y, z) {
+    if ((q.c.x - x) ** 2 + (q.c.y - y) ** 2 + (q.c.z - z) ** 2 > (q.r + FV_PROP_PAD) ** 2) return false;
+    return q.box.containsPoint(_f3.set(x, y, z).applyMatrix4(q.inv));
+  }
+  // FACE-3: is a prop over the line from p to the face f (from 0.3 m off the lens to 0.35 m short of the face)?
+  _propOver(p, f, props) {
+    const tx = f.x - p.x, ty = f.y - p.y, tz = f.z - p.z, L = Math.hypot(tx, ty, tz);
+    for (let i = 0; i < props.length; i++) {
+      const q = props[i], cx = q.c.x - p.x, cy = q.c.y - p.y, cz = q.c.z - p.z, t = clamp((cx * tx + cy * ty + cz * tz) / (L * L), 0, 1);
+      if (Math.hypot(cx - tx * t, cy - ty * t, cz - tz * t) > q.r + FV_PROP_PAD) continue;
+      for (let d = 0.3; d < L - 0.35; d += 0.12) { const k = d / L; if (this._inProp(q, p.x + tx * k, p.y + ty * k, p.z + tz * k)) return true; }
+    }
+    return false;
+  }
+
+  // FACE-3: the booth a face stands in (see FV_BOOTH_R) → { c: its collider, yaw: its open side's normal, a: the axis
+  // across that side (0: local x, 1: local z), s: its sign, ext: the half-size along it, span: the half-size across } or null
+  _booth(fi) {
+    const P = this.physics;
+    if (!P || fi.home == null) return null;
+    const C = P.near(fi.x, fi.z);
+    for (let i = 0; i < C.length; i++) {
+      const c = C[i];
+      if (!c.enabled || c.type !== 'box' || c.hw > FV_BOOTH_R || c.hd > FV_BOOTH_R || !(c.top > fi.y) || c.bottom > fi.y - 1 || !P._inside(c, fi.x, fi.z, 0)) continue;
+      const r = c.rot || 0, ux = Math.sin(fi.home - r), uz = Math.cos(fi.home - r);   // (the way she keeps, in the box's own axes)
+      const ax = Math.abs(ux) > Math.abs(uz), sg = Math.sign(ax ? ux : uz) || 1;
+      return { c, a: ax ? 0 : 1, s: sg, ext: ax ? c.hw : c.hd, span: ax ? c.hd : c.hw, yaw: r + (ax ? (sg > 0 ? Math.PI / 2 : -Math.PI / 2) : sg > 0 ? 0 : Math.PI) };
+    }
+    return null;
+  }
+  // FACE-3: does the line from the face fi to a camera at p leave booth B through its open side, clear of its ends?
+  _hatch(B, fi, p) {
+    if (Math.abs(angleDiff(B.yaw, Math.atan2(p.x - fi.x, p.z - fi.z))) > FV_HATCH) return false;
+    if (p.y - fi.y > FV_HATCH_RISE * Math.hypot(p.x - fi.x, p.z - fi.z)) return false;   // (under the awning or header over the hatch)
+    const c = B.c, loc = (x, z) => { const dx = x - c.x, dz = z - c.z; return [dx * c.cos - dz * c.sin, dx * c.sin + dz * c.cos]; };
+    const f = loc(fi.x, fi.z), q = loc(p.x, p.z), nf = B.s * f[B.a], nq = B.s * q[B.a];
+    if (nq <= B.ext) return false;
+    const t = (B.ext - nf) / (nq - nf), u = f[1 - B.a] + (q[1 - B.a] - f[1 - B.a]) * t;
+    return Math.abs(u) <= B.span - FV_HATCH_EDGE;
   }
 
   // FACE-2: the two-shot favouring F's face (F: him or one of `who`): from the others' side of the line between them,
@@ -1753,8 +1846,12 @@ export class CameraRig {
     const cx = who.reduce((s, p) => s + p.x, 0) / who.length, cz = who.reduce((s, p) => s + p.z, 0) / who.length;
     const side = (x, z) => Math.sign((cx - hero.x) * (z - hero.z) - (cz - hero.z) * (x - hero.x));
     const tv = Math.tan(((this.cam.fov || CH_FOV) * Math.PI) / 360), A = this.cam.aspect || 1.78, zT = (0.54 * fi.s) / (FV_HEAD * 2 * tv);
+    // (FACE-3: the props round them — none whose own box, unpadded, holds one of their heads: a booth or an arch round
+    // someone tells nothing —, and the booth the face may stand in, seen into near level: see FV_PROP_*, FV_BOOTH_R)
+    const heads = [fi, ...oi], props = this._fvProps(fi.x, fi.z).filter((q) => !heads.some((o) => q.raw.containsPoint(_f3.set(o.x, o.y, o.z).applyMatrix4(q.inv))));
+    const booth = this._booth(fi), skip = booth?.c || null, QS = booth ? FV_HATCH_Q : FV_Q;
     const cands = [];
-    for (const ang of FV_ANG) for (const k of FV_K) for (const q of FV_Q) for (const sg of [1, -1]) for (const mx of FV_MIX) cands.push([ang, k, q, sg, Math.abs(ang - FV_ANG[0]) * 1.2 + Math.abs(Math.log(k)) * 3 + Math.abs(q - FV_Q[0]) * 1.5 + (mx - FV_MIX[0]) * 0.5, mx]);
+    for (const ang of FV_ANG) for (const k of FV_K) for (const q of QS) for (const sg of [1, -1]) for (const mx of FV_MIX) cands.push([ang, k, q, sg, Math.abs(ang - FV_ANG[0]) * 1.2 + Math.abs(Math.log(k)) * 3 + Math.abs(q - QS[0]) * 1.5 + (mx - FV_MIX[0]) * 0.5, mx]);
     cands.sort((a, b) => a[4] - b[4]);
     const crowd = this.crowd?.() || [], look = new THREE.Vector3(), piv = new THREE.Vector3(F.x, F.y, F.z);
     let best = null, bc = Infinity;
@@ -1766,6 +1863,7 @@ export class CameraRig {
       p.y += this._chaseLift(p, piv, false);
       let c = c1 + (want && side(p.x, p.z) !== want ? CH_TALK_K_LINE * 2 : 0);
       if (c >= bc || all.some((o) => Math.hypot(o.x - p.x, o.z - p.z) < FV_NEAR)) continue;
+      if (booth && !this._hatch(booth, fi, p)) continue;   // (FACE-3: into a booth only through its open side)
       // (it looks a little under the speaker's head, FV_MIX of the way toward the others: the face in the frame's upper half)
       look.set(fi.x + (lx - fi.x) * mx, fi.y - 0.28 * fi.s, fi.z + (lz - fi.z) * mx);
       const [fx, fy, fd] = this._ndc(p, look, fi.x, fi.y, fi.z), fr = (0.27 * fi.s) / (Math.max(fd, 0.05) * tv);
@@ -1785,15 +1883,36 @@ export class CameraRig {
       }
       if (hid) continue;
       c += out;
-      if (c >= bc || this._solidAt(p, CH_GAP) || !this._line(p, fi.x, fi.y, fi.z, true) || !this._line(p, fi.x, fi.y - 0.5 * fi.s, fi.z, true)) continue;
+      if (c >= bc || this._solidAt(p, CH_GAP) || !this._line(p, fi.x, fi.y, fi.z, true, true, -Infinity, skip) || !this._line(p, fi.x, fi.y - 0.5 * fi.s, fi.z, true, true, -Infinity, skip)) continue;
+      if (props.length && this._propOver(p, fi, props)) continue;   // (FACE-3: a prop over the speaker's face)
       for (const o of oth) if (c < bc && !this._sees(p, o, true)) c += CH_TALK_K_PART * 0.5;
-      if (c < bc) c += this._fgClutter(p, [fi, ...oi]) * FV_K_FG;
+      if (c < bc) c += this._fgClutter(p, [fi, ...oi], props, skip) * FV_K_FG;
       if (c < bc) c += this._crowdIn(p, look, all, crowd) * CH_TALK_K_PART;
       if (c < bc) { bc = c; best = { pos: p.clone(), look: look.clone(), fav: F, why: [ang, k, q, sg, mx, +c.toFixed(2)] }; }   // (why: for the tests)
     }
     // (where everyone stood for it: _talkShot looks again once, FV_CHECK s on)
     if (best) best.at = all.map((p) => [p.x, p.z]);
     return best;
+  }
+
+  // FACE-3 (3): the Fixed (LBA2) and Free cameras in a talk out of doors: the favoured two-shot over the view the camera
+  // chosen gives (_talkShot, as under Follow, but none of Follow's after-talk hold: CAM-AFTERTALK is the chase's own),
+  // eased in and out (the 1997 look: cut). The chosen camera's own view of this frame is kept (_own) and put back before
+  // it runs next frame (_ownView), so it runs on as if no talk were shown — the LBA view's cuts test the frame it had —
+  // and once the talk has eased out the view is its own again.
+  _talkOver(dt, hero, heroAngle, snap) {
+    const cam = this.cam, S = this.tk, O = (this._own ??= { on: false, pos: new THREE.Vector3(), q: new THREE.Quaternion(), look: new THREE.Vector3() });
+    if (!(S && (S.k > 0 || S.shot)) && !this.talk?.()) { O.on = false; return; }   // (no talk, none easing out, nothing left to clear: nothing to do)
+    O.pos.copy(cam.position); O.q.copy(cam.quaternion); O.look.copy(this.look); O.on = true;
+    this._talkShot(dt, hero, snap, heroAngle, false);
+    if (this.why.talk > 0) { cam.lookAt(this.look); cam.updateMatrixWorld(); }   // (the matrices too: the modes set theirs before the shot was put over them)
+    else O.on = false;
+  }
+  _ownView() {
+    const O = this._own;
+    if (!O?.on) return;
+    this.cam.position.copy(O.pos); this.cam.quaternion.copy(O.q); this.look.copy(O.look); this.cam.updateMatrixWorld();
+    O.on = false;
   }
 
   // CAM-CLEAR-2: into the dialogue's two-shot (this.talk) and back out to the chase, eased (CH_TALK_IN s, the shot's own
@@ -1805,8 +1924,8 @@ export class CameraRig {
   _talkShot(dt, hero, fresh, heroAngle = 0, lock = false) {
     const cam = this.cam, S = (this.tk ??= { k: 0, n: 0, shot: null, pos: new THREE.Vector3(), look: new THREE.Vector3(), init: false });
     const who = this.talk?.() || null;
-    if (fresh) { S.k = 0; S.init = false; S.shot = null; S.n = 0; S.keep = null; S.fav = S.base = S.spk = null; }
-    if (who && who.length) S.keep = { x: hero.x, z: hero.z, a: heroAngle, t: 0, who, at: who.map((p) => [p.x, p.z]) };
+    if (fresh) { S.k = 0; S.init = false; S.shot = null; S.n = 0; S.keep = null; S.fav = S.base = S.spk = null; S.props = null; }
+    if (who && who.length && this.mode === 'follow') S.keep = { x: hero.x, z: hero.z, a: heroAngle, t: 0, who, at: who.map((p) => [p.x, p.z]) };   // (FACE-3: the hold after a talk is the chase's alone)
     else if (S.keep && (lock || !S.shot || (S.keep.t += dt) > CH_TALK_KEEP || Math.hypot(hero.x - S.keep.x, hero.z - S.keep.z) > 0.15 || Math.abs(angleDiff(S.keep.a, heroAngle)) > 0.05 || S.keep.who.some((p, i) => Math.hypot(p.x - S.keep.at[i][0], p.z - S.keep.at[i][1]) > 0.5))) S.keep = null;
     if (who && who.length) {
       // (worked out when the dialogue starts and whenever someone joins it)
@@ -1845,10 +1964,11 @@ export class CameraRig {
       S.n = 0; S.spk = null;
       // (FACE-2: the talk over, the view goes back to his side — never eased from a shot on his face into the chase behind him)
       if (S.shot && S.fav === hero && S.base) { S.shot = S.base; S.fav = S.base.fav || null; S.init = false; }
-      if (S.k <= 0) { S.shot = null; S.fav = S.base = null; }
+      if (S.k <= 0) { S.shot = null; S.fav = S.base = null; S.props = null; }
     }
     const on = !!((who && who.length) || S.keep) && !!S.shot;
     S.k = clamp(S.k + (on ? dt : -dt) / CH_TALK_IN, 0, 1);
+    if (this.cut && this.mode === 'lba') S.k = on ? 1 : 0;   // (FACE-3: the 1997 look's Fixed camera cuts, into a talk and out)
     if (S.k <= 0 || !S.shot) { S.init = false; return; }
     if (!S.init) { S.pos.copy(S.shot.pos); S.look.copy(S.shot.look); S.init = true; }
     else if (on) {

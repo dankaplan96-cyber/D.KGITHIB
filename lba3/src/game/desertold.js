@@ -336,7 +336,10 @@ export function buildOldPlaces(C) {
   for (const [x, z, ry] of [[-33.4, -44.9, 0], [-35.5, -45.1, 0], [-37.7, -45.3, 0], [-39.8, -45.5, 0], [-42.0, -45.7, 0], [-48.3, -46.2, 0], [-50.5, -46.4, 0], [-32.2, -43.6, Math.PI / 2]]) lowWall(x, z, 2.12, ry);
   hornedPillar(-43.0, -41.3, 0, 4.25);
   C.palm(-46.9, -36.3, 1.1, 2.6);
-  { const g = H(-25.4, -45.7); B.add(bbox(2.4, 0.5, 1.2, 0.04, 1), M.plank, -25.4, g + 0.85, -45.7); for (const s of [-1, 1]) B.add(cyl(0.55, 0.55, 0.14, 12, 0), M.darkWood, -25.4 + s * 1.1, g + 0.55, -45.7 - 0.7, Math.PI / 2, 0, 0); B.add(cyl(0.05, 0.05, 2.6, 6), M.darkWood, -25.4, g + 0.75, -44.4, Math.PI / 2, 0, 0); col({ type: 'box', x: -25.4, z: -45.7, hw: 1.3, hd: 0.8, top: g + 1.1, noStand: true, seeThrough: true }); }
+  // (P65-2 OVERLAP-SWEEP: the hand cart 4.9 m north-west of where it stood across the dune's flank, one wheel 46 cm in
+  //  the sand and the other 83 cm over it: here the ground under both wheels is level (1 cm), under its bed within 16 cm;
+  //  set on its wheels' ground; the wheels against the bed's back edge, 10 cm behind it they held nothing up)
+  { const cx = -28.9, cz = -41.7, g = Math.min(H(cx - 1.1, cz - 0.55), H(cx + 1.1, cz - 0.55)); B.add(bbox(2.4, 0.5, 1.2, 0.04, 1), M.plank, cx, g + 0.85, cz); for (const s of [-1, 1]) B.add(cyl(0.55, 0.55, 0.14, 12, 0), M.darkWood, cx + s * 1.1, g + 0.55, cz - 0.55, Math.PI / 2, 0, 0); B.add(cyl(0.05, 0.05, 2.6, 6), M.darkWood, cx, g + 0.75, cz + 1.3, Math.PI / 2, 0, 0); col({ type: 'box', x: cx, z: cz, hw: 1.3, hd: 0.8, top: g + 1.1, noStand: true, seeThrough: true }); }
   // the crew's bunkhouse: a grey tower. (SCHOOL-S28: it stood in S28's hollow, where LBA2's School is; now on the
   // valley's east side south of it, its door to the west onto the valley's floor, the way to the School)
   {
@@ -464,7 +467,9 @@ export function buildOldPlaces(C) {
     const ph = 7.0, g = Math.max(H(cx + uz * 4.5, cz - ux * 4.5), H(cx - uz * 4.5, cz + ux * 4.5));
     for (const s of [-1, 1]) {
       const px = cx - uz * s * 4.5, pz = cz + ux * s * 4.5, pg = H(px, pz);
-      B.add(bbox(1.1, ph + 0.4 + (g - pg), 1.1, 0.06, TILE.stone), M.peach, px, pg - 0.4 + (ph + 0.4 + (g - pg)) / 2, pz, 0, ry, 0);   // (DESERT-ART 2: peach posts)
+      // (P65-2 OVERLAP-SWEEP: the post ends 5 cm inside its cap: its top lay in the cap's top face round the beam's foot,
+      //  peach and grey fighting there)
+      B.add(bbox(1.1, ph + 0.35 + (g - pg), 1.1, 0.06, TILE.stone), M.peach, px, pg - 0.4 + (ph + 0.35 + (g - pg)) / 2, pz, 0, ry, 0);   // (DESERT-ART 2: peach posts)
       B.add(bbox(1.4, 0.3, 1.4, 0.04, 1), M.grey, px, pg + 0.1, pz, 0, ry, 0);
       B.add(bbox(1.35, 0.4, 1.35, 0.04, 1), M.grey, px, g + ph - 0.2, pz, 0, ry, 0);
       col({ type: 'box', x: px, z: pz, hw: 0.6, hd: 0.6, rot: ry, top: g + ph + 1.4 });

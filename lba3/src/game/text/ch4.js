@@ -62,7 +62,7 @@ Object.assign(STR.en, {
   c4_tw_ilka1: "I'm Twinsen. Baldino sent me. The crystals you found are growing under Citadel Island now.",
   c4_ilka_2: "Baldino still writes to me. In capitals. Under Citadel too? Then it is everywhere. The crystals grow where heat leaks from deep down, and when I told the project, they told me to pack.",
   c4_ilka_3: 'At the bottom of the dig there is a wall I never finished clearing. Old carvings, older than FunFrock. I think they show what is under the ground.',
-  c4_ilka_4: "The project fenced off Temple-Park and dug down to the Temple of Bù, the old god's house under it. The gate code and my survey are in my notebook, which is on Dallan's desk at the research post.",
+  c4_ilka_4: "The project fenced off Temple-Park and dug down to the Temple of Bù beneath it. My notebook has the gate code and my survey, and it is on Dallan's desk at the research post.",
   c4_tw_ilka2: 'Then I need the notebook.',
   c4_ilka_5: 'The post has drones. But this season a sandstorm blows through every few minutes. Their cameras are blind in it. So is the gate guard, who hides in his cabin.',
   c4_ilka_wait: 'The research post, east of the village. Wait for the storm.',

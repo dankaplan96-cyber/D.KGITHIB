@@ -45,7 +45,7 @@ Object.assign(STR.en, {
   c5_hangar_in: 'A hangar. Three condensers, and something big under a tarp.',
   c5_glider_1: 'A FunFrock cargo glider. The wings are sound. Hesk would know what to do with it.',
   c5_hatch: 'The roof hatch grinds open. Daylight pours in.',
-  c5_hatch_vent: "A hatch grinds open, but over the condensers: their steam goes up through it. The glider's further along.",
+  c5_hatch_vent: "A hatch grinds open, but it's over the condensers, and their steam goes up through it. The glider's further along.",
 
   // the relief valve
   c5_dallan_gate1: 'Twinsen. I suppose you want me to look the other way.',
@@ -68,7 +68,7 @@ Object.assign(STR.en, {
   c5_zoe_radio3: "Building a radio for every house on Bug Street. Three of them work. Go on, Twinsen.",
   c5_dallan_k1: 'The ferry left without me. Project headquarters recalled it. I am not on the list either, it seems.',
   c5_ilka_k1: 'Welcome to Kesh, Dallan. The water is free.',
-  c5_hesk_k1: "The ferry's gone. But that glider in the hangar... it can glide, it can't climb. Launch it from the hangar roof into the wind and, if the wind likes us, we'll reach the Hamalayi foothills.",
+  c5_hesk_k1: "The ferry's gone. But that glider in the hangar... it glides, it doesn't climb. Launch it off the hangar roof into the wind, and if the wind likes us, we reach the Hamalayi foothills.",
   c5_hesk_k2: 'Meet me in the hangar. Bring a coat. It gets cold up north.',
   c5_board_1: "Hesk pulls the tarp away. The glider rolls out under the open hatch, into a gust of hot wind.",
   c5_hesk_board: "Hold on. And if you know any prayers to Sendell, now's the time.",

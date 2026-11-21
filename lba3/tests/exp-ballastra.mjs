@@ -104,7 +104,7 @@ const s0 = await timed(() => {
   return { before: a.key, r: r.r, ...T.view(), said: window.__said.slice(-30), doran: d ? { present: d.present, d: +d.distTo(G.hero).toFixed(1) } : null, items: G.story.items().map((i) => i.id) };
 });
 console.log('chapter 10 → 11:', JSON.stringify(s0).slice(0, 1600));
-check("chapter 10's end in the expanded campaign: Baldino asks where the B-7 came from; Zoé's return label names Tessa's Float Repairs on Ballastra", s0.before === 'throttle' && s0.said.some((l) => /That B-7 holds a station by hand/.test(l)) && s0.said.some((l) => /TESSA'S FLOAT REPAIRS · FLOAT HARBOR · BALLASTRA/.test(l)), s0.said.slice(-14));
+check("chapter 10's end in the expanded campaign: Baldino asks where the B-7 came from; Zoé's return label names Tessa's Float Repairs on Ballastra", s0.before === 'throttle' && s0.said.some((l) => /That B-7 let one station say no/.test(l)) && s0.said.some((l) => /TESSA'S FLOAT REPAIRS · FLOAT HARBOR · BALLASTRA/.test(l)), s0.said.slice(-14));
 check('chapter 11 "Ballastra" follows (its card), numbered 11, at Citadel Spaceport by Doran and the freighter', s0.key === 'ballastra' && s0.n === 11 && s0.cards.some((c) => /Chapter 11 · Ballastra/.test(c)) && s0.room === 'citadel' && s0.doran?.present && s0.doran.d < 5, { key: s0.key, n: s0.n, cards: s0.cards, doran: s0.doran });
 check('the objective: board the freighter; the label in his pockets; the journal has "11. Ballastra"', /Board Doran's freighter/.test(s0.obj) && s0.items.includes('bl_label') && s0.journal.includes('11. Ballastra'), { obj: s0.obj, items: s0.items, j: s0.journal });
 
