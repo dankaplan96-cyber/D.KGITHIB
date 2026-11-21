@@ -377,6 +377,7 @@ export class CameraRig {
     this.occ = null;      // () → the scenery volumes in force (Citadel outdoors), or null (main.js)
     this.relative = false; // () → true when the controls are camera-relative (Modern): the free orbit never turns by itself (main.js)
     this.lockOn = null;    // () → the locked target's position, or null: the Follow camera frames both (main.js)
+    this.aimHold = null;   // () → true while the ball is held and aimed with the mouse cursor: the Follow camera keeps its heading (main.js)
     this.talk = null;      // () → the positions of those talking with him in a dialogue, or null: Follow frames them together (main.js)
     this.speaker = null;   // (FACE-2) () → who speaks now: 'hero', a talker's position (one of talk()'s), or null (main.js)
     this.faceOf = null;    // (FACE-2) (position) → { x, y, z: the head's middle, s: the body's scale, yaw: the way a seated face keeps, or null: it turns to the talk, now: the way it faces now, home: the way its placement faces (FACE-3) } or null (main.js)
@@ -1236,7 +1237,13 @@ export class CameraRig {
       const f = facing(), e = angleDiff(C.goal, f);
       C.steadyT = C.fPrev != null && Math.abs(angleDiff(C.fPrev, f)) < 0.002 ? (C.steadyT || 0) + dt : 0; C.fPrev = f;
       if (lock || C.steadyT > CH_STEADY) C.goal = f; else if (Math.abs(e) > CH_DEAD_YAW) C.goal += e - Math.sign(e) * CH_DEAD_YAW;
-      if (C.hold) { C.vyaw *= Math.exp(-CH_W * dt); C.yaw += C.vyaw * dt; C.goal = C.yaw; }
+      // (P94: the ball held and aimed with the mouse cursor, the view keeps its heading as camera-relative controls pushed back
+      //  do: he turns to face where the cursor points, and the view turned with him, so a cursor held still beside him moved
+      //  the point it aims at on round with them — he and the view spun at ~3.9 rad/s and the aim's arc slid 4-8 m/s with
+      //  the mouse untouched, at 30 and at 60 alike: tests/fps30-feel.mjs probes, docs/lba-maturity/FPS30.md §8. Thrown, the
+      //  view comes round behind him as after any turn. Not with a lock-on, which frames the target itself)
+      const aimHeld = !lock && !fresh && !!this.aimHold?.();
+      if (C.hold || aimHeld) { C.vyaw *= Math.exp(-CH_W * dt); C.yaw += C.vyaw * dt; C.goal = C.yaw; }
       else if (!fresh) {
         C.y = C.yaw; C.vy = C.vyaw;
         // (the arm still far out from where it must come in to: the view turns no faster than it can come in — never a
@@ -1246,7 +1253,7 @@ export class CameraRig {
         C.vyaw = clamp(C.vy, -vmax, vmax);
         C.yaw += clamp(C.y - C.yaw, -vmax * dt, vmax * dt);
       }
-      C.dyc = angleDiff(y0, C.yaw); W.swingBy = C.hold ? 'hold' : lock ? 'lock' : 'chase';
+      C.dyc = angleDiff(y0, C.yaw); W.swingBy = C.hold ? 'hold' : aimHeld ? 'aim' : lock ? 'lock' : 'chase';
     }
     // the pivot's height: a dead band (a kerb, a step), then its spring (stairs and slopes glide)
     {

@@ -1,6 +1,6 @@
 // Chapter 1 (The Well), the town part made longer (CH1-LONGER, src/game/story/prologue.js): the steps, their order,
 // what each says when it fails, the journal's honesty, the nudges, and Save → Continue at every new step.
-//   1. Mira refuses the key for a "pipe fault" (Zoé's marker, the objective, the journal says so — never "Mira gave me
+//   1. Mira refuses the key "on a rumour" (Zoé's marker, the objective, the journal says so — never "Mira gave me
 //      the key" before she has); Zoé's kettle crystals (she hears of the refusal); Mira gives the key
 //   2. the lid: before the key, Aggressive gives no kick (only the padlock line); with the key, rusted to the rim;
 //      Save → Continue keeps it rusted; the ball bounces off (a line, once); the nudge after a while near it names
@@ -26,7 +26,10 @@ const boot = async (mode) => {
   await ev(() => { game.testFreeze = true; });
   if (mode) await page.click(`[data-act="${mode}"]`, { timeout: 180000 });
   await page.addScriptTag({ path: HARNESS });
-  await ev(() => { game.testFreeze = true; game.step(0.2); P.settle(); });
+  // (P.yardFirst = false: the harness otherwise does Zoé's yard errand on the first walk out of the yard (OPENING-TUT-2),
+  //  kettle included, and Mira's refusal is never met. A player can leave the yard with the errand open (TUT-MYSTERY):
+  //  this suite walks that way, to the well before Zoé)
+  await ev(() => { game.testFreeze = true; P.yardFirst = false; game.step(0.2); P.settle(); });
 };
 const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
 const has = (lines, re) => lines.some((l) => re.test(l));
@@ -49,7 +52,7 @@ check('before the key, Aggressive gives the well no kick prompt', r.label === 'p
 await ev(() => P.tap('F1'));
 r = await ev(() => P.talk('gilbert', { run: true })); s = await said();
 const j1 = await journal(), o1 = await obj();
-check('Mira refuses: "I don\'t unlock the town well for a pipe fault" (INPUT)', r.r === 'talked' && has(s, /pipe fault/) && !(await ev(() => game.flags.key)), { r, s });
+check('Mira refuses: "I don\'t unlock the town well on a rumour" (INPUT)', r.r === 'talked' && has(s, /unlock the town well on a rumour/) && !(await ev(() => game.flags.key)), { r, s });
 check('the objective asks for proof, the journal says what Mira said (no "gave me the key" yet)', o1.includes('Mira wants proof') && j1.includes('pr_j_mira') && !j1.some((k) => k.startsWith('pr_j_key')), { o1, j1 });
 check('the map marks Zoé (she has the proof)', await ev(() => game.story.markers().some((m) => m.label === 'Zoé')));
 r = await ev(() => P.talk('zoe', { run: true })); s = await said();

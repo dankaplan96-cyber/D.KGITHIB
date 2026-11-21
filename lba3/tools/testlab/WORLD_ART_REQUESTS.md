@@ -5900,3 +5900,29 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
 - **21.11 (cloud coordinator): P95 merged** (Auto: `src/engine/autoquality.js`, `autoapply.js`; published as v119). Order 64
   AUTO-HW: "before" = the commit before "Merge branch 'worktree-agent-a22cbbf029a651730'", "after" = that merge; the exact
   console procedure (clear the cache, read Auto's decisions, force a profile) is in `docs/lba3-performance/AUTO-P95.md`.
+
+- **21.11 night (cloud coordinator): P94 merged** (30 FPS feel: `MagicBall.preview`/`aimPoint` in actors.js, the Follow camera's
+  heading held while the ball is aimed by the mouse, `tests/fps30-feel.mjs`). Order 62 FPS30-FEEL: "after" = this merge
+  (published v121); the laptop commands are in `docs/lba-maturity/FPS30.md` §8 (`RATE=real` / `real60`).
+- **62 FPS30-FEEL "before" · done** (the desktop, 21.11 evening) — branch **`fps30-feel`** (`0fc43944`, from `a333b00d`),
+  `docs/lba-maturity/FPS30.md` §8, runner and runs in `docs/lba-maturity/fps30-feel/`.
+  - Where: the desktop app's Electron (the packaged build of `a333b00d`) on the GTX 1050; Medium, Follow, Citadel street. T1–T3 3 runs each at 30, and T3 at 60; battery first, then plugged in.
+  - At 30, images on screen every 33.3 ms (p99 33.5), each shown in its own frame. One 50 ms interval in 18 runs (T3, battery).
+  - T1 and T2 have no motion spikes. T3 (lock-on, strafe, aim) has 4–14 camera and view spikes per run at a stable frame time, at 30 and at 60 alike: that is P94's ground.
+  - On battery the CPU work doubles (15–17 ms vs 7 ms), still within 33 ms.
+  - Not done: the 60 FPS film, the mouse and controller, and the bank shot at 60 (with the "after").
+  - Next: 61 SMOOTH-HW (the user's order: 62 then 61); 62 "after" when "P94 merged" appears here.
+- **61 SMOOTH-HW · plugged-in half done** (the desktop, 21.11 night) — branch **`smooth-hw`** (`2d20b6d3`, from
+  `a333b00d`), SMOOTH-1.md §8 with tables, runs' summaries and tools in `docs/lba3-performance/smooth-hw/`.
+  - Before `05c32d81` vs after `18f607cf`, headed Chrome 158 on the GTX 1050, plugged in, Medium and High at 60 and 30.
+  - **At 60, equal within the spread.** Combat after takes about 1.4 ms more CPU at Medium. No interval over 50 ms. GPU 4–10 ms, so no resolution or edge trade was needed.
+  - **New, important for "30 isn't even":** for most of the evening the frame clock ran at 57 Hz (17.5 ms; cause not found). In that state, at 30, **the browser stops calling rAF for ~400 ms, 2–14 times a pass**. That held in both builds, and in Chrome and the desktop app's Electron alike. At 60 it doesn't happen.
+  - **A 1 px change every refresh removes it entirely** (diagnosis only). Proposed: give the skipped refreshes something to present, then measure.
+  - FPS30.md §8 on `fps30-feel` got an addendum: 62's even "before" was in the 60 Hz state.
+  - Left: the battery half (needs the user to unplug) and the clips.
+
+- **21.11 night (cloud coordinator), to the desktop:** your SMOOTH-HW plugged-in half is merged. Your proposal is in as
+  **P96 (v122)**: `main.js` `_keepAlive` changes an invisible 1 px mark on every refresh the 30 limit skips, and the
+  refresh-count tolerance is 0.08 → 0.12 (at 57 Hz, 30 = 1.90 refreshes now counts 2 instead of the grid's 1-in-8 early
+  frames). Please confirm in the 57 Hz state: 30 FPS, T1–T3 (`tests/fps30-feel.mjs` RATE=real) and SMOOTH-HW's street
+  route, ≥ 45 ms intervals and early frames, v121 vs v122. F9 counting presented frames: not done yet (noted).

@@ -1,0 +1,2734 @@
+[
+ {
+  "mode": "real",
+  "route": "street",
+  "run": 1,
+  "timing": {
+   "frames": 355,
+   "fps": 20.9,
+   "p50": 35.3,
+   "p95": 37,
+   "p99": 405.6,
+   "max": 420.3,
+   "over50": 14,
+   "over1_5": null,
+   "cpuP50": 7.3,
+   "cpuP95": 10.5,
+   "simP50": 2.8,
+   "renderP50": 4.4,
+   "gpuP50": 7.2,
+   "gpuP95": 9.8,
+   "calls": 228,
+   "callsP95": 316,
+   "steps": 2.69,
+   "lostS": 3.72,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 239,
+    "spikes": 24,
+    "osc": 0,
+    "devP95": 1.52,
+    "jerkP95": 3.6,
+    "jerkMax": 124.1,
+    "jerkOver": 28,
+    "jn": 353
+   },
+   "camPos": {
+    "n": 338,
+    "spikes": 34,
+    "osc": 0,
+    "devP95": 1.7,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 187,
+    "spikes": 14,
+    "osc": 0,
+    "devP95": 1.54,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 319,
+    "spikes": 35,
+    "osc": 0,
+    "devP95": 1.9,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 353
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 32.9,
+    "jerkMax": 554.7,
+    "jerkOver": 15,
+    "jn": 55
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 23.3,
+    "jerkMax": 100.6,
+    "jerkOver": 24,
+    "jn": 100
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 15,
+    "jerkMax": 15,
+    "jerkOver": 12,
+    "jn": 15
+   },
+   "viewAcc": {
+    "p99": 9.3,
+    "max": 10,
+    "peakW": 2.69
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 18.4,
+  "refresh": 17.5,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 6.1,
+   "shadow map": 1.07,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 88
+ },
+ {
+  "mode": "real",
+  "route": "street",
+  "run": 2,
+  "timing": {
+   "frames": 364,
+   "fps": 22.3,
+   "p50": 35.3,
+   "p95": 36.9,
+   "p99": 409.4,
+   "max": 439.7,
+   "over50": 11,
+   "over1_5": null,
+   "cpuP50": 7.2,
+   "cpuP95": 9.7,
+   "simP50": 2.8,
+   "renderP50": 4.4,
+   "gpuP50": 7,
+   "gpuP95": 8.2,
+   "calls": 226,
+   "callsP95": 313,
+   "steps": 2.69,
+   "lostS": 3.04,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 252,
+    "spikes": 16,
+    "osc": 0,
+    "devP95": 1.5,
+    "jerkP95": 3.1,
+    "jerkMax": 23.4,
+    "jerkOver": 25,
+    "jn": 362
+   },
+   "camPos": {
+    "n": 347,
+    "spikes": 30,
+    "osc": 1,
+    "devP95": 1.57,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 205,
+    "spikes": 11,
+    "osc": 0,
+    "devP95": 1.5,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 331,
+    "spikes": 23,
+    "osc": 0,
+    "devP95": 1.51,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 362
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 61.8,
+    "jerkMax": 287,
+    "jerkOver": 17,
+    "jn": 52
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 31.8,
+    "jerkMax": 361.4,
+    "jerkOver": 23,
+    "jn": 99
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 502,
+    "jerkMax": 502,
+    "jerkOver": 9,
+    "jn": 13
+   },
+   "viewAcc": {
+    "p99": 9.6,
+    "max": 11.7,
+    "peakW": 2.7
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 18.3,
+  "refresh": 17.6,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 5.92,
+   "shadow map": 1.09,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 88
+ },
+ {
+  "mode": "real",
+  "route": "street",
+  "run": 3,
+  "timing": {
+   "frames": 367,
+   "fps": 23,
+   "p50": 35.3,
+   "p95": 36.7,
+   "p99": 404.8,
+   "max": 423,
+   "over50": 10,
+   "over1_5": null,
+   "cpuP50": 7.2,
+   "cpuP95": 9.3,
+   "simP50": 2.9,
+   "renderP50": 4.4,
+   "gpuP50": 7.6,
+   "gpuP95": 10.6,
+   "calls": 230,
+   "callsP95": 318,
+   "steps": 2.69,
+   "lostS": 2.69,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 243,
+    "spikes": 22,
+    "osc": 0,
+    "devP95": 1.5,
+    "jerkP95": 2.9,
+    "jerkMax": 38.3,
+    "jerkOver": 23,
+    "jn": 365
+   },
+   "camPos": {
+    "n": 350,
+    "spikes": 24,
+    "osc": 0,
+    "devP95": 1.51,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 204,
+    "spikes": 10,
+    "osc": 0,
+    "devP95": 1.44,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 332,
+    "spikes": 27,
+    "osc": 0,
+    "devP95": 1.51,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 365
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 12.4,
+    "jerkMax": 74.2,
+    "jerkOver": 19,
+    "jn": 59
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 18.9,
+    "jerkMax": 307,
+    "jerkOver": 19,
+    "jn": 102
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 20.8,
+    "jerkMax": 20.8,
+    "jerkOver": 11,
+    "jn": 15
+   },
+   "viewAcc": {
+    "p99": 9.6,
+    "max": 10.7,
+    "peakW": 2.7
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 18.3,
+  "refresh": 18,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 6.46,
+   "shadow map": 1.19,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 88
+ },
+ {
+  "mode": "synth",
+  "route": "street",
+  "rate": "60",
+  "timing": {
+   "frames": 792,
+   "fps": 60,
+   "p50": 16.7,
+   "p95": 16.7,
+   "p99": 16.7,
+   "max": 16.7,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1,
+   "cpuP95": 1.4,
+   "simP50": 1,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 545,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 0.3,
+    "jerkMax": 7.9,
+    "jerkOver": 13,
+    "jn": 790
+   },
+   "camPos": {
+    "n": 762,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 475,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.04,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 730,
+    "spikes": 2,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 790
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 2.7,
+    "jerkMax": 4.2,
+    "jerkOver": 13,
+    "jn": 127
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 2.2,
+    "jerkMax": 4.5,
+    "jerkOver": 15,
+    "jn": 229
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 4.3,
+    "jerkMax": 4.5,
+    "jerkOver": 14,
+    "jn": 34
+   },
+   "viewAcc": {
+    "p99": 9.9,
+    "max": 11,
+    "peakW": 2.68
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.67,
+  "cap": 0
+ },
+ {
+  "mode": "synth",
+  "route": "street",
+  "rate": "59.9",
+  "timing": {
+   "frames": 791,
+   "fps": 59.9,
+   "p50": 16.7,
+   "p95": 16.7,
+   "p99": 16.7,
+   "max": 16.7,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1,
+   "cpuP95": 1.5,
+   "simP50": 1,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 544,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 0.4,
+    "jerkMax": 5.7,
+    "jerkOver": 16,
+    "jn": 789
+   },
+   "camPos": {
+    "n": 762,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.03,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 464,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.04,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 729,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 789
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 2.7,
+    "jerkMax": 5.7,
+    "jerkOver": 12,
+    "jn": 126
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 2.4,
+    "jerkMax": 4.4,
+    "jerkOver": 16,
+    "jn": 229
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 4,
+    "jerkMax": 4.6,
+    "jerkOver": 14,
+    "jn": 34
+   },
+   "viewAcc": {
+    "p99": 9.8,
+    "max": 11,
+    "peakW": 2.68
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.69,
+  "cap": 0
+ },
+ {
+  "mode": "synth",
+  "route": "street",
+  "rate": "30@60",
+  "timing": {
+   "frames": 397,
+   "fps": 30,
+   "p50": 33.3,
+   "p95": 33.3,
+   "p99": 33.3,
+   "max": 33.3,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1.7,
+   "cpuP95": 2.3,
+   "simP50": 1.7,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 2,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 269,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": 1.3,
+    "jerkMax": 16.1,
+    "jerkOver": 13,
+    "jn": 395
+   },
+   "camPos": {
+    "n": 379,
+    "spikes": 3,
+    "osc": 0,
+    "devP95": 1.08,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 227,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.11,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 362,
+    "spikes": 2,
+    "osc": 0,
+    "devP95": 1.06,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 395
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 8.6,
+    "jerkMax": 12.9,
+    "jerkOver": 16,
+    "jn": 61
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 8.8,
+    "jerkMax": 16.7,
+    "jerkOver": 15,
+    "jn": 112
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 17,
+    "jerkMax": 17,
+    "jerkOver": 13,
+    "jn": 16
+   },
+   "viewAcc": {
+    "p99": 9.6,
+    "max": 10.9,
+    "peakW": 2.68
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.67,
+  "cap": 33.33
+ },
+ {
+  "mode": "synth",
+  "route": "street",
+  "rate": "30@59.9",
+  "timing": {
+   "frames": 395,
+   "fps": 30,
+   "p50": 33.4,
+   "p95": 33.4,
+   "p99": 33.4,
+   "max": 33.4,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1.8,
+   "cpuP95": 2.5,
+   "simP50": 1.8,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 2,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 269,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": 1.5,
+    "jerkMax": 17.6,
+    "jerkOver": 15,
+    "jn": 393
+   },
+   "camPos": {
+    "n": 378,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 1.1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 227,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.13,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 361,
+    "spikes": 2,
+    "osc": 0,
+    "devP95": 1.08,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 393
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 10.1,
+    "jerkMax": 12.8,
+    "jerkOver": 15,
+    "jn": 60
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 9.2,
+    "jerkMax": 14.8,
+    "jerkOver": 15,
+    "jn": 112
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 16.3,
+    "jerkMax": 16.3,
+    "jerkOver": 12,
+    "jn": 16
+   },
+   "viewAcc": {
+    "p99": 9.9,
+    "max": 10.9,
+    "peakW": 2.68
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.69,
+  "cap": 33.33
+ },
+ {
+  "mode": "synth",
+  "route": "street",
+  "rate": "120",
+  "timing": {
+   "frames": 1585,
+   "fps": 120,
+   "p50": 8.3,
+   "p95": 8.3,
+   "p99": 8.3,
+   "max": 8.3,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 0.9,
+   "cpuP95": 1.2,
+   "simP50": 0.9,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 1093,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 0.1,
+    "jerkMax": 2.2,
+    "jerkOver": 1,
+    "jn": 1583
+   },
+   "camPos": {
+    "n": 1527,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 943,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 1460,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 1583
+   },
+   "npc:sphero1": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 0.8,
+    "jerkMax": 1.1,
+    "jerkOver": 0,
+    "jn": 259
+   },
+   "npc:pippa": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 0.6,
+    "jerkMax": 1.2,
+    "jerkOver": 0,
+    "jn": 464
+   },
+   "npc:sphero2": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 1.2,
+    "jerkMax": 1.3,
+    "jerkOver": 0,
+    "jn": 71
+   },
+   "viewAcc": {
+    "p99": 9.9,
+    "max": 11.1,
+    "peakW": 2.68
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 8.33,
+  "cap": 0
+ },
+ {
+  "mode": "real",
+  "route": "combat",
+  "run": 1,
+  "timing": {
+   "frames": 303,
+   "fps": 23.2,
+   "p50": 35.3,
+   "p95": 37,
+   "p99": 403.7,
+   "max": 421.9,
+   "over50": 8,
+   "over1_5": null,
+   "cpuP50": 8,
+   "cpuP95": 11,
+   "simP50": 3.4,
+   "renderP50": 4.6,
+   "gpuP50": 6.9,
+   "gpuP95": 8.1,
+   "calls": 255,
+   "callsP95": 293,
+   "steps": 2.65,
+   "lostS": 2.12,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 135,
+    "spikes": 7,
+    "osc": 0,
+    "devP95": 1.51,
+    "jerkP95": 5.2,
+    "jerkMax": 104.7,
+    "jerkOver": 37,
+    "jn": 301
+   },
+   "camPos": {
+    "n": 283,
+    "spikes": 27,
+    "osc": 0,
+    "devP95": 1.86,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 201,
+    "spikes": 21,
+    "osc": 0,
+    "devP95": 2.23,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 269,
+    "spikes": 19,
+    "osc": 1,
+    "devP95": 1.71,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 301
+   },
+   "mite": {
+    "n": 256,
+    "spikes": 47,
+    "osc": 2,
+    "devP95": 2.98,
+    "jerkP95": 7.2,
+    "jerkMax": 92.6,
+    "jerkOver": 86,
+    "jn": 301
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 80,
+    "spikes": 25,
+    "osc": 1,
+    "devP95": 6.36,
+    "jerkP95": 4.4,
+    "jerkMax": 5.2,
+    "jerkOver": 19,
+    "jn": 93
+   },
+   "ball": {
+    "n": 13,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": null,
+    "jerkP95": 65.7,
+    "jerkMax": 426,
+    "jerkOver": 34,
+    "jn": 139
+   },
+   "viewAcc": {
+    "p99": 37,
+    "max": 85.7,
+    "peakW": 4.27
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 14.9,
+  "refresh": 17.6,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 5.94,
+   "shadow map": 1.01,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 88
+ },
+ {
+  "mode": "real",
+  "route": "combat",
+  "run": 2,
+  "timing": {
+   "frames": 313,
+   "fps": 25.3,
+   "p50": 35.5,
+   "p95": 36.5,
+   "p99": 405.4,
+   "max": 438.9,
+   "over50": 5,
+   "over1_5": null,
+   "cpuP50": 8.2,
+   "cpuP95": 9.4,
+   "simP50": 3.5,
+   "renderP50": 4.6,
+   "gpuP50": 9.5,
+   "gpuP95": 11.4,
+   "calls": 272,
+   "callsP95": 297,
+   "steps": 2.63,
+   "lostS": 1.42,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 138,
+    "spikes": 6,
+    "osc": 0,
+    "devP95": 1.5,
+    "jerkP95": 4,
+    "jerkMax": 21.7,
+    "jerkOver": 29,
+    "jn": 311
+   },
+   "camPos": {
+    "n": 293,
+    "spikes": 25,
+    "osc": 0,
+    "devP95": 1.72,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 212,
+    "spikes": 14,
+    "osc": 0,
+    "devP95": 1.55,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 253,
+    "spikes": 16,
+    "osc": 0,
+    "devP95": 1.53,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 311
+   },
+   "mite": {
+    "n": 263,
+    "spikes": 49,
+    "osc": 3,
+    "devP95": 3.1,
+    "jerkP95": 6.1,
+    "jerkMax": 57.7,
+    "jerkOver": 87,
+    "jn": 311
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 83,
+    "spikes": 25,
+    "osc": 4,
+    "devP95": 3.98,
+    "jerkP95": 3.9,
+    "jerkMax": 6,
+    "jerkOver": 14,
+    "jn": 92
+   },
+   "ball": {
+    "n": 42,
+    "spikes": 5,
+    "osc": 0,
+    "devP95": 1.71,
+    "jerkP95": 31.8,
+    "jerkMax": 429.5,
+    "jerkOver": 57,
+    "jn": 148
+   },
+   "viewAcc": {
+    "p99": 31.6,
+    "max": 88.4,
+    "peakW": 4.34
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 14.4,
+  "refresh": 17.9,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 8.13,
+   "shadow map": 1.31,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 88
+ },
+ {
+  "mode": "real",
+  "route": "combat",
+  "run": 3,
+  "timing": {
+   "frames": 310,
+   "fps": 24.4,
+   "p50": 35.4,
+   "p95": 36.6,
+   "p99": 406.1,
+   "max": 455.3,
+   "over50": 6,
+   "over1_5": null,
+   "cpuP50": 8.2,
+   "cpuP95": 9.9,
+   "simP50": 3.6,
+   "renderP50": 4.6,
+   "gpuP50": 10.6,
+   "gpuP95": 12.3,
+   "calls": 283,
+   "callsP95": 387,
+   "steps": 2.71,
+   "lostS": 1.72,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 130,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 1.18,
+    "jerkP95": 3.7,
+    "jerkMax": 14.3,
+    "jerkOver": 29,
+    "jn": 308
+   },
+   "camPos": {
+    "n": 266,
+    "spikes": 18,
+    "osc": 0,
+    "devP95": 1.71,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 209,
+    "spikes": 8,
+    "osc": 0,
+    "devP95": 1.4,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 251,
+    "spikes": 13,
+    "osc": 0,
+    "devP95": 1.5,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 308
+   },
+   "mite": {
+    "n": 265,
+    "spikes": 42,
+    "osc": 1,
+    "devP95": 3.17,
+    "jerkP95": 5.7,
+    "jerkMax": 82.2,
+    "jerkOver": 69,
+    "jn": 308
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 78,
+    "spikes": 28,
+    "osc": 3,
+    "devP95": 7.93,
+    "jerkP95": 3.2,
+    "jerkMax": 3.7,
+    "jerkOver": 16,
+    "jn": 92
+   },
+   "ball": {
+    "n": 13,
+    "spikes": 5,
+    "osc": 0,
+    "devP95": null,
+    "jerkP95": 28.4,
+    "jerkMax": 343.8,
+    "jerkOver": 26,
+    "jn": 132
+   },
+   "viewAcc": {
+    "p99": 43.6,
+    "max": 112.4,
+    "peakW": 3.98
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 14.7,
+  "refresh": 17.9,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 9.12,
+   "shadow map": 1.52,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 88
+ },
+ {
+  "mode": "synth",
+  "route": "combat",
+  "rate": "60",
+  "timing": {
+   "frames": 668,
+   "fps": 60,
+   "p50": 16.7,
+   "p95": 16.7,
+   "p99": 16.7,
+   "max": 16.7,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1,
+   "cpuP95": 1.5,
+   "simP50": 1,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 322,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.04,
+    "jerkP95": 0.5,
+    "jerkMax": 7.6,
+    "jerkOver": 5,
+    "jn": 666
+   },
+   "camPos": {
+    "n": 626,
+    "spikes": 8,
+    "osc": 0,
+    "devP95": 1.1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 521,
+    "spikes": 9,
+    "osc": 0,
+    "devP95": 1.07,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 608,
+    "spikes": 6,
+    "osc": 0,
+    "devP95": 1.09,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 666
+   },
+   "mite": {
+    "n": 592,
+    "spikes": 80,
+    "osc": 7,
+    "devP95": 1.79,
+    "jerkP95": 1.7,
+    "jerkMax": 9.5,
+    "jerkOver": 20,
+    "jn": 666
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 142,
+    "spikes": 23,
+    "osc": 3,
+    "devP95": 2.8,
+    "jerkP95": 1.7,
+    "jerkMax": 4.9,
+    "jerkOver": 4,
+    "jn": 156
+   },
+   "ball": {
+    "n": 24,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 5.28,
+    "jerkP95": 2.3,
+    "jerkMax": 294.2,
+    "jerkOver": 13,
+    "jn": 224
+   },
+   "viewAcc": {
+    "p99": 52.6,
+    "max": 100.7,
+    "peakW": 4.02
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.67,
+  "cap": 0
+ },
+ {
+  "mode": "synth",
+  "route": "combat",
+  "rate": "59.9",
+  "timing": {
+   "frames": 651,
+   "fps": 59.9,
+   "p50": 16.7,
+   "p95": 16.7,
+   "p99": 16.7,
+   "max": 16.7,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1,
+   "cpuP95": 1.4,
+   "simP50": 1,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 292,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.04,
+    "jerkP95": 0.5,
+    "jerkMax": 9.1,
+    "jerkOver": 5,
+    "jn": 649
+   },
+   "camPos": {
+    "n": 619,
+    "spikes": 8,
+    "osc": 0,
+    "devP95": 1.08,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 523,
+    "spikes": 3,
+    "osc": 0,
+    "devP95": 1.03,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 612,
+    "spikes": 3,
+    "osc": 0,
+    "devP95": 1.09,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 649
+   },
+   "mite": {
+    "n": 648,
+    "spikes": 79,
+    "osc": 8,
+    "devP95": 1.79,
+    "jerkP95": 1.7,
+    "jerkMax": 11.4,
+    "jerkOver": 19,
+    "jn": 649
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 183,
+    "spikes": 43,
+    "osc": 6,
+    "devP95": 3.86,
+    "jerkP95": 1.3,
+    "jerkMax": 5.9,
+    "jerkOver": 6,
+    "jn": 201
+   },
+   "ball": {
+    "n": 31,
+    "spikes": 5,
+    "osc": 0,
+    "devP95": 5.02,
+    "jerkP95": 2.8,
+    "jerkMax": 319.2,
+    "jerkOver": 17,
+    "jn": 295
+   },
+   "viewAcc": {
+    "p99": 45.2,
+    "max": 116.4,
+    "peakW": 4.21
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.69,
+  "cap": 0
+ },
+ {
+  "mode": "synth",
+  "route": "combat",
+  "rate": "30@60",
+  "timing": {
+   "frames": 334,
+   "fps": 30,
+   "p50": 33.3,
+   "p95": 33.3,
+   "p99": 33.3,
+   "max": 33.3,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 2.2,
+   "cpuP95": 2.9,
+   "simP50": 2.2,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 2,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 147,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.14,
+    "jerkP95": 2.7,
+    "jerkMax": 17,
+    "jerkOver": 21,
+    "jn": 332
+   },
+   "camPos": {
+    "n": 309,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 1.19,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 231,
+    "spikes": 2,
+    "osc": 0,
+    "devP95": 1.12,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 283,
+    "spikes": 6,
+    "osc": 0,
+    "devP95": 1.16,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 332
+   },
+   "mite": {
+    "n": 319,
+    "spikes": 7,
+    "osc": 0,
+    "devP95": 1.27,
+    "jerkP95": 5.3,
+    "jerkMax": 26.1,
+    "jerkOver": 48,
+    "jn": 332
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 86,
+    "spikes": 22,
+    "osc": 1,
+    "devP95": 7.46,
+    "jerkP95": 3.6,
+    "jerkMax": 10.5,
+    "jerkOver": 19,
+    "jn": 97
+   },
+   "ball": {
+    "n": 45,
+    "spikes": 3,
+    "osc": 0,
+    "devP95": 2.39,
+    "jerkP95": 5.4,
+    "jerkMax": 202.2,
+    "jerkOver": 30,
+    "jn": 183
+   },
+   "viewAcc": {
+    "p99": 47.2,
+    "max": 86,
+    "peakW": 4.26
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.67,
+  "cap": 33.33
+ },
+ {
+  "mode": "synth",
+  "route": "combat",
+  "rate": "30@59.9",
+  "timing": {
+   "frames": 325,
+   "fps": 30,
+   "p50": 33.4,
+   "p95": 33.4,
+   "p99": 33.4,
+   "max": 33.4,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 2.3,
+   "cpuP95": 2.9,
+   "simP50": 2.2,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 2,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 142,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.1,
+    "jerkP95": 3.4,
+    "jerkMax": 17.4,
+    "jerkOver": 26,
+    "jn": 323
+   },
+   "camPos": {
+    "n": 302,
+    "spikes": 9,
+    "osc": 0,
+    "devP95": 1.28,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 222,
+    "spikes": 6,
+    "osc": 0,
+    "devP95": 1.3,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 299,
+    "spikes": 6,
+    "osc": 0,
+    "devP95": 1.22,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 323
+   },
+   "mite": {
+    "n": 297,
+    "spikes": 8,
+    "osc": 0,
+    "devP95": 1.28,
+    "jerkP95": 5.2,
+    "jerkMax": 26.6,
+    "jerkOver": 53,
+    "jn": 323
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 90,
+    "spikes": 18,
+    "osc": 0,
+    "devP95": 8.68,
+    "jerkP95": 3.3,
+    "jerkMax": 11.8,
+    "jerkOver": 11,
+    "jn": 99
+   },
+   "ball": {
+    "n": 43,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 2.33,
+    "jerkP95": 4,
+    "jerkMax": 306.5,
+    "jerkOver": 32,
+    "jn": 178
+   },
+   "viewAcc": {
+    "p99": 47,
+    "max": 81.6,
+    "peakW": 4.16
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.69,
+  "cap": 33.33
+ },
+ {
+  "mode": "synth",
+  "route": "combat",
+  "rate": "120",
+  "timing": {
+   "frames": 1302,
+   "fps": 120,
+   "p50": 8.3,
+   "p95": 8.3,
+   "p99": 8.3,
+   "max": 8.3,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1.1,
+   "cpuP95": 1.6,
+   "simP50": 1,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 594,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 0.2,
+    "jerkMax": 5.3,
+    "jerkOver": 6,
+    "jn": 1300
+   },
+   "camPos": {
+    "n": 1158,
+    "spikes": 5,
+    "osc": 0,
+    "devP95": 1.05,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 856,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 1215,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 1.03,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 1300
+   },
+   "mite": {
+    "n": 1206,
+    "spikes": 33,
+    "osc": 1,
+    "devP95": 1.38,
+    "jerkP95": 0.8,
+    "jerkMax": 8.4,
+    "jerkOver": 39,
+    "jn": 1300
+   },
+   "ring": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "dot": {
+    "n": 375,
+    "spikes": 15,
+    "osc": 0,
+    "devP95": 1.19,
+    "jerkP95": 0.2,
+    "jerkMax": 11.1,
+    "jerkOver": 11,
+    "jn": 408
+   },
+   "ball": {
+    "n": 198,
+    "spikes": 3,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 0.2,
+    "jerkMax": 290.2,
+    "jerkOver": 6,
+    "jn": 706
+   },
+   "viewAcc": {
+    "p99": 61.9,
+    "max": 362.1,
+    "peakW": 6.62
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 8.33,
+  "cap": 0
+ },
+ {
+  "mode": "real",
+  "route": "mill",
+  "run": 1,
+  "timing": {
+   "frames": 209,
+   "fps": 24.7,
+   "p50": 35.3,
+   "p95": 36.7,
+   "p99": 404.4,
+   "max": 421.1,
+   "over50": 4,
+   "over1_5": null,
+   "cpuP50": 8.3,
+   "cpuP95": 13.2,
+   "simP50": 5.1,
+   "renderP50": 3.3,
+   "gpuP50": 6.8,
+   "gpuP95": 7.8,
+   "calls": 117,
+   "callsP95": 169,
+   "steps": 2.61,
+   "lostS": 1.1,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 83,
+    "spikes": 3,
+    "osc": 0,
+    "devP95": 1.13,
+    "jerkP95": 26.9,
+    "jerkMax": 121.9,
+    "jerkOver": 56,
+    "jn": 207
+   },
+   "camPos": {
+    "n": 197,
+    "spikes": 19,
+    "osc": 0,
+    "devP95": 1.79,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 155,
+    "spikes": 8,
+    "osc": 0,
+    "devP95": 1.52,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 204,
+    "spikes": 25,
+    "osc": 0,
+    "devP95": 2.27,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 207
+   },
+   "cart": {
+    "n": 183,
+    "spikes": 9,
+    "osc": 0,
+    "devP95": 1.5,
+    "jerkP95": 18.2,
+    "jerkMax": 121.3,
+    "jerkOver": 72,
+    "jn": 144
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 52.8,
+    "jerkMax": 326.1,
+    "jerkOver": 94,
+    "jn": 165
+   },
+   "npc:zl_kell": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 26.7,
+    "jerkMax": 151.8,
+    "jerkOver": 108,
+    "jn": 207
+   },
+   "viewAcc": {
+    "p99": 48.6,
+    "max": 96.6,
+    "peakW": 4.08
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 9.6,
+  "refresh": 17.6,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 4.73,
+   "shadow map": 2.04,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 98
+ },
+ {
+  "mode": "real",
+  "route": "mill",
+  "run": 2,
+  "timing": {
+   "frames": 204,
+   "fps": 22.6,
+   "p50": 35.4,
+   "p95": 36.9,
+   "p99": 406.4,
+   "max": 440.2,
+   "over50": 6,
+   "over1_5": null,
+   "cpuP50": 8.6,
+   "cpuP95": 13.9,
+   "simP50": 5.4,
+   "renderP50": 3.2,
+   "gpuP50": 6.5,
+   "gpuP95": 7.6,
+   "calls": 115,
+   "callsP95": 168,
+   "steps": 2.65,
+   "lostS": 1.65,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 75,
+    "spikes": 8,
+    "osc": 0,
+    "devP95": 2.9,
+    "jerkP95": 29,
+    "jerkMax": 148.4,
+    "jerkOver": 61,
+    "jn": 202
+   },
+   "camPos": {
+    "n": 190,
+    "spikes": 18,
+    "osc": 0,
+    "devP95": 2.2,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 155,
+    "spikes": 13,
+    "osc": 0,
+    "devP95": 2.18,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 198,
+    "spikes": 31,
+    "osc": 1,
+    "devP95": 2.64,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 202
+   },
+   "cart": {
+    "n": 176,
+    "spikes": 9,
+    "osc": 0,
+    "devP95": 1.51,
+    "jerkP95": 48.4,
+    "jerkMax": 120.9,
+    "jerkOver": 66,
+    "jn": 138
+   },
+   "npc:zc_courier": {
+    "n": 101,
+    "spikes": 29,
+    "osc": 1,
+    "devP95": null,
+    "jerkP95": 3.1,
+    "jerkMax": 3.1,
+    "jerkOver": 2,
+    "jn": 8
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 38.5,
+    "jerkMax": 207.7,
+    "jerkOver": 99,
+    "jn": 165
+   },
+   "viewAcc": {
+    "p99": 47.6,
+    "max": 68.5,
+    "peakW": 4.01
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 10.3,
+  "refresh": 17.5,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 4.91,
+   "shadow map": 1.6,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 98
+ },
+ {
+  "mode": "real",
+  "route": "mill",
+  "run": 3,
+  "timing": {
+   "frames": 210,
+   "fps": 24.7,
+   "p50": 35.2,
+   "p95": 36.5,
+   "p99": 408,
+   "max": 423.5,
+   "over50": 4,
+   "over1_5": null,
+   "cpuP50": 8,
+   "cpuP95": 13,
+   "simP50": 4.8,
+   "renderP50": 3.1,
+   "gpuP50": 6.7,
+   "gpuP95": 7.8,
+   "calls": 115,
+   "callsP95": 165,
+   "steps": 2.57,
+   "lostS": 1.11,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 78,
+    "spikes": 7,
+    "osc": 0,
+    "devP95": 1.52,
+    "jerkP95": 26.2,
+    "jerkMax": 372.6,
+    "jerkOver": 49,
+    "jn": 208
+   },
+   "camPos": {
+    "n": 197,
+    "spikes": 16,
+    "osc": 0,
+    "devP95": 1.68,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 159,
+    "spikes": 9,
+    "osc": 0,
+    "devP95": 1.58,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 206,
+    "spikes": 30,
+    "osc": 0,
+    "devP95": 2.57,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 208
+   },
+   "cart": {
+    "n": 182,
+    "spikes": 7,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 35.4,
+    "jerkMax": 402.2,
+    "jerkOver": 75,
+    "jn": 147
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 39.9,
+    "jerkMax": 420.4,
+    "jerkOver": 92,
+    "jn": 169
+   },
+   "npc:zc_clerk": {
+    "n": 198,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": 54.1,
+    "jerkMax": 537.5,
+    "jerkOver": 78,
+    "jn": 160
+   },
+   "viewAcc": {
+    "p99": 40.3,
+    "max": 59.8,
+    "peakW": 3.98
+   },
+   "rootVsSim": 0
+  },
+  "longTasks": 0,
+  "longTaskMax": 0,
+  "wall": 9.6,
+  "refresh": 17.5,
+  "cap": 33.33,
+  "bg": false,
+  "gpuPasses": {
+   "scene": 4.83,
+   "shadow map": 1.89,
+   "bloom": 0,
+   "output": 0
+  },
+  "disjoint": 0,
+  "programs": 98
+ },
+ {
+  "mode": "synth",
+  "route": "mill",
+  "rate": "60",
+  "timing": {
+   "frames": 444,
+   "fps": 60,
+   "p50": 16.7,
+   "p95": 16.7,
+   "p99": 16.7,
+   "max": 16.7,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1.9,
+   "cpuP95": 4.6,
+   "simP50": 1.9,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 178,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 6.9,
+    "jerkMax": 72.1,
+    "jerkOver": 50,
+    "jn": 442
+   },
+   "camPos": {
+    "n": 416,
+    "spikes": 9,
+    "osc": 0,
+    "devP95": 1.19,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 334,
+    "spikes": 3,
+    "osc": 0,
+    "devP95": 1.14,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 437,
+    "spikes": 20,
+    "osc": 0,
+    "devP95": 1.46,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 442
+   },
+   "cart": {
+    "n": 400,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 4.5,
+    "jerkMax": 78.7,
+    "jerkOver": 46,
+    "jn": 327
+   },
+   "npc:zc_clerk": {
+    "n": 343,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 8.1,
+    "jerkMax": 81.9,
+    "jerkOver": 70,
+    "jn": 418
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 8.2,
+    "jerkMax": 82.7,
+    "jerkOver": 49,
+    "jn": 363
+   },
+   "viewAcc": {
+    "p99": 49.7,
+    "max": 93.4,
+    "peakW": 4.06
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.67,
+  "cap": 0
+ },
+ {
+  "mode": "synth",
+  "route": "mill",
+  "rate": "59.9",
+  "timing": {
+   "frames": 438,
+   "fps": 59.9,
+   "p50": 16.7,
+   "p95": 16.7,
+   "p99": 16.7,
+   "max": 16.7,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1.8,
+   "cpuP95": 3.2,
+   "simP50": 1.8,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 174,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 7.2,
+    "jerkMax": 71.8,
+    "jerkOver": 52,
+    "jn": 436
+   },
+   "camPos": {
+    "n": 414,
+    "spikes": 11,
+    "osc": 0,
+    "devP95": 1.16,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 330,
+    "spikes": 2,
+    "osc": 0,
+    "devP95": 1.1,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 433,
+    "spikes": 22,
+    "osc": 0,
+    "devP95": 1.51,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 436
+   },
+   "cart": {
+    "n": 393,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 4.8,
+    "jerkMax": 78.2,
+    "jerkOver": 42,
+    "jn": 315
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 8.2,
+    "jerkMax": 86.4,
+    "jerkOver": 48,
+    "jn": 350
+   },
+   "npc:zl_kell": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 5.1,
+    "jerkMax": 66.1,
+    "jerkOver": 60,
+    "jn": 436
+   },
+   "viewAcc": {
+    "p99": 51.6,
+    "max": 94.5,
+    "peakW": 4.07
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.69,
+  "cap": 0
+ },
+ {
+  "mode": "synth",
+  "route": "mill",
+  "rate": "30@60",
+  "timing": {
+   "frames": 219,
+   "fps": 30,
+   "p50": 33.3,
+   "p95": 33.3,
+   "p99": 33.3,
+   "max": 33.3,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 4.1,
+   "cpuP95": 7.3,
+   "simP50": 4,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 2,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 85,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.05,
+    "jerkP95": 20.5,
+    "jerkMax": 122.2,
+    "jerkOver": 59,
+    "jn": 217
+   },
+   "camPos": {
+    "n": 204,
+    "spikes": 11,
+    "osc": 0,
+    "devP95": 1.55,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 162,
+    "spikes": 7,
+    "osc": 0,
+    "devP95": 1.4,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 211,
+    "spikes": 23,
+    "osc": 0,
+    "devP95": 2.13,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 217
+   },
+   "cart": {
+    "n": 195,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 16,
+    "jerkMax": 84.3,
+    "jerkOver": 74,
+    "jn": 148
+   },
+   "npc:zc_clerk": {
+    "n": 111,
+    "spikes": 48,
+    "osc": 0,
+    "devP95": null,
+    "jerkP95": 5.8,
+    "jerkMax": 36.3,
+    "jerkOver": 23,
+    "jn": 60
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 27.5,
+    "jerkMax": 211.7,
+    "jerkOver": 91,
+    "jn": 171
+   },
+   "viewAcc": {
+    "p99": 32.7,
+    "max": 57.6,
+    "peakW": 4.16
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.67,
+  "cap": 33.33
+ },
+ {
+  "mode": "synth",
+  "route": "mill",
+  "rate": "30@59.9",
+  "timing": {
+   "frames": 219,
+   "fps": 29.9,
+   "p50": 33.4,
+   "p95": 33.4,
+   "p99": 33.4,
+   "max": 33.4,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 3.1,
+   "cpuP95": 6.5,
+   "simP50": 3.1,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 2,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 85,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.03,
+    "jerkP95": 24.9,
+    "jerkMax": 156,
+    "jerkOver": 53,
+    "jn": 217
+   },
+   "camPos": {
+    "n": 206,
+    "spikes": 9,
+    "osc": 0,
+    "devP95": 1.42,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 163,
+    "spikes": 4,
+    "osc": 0,
+    "devP95": 1.32,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 215,
+    "spikes": 26,
+    "osc": 0,
+    "devP95": 2.34,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 217
+   },
+   "cart": {
+    "n": 194,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 17,
+    "jerkMax": 168.7,
+    "jerkOver": 73,
+    "jn": 157
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 34.2,
+    "jerkMax": 160.8,
+    "jerkOver": 91,
+    "jn": 172
+   },
+   "npc:zl_kell": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 17.2,
+    "jerkMax": 139.2,
+    "jerkOver": 99,
+    "jn": 217
+   },
+   "viewAcc": {
+    "p99": 42.9,
+    "max": 61.6,
+    "peakW": 3.63
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 16.69,
+  "cap": 33.33
+ },
+ {
+  "mode": "synth",
+  "route": "mill",
+  "rate": "120",
+  "timing": {
+   "frames": 885,
+   "fps": 120,
+   "p50": 8.3,
+   "p95": 8.3,
+   "p99": 8.3,
+   "max": 8.3,
+   "over50": 0,
+   "over1_5": null,
+   "cpuP50": 1.6,
+   "cpuP95": 3,
+   "simP50": 1.6,
+   "renderP50": 0,
+   "gpuP50": null,
+   "gpuP95": null,
+   "calls": 0,
+   "callsP95": 0,
+   "steps": 1,
+   "lostS": 0,
+   "bgFrames": 0
+  },
+  "motion": {
+   "hero": {
+    "n": 355,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.01,
+    "jerkP95": 1.4,
+    "jerkMax": 66.8,
+    "jerkOver": 32,
+    "jn": 883
+   },
+   "camPos": {
+    "n": 837,
+    "spikes": 13,
+    "osc": 0,
+    "devP95": 1.06,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "camView": {
+    "n": 670,
+    "spikes": 1,
+    "osc": 0,
+    "devP95": 1.03,
+    "jerkP95": null,
+    "jerkMax": null,
+    "jerkOver": 0,
+    "jn": 0
+   },
+   "look": {
+    "n": 877,
+    "spikes": 20,
+    "osc": 0,
+    "devP95": 1.09,
+    "jerkP95": 0,
+    "jerkMax": 0,
+    "jerkOver": 0,
+    "jn": 883
+   },
+   "cart": {
+    "n": 803,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1.02,
+    "jerkP95": 1,
+    "jerkMax": 66.9,
+    "jerkOver": 13,
+    "jn": 648
+   },
+   "npc:zl_brel": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 2,
+    "jerkMax": 89,
+    "jerkOver": 36,
+    "jn": 722
+   },
+   "npc:zl_kell": {
+    "n": 0,
+    "spikes": 0,
+    "osc": 0,
+    "devP95": 1,
+    "jerkP95": 1.1,
+    "jerkMax": 71.3,
+    "jerkOver": 23,
+    "jn": 883
+   },
+   "viewAcc": {
+    "p99": 50.1,
+    "max": 273.6,
+    "peakW": 4.07
+   },
+   "rootVsSim": 0
+  },
+  "refresh": 8.33,
+  "cap": 0
+ }
+]
