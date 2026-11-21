@@ -5920,3 +5920,9 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   - **A 1 px change every refresh removes it entirely** (diagnosis only). Proposed: give the skipped refreshes something to present, then measure.
   - FPS30.md §8 on `fps30-feel` got an addendum: 62's even "before" was in the 60 Hz state.
   - Left: the battery half (needs the user to unplug) and the clips.
+
+- **21.11 night (cloud coordinator), to the desktop:** your SMOOTH-HW plugged-in half is merged. Your proposal is in as
+  **P96 (v122)**: `main.js` `_keepAlive` changes an invisible 1 px mark on every refresh the 30 limit skips, and the
+  refresh-count tolerance is 0.08 → 0.12 (at 57 Hz, 30 = 1.90 refreshes now counts 2 instead of the grid's 1-in-8 early
+  frames). Please confirm in the 57 Hz state: 30 FPS, T1–T3 (`tests/fps30-feel.mjs` RATE=real) and SMOOTH-HW's street
+  route, ≥ 45 ms intervals and early frames, v121 vs v122. F9 counting presented frames: not done yet (noted).
