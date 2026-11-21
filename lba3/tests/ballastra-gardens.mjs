@@ -26,7 +26,7 @@ const built = await ev(() => {
   return { before, after: gr.state, ms: gr.ms, rooms: H?.rooms, here: G.room?.id, y: +G.hero.pos.y.toFixed(2), nearest: far,
     scene: G.regions.sceneOf(c.x + 5, c.z + 5), roomScenes: ['bl_tunnel', 'bl_kiln'].map((id) => G.regions.sceneOf(G.rooms[id].center.x, G.rooms[id].center.z)) };
 });
-check('the gardens build on first need (their own lazy group) and he stands on the west plaza by the gate from the Arch District', built.before === 'unloaded' && built.rooms?.join() === 'bl_gardens,bl_tunnel,bl_kiln' && built.here === 'bl_gardens' && Math.abs(built.y - 6.4) < 0.1, built);
+check('the gardens build on first need (their own lazy group) and he stands on the west plaza by the gate from the Arch District', built.before === 'unloaded' && built.rooms?.join() === 'bl_gardens,bl_tunnel,bl_kiln,bl_house' && built.here === 'bl_gardens' && Math.abs(built.y - 6.4) < 0.1, built);
 check('they stand far from every other area (the nearest over 600 m away), and their points and rooms are known as their own before they are built', built.nearest.every(([, d]) => d > 600) && built.scene === 'bl_gardens' && built.roomScenes.join() === 'bl_tunnel,bl_kiln', built);
 
 // ---- the handles

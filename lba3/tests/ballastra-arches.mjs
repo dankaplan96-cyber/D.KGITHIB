@@ -25,7 +25,7 @@ const built = await ev(() => {
   return { before, after: gr.state, steps: gr.stepsMs?.length ?? null, ms: gr.ms, rooms: H?.rooms, here: G.room?.id, hero: [G.hero.pos.y].map((v) => +v.toFixed(2)), nearest: far,
     scene: G.regions.sceneOf(c.x + 5, c.z + 5), roomScenes: ['bl_oren', 'bl_mags', 'bl_pump'].map((id) => G.regions.sceneOf(G.rooms[id].center.x, G.rooms[id].center.z)) };
 });
-check('the district builds on first need (its own lazy group, in steps) and he stands at the landing from the harbour', built.before === 'unloaded' && built.rooms?.join() === 'bl_arches,bl_oren,bl_mags,bl_pump' && built.here === 'bl_arches' && Math.abs(built.hero[0] - 1.4) < 0.1, built);
+check('the district builds on first need (its own lazy group, in steps) and he stands at the landing from the harbour', built.before === 'unloaded' && built.rooms?.join() === 'bl_arches,bl_oren,bl_mags,bl_pump,bl_cradles' && built.here === 'bl_arches' && Math.abs(built.hero[0] - 1.4) < 0.1, built);
 check('it stands far from every other area (the nearest over 600 m away), and its points and rooms are known as its own before they are built', built.nearest.every(([, d]) => d > 600) && built.scene === 'bl_arches' && built.roomScenes.join() === 'bl_oren,bl_mags,bl_pump', built);
 
 // ---- the handles
