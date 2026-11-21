@@ -1088,7 +1088,10 @@ export function* buildDesertSteps(scene, physics) {
     // the gate: two leaves that slide aside
     for (const s of [-1, 1]) {
       const leaf = new THREE.Mesh(new THREE.PlaneGeometry(2.0, fH), fenceMat);
-      leaf.position.set(POST.x0, postY + fH / 2 + 0.1, POST.gateZ + s * 1.0); leaf.rotation.y = Math.PI / 2; group.add(leaf);
+      // (P65-2 OVERLAP-SWEEP: the leaves run 12 cm outside the fence's line, past its posts: in the line itself each leaf
+      //  shared the plane of the next panel, two chain-links flickering into each other where they overlap — 0.56 m
+      //  shut, the whole leaf when slid open)
+      leaf.position.set(POST.x0 - 0.12, postY + fH / 2 + 0.1, POST.gateZ + s * 1.0); leaf.rotation.y = Math.PI / 2; group.add(leaf);
       gateParts.push({ leaf, s, c: col({ type: 'box', x: POST.x0, z: POST.gateZ + s * 1.0, hw: 0.08, hd: 1.0, top: postY + fH, noStand: true, seeThrough: true }) });
     }
     // cabins: teal prefab units with the project emblem
