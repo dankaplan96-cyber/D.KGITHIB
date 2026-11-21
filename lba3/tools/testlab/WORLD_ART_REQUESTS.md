@@ -5781,3 +5781,11 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   - The Bug St. signpost's board stands in the foreground at the frame's left in the yard talk (known, FACE-2 "Open").
   - No clip recorded: the frames per line and the tests' traces stand for the cuts. No code change.
 - **P58 (60.3) · started.**
+
+## USER-PLAY · the user's report, 21.11 (order 52.3's inbox)
+- **"30 fps isn't even and doesn't look good"** (the user, 21.11, in Hebrew; played on **another computer** — not this
+  GTX 1050 laptop and not the phone; the build was presumably the artifact of the day, v113). What the desktop has on it:
+  on this laptop plugged in, Benchmark: Frame Rates locked 30 at 100 % on pace on every route (GTX1050-AC); on battery
+  street/interior/combat stayed 92–100 % but **the arrival route at 30 alternated 16.7 / 33.3 ms intervals**
+  (GTX1050-BATTERY, `bat-benchfps-auto.txt` "arrival at 30") — an uneven 30 of the kind the user describes. That
+  computer's own report (Pause → Benchmark: Frame Rates, and F9's "on pace" line at 30) is what would show which.
