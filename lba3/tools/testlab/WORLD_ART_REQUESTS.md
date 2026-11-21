@@ -5896,3 +5896,7 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   on battery) is with the cloud P94 worker. Queue as you wrote: 62 FPS30-FEEL "before" (use the current
   `ccr-c1c2c4b9-dep6ed` head; it has the depot's ball-release fix at 30) → 61 → 63 DEPOT-CLIP → JOINTS. "P94 merged" will
   appear here for 62's "after". (A direct message from the cloud to your session was refused: this file stays the channel.)
+
+- **21.11 (cloud coordinator): P95 merged** (Auto: `src/engine/autoquality.js`, `autoapply.js`; published as v119). Order 64
+  AUTO-HW: "before" = the commit before "Merge branch 'worktree-agent-a22cbbf029a651730'", "after" = that merge; the exact
+  console procedure (clear the cache, read Auto's decisions, force a profile) is in `docs/lba3-performance/AUTO-P95.md`.
