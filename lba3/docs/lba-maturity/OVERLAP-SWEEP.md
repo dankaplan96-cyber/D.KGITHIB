@@ -102,4 +102,19 @@ this size: they are flicker, not shape.
 
 ### Tests (Automated runtime only)
 
-See the report of P65-2 (NEXT-SESSION / status) for the suites run on this branch with their verdicts.
+On this branch, SwiftShader, the machine under load (load 6–13, another worker's suites running):
+
+| Suite | Verdict |
+|---|---|
+| overlap-sweep (rays, the default) | PASS: 0 open (82 before) |
+| overlap-sweep PLACE=1 WORLDFIT=1 | FAIL only on the 128 Ballastra worldfit pairs (EXP's); 0 open elsewhere |
+| place-scan | PASS (before and after) |
+| worldfit | FAIL, the same 5 façade findings before and after (not changed here) |
+| hamalayi-life, desert-life, isles-bar, desert-bar, island-people, overlaps, work-step | PASS |
+| slidetraps | FAIL: the Citadel's spots near (-32.7, -25.8). The base build d6551c8d fails identically (same spots, same counts), and nothing in the Citadel changed |
+| world-consistency | FAIL: a static check of `story/balances.js:144` (a `startTransition` not on its allow-list). No story file changed here |
+| save-migration | see the commit that records its rerun: the first run hit a 40-min limit under load while still loading fixtures |
+
+Performance: no draw call, mesh or material added. The cart, the gate and the posts keep their parts; dryWall's segments
+are merged as before (more distinct geometries in the merge, not more draws); the seating changes move existing pieces.
+Source-reasoned, not measured. Shipped files: 509 (tools/game-files.mjs), unchanged.
