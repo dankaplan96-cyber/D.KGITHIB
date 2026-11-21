@@ -820,3 +820,16 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     `joints-blender` as before), pushed, plus a line in WORLD_ART_REQUESTS.md when you start and finish each. Stay out
     of `camera.js`, `rig.js` (except order 57), `src/game/story/*` and `src/game/text/*`: the cloud works there.
     Never commit LBA1/LBA2 files. Test lightly; the cloud runs the full test.
+
+61. **SMOOTH-HW (the user, 21.11: "make movement, camera rotation and combat feel smoother without sacrificing the art";
+    status.md P89).** The cloud worker SMOOTH-1 is writing `tests/smooth-routes.mjs` (three scripted routes in loaded
+    scenes, Follow camera, 1366×768: Citadel street run/turn/stop/camera sweep over the harbour; combat strafe + two ball
+    throws; Mill Lane beside the moving lift and cart while rotating the camera) and `docs/lba3-performance/SMOOTH-1.md`
+    with the exact local procedure. When it is merged on `ccr-c1c2c4b9-dep6ed` (the coordinator will say so in
+    WORLD_ART_REQUESTS.md), run it on this laptop, headed Chrome, before (base = the commit before SMOOTH-1's merge) and
+    after, **3 runs each**, separately **on battery** and **plugged in**, at 60 and at 30, Medium (and High plugged in);
+    note which GPU Chrome uses (chrome://gpu). If the GPU is over budget on a route: the same route at 100 % vs 90 % world
+    resolution, then edge smoothing on/off, separately. Report frame p95/p99, stalls > 50 ms, CPU and GPU ms/frame, and
+    whether the motion looks even at a stable frame time (a short clip per route). Do not change OS power or GPU settings.
+    Measure only; report as SMOOTH-HW with numbers in SMOOTH-1.md's "Real hardware" section on a branch `smooth-hw`.
+    Order: after 60.0 FPS30-PRESENT, before 60.1.
