@@ -5,7 +5,7 @@ import { createHumanoid, createBlobShadow, placeBlobShadow } from '../engine/rig
 import { createCharacter, addSilhouette, writeBodyStencil, LOOKS, dressVariant } from './characters.js';
 import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
-import { HeroCombat } from './combat.js';
+import { HeroCombat, COMBAT } from './combat.js';
 import { WATER_FLOOR, GRAVITY } from '../engine/physics.js';
 import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
@@ -1241,6 +1241,11 @@ const BALL_TARGET_PACE = { normal: 13, athletic: 15, aggressive: 19, discreet: 9
 //  - limits: 4.2 s of flight (Discreet's four tall hops take ~3.8 s), then it returns; a return that takes over
 //    2.5 s (or a scene change) puts it straight back in the hand. The ball can't be lost.
 const BALL_STEP = 0.12, BALL_R = 0.14;
+// P93: the throw's clock (Rig.actionT for the planted throw, the upper-body layer's for a throw on the move) at which the
+// ball leaves the hand as drawn: the release frame's pose at 60 fps — the controller lets go on its first 1/60 s step at
+// or past COMBAT.throw.quickRelease (10/60 s) and the planted pose is drawn one frame ahead of that (11/60 s)
+const REL_POSE = (Math.ceil(COMBAT.throw.quickRelease * 60 - 1e-6) + 1) / 60;
+function poseClock(hero) { const R = hero?.rig; return !R ? null : R.anim === 'throwQuick' ? R.actionT : R.over?.kind === 'throw' ? R.over.t : null; }
 const REL_OFF = { f: 0.9, s: -0.19, u: 1.45 };   // where the ball leaves the hand, standing (ahead, to his left (+), up): MagicBall.preview
 // the ball's colour by magic level (1 yellow, 2 green, 3 red, 4 the fire ball)
 const BALL_LEVEL = [null, ['#ffe68a', '#ffc400'], ['#9dff8a', '#30d020'], ['#ff8a7a', '#ff2a10'], ['#ffc070', '#ff6a00']];
@@ -1345,6 +1350,13 @@ export class MagicBall {
     this.followHand();
   }
   cancelHold() { if (this.state === 'inhand') this.toHand(true); }
+  // (P93: the hand's place in the frame just drawn and the throw's clock for that pose, for the release: step)
+  handWas() {
+    const t = poseClock(this.holder);
+    if (t == null) { this._handA = null; return; }
+    const A = (this._handA ||= { p: new THREE.Vector3(), t: 0, anim: null });
+    A.p.copy(this.mesh.position); A.t = t; A.anim = this.holder.rig.anim;
+  }
   setCharge(k) { this.charge = k; this.setGlow(0.6 + k * 3.2); this.mesh.scale.setScalar(1 + k * 0.35 + (k >= 1 ? Math.sin(this.game.time * 30) * 0.05 : 0)); }
   // the look of a level (1 yellow, 2 green, 3 red, 4 the fire ball): the body's painted marble, its glow, the trail and halo
   paint(level) {
@@ -1574,15 +1586,29 @@ export class MagicBall {
   step(dt) {
     const g = this.game, P = g.physics;
     this.shadow.visible = this.state === 'fly' || this.state === 'return' || this.state === 'impact';
-    if (this.state === 'inhand') { this.followHand(); return; }
+    if (this.state === 'inhand') { this.followHand(); this.handWas(); return; }
     if (this.state === 'idle' || this.state === 'held') return;
     const was = this.state;
     if (this.reseat) {
       // the release frame: the ball leaves the hand as it is posed NOW (this frame's rig update has run) and has not
       // flown yet (it was released at the pose, not a frame earlier and then flown a whole frame on)
+      // (P93 DEPOT: … unless this frame's pose has gone past the release. A planted throw is drawn one frame ahead of the
+      //  controller's clock (the rig adds the frame to it), so at 30 fps the release frame showed the whip 0.2 s in —
+      //  the hand 1.13 m up, coming down — against 0.18 s and 1.54 m at 60 fps, and the ball, raised to 1.2 m, left
+      //  beside the hand rather than from it. The ball now leaves from the hand where it was at the release as 60 fps
+      //  draws it (REL_POSE), read between the last two poses, and flies the time since then in this frame: the same
+      //  origin and the same flight at 30 and 60 fps. 60 fps itself is unchanged: its release frame is that pose)
       const r = this.reseat; this.reseat = null;
       if (this.state === 'fly' && this.holder) {
-        this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, r.hero.pos.y + 1.2);
+        this.followHand(); this.pos.copy(this.mesh.position);
+        const A = this._handA, tB = poseClock(this.holder);
+        if (A && tB != null && A.anim === this.holder.rig.anim && tB > REL_POSE && tB > A.t) {
+          const k = clamp((REL_POSE - A.t) / (tB - A.t), 0, 1);
+          this.pos.lerpVectors(A.p, this.pos, k);
+          r.since = tB - Math.max(A.t, REL_POSE);
+        }
+        this._handA = null;
+        this.pos.y = Math.max(this.pos.y, r.hero.pos.y + 1.2);
         { const H = r.hero, fx = Math.sin(H.angle), fz = Math.cos(H.angle), dx = this.pos.x - H.pos.x, dz = this.pos.z - H.pos.z;
           this.relOff = { f: dx * fx + dz * fz, s: dx * fz - dz * fx, u: this.pos.y - H.pos.y }; }   // (for the next preview)
         const struck = this.armReach(r.hero, this.pos, true);
@@ -1590,7 +1616,7 @@ export class MagicBall {
         const pl = this.plan(r.hero, r.beh, aim, r.target, r.charged);
         this.vel.copy(pl.vel); this.grav = pl.grav; this.lift = pl.lift;
         this.flash(this.pos.x, this.pos.y, this.pos.z, r.charged ? 0.5 : 0.3, false); // (a small pop where the ball leaves the hand)
-        dt = 0;
+        dt = r.since || 0;
         // (POINT-BLANK: the hand came down on or through an enemy before it let go: the ball strikes it there)
         if (struck) { const hit = g.ballHitTest(this.pos, this); if (hit) this.onHit(hit); }
       }

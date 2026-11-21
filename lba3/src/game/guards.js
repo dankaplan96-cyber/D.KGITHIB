@@ -71,6 +71,36 @@ export class Guard extends Actor {
   // (a guard going down finishes its fall whatever the story does with the cast meanwhile: death.js)
   setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.def.calm?.()) return; if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
+  // P93 (the Zeelich depot, story/chapter2.js): a noise over there. From his calm round only: he turns to `to` and looks
+  // for `look` s, then goes on with his round; walk: first he walks to `stand` (a place to look it over from), and after the
+  // look he takes up his round again at its nearest point. It stays his round (state 'patrol'): anything he sees of
+  // Twinsen meanwhile alerts him as on his round; a hit or a call from the others ends it. force: a walk may replace a look
+  investigate(to, { walk = false, stand = null, look = 1.5, force = false } = {}) {
+    if (!this.alive || !this.present || this.state !== 'patrol' || (this.inv && !(force && walk && !this.inv.walk))) return false;
+    this.inv = { to: { x: to.x, z: to.z }, walk, stand: walk ? { x: (stand || to).x, z: (stand || to).z } : null, look, t: 0, goT: 0, at: !walk };
+    return true;
+  }
+  // (P93: one frame of it; returns { face, sp, anim } and clears this.inv when he goes back to his round)
+  stepInvestigate(dt) {
+    const I = this.inv;
+    if (!I.at) {
+      const dx = I.stand.x - this.pos.x, dz = I.stand.z - this.pos.z;
+      I.goT += dt;
+      if (Math.hypot(dx, dz) > 0.4 && I.goT < 20) return { face: Math.atan2(dx, dz), sp: 1.4, anim: 'walk' };
+      I.at = true;
+    }
+    I.t += dt;
+    const face = Math.atan2(I.to.x - this.pos.x, I.to.z - this.pos.z);
+    if (I.t > I.look) {
+      this.inv = null; this.waitT = 0.5;
+      if (I.walk) {   // (back into his round at its nearest point)
+        let best = 0, bd = Infinity;
+        this.patrol.forEach(([x, z], i) => { const d = Math.hypot(x - this.pos.x, z - this.pos.z); if (d < bd) { bd = d; best = i; } });
+        this.wp = best;
+      }
+    }
+    return { face, sp: 0, anim: I.t > 0.35 ? 'search' : 'idle' };
+  }
 
   // ---- hits (LBA1's HitObj: armour, two reactions)
   melee(D, h) { return this.take(D.dmg + (D.heavy ? 1 : 0), h.pos); }
@@ -168,7 +198,8 @@ export class Guard extends Actor {
       case 'patrol': {
         const [tx, tz] = this.patrol[this.wp % this.patrol.length];
         const dd = Math.hypot(tx - this.pos.x, tz - this.pos.z);
-        if (this.waitT > 0) { this.waitT -= dt; anim = 'idle'; }
+        if (this.inv) ({ face, sp, anim } = this.stepInvestigate(dt));   // (P93: a noise to look at first)
+        else if (this.waitT > 0) { this.waitT -= dt; anim = 'idle'; }
         else if (dd < 0.4 || this.patrol.length < 2) { this.wp = (this.wp + 1) % this.patrol.length; this.waitT = this.patrol.length < 2 ? 1e9 : 1.2; }
         else { face = Math.atan2(tx - this.pos.x, tz - this.pos.z); sp = 1.4; anim = 'walk'; }
         if (sees) { this.state = 'alerted'; this.stateT = 0; g.audio.play('alert', this.pos); g.hud?.float?.('!', { x: this.pos.x, y: this.pos.y + 2.4, z: this.pos.z }, '#e090ff'); }
@@ -240,6 +271,7 @@ export class Guard extends Actor {
         break;
       }
     }
+    if (this.state !== 'patrol') this.inv = null;   // (P93: whatever took him off his round ends a look)
     if (this.hurtT > 0 && this.state !== 'hurt') sp = 0;
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'strike' ? 1.5 : this.state === 'hurt' ? 16 : 4, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);

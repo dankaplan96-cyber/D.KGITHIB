@@ -38,6 +38,14 @@ const MILL_IDS = ['north', 'east', 'south'];   // (zeelich.js MILLS: the flags c
 // Zeelich's street folk and where they stand
 const ZFOLK = [['zbee1', 'bee1'], ['zbee2', 'bee2'], ['zmole1', 'mole1'], ['zmole2', 'mole2'], ['ztri1', 'tri1'], ['ztri2', 'tri2']];
 const SOLUTION = [0, 1, 2];
+// P93 DEPOT (the user's brief, 21.11): the red container in the depot has a loose door leaf (zeelich.js depot.door). Now
+// and then a gust swings it open and it bangs shut; the depot's guard, if he is on his round near it, turns to it, waits
+// and goes back to work — the clue, seen with the sound off. The ball against those doors swings it the same way, and the
+// guard walks over and looks it over (guards.js investigate), well away from the way to the locker: an opening, in
+// Discreet, for whoever thought of it. After a couple of checks he only glances, until a minute passes without a knock.
+// Nothing is shown or said; nothing is saved; the drones and the dog are not part of it.
+const DEPOT_GUST = { first: 6, every: [17, 23, 19], near: 36, w: 2.4 };   // s of game time; m from the depot's middle; the swing (rad/s)
+const DEPOT_EAR = { glance: 14, look: 1.6, check: 4.0, cool: 6, bored: 2, forget: 60, glanceBored: 1.2 };   // m; s; checks
 
 export class Chapter2 extends ChapterBase {
   get Z() { return this.game.rooms.zeelich; }
@@ -83,6 +91,18 @@ export class Chapter2 extends ChapterBase {
     // (COMBAT-2: the two drones take two hits, not three. With the magic ball still at level 1 here (1 a hit, 1 magic a
     //  throw) three each meant 6 of his 6–8 magic on them alone while they, the guard's rifle and the dog worked on him: the
     //  playthrough's bot lost 9–10 of its 11 health in 4 of 5 runs, the fights 43–87 s, a drone 30–84 s to beat)
+    // (P93 DEPOT: each its own beat, zeelich.js depot.beats: the drones the east half, the dog at its post by the shed, the
+    //  guard the middle from the gate to the locker. A build without beats keeps the one shared loop)
+    const B = D.beats;
+    if (B) {
+      const dr = B.drones, k = Math.floor(dr.length / 2), G0 = B.guard, P0 = B.dogPost;
+      return [
+        { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, x: dr[0][0], z: dr[0][1], patrol: dr, wp: 1, when },
+        { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, x: dr[k][0], z: dr[k][1], patrol: dr, wp: (k + 1) % dr.length, when },
+        { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: G0[0][0], z: G0[0][1], angle: Math.atan2(G0[1][0] - G0[0][0], G0[1][1] - G0[0][1]), patrol: G0, wp: 1, when },
+        { id: 'zgdog1', kind: 'gdog', coat: 'brown', group: 'zdepot', x: P0.x, z: P0.z, angle: P0.a, patrol: [[P0.x, P0.z]], wp: 0, when },
+      ];
+    }
     return [
       { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
       { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[h][0], z: D.patrol[h][1], patrol: D.patrol, wp: (h + 1) % n, when },
@@ -296,10 +316,46 @@ export class Chapter2 extends ChapterBase {
     return false;
   }
 
+  // ---------------------------------------------------------------- P93 DEPOT: the loose door and the guard's ear
+  depotDoor() { return this.inZ() ? this.Z?.depot?.door : null; }
+  depotGuard() { return this.game.enemies.find((e) => e.def?.id === 'zguard1' && e.present && e.alive && !e.gone) || null; }
+  depotTick(dt) {
+    const g = this.game, S = this.depotDoor(), h = g.hero;
+    if (!S) return;
+    const E = (this.depotEar ||= { gustT: DEPOT_GUST.first, gi: 0, checks: 0, lastHit: -1e9, coolUntil: -1e9, wasCheck: false });
+    S.onClack ||= () => g.audio.play('clunk', { x: S.x, z: S.z });
+    if (g.state !== 'play' || g.trans) return;
+    // (a check that has ended starts the cool-down; a minute without a knock and he has forgotten the last ones)
+    const G = this.depotGuard();
+    if (E.wasCheck && !G?.inv?.walk) { E.wasCheck = false; E.coolUntil = g.time + DEPOT_EAR.cool; }
+    if (E.checks && g.time - E.lastHit > DEPOT_EAR.forget) E.checks = 0;
+    // the gusts, while Twinsen is about the depot
+    if (Math.hypot(h.pos.x - this.Z.depot.x, h.pos.z - this.Z.depot.z) > DEPOT_GUST.near) return;
+    E.gustT -= dt;
+    if (E.gustT > 0) return;
+    E.gustT = DEPOT_GUST.every[E.gi++ % DEPOT_GUST.every.length];
+    S.knock(DEPOT_GUST.w);
+    if (G && Math.hypot(G.pos.x - S.x, G.pos.z - S.z) < DEPOT_EAR.glance) G.investigate?.(S, { look: DEPOT_EAR.look });
+  }
+  // the ball against the container's doors (from ballHit, every step of its flight; it bounces on by itself)
+  depotBall(p) {
+    const g = this.game, S = this.depotDoor(), B = g.ball;
+    if (!S || this._depotThrow === B.contacts || !S.hitBy(p)) return;
+    this._depotThrow = B.contacts;   // (once a throw)
+    S.knock(DEPOT_GUST.w);
+    const G = this.depotGuard(), E = this.depotEar;
+    if (!G || !E || G.state !== 'patrol' || G.inv?.walk) return;
+    const bored = E.checks >= DEPOT_EAR.bored || g.time < E.coolUntil;
+    E.lastHit = g.time;
+    if (bored) { G.investigate?.(S, { look: DEPOT_EAR.glanceBored }); return; }
+    if (G.investigate?.(S, { walk: true, stand: S.stand, look: DEPOT_EAR.check, force: true })) { E.checks++; E.wasCheck = true; }
+  }
+
   // ---------------------------------------------------------------- mills (magic ball on the brake)
   // (MILLS: before the shield the ball brakes a turning mill; from the shield on it knocks a braked one loose)
   ballHit(p) {
     const f = this.f;
+    this.depotBall(p);
     if (!this.inZ() || !f.c2_plan) return false;
     for (const m of this.Z.mills) {
       const near = Math.hypot(p.x - m.brake.x, p.y - m.brake.y, p.z - m.brake.z) < 0.9;
@@ -556,6 +612,7 @@ export class Chapter2 extends ChapterBase {
     const g = this.game, f = this.f;
     if (!this.reached()) return;
     this.lift.update(dt);
+    this.depotTick(dt);
     // a save made during Zoe's segment resumes before it (in the workshop, as Twinsen)
     if (g.room?.id === 'lighttop' && !f.c2_zoeStart && g.state === 'play' && !g.trans) g.enterRoom(g.regions.has('workshop') ? 'workshop' : 'zeelich', null, true);
   }
