@@ -1,0 +1,17 @@
+[cit] new-11-town: {"power":"plugged in","gpu":"NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11","timer":true,"pr":1,"scale":1,"msaa":2,"edgeAA":0,"quality":"medium","fps":"30","dpr":1.0000000149011612,"ua":"Chrome/158.0.0.0","winPower":"plugged in, 100 %"} (14 s)
+  street real warm-up pass: 364 frames in 18 s
+  street real #1: 376 frames, 24.9 fps, p95 36.6 ms, >50 ms 7, CPU 6.9 ms, GPU 5.8 (17.1 s)
+  street real #2: 378 frames, 25.4 fps, p95 36.8 ms, >50 ms 6, CPU 6.7 ms, GPU 6.9 (16.5 s)
+  street real #3: 374 frames, 24.2 fps, p95 36.6 ms, >50 ms 8, CPU 6.7 ms, GPU 7.8 (17.4 s)
+[cit] page errors: console error: Failed to load resource: the server responded with a status of 404 (File not found) | console error: Failed to load resource: the server responded with a status of 404 (File not found)
+
+=== SMOOTH-1 routes v121 round 2 · 1366×768 · Follow · quality medium · world resolution 100 · edges msaa · Frame Rate 30 · Real GPU: NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11 · Chrome/158.0.0.0 · dPR 1.0000000149011612 · render pixel ratio 1 · MSAA 2× · GPU timer yes · power plugged in, 100 %
+
+street — real loop, real draw (3 runs)
+run  fps    p50   p95   p99    max  >50ms  longTasks  CPU p50/p95 ms  GPU p50/p95 ms  calls  steps | spikes: hero  camPos camView look  | jerk px p95/max/>2: hero  cart/ring      | view acc p99/max rad/s²
+1    24.9   35.3  36.6  421.2  423.4 7      0          6.9/8.9         5.8/7           184    2.57  | 13/252     17/359  8/210   16/342 | 1.5/18.2/16    –              | 9.9/10.8
+2    25.4   35.3  36.8  408.3  424.5 6      0          6.7/8.8         6.9/9.6         184    2.56  | 10/256     12/362  7/212   15/347 | 2.5/17.7/24    –              | 9/9.7
+3    24.2   35.3  36.6  405.3  439.4 8      0          6.7/8.5         7.8/9.4         187    2.61  | 15/256     17/356  4/206   17/344 | 2.7/31.5/20    –              | 9.4/11.1
+page errors: console error: Failed to load resource: the server responded with a status of 404 (File not found) | console error: Failed to load resource: the server responded with a status of 404 (File not found)
+
+(1.5 min)

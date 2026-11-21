@@ -1,0 +1,44 @@
+setup: {"gpu":"NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11","pr":1,"msaa":2,"quality":"medium","dpr":1.0000000149011612,"ua":"Chrome/158.0.0.0","rvfc":true,"presentation":"element,event,first-input,interaction-contentful-paint,largest-contentful-paint,layout-shift,long-animation-frame,longtask,mark,measure,navigation,paint,resource,soft-navigation,visibility-state"} (14 s)
+T1 keys real #1 (22 s): drawn 118 (p50 35.3 p95 36.8 p99 402.8 max 421.8 ms, ≥45 ms 3; callbacks p50 17.6 max 404.2) steps/frame 2.69 | cam step p50/max 0.443/2.839 m, yaw 0.099/0.396 rad, jumps pos 5 yaw 3 tilt 1 | him vs post step p50/max 31.2/277.4 px, change p95/max 31.8/210.6 (>4: 74); post step p50/max 29.1/276.9, change p95/max 32/208.7
+     camera jump: {"i":14,"step":0.293,"nb":[0.176,0.194],"keepBy":"","swingBy":"chase","gt":3.6081}
+     camera jump: {"i":50,"step":2.839,"nb":[0.83,0.695],"keepBy":"","swingBy":"chase","gt":4.8835}
+     camera jump: {"i":56,"step":0.711,"nb":[0.415,0.454],"keepBy":"","swingBy":"chase","gt":5.0786}
+     camera jump: {"i":87,"step":2.577,"nb":[0.652,0.712],"keepBy":"","swingBy":"chase","gt":6.217}
+T1 keys real #2 (31 s): drawn 112 (p50 35.4 p95 37.6 p99 420.2 max 421.4 ms, ≥45 ms 5; callbacks p50 17.7 max 403.8) steps/frame 2.79 | cam step p50/max 0.441/3.145 m, yaw 0.099/0.434 rad, jumps pos 5 yaw 5 tilt 2 | him vs post step p50/max 29.1/197.8 px, change p95/max 57/155.5 (>4: 68); post step p50/max 26.8/190.8, change p95/max 55.3/151.1
+     camera jump: {"i":20,"step":2.824,"nb":[0.674,0.795],"keepBy":"","swingBy":"chase","gt":11.1302}
+     camera jump: {"i":40,"step":3.145,"nb":[0.433,0.816],"keepBy":"","swingBy":"chase","gt":11.8896}
+     camera jump: {"i":60,"step":1.394,"nb":[0.385,0.371],"keepBy":"","swingBy":"chase","gt":12.66}
+     camera jump: {"i":79,"step":2.482,"nb":[0.322,0.71],"keepBy":"","swingBy":"chase","gt":13.3848}
+T1 keys real #3 (38 s): drawn 123 (p50 35.3 p95 36.5 p99 36.8 max 419.4 ms, ≥45 ms 1; callbacks p50 17.7 max 401.9) steps/frame 2.55 | cam step p50/max 0.471/1.019 m, yaw 0.102/0.132 rad, jumps pos 2 yaw 2 tilt 0 | him vs post step p50/max 30.2/73.7 px, change p95/max 28.8/38.5 (>4: 78); post step p50/max 28.9/73.7, change p95/max 25.8/38.5
+     camera jump: {"i":58,"step":0.763,"nb":[0.446,0.471],"keepBy":"","swingBy":"chase","gt":19.5387}
+     camera jump: {"i":106,"step":0.846,"nb":[0.408,0.132],"keepBy":"","swingBy":"chase","gt":21.2459}
+     camera jump: {"i":56,"step":0.075,"nb":[0.048,0.046],"keepBy":"","swingBy":"chase","gt":19.4854}
+     camera jump: {"i":106,"step":0.119,"nb":[0.055,0.019],"keepBy":"","swingBy":"chase","gt":21.2459}
+T2 keys real #1 (49 s): drawn 161 (p50 35.3 p95 36.6 p99 421.3 max 421.6 ms, ≥45 ms 5; callbacks p50 17.6 max 403.8) steps/frame 2.66 | cam step p50/max 0.083/0.661 m, yaw 0/0 rad, jumps pos 3 yaw 0 tilt 0 | him vs post step p50/max 1.8/26.7 px, change p95/max 5.7/13.9 (>4: 12); post step p50/max 2.1/26.5, change p95/max 7/14
+     camera jump: {"i":60,"step":0.661,"nb":[0.173,0.178],"keepBy":"","swingBy":"chase","gt":26.7541}
+     camera jump: {"i":99,"step":0.315,"nb":[0.082,0.082],"keepBy":"","swingBy":"chase","gt":28.2605}
+     camera jump: {"i":134,"step":0.315,"nb":[0.083,0.085],"keepBy":"","swingBy":"chase","gt":29.5202}
+T2 keys real #2 (58 s): drawn 166 (p50 35.6 p95 36.7 p99 423.3 max 438.9 ms, ≥45 ms 3; callbacks p50 17.7 max 438.9) steps/frame 2.7 | cam step p50/max 0.084/0.652 m, yaw 0/0 rad, jumps pos 2 yaw 0 tilt 0 | him vs post step p50/max 1.8/26.9 px, change p95/max 5/12.9 (>4: 11); post step p50/max 2/26.7, change p95/max 5.6/13.8
+     camera jump: {"i":63,"step":0.652,"nb":[0.177,0.175],"keepBy":"","swingBy":"chase","gt":35.5629}
+     camera jump: {"i":116,"step":0.315,"nb":[0.083,0.082],"keepBy":"","swingBy":"chase","gt":37.5387}
+T2 keys real #3 (68 s): drawn 166 (p50 35.3 p95 36.6 p99 420.5 max 421.4 ms, ≥45 ms 3; callbacks p50 17.6 max 404.1) steps/frame 2.59 | cam step p50/max 0.082/0.661 m, yaw 0/0 rad, jumps pos 2 yaw 0 tilt 0 | him vs post step p50/max 5.2/37.3 px, change p95/max 7.9/28.2 (>4: 23); post step p50/max 5.3/40.4, change p95/max 8.2/30.5
+     camera jump: {"i":45,"step":0.661,"nb":[0.174,0.175],"keepBy":"","swingBy":"chase","gt":43.8298}
+     camera jump: {"i":95,"step":0.315,"nb":[0.083,0.083],"keepBy":"","swingBy":"chase","gt":45.592}
+T3 mouse+keys real #1 (76 s): drawn 151 (p50 35.2 p95 36.3 p99 36.8 max 386.4 ms, ≥45 ms 1; callbacks p50 17.6 max 385.9) steps/frame 2.54 | cam step p50/max 0.075/0.899 m, yaw 0/0.031 rad, jumps pos 6 yaw 0 tilt 2 | him vs post step p50/max 5.6/100.4 px, change p95/max 21.7/44.8 (>4: 37); post step p50/max 5.6/69.6, change p95/max 11.6/25.2 | ring step p50/max 0.008/0.214 m (3.2/26.7 px) jumps 0/70; dot 0.032/4.971 m jumps 13/93; release {"frame":106,"fromHand":0.386,"prevInHand":true,"prevFromHand":0.08}
+     camera jump: {"i":4,"step":0.249,"nb":[0.021,0.051],"keepBy":"","swingBy":"chase","gt":51.0034}
+     camera jump: {"i":41,"step":0.273,"nb":[0.077,0.079],"keepBy":"","swingBy":"aim","gt":52.2262}
+     camera jump: {"i":52,"step":0.209,"nb":[0.075,0.089],"keepBy":"","swingBy":"aim","gt":52.5988}
+     camera jump: {"i":67,"step":0.209,"nb":[0.077,0.068],"keepBy":"","swingBy":"aim","gt":53.0925}
+T3 mouse+keys real #2 (85 s): drawn 148 (p50 35.2 p95 36.5 p99 406.9 max 421.4 ms, ≥45 ms 2; callbacks p50 17.6 max 404.1) steps/frame 2.57 | cam step p50/max 0.075/0.935 m, yaw 0/0.032 rad, jumps pos 4 yaw 0 tilt 1 | him vs post step p50/max 5.5/101.2 px, change p95/max 22.8/43.7 (>4: 35); post step p50/max 5.6/70.9, change p95/max 9.9/27.7 | ring step p50/max 0.009/0.196 m (3.2/26.8 px) jumps 2/72; dot 0.033/5.004 m jumps 14/90; release {"frame":103,"fromHand":0.485,"prevInHand":true,"prevFromHand":0.08}
+     camera jump: {"i":19,"step":0.248,"nb":[0.077,0.104],"keepBy":"","swingBy":"aim","gt":59.4267}
+     camera jump: {"i":38,"step":0.272,"nb":[0.122,0.076],"keepBy":"","swingBy":"aim","gt":60.1618}
+     camera jump: {"i":49,"step":0.292,"nb":[0.08,0.164],"keepBy":"","swingBy":"aim","gt":60.5321}
+     camera jump: {"i":70,"step":0.276,"nb":[0.072,0.073],"keepBy":"","swingBy":"aim","gt":61.3236}
+T3 mouse+keys real #3 (93 s): drawn 145 (p50 35.4 p95 36.6 p99 403.3 max 421.2 ms, ≥45 ms 3; callbacks p50 17.7 max 404) steps/frame 2.66 | cam step p50/max 0.076/0.902 m, yaw 0/0.031 rad, jumps pos 3 yaw 0 tilt 2 | him vs post step p50/max 5.5/97.9 px, change p95/max 21.1/46 (>4: 35); post step p50/max 5.5/68.4, change p95/max 8/32.5 | ring step p50/max 0.01/0.081 m (3.4/27 px) jumps 1/74; dot 0.034/4.963 m jumps 13/90; release {"frame":103,"fromHand":0.511,"prevInHand":true,"prevFromHand":0.08}
+     camera jump: {"i":43,"step":0.197,"nb":[0.072,0.114],"keepBy":"","swingBy":"aim","gt":68.0945}
+     camera jump: {"i":55,"step":0.081,"nb":[0.031,0.05],"keepBy":"","swingBy":"aim","gt":68.6026}
+     camera jump: {"i":136,"step":0.227,"nb":[0.087,0.013],"keepBy":"","swingBy":"chase","gt":71.4007}
+     camera jump: {"i":43,"step":0.006,"nb":[0,0.001],"keepBy":"","swingBy":"aim","gt":68.0945}
+
+=== P94 fps30-feel v121 round 2 · 1366×768 · Follow · Medium · NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11 · Automated runtime only (synthetic display / headless rAF; draw stubbed). Presentation timing: none in headless Chromium.
+(1.6 min)
