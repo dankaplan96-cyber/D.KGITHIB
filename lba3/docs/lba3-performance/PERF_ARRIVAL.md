@@ -204,3 +204,117 @@ verdicts. `perfbudget`: PASS (was FAIL on base).
 2. High arrival (was 49.4 fps, draw calls p95 625; Zeelich should now be ≈ 150 calls lighter) and High street.
 3. Startup (plugged in, cold): build (was 13.6 s) and the preparation's parts; whether parallel shader compile is "yes".
 4. First Ctrl (behaviour menu) and a preset change in Settings: no hitch after the change has applied.
+
+## ARRIVAL-2 (P87, 21.11) — the open stalls behind the arrival black
+
+**Automated runtime only (SwiftShader)**: headless Chromium, ANGLE on SwiftShader, 4-core shared container, Medium,
+960×540 (arrival-steps) / 1366×768 (the Citadel probe). No GTX 1050 or UHD 620 number here. Base = `a4e1fb45` (served
+from an export, port 8191), candidate = this branch (port 8195), run one browser of mine at a time; other agents' test
+browsers ran on the machine at times (each result file says for how long: `probes/quiet.sh` waits for them, then logs
+it). Probes and raw results: `ARRIVAL-2/probes/`, `ARRIVAL-2/results/` (summary: `ARRIVAL-2/results/summary.json`).
+
+### Units found (MEASURED; the prepLog's `u` and `probes/units.mjs`, every staged unit ≥ 6 ms with the label it began
+after and the one it ended on)
+
+| Arrival | unit (from > to) | what it is | base, quiet | base, loaded |
+|---|---|---|---|---|
+| Zeelich, tavern | `assign>array`, `array>array` | a texture array made: the 10–13 MB copy of its data (`slice`) and its upload (texSubImage3D; the second array's waits for SwiftShader's GPU process still on the first) | 17–35 (one 78) | 34–45 |
+| Zeelich | `place>place` | overlapRuns placing 32 parts | ≤ 11 | **50, 95, 113** (3 frames in a row) |
+| Zeelich, tavern | `cell part>cell part`, `cell part>cell` | a cell's merge (its arrays allocated, a piece's attributes) | 15–28 | 35–54 |
+| Zeelich | `order>fixed draws` | overlapRuns' walk of the area, every draw's box, one unit | 4–13 | 43 |
+| tavern | `fixed draws>parts` | a cut piece's vertices into world space, one unit | 34 | — |
+| Citadel return | first frame drawn | 12 station / pipeline / harbour pieces leave their batches, cells rebuilt in it | 91 ms frame | — |
+
+FULL-TEST's 154 ms Zeelich unit was not logged with its label. The same kinds of unit reached 113 ms (placing) and 62 ms
+(a cell merge) here with another browser on the machine, so 154 is INFERRED to be one of these, enlarged by load. A trace
+(`results/gc-overlap-*.txt`) shows how load enlarges them: with CPU taken by other processes, the V8 GC's main-thread
+parts land inside the units. In one case a 28 ms cell merge held a 25 ms scavenge that was mostly waiting for a safepoint.
+A 43 ms walk held 33 ms of incremental marking. MajorGC finalisation and the external-memory GC prologue (8–10 ms, set
+off by the merges' large typed arrays) were inside 16–26 ms tavern merges.
+
+The Citadel return: the 12 pieces left because of their **texture source's version** (3 → 5; `lookVer` reads it, the
+settle's string check does not). The bump came from `merge.js twinOf`. Arriving in Zeelich, warmLayers → recipe made a
+new twin, and `t0.clone()` (three's `copy()` sets needsUpdate) plus the explicit `map.needsUpdate` each counted as a
+repaint of the shared canvas. three then sent the canvas again: 5.7 MB of uploads in that frame against 0.5 MB.
+
+### Changes
+
+- `src/engine/drawbatch.js` `UNIT` (set by `runFor` for each unit; Infinity outside, so a one-step build is unchanged):
+  the staged build's long loops also end their unit once it has run 4 ms. This covers the pieces, order and assign loops;
+  overlapRuns' fixed draws (now a list, then the same boxes in the same order), parts (also inside a cut piece's
+  vertices and triangles) and placing; and a cell merge (at piece boundaries, between its array allocations, and
+  between the attributes of a piece of ≥ 1 024 vertices, which now gets its own matrices). The same work runs in the same
+  order: test A gives identical staged and one-step batches.
+- `src/engine/texarray.js`: the array texture is made from a `subarray` view of its data, not a copy. layerOf only writes
+  past the texture's layers, and a growth makes a new buffer, so the texels are the same.
+- `src/engine/merge.js` `twinOf`: the clone keeps its source's version. The pixels did not change, and the twin's own
+  version still makes three set it up. The cache key is the same, so the twin uses the same GPU texture.
+- `tests/arrival-steps.mjs`: prints each kind's longest unit and its label (`[label ms]`), and the label of a slice
+  over the limit.
+- No visual change: the same batches (test A), the same programs, and the same texels. No new shipped file
+  (`tools/game-files.mjs`: 509). Nothing in gameplay timing or saves was touched.
+
+### Before / after (Automated runtime only, SwiftShader)
+
+Longest draw-batch unit (ms, label) per arrival, `tests/arrival-steps.mjs` and `probes/units.mjs`:
+
+| Run (conditions) | Zeelich | tavern | verdict |
+|---|---|---|---|
+| base, quiet (`before-1`) | 33 array | 35 (cell part 27) | FAIL: desert warm-up step 157 (a 146 ms compile unit, no program) |
+| base, other browser 90 s beside (`q-base-1`) | 26 array | 36 cell part | PASS |
+| base, load 5–7 from another agent's browser (`ab-base-1`) | **62 cell part** | **48 array, 45 cell** | FAIL ×2 (FULL-TEST's kind) |
+| base, 3 busy loops beside (`units-before-load3`) | **113 place** | 41 cell part | (probe) |
+| cand at 57c3787a, quiet (`after-1`) | **20 array** | **29 array** | **PASS 12/12** |
+| cand, final code, other browser 96 s beside (`q-cand-2`) | **28 array** (slice 37) | **24 array** | **PASS 12/12** |
+| cand at 57c3787a, load 5–7 (`ab-cand-1`) | 31 cell part | 53 cell | FAIL: tavern 53, desert 46 |
+| cand, final code, load 5 → 8 (`ab-cand-2`) | 75 parts | 59 cell part | FAIL ×3 |
+| cand, final code, other browser 256 s beside, load → 8.8 (`q-cand-1`) | 24 array | 107 cell part | FAIL ×2 |
+
+Units probe, all draw-batch units, the same quiet window (`u-base-1` / `u-cand-1`, another browser 64 s beside each):
+
+| | Zeelich: units > 10 ms; longest | tavern: units > 10 ms; longest |
+|---|---|---|
+| base | 3; 22.7 array, 15.1 array, 10.5 place | 3; 28.7 array, 15.5 cell part, 11.5 array |
+| cand | 2; 24.5 array, 20.4 cell end | **1; 19.7 array**, next 7.1 |
+
+Citadel return after Zeelich (`probes/q_look.js` via the ARRIVAL-STEPS runner, Medium, canvases flushed before each visit,
+`c-base-1` / `c-cand-1`):
+
+| | base | cand |
+|---|---|---|
+| pieces leaving their batches on the first frame drawn (still black) | 12 (all "texture source version 3→5") | **0** |
+| that frame: ms / uploads / "submit other" | 91 ms / 94 (5 666 KB) / 58 ms | **48 ms / 65 (536 KB) / 21 ms** |
+| longest black frame | 91 | 48 |
+| longest preparation step | draw batches back 32 | geometry 36 |
+
+The remaining 48 ms is the first frame's own draw and the shadow cache's full build on SwiftShader, not a preparation
+unit.
+
+### Reading
+
+- On a quiet machine, every draw-batch unit of the three arrivals is now ≤ ~8 ms, except the texture-array upload
+  (one GL call, 20–25 ms here, most of it waiting for SwiftShader's GPU process). The tavern's next unit is 7.1 ms.
+  Splitting that upload by layers would cost an extra full mipmap pass per array (three makes mipmaps after every
+  upload), so it was not done.
+- With other browsers or busy processes on this 4-core machine, units of 45–107 ms still occur in **both** base and
+  candidate, inside loops that now yield every 4 ms. That is the process being descheduled or GC pauses, not one long
+  unit of work. `arrival-steps`' 40 ms check is not a reliable verdict under such load. Run it alone.
+- The Citadel return's first-frame rebuild is gone (MEASURED) in two cases. In the benchmark's case (areas built
+  beforehand), 12 pieces left on base and 0 on the candidate. In play's case, Zeelich was built on its first visit
+  (`NOPREP=1`, `results/c-cand-lazy1.txt`): 0 pieces left and the uploads were 536 KB. That run's 1.5 s first frame is
+  "submit main", SwiftShader's canvas raster stall: the flush before Citadel read 0 ms there. **NOT VERIFIED**: the
+  interiors' and other builders' clones (interiors.js `tex()`, architecture.js `texMat`, props-esmer.js), built on a
+  first visit to a room. They can move a shared source's version in the same way, and a return from a newly built room
+  to Citadel was not probed.
+- Hardware: NOT VERIFIED. The user's GTX 1050 "Citadel return 250 ms" in FULL-TEST §4 is PERFORMANCE_REPORT §3's
+  SwiftShader figure (the first drawn frame, 53 → 250 ms there). It was never measured on the GTX 1050.
+
+### Verification (final code, GAME_URL=http://localhost:8195/, one browser of mine at a time)
+
+- `tests/arrival-steps.mjs`: **PASS 12/12** on a quiet machine (`q-cand-2`, the final code; `after-1` at 57c3787a too).
+  Under load from other browsers it FAILs, in base and candidate alike (table above).
+- `tests/travel.mjs` (Citadel ⇄ Zeelich and every route, arriving in play): PASS 27/27.
+- `tests/lazyregions.mjs` (a door into an interior not built yet, in real time; a second visit builds nothing): PASS 13/13.
+- `tests/merge.mjs` (twinOf / mergeStatic): PASS.
+- `tools/game-files.mjs`: 509 files (unchanged).
+- NOT TESTED: a 30-minute session; a probed return to Citadel from a room built on its first visit; any hardware.
