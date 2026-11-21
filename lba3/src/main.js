@@ -1921,7 +1921,7 @@ class Game {
   setBackground() {
     const W = this._win, bg = !!(document.hidden || this._blurred || (W && (!W.focused || W.minimized || !W.visible)));
     if (bg === !!this.background) return;
-    this.background = bg; this._due = 0;
+    this.background = bg; this._due = 0; this._drawT = 0;
     this.renderer._fb.length = 0;   // (the automatic resolution starts its count again)
   }
   // the label of the key bound to an action ("E", "Space"...), for prompts
@@ -2343,7 +2343,7 @@ class Game {
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
-    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; this.autoQ?.onBudget?.(); }
+    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; this._drawT = 0; this.autoQ?.onBudget?.(); }
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
@@ -2940,13 +2940,24 @@ class Game {
     if (this.background && !this.testFreeze && now - (this._bgCheck ?? 0) > 1000) { this._bgCheck = now; if (!document.hidden && document.hasFocus()) this.foreground(); }   // (BG-STUCK)
     const cap = this.benching ? (this.benchCapMs || 0) : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
     const refresh = this._refresh || this._vsync || 1000 / 60;
-    if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
+    // P88 (the user, 21.11, a 59.9 Hz laptop screen: "30 still jumps"): where the limit is close to a whole number of
+    // refreshes (30 on 59.9 / 60 / 120 Hz), frames are counted in refreshes, not on a grid of 33.33 ms: the grid drifted
+    // against a 16.70 ms refresh by 0.07 ms a frame, and every ~4 s a frame came a refresh early (16.7 ms) — at 59.94 Hz
+    // a long one followed. Now a frame is drawn on the n-th refresh after the last drawn one (at least n − ½ refreshes
+    // after it, by the rAF timestamps, which follow the display): no drift whatever the refresh. A late frame (a missed
+    // refresh) starts the count from itself: no catch-up. Other ratios (75, 144 Hz) keep the grid below.
+    const nR = cap ? Math.round(cap / refresh) : 0;
+    if (cap && nR >= 2 && Math.abs(cap / refresh - nR) < 0.08 && !this.testFreeze && !this.preparing) {
+      if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      this._drawT = now; this._due = 0;
+    } else if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
+      this._drawT = 0;
       const due = this._due || 0;
       if (due && now < due - refresh / 2) { this.input.poll?.(); requestAnimationFrame((t2) => this.loop(t2)); return; }
       let nx = (due || now) + cap;
       if (!due || nx - now < cap - 0.75 * refresh) nx = now + cap;   // (late by most of a refresh or more: a new grid from this frame)
       this._due = nx;
-    } else this._due = 0;   // (no limit: the next limited frame is due at once)
+    } else { this._due = 0; this._drawT = 0; }   // (no limit: the next limited frame is due at once)
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;

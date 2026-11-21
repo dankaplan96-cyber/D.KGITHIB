@@ -79,6 +79,16 @@ if (ONLY.includes('A')) {
   let r = await drive({ hz: 60, ms: 4000 });
   result.exact60 = summ(r.iv); log('30 on exact 60 Hz, drawn intervals', result.exact60);
   check('A1 30 on a steady 60 Hz display: every drawn interval is two refreshes (33.3 ms)', r.iv.length >= 115 && r.iv.every((x) => near(x, 33.33, 0.2)), result.exact60);
+  // A1b (P88, the user's laptop: 59.9 Hz). The 33.33 ms grid drifted against a 16.70 ms refresh: every ~4 s a frame a
+  // refresh early (16.7 ms); at 59.94 Hz a long one too. 12 s at each: every drawn interval two refreshes.
+  for (const hz of [59.9, 59.94]) {
+    await warm(hz); await setFps('30');
+    r = await drive({ hz, ms: 12000 });
+    const k = 'hz' + String(hz).replace('.', '_');
+    result[k] = { ...summ(r.iv), under25: r.iv.filter((x) => x < 25).length, over40: r.iv.filter((x) => x > 40).length };
+    log(`30 on ${hz} Hz, 12 s`, result[k]);
+    check(`A1b 30 on a ${hz} Hz display for 12 s: no 16.7 ms or 50 ms drawn interval (no drift against the refresh)`, r.iv.length >= 340 && result[k].under25 === 0 && result[k].over40 === 0, result[k]);
+  }
   // A2. 60 Hz with ±1.8 ms timestamp jitter (rAF timestamps that are not vsync-aligned)
   r = await drive({ hz: 60, ms: 6000, jitter: 1.8 });
   result.jitter60 = { ...summ(r.iv), over40: r.iv.filter((x) => x > 40).length, under25: r.iv.filter((x) => x < 25).length };

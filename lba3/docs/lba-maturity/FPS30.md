@@ -232,3 +232,23 @@ Tests this round (lean, as the user asked): `tests/fps30.mjs` whole, 49 of 54 �
 the whole run (an earlier part's pad had switched the key scheme; G now sets Modern keys itself), then `ONLY=DG` 32/32.
 `tests/camsteady.mjs` (Follow and LBA at 60/30; Follow at 30s) for the table above: its known failures as in
 KNOWN-FAILING.md. The full regression set is for the end of the pass.
+
+## 7. P88 (21.11): the grid drifted on a 59.9 Hz screen
+
+The user's Frame Rates report (21.11 09:42, Chrome on the **Intel UHD 620**, on battery, measured refresh **59.9 Hz**,
+median 16.70 ms) shows 30 on pace 100 % and the first 40 drawn intervals at 33.3 ± 0.5 ms, yet the user sees 30 "still
+jumping, not even". Cause: the 30 grid stepped by exactly 33.33 ms while two refreshes of that screen are 33.40 ms; the
+target drifted 0.07 ms a frame and every few seconds a frame came **one refresh early (16.7 ms)** — at 59.94 Hz a 50 ms
+one too. The synthetic tests only drove exact 60 Hz. The report's 40 intervals and 10 s runs were too short to show it.
+
+Fix (`src/main.js` loop): where the limit is within 8 % of a whole number n ≥ 2 of refreshes (30 on 59.9/60/120 Hz, 60 on
+120 Hz) frames are counted in refreshes: drawn on the first callback at least n − ½ refreshes after the last drawn one,
+by the rAF timestamps. No drift at any refresh; a late frame restarts the count (no catch-up). 75 / 144 Hz keep the grid.
+
+`tests/fps30.mjs` A1b (new): 30 on 59.9 and 59.94 Hz for 12 s — old scheduler FAIL (a 16.69 ms interval at each),
+new PASS (every interval 33.39 / 33.37 ms). All of A–G PASS on the new code (A5 failed once in the first of four runs of
+part A, then passed three times with identical numbers). Automated runtime only (synthetic display).
+
+Not explained by this, still open: at 30 the report's GPU time per frame on the street and arrival routes is 17–18.5 ms
+(p50) — more than one refresh — so the compositor may show some frames a refresh late even with even rAF. That needs the
+presented frames on the user's machine (order 60.0 FPS30-PRESENT). Note the report ran on the Intel UHD 620, not the GTX.
