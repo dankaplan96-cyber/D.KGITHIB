@@ -1,5 +1,7 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**21.11 05:05: v111 published** (artifact 1795237541-4549): P87 ARRIVAL-2 — draw-batch units yield after 4 ms, texture array without a copy, the twin clone no longer re-uploads Citadel (first frame back 91→48 ms, 5.7 MB→536 KB). arrival-steps 12/12 on a quiet machine. Open: other texture clones (interiors, architecture, props-esmer) unprobed; real-GPU numbers.
+
 **21.11 04:07: v110 published** (artifact 1795234031-30ec): P86 FACE-2 — the dialogue camera favours the speaker (head 73→131–134 px), Twinsen's face seen, expressions carried by head and chest (FACE-2.md). P87 ARRIVAL-2 still running.
 
 **21.11 night: v106–v109 published** (v109 = artifact 1795226187-b9be, 510 files): P80 puzzles phases 1–2 (8 puzzles reworked), the dialogue pass on the new text, JOINTS-BLENDER 5–7 (the local agent), P83 9–10 (Tali's court behind the School, Zeelich Spaceport through a terminal), travel.mjs 27/27. POLISH-SWEEP: no defect; HIDDEN-TRIS (cloud + GTX 1050): no fix. Next: P86 FACE-2, P87 ARRIVAL-2.
