@@ -1,0 +1,22 @@
+{
+ "dialog-neutral": {
+  "twinsenHeadPx": 199,
+  "zoeHeadPx": 131
+ },
+ "dialog-curious": {
+  "twinsenHeadPx": 198,
+  "zoeHeadPx": 131
+ },
+ "dialog-concerned": {
+  "twinsenHeadPx": 198,
+  "zoeHeadPx": 130
+ },
+ "play-curious": {
+  "twinsenHeadPx": 45,
+  "zoeHeadPx": 34
+ },
+ "play-concerned": {
+  "twinsenHeadPx": 45,
+  "zoeHeadPx": 34
+ }
+}

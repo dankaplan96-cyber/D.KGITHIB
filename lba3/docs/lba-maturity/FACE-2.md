@@ -115,3 +115,130 @@ someone joins, the speaker changes past the hold, or once 0.8 s into a shot. Not
 - The LBA2 "Fixed" camera and the "Free" orbit are unchanged: their talks stay as before (faces small).
 - Partner review needed: `rig.js` is shared with JOINTS-BLENDER (order 57). FACE-2 touched only `FACES`, and one
   guarded line before the head and torso `set` in `Rig.update`.
+  (FACE-3 below closes the sign, Corla and Fixed/Free items.)
+
+---
+
+# FACE-3: FACE-2's open items (a prop with no collider, Corla's kiosk, the Fixed and Free cameras)
+
+Baseline `d6551c8d`. All results: **Automated runtime only** (headless Chromium, SwiftShader, 1280×720, on a machine shared
+with another worker). Nobody has looked at it in play. FACE-2's rules hold: the camera stays on one side of the line, a shot
+is held 2.2 s, heads stay above the dialogue box, the camera is at least 1.7 m from anyone and never inside a solid, and the
+old two-shot is the fallback. Only `src/engine/camera.js` and the FACE-2 hooks in `src/main.js` changed.
+
+## What changed
+
+### 1. Props with no collider of their own (the Bug St. sign)
+Cause: the shot search knew only colliders. The yard's Bug St. sign (`town.js` `sign()`) has a collider for its post only
+(0.12 m round). Its board (1.1 × 0.3 m, at chest height) has none.
+- `camRig.propsNear` (main.js, beside `faceOf`) walks the scene for meshes drawn within 7 m of the favoured face. It skips
+  characters, hidden or see-through meshes, draw-batch copies, anything more than 1.6 m round (merged groups and
+  buildings are bigger and have colliders) and anything under 0.1 m.
+- `_fvProps` keeps each mesh's inverse world matrix and its own box (padded 0.15 m). The meshes are gathered **once per
+  talk**, and again only if the favoured face is 1.5 m from the last gathering. Measured in the yard: the walk took
+  0.8–5.1 ms and found 15 meshes. Nothing runs per frame outside the shot search.
+- `_fgClutter`: a foreground line (first 3 m from the lens) through a prop costs 4× a nearby collider, counted once per line
+  at the higher cost. Before this, the post's padded collider was met first along the line and the board was never counted.
+- `_propOver`: a prop over the line to the **speaker's face** rules the shot out.
+- A prop whose own unpadded box holds one of the heads (a booth or an arch round someone) is ignored.
+
+### 2. Corla at the ticket kiosk
+Cause (measured): the kiosk has **one collider for the whole booth** (hw 1.11 × hd 0.76), and Corla stands inside it.
+Every strict line to her face ended in it, so no favoured shot passed and the old two-shot came back. From the hatch that
+shot looked down through the awning (head top hidden, 99–100 px). From the kiosk's side the wall hid her completely
+(94–96 px, 4 of 4 body points hidden). FACE-2's tour, which gave the 74 px, walks up to the kiosk's back corner.
+- `faceOf` also returns `home`, the direction an NPC's placement faces. Corla is placed facing the hatch.
+- `_booth`/`_hatch`: a box collider no wider than 2.5 m round the face is treated as a booth. Its side nearest `home` is
+  the open side. A shot must lie within 0.75 rad of that side's normal and see her through that side, at least 0.2 m in
+  from its ends. It must also be close to face height: tilts 0.04 / 0 / 0.08, with the line rising at most 0.1 per metre
+  to the lens. This keeps the line under the awning at her brow, which the collider does not model. Only these lines may
+  pass the booth's own collider.
+
+### 3. Fixed (LBA2) and Free cameras: talks out of doors take the favoured shot
+Evidence: before, the yard talk showed Zoé at **27 px** (Fixed), **24 px** (Fixed with the 1997 look) and **35 px** (Free).
+Twinsen was seen from behind (97–137°). In Free the view stood over a roof edge with Twinsen as a see-through outline
+(`captures/face-3/before/free-line0-zoe.jpg`). Also, every gamepad player is switched to Free automatically
+(`controlsByDevice`: a pad sets Modern + Free), so FACE-2 never reached them. The player has no camera control during a
+talk, and the chosen mode still governs all play.
+- `_talkOver`: the chosen camera runs first, then the same `_talkShot` is laid over it and eased in and out over 1.1 s.
+  With the 1997 look (Fixed with hard cuts) it **cuts** in and out instead. Follow's CAM-AFTERTALK hold after a talk
+  stays Follow's alone.
+- Hand back: the chosen camera's own view is saved each frame, and `_ownView` puts it back before that camera runs next
+  frame. The mode runs underneath as if no talk were shown (the LBA cuts test the frame they had). Once the talk has eased
+  out, the view is the mode's own again. **Measured: identical to the build before** at the same moment after the same
+  walk and talk (0.000 m, 0.000 in direction; Fixed, Fixed 1997, Free).
+- The camera's matrices are updated once the shot is laid over the mode's view.
+
+## Measured (head px of 720; the face's turn from the lens)
+
+| Case | Before (`d6551c8d`) | After |
+|---|---|---|
+| D2 spot, the Bug St. board | over Twinsen's chest and waist, 1.0–1.6 m from the lens, on 1–3 of 4 lines (two runs) | at his knees on 2 lines, clear on 2: never over a head, chest or waist |
+| D2 spot, Zoé speaking | 127–133 (51–56°) | 127–142 (51–56°) |
+| Corla, from the hatch | 99–100, old two-shot, head top under the awning | **128–135**, favoured, 36–44° |
+| Corla, from the kiosk's side (staged) | 94–96, old two-shot, behind the wall | 130–134 through the hatch, 59–62° (near profile) |
+| Corla, FACE-2's tour (walked up to the kiosk's back corner) | 74 | 74, unchanged: from behind, no shot shows her face (see Open) |
+| Fixed: Zoé / Twinsen | 27 (35°) / 28, from behind (137°) | **130–135** (26–30°) / 129 (36°) |
+| Fixed, 1997 look | 24 / 24 (103°) | 133–136 / 129 |
+| Free | 35, from a roof edge / 37 (97°) | **99–103** (28–29°) / 135 (46°) |
+| Follow (path unchanged, a check) | (FACE-2: 131–134) | 132–134 / 114 |
+
+Free takes a wider camera (55°), and from the orbit's side of the line only the 1.28× distance was clear. Hence the
+smaller head.
+Motion (stepped at 1/60, traced, not watched): Fixed and Free make 2 cuts per talk (to his line and back), as Follow does.
+Easing back into the chosen camera moves at most 0.17–0.28 m per frame. Fixed 1997 also cuts in (12.7 m). In every talk
+here the camera was never inside a solid.
+
+## Evidence
+- `tests/face-3.mjs` (new). `SEC=scenes` (default) runs the D2 spot and Corla from the hatch and from the side.
+  `SEC=lba|lba97|free|follow` runs the yard talk walked up to and opened by input under that camera. `REF=<the before json>`
+  compares the view after the talk with the build before. "Covered" is the test's own three.js rays from the lens to head,
+  chest, waist and knees against every drawn mesh except characters.
+  `GAME_URL=… [SEC=…] [REF=…] OUT=captures/face-3/after node tests/face-3.mjs`
+- Before: `captures/face-3/before/` (the base build served from an exported copy). After: `captures/face-3/after/`.
+  Pictures: `sign-line*`, `corla-{hatch,side}-line*`, `{lba,lba97,free}-line*`, `follow-line*` (after only). All of
+  them are chapter 1 (the yard, the spaceport kiosk).
+- The regression suites' pictures: `captures/face-3/suites/`. Committed captures the suites overwrite were restored.
+
+## Tests (Automated runtime only; final build plus this doc)
+
+One browser at a time, served with `python3 -m http.server`. The machine was heavily loaded by the other worker's runs
+(load average about 12 on 4 cores).
+
+| Suite | Result |
+|---|---|
+| `tests/face-3.mjs` (new), `SEC=scenes` | **6/6** (before: the board over his chest/waist; Corla from the hatch not favoured) |
+| `tests/face-3.mjs`, `SEC=lba` / `lba97` / `free` with `REF` | **6/6** each (before: the favoured-shot check fails in all three: 27 / 24 / 35 px). In Free, the final run passed with the 90-px floor (99–103 px) |
+| `tests/face-3.mjs`, `SEC=follow` | 4/4 |
+| `tests/face-2.mjs` (yard) and `SPOT=wall` | **9/9** and **9/9** (Zoé 130–134, Twinsen 129–140, 2 cuts, never in a solid) |
+| `tests/face-2-tour.mjs` | **5/5** (Ume 128, Tilde 101, Maro 128; Corla 74, from the kiosk's back: see Open) |
+| `tests/dialogue-scenes.mjs` | **10/10** (D2/D3 pictures: `captures/face-3/suites/dialogue-scenes/`, the board beside him, not over him) |
+| `tests/p79-faces.mjs` | PASS (dialogue: Zoé 130–131, Twinsen 198–199; play unchanged) |
+| `tests/opening-tutorial.mjs` | **43/43** |
+| `tests/controls.mjs` | **89/92**: the same 3 known "no lurch" failures with the same numbers (p95 12.5 / 14.3 / 12.8). No new failure |
+
+Saves: nothing saved or loaded changed (no save field; the camera's talk state is not saved). Old saves load as before
+(opening-tutorial's old-save checks C1/C2 pass).
+
+## Cost
+- Props walk: one scene walk per talk (0.8–5.1 ms measured on SwiftShader's CPU; 15 meshes kept in the yard), then a box
+  test per sample point in the shot search only.
+- Booth test: one collider lookup per search.
+- The overlay in Fixed and Free: nothing outside a talk (one `talk()` call a frame). In a talk, the same work as Follow's
+  two-shot plus one pose save and restore. Not measured on a real GPU.
+
+## Open / unverified
+- Nobody has watched these in play. No real GPU. The cuts and eases are traces.
+- From the kiosk's side, a street sign merged with its boards (a 2.29 m-round mesh, over FV_PROP_R) stands faded over
+  Twinsen's head near the lens. Raising the limit to 2.5 m let that coarse box rule out every hatch shot (Corla lost her
+  shot), so it stays 1.6 m. A finer test of merged meshes (by triangle) would cost too much per search.
+- **Corla talked to from behind the kiosk** (FACE-2's tour walks up to its back corner, and the Talk prompt opens
+  through the back wall): she turns to him, away from the hatch, so no shot can show her face. The old two-shot stays
+  (74 px, the kiosk's back wall in view). That is the talk prompt's reach, not the camera's. Proposal for the owner of
+  the NPC/talk code (not done here: outside these files): a kiosk clerk answers only from the hatch's side, or turns to
+  the hatch.
+- The booth rule trusts that someone placed inside a box collider faces its open side (true for Corla; not checked for
+  every NPC: only small box colliders round a face, with a placement direction, are affected).
+- Free's heads are 99–103 px, just at the 100-px target (the camera's wider lens and the side of the line).
+- In the D2 spot the board can still show at his knees (the shot keeps faces, chests and waists clear).
+- Partner review: none needed for rig or animation (no `rig.js` change). Camera hooks only.

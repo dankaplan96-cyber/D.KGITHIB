@@ -484,7 +484,28 @@ class Game {
       const hd = a?.rig?.j?.head;
       if (!hd) return null;
       const v = hd.getWorldPosition(new THREE.Vector3()), s = a.rig.root.scale.y || 1;
-      return { x: v.x, y: v.y + 0.05 * s, z: v.z, s, yaw: a !== this.hero && (a.pinY != null || a.forceAnim === 'doze') ? a.angle : null, now: a.angle };
+      // (FACE-3: home, the way an NPC's placement faces: someone serving from a booth faces its hatch — camera.js _booth)
+      return { x: v.x, y: v.y + 0.05 * s, z: v.z, s, yaw: a !== this.hero && (a.pinY != null || a.forceAnim === 'doze') ? a.angle : null, now: a.angle, home: a !== this.hero ? (a.targetAngle ?? a.def?.angle ?? null) : null };
+    };
+    // (FACE-3: the meshes drawn within r m of (x, z), rMin..rMax m round, none of a character's, none hidden or see-through:
+    //  the favoured two-shot's search asks them besides the colliders — the yard sign's board stands on no collider of its
+    //  own. A walk of the scene, asked once a talk: camera.js _fvProps)
+    this.camRig.propsNear = (x, z, r, rMax, rMin) => {
+      const out = [], skip = new Set(), ws = new THREE.Vector3(), c = new THREE.Vector3();
+      for (const a of [this.hero, ...this.npcs]) if (a?.rig?.root) skip.add(a.rig.root);
+      const walk = (o) => {
+        if (!o.visible || skip.has(o)) return;
+        const g = o.geometry, m = Array.isArray(o.material) ? o.material[0] : o.material;
+        if (o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && !o.userData.drawBatch && !o.userData.shadowProxy && g?.attributes?.position && m && m.visible !== false && m.colorWrite !== false && !(m.transparent && m.opacity < 0.5)) {
+          if (!g.boundingSphere) g.computeBoundingSphere();
+          o.getWorldScale(ws);
+          const R = g.boundingSphere.radius * Math.max(Math.abs(ws.x), Math.abs(ws.y), Math.abs(ws.z));
+          if (R <= rMax && R >= rMin) { c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld); if (Math.hypot(c.x - x, c.z - z) < r + R) out.push(o); }
+        }
+        for (let i = 0; i < o.children.length; i++) walk(o.children[i]);
+      };
+      walk(this.scene);
+      return out;
     };
     // (CAM-CROWD, PLAYTHROUGH PT-8: the people standing round a dialogue, not in it — its two-shot keeps them out of the way)
     this.camRig.crowd = () => {
