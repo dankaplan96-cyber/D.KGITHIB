@@ -5856,3 +5856,18 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
 - **The F9 line still read "on pace 100 %"** — the overlay measures the game's draw intervals, not presentation, so on battery it does not see the jumps the user describes.
 - The rest of the battery set (v114 at 30, both at 60, Benchmark: Frame Rates) is running; it will follow in this section.
 - Earlier on this machine (GTX1050-BATTERY): on battery the panel's pace drops to 41–48 Hz at times — the likely root of an uneven 30 there.
+- **FPS30-PRESENT, the battery half (done, 98 → 76 %, the plan Balanced; the panel at 60 Hz this time):**
+
+  | Build · limit | Quality (Auto) | rAF p50 / p95 | Game frames (20 s) | Presented / dropped | Presented p50 / p95 / p99 | Intervals ≥ 3 refreshes | GPU p50 / p95 | F9 |
+  |---|---|---|---|---|---|---|---|---|
+  | v113 · 30 | Medium | 16.7 / **33.4** | 605 | 980 / 381 | 16.7 / 33.5 / **66.7** | **36** | 7.9 / 18.7 | on pace 100 % |
+  | **v114 · 30** | Medium | 16.7 / **16.8** | 578 | 891 / 331 | 16.7 / 33.4 / **49.8** | **9** | 7.5 / 14.7 | on pace 95 %, ≥1.5× 6 |
+  | v113 · 60 | Low | 16.7 / 49.7 | 887 | 1732 / 289 | 16.6 / 33.3 / 83.3 | 44 | 9.2 / 16.4 | on pace 100 % |
+  | v114 · 60 | Low | 16.7 / 33.4 | 952 | 1859 / 202 | 16.5 / 33.3 / 66.6 | 22 | 9.1 / 15.6 | on pace 99 % |
+
+  - **v114 helps on battery too:** at 30 the jumps of 50 ms or more fall from 36 to 9 in 20 s, rAF is even again, and F9 now shows the slips (95 %, 6). Not gone: some remain.
+  - The remaining drops come with the CPU slowed on battery: Benchmark: Frame Rates (v114, battery, `bat-v114-benchfps.txt`) shows CPU work 516–752 ms per second against 191–360 plugged in, and 727 missed callbacks.
+  - At 30 in that benchmark: street 33.3 with an occasional 50 ms, interior, combat and **the arrival now even at 33.3**. On v104 the arrival alternated 16.7 / 33.3.
+  - At 60 on battery, Auto dropped to Low and still missed refreshes (p99 66–83 ms).
+  - On battery with the panel at 40–48 Hz (GTX1050-BATTERY) an even 30 cannot be shown at all: there 25 ms or 20.8 ms refreshes. Proposed for the cloud: a 30 limit that follows the measured refresh (20 or 40 at 40 Hz, 24 or 48 at 48 Hz), and F9's line counting presented frames, not only drawn ones.
+  - Traces: `fps30-present/traces-frames-battery.zip`.
