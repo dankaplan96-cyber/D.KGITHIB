@@ -5754,3 +5754,13 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   street, interior and combat at the battery profile's ×0.85 — the same ~41 fps cap as Low and Medium in that window, so
   it says nothing about High's own cost on battery; Auto's first guess on battery (Medium) can't be judged from these
   runs while the pace is capped.
+
+## Orders 60 · the queue of 21.11, in the cloud's order (the user chose it) · the desktop
+- **ARRIVAL-HW (60.1) · started and done** — branch `arrival-hw` (`11ae8e1d`): a "Real GPU" section in
+  `docs/lba3-performance/PERF_ARRIVAL.md`, the probe `ARRIVAL-2/probes/arrhw.mjs` (the game's own loop in real time, every
+  frame from rAF, black from `#fade`), raw data in `ARRIVAL-2/results/real-gpu-gtx1050/`. GTX 1050, Chrome, 1536×864
+  @1.25, plugged in; v109 `a4e1fb45` against v113, Medium and High, 3 interleaved rounds. **Every long frame is behind
+  the black; none in view in v113** (p95 16.8–16.9 ms in the 6 s after the fade, no frame over 33 ms). The cold Zeelich
+  arrival's longest black frame 167–183 → 150 ms at Medium (183–217 → 183 at High), its black 2.32 → 2.00 s at Medium;
+  the cold tavern 67–100 → 67 ms at Medium; the return to Citadel and every warm visit ≤ 17 ms in both. No code change.
+- **FACE-2-HW (60.2) · started.**
