@@ -29,7 +29,7 @@ Object.assign(STR.en, {
   c2_bal_2: "Look at the globe. Deep under Twinsun there's a shell, like an egg's, and something sleeps inside it. Sendell has watched over it longer than anyone remembers.",
   c2_bal_3: "Vesk's bore on Citadel is drilling into that shell to draw off its heat. He thinks it will crack anyway, so he's saving whoever he can. The rest... he isn't.",
   c2_tw_bal2: 'Then we stop the drill.',
-  c2_bal_4: "No! Pull it out halfway and the hole cracks wider on its own. Run it backwards instead: push the heat back down, and the bore becomes a patch. Vesk steers it from his platform here, behind a shield.",
+  c2_bal_4: 'No! Pull it out halfway and the hole cracks wider on its own. Run it backwards instead. Push the heat back down, and the bore becomes a patch. Vesk steers it from his platform here, behind a shield.',
   c2_bal_5: "So I built an override key. Almost. It still needs the cog from the top of the old mill and the code cylinder in the project depot's locker.",
   c2_bal_6: "The shield runs off the three mills. Brake them, and the key can open it.",
   c2_bal_7: "Zoé's waiting at the Citadel lighthouse with my radio. When the key is ready, she warns the whole island. Not before, or Vesk shuts his platform tight.",

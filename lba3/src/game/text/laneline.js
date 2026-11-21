@@ -20,7 +20,7 @@ Object.assign(STR.en, {
   ev_z_sched: '(SCHEDULE, EVERY ROUND. Stop four, LANE GATE: Bram, Hedda, Tobin. They are on it. Every round.)',
   ev_z_route: "(The driver's route. Bridge, plaza, fields, lighthouse path. The lane is crossed out: GATE SHUT, NO STOP.)",
   ev_z_both: 'So on paper the lane is picked up every round. On the road nobody stops. They are sitting on their cases waiting for a cart that turns round.',
-  ev_z_go: "Those three are on the list: the seats on the ships are theirs. So they wait at the cart's own stop, the landing by the pump house, where the driver can't miss them.",
+  ev_z_go: "Those three are on the list. The seats on the ships are theirs. So they wait at the cart's own stop, the landing by the pump house, where the driver can't miss them.",
 
   // ------------------------------------------------------------ the lane's people
   ev_obj_lane: "Zoé: bring the lane's people to the landing ({n}/2)",
@@ -65,7 +65,7 @@ Object.assign(STR.en, {
   ev_pippa_board2: "I've got bread.",
   ev_drv_3: '...Sit down, then.',
   ev_zoe_board: 'There. Now they are out of the lane, and not just on paper.',
-  ev_zoe_board2: "I'm going back to the hill families. You wanted to know what Vesk is telling his stations: the control room hears all of it.",
+  ev_zoe_board2: "I'm going back to the hill families. You wanted to know what Vesk is telling his stations? The control room hears all of it.",
 
   // ------------------------------------------------------------ waiting, and after
   ev_bram_wait: "Float gate. It opens when the culvert's empty, and not a moment before.",

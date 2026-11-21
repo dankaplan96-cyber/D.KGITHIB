@@ -38,7 +38,7 @@ Object.assign(STR.en, {
 
   // Citadel: Mira's valves
   c10_mira_1: "You still have my key. Good. The valve room is under this floor. The mains run to the fortress, the depot and the lighthouse: the oldest pipes on the island, and still the best.",
-  c10_mira_2: "The relay needs pressure, two marks on every gauge. Each valve feeds two of the mains. Except the fourth: that one's FunFrock's own, and it only floods the fortress. Come down, I'll show you.",
+  c10_mira_2: "The relay needs pressure, two marks on every gauge. Each valve feeds two of the mains. Except the fourth. That one's FunFrock's own, and it only floods the fortress. Come down, I'll show you.",
   c10_valves_in: 'FunFrock\'s valve room. Four wheels, three gauges. Mira watches from the stairs with her arms folded.',
   c10_valve_hint: '(Each gauge should rest on the green mark: two.)',
   c10_valves_ok: 'All three needles settle on the green mark. The pipes hum, and Baldino\'s relay on the manifold blinks awake.',
@@ -58,7 +58,7 @@ Object.assign(STR.en, {
 
   // Desert Island: the bore
   c10_ilka_1: "Twinsen! Dallan said you'd come. The bore vent is still breathing since you opened it. Steam without a pause. If your relay wants power, there's plenty.",
-  c10_ilka_2: "Set it on the bore's frame. And keep your ball handy: the project's drones don't like anything they didn't build.",
+  c10_ilka_2: "Set it on the bore's frame. And keep your ball handy. The project's drones don't like anything they didn't build.",
   c10_relay_bore: 'The relay clicks onto the bore\'s frame. Steam rattles through its little pipe, and the lamp lights up.',
   c10_drones: 'Drones! Three of them, coming in low over the post.',
   c10_ilka_w2: "Drones down! But one of FunFrock's old clone soldiers is out by the cabins, and his sentry's awake at the gate. They take orders from nobody alive. Catch your breath, then one at a time.",

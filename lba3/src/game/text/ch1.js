@@ -34,7 +34,7 @@ Object.assign(STR.en, {
   c1_vesk_2: "Crystals? Fascinating. We're drilling for the planet's heat, and to do it we diverted the groundwater. Your well paid for it. I apologise.",
   c1_tw_vesk2: 'Then give the water back.',
   c1_vesk_3: "Gladly, but it isn't one tap. FunFrock's old pipeline has three bypass valves: the orchard, our depot at the old camp, and the Whispering Cliffs. Open all three and your well fills.",
-  c1_vesk_4: "Then come and see me at the station, in the old fortress. My crews are all on the bore, and you know the island better. The depot's watch may not know you yet: use my name, and mind the dog.",
+  c1_vesk_4: "Then come and see me at the station, in the old fortress. My crews are all on the bore, and you know the island better. The depot's watch may not know you yet. Use my name, and mind the dog.",
   c1_vesk_wait: "Three valves, Twinsen: orchard, depot, cliffs. I'm counting on you.",
   c1_vesk_tour1: "Twinsen! I hear the water's back. Welcome to the station. FunFrock built this fortress to rule the island; we use it to heat it.",
   c1_vesk_tour1b: "Seen the heat posts in town? Free heat for every house on the island, straight from the bore. Zeelich's hospital runs on the same line.",
@@ -112,7 +112,7 @@ Object.assign(STR.en, {
   c1_doran_ferry1: "Baldino? The mad inventor? He radioed me the start code for the project's ship. Passenger flights are grounded, but the project's own ships still fly.",
   c1_tw_ferry: 'Can you fly it to Zeelich?',
   // (P83 / S-6: the vehicles told apart)
-  c1_doran_ships: "Not the ferry, mind: she only does the islands. Vesk's own ship sits up where his beam goes. Ours is the one the project keeps at the port.",
+  c1_doran_ships: "Not the ferry, mind. She only does the islands. Vesk's own ship sits up where his beam goes. Ours is the one the project keeps at the port.",
   c1_doran_ferry2: 'Doran can sail anything that floats, and up there everything floats. Meet me at the spaceport, Twinsen.',
   c1_doran_board: 'Hatch is open. Climb aboard, Twinsen. And hold on to your hat.',
   // SPACEPORT-3 (P62): Doran's errand, the flight form at the terminal's ticket counter

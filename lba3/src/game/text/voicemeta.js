@@ -68,7 +68,7 @@ export const VOICE_META = {
   c1_vesk_1: { i: ['pleased', 'pleased', 'neutral', 'pleased'], e: ['Twinsen', 'legend', null, 'pleasure'] },
   c1_tw_vesk1: { i: ['neutral', 'concerned', 'curious'], e: [null, 'warm', 'project'] },
   c1_vesk_2: { i: ['curious', 'pleased', 'neutral', 'uncertain', 'neutral'], e: ['Crystals', 'Fascinating', null, null, null] },
-  c1_tw_vesk2: { i: 'annoyed', e: 'back' }, c1_vesk_3: ['uncertain', 'neutral', 'pleased'], c1_vesk_4: ['pleased', 'neutral', 'concerned'],
+  c1_tw_vesk2: { i: 'annoyed', e: 'back' }, c1_vesk_3: ['uncertain', 'neutral', 'pleased'], c1_vesk_4: ['pleased', 'neutral', 'concerned', 'neutral'],
   c1_vesk_wait: ['neutral', 'pleased'], c1_vesk_tour1: ['pleased', 'pleased', 'pleased', 'pleased'], c1_vesk_tour1b: ['curious', 'pleased', 'neutral'],
   c1_tw_tour1b: ['pleased', 'pleased'], c1_tw_tour1: { i: 'concerned', e: 'well' },
   c1_vesk_tour2: { i: ['neutral', 'neutral', 'uncertain', 'pleased'] }, c1_tw_tour2: { i: ['curious', 'curious'], e: ['shell', 'What'] },
@@ -91,7 +91,7 @@ export const VOICE_META = {
   c1_tw_water: ['concerned', 'neutral'], c1_tw_control: ['neutral', 'concerned'], c1_worker_1: ['neutral', 'neutral', 'annoyed'], c1_worker_2: ['concerned', 'uncertain'],
   c1_guard_1: 'neutral', c1_guard_2: ['neutral', 'uncertain', 'uncertain'], c1_gil_idle: ['pleased', 'pleased'], c1_gil_task: ['curious', 'neutral', 'annoyed'],
   c1_gil_water: ['relieved', 'pleased', 'pleased', 'neutral'], c1_doran_idle: 'annoyed', c1_doran_drones: ['curious', 'neutral', 'neutral', 'concerned', 'pleased'],
-  c1_doran_depot: ['neutral', 'uncertain'], c1_doran_ferry1: ['curious', 'curious', 'neutral', 'neutral'], c1_tw_ferry: { i: 'curious', e: 'fly' }, c1_doran_ships: { i: ['neutral', 'neutral', 'pleased'], e: ['ferry', 'own', null] },
+  c1_doran_depot: ['neutral', 'uncertain'], c1_doran_ferry1: ['curious', 'curious', 'neutral', 'neutral'], c1_tw_ferry: { i: 'curious', e: 'fly' }, c1_doran_ships: { i: ['neutral', 'neutral', 'neutral', 'pleased'], e: ['ferry', null, 'own', null] },
   c1_doran_ferry2: ['pleased', 'neutral'], c1_doran_board: ['neutral', 'pleased', 'pleased'], c1_xil_1: ['annoyed', 'annoyed'], c1_xil_2: ['pleased', 'pleased'],
   c1_pippa_1: ['neutral', 'curious'], c1_pippa_heat: ['neutral', 'pleased', 'pleased', 'curious'], c1_pippa_2: ['concerned', 'neutral'],
   c1_tim: ['urgent', 'curious', 'pleased'], c1_tim_heat: ['pleased', 'pleased'], c1_lulu_heat: ['neutral', 'neutral', 'annoyed'], c1_lulu: ['concerned', 'neutral', 'pleased'],
@@ -99,7 +99,7 @@ export const VOICE_META = {
   c2_doran_1: ['neutral', 'neutral', 'pleased'], c2_tw_arrive: ['neutral', 'neutral'], c2_doran_idle: { i: 'pleased', h: 1 },
   c2_bal_1: { i: ['pleased', 'urgent', 'uncertain', 'uncertain'], e: [null, 'Mind', null, null] }, c2_tw_bal1: { i: ['neutral', 'curious'], e: [null, 'really'] },
   c2_bal_2: ['neutral', 'neutral', 'neutral'], c2_bal_3: ['concerned', 'concerned', 'concerned', 'concerned'], c2_tw_bal2: { i: 'annoyed', e: 'stop' },
-  c2_bal_4: { i: ['urgent', 'urgent', 'neutral', 'neutral'], e: ['No', null, 'backwards', null] }, c2_bal_5: ['pleased', 'uncertain', 'neutral'], c2_bal_6: ['neutral', 'neutral'],
+  c2_bal_4: { i: ['urgent', 'urgent', 'urgent', 'neutral', 'neutral'], e: ['No', null, 'backwards', null, null] }, c2_bal_5: ['pleased', 'uncertain', 'neutral'], c2_bal_6: ['neutral', 'neutral'],
   c2_bal_7: ['neutral', 'neutral', 'concerned'], c2_bal_wait: ['neutral', 'urgent'], c2_bal_build: ['pleased', 'neutral', 'uncertain', 'uncertain', 'uncertain', 'uncertain'],
   c2_bal_built: ['pleased', 'pleased', 'uncertain', 'neutral', 'pleased', 'pleased'], c2_bal_after: ['neutral', 'concerned'],
   c2_zoe_in: { i: ['neutral', 'neutral', 'uncertain'], e: [null, null, 'order'] }, c2_zoe_broadcast: ['neutral', 'concerned', 'urgent', 'urgent'],
@@ -141,7 +141,7 @@ export const VOICE_META = {
   c5_zoe_radio3: ['pleased', 'pleased', 'concerned'], c7_sendell_1: 'neutral', c7_tw_s1: ['neutral', 'concerned', 'concerned'],
   c7_sendell_2: ['neutral', 'concerned', 'concerned', 'concerned'], c7_tw_s2: { i: 'curious', e: 'she' }, c7_sendell_4: ['neutral', 'neutral', 'neutral', 'urgent'],
   c7_tw_v1: 'pleased', c7_arthur_1: { i: ['curious', 'urgent', 'urgent', 'urgent', 'urgent'] }, c7_tw_ar1: ['neutral', 'curious'],
-  c7_arthur_2: ['concerned', 'concerned', 'concerned', 'concerned', 'urgent'], c7_tw_ar2: { i: ['urgent', 'neutral', 'urgent'], e: [null, null, 'nobody'] },
+  c7_arthur_2: ['concerned', 'concerned', 'concerned', 'concerned', 'urgent'], c7_tw_ar2: { i: ['urgent', 'neutral', 'urgent', 'urgent'], e: [null, null, null, 'nobody'] },
   c8_tw_1: ['concerned', 'concerned', 'neutral'], c8_zoe_1: { i: ['relieved', 'pleased'], b: 1 }, c8_ar_1: ['pleased', 'pleased', 'curious', 'curious'],
   c8_zoe_2: ['concerned', 'annoyed', 'neutral', 'concerned'], c8_tw_z1: ['neutral', 'curious'], c8_ar_2: ['urgent', 'neutral', 'annoyed'], c8_zoe_4: ['neutral', 'neutral', 'pleased'],
   c8_gil_1: { i: ['urgent', 'annoyed', 'annoyed', 'annoyed'], e: [null, 'MY', null, null] }, c8_tw_g1: ['urgent', 'neutral', 'neutral'],
@@ -173,7 +173,7 @@ export const VOICE_META = {
   c10_ar_mic: { i: ['curious', 'curious', 'neutral', 'pleased'] }, c10_zoe_3: ['pleased', 'neutral', 'pleased'], c10_bal_p3: ['relieved', 'pleased', 'pleased', 'urgent', 'urgent'],
   c10_tw_p1: 'concerned', c10_tw_p2: 'neutral', c10_bal_p2: { i: ['neutral', 'uncertain'] },
   // ---------------------------------------------------------------- P81: the campaign pass and the revisits
-  c8_zoe_wait: ['neutral', 'neutral', 'neutral'], c8_zoe_done: ['pleased', 'neutral', 'pleased'], c8_ar_after: { i: ['urgent', 'pleased'], e: ['real', null] },
+  c8_zoe_wait: ['neutral', 'neutral', 'neutral', 'neutral'], c8_zoe_done: ['pleased', 'neutral', 'pleased'], c8_ar_after: { i: ['urgent', 'pleased'], e: ['real', null] },
   c7_yorna_after: ['neutral', 'concerned', 'pleased'], c7_keeper_after: ['pleased', 'neutral'],
   c5_press: ['neutral', 'concerned'],   // (PUZZLES P-A)
   c8_lever_dry: ['neutral', 'curious', 'curious', 'curious'], c8_pump_full: ['pleased', 'neutral'], c8_lever_water: 'pleased',   // (PUZZLES phase 2)
@@ -212,7 +212,7 @@ export const VOICE_META = {
   wk_tw_1: { i: ['neutral', 'curious'], e: ['back', 'name'] }, wk_ma_rota: { i: ['neutral', 'neutral'], e: ['between', 'push'] },
   wk_jo_after: { i: ['pleased', 'uncertain'], e: ['nephew', 'nine'] }, wk_we_wait: ['concerned', 'annoyed'],
   co_lock_ok: { i: ['relieved', 'neutral', 'concerned', 'neutral'], e: [null, null, 'knocking', 'easy'] },
-  cn_bal_stop2: { i: ['neutral', 'concerned', 'neutral'], e: ['drill', 'close', 'once'] },
+  cn_bal_stop2: { i: ['neutral', 'neutral', 'concerned', 'neutral'], e: [null, 'drill', 'close', 'once'] },
   // (P91, 21.11: lines edited as spoken dialogue; their sentences counted again)
   wk_we_2b: { i: ['neutral', 'annoyed'], e: ['asks', 'twenty'], p: [0, 0.4] },
 };

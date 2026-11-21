@@ -163,7 +163,7 @@ Object.assign(STR.en, {
   bl_ha_1: 'Tessa sent you. She sends me people when she wants me to feel useful.',
   bl_tw_ha1: "She says you drew this town's water.",
   bl_ha_2: 'I drew the safeguards. Other people decided which ones to keep.',
-  bl_ha_3: "Here. A copy of the old plan. Not the regulator's numbers: those are in the House of Balances, and I don't go there.",
+  bl_ha_3: "Here. A copy of the old plan. Not the regulator's numbers. Those are in the House of Balances, and I don't go there.",
   bl_plan_read: "(Halden's plan: the pump room in the arch's west pier, and beside the upper terrace's outlets, a gate to the lower row, drawn and labelled LOWER ROW · SPILL.)",
   bl_tw_ha2: 'There is a gate for the lower row. The row is under water.',
   bl_ha_4: "Then someone chose not to open it. Ask the pump room. I don't go there either.",
@@ -468,7 +468,7 @@ Object.assign(STR.en, {
   wk_mk_bell: 'Flood bell', wk_mk_hall: 'Cradle Hall', wk_mk_tessa: 'Tessa',
   wk_nudge_card: "Each cradle has a card in a brass slot. Jory's is J-17.",
   wk_nudge_bell: "The flood bell stands on the terrace beside the keepers' house.",
-  wk_j_wenna: "Wenna's brother Jory is one of the 304. His card says: wake me in ten years, or when my sister asks. She has asked 24 times.",
+  wk_j_wenna: "Wenna's brother Jory is one of the 304. His card says: wake me in ten years, or when my sister asks. She has asked 24 times. Tessa is building the B-8s, and I told Oren I'd come back for the sleepers.",
   wk_j_hall: "The Cradle Hall is under the keepers' house by the flood bell. Garrow, the keepers' foreman, lets no visitors in, but Oren let us look.",
   wk_j_card: "Jory's card, J-17, in his own hand. The ledger: every request DEFERRED, \"conditions\".",
   wk_j_ask: "Oren won't wake him: Bay 2, a waking with the floor ring open, chilled two neighbours. Shut the ring, and the lever must stay open for an hour.",
@@ -478,7 +478,7 @@ Object.assign(STR.en, {
 
   // ---- chapter 14 in the expanded campaign: the valve room's relay and Tessa's B-8 (story/balances.js NetB8)
   // Essential clues: nwb_mi_2 / nwb_mi_0 (which way the band is off), nwb_sub_band.
-  nwb_bal: "And Tessa's boxes went out with the relays. The valve room's is yours to fit: that one sits on the project's pipes, by Oren's governor.",
+  nwb_bal: "And Tessa's boxes went out with the relays. The valve room's is yours to fit. That one sits on the project's pipes, right by Oren's governor.",
   nwb_trim: "(A thump runs through the pipes on the drill's stroke. The governor's hum drops a note, and the relay's lamp sinks to a glimmer.)",
   nwb_or_trim: 'Your box drinks. The shelters drink first.',
   nwb_mi_trim: "He's cut the relay's share. Nobody asked me. When the code goes out, that relay goes dark.",
