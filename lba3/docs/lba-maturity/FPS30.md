@@ -370,7 +370,37 @@ stepping on/off the kerb (2), 2 unattributed. The `cpu` rows follow this machine
 build; the synthetic rows are the comparison.
 
 ### 8.6 Tests run (this machine; after = this branch)
-TESTS-PLACEHOLDER
+One browser at a time; after = `b2b590ec` (the T3 mouse pass and its probe re-run on the merge with P95, `846cfb30`:
+the same numbers).
+- `tests/fps30-feel.mjs`: before and after, all of T1–T3 × keys/mouse and pad × 30@60, 30@59.9, 60, cpu × 3 runs, and
+  the probes: table above. Measures only; verdict PASS (no page error) on both.
+- `tests/fps30.mjs` whole: 55/56 — the one failure A5 (120 Hz: one 24.8 ms interval at the start of the 30 run, the
+  intermittent of §7); `ONLY=A` re-run 10/10. B1 and every D check pass in the full run (before the test fix the full run
+  failed B1 and 7 D checks: the dead hero).
+- `tests/combat.mjs` 76/78: the two known (dodge at 30/60; "the follow-through blends into the walk", maxJump 0.314),
+  KNOWN-FAILING.md.
+- `tests/camfollow.mjs` 30/31: the known "full turn on the spot by the wall" (unseen 1 frame, 2.83°), KNOWN-FAILING.md.
+- `tests/camclear.mjs` 12/14 + 1 visual: the Hamalayi dead tree and the ch8 hatch wheel not fired, the ch10 north mill
+  off screen — identical on the base `6ee0b0b5` (run there: the same three). Not in KNOWN-FAILING.md: for the coordinator.
+- `tests/camsteady.mjs` 105/110 (the known five of KNOWN-FAILING.md); the base in the same session 105/111 (the same
+  plus a jitter check that varies run to run).
+- `tests/chapter3.mjs` (the bank shots: the three pylons by a real throw from their plates, at 60) 48/48.
+- `tests/smooth-routes.mjs` combat, synthetic 30@60 / 30@59.9 / 60, base only (diagnosis, §8.3-6).
+Not run: the full regression set; anim-combat, timing, depot (P93's), autoquality (P95's).
+
+**What a person should notice** (expected from the measurements, not yet felt on hardware): in Modern with the Follow
+camera and the mouse, holding the ball no longer makes the view swing round on its own. The ring stays under the
+cursor and the arc's dots glide while he strafes instead of ticking. Running and turning at 30 are unchanged. They were
+already even on the synthetic display. Remaining unevenness at a stable 30 would come from presentation, a missed rAF
+callback, or the camera arm's 0.25 m steps (§8.3-5).
+
+**Open / risks**: (a) the view-hold is a behaviour change for Modern + Follow + mouse while the ball is out; with the
+cursor near the screen's edge he now turns to it and the view stays, so a target behind him needs the ball released or
+the view turned first. This is how a cursor aim works in the Free camera, but a person should try it. (b) The camera
+arm's 0.25 m steps (§8.3-5) are still there. (c) At 30, when the release falls on the inner step, the ball is first drawn
+0.35 m from the hand (§8.3-7). (d) camclear's three failures predate this change and are not filed. (e) P95 (Auto under
+the 30 limit) does not interact: these changes add one ground query per aimed frame and run nothing per refresh. The
+tests run with Auto off.
 
 ### 8.7 The local run (order 62 FPS30-FEEL)
 Before = `6ee0b0b5`, after = this branch once merged. Headed Chrome (or the Electron build) on the laptop, nothing else
