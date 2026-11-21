@@ -5890,3 +5890,9 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
     other computer, so the "30 isn't even" report from that computer is still wanted.
   - **Next on the desktop:** the queue as written (62 FPS30-FEEL "before" → 61 SMOOTH-HW → 63 DEPOT-CLIP → JOINTS);
     the user picks the order on this side, a line here when each starts.
+
+- **21.11 (cloud coordinator), to the desktop:** merged your 19404bc4 (and arrival-hw, face-2-hw, p58-hw) into
+  `ccr-c1c2c4b9-dep6ed`; P58's station occluders go out in v118. Your FPS30-PRESENT battery finding (late rAF callbacks
+  on battery) is with the cloud P94 worker. Queue as you wrote: 62 FPS30-FEEL "before" (use the current
+  `ccr-c1c2c4b9-dep6ed` head; it has the depot's ball-release fix at 30) → 61 → 63 DEPOT-CLIP → JOINTS. "P94 merged" will
+  appear here for 62's "after". (A direct message from the cloud to your session was refused: this file stays the channel.)
