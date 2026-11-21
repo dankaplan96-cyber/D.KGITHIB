@@ -277,7 +277,9 @@ export function* buildHamalayiSteps(scene, physics) {
   }
 
   // ---- the glider's landing and the shepherd's hut
-  const glider = new THREE.Group(); glider.position.set(LANDING.x + 5, H(LANDING.x + 5, LANDING.z - 2) + 0.2, LANDING.z - 2); glider.rotation.set(0.05, 0.6, 0.12); group.add(glider);
+  // (P65-2 OVERLAP-SWEEP: the group 0.06 m under the snow, was 0.2 m over it: the fuselage's belly hung 25 cm over the
+  //  snow at its lowest; now it rests in it)
+  const glider = new THREE.Group(); glider.position.set(LANDING.x + 5, H(LANDING.x + 5, LANDING.z - 2) - 0.06, LANDING.z - 2); glider.rotation.set(0.05, 0.6, 0.12); group.add(glider);
   {
     const GB = new Batch(glider), body = pm('#c8b890', 0.55), trim = pm('#7a2a1a', 0.5);
     GB.add(cyl(0.7, 0.45, 5.0, 14, 0), body, 0, 1.0, 0, Math.PI / 2, 0, 0);
@@ -485,7 +487,9 @@ export function* buildHamalayiSteps(scene, physics) {
     put('lhar', 'notice', -8.2, -0.75, 0, (k) => noticeBoard(k));
     put('lhar', 'woodpileH1', -15.8, -4.4, -Math.PI / 2, (k) => woodpile(k, { w: 1.9, h: 1.1 }));
     put('lhar', 'woodpileH4', 7.5, 15.9, -0.6 + Math.PI, (k) => woodpile(k, { w: 1.4, h: 0.9, lid: false }));
-    put('lhar', 'dryingRack', -5.6, -6.2, 0, (k) => dryingRack(k, { seed: 2 }));
+    // (P65-2 OVERLAP-SWEEP: on the lowest ground under its four splayed feet, not at its middle: on the slope the
+    //  downhill legs stood 8 cm over the snow)
+    put('lhar', 'dryingRack', -5.6, -6.2, 0, (k) => dryingRack(k, { seed: 2 }), { y: Math.min(...[[-1.3, -0.5], [1.3, -0.5], [-1.3, 0.5], [1.3, 0.5]].map(([a, b]) => H(-5.6 + a, -6.2 + b))) });
     put('lhar', 'cart', -17.3, 2.4, 0.3 + Math.PI / 2, (k) => handCart(k, { load: 'sacks', seed: 4 }));
     put('lhar', 'sledge', -24.6, 8.6, 0.3 + 1.4, (k) => sledge(k, { seed: 1 }), { stand: true });
     put('lhar', 'sledge2', 10.6, 13.6, 2.2, (k) => sledge(k, { seed: 2, load: false }), { stand: true });

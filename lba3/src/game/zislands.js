@@ -1678,7 +1678,13 @@ function buildIsland0(scene, physics, name, L, at) {
     const t = d.face, fx = d.x + t[0] * d.sx / 2, fz = d.z + t[1] * d.sz / 2;
     return { x0: t[0] ? Math.min(fx, fx + t[0] * 2.2) : d.x - 0.75, x1: t[0] ? Math.max(fx, fx + t[0] * 2.2) : d.x + 0.75, z0: t[1] ? Math.min(fz, fz + t[1] * 2.2) : d.z - 0.75, z1: t[1] ? Math.max(fz, fz + t[1] * 2.2) : d.z + 0.75, y: d.y };
   });
+  // (P65-2 OVERLAP-SWEEP: a slab or a plant lying on one of the original's things that was seated moves with it — Undergas'
+  //  table, a slab on a crate with two potted plants on it: the crate went 31 cm down to the ground, the slab and the
+  //  plants stayed, 32 cm over it)
+  const onMoved = (o) => A.decor.find((d) => d !== o && seated.has(d) && seated.get(d) != null && seated.get(d) !== d.y && Math.abs(d.y + d.sy - o.y) < 0.03
+    && Math.abs(o.x - d.x) <= Math.max(0.2, d.sx) / 2 && Math.abs(o.z - d.z) <= Math.max(0.2, d.sz) / 2);
   const seat0 = (o, ex, ez) => {
+    if (o.shape === 'slab' || o.shape === 'plant') { const d = onMoved(o); if (d) return o.y + seated.get(d) - d.y; }
     if (!SEAT.test(o.shape) || o.shape === 'pole' && S.flowerTrees) return o.y;
     const out = (why) => { R.leftOut.push({ shape: o.shape, x: +(ox + o.x).toFixed(2), z: +(oz + o.z).toFixed(2), why }); return null; };
     if (doorWays.some((w) => o.x > w.x0 && o.x < w.x1 && o.z > w.z0 && o.z < w.z1 && Math.abs(o.y - w.y) < 1.0)) return out('doorway');
@@ -1688,6 +1694,9 @@ function buildIsland0(scene, physics, name, L, at) {
     if (A.decor.some((d) => d !== o && !SEAT.test(d.shape) && Math.abs(o.x - d.x) <= Math.max(0.2, d.sx) / 2 && Math.abs(o.z - d.z) <= Math.max(0.2, d.sz) / 2 && d.y + d.sy <= o.y + 0.1 && d.y + d.sy >= o.y - 0.3)) return o.y;
     if (hi - lo > (o.shape === 'fence' ? 1.2 : o.shape === 'post' || o.shape === 'pole' ? 0.6 : 1.0)) return out('cliff face');
     if (o.y + o.sy < lo) return out('buried');
+    // (P65-2 OVERLAP-SWEEP: more than 0.8 m over the ground and over everything else under it, it stands on nothing the
+    //  plan holds either: set down too, up to 1.2 m — Undergas' crate beside the table hung 65–85 cm over the slope)
+    if (o.y - lo > 0.8 && o.y - lo <= 1.2 && o.y > hi + 0.04) return lo;
     return Math.abs(o.y - lo) > 0.04 && Math.abs(o.y - lo) <= 0.8 ? lo : o.y;
   };
   for (const o of [...A.decor].sort((a, b) => a.y - b.y)) seated.set(o, seat0(o, Math.max(0.2, o.sx), Math.max(0.2, o.sz)));
@@ -2201,7 +2210,8 @@ function buildIsland0(scene, physics, name, L, at) {
     if (!list.length) return;
     geo.computeBoundingBox(); const b = geo.boundingBox, gw = b.max.x - b.min.x, gh = b.max.y - b.min.y, gd = b.max.z - b.min.z;
     // (TREES-1: a cut plant's colour is drawn all the same, so the island's random stream is unchanged)
-    const items = list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })).filter((_, i) => !list[i].cut);
+    const items = list.map((o) => ({ x: o.x, y: (seated.get(o) ?? o.y) - b.min.y * (o.sy / gh) * ys, z: o.z,   // (P65-2: a plant on a seated slab follows it)
+      ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })).filter((_, i) => !list[i].cut);
     if (items.length) cullInstances(group, geo, mat, items, { lo }).userData.gpuGroup = 'trees';   // (benchgpu.js)
   };
   const vc = pm('#ffffff', 0.85, { vertexColors: true });
