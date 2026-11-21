@@ -236,6 +236,60 @@ minimal tests.
 6. **#20 the cistern lift**: six single presses in a row; a person's verdict first.
 7. A native speaker's look at the new Hebrew lines; a person's play of the three changed puzzles.
 
+## 5. Phase 2 (21.11): what changed
+
+Base `ccr-c1c2c4b9-dep6ed` at `697ff712` (v107: phase 1 merged, the dialogue pass and JOINTS-BLENDER on top). Same
+labels: **Automated runtime only**, nobody has played it. Files of the building agent (spaceport, terminals, Zeelich's
+`zeelich.js`/`zplaces.js`, `offwall`, `magic`, `wizards`) not touched.
+
+| # | Ch | Puzzle | Before → after (what the player now notices or decides) | Files |
+|---|---|---|---|---|
+| 1 | 15 | the cooling machinery (#68) | Before: open A and C, keep B (the drain) shut: chapter 5's decision. **After: one pump feeds the drill's drive and the exchanger** (the diagram draws the drive's branch; his line says so). The drain (B) is **found open**, glowing. A alone: the glasses amber, the drive turning. Both feeds with the drain running: **the drive starves** — the drill string slows to a crawl and judders, its lamp turns red and flashes, his line once ("If the drill stops halfway, the shell cracks", chapter 3's warning). Shut the drain: the loop closes, the drive spins back up, the glasses go cyan, the shutter's lock lets go. The brief's "keep one branch running while another stops; both consequences visible from the controls" (the drive in its corner is in the room camera's view from every valve). A nudge 35 s after the starve with nothing turned: the drain. | `underground.js`, `story/chapter3.js`, `text/ch3.js`, `he/ch3.js` |
+| 2 | 14 | the old mill's second climb (#62) | Before: chapter 3's climb again, the hop-pack able to shorten it but nobody said so. **After: Oku names the other way up** — without the pack, "Baldino's hop-pack is on the peg by his door, if your knees would rather fly. The stones work too"; with it, "Jump from a stone and hold it: every other stone". Up with the pack on: "Up in four hops. My grandmother would have called that cheating." The 4-hop route itself was already there (jetpack.mjs). | `story/network.js`, `text/ch10.js`, `he/ch10.js` |
+| 3a | 5 | the hangar's roof hatch (#34) | Before: one red switch on the gantry, hit it. **After: two switches, each level with its roof hatch**: one by the glider, one by the condensers. The wrong one opens the condensers' vent hatch: a shaft of daylight on them, their steam goes up, his line ("The glider's further along"), harmless. The right one, as before. | `condenser.js`, `story/steam.js`, `text/ch5.js`, `he/ch5.js` |
+| 3b | 6 | the tree over the gorge (#37) | Before: a ball at the tree, it falls (no question; the "loaded with snow" hint was never wired). **After: the dead tree leans out over the gorge, propped from the gorge side by an old lashed pole.** At the near bank his line says it leans. A ball on the tree rocks it out over the gorge and it settles back onto the pole (his line once); from then the ball's help goes to the pole; a ball on the pole kicks it out and the tree falls across. A nudge 40 s after the rock. | `hamalayi.js`, `hamalayi-tree.js`, `story/pass.js`, `text/ch6.js`, `he/ch6.js` |
+| 3c | 8 | the fortress shelter's lever (#45) | Before: fight the squad, pull the lever. **After: FunFrock's door runs on the cistern's water, and the cistern (open now) is dry.** The lever drops, gurgles and springs back (his line once). The old hand pump beside it fills the cistern in three strokes (the water's face rises, n/3). Full, the lever opens the door and the cistern drains with a roar. A nudge 30 s after the dry pull. | `story/evacuation.js`, `text/ch8.js`, `he/ch8.js` |
+
+Flags: nothing renamed. New: `c3_starve`; `c5_hatchVent`; `c6_rocked`, `c6_gorgeSeen`; `c8_dry`, `c8_pump` (0–3).
+Old saves: `c3_valves` already recorded keeps its valves (only a hall entered with no valve turned finds B open);
+`c3_cooled`, `c5_hatch`, `c6_bridge`, `c8_fort` load as before (the pole gone with the tree; the cistern drained).
+Hebrew for every new or changed line; `voicemeta.js` entries; `he-text.js` regenerated; `dialogue-check` PASS.
+
+### Tests run (Automated runtime only, one browser at a time, port 8197)
+
+| Test | Result | Notes |
+|---|---|---|
+| `PART=c15 node tests/puzzles.mjs` | **7/7** | by input except valve C (set on the catwalk: the stair and the knocker are chapter3's): B found open, the drive at speed; the diagram; A alone; C with the drain running → the drive starves (speed 0.12, his line); **save → Continue halfway**: still starving; B shut → cooled, drive back to 0.99 |
+| `tests/chapter3.mjs` | **48/48** | **changed on purpose**: "the wrong valve (B) opens" → "the drain found open"; "valve C: cooled" → "valve C with the drain open: the drive starves" + "the drain shut: cooled" |
+| `tests/playthrough/14-shell.mjs` from `base-14` | **PASS** to Keep Exploring | **changed on purpose**: valve C's step expects the starve; a step added (down to B, shut). The core fight took the bot 300 s and one ISO assist this run (unrelated: no core change) |
+| `PART=c14 node tests/puzzles.mjs` | **4/4** | Oku without the pack (the peg line); with it (every other stone); the relay with the pack on (four hops) |
+| `tests/chapter10.mjs` | **30/30** | unchanged |
+| `tests/jetpack.mjs` | **48/48** | incl. "the pack skips every other stair-stone — up in 4 hops instead of 8" |
+| `tests/playthrough/13-network.mjs` from `base-13` | **PASS** | Oku now 4 lines (the peg alternative) |
+| `PART=c5h node tests/puzzles.mjs` | **3/3** | by input: the far switch (vent hatch, his line, glider shut), then the glider's |
+| `PART=c6 node tests/puzzles.mjs` | **4/4** | by input: the gorge line; the tree rocks back (his line, no bridge); the pole: bridge |
+| `PART=c8 node tests/puzzles.mjs` | **6/6** | by input: dry lever (line); one stroke 1/3; lever again (springs back, no line); two strokes, full (line); lever: open |
+| `tests/chapter5.mjs` / `chapter6.mjs` / `chapter8.mjs` | **23/23**, **25/25**, **22/22** | chapter6 and chapter8 **changed on purpose** (the tree then the pole; dry, pump, lever) |
+| playthrough 08 / 09 / 11 from `base-07` / `base-09` / `base-11` | **PASS**, **PASS**, **PASS** | 09 and 11 **changed on purpose** (09: throws until the bridge; 11: dry, three strokes, lever; the bot's three pump strokes took 49 s of walking round the cistern) |
+
+Captures (`captures/puzzles/`, looked at): `after-c15-starved.jpg` (the drive in its corner, the drain glowing, A and C
+open), `after-c15-cooled.jpg`; `after-c14-oku-mill.jpg` (the stair-stones, the pack on his back); `before-c5h-switches.jpg`
+/ `after-c5h-switches.jpg` / `after-c5h-vent-open.jpg` (the green switch over the condensers, the shaft of daylight on
+them, the red one at the glider's end) / `after-c5h-glider-open.jpg`; `before-c6-gorge.jpg` / `after-c6-rocked.jpg` (the
+pale lashed pole beside the trunk at the gorge's edge) / `after-c6-bridge.jpg`; `before-c8-cistern.jpg` /
+`after-c8-cistern.jpg` / `after-c8-cistern-full.jpg` (the open cistern, water to the brim).
+
+**Not verified**: a person's play; whether the starving drive is noticed from valve C on the catwalk without the line
+(the room camera shows the whole hall, the drive is small); the tree's pole is thin at the follow camera's distance
+(thickened once; a person should judge); 30/60 FPS (no timing window added; the drive's slow-down and the nudges run on
+game time); the rest of the suites (campaign-thread, save-migration, the chain).
+
+## 6. Left after phase 2
+- A person's play of all eight changed puzzles; a native speaker's look at the Hebrew.
+- #53 Borrowed Time's inverted rule and #20 the cistern lift's six presses: a person's verdict first.
+- Chapter 5's hall, one step further, only if play finds it trivial (section 4 item 2).
+
 ## Resumable checkpoint
-Branch `worktree-agent-aea3471dc98cb8cc5` from `ccr-c1c2c4b9-dep6ed` at `89d3735d`. Done: the audit (90 puzzles), the
-plan, P-A, P-B and P-C's first half, each committed with its tests. Next, if continued: phase 2 item 1.
+Branch `worktree-agent-aea3471dc98cb8cc5` from `ccr-c1c2c4b9-dep6ed` at `697ff712` (v107). Phase 1 merged; phase 2 done:
+item 1 (chapter 15), item 2 (chapter 14), item 3 (chapters 5, 6, 8), each committed with its tests. Next, if continued:
+section 6.

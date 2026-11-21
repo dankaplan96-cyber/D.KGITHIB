@@ -45,6 +45,7 @@ Object.assign(STR.en, {
   c5_hangar_in: 'A hangar. Three condensers, and something big under a tarp.',
   c5_glider_1: 'A FunFrock cargo glider. The wings are sound. Hesk would know what to do with it.',
   c5_hatch: 'The roof hatch grinds open. Daylight pours in.',
+  c5_hatch_vent: "A hatch grinds open, but over the condensers: their steam goes up through it. The glider's further along.",
 
   // the relief valve
   c5_dallan_gate1: 'Twinsen. I suppose you want me to look the other way.',

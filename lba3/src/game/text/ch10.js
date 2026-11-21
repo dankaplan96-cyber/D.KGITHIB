@@ -29,6 +29,10 @@ Object.assign(STR.en, {
   // Zeelich: Oku's mill
   c10_oku_1: "Baldino's relay on the old mill? The wind's the only power up there. I'll hold her steady while you climb, but you'll have to put the brake on first. You know how.",
   c10_oku_brake: "That's it. Up you go, and don't look at the clouds.",
+  // (PUZZLES phase 2: the second climb is a choice: the stones, or the hop-pack every other stone)
+  c10_oku_hop: "Or use Baldino's hop-pack. Jump from a stone and hold it: every other stone, and your knees will thank you.",
+  c10_oku_peg: "Baldino's hop-pack is on the peg by his door, if your knees would rather fly. The stones work too.",
+  c10_oku_2hop: "Up in four hops. My grandmother would have called that cheating. I'll stay by her, in case the wind drops.",
   c10_relay_mill: "Twinsen sets the relay on the mill's balcony and runs its wire to the sail shaft. The little lamp glows as the sails take up the wind again.",
   c10_oku_2: "I'll stay by her. If the wind drops, I'll turn the sails by hand. My grandmother did it once, in the year of the long calm.",
 

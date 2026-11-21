@@ -7,8 +7,10 @@
 export const steps = [
   ['continue (Hamalayi)', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['fell the tree over the gorge (ball)', () => {
+    // (PUZZLES phase 2, changed on purpose: the first hit rocks the tree back onto its prop; then the ball's help goes to
+    //  the prop, and the next throw knocks it out)
     const tg = game.room.ballTargets.find((t) => t.tree);
-    for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * 4, tg.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
+    for (let k = 0; k < 8 && !game.flags.c6_bridge; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * 4, tg.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
     P.wait(2); P.settle(); return { bridge: game.flags.c6_bridge, fail: game.flags.c6_bridge ? null : 'tree' };
   }],
   // up the switchback trail a player follows (its cairns and rope rail: hamalayi.js TRAIL, region at x+4300), then Lhar

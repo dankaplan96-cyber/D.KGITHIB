@@ -691,8 +691,9 @@ const flowTex = () => M('ugflow', () => tiled(canvasTex(256, 64, (x, W, H) => {
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   for (let i = 0; i < 9; i++) { const px = (i / 9) * W + (i % 3) * 7, gg = x.createLinearGradient(px, 0, px + 26, 0); gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(0.6, 'rgba(230,255,255,0.9)'); gg.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gg; x.fillRect(px, H * 0.25, 26, H * 0.5); }
 }), 1, 1));
-// the cooling circuit as painted on the wall plate: where each pipe runs (A and C into the exchanger, B out of it to the
-// drain). PUZZLES P-C: no longer the drain crossed out in red: the sight glasses and the drain's glow answer it
+// the cooling circuit as painted on the wall plate: where each pipe runs (one pump: the bore's drive, and A and C into the
+// exchanger; B out of it to the drain). PUZZLES P-C: no longer the drain crossed out in red; phase 2: the drive's branch
+// drawn too (the pump keeps the drive and the exchanger only while nothing runs down the drain)
 const diagramTex = () => M('ugdiagram', () => canvasTex(768, 512, (x, W, H) => {
   x.fillStyle = '#e8e0c8'; x.fillRect(0, 0, W, H);
   const r = rng(5);
@@ -725,6 +726,11 @@ const diagramTex = () => M('ugdiagram', () => canvasTex(768, 512, (x, W, H) => {
   valve(90, 360, 'A', true); valve(190, 110, 'C'); valve(590, 420, 'B');
   x.fillStyle = '#4a4a50'; x.font = "bold 20px 'Arial Narrow', Arial, sans-serif";
   x.fillText('FLOOR', 40, 470); x.fillText('CATWALK', 150, 160); x.fillText('DRAIN', 690, 486);
+  // (PUZZLES P-C 2) the pump at the foot of A's riser, and its other branch along the bottom to the bore's drive
+  pipeL([[90, 440], [90, 482], [470, 482]], '#2a7a9a', 10);
+  x.fillStyle = '#2a7a9a'; x.save(); x.translate(470, 482); x.beginPath(); x.moveTo(-14, -14); x.lineTo(16, 0); x.lineTo(-14, 14); x.fill(); x.restore();
+  x.fillStyle = '#3f8a86'; x.strokeStyle = '#1e3a38'; x.lineWidth = 3; x.beginPath(); x.arc(90, 440, 24, 0, 7); x.fill(); x.stroke();
+  x.fillStyle = '#1e1e22'; x.font = "bold 22px 'Arial Narrow', Arial, sans-serif"; x.fillText('PUMP', 122, 446); x.fillText('DRIVE', 380, 470);
   // the drain
   x.strokeStyle = '#4a4a50'; x.lineWidth = 4; x.beginPath(); x.arc(660, 470, 22, 0, 7); x.stroke();
 }));
@@ -857,13 +863,17 @@ function buildDeep(scene, physics) {
   for (const [id, p, y, wy] of vdefs) {
     R.valves.push({ id, ...B.world(p.x, p.z), y, wheelY: wy, open: false, turn: 0, setOpen(b) { this.open = !!b; refresh(); } });
   }
+  // PUZZLES P-C (phase 2): one pump feeds the bore's drive and the exchanger. With both feeds open while B runs the
+  // exchanger's coolant down the drain, the pump can't keep up and the drive starves (it slows, its lamp goes red): the
+  // drill must not stop halfway. Shut the drain and the loop closes: the drive keeps turning and the exchanger cools.
+  R.coolState = () => { const st = Object.fromEntries(R.valves.map((v) => [v.id, v.open])); return { good: !!(st.A && st.C && !st.B), starve: !!(st.A && st.C && st.B), feeds: +!!st.A + +!!st.C }; };
+  let driveGoal = 1;
   const refresh = () => {
-    const st = Object.fromEntries(R.valves.map((v) => [v.id, v.open]));
-    const good = st.A && st.C && !st.B;
-    for (const m of sight) { m.emissive.set(good ? '#40e8ff' : st.A || st.C ? '#ffb040' : '#ff5a20'); m.color.set(good ? '#103a48' : '#401810'); }
-    exLight.color.set(good ? '#60e0ff' : '#ff8a40');
+    const c = R.coolState();
+    for (const m of sight) { m.emissive.set(c.good ? '#40e8ff' : c.feeds ? '#ffb040' : '#ff5a20'); m.color.set(c.good ? '#103a48' : '#401810'); }
+    exLight.color.set(c.good ? '#60e0ff' : '#ff8a40');
+    driveGoal = c.starve ? 0.1 : 1;
   };
-  refresh();
 
   // --- the catwalk along the back wall (deck at UY), the hinged stair, the gantry with the ball switch
   const CW = { x0: LX, x1: 0.6, z0: BZ, z1: BZ + 2.3 };
@@ -984,6 +994,10 @@ function buildDeep(scene, physics) {
 
   // --- the bore's transmission in the corner: the drill string coming down, a ring gear and its motor
   const TX = { x: 9.5, z: -6.2 };
+  // (PUZZLES P-C 2) the drive's lamp on its motor's front: green while it turns at speed, red while it starves
+  const driveLamp = new THREE.Mesh(sphere(0.09, 10, 8), stdM({ color: '#c8ffd0', emissive: '#30e060', emissiveIntensity: 2.2 }, 0, { noShadow: true }));
+  driveLamp.position.set(TX.x - 1.65, 1.55, TX.z + 1.04); B.group.add(driveLamp);
+  R.drive = { speed: 1, get starved() { return driveGoal < 1; } };
   const tstring = new THREE.Group(); tstring.position.set(TX.x, 0, TX.z); B.group.add(tstring);
   { const sm = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 12, 18, 1, true), M('ugstring', () => { const m = stdM({ map: drillTex(), roughness: 0.4, metalness: 0.55 }); m.map.repeat.set(2, 9); return m; })); sm.position.y = 6; sm.castShadow = false; tstring.add(sm); }
   const gear = new THREE.Mesh(P.gearGeo(1.35, 36, 0.3, 0.4), brass()); gear.rotation.x = -Math.PI / 2; gear.position.y = 1.45; tstring.add(gear);
@@ -1139,10 +1153,17 @@ function buildDeep(scene, physics) {
   }
 
   flushNoShadow(kt);
-  let wasFlow = '';
+  let wasFlow = '', driveA = 0;
+  refresh();
   R.updaters.push((dt, tt) => {
-    tstring.rotation.y = tt * 1.1;
-    pin.rotation.z = -tt * 1.1 * (1.35 / 0.45);
+    // (PUZZLES P-C 2: the drive at the pump's mercy: it winds down while starved, back up once fed; a judder at a crawl)
+    const D = R.drive; D.speed += (driveGoal - D.speed) * Math.min(1, dt * 0.8);
+    driveA += dt * 1.1 * D.speed;
+    tstring.rotation.y = driveA + (D.speed < 0.5 ? Math.sin(tt * 40) * 0.02 : 0);
+    pin.rotation.z = -driveA * (1.35 / 0.45);
+    const red = D.speed < 0.6;
+    driveLamp.material.emissive.set(red ? '#ff3020' : '#30e060'); driveLamp.material.color.set(red ? '#ffd0c0' : '#c8ffd0');
+    driveLamp.material.emissiveIntensity = red ? 1.2 + Math.max(0, Math.sin(tt * 6)) * 1.6 : 2.2;
     // stair and shutter animation
     if (stairT < stairGoal) { stairT = Math.min(1, stairT + dt / 1.6); const e = stairT * stairT * (3 - 2 * stairT); flight.rotation.x = STOW * (1 - e); placeChains(); }
     else if (stairT >= 1 && flight.rotation.x !== 0) { flight.rotation.x = 0; placeChains(); }

@@ -37,6 +37,12 @@ Object.assign(STR.en, {
   c8_pippa_1: "Supplies? For the shelters? Potions, bread, clover leaves, all of it. I'll send Tim and Lulu with the cart. They owe me for the stone business.",
   c8_pippa_after: 'Everything I had went down the tunnels. Best business I ever didn\'t make.',
 
+  // (PUZZLES phase 2: FunFrock's door runs on the cistern's water; the cistern is dry; the old hand pump fills it)
+  c8_lever_dry: "The lever drops, the pipes gurgle... and it springs back. The cistern's bone dry. FunFrock's door must run on water.",
+  c8_toast_pump: 'The cistern fills ({n}/3)',
+  c8_pump_full: 'Full to the brim. Now the lever.',
+  c8_lever_water: 'The lever drops, the cistern drains with a roar, and somewhere outside a door grinds open.',
+  c8_nudge_pump: 'That old hand pump beside the cistern still has its handle.',
   c8_lever_1: "A heavy lever by the old cistern, under rust and project paint. It moves. Somewhere outside, a door grinds open.",
   c8_shelter_fort: 'The fortress shelter is open. Steps lead down into the dark, and the air is dry.',
   c8_wheel_hint: '(The hatch wheel is up on the frame. Too high to reach by hand.)',

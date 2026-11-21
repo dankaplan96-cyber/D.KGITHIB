@@ -29,7 +29,9 @@ export const steps = [
     P.go(L.x, L.z - 5.4, { tol: 0.4 });
     let knocks = 0; for (let k = 0; k < 3 && f.sh_reply !== true && f.sh_reply !== 'past'; k++) { P.use(K.x, K.z, { near: 0.7, kind: 'sh_knock' }); P.tap('KeyE', 0.05); for (let w = 0; w < 60 && (h.steer || h.actT > 0); w++) G.step(0.05); knocks += 2; SWAIT(200, () => !G.story._sh?.msg && !G.story._sh?.busy); SWAIT(120); }
     P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle();
-    return { waited: w0, knocks, knock: f.sh_knock ?? null, reply: f.sh_reply ?? null, hp: h.hp, open: v.open, y: +h.pos.y.toFixed(2), cooled: f.c3_cooled, fail: f.c3_cooled ? null : 'cooling' }; }],
+    // (PUZZLES P-C phase 2, changed on purpose: the drain was found open, so both feeds starve the drive; the next step shuts it)
+    return { waited: w0, knocks, knock: f.sh_knock ?? null, reply: f.sh_reply ?? null, hp: h.hp, open: v.open, y: +h.pos.y.toFixed(2), starve: f.c3_starve ?? null, fail: f.c3_starve ? null : 'no starve' }; }],
+  ['the drive starving: down to the drain (B), shut: the loop closes', () => { const v = game.room.valves.find((x) => x.id === 'B'); P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle(); return { b: v.open, cooled: game.flags.c3_cooled, fail: game.flags.c3_cooled ? null : 'cooling' }; }],
   // (CAMPAIGN-9: the shutter starts down as he reaches it and her crystal holds it: the line read, then through)
   ['the galleries (the shutter held)', () => { let r = P.exitTo('c3-gallery'); SWAIT(100); if (game.room?.id !== 'c3gallery') r = P.exitTo('c3-gallery'); return { ...r, held: game.flags.sh_held ?? null, room: game.room?.id, fail: game.room?.id === 'c3gallery' ? null : 'galleries' }; }],
   // (the crew's supply crates: a hop beside one, the heart that comes out; a player who is hurt rummages them — the bot only when

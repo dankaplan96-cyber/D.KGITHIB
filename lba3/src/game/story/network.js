@@ -299,7 +299,8 @@ export class Network extends ChapterBase {
         h.act('use', 1.0, () => {
           this.lightRelay('mill');
           this.Z.mills[0].setSpinning(true);
-          this.chain([['narrator', 'c10_relay_mill'], ['oku', 'c10_oku_2']], () => this.stationDone('mill'));
+          // (PUZZLES phase 2: up with the hop-pack on his back, Oku has a word about it)
+          this.chain([['narrator', 'c10_relay_mill'], ['oku', h.arms?.jetpackOn ? 'c10_oku_2hop' : 'c10_oku_2']], () => this.stationDone('mill'));
         }, 0.5);
         return true;
       case 'c10valve': {
@@ -425,9 +426,14 @@ export class Network extends ChapterBase {
       case 'baldino':
         if (this.done() >= 5 && !f.c10_done) return c([['baldino', 'c10_bal_p1']]);
         return c([['baldino', 'c10_bal_after']]);
-      case 'oku':
-        if (!f.c10_okuAsk) return c([['oku', 'c10_oku_1']], () => { f.c10_okuAsk = true; ok(); });
-        return c([['oku', f.c10_mill ? 'c10_oku_2' : f.c10_millBraked ? 'c10_oku_brake' : 'c10_oku_1']]);
+      case 'oku': {
+        // (PUZZLES phase 2, chapter-balance's proposal: the second climb is a choice. Oku names the other way up: the
+        //  hop-pack on Twinsen's back (every other stair-stone), or on Baldino's peg if he hasn't taken it)
+        const hop = ['oku', g.hero.arms?.jetpack ? 'c10_oku_hop' : 'c10_oku_peg'];
+        if (!f.c10_okuAsk) return c([['oku', 'c10_oku_1'], hop], () => { f.c10_okuAsk = true; ok(); });
+        if (f.c10_mill) return c([['oku', 'c10_oku_2']]);
+        return c([['oku', f.c10_millBraked ? 'c10_oku_brake' : 'c10_oku_1'], hop]);
+      }
       case 'mira':
         if (!f.c10_miraAsk) return c([['mira', 'c10_mira_1'], ['mira', 'c10_mira_2']], () => { f.c10_miraAsk = true; g.startTransition(() => { g.enterRoom('valves', null, true); ok(); if (!this.thread.valvesIn()) this.chain([['narrator', 'c10_valves_in'], ['hero', 'c10_valve_hint']]); }); });
         return c([['mira', f.c10_valves ? 'c10_mira_3' : 'c10_mira_2']]);

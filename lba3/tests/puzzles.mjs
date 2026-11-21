@@ -3,8 +3,17 @@
 //       not how to set it; each gauge sits over the branch it reads; steam let in with nowhere to go shakes the shut
 //       branches and flutters their needles; one branch open settles its own needle (progress); the aquifer branch
 //       opened with steam on sends its needle into the red; a save halfway keeps the valves and the shaking.
-//   c15 chapter 15, the cooling machinery (story/chapter3.js, underground.js): the diagram shows where the pipes run, the
-//       drain no longer crossed out; B opened is the wrong try (his line, the drain's glow, the sight glasses amber).
+//   c15 chapter 15, the cooling machinery (story/chapter3.js, underground.js; phase 2): one pump feeds the drill's drive
+//       and the exchanger; the drain (B) is found open; both feeds with it running starve the drive (it slows, its lamp
+//       red, his line); shut, the loop closes and the exchanger cools with the drive at speed; a save halfway keeps it.
+//   c14 chapter 14, the old mill's second climb (story/network.js; phase 2): Oku names the hop-pack as the other way up
+//       (on Baldino's peg, or on his back: every other stair-stone), and has a word when it was used.
+//   c5h chapter 5, the hangar (phase 2): two switches on the gantry, each level with its roof hatch; the far one opens the
+//       condensers' vent hatch (their steam goes up, his line), the one level with the glider opens its hatch.
+//   c6  chapter 6, the gorge (phase 2): the dead tree leans out on an old prop; the ball on the tree rocks it back onto
+//       the pole (said); the ball on the pole knocks it out and the tree falls across.
+//   c8  chapter 8, the fortress shelter (phase 2): its door runs on the cistern's water and the cistern is dry; the lever
+//       springs back (said); three strokes of the old hand pump fill it; then the lever opens the door.
 //   c7  chapter 7, the vent's seal (story/observatory.js, hamalayi.js): three of the five discs steam already, two are
 //       capped with ice; a ball at a steaming one only rings (said once); the ice broken (ball, or a blow) lets that
 //       one breathe; with all five breathing the seal turns; a save halfway keeps what was freed.
@@ -152,12 +161,117 @@ if (PARTS.includes('c15')) {
   await ev(() => { const D = game.room.diagram; P.go(D.x + 2.2, D.z + 0.6, { tol: 0.5 }); P.face(D.x, D.z); game.step(0.6); });
   await shot('c15-diagram');
   if (!BEFORE) {
-    is('c15: the diagram (input): where the pipes run, no answer crossed out', await ev(() => { const D = game.room.diagram, n = window.SAID.length; P.use(D.x, D.z, { kind: 'c3diagram' }); P.settle(); return T.said(n)[0] || ''; }),
-      (v) => /drain/i.test(v) && /catwalk/i.test(v) && !/crossed|A and C/i.test(v));
-    is('c15: a wrong try: B (the drain) opened: his line; not cooled', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'), n = window.SAID.length; P.use(v.x, v.z, { kind: 'c3valve', near: 1.2 }); game.step(1); P.settle(); return [v.open, !!game.flags.c3_cooled, T.said(n)]; }),
-      (v) => v[0] && !v[1] && v[2].some((s) => /drain/i.test(s)));
+    is('c15: arrival: the drain (B) found running, the drive turning at speed, nothing cooled', await ev(() => { const D = game.room, v = D.valves.find((x) => x.id === 'B'); return [v.open, !!game.flags.c3_cooled, D.drive.starved, +D.drive.speed.toFixed(2)]; }),
+      (v) => v[0] && !v[1] && v[2] === false && v[3] > 0.9);
+    is('c15: the diagram (input): one pump for the drive and the exchanger, the drain', await ev(() => { const D = game.room.diagram, n = window.SAID.length; P.use(D.x, D.z, { kind: 'c3diagram' }); P.settle(); return T.said(n)[0] || ''; }),
+      (v) => /pump/i.test(v) && /drive/i.test(v) && /drain/i.test(v) && !/crossed|A and C/i.test(v));
+    is('c15: valve A (input): one feed, the drive still at speed', await ev(() => { const D = game.room, v = D.valves.find((x) => x.id === 'A'); P.use(v.x, v.z, { kind: 'c3valve', near: 1.2 }); game.step(3); P.settle(); return [v.open, D.drive.starved, +D.drive.speed.toFixed(2), !!game.flags.c3_cooled]; }),
+      (v) => v[0] && !v[1] && v[2] > 0.9 && !v[3]);
+    // (valve C is on the catwalk: the stair and the knocker are chapter3.mjs's; here he is set on the catwalk by it: staged)
+    is('c15: valve C with the drain running: the drive starves (it slows, his line), nothing cooled', await ev(() => { const G = game, D = G.room, v = D.valves.find((x) => x.id === 'C'), n = window.SAID.length; T.useAt(v.x, v.z, v.y); G.step(4); P.settle();
+      return [v.open, D.drive.starved, +D.drive.speed.toFixed(2), !!G.flags.c3_cooled, T.said(n)]; }), (v) => v[0] && v[1] && v[2] < 0.6 && !v[3] && v[4].some((s) => /drive/i.test(s)));
+    await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.tp(v.x - 1.6, v.z - 1.2); P.face(v.x, v.z); game.step(0.6); });
+    await shot('c15-starved');
+    await ev(() => { game.save(false); });
+    await boot('continue');
+    is('c15: save → Continue halfway: the three valves open, the drive still starving', await ev(() => { const G = game; G.step(3); P.settle(); const D = G.room; return [G.room?.id, D.valves.map((v) => v.open).join(), D.drive.starved]; }),
+      (v) => v[0] === 'c3deep' && v[1] === 'true,true,true' && v[2]);
+    is('c15: the drain (B) shut (input): the loop closes, the exchanger cools, the drive back to speed', await ev(() => { const G = game, D = G.room, v = D.valves.find((x) => x.id === 'B');
+      for (const en of G.enemies) if (en.alive && en.group === 'c3deep') { for (let k = 0; k < 12 && en.alive; k++) { (en.take || en.damage).call(en, 3, G.hero.pos); G.step(0.1); } }
+      P.use(v.x, v.z, { kind: 'c3valve', near: 1.2 }); G.step(5); P.settle(); return [v.open, !!G.flags.c3_cooled, D.drive.starved, +D.drive.speed.toFixed(2)]; }),
+      (v) => !v[0] && v[1] && !v[2] && v[3] > 0.9);
+    await shot('c15-cooled');
+  }
+}
+
+// ================================================================ c14: the old mill's second climb (phase 2)
+if (PARTS.includes('c14')) {
+  await boot('new');
+  is('c14: chapter 14 (the network, base campaign) in Baldino\'s workshop', await ev(() => { const G = game; P.settle(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 8, chapterKey: 'council', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,
+    c5_dallanOK: true, c5_relief: true, c5_vent: true, c6_up: true, c6_trip2: true, c6_thawed: true, c7_vent: true, c8_mira: true, c8_fort: true, c8_depot: true, c8_zoeDone: true, c9_started: true, c9_vote: true,
+    cn_v: 1, cn_closed: true, cn_kell: true, cn_log: true, cn_stop: true, cn_isoGot: true, cn_isoA: true, cn_isoB: true, cn_iso: true, cn_lane: true, exp_base: 1 }); delete G.flags.exp;
+    G.hero.hasBall = true; G.story.chapters.find((c) => c.key === 'council')?.thread?.applyFlags?.();
+    G.story.nextChapter(); G.step(0.5); P.settle(); return [G.flags.chapterKey, G.room?.id, !!G.hero.arms?.jetpack]; }), (v) => v[0] === 'network' && v[1] === 'workshop' && !v[2]);
+  is('c14: Oku asked without the pack: the climb, and the pack on Baldino\'s peg as the other way', await ev(() => { const G = game, n = window.SAID.length; const e = G.room.exits[0]; P.through(e.x, e.z); P.settle(); P.talk('oku', { run: true }); P.settle(); return [G.room?.id, !!G.flags.c10_okuAsk, T.said(n)]; }),
+    (v) => v[0] === 'zeelich' && v[1] && v[2].some((s) => /brake/i.test(s)) && v[2].some((s) => /hop-pack is on the peg/i.test(s)));
+  // (the pack taken and worn as the peg gives it: tests/jetpack.mjs takes it by input; staged here)
+  is('c14: with the pack, braked: Oku names the hop up every other stone', await ev(() => { const G = game, n = window.SAID.length; Object.assign(G.hero.arms, { jetpack: true, jetpackOn: true });
+    G.flags.c10_millBraked = true; G.rooms.zeelich.mills[0].setSpinning(false); P.talk('oku', { run: true }); P.settle(); return T.said(n); }), (v) => v.some((s) => /every other stone/i.test(s)));
+  await ev(() => { const mt = game.rooms.zeelich.millTop; P.go(mt.x, mt.z - 6.5, { tol: 0.8, fight: false }); P.face(mt.x, mt.z); game.step(0.5); });
+  await shot('c14-oku-mill');
+  // (the 4-hop climb itself is tests/jetpack.mjs's "later use" check: here he is set on the gallery, staged)
+  is('c14: the relay set with the pack on his back: Oku\'s word on the four hops', await ev(() => { const G = game, mt = G.rooms.zeelich.millTop, n = window.SAID.length; T.useAt(mt.x, mt.z, mt.y); G.step(1); P.settle(); return [!!G.flags.c10_mill, T.said(n)]; }),
+    (v) => v[0] && v[1].some((s) => /four hops/i.test(s)));
+}
+
+// ================================================================ c5h: the hangar's roof hatch (phase 2)
+if (PARTS.includes('c5h')) {
+  await boot('new');
+  is('c5h: chapter 5, the hangar, Hesk waiting for the hatch', await ev(() => { const G = game; P.settle(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 3, chapterKey: 'dig', c4_started: true, c4_done: true, c4_pump: true, c4_trust: true, c4_carving: true,
+    dt_v: 1, dt_hail: true, dt_cut: true, dt_second: true, dt_again: true, dt_strip: true });
+    G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); P.settle(); P.settle();
+    Object.assign(G.flags, { c5_planned: true, c5_jar: true, c5_water: true, c5_shovel: true, c5_dug: true, c5_diagram: true, c5_valves: { 1: true, 3: true, 4: true }, c5_routed: true, c5_gliderSeen: true, c5_dallanOK: true, c5_relief: true, c5_vent: true, c5_clover: true, c5_radio: true, c5_glider: true });
+    G.story.applyFlags?.(); G.story.refreshCast(); G.step(0.5); P.settle();
+    const d = G.rooms.desert.ruins.door; T.tp(d.x, d.z + 1.6); G.step(0.3); T.tp(d.x, d.z); G.step(1.6); P.settle();
+    const e = G.room.exits.find((x) => x.to === 'cond-b'); T.tp(e.x, e.z); G.step(1.6); P.settle(); return [G.room?.id, T.obj()]; }), (v) => v[0] === 'condB' && /hatch/i.test(v[1]));
+  await ev(() => { const S = game.rooms.condB.ballSwitch; P.go(S.x - 5, S.z - 1.5, { tol: 0.6 }); P.face(S.x, S.z); game.step(0.5); });
+  await shot('c5h-switches');
+  if (!BEFORE) {
+    const throwSw = (key) => ev((key) => { const G = game, B = G.rooms.condB, S = B[key], n = window.SAID.length; let k = 0;
+      const tg = B.ballTargets.find((t) => (key === 'ballSwitch' ? t.hatch : t.ventHatch));
+      for (; k < 5 && !tg.done; k++) { P.go(S.x - 3.6 - (k % 2) * 0.8, S.z + (k - 2) * 0.6, { tol: 0.5 }); G.hero.hp = G.hero.maxHp; P.tap('Digit1'); P.throwAt(S.x, S.z); P.settle(); }
+      return { tries: k, hatch: !!G.flags.c5_hatch, vent: !!G.flags.c5_hatchVent, said: T.said(n) }; }, key);
+    is('c5h: a wrong try (input): the far switch opens the hatch over the condensers: their steam goes up, his line; the glider\'s still shut', await throwSw('ventSwitch'),
+      (v) => v.vent && !v.hatch && v.said.some((s) => /over the condensers/i.test(s)));
     await ev(() => { game.step(1.5); });
-    await shot('c15-drain-open');
+    await shot('c5h-vent-open');
+    is('c5h: the switch level with the glider (input): its hatch opens', await throwSw('ballSwitch'), (v) => v.hatch && v.said.some((s) => /Daylight/i.test(s)));
+    await shot('c5h-glider-open');
+  }
+}
+
+// ================================================================ c6: the tree over the gorge (phase 2)
+if (PARTS.includes('c6')) {
+  await boot('new');
+  is('c6: chapter 6 at the landing', await ev(() => { const G = game; P.settle(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 4, chapterKey: 'steam', c5_planned: true, c5_vent: true, c5_glider: true, c5_done: true });
+    G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); P.settle(); P.settle(); return [G.flags.chapterKey, G.room?.id ?? 'hamalayi', !!G.flags.c6_started]; }), (v) => v[0] === 'pass' && v[2]);
+  const n6 = await ev(() => window.SAID.length);
+  await ev(() => { const t = game.rooms.hamalayi.gorge.tree; P.go(t.x - 1.5, t.z + 12.5, { tol: 0.8, run: true }); P.settle(); });
+  if (BEFORE) { await ev(() => { const t = game.rooms.hamalayi.gorge.tree; P.face(t.x, t.z); game.step(0.6); }); await shot('c6-gorge'); }
+  if (!BEFORE) {
+    is('c6: at the gorge (input): his line: too wide, and the tree leans out over it', await ev((n) => T.said(n), n6), (v) => v.some((s) => /leans right out over it/i.test(s)));
+    const throwAt = (which) => ev((which) => { const G = game, M = G.rooms.hamalayi, tg = M.ballTargets.find((t) => t[which]), n = window.SAID.length, b0 = !!G.flags.c6_bridge; let k = 0;
+      for (; k < 5 && !!G.flags.c6_bridge === b0 && !(which === 'tree' && G.flags.c6_rocked); k++) { P.go(tg.x - 1 + k * 0.5, tg.z + 9.5, { tol: 0.6 }); P.tap('Digit1'); P.throwAt(tg.x, tg.z); P.settle(); }
+      G.step(2.5); P.settle(); return { tries: k, bridge: !!G.flags.c6_bridge, fallen: M.gorge.tree.fallen, said: T.said(n) }; }, which);
+    is('c6: a reasonable wrong try (input): the ball on the tree rocks it; it settles back on the pole, said; no bridge', await throwAt('tree'), (v) => !v.bridge && v.said.some((s) => /old pole/i.test(s)));
+    await ev(() => { const t = game.rooms.hamalayi.gorge.prop; P.face(t.x, t.z); game.step(1.5); });
+    await shot('c6-rocked');
+    is('c6: the ball on the pole (input): it kicks out, the tree falls across: a bridge', await throwAt('prop'), (v) => v.bridge && v.fallen && v.said.some((s) => /pole kicks out/i.test(s)));
+    await shot('c6-bridge');
+  }
+}
+
+// ================================================================ c8: the fortress shelter's lever (phase 2)
+if (PARTS.includes('c8')) {
+  await boot('new');
+  is('c8: chapter 8, Gilbert asked, the squad out of the way', await ev(() => { const G = game; P.settle();
+    Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 6, chapterKey: 'observatory', c1_water: true, c1_done: true, c7_started: true, c7_vent: true, c7_done: true });
+    G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); P.settle(); P.settle();
+    Object.assign(G.flags, { c8_home: true, c8_gilbert: true }); G.story.applyFlags?.(); G.story.refreshCast(); G.step(0.5); P.settle(); G.updateObjective();
+    for (const e of G.enemies) if (e.alive && e.group === 'ccyard') { for (let k = 0; k < 14 && e.alive; k++) { (e.take || e.damage).call(e, 3, G.hero.pos); G.step(0.1); } }
+    G.step(2); P.settle(); return [G.flags.chapterKey, G.enemies.filter((e) => e.alive && e.group === 'ccyard').length]; }), (v) => v[0] === 'evacuation');
+  await ev(() => { const L = game.story.cur.pumpAt || { x: -31.4, z: -68.3 }; P.go(L.x - 3.2, L.z + 2.2, { tol: 0.6 }); P.face(L.x, L.z - 1.5); game.step(0.6); });
+  await shot('c8-cistern');
+  if (!BEFORE) {
+    const use = (kind, at) => ev(([kind, at]) => { const G = game, C = G.story.cur, p = at === 'pump' ? C.pumpAt : { x: -33, z: -70 }, n = window.SAID.length, t0 = window.TOASTS.length;
+      P.use(p.x, p.z, { kind, near: 1.0 }); G.step(0.8); P.settle(); return { fort: !!G.flags.c8_fort, pump: G.flags.c8_pump || 0, said: T.said(n), toasts: window.TOASTS.slice(t0), open: C.fortDoor.p ?? null }; }, [kind, at]);
+    is('c8: the lever pulled dry (input): it springs back, the cistern is dry, said; the door shut', await use('c8lever', 'lever'), (v) => !v.fort && v.said.some((s) => /bone dry/i.test(s)));
+    is('c8: the hand pump, one stroke (input): the cistern fills 1/3', await use('c8pump', 'pump'), (v) => v.pump === 1 && v.toasts.includes('c8_toast_pump'));
+    is('c8: the lever with the cistern a third full: still springs back (no line again)', await use('c8lever', 'lever'), (v) => !v.fort && v.said.length === 0);
+    is('c8: two more strokes: full, his line', await ev(() => { const G = game, C = G.story.cur, n = window.SAID.length; for (let i = 0; i < 2; i++) { P.use(C.pumpAt.x, C.pumpAt.z, { kind: 'c8pump', near: 1.0 }); G.step(0.8); P.settle(); } return [G.flags.c8_pump, T.said(n), C.cisternWater.visible]; }),
+      (v) => v[0] === 3 && v[2] && v[1].some((s) => /Full to the brim/i.test(s)));
+    await shot('c8-cistern-full');
+    is('c8: the lever with the cistern full: the door opens, the cistern drains', await use('c8lever', 'lever'), (v) => v.fort && v.said.some((s) => /drains with a roar/i.test(s)));
   }
 }
 

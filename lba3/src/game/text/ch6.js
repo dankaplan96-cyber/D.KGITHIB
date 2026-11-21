@@ -9,9 +9,13 @@ Object.assign(STR.en, {
   c6_narr: "FunFrock's glider comes down hard in the snow of the Hamalayi foothills. It won't fly again without a hill to jump from.",
   c6_hesk_1: "I said it glides. I didn't say it lands. I'll stay with her and dig her out. You find that vent.",
   c6_tw_1: "Zoé said the vent is near an old observatory. Up there, somewhere.",
-  c6_gorge: 'Meltwater has cut a gorge across the path. Too wide to jump.',
+  c6_gorge: 'Meltwater has cut a gorge across the path. Too wide to jump. And that dead tree leans right out over it.',
   c6_tree_hint: '(That dead tree on the far side is loaded with snow. If it fell the right way...)',
   c6_bridge: 'Crack. The tree topples across the gorge. A bridge.',
+  // (PUZZLES phase 2: the tree leans out over the gorge on an old prop)
+  c6_tree_rock: '(It rocks out over the gorge, and settles back onto that old pole.)',
+  c6_bridge2: 'The pole kicks out into the gorge. The tree creaks, leans, and topples across. A bridge.',
+  c6_nudge_prop: 'An old pole props the tree from the gorge side.',
 
   c6_lhar_in: 'A village on the terrace. People are carrying bundles out of their houses.',
   c6_yorna_1: "A stranger, in this weather? You came over the gorge? Then you're either a guide or a fool.",
