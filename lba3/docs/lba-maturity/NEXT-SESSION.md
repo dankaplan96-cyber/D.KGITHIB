@@ -1,5 +1,6 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+- v116 (21.11): P65-2 overlap fixes (Hamalayi, desert, isles) published. P90+P91 narrative worker started; P94 (30 FPS feel) queued after SMOOTH-1, local order 62.
 - v115 (21.11): FACE-3 (sign/Corla/Fixed-Free talk shots) + the P91 four dialogue lines + P92 Kell lift labels published. fps30 D fails only in the full run (also before the merge: order-dependent). P93 depot worker running.
 **21.11 09:58: v114 published** (artifact 1795255077-5964): P88 — 30 FPS counted in refreshes (the 33.33 ms grid drifted on the user's 59.9 Hz screen). Running: P65-2 overlaps, FACE-3 (both cloud workers; FACE-3 also edits main.js — merge with care). Local: order 60 (60.0 FPS30-PRESENT first).
 
