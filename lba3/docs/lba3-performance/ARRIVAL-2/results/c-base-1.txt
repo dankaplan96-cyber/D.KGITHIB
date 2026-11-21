@@ -1,0 +1,139 @@
+waited 35s for other browsers; load 2.22 3.05 3.58
+ROTATE-STALL arrival · medium · battery false · camera free · zeelich → citadel × 1
+(flush before zeelich: 45721 ms)
+zeelich (cold): 143 frames, 15844 ms in all, 14965 ms of it with the screen black
+    0    19 ms view  op 0.10 calls 184 uploads 26 (51 KB)
+    1    14 ms view  op 0.19 calls 184 uploads 26 (51 KB)
+    2     9 ms view  op 0.29 calls 184 uploads 26 (51 KB)
+    3     7 ms view  op 0.38 calls 184 uploads 26 (51 KB)
+    4     7 ms view  op 0.48 calls 184 uploads 26 (51 KB)
+    5     6 ms view  op 0.57 calls 184 uploads 26 (51 KB)
+    6     6 ms view  op 0.67 calls 184 uploads 26 (51 KB)
+    7    11 ms view  op 0.76 calls 184 uploads 26 (51 KB)
+    8     7 ms view  op 0.86 calls 184 uploads 26 (51 KB)
+    9     7 ms view  op 0.95 calls 184 uploads 26 (51 KB)
+   10     4 ms BLACK op 1.00 calls 0 hold 
+   11    18 ms BLACK op 1.00 calls 0 hold STEP shadow batches 17 [unit large piece 5.4]
+   12    16 ms BLACK op 1.00 calls 0 hold STEP shadow batches 15 [unit large piece 6.1]
+   13    22 ms BLACK op 1.00 calls 0 hold STEP shadow batches 21 [unit large piece 14], SEC other sim 22 · physics 0 · camera 0
+   14    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12 [unit large piece 6.1]
+   15    15 ms BLACK op 1.00 calls 0 hold STEP shadow batches 14 [unit cell 4.8]
+   16    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12 [unit cell 4.2]
+   17    17 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12 [unit cell 7.6]
+   18    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12
+   19    15 ms BLACK op 1.00 calls 0 hold STEP shadow batches 15 [unit cell 4.1]
+   20    13 ms BLACK op 1.00 calls 0 hold STEP shadow batches 12 [unit cell part 4.1]
+   21     6 ms BLACK op 1.00 calls 0 hold shadow batches built 4 ms, STEP shadow batches 5
+   22 14129 ms BLACK op 1.00 calls 0 hold 71 pieces left shadow batches, STEP texture layers 14103, SEC other sim 14129 · camera 0 · physics 0
+   23    14 ms BLACK op 1.00 calls 0 hold STEP texture layers 13
+   24    14 ms BLACK op 1.00 calls 0 hold STEP texture layers 12
+   25    14 ms BLACK op 1.00 calls 0 hold STEP texture layers 13
+   26     6 ms BLACK op 1.00 calls 0 hold STEP texture layers 5
+   27    15 ms BLACK op 1.00 calls 0 hold STEP draw batches 13
+   28    16 ms BLACK op 1.00 calls 0 hold STEP draw batches 15
+   29    20 ms BLACK op 1.00 calls 0 hold STEP draw batches 18 [unit place 5.8]
+   30    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12
+   31    18 ms BLACK op 1.00 calls 0 hold STEP draw batches 17 [unit array 14.5], uploads 1 (12288 KB), 1 first uploads by draws behind black: tex 512x512 outside a draw
+   32    25 ms BLACK op 1.00 calls 0 hold STEP draw batches 24 [unit array 23.6], SEC other sim 24 · camera 0 · physics 0, uploads 1 (9984 KB), 1 first uploads by draws behind black: tex 256x256 outside a draw
+   33    13 ms BLACK op 1.00 calls 0 hold +1 textures, STEP draw batches 12, uploads 2 (2304 KB), 2 first uploads by draws behind black: tex 128x128 outside a draw · tex 64x64 outside a draw
+   34    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12 [unit cell part 5.7]
+   35    14 ms BLACK op 1.00 calls 0 hold STEP draw batches 13
+   36    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12
+   37    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12
+   38    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 13 [unit cell part 8.8]
+   39    15 ms BLACK op 1.00 calls 0 hold STEP draw batches 14 [unit cell 8.4]
+   40    23 ms BLACK op 1.00 calls 0 hold STEP draw batches 22 [unit cell 15.2], SEC other sim 23 · camera 0 · physics 0
+   41    19 ms BLACK op 1.00 calls 0 hold STEP draw batches 17 [unit cell 5.6]
+   42    13 ms BLACK op 1.00 calls 0 hold STEP draw batches 12
+   43     4 ms BLACK op 1.00 calls 0 hold draw batches built 3 ms, STEP draw batches 4
+   44     1 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   45    58 ms BLACK op 1.00 calls 0 hold +92 geometries, STEP geometry 50, SEC other sim 58 · submit shadow 0 · camera 0 · physics 0, uploads 326 (7885 KB)
+   46     7 ms BLACK op 1.00 calls 0 hold +18 geometries, STEP geometry 7, uploads 57 (591 KB)
+   47     9 ms BLACK op 1.00 calls 0 hold +58 geometries, STEP geometry 8, uploads 178 (4092 KB)
+   48    20 ms BLACK op 1.00 calls 0 hold +96 geometries, STEP geometry 19, uploads 488 (43707 KB)
+   49     8 ms BLACK op 1.00 calls 0 hold STEP geometry 7, uploads 1 (22 KB)
+   50    16 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 16 [unit cell part 6.6], 68 first uploads by draws behind black: DIFF{r undefined→1 g undefined→1 b undefined→1 rough undefined→0.36 metal undefined→0.75 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→1 offx undefined→0 offy undefined→0 repx undefined→1 repy undefined→1 rot undefined→0 texVer undefined→1 srcVer undefined→3 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[] mat a6d073 tex bbd5cb left draw batch: Mesh:zeelich at 2390.8,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{ lv 0 now undefined} BUMPS[] mat b1c46b tex 2dc888 left draw batch: Mesh:zeelich at 2390.8,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{ lv 0 now undefined} BUMPS[] mat b1c46b tex 2dc888 left draw batch: Mesh:zeelich at 2390.7,8.6,8.3 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{r undefined→0.04231141061442144 g undefined→0.05126945836711539 b undefined→0.06480326668529614 rough undefined→0.5 metal undefined→0.55 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→0 offx undefined→0 offy undefined→0 repx undefined→0 repy undefined→0 rot undefined→0 texVer undefined→0 srcVer undefined→0 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[] mat 30356c tex - left draw batch: Mesh:zeelich at 2390.8,9.0,8.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · DIFF{r undefined→0.04231141061442144 g undefined→0.05126945836711539 b undefined→0.06480326668529614 rough undefined→0.5 metal undefined→0.55 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→0 offx undefined→0 offy undefined→0 repx undefined→0 repy undefined→0 rot undefined→0 texVer undefined→0 srcVer undefined→0 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[] mat 30356c tex - left draw batch: Mesh:zeelich at 2390.8,9.0,8.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color 3a4048 emissive 000000 · DIFF{r undefined→1 g undefined→1 b undefined→1 rough undefined→0.55 metal undefined→0.3 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→1 offx undefined→0 offy undefined→0 repx undefined→1 repy undefined→1 rot undefined→0 texVer undefined→1 srcVer undefined→5 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat b82266 tex 78275c left draw batch: Mesh:zeelich at 2389.6,12.7,11.6 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{r undefined→0.8713671191959567 g undefined→0.5775804404214573 b undefined→0.5271151256969157 rough undefined→0.4 metal undefined→0.6 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→1 offx undefined→0 offy undefined→0 repx undefined→1 repy undefined→1 rot undefined→0 texVer undefined→1 srcVer undefined→3 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[] mat 1f237a tex bbd5cb left draw batch: Mesh:zeelich at 2389.3,12.7,11.2 [moved] mat MeshStandardMaterial opacity 1 transparent false color f0c8c0 emissive 000000 · DIFF{r undefined→0.5775804404214573 g undefined→0.8713671191959567 b undefined→0.9386857284565036 rough undefined→0.15 metal undefined→0.1 vis undefined→1 opac undefined→1 emR undefined→0.014443843592229466 transp undefined→0 map undefined→1 offx undefined→0.04000000000000002 offy undefined→0.026666666666666682 repx undefined→0.6 repy undefined→0.6 rot undefined→0 texVer undefined→3 srcVer undefined→5 emG undefined→0.06480326668529614 emB undefined→0.11697066774917994 emI undefined→0.4 lv 1 now 1} BUMPS[] mat bace7b tex c9e7c2 left draw batch: Mesh:zeelich at 2376.0,6.5,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · DIFF{r undefined→0.5775804404214573 g undefined→0.8713671191959567 b undefined→0.9386857284565036 rough undefined→0.15 metal undefined→0.1 vis undefined→1 opac undefined→1 emR undefined→0.014443843592229466 transp undefined→0 map undefined→1 offx undefined→0.04000000000000002 offy undefined→0.026666666666666682 repx undefined→0.6 repy undefined→0.6 rot undefined→0 texVer undefined→3 srcVer undefined→5 emG undefined→0.06480326668529614 emB undefined→0.11697066774917994 emI undefined→0.4 lv 1 now 1} BUMPS[] mat bace7b tex c9e7c2 left draw batch: Mesh:zeelich at 2376.0,7.8,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color c8f0f8 emissive 204860 · DIFF{r undefined→1 g undefined→1 b undefined→1 rough undefined→0.36 metal undefined→0.75 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→1 offx undefined→0 offy undefined→0 repx undefined→1 repy undefined→1 rot undefined→0 texVer undefined→1 srcVer undefined→3 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[] mat a6d073 tex bbd5cb left draw batch: Mesh:zeelich at 2393.7,19.6,-16.9 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{r undefined→1 g undefined→1 b undefined→1 rough undefined→0.55 metal undefined→0.3 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→1 offx undefined→0 offy undefined→0 repx undefined→1 repy undefined→1 rot undefined→0 texVer undefined→1 srcVer undefined→5 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat b82266 tex 78275c left draw batch: Mesh:zeelich at 2450.0,13.0,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{r undefined→1 g undefined→1 b undefined→1 rough undefined→0.36 metal undefined→0.75 vis undefined→1 opac undefined→1 emR undefined→0 transp undefined→0 map undefined→1 offx undefined→0 offy undefined→0 repx undefined→1 repy undefined→1 rot undefined→0 texVer undefined→1 srcVer undefined→3 emG undefined→0 emB undefined→0 emI undefined→1 lv 1 now 1} BUMPS[] mat a6d073 tex bbd5cb left draw batch: Mesh:zeelich at 2450.0,13.7,0.0 [moved] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   51    13 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 12 [unit cell part 7.2]
+   52    14 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 13 [unit cell part 5.6]
+   53    13 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches settle 12
+   54    23 ms BLACK op 1.00 calls 0 hold -2 geometries, 68 pieces left draw batches, STEP draw batches settle 12, SEC other sim 23 · camera 0 · physics 0 · submit shadow 0, uploads 70 (13229 KB), 1 first uploads by draws behind black: DIFF{ lv 0 now undefined} BUMPS[] mat b1c46b tex 2dc888 left draw batch: Mesh:zeelich at 2388.0,6.0,12.2 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   55     1 ms BLACK op 1.00 calls 0 hold STEP batch meshes 0
+   56    10 ms BLACK op 1.00 calls 0 hold +79 textures, STEP textures 9, uploads 81 (13181 KB), 79 first uploads by draws behind black: 3× tex 512x512 outside a draw · 16× tex 128x128 outside a draw · 3× tex 64x64 outside a draw · 7× tex 256x256 outside a draw · 2× tex 512x384 outside a draw · 2× tex 256x160 outside a draw · 2× tex 256x128 outside a draw · tex 256x96 outside a draw · tex 128x160 outside a draw · 3× tex 128x64 outside a draw · tex 256x80 outside a draw · tex 512x256 outside a draw
+   57     2 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   58    16 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 14 [unit compile 5.5]
+   59    15 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 14 (+1 prog) [unit compile 5.4]
+   60    18 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 17 [unit compile 6.9]
+   61    13 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 12 [unit compile 6.8]
+   62    11 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 10 [unit compile 6.6]
+   63     1 ms BLACK op 1.00 calls 0 hold 
+   64     1 ms BLACK op 1.00 calls 0 hold 
+   65     1 ms BLACK op 1.00 calls 0 hold 
+   66     2 ms BLACK op 1.00 calls 0 hold 
+   67     1 ms BLACK op 1.00 calls 0 hold 
+   68     1 ms BLACK op 1.00 calls 0 hold 
+   69     1 ms BLACK op 1.00 calls 0 hold 
+   70    82 ms BLACK op 1.00 calls 212 cache full build, +16 geometries, +1 textures, SEC submit main 51 · submit other 27 · submit shadow 3 · other sim 1, uploads 228 (4265 KB), 1 first uploads by draws behind black: tex 8052x1 drawing Skinned:?
+   71    10 ms BLACK op 1.00 calls 174 uploads 15 (39 KB)
+   72     8 ms view  op 0.90 calls 174 uploads 15 (39 KB)
+   73     8 ms view  op 0.81 calls 174 uploads 15 (39 KB)
+   74    11 ms view  op 0.71 calls 174 uploads 15 (39 KB)
+   75     5 ms view  op 0.62 calls 174 uploads 15 (39 KB)
+   76     6 ms view  op 0.52 calls 174 uploads 15 (39 KB)
+   77     6 ms view  op 0.43 calls 174 uploads 15 (39 KB)
+   78     5 ms view  op 0.33 calls 174 uploads 15 (39 KB)
+   79     5 ms view  op 0.24 calls 174 uploads 15 (39 KB)
+   80     6 ms view  op 0.14 calls 174 uploads 15 (39 KB)
+(flush before citadel: 94306 ms)
+citadel (cold): 113 frames, 50612 ms in all, 344 ms of it with the screen black
+    0    14 ms view  op 0.10 calls 177 uploads 18 (78 KB)
+    1     5 ms view  op 0.19 calls 177 uploads 18 (78 KB)
+    2    17 ms view  op 0.29 calls 177 uploads 18 (78 KB)
+    3     8 ms view  op 0.38 calls 177 uploads 18 (78 KB)
+    4    19 ms view  op 0.48 calls 177 uploads 18 (78 KB)
+    5     8 ms view  op 0.57 calls 177 uploads 18 (78 KB)
+    6    12 ms view  op 0.67 calls 177 uploads 18 (78 KB)
+    7    11 ms view  op 0.76 calls 177 uploads 18 (78 KB)
+    8    12 ms view  op 0.86 calls 177 uploads 18 (78 KB)
+    9    10 ms view  op 0.95 calls 177 uploads 18 (78 KB)
+   10     9 ms BLACK op 1.00 calls 0 hold 
+   11     5 ms BLACK op 1.00 calls 0 hold STEP shadow batches 0
+   12    35 ms BLACK op 1.00 calls 0 hold -1 geometries, STEP draw batches back 32 [unit cell part 24.2], SEC other sim 35 · camera 0 · physics 0
+   13    11 ms BLACK op 1.00 calls 0 hold STEP draw batches back 10 [unit cell part 8.5]
+   14     3 ms BLACK op 1.00 calls 0 hold STEP geometry 0
+   15    20 ms BLACK op 1.00 calls 0 hold +1 geometries, STEP geometry 19, uploads 29 (385 KB)
+   16    29 ms BLACK op 1.00 calls 0 hold STEP geometry 25, SEC other sim 29 · camera 0 · submit shadow 0 · physics 0, uploads 6 (39 KB)
+   17    17 ms BLACK op 1.00 calls 0 hold +26 geometries, STEP geometry 16, uploads 36 (1377 KB)
+   18    17 ms BLACK op 1.00 calls 0 hold +43 geometries, STEP geometry 16, uploads 58 (5884 KB)
+   19    12 ms BLACK op 1.00 calls 0 hold STEP geometry 11, uploads 4 (39 KB)
+   20     8 ms BLACK op 1.00 calls 0 hold STEP draw batches settle 2
+   21    10 ms BLACK op 1.00 calls 0 hold STEP batch meshes 9, uploads 3 (39 KB)
+   22     6 ms BLACK op 1.00 calls 0 hold STEP textures 5, uploads 2 (1 KB)
+   23     1 ms BLACK op 1.00 calls 0 hold STEP shadow programs 0
+   24    15 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 14
+   25    14 ms BLACK op 1.00 calls 0 hold +1 programs, STEP shader warm-up 13 (+1 prog) [unit program 7.4]
+   26    13 ms BLACK op 1.00 calls 0 hold STEP shader warm-up 12
+   27     1 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30     1 ms BLACK op 1.00 calls 0 hold 
+   31     1 ms BLACK op 1.00 calls 0 hold 
+   32     1 ms BLACK op 1.00 calls 0 hold 
+   33     1 ms BLACK op 1.00 calls 0 hold 
+   34     1 ms BLACK op 1.00 calls 0 hold 
+   35     1 ms BLACK op 1.00 calls 0 hold 
+   36     1 ms BLACK op 1.00 calls 0 hold 
+   37     1 ms BLACK op 1.00 calls 0 hold 
+   38     1 ms BLACK op 1.00 calls 0 hold 
+   39     1 ms BLACK op 1.00 calls 0 hold 
+   40    91 ms BLACK op 1.00 calls 275 cache full build, -1 geometries, 12 pieces left draw batches, SEC submit other 58 · submit main 21 · other sim 10 · submit shadow 2, uploads 94 (5666 KB), 13 first uploads by draws behind black: DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat c58457 tex 78275c left draw batch: Mesh:station at -24.5,18.8,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat 965074 tex 78275c left draw batch: Mesh:station at -24.5,24.6,-70.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color f0c040 emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat f19b50 tex 78275c left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat e8cdb4 tex 78275c left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat 57cde4 tex 78275c left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat c58457 tex 78275c left draw batch: Mesh:station at -32.8,15.9,-55.5 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat f19b50 tex 78275c left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color e8f4f2 emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat e8cdb4 tex 78275c left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 8ab4b4 emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat 57cde4 tex 78275c left draw batch: Mesh:station at -25.7,15.9,-55.4 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color 80a8a8 emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat c58457 tex 78275c left draw batch: Mesh:station at -76.0,0.0,-101.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat c58457 tex 78275c left draw batch: Mesh:pipeline at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000 · DIFF{srcVer 3→5 lv 1 now 2} BUMPS[@zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at ah.copy (vendor/three/build/three.core.min.js:6:33124) < at ah.clone (vendor/three/build/three.core.min.js:6:32255) < at twinOf (src/engine/merge.js:53:24) < at recipe (src/engine/drawbatch.js:110:201) ;; @zeelich at set needsUpdate (vendor/three/build/three.core.min.js:6:34962) < at twinOf (src/engine/merge.js:53:182) < at recipe (src/engine/drawbatch.js:110:201) < at warmLayers (src/engine/drawbatch.js:793:62) < at warmLayers.next (<anonymous>)] mat f5201a tex 78275c left draw batch: Mesh:harbour-zeelich at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color ffffff emissive 000000
+   41    21 ms BLACK op 1.00 calls 228 SEC submit main 14 · other sim 5 · submit other 2 · submit shadow 1, uploads 27 (57 KB)
+   42    16 ms view  op 0.90 calls 228 uploads 27 (57 KB)
+   43     6 ms view  op 0.81 calls 228 uploads 27 (57 KB)
+   44     7 ms view  op 0.71 calls 228 uploads 27 (57 KB)
+   45     7 ms view  op 0.62 calls 228 uploads 27 (57 KB)
+   46     7 ms view  op 0.52 calls 228 uploads 27 (57 KB)
+   47     6 ms view  op 0.43 calls 228 uploads 27 (57 KB)
+   48     6 ms view  op 0.33 calls 228 uploads 27 (57 KB)
+   49     7 ms view  op 0.24 calls 228 uploads 27 (57 KB)
+   50     6 ms view  op 0.14 calls 228 uploads 27 (57 KB)
+another browser ran beside it for 172s; load 4.01 3.60 3.66

@@ -39,6 +39,12 @@ export const LOOSE = { n: typeof location !== 'undefined' && /[?&]loose/.test(lo
 export const OVERLAP = { on: !(typeof location !== 'undefined' && /[?&]nooverlap/.test(location.search)) };
 const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
 const _m = new THREE.Matrix4(), _nm = new THREE.Matrix3(), _v = new THREE.Vector3(), _c = new THREE.Vector3();
+// ARRIVAL-2: the start of the unit runFor is running (Infinity outside one: a build run to its end never yields early).
+// The builds' long loops (overlapRuns' fixed draws, parts and placing, the pieces, a cell's merge) also end their unit
+// once it has run UNIT.ms, whatever their count: under load one 32-part placing unit was 113 ms here (Zeelich), a
+// cut piece's vertices 34 ms (the tavern). The same work in the same order; only where the slices fall moves.
+export const UNIT = { t0: Infinity, ms: 4 };
+const long = () => performance.now() - UNIT.t0 > UNIT.ms;
 const BASE_OBR = THREE.Object3D.prototype.onBeforeRender;
 
 const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
@@ -195,7 +201,7 @@ class Area {
     yield 'scan';
     let y = 0;
     for (const o of scan) {
-      if ((++y & 31) === 0) yield 'pieces';
+      if ((++y & 31) === 0 || long()) yield 'pieces';
       if (!o.parent || !eligible(o, root)) continue;   // (removed or changed since the list was made: as if not met)
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       _c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
@@ -216,7 +222,7 @@ class Area {
       const n = new Map(), keyOf0 = (e) => kindKey(e.o, e.F0, e.flip) + '|' + Math.floor(e.cx / this.cell) + ',' + Math.floor(e.cz / this.cell);
       for (const e of found) { const k = keyOf0(e); n.set(k, (n.get(k) || 0) + 1); }
       for (const e of found) {
-        if ((++y & 31) === 0) yield 'order';
+        if ((++y & 31) === 0 || long()) yield 'order';
         const g = e.o.geometry, nt = Math.floor((g.index ? g.index.count : g.attributes.position.count) / 3);
         const cut = nt >= SPLIT_TRIS && g.boundingSphere.radius * e.o.matrixWorld.getMaxScaleOnAxis() > this.cell * SPLIT;
         const F = recipe(e.o, true);
@@ -248,7 +254,7 @@ class Area {
     P.order = performance.now() - tq; tq = performance.now();
     yield 'order';
     for (const { o, flip, F0, F: F1 } of found) {
-      if ((++y & 15) === 0) yield 'assign';
+      if ((++y & 15) === 0 || long()) yield 'assign';
       const g = o.geometry, F = arrays && TEXARRAY.on && fold ? (exact ? F1 || F0 : recipe(o, true)) : F0;
       const mat = F ? F.twin : o.material, sig = F ? (F.arr ? 'fold:arr' + (F.gap !== undefined ? ':' + F.gap : '') : F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
       const M = { o, fold: F, pre: F?.pre || null, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, lv: F ? lookVer(o.material, -1) : 0, okF: -1, own: ownUpdate(o, root), geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
@@ -325,13 +331,15 @@ class Area {
     // the draws that stay where they are
     const arr = new Set(); for (const e of found) if (e.F?.arr) arr.add(e.o);
     const twinIds = new Map(); for (const e of found) if (!e.F?.arr && e.F0) twinIds.set(e.o, e.F0.twin.id);
-    root.traverse((o) => {
-      if (arr.has(o) || !(o.isMesh || o.isLine || o.isPoints) || !o.material) return;
-      const box = boxOf(o); if (!box) return;
+    // (ARRIVAL-2: the objects listed first, in the walk's order, then their boxes in units: Zeelich's walk was one unit)
+    const fixed = []; root.traverse((o) => { if (!arr.has(o) && (o.isMesh || o.isLine || o.isPoints) && o.material) fixed.push(o); });
+    for (let i = 0; i < fixed.length; i++) {
+      if ((i & 63) === 63 && long()) yield 'fixed draws';
+      const o = fixed[i], box = boxOf(o); if (!box) continue;
       const ids = []; for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (!m.transparent) ids.push(m.id);
       if (twinIds.has(o)) ids.push(twinIds.get(o));
       for (const id of ids) put({ fixed: true, ord: id, box, ro: o.renderOrder, seen: 0 });
-    });
+    }
     D.fixedMs = performance.now() - tp;
     yield 'fixed draws';
     tp = performance.now();
@@ -340,7 +348,7 @@ class Area {
     let y = 0;
     for (const e of found) {
       if (!e.F?.arr) continue;
-      if ((++y & 15) === 0) yield 'parts';
+      if ((++y & 15) === 0 || long()) yield 'parts';
       const o = e.o, g = o.geometry, W = o.matrixWorld, I = g.index, Pp = g.attributes.position, nt = Math.floor((I ? I.count : Pp.count) / 3);
       const key = kindKey(o, e.F, e.flip); e.F.pre = [];
       if (!(nt >= SPLIT_TRIS && g.boundingSphere.radius * W.getMaxScaleOnAxis() > cell * SPLIT)) {
@@ -351,10 +359,10 @@ class Area {
       // (the same rule and cells as assign(); the vertices in world space once, without allocations)
       const n = Pp.count, X = new Float64Array(n * 3), el = W.elements, Ia = I?.array;
       const raw = !Pp.normalized && Pp.itemSize === 3 ? Pp.array : null;
-      for (let i = 0; i < n; i++) { const x = raw ? raw[i * 3] : Pp.getX(i), y = raw ? raw[i * 3 + 1] : Pp.getY(i), z = raw ? raw[i * 3 + 2] : Pp.getZ(i); X[i * 3] = el[0] * x + el[4] * y + el[8] * z + el[12]; X[i * 3 + 1] = el[1] * x + el[5] * y + el[9] * z + el[13]; X[i * 3 + 2] = el[2] * x + el[6] * y + el[10] * z + el[14]; }
+      for (let i = 0; i < n; i++) { if ((i & 4095) === 4095 && long()) yield 'parts'; const x = raw ? raw[i * 3] : Pp.getX(i), y = raw ? raw[i * 3 + 1] : Pp.getY(i), z = raw ? raw[i * 3 + 2] : Pp.getZ(i); X[i * 3] = el[0] * x + el[4] * y + el[8] * z + el[12]; X[i * 3 + 1] = el[1] * x + el[5] * y + el[9] * z + el[13]; X[i * 3 + 2] = el[2] * x + el[6] * y + el[10] * z + el[14]; }
       const lists = new Map();
       for (let t = 0; t < nt; t++) {
-        if ((t & 8191) === 8191) yield 'parts';   // (ARRIVAL-STEPS: a large piece's triangles, in steps)
+        if ((t & 8191) === 8191 || ((t & 1023) === 1023 && long())) yield 'parts';   // (ARRIVAL-STEPS: a large piece's triangles, in steps)
         const a = Ia ? Ia[t * 3] : t * 3, b = Ia ? Ia[t * 3 + 1] : t * 3 + 1, c = Ia ? Ia[t * 3 + 2] : t * 3 + 2;
         let x = (X[a * 3] + X[b * 3] + X[c * 3]) / 3, z = (X[a * 3 + 2] + X[b * 3 + 2] + X[c * 3 + 2]) / 3;
         if (!Number.isFinite(x + z)) { x = e.cx; z = e.cz; }
@@ -410,7 +418,7 @@ class Area {
     const open = new Map(); let runs = 0;
     yield 'parts';
     for (const p of parts) {
-      if ((++y & 31) === 0) yield 'place';
+      if ((++y & 31) === 0 || long()) yield 'place';
       const gk = p.key + '|' + p.cc;
       let R = open.get(gk);
       D.parts++;
@@ -496,17 +504,19 @@ class Area {
       const map = new Int32Array(cnt).fill(-1), from = [], IA = I ? I.array : null;
       for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = IA ? IA[T[k] * 3 + j] : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
       parts.push({ M, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
-      if ((acc += T.length) > 4096) { acc = 0; yield 'cell part'; }
+      if ((acc += T.length) > 4096 || long()) { acc = 0; yield 'cell part'; }
     }
-    const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; }
+    // (ARRIVAL-2: a large cell's arrays made one a unit once the unit is long: fresh memory, megabytes at a time)
+    const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; if (nv > 4096 && long()) yield 'cell part'; }
     const index = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
     let io = 0;
     for (const { M, T, map, from, vo } of parts) {
       const g = M.geo, I = g.index, IA = I ? I.array : null, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
-      if ((acc += nf) > 4096) { acc = 0; yield 'cell part'; }
+      if ((acc += nf) > 4096 || long()) { acc = 0; yield 'cell part'; }
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
-      // (ARRIVAL-STEPS: a large piece's attributes one a step, its matrices its own meanwhile)
-      const big = nf >= 8192, Mm = big ? _m.clone() : _m, Nm = big ? _nm.clone() : _nm;
+      // (ARRIVAL-STEPS: a large piece's attributes one a step, its matrices its own meanwhile; ARRIVAL-2: a piece of 1 024
+      //  vertices or more also between its attributes once the unit is long)
+      const big = nf >= 8192, part = nf >= 1024, Mm = part ? _m.clone() : _m, Nm = part ? _nm.clone() : _nm;
       for (const n of names) {
         const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
         // (PERF-CALLS: positions and normals without a call per vertex — three's own arithmetic, in its order, so the
@@ -546,7 +556,7 @@ class Area {
         else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
         else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
         else { const sz = a.itemSize, A = a.array; for (let k = 0; k < nf; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
-        if (big) yield 'cell part';
+        if (big || (part && long())) yield 'cell part';
       }
       if (!T) {
         if (I) { const X = I.array, n = I.count - (I.count % 3); for (let i = 0; i < n; i += 3) { index[io + i] = X[i] + vo; index[io + i + 1] = X[C.flip ? i + 2 : i + 1] + vo; index[io + i + 2] = X[C.flip ? i + 1 : i + 2] + vo; } io += n; }
@@ -771,11 +781,13 @@ export class DrawBatch {
 export function runFor(it, ms, out) {
   const t0 = performance.now();
   let um = 0, ul = '', r;
-  for (;;) {
-    const u0 = performance.now(); r = it.next(); const du = performance.now() - u0;
-    if (du > um) { um = du; ul = r.done ? 'end' : r.value || '?'; }
-    if (r.done || performance.now() - t0 >= ms) break;
-  }
+  try {
+    for (;;) {
+      const u0 = (UNIT.t0 = performance.now()); r = it.next(); const du = performance.now() - u0;
+      if (du > um) { um = du; ul = r.done ? 'end' : r.value || '?'; }
+      if (r.done || performance.now() - t0 >= ms) break;
+    }
+  } finally { UNIT.t0 = Infinity; }
   if (out) out.unit = { ms: +um.toFixed(1), label: ul };
   return r;
 }

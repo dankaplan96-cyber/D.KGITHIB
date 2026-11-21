@@ -1,0 +1,26 @@
+ 03:28:31 up 17:28,  0 user,  load average: 5.41, 7.10, 7.25
+PASS A staged batches = one-step batches (Desert Island: shadow cells, members, vertices, indices; draw batches, pieces, vertices, indices) {"staged":{"shadowCells":108,"shadowMembers":287,"shadowSolo":56,"shadowVerts":412996,"shadowIdx":551595,"drawBatches":39,"drawPieces":323,"drawVerts":397758,"drawIdx":524610},"one":{"shadowCells":108,"shadowMembers":287,"shadowSolo":56,"shadowVerts":412996,"shadowIdx":551595,"drawBatches":39,"drawPieces":323,"drawVerts":397758,"drawIdx":524610},"slices":{"shadow":13,"shadowMax":42,"draw":15,"drawMax":4851},"oneStepMs":{"shadow":145,"draw":77}}
+PASS A the staged builds came in several slices {"shadow":13,"shadowMax":42,"draw":15,"drawMax":4851}
+  zeelich: 163 frames, 132 black · 120 steps · shadow batches 10×, longest 45 ms [large piece 42.6] · texture layers 4×, longest 56227 ms · draw batches 65×, longest 75 ms [parts 66.2] · geometry 6×, longest 72 ms · draw batches settle 27×, longest 23 ms [cell part 11.4] · batch meshes 1×, longest 0 ms · textures 1×, longest 59 ms · shadow programs 1×, longest 0 ms · shader warm-up 5×, longest 15 ms [compile 4.6] (+1 with programs)
+    steps that compiled programs: shader warm-up 14 ms (+1 program)
+PASS B zeelich: the arrival came through (in the area, the screen revealed) {"room":"zeelich","revealed":true}
+FAIL B zeelich: every batch / settle / layer / warm-up slice ≤ 40 ms ["shadow batches 45 (unit large piece 42.6 ms)","draw batches 75 (unit parts 66.2 ms)"]
+PASS B zeelich: no batch build or piece leaving a batch on the first 30 frames in view []
+PASS B zeelich: its shadow and draw batches built in several slices {"shadow batches":{"n":10,"max":45,"total":156,"prog":0,"u":"large piece 42.6"},"texture layers":{"n":4,"max":56227,"total":56258,"prog":0},"draw batches":{"n":65,"max":75,"total":1032,"prog":0,"u":"parts 66.2"},"geometry":{"n":6,"max":72,"total":158,"prog":0},"draw batches settle":{"n":27,"max":23,"total":413,"prog":0,"u":"cell part 11.4"},"batch meshes":{"n":1,"max":0,"total":0,"prog":0},"textures":{"n":1,"max":59,"total":59,"prog":0},"shadow programs":{"n":1,"max":0,"total":0,"prog":0},"shader warm-up":{"n":5,"max":15,"total":60,"prog":1,"u":"compile 4.6"}}
+  desert: 93 frames, 62 black · 43 steps · shadow batches 10×, longest 16 ms [cell 6.9] · texture layers 1×, longest 6 ms · draw batches 12×, longest 16 ms [cell part 8.5] · geometry 6×, longest 71 ms · draw batches settle 5×, longest 77 ms [cell part 77] · batch meshes 1×, longest 0 ms · textures 1×, longest 4 ms · shadow programs 1×, longest 0 ms · shader warm-up 6×, longest 20 ms [compile 12.2] (+1 with programs)
+    steps that compiled programs: shader warm-up 20 ms (+1 program)
+PASS B desert: the arrival came through (in the area, the screen revealed) {"room":"desert","revealed":true}
+FAIL B desert: every batch / settle / layer / warm-up slice ≤ 40 ms ["draw batches settle 45 (unit cell part 34.6 ms)","draw batches settle 77 (unit cell part 77 ms)"]
+PASS B desert: no batch build or piece leaving a batch on the first 30 frames in view []
+  tavern: 83 frames, 52 black · 34 steps · shadow batches 5×, longest 17 ms [large piece 13.3] · texture layers 5×, longest 132755 ms · draw batches 10×, longest 59 ms [cell part 58.7] · geometry 6×, longest 23 ms · draw batches settle 1×, longest 0 ms [check 0.1] · batch meshes 1×, longest 0 ms · textures 1×, longest 4 ms · shadow programs 1×, longest 37 ms · shader warm-up 4×, longest 18 ms [compile 8.2]
+PASS B tavern: the arrival came through (in the area, the screen revealed) {"room":"tavern","revealed":true}
+FAIL B tavern: every batch / settle / layer / warm-up slice ≤ 40 ms ["draw batches 59 (unit cell part 58.7 ms)"]
+PASS B tavern: no batch build or piece leaving a batch on the first 30 frames in view []
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 9 passed, 3 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: FAIL (3 functional)
+3 FAILED
+ 03:33:35 up 17:33,  0 user,  load average: 8.15, 7.72, 7.49

@@ -65,7 +65,9 @@ export function* flushArraysSteps() {
 function* flushOne(A) {
   {
     A.dirty = false;
-    const tex = new THREE.DataArrayTexture(A.data.slice(0, A.n * A.w * A.h * 4), A.w, A.h, A.n);
+    // (ARRIVAL-2: a view of the array's own data, not a copy: layerOf only writes layers past A.n, and a growth makes a new
+    //  buffer, so the texels this texture holds never change. The copy was 5–34 ms of one step here, 13 MB at a time)
+    const tex = new THREE.DataArrayTexture(A.data.subarray(0, A.n * A.w * A.h * 4), A.w, A.h, A.n);
     tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.anisotropy = A.aniso;
     tex.minFilter = THREE.LinearMipmapLinearFilter; tex.magFilter = THREE.LinearFilter; tex.generateMipmaps = true; tex.flipY = false; tex.unpackAlignment = 4;
     tex.name = `world.textureArray ${A.key} ×${A.n}`; tex.needsUpdate = true;
