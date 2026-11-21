@@ -16,14 +16,19 @@ import { restoreJoints } from './handik.js';
 // lid: the eyes' opening (1 open; the blink is 0.12); smile: the mouth's corners (+ up, − down); wide: its width.
 // The brief's five — neutral, curious, concerned, pleased, determined/annoyed — and the voice's other intentions
 // (voicemeta.js) mapped onto them: uncertain (a softer concern), urgent (determined), relieved (pleased).
+// FACE-2 (P86): the expression carried by the head and the chest as well, for the dialogue camera's ~120 px head (radians,
+// added to the standing poses only — idle, talk, listen —, eased in and out with the face; Rig.update):
+// nod: the head down (+) or the chin up (−); tilt: the head to one side; bow: the chest forward (+) or drawn up (−).
+// Curious: a tilt; concerned: the head and the chest down; determined: the chin and the chest up; pleased: a small lift.
+// And the brows, eyes and mouth a little stronger where curious and concerned were alike at that size.
 export const FACES = {
-  neutral: { up: 0, cross: 0, sad: 0, lid: 1, smile: 0, wide: 1 },
-  curious: { up: 0.85, cross: 0, sad: 0, lid: 1.1, smile: 0.1, wide: 0.94 },
-  concerned: { up: 0.15, cross: 0, sad: 1, lid: 0.94, smile: -0.7, wide: 0.95 },
-  uncertain: { up: 0.35, cross: 0, sad: 0.55, lid: 1, smile: -0.3, wide: 0.95 },
-  pleased: { up: 0.3, cross: 0, sad: 0, lid: 0.84, smile: 1, wide: 1.1 },
-  determined: { up: 0, cross: 0.8, sad: 0, lid: 0.82, smile: -0.15, wide: 0.92 },
-  annoyed: { up: 0, cross: 1, sad: 0, lid: 0.74, smile: -0.55, wide: 0.9 },
+  neutral: { up: 0, cross: 0, sad: 0, lid: 1, smile: 0, wide: 1, nod: 0, tilt: 0, bow: 0 },
+  curious: { up: 1, cross: 0, sad: 0, lid: 1.16, smile: 0.18, wide: 0.92, nod: -0.04, tilt: 0.2, bow: 0.03 },
+  concerned: { up: 0.25, cross: 0, sad: 1, lid: 0.9, smile: -0.95, wide: 0.92, nod: 0.2, tilt: -0.04, bow: 0.08 },
+  uncertain: { up: 0.4, cross: 0, sad: 0.6, lid: 1, smile: -0.35, wide: 0.95, nod: 0.08, tilt: -0.12, bow: 0.03 },
+  pleased: { up: 0.35, cross: 0, sad: 0, lid: 0.84, smile: 1, wide: 1.12, nod: -0.08, tilt: 0.06, bow: -0.04 },
+  determined: { up: 0, cross: 0.85, sad: 0, lid: 0.82, smile: -0.2, wide: 0.92, nod: -0.13, tilt: 0, bow: -0.06 },
+  annoyed: { up: 0, cross: 1, sad: 0, lid: 0.74, smile: -0.6, wide: 0.9, nod: -0.06, tilt: -0.07, bow: -0.03 },
 };
 FACES.urgent = FACES.determined; FACES.relieved = FACES.pleased;
 
@@ -1632,6 +1637,9 @@ export class Rig {
     j.hips.position.y = damp(j.hips.position.y, this.hipsRest + (hipsY - 0.95) * (this.hipsRest / 0.95), R, dt);
     this.hipsRestZ ??= j.hips.position.z;
     j.hips.position.z = damp(j.hips.position.z, this.hipsRestZ + hipsZ * (this.hipsRest / 0.95), R, dt);
+    // (FACE-2: the expression's head and chest, standing only — idle, talk, listen; eased in and out as it stands or moves)
+    this._faceW = damp(this._faceW || 0, a === 'idle' || a === 'talk' || a === 'listen' ? 1 : 0, 6, dt);
+    if (this._faceW > 1e-3) { const F = this.face, w = this._faceW; headX += F.nod * w; headZ += F.tilt * w; torsoX += F.bow * w; }
     set(j.torso, torsoX, 'x', Ru); set(j.torso, torsoY, 'y', Ru); set(j.torso, torsoZ, 'z', 8);
     set(j.head, headX, 'x', 10); set(j.head, headY, 'y', 8); set(j.head, headZ, 'z', 8);
     set(j.body, bodyRotX, 'x', ko ? 40 : 8);
