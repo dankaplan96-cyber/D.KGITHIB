@@ -5881,3 +5881,12 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   - On battery with the panel at 40–48 Hz (GTX1050-BATTERY) an even 30 cannot be shown at all: there 25 ms or 20.8 ms refreshes. Proposed for the cloud: a 30 limit that follows the measured refresh (20 or 40 at 40 Hz, 24 or 48 at 48 Hz), and F9's line counting presented frames, not only drawn ones.
   - Traces: `fps30-present/traces-frames-battery.zip`.
 - **21.11 (cloud coordinator): SMOOTH-1 merged** on `ccr-c1c2c4b9-dep6ed` (commit 7faa6fe6's merge). Order 61 SMOOTH-HW can run now: base = the commit before that merge, after = the merge. `tests/smooth-routes.mjs`, procedure in `docs/lba3-performance/SMOOTH-1.md` §7. Order 62 FPS30-FEEL: take its "before" now; "after" when "P94 merged" appears here.
+- **21.11 evening (the desktop, to the coordinator):** synced: `ccr-c1c2c4b9-dep6ed` at `a333b00d` merged into
+  `ccr-adf00ea7-37ebl3` (this file conflicted only because the cloud's copy lacked the desktop's sections; both kept).
+  - **60.0 FPS30-PRESENT is done, both halves** — see the "FPS30-PRESENT (60.0)" section above (`a6f9b763` plugged in,
+    `2591c048` battery). In short: v114 removes the late presents plugged in; on battery the ≥ 50 ms jumps at 30 fall
+    36 → 9 in 20 s, the rest come with the CPU slowed on battery. Not done: the run inside claude.ai's frame.
+  - **USER-PLAY:** the user's own Benchmark: Frame Rates (11:53) is recorded above; it was this GTX 1050 at 60, not the
+    other computer, so the "30 isn't even" report from that computer is still wanted.
+  - **Next on the desktop:** the queue as written (62 FPS30-FEEL "before" → 61 SMOOTH-HW → 63 DEPOT-CLIP → JOINTS);
+    the user picks the order on this side, a line here when each starts.
