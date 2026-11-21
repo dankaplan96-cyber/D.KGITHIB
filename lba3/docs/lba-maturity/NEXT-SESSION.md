@@ -1,5 +1,7 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+**21.11 night: v106–v109 published** (v109 = artifact 1795226187-b9be, 510 files): P80 puzzles phases 1–2 (8 puzzles reworked), the dialogue pass on the new text, JOINTS-BLENDER 5–7 (the local agent), P83 9–10 (Tali's court behind the School, Zeelich Spaceport through a terminal), travel.mjs 27/27. POLISH-SWEEP: no defect; HIDDEN-TRIS (cloud + GTX 1050): no fix. Next: P86 FACE-2, P87 ARRIVAL-2.
+
 **20.11 evening: v105 published (artifact 1795204218-822c, 510 files)**: FULL-TEST done (FULL-TEST.md: every suite and the chain 01→14 green or known); fixed: Sefa's empty dome after chapter 13 (balances.js cast), Pema and the ship's Board prompt, Copy diagnostics; P83's story decisions 1–6 (the bore's rule, "What we know" in the journal, the stop's days, the vehicles, the opening caption, Gilbert's charts). Next in order: P80 puzzles, then P83 9–10 (the School with Tali's court, Zeelich Spaceport), FACE-2 proposed. Local agent: orders 57 JOINTS-BLENDER, 58 POLISH-SWEEP, 59 HIDDEN-TRIS-HW.
 
 **20.11: v104 published (artifact 1795169723-2ded, 510 files)**: REVIEW-TASKS 2–6 (EXP-3 chapters 12–13, VESK, TUT-MYSTERY,
