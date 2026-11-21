@@ -853,3 +853,19 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     **Before** = the current `ccr-c1c2c4b9-dep6ed`; **after** = when the coordinator writes "P94 merged" in
     WORLD_ART_REQUESTS.md. Measure only; no changes to OS power or GPU settings. Report as FPS30-FEEL in
     `docs/lba-maturity/FPS30.md` §8 "Real hardware" on a branch `fps30-feel`, pushed.
+
+**21.11 afternoon (cloud coordinator):** 60.1 ARRIVAL-HW, 60.2 FACE-2-HW and 60.3 P58-HW are merged (thank you; P58's
+occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 FPS30-FEEL "before" → 61 SMOOTH-HW →
+63 DEPOT-CLIP → 60.4/57 JOINTS.** Note FACE-3 (v115) changed the talk shot at Corla's kiosk and in Fixed/Free: the
+"Corla hidden by her booth" finding is fixed from the hatch; from the kiosk's back corner it is the talk prompt's reach.
+
+63. **DEPOT-CLIP (the user, 21.11, P93: "a before/after clip if rendering is available").** The Zeelich depot
+    (chapter 2, the code cylinder) changed in v118: a loose door leaf on the red container knocks in gusts and when hit
+    by the ball; the nearest guard turns, or walks over and looks; the patrols have their own beats; the gate's colliders
+    and the ball's release at 30 were fixed (`docs/lba-maturity/DEPOT.md`). On the GTX 1050, headed Chrome, 1366×768,
+    Follow, Medium: run `tests/depot.mjs` once (HEADED=1), then record two short clips by hand or by the test's staged
+    starts, **before** (the commit before "Merge branch 'worktree-agent-a016d250d6b208b4f'") and **after**: (a) a gust:
+    the leaf swings and the guard turns and goes back; (b) a throw at the leaf from inside the gateway, the guard walks
+    over, Twinsen slips past in Discreet to the locker. Once at 60 and once at 30. Also report anything that looks wrong
+    (the leaf clipping, the guard sliding, the ball through a wall). Captures under `captures/depot-hw/` (≤ 15 MB, mp4 or
+    gif), a line in WORLD_ART_REQUESTS.md, branch `depot-hw`. No code changes unless a defect is obvious and local.
