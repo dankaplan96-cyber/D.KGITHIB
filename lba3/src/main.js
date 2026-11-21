@@ -2970,13 +2970,13 @@ class Game {
     // after it, by the rAF timestamps, which follow the display): no drift whatever the refresh. A late frame (a missed
     // refresh) starts the count from itself: no catch-up. Other ratios (75, 144 Hz) keep the grid below.
     const nR = cap ? Math.round(cap / refresh) : 0;
-    if (cap && nR >= 2 && Math.abs(cap / refresh - nR) < 0.08 && !this.testFreeze && !this.preparing) {
-      if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+    if (cap && nR >= 2 && Math.abs(cap / refresh - nR) < 0.12 && !this.testFreeze && !this.preparing) {
+      if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
       this._drawT = now; this._due = 0;
     } else if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
       this._drawT = 0;
       const due = this._due || 0;
-      if (due && now < due - refresh / 2) { this.input.poll?.(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      if (due && now < due - refresh / 2) { this.input.poll?.(); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
       let nx = (due || now) + cap;
       if (!due || nx - now < cap - 0.75 * refresh) nx = now + cap;   // (late by most of a refresh or more: a new grid from this frame)
       this._due = nx;
@@ -2986,6 +2986,26 @@ class Game {
     this.last = now;
     if (!this.testFreeze && !this.preparing) { this.advance(real); if (!this.settings.qualityAuto) this.fit?.frame(real); }   // (AUTO-QUALITY: Auto adjusts itself: no suggestion)
     requestAnimationFrame((t2) => this.loop(t2));
+  }
+
+  // P96 (the desktop's SMOOTH-HW, 21.11, GTX 1050, headed Chrome and Electron alike): with the clock at 17.5 ms (57 Hz) and
+  // the 30 limit, the browser stopped calling requestAnimationFrame for 370–460 ms, 2–14 times a pass, never at 60: a
+  // refresh the limit skips changed nothing on the page, and Chrome let the frame loop sleep. A 1 px mark in the corner
+  // that changes on every skipped refresh (alpha 1–2 %, invisible) gives each refresh something to present: in the
+  // desktop's diagnosis the gaps went to 0 (≥ 45 ms intervals) and T2's motion spikes 0/153. Not in the background
+  // (BG_FPS) and not under the tests' fixed stepping. (The tolerance above went 0.08 → 0.12 for the same report: at
+  // 57 Hz, 30 is 1.90 refreshes, and the grid it fell back to drew 1 frame in 8 a refresh early.)
+  _keepAlive() {
+    if (this.background || this.testFreeze) return;
+    let k = this._kaEl;
+    if (!k) {
+      k = this._kaEl = document.createElement('div');
+      k.setAttribute('aria-hidden', 'true');
+      k.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:1px;pointer-events:none;z-index:2147483647;background:rgba(0,0,0,0.01)';
+      document.body.appendChild(k);
+    }
+    this._kaOn = !this._kaOn;
+    k.style.backgroundColor = this._kaOn ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.01)';
   }
 
   // Real time → simulation. A slow frame is simulated in steps of at most MAX_STEP (so the game keeps real
