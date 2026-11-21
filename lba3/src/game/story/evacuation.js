@@ -118,8 +118,25 @@ export class Evacuation extends ChapterBase {
     W.updaters.push((dt) => { this.fortDoor.tick(dt); this.depotDoor.tick(dt); near(plateauG, -72, -64, 70); near(farmG, -47, 43, 60); });
     // the cistern lever in the station yard
     const ly = H(FORT.lever.x, FORT.lever.z);
-    mesh(grp, cyl(1.2, 1.3, 0.8, 16, 0), tm('stone', { color: '#a8a090' }), FORT.lever.x + 1.6, ly + 0.4, FORT.lever.z);
+    // (PUZZLES phase 2: an open cistern now, so its water can be seen: the drum without its lid, a stone lip, the inner wall)
+    mesh(grp, cyl(1.2, 1.3, 0.8, 16, 0, true), tm('stone', { color: '#a8a090' }), FORT.lever.x + 1.6, ly + 0.4, FORT.lever.z);
+    mesh(grp, cyl(1.06, 1.06, 0.78, 16, 0, true), new THREE.MeshStandardMaterial({ color: '#7a7264', roughness: 0.95, side: THREE.BackSide }), FORT.lever.x + 1.6, ly + 0.41, FORT.lever.z, 0, { cast: false });
+    mesh(grp, new THREE.RingGeometry(1.05, 1.21, 20).rotateX(-Math.PI / 2), tm('stone', { color: '#a8a090' }), FORT.lever.x + 1.6, ly + 0.8, FORT.lever.z, 0, { cast: false });
     this.lever = mesh(grp, cyl(0.06, 0.06, 1.2, 6, 0), iron, FORT.lever.x, ly + 0.6, FORT.lever.z);
+    // (PUZZLES phase 2: FunFrock's door runs on the cistern's water, and the cistern is dry: its bottom shows, cracked and
+    //  dark. The old hand pump on its south side fills it in three strokes (the water's face rises each time); full, the
+    //  lever opens the door, and the cistern drains with it)
+    const CX = FORT.lever.x + 1.6, CZ = FORT.lever.z;
+    mesh(grp, cyl(1.08, 1.08, 0.02, 16, 0), pm('#3a3026', 0.95), CX, ly + 0.12, CZ, 0, { cast: false });
+    this.cisternWater = mesh(grp, cyl(1.1, 1.1, 0.02, 16, 0), pm('#3c7c9a', 0.15, { metalness: 0.1 }), CX, ly + 0.14, CZ, 0, { cast: false });
+    this.cisternWater.visible = false;
+    this.cisternY = (n) => { this.cisternWater.visible = n > 0; this.cisternWater.position.y = ly + 0.14 + Math.min(3, n) * 0.2; };
+    this.pumpAt = { x: CX, z: CZ + 1.75 };
+    const py = H(this.pumpAt.x, this.pumpAt.z);
+    mesh(grp, cyl(0.09, 0.11, 1.05, 8, 0), iron, this.pumpAt.x, py + 0.52, this.pumpAt.z);
+    mesh(grp, cyl(0.04, 0.04, 0.5, 6, 0), iron, this.pumpAt.x, py + 0.92, this.pumpAt.z - 0.25, 0, { rx: Math.PI / 2 });
+    this.pumpHandle = mesh(grp, cyl(0.03, 0.03, 0.75, 6, 0), pm('#7a4a2a', 0.8), this.pumpAt.x, py + 1.05, this.pumpAt.z + 0.3, 0, { rx: 1.1 });
+    this.cols.push(P.add({ type: 'cyl', x: this.pumpAt.x, z: this.pumpAt.z, r: 0.2, top: py + 1.1, noStand: true, enabled: false }));
     this.cols.push(P.add({ type: 'cyl', x: FORT.lever.x + 1.6, z: FORT.lever.z, r: 1.3, top: ly + 0.8, noStand: true, enabled: false }));
     // hay, a cart and bundles at each farm; a cart and bundles waiting at the gather point and by the depot shelter
     const solid = (x, z, ry, hw, hd, top) => this.cols.push(P.add({ type: 'box', x, z, hw, hd, rot: ry, top: H(x, z) + top, noStand: true, enabled: false }));
@@ -211,6 +228,7 @@ export class Evacuation extends ChapterBase {
     this.ev.interactables(consider, dist);   // (CAMPAIGN-6: the board, the culvert's pipe and cock)
     if (!this.isCur() || !this.outdoors()) return;
     if (f.c8_gilbert && !f.c8_fort) consider(dist(FORT.lever.x, FORT.lever.z), 1.6, { kind: 'c8lever', label: 'p_lever' });
+    if (f.c8_gilbert && !f.c8_fort && (f.c8_pump || 0) < 3 && this.pumpAt) consider(dist(this.pumpAt.x, this.pumpAt.z), 1.3, { kind: 'c8pump', label: 'p_pump' });
     if (f.c8_gilbert && !f.c8_depot && !this.squeeze) { const p = DEPOT_F.at(1.9, 0); consider(dist(p.x, p.z), 2.2, { kind: 'c8hatch', label: f.c8_gap ? 'p_look' : 'p_shelter' }); }
     // a project ship on the spaceport's pad (same spot and reach as the pad's travel menu: the chapter wins the tie)
     const sp = this.W.spaceport;
@@ -223,10 +241,27 @@ export class Evacuation extends ChapterBase {
     switch (it.kind) {
       case 'c8lever':
         h.act('use', 1.0, () => {
+          // (PUZZLES phase 2: dry, the lever drops and springs back with a gurgle; said once, then only the gurgle)
+          if ((f.c8_pump || 0) < 3) {
+            this.lever.rotation.z = 0.6; this.leverBack = 0.45;
+            g.audio.play('clunk'); g.audio.play('trickle'); this.leverAt = g.time;
+            if (!f.c8_dry) { f.c8_dry = true; this.chain([['hero', 'c8_lever_dry']], () => g.updateObjective()); }
+            return;
+          }
           f.c8_fort = true; this.lever.rotation.z = 1.0; this.fortDoor.open(); g.audio.play('door'); g.camRig.shake(0.2);
+          this.drainT = 1.6;
           this.story.refreshCast({ walk: true });
-          this.chain([['hero', 'c8_lever_1'], ['hero', 'c8_shelter_fort']], () => this.progress());
+          this.chain([['hero', 'c8_lever_water'], ['hero', 'c8_shelter_fort']], () => this.progress());
         }, 0.6);
+        return true;
+      case 'c8pump':
+        h.act('use', 0.7, () => {
+          f.c8_pump = Math.min(3, (f.c8_pump || 0) + 1); this.cisternY(f.c8_pump);
+          this.pumpHandle.rotation.x = 0.4; this.handleBack = 0.3;
+          g.audio.play('trickle'); this.leverAt = g.time;
+          g.hud.toast('c8_toast_pump', { n: f.c8_pump });
+          if (f.c8_pump >= 3) this.chain([['hero', 'c8_pump_full']], () => g.updateObjective());
+        }, 0.4);
         return true;
       case 'c8hatch':
         if (f.c8_gap) { this.depotDoor.jolt(); g.audio.play('clunk'); }   // (he tugs the leaf: it jerks against the bar)
@@ -434,6 +469,11 @@ export class Evacuation extends ChapterBase {
     void g;
   }
   update(dt = 1 / 60) {
+    // (PUZZLES phase 2: the cistern drains as the door opens; tried dry and a while with nothing done: the pump)
+    if (this.drainT > 0) { this.drainT -= dt; this.cisternY?.(Math.max(0, 3 * this.drainT / 1.6)); }
+    if (this.leverBack > 0 && (this.leverBack -= dt) <= 0 && !this.f.c8_fort) this.lever.rotation.z = 0;
+    if (this.handleBack > 0 && (this.handleBack -= dt) <= 0) this.pumpHandle.rotation.x = 1.1;
+    this.nudge(dt, 'c8pump', this.isCur() && !!this.f.c8_dry && !this.f.c8_fort && (this.f.c8_pump || 0) < 3 && this.game.time - (this.leverAt ?? -1e9) > 15, 30, 'c8_nudge_pump');
     const g = this.game, f = this.f, h = g.hero;
     if (!this.isCur()) return;
     this.marchStep(dt);
@@ -460,6 +500,7 @@ export class Evacuation extends ChapterBase {
     W.station?.setActive?.(false);
     W.ferry?.setVisible?.(true);
     if (f.c8_fort) { this.fortDoor.open(true); this.lever.rotation.z = 1.0; }
+    this.cisternY?.(f.c8_fort ? 0 : (f.c8_pump || 0));   // (PUZZLES phase 2: the cistern as the pump left it; drained once the door opened)
     // (MIDDLE-VARIETY: the depot's door stuck ajar on its bar; a squeeze cut off by a load is not half done)
     this.squeeze = null;
     if (f.c8_depot) this.depotDoor.open(true);

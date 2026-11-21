@@ -12,8 +12,9 @@
 //              [flutter…]) (each gauge over its own branch: valves 2, 3, 4), R.gauges.read()
 //              R.diagram {x,z}; R.hangarDoor {x,z, isOpen, open()}; R.patrol [[x,z]…]
 //              exits 'cond-out' (up to the dunes), 'cond-b' (the hangar, behind the door)
-//   condB      R.glider {x,z, uncover()}; R.hatch {isOpen, open()}; R.ballSwitch {x,y,z, on, setOn(b)}
-//              (ballTargets entry {…, hatch:true}); R.condensers [{setSteam(0..1)}]; exit 'cond-a'
+//   condB      R.glider {x,z, uncover()}; R.hatch {isOpen, open()}; R.ballSwitch {x,y,z, on, setOn(b)} (ballTargets entry
+//              {…, hatch:true}); R.ventHatch, R.ventSwitch the same for the condensers' vent hatch ({…, ventHatch:true});
+//              R.condensers [{setSteam(0..1)}]; exit 'cond-a'
 import * as THREE from 'three';
 import { RoomBuilder, glowSprite } from './interiors.js';
 import { MAT, M, rbox, plane, cyl, sphere, torus, pipe, canvasTex } from './props.js';
@@ -191,18 +192,29 @@ function buildHangar(scene, physics) {
   // (DESERT-BAR: gone(): flown north at the end of chapter 5: the hall is open in later chapters, story/desertlife.js;
   //  its tarp with it)
   R.glider = { x: B.cx + 2.5, z: B.cz + 2.8 + 2.0, uncover() { tarp.visible = false; }, gone() { gl.visible = false; for (const c of glCols) c.enabled = false; } };
-  // a gantry along the right side with a ball switch for the roof hatch
+  // a gantry along the right side with two ball switches, each level with the roof hatch it opens (PUZZLES phase 2: which
+  // one is over the glider is the question; the room's cut-away shows the switches, the glider and the condensers, and an
+  // opened hatch shows where it is by its shaft of daylight). The near one (z 2.8) is the glider's hatch; the far one
+  // (z −4.6) the condensers' old vent hatch: opened, daylight falls on them and their steam goes up through it
   const gy = 4.2;
   k.add(rbox(1.2, 0.12, D - 2, 0.02), MAT.tread('#5a5a5a'), W / 2 - 1.0, gy, 0);
   for (const z of [-5, -1.5, 2, 5]) k.add(rbox(0.14, gy, 0.14, 0.02), MAT.iron(), W / 2 - 1.5, gy / 2, z);
-  const sw = k.mesh(cyl(0.32, 0.32, 0.14, 18), MAT.paint('#c8302a', 0.4), W / 2 - 0.6, gy + 0.9, 0.5, 0, { rz: Math.PI / 2 });
-  R.ballSwitch = { x: B.cx + W / 2 - 0.6, y: gy + 0.9, z: B.cz + 0.5, on: false, setOn(b) { this.on = !!b; sw.material = b ? MAT.glow('#9fffa0', '#40ff60', 1.6) : MAT.paint('#c8302a', 0.4); } };
+  const lightShaft = (x, z) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, H, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#fff2d0', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); s.position.set(x, H / 2, z); B.group.add(s); return s; };
+  const switchAt = (z) => {
+    const m = k.mesh(cyl(0.32, 0.32, 0.14, 18), MAT.paint('#c8302a', 0.4), W / 2 - 0.6, gy + 0.9, z, 0, { rz: Math.PI / 2 });
+    k.add(rbox(0.1, 0.9, 0.1, 0.01), MAT.iron(), W / 2 - 0.6, gy + 0.45, z);
+    return { x: B.cx + W / 2 - 0.6, y: gy + 0.9, z: B.cz + z, on: false, setOn(b) { this.on = !!b; m.material = b ? MAT.glow('#9fffa0', '#40ff60', 1.6) : MAT.paint('#c8302a', 0.4); } };
+  };
+  R.ballSwitch = switchAt(2.8);
+  R.ventSwitch = switchAt(-4.6);
   R.ballTargets.push({ x: R.ballSwitch.x, y: R.ballSwitch.y, z: R.ballSwitch.z, r: 0.75, hatch: true });
+  R.ballTargets.push({ x: R.ventSwitch.x, y: R.ventSwitch.y, z: R.ventSwitch.z, r: 0.75, ventHatch: true });
   // the roof hatch: a light shaft falls in when it opens
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.4, H, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#fff2d0', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-  shaft.position.set(2.5, H / 2, 2.8); B.group.add(shaft);
+  const shaft = lightShaft(2.5, 2.8);
   const sun = B.light('#fff0c8', 0, 14, 2.5, H - 0.5, 2.8);
   R.hatch = { isOpen: false, open() { this.isOpen = true; shaft.material.opacity = 0.16; sun.userData.base = 14; sun.intensity = 14; } };
+  const vShaft = lightShaft(0, -4.6);
+  R.ventHatch = { isOpen: false, open() { this.isOpen = true; vShaft.material.opacity = 0.12; for (const c of condensers) c.setSteam(1); } };
   B.light('#ffd8a0', 7, 12, -3, 5.5, 0); B.light('#ffd8a0', 5, 10, 5, 5.5, -2);
   // crates and drums
   for (const [x, z, s] of [[-7, 4.5, 1.0], [-6, 4.8, 0.8], [-7.2, 3.4, 0.8]]) { k.add(rbox(s, s, s, 0.03), MAT.planks('honey'), x, s / 2, z); B.col(x, z, s / 2, s / 2, s); }

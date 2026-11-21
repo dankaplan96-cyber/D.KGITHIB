@@ -182,10 +182,19 @@ export class Steam extends ChapterBase {
   ballHit(p) {
     const g = this.game, f = this.f;
     if (!this.isCur() || this.room() !== 'condB' || f.c5_hatch) return false;
-    const S = this.Bh.ballSwitch;
+    const S = this.Bh.ballSwitch, V = this.Bh.ventSwitch;
     if (Math.hypot(p.x - S.x, p.y - S.y, p.z - S.z) < 0.9) { this.openHatch(); return true; }
-    void g;
+    // (PUZZLES phase 2: the far switch opens the condensers' vent hatch: daylight on them, their steam goes up; harmless)
+    if (V && !f.c5_hatchVent && Math.hypot(p.x - V.x, p.y - V.y, p.z - V.z) < 0.9) { this.openVentHatch(); return true; }
     return false;
+  }
+  openVentHatch(silent = false) {
+    const g = this.game, f = this.f, Bh = this.Bh;
+    f.c5_hatchVent = true; Bh.ventSwitch.setOn(true); Bh.ventHatch.open();
+    for (const tg of Bh.ballTargets) if (tg.ventHatch) tg.done = true;
+    if (silent) return;
+    g.audio.play('door'); g.audio.play('steam');
+    this.chain([['hero', 'c5_hatch_vent']], () => g.save(false));
   }
   openHatch(silent = false) {
     const g = this.game, f = this.f, Bh = this.Bh;
@@ -374,6 +383,7 @@ export class Steam extends ChapterBase {
       this.updateGauges();   // (and the shaking of a shut branch, PUZZLES P-A)
       if (f.c5_routed) { A.hangarDoor.open(); for (const c of this.Bh.condensers) c.setSteam(0.4); }
       if (f.c5_hatch) this.openHatch(true);
+      if (f.c5_hatchVent) this.openVentHatch(true);
       if (f.c5_vent) for (const c of this.Bh?.condensers || []) c.setSteam(1);
       if (!this.isCur() && this.Bh) { this.Bh.glider.uncover(); this.Bh.glider.gone?.(); }   // (DESERT-BAR: flown north at the chapter's end; the hall stays open: desertlife.js)
     });

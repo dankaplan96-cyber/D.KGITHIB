@@ -54,7 +54,10 @@ await boot('new');
 is('chapter 6 (pass) starts on the Hamalayi, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 4, chapterKey: 'steam', c5_planned: true, c5_vent: true, c5_glider: true, c5_done: true });
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'pass' && v[1] === 'hamalayi' && v[2] === 'play' && v[3].length > 0);
 await shot('C6-00-landing.png');
-is('the dead tree knocked down by the ball: a bridge, an objective set', await ev(() => { const tg = game.room.ballTargets.find((t) => t.tree); const r = T.hit(tg); game.step(2); T.talkAll(); return [r, game.flags.c6_bridge, T.obj()]; }), (v) => v[0] !== 'FAILED' && v[1] === true && v[2].length > 0);
+// (PUZZLES phase 2, 21.11: changed on purpose. The tree leans on an old prop: the ball on the tree rocks it back onto the
+//  pole; the ball on the pole knocks it out and the tree falls)
+is('the dead tree rocked by the ball settles back on its prop: no bridge yet', await ev(() => { const tg = game.room.ballTargets.find((t) => t.tree); const r = T.hit(tg); game.step(2); T.talkAll(); return [r, !!game.flags.c6_rocked, !!game.flags.c6_bridge]; }), (v) => v[0] !== 'FAILED' && v[1] === true && v[2] === false);
+is('the prop knocked out by the ball: the tree falls, a bridge, an objective set', await ev(() => { const tg = game.room.ballTargets.find((t) => t.prop); const r = T.hit(tg); game.step(2); T.talkAll(); return [r, game.flags.c6_bridge, T.obj()]; }), (v) => v[0] !== 'FAILED' && v[1] === true && v[2].length > 0);
 is('walking across the tree bridge reaches the far side', await ev(() => { const G = game, t = G.rooms.hamalayi.gorge.tree; const x = t.x - 0.6; let z = t.z + 10; T.tp(x, z); for (let i = 0; i < 80; i++) { G.physics.move(G.hero, 0, -0.2); G.step(0.02); } return [G.hero.pos.z.toFixed(1), G.hero.pos.y.toFixed(2), t.z.toFixed(1)]; }), (v) => +v[0] < +v[2] - 3);
 is('Lhar reached', await ev(() => { const G = game, L = G.rooms.hamalayi.lhar; T.tp(L.x, L.z + 8); G.step(0.5); T.talkAll(); return [G.flags.c6_lhar, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C6-01-lhar.png');

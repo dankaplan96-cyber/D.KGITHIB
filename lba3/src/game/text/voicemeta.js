@@ -176,6 +176,9 @@ export const VOICE_META = {
   c8_zoe_wait: ['neutral', 'neutral', 'neutral'], c8_zoe_done: ['pleased', 'neutral', 'pleased'], c8_ar_after: { i: ['urgent', 'pleased'], e: ['real'] },
   c7_yorna_after: ['neutral', 'concerned', 'pleased'], c7_keeper_after: ['pleased', 'neutral'],
   c5_press: ['neutral', 'concerned'],   // (PUZZLES P-A)
+  c8_lever_dry: ['neutral', 'curious', 'curious'], c8_pump_full: ['pleased', 'neutral'], c8_lever_water: 'pleased',   // (PUZZLES phase 2)
+  c5_hatch_vent: ['neutral', 'neutral', 'neutral'],   // (PUZZLES phase 2)
+  c6_gorge: ['neutral', 'neutral', 'curious'], c6_tree_rock: 'curious',   // (PUZZLES phase 2)
   c10_oku_hop: ['neutral', 'pleased'], c10_oku_peg: ['neutral', 'neutral'], c10_oku_2hop: ['pleased', 'pleased', 'neutral'],   // (PUZZLES phase 2)
   c3_starve: { i: ['urgent', 'concerned', 'concerned'], e: ['slowing'] },   // (PUZZLES P-C 2)
   c7_seal_stuck: ['neutral', 'curious'], c7_seal_more: ['neutral', 'neutral'], c7_seal_free: ['pleased', 'pleased'], c7_warm_hit: ['neutral', 'neutral'],   // (PUZZLES P-B)

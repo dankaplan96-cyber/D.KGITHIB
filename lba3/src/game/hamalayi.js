@@ -11,7 +11,7 @@
 //
 // CONTRACT used by src/game/story/pass.js (chapter 6) and observatory.js (chapter 7). World coordinates.
 //   R.landing {x,z,a}; R.glider {x,z}; R.gliderObj (its Group); R.hut {x,z}
-//   R.gorge {tree:{x,y,z, fallen, fell(instant?)}}  ballTargets entry {…, tree:true}
+//   R.gorge {tree:{x,y,z, fallen, fell(instant?), rock()}, prop:{x,y,z, knock()}}  ballTargets entries {…, tree:true}, {…, prop:true}
 //   R.lhar {x,z}; R.npcSpots {yorna, pim, v1, v2, v3, keeper, hesk} {x,z,a}
 //   R.lift {bottom:{x,z}, top:{x,z}, y0, y1, frozen, thaw(), up, ride(up, riders, done), speed, y, halt(), jolt()};
 //   R.line the line's pulse, lamps, cable, crank, gauge and upper brake (winchline.js); R.heatPost {x,z, on, setOn(b)}
@@ -351,16 +351,46 @@ export function* buildHamalayiSteps(scene, physics) {
   const treeCol = col({ type: 'cyl', x: TREE.x, z: TREE.z, r: 0.45, top: H(TREE.x, TREE.z) + 11 });
   const bridgeCol = col({ type: 'box', x: TREE.x, z: (GORGE.z0 + GORGE.z1) / 2, hw: 0.55, hd: (GORGE.z1 - GORGE.z0) / 2 + 2.5, top: L0 - 0.2, enabled: false });
   bridgeCol.enabled = false;
+  // (PUZZLES phase 2: the tree leans out over the gorge on an old prop, a pole wedged under its trunk on the gorge side.
+  //  The ball on the tree rocks it and it settles back on the pole; the ball on the pole knocks it out, and the tree falls)
+  const PROP = { x: TREE.x + 0.15, z: TREE.z + 1.15, top: 2.7 };
+  const propG = new THREE.Group(); propG.position.set(PROP.x, H(PROP.x, PROP.z), PROP.z); group.add(propG);
+  {
+    const poleM = pm('#c8b088', 0.85), lashM = pm('#7a4a2a', 0.9);
+    const len = Math.hypot(PROP.top, 0.62);
+    const pole = mesh(propG, cyl(0.12, 0.15, len, 8, 0), poleM, 0, PROP.top / 2, -0.31, 0, { rx: -Math.atan2(0.62, PROP.top) });
+    void pole;
+    mesh(propG, cyl(0.16, 0.16, 0.2, 8, 0), lashM, 0, PROP.top - 0.25, -0.56, 0, { rx: -Math.atan2(0.62, PROP.top) });
+    mesh(propG, new THREE.SphereGeometry(0.22, 7, 5).scale(1, 0.5, 1), snowM, 0, 0.06, 0, 0, { cast: false });
+  }
+  let propT = -1;
   R.gorge = {
     tree: {
-      x: ox + TREE.x + 0.6, y: H(TREE.x, TREE.z) + 8.2, z: oz + TREE.z + 0.3, fallen: false,
+      x: ox + TREE.x + 0.6, y: H(TREE.x, TREE.z) + 8.2, z: oz + TREE.z + 1.1, fallen: false,
       fell(instant = false) {
         this.fallen = true; treeCol.enabled = false; bridgeCol.enabled = true;
+        if (instant) propG.visible = false;
         T.fell(instant);
+      },
+      rock() { T.rock(); },
+    },
+    // the prop: knocked out, it kicks away into the gorge (out of sight in under a second)
+    prop: {
+      x: ox + PROP.x, y: H(PROP.x, PROP.z) + 2.2, z: oz + PROP.z - 0.45, y0: H(PROP.x, PROP.z),
+      knock() {
+        if (propT >= 0 || !propG.visible) return;
+        propT = 0;
+        updaters.push(function kick(dt) {
+          propT += dt; propG.rotation.x = Math.min(1.4, propT * 3.2); propG.position.z = PROP.z + propT * 1.6; propG.position.y = H(PROP.x, PROP.z) - propT * propT * 4;
+          if (propT > 0.8) { propG.visible = false; updaters.splice(updaters.indexOf(kick), 1); }
+        });
       },
     },
   };
   R.ballTargets.push({ x: R.gorge.tree.x, y: R.gorge.tree.y, z: R.gorge.tree.z, r: 1.2, tree: true });
+  // (the pole is a target the ball curves to only once the tree has been seen to rock back onto it: story/pass.js; before
+  //  that the tree's own target, nearer the throw's line, takes the ball's help)
+  R.ballTargets.push({ x: R.gorge.prop.x, y: R.gorge.prop.y, z: R.gorge.prop.z, r: 0.8, prop: true, done: true });
 
   // ---- the trail: cairns and a rope rail on posts along its open (lower) side
   {

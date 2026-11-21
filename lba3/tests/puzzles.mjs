@@ -236,14 +236,16 @@ if (PARTS.includes('c6')) {
   is('c6: chapter 6 at the landing', await ev(() => { const G = game; P.settle(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 4, chapterKey: 'steam', c5_planned: true, c5_vent: true, c5_glider: true, c5_done: true });
     G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); P.settle(); P.settle(); return [G.flags.chapterKey, G.room?.id ?? 'hamalayi', !!G.flags.c6_started]; }), (v) => v[0] === 'pass' && v[2]);
   const n6 = await ev(() => window.SAID.length);
-  await ev(() => { const t = game.rooms.hamalayi.gorge.tree; P.go(t.x - 1.5, t.z + 12.5, { tol: 0.8, run: true }); P.settle(); P.face(t.x, t.z); game.step(0.6); });
-  await shot('c6-gorge');
+  await ev(() => { const t = game.rooms.hamalayi.gorge.tree; P.go(t.x - 1.5, t.z + 12.5, { tol: 0.8, run: true }); P.settle(); });
+  if (BEFORE) { await ev(() => { const t = game.rooms.hamalayi.gorge.tree; P.face(t.x, t.z); game.step(0.6); }); await shot('c6-gorge'); }
   if (!BEFORE) {
     is('c6: at the gorge (input): his line: too wide, and the tree leans out over it', await ev((n) => T.said(n), n6), (v) => v.some((s) => /leans right out over it/i.test(s)));
     const throwAt = (which) => ev((which) => { const G = game, M = G.rooms.hamalayi, tg = M.ballTargets.find((t) => t[which]), n = window.SAID.length, b0 = !!G.flags.c6_bridge; let k = 0;
       for (; k < 5 && !!G.flags.c6_bridge === b0 && !(which === 'tree' && G.flags.c6_rocked); k++) { P.go(tg.x - 1 + k * 0.5, tg.z + 9.5, { tol: 0.6 }); P.tap('Digit1'); P.throwAt(tg.x, tg.z); P.settle(); }
       G.step(2.5); P.settle(); return { tries: k, bridge: !!G.flags.c6_bridge, fallen: M.gorge.tree.fallen, said: T.said(n) }; }, which);
     is('c6: a reasonable wrong try (input): the ball on the tree rocks it; it settles back on the pole, said; no bridge', await throwAt('tree'), (v) => !v.bridge && v.said.some((s) => /old pole/i.test(s)));
+    await ev(() => { const t = game.rooms.hamalayi.gorge.prop; P.face(t.x, t.z); game.step(1.5); });
+    await shot('c6-rocked');
     is('c6: the ball on the pole (input): it kicks out, the tree falls across: a bridge', await throwAt('prop'), (v) => v.bridge && v.fallen && v.said.some((s) => /pole kicks out/i.test(s)));
     await shot('c6-bridge');
   }
