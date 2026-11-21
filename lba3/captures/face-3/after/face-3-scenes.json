@@ -1,0 +1,415 @@
+{
+ "SEC": "scenes",
+ "W": 1280,
+ "H": 720,
+ "propsWalk": {
+  "walkMs": [
+   3,
+   3.5,
+   1.4,
+   4.1,
+   1.1
+  ],
+  "found": 15,
+  "gatherMs": 1.9,
+  "gathered": 15
+ },
+ "sign": [
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "talk": 1,
+   "line": "Same next door. Their tap ran warm, knoc",
+   "why": [
+    0.9,
+    1,
+    0.3,
+    -1,
+    0.3,
+    1.09
+   ],
+   "head": {
+    "px": 127,
+    "x": 552,
+    "bottom": 337,
+    "top": 210,
+    "turn": 54
+   },
+   "other": {
+    "px": 165,
+    "x": 946,
+    "bottom": 399,
+    "top": 234,
+    "turn": 124
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 1,
+     "hits": [
+      [
+       "knees",
+       1.17,
+       0.57,
+       "BoxGeometry"
+      ]
+     ]
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "talk": 1,
+   "line": "And look at their kettle. Furred with th",
+   "why": [
+    0.9,
+    1,
+    0.3,
+    -1,
+    0.3,
+    1.09
+   ],
+   "head": {
+    "px": 129,
+    "x": 570,
+    "bottom": 340,
+    "top": 212,
+    "turn": 56
+   },
+   "other": {
+    "px": 163,
+    "x": 914,
+    "bottom": 390,
+    "top": 227,
+    "turn": 124
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 1,
+     "hits": [
+      [
+       "knees",
+       1.13,
+       0.57,
+       "BoxGeometry"
+      ]
+     ]
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  },
+  {
+   "who": "hero",
+   "fav": "hero",
+   "talk": 1,
+   "line": "(Tiny crystals. Still warm.)",
+   "why": [
+    1.05,
+    1,
+    0.2,
+    1,
+    0.3,
+    1.27
+   ],
+   "head": {
+    "px": 127,
+    "x": 745,
+    "bottom": 345,
+    "top": 218,
+    "turn": 83
+   },
+   "other": {
+    "px": 150,
+    "x": 355,
+    "bottom": 424,
+    "top": 274,
+    "turn": 98
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "talk": 1,
+   "line": "Mira's got the well padlocked, and she's",
+   "why": [
+    0.9,
+    0.9,
+    0.3,
+    -1,
+    0.3,
+    1.4
+   ],
+   "head": {
+    "px": 142,
+    "x": 542,
+    "bottom": 334,
+    "top": 192,
+    "turn": 51
+   },
+   "other": {
+    "px": 190,
+    "x": 991,
+    "bottom": 405,
+    "top": 215,
+    "turn": 120
+   },
+   "box": 534,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  }
+ ],
+ "corlaHatch": {
+  "st": "dialog",
+  "w": {
+   "corla": [
+    -35.24,
+    35.54,
+    0.25
+   ],
+   "hero": [
+    -34.87,
+    37
+   ]
+  },
+  "lines": [
+   {
+    "who": "cs_corla",
+    "fav": "npc",
+    "talk": 1,
+    "line": "Tickets and information. No flights to Z",
+    "why": [
+     0.62,
+     1,
+     0.04,
+     -1,
+     0.3,
+     0
+    ],
+    "head": {
+     "px": 128,
+     "x": 561,
+     "bottom": 346,
+     "top": 218,
+     "turn": 44
+    },
+    "other": {
+     "px": 201,
+     "x": 905,
+     "bottom": 419,
+     "top": 218,
+     "turn": 122
+    },
+    "box": 534,
+    "cover": {
+     "hero": {
+      "hid": 0,
+      "hits": []
+     },
+     "cs_corla": {
+      "hid": 1,
+      "hits": [
+       [
+        "knees",
+        2.42,
+        25.55,
+        "BufferGeometry:merged"
+       ]
+      ]
+     }
+    },
+    "mode": "follow"
+   }
+  ]
+ },
+ "corlaSide": {
+  "st": "dialog",
+  "w": {
+   "corla": [
+    -35.24,
+    35.54,
+    1.7
+   ],
+   "hero": [
+    -33.59,
+    35.12
+   ]
+  },
+  "lines": [
+   {
+    "who": "cs_corla",
+    "fav": "npc",
+    "talk": 1,
+    "line": "Tickets and information. No flights to Z",
+    "why": [
+     1.05,
+     1,
+     0.04,
+     -1,
+     0.3,
+     0.52
+    ],
+    "head": {
+     "px": 132,
+     "x": 519,
+     "bottom": 353,
+     "top": 222,
+     "turn": 60
+    },
+    "other": {
+     "px": 162,
+     "x": 963,
+     "bottom": 374,
+     "top": 212,
+     "turn": 89
+    },
+    "box": 534,
+    "cover": {
+     "hero": {
+      "hid": 3,
+      "hits": [
+       [
+        "head",
+        0.98,
+        2.29,
+        "BufferGeometry"
+       ],
+       [
+        "chest",
+        1.01,
+        29.07,
+        "BufferGeometry:merged"
+       ],
+       [
+        "knees",
+        0.71,
+        29.07,
+        "BufferGeometry:merged"
+       ]
+      ]
+     },
+     "cs_corla": {
+      "hid": 1,
+      "hits": [
+       [
+        "knees",
+        2.44,
+        25.55,
+        "BufferGeometry:merged"
+       ]
+      ]
+     }
+    },
+    "mode": "follow"
+   },
+   {
+    "who": "cs_corla",
+    "fav": "npc",
+    "talk": 1,
+    "line": "The project says it's the tremors. A tic",
+    "why": [
+     1.05,
+     1,
+     0.04,
+     -1,
+     0.3,
+     0.52
+    ],
+    "head": {
+     "px": 131,
+     "x": 509,
+     "bottom": 354,
+     "top": 223,
+     "turn": 59
+    },
+    "other": {
+     "px": 164,
+     "x": 984,
+     "bottom": 378,
+     "top": 214,
+     "turn": 88
+    },
+    "box": 552,
+    "cover": {
+     "hero": {
+      "hid": 3,
+      "hits": [
+       [
+        "head",
+        0.96,
+        2.29,
+        "BufferGeometry"
+       ],
+       [
+        "chest",
+        0.98,
+        29.07,
+        "BufferGeometry:merged"
+       ],
+       [
+        "knees",
+        0.71,
+        29.07,
+        "BufferGeometry:merged"
+       ]
+      ]
+     },
+     "cs_corla": {
+      "hid": 1,
+      "hits": [
+       [
+        "knees",
+        2.46,
+        25.55,
+        "BufferGeometry:merged"
+       ]
+      ]
+     }
+    },
+    "mode": "follow"
+   }
+  ]
+ },
+ "path": {
+  "frames": 1887,
+  "cuts": [
+   2.07,
+   1.97,
+   30.65,
+   5.49
+  ],
+  "maxMovePerFrame": 0.573,
+  "solid": 0
+ }
+}
