@@ -869,3 +869,14 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     over, Twinsen slips past in Discreet to the locker. Once at 60 and once at 30. Also report anything that looks wrong
     (the leaf clipping, the guard sliding, the ball through a wall). Captures under `captures/depot-hw/` (≤ 15 MB, mp4 or
     gif), a line in WORLD_ART_REQUESTS.md, branch `depot-hw`. No code changes unless a defect is obvious and local.
+
+64. **AUTO-HW (the user, 21.11: "make Auto give the best picture and quality while keeping it smooth, in every way";
+    status.md P95).** A cloud worker is improving Auto's choices (`src/engine/autoquality.js`, `autoapply.js`). Before its
+    merge (now) and after ("P95 merged" in WORLD_ART_REQUESTS.md): on this desktop (GTX 1050) and, if the user can, the
+    other laptop (UHD 620, devicePixelRatio 2), with a **fresh profile** (no cached Auto result) and Quality Auto: play
+    3 minutes across the Citadel street, a house interior and a combat, battery and plugged in, Frame Rate 60 and 30.
+    Record what Auto settled on (the F9 overlay / benchmark line: profile, world resolution, render scale, edge smoothing),
+    when it changed, frame pacing (presented intervals p95/p99, ≥ 50 ms count) and GPU ms, and then the same 3 minutes
+    forced one profile higher by hand: did that hold the pace too (Auto left quality unused) or not? Screenshots at the
+    same spot for each profile to judge sharpness. Measure only; report as AUTO-HW on branch `auto-hw`.
+    Queue: after 62, before 61.
