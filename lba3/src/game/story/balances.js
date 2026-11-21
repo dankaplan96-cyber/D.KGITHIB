@@ -37,6 +37,9 @@ import { playJourney } from '../travelfilm.js';
 import { readyCast } from './ballastra.js';
 import { GROOMS } from '../ballastra/gardenrooms.js';
 import { ROOMS } from '../ballastra/archrooms.js';
+import * as THREE from 'three';
+import { cyl, MAT } from '../props.js';
+import { compose } from '../kit.js';
 import '../text/ballastra.js';
 
 const gold = '#ffcf4a';
@@ -65,6 +68,15 @@ class BlChapter extends ChapterBase {
   // a short wait in game time (a scene's beat); stepWaits(dt) runs them, from each chapter's update
   after(s, fn) { (this.waits ??= []).push({ s, fn }); }
   stepWaits(dt) { if (this.waits?.length && this.game.state !== 'pause') for (const w of this.waits.splice(0)) { w.s -= dt; if (w.s <= 0) w.fn(); else this.waits.push(w); } }
+  // a scene's beat: someone turns toward a place (p: {x, z}) for s seconds of game time, the way a listener turns to a
+  // speaker (Actor.update's listenTo), then back to her own ways. unface() lets go of every such turn (a load: the waits
+  // are dropped with it)
+  faceFor(id, p, s) {
+    const n = this.npc(id); if (!n || !p) return;
+    const look = { pos: { x: p.x, z: p.z }, face: true }; n.listenTo = look;
+    this.after(s, () => { if (n.listenTo === look) n.listenTo = null; });
+  }
+  unface() { for (const n of this.game.npcs) if (n.listenTo?.face) n.listenTo = null; }
   say(key, vars, done, who = '') { const g = this.game; g.say(who ? 'n_' + who : '', [t(key, vars)], done, null, SPEAKER_COLORS[who || 'narrator']); }
   near(id, d) { const n = this.npc(id); return n?.present && n.distTo(this.game.hero) < d; }
   // the House's hall and the Cradle Hall: their spots once built (read through regions so a spot in an unbuilt area waits)
@@ -378,7 +390,7 @@ export class Cradles extends BlChapter {
   }
   get C() { return this.game.regions.built('bl_arches')?.arches?.cradles; }
   regionBuilt(ids) { if (ids.includes('bl_arches')) this.sync(true); }
-  applyFlags() { this.rota = null; this.leaving = false; this.waits = []; if (!this.f.wk_started) this.begun = false; if (this.inMine()) this.sync(true); }
+  applyFlags() { this.rota = null; this.leaving = false; this.waits = []; this.unface(); if (!this.f.wk_started) this.begun = false; if (this.inMine()) this.sync(true); }
 
   begin() {
     const g = this.game, f = this.f;
@@ -393,6 +405,8 @@ export class Cradles extends BlChapter {
           f.wk_started = true; this.sync(true); this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
         });
       };
+      // (she looks off toward the gate to the Arches, where the terrace and the hall are, while he takes it in)
+      this.faceFor('bl_wenna', this.GD?.exits?.toArches, 1.5);
       this.after(1.6, where);
     });
     this.begun = true;
@@ -632,6 +646,23 @@ export class Cradles extends BlChapter {
 // ===================================================================== the network: Tessa's B-8 on the valve room's relay
 // network.js owns one (net.b8) and asks it: when the valve room's three gauges are green, on() says whether Oren's trim
 // comes first (the expanded campaign, the rig's test passed, the station not done yet).
+// CAMPAIGN-CLARITY §7.1: Tessa's five boxes are seen at every station, not only told (nwb_bal). Each relay carries one
+// on its lid (buildB8: a dark iron body, a cream band dial, a brass lever; shown with the relay as network.js shows it);
+// the valve room's only once he has fitted it (nwb_fit), its pointer on the band he set. As each of the other four
+// stations is done, one line says whose hand set its band (stationLine: the friend who holds it, Tessa's "five
+// somebodies"); the journal says it once all five are held. No flag of its own: a save keeps the station flags.
+function buildB8() {
+  const grp = new THREE.Group(); grp.name = 'b8'; grp.position.set(0, 0.945, -0.15);   // (on the relay's lid, behind its lamp and clear of its mast)
+  const mesh = (parent, mat, parts, shadow = false) => { const m = new THREE.Mesh(compose(parts), mat); m.castShadow = shadow; parent.add(m); return m; };
+  const ir = MAT.iron(), br = MAT.brass();
+  mesh(grp, ir, [[cyl(0.085, 0.085, 0.22, 12), 0, 0.11, 0], [cyl(0.1, 0.1, 0.03, 12), 0, 0.02, 0], [cyl(0.1, 0.1, 0.03, 12), 0, 0.2, 0]], true);
+  mesh(grp, MAT.flat('#f0ead8', 0.6), [[cyl(0.062, 0.062, 0.02, 14), 0, 0.12, 0.088, Math.PI / 2]]);
+  const knob = new THREE.Group(); knob.position.set(0, 0.12, 0.1); grp.add(knob);
+  mesh(knob, ir, [[cyl(0.024, 0.024, 0.03, 8), 0, 0, 0, Math.PI / 2]]);
+  mesh(knob, br, [[new THREE.BoxGeometry(0.01, 0.045, 0.008), 0, 0.024, 0.016]]);
+  mesh(grp, br, [[cyl(0.018, 0.018, 0.05, 6), 0, 0.24, 0], [new THREE.BoxGeometry(0.24, 0.024, 0.024), 0.12, 0.262, 0]]);
+  return { grp, knob };
+}
 export class NetB8 {
   constructor(net) { this.net = net; this.game = net.game; this.story = net.story; }
   get f() { return this.game.flags; }
@@ -661,12 +692,12 @@ export class NetB8 {
   interact(it) {
     const g = this.game, f = this.f, h = g.hero, n = this.net;
     if (it.kind === 'nwbFit') {
-      h.act('use', 1.0, () => { f.nwb_fit = true; g.audio.play('clunk'); g.save(false); n.chain([['narrator', 'nwb_fit'], ['mira', 'nwb_mi_2']], () => g.updateObjective()); }, 0.5);
+      h.act('use', 1.0, () => { f.nwb_fit = true; this.dress(); g.audio.play('clunk'); g.save(false); n.chain([['narrator', 'nwb_fit'], ['mira', 'nwb_mi_2']], () => g.updateObjective()); }, 0.5);
       return true;
     }
     if (it.kind === 'nwbBand') {
       h.act('use', 0.5, () => {
-        const b = ((f.nwb_band ?? 2) + 1) % 3; f.nwb_band = b; g.audio.play('select');
+        const b = ((f.nwb_band ?? 2) + 1) % 3; f.nwb_band = b; this.dress(); g.audio.play('select');
         if (b !== 1) { g.save(false); n.chain([['mira', b === 2 ? 'nwb_mi_2' : 'nwb_mi_0']]); return; }
         this.relay()?.userData.setOn?.(true);
         n.chain([['narrator', 'nwb_mid'], ['mira', 'nwb_mi_1']], () => {
@@ -683,6 +714,20 @@ export class NetB8 {
     }
     return false;
   }
+  // the boxes on the relays, as the flags have them (network.js: showProps, lightRelay; and the fit and the band here)
+  dress() {
+    const has = this.has(), f = this.f;
+    for (const [s, r] of Object.entries(this.net.relays || {})) {
+      if (!has && !r.userData.b8) continue;
+      const b = (r.userData.b8 ||= buildB8());
+      if (!b.grp.parent) r.add(b.grp);
+      b.grp.visible = has && (s !== 'valves' || !!f.nwb_fit);
+      b.knob.rotation.z = -((s === 'valves' ? f.nwb_band ?? 2 : 1) - 1) * 0.8;   // (HIGH as fitted; the others on their middle band)
+    }
+  }
+  // the line as a station other than the valve room is done (network.js stationDone): whose hand set its band
+  stationLine(s) { return (this.has() && { mill: 'nwb_at_mill', light: 'nwb_at_light', bore: 'nwb_at_bore', dome: 'nwb_at_dome' }[s]) || null; }
+  journal() { const f = this.f; return this.has() && !!f.nwb_set && this.net.done() >= 5 ? [{ key: 'nwb_j_five', done: true }] : []; }
   sub() {
     const f = this.f;
     if (!this.on() || !f.nwb_trim) return '';

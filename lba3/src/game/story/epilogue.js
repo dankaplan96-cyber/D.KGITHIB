@@ -88,7 +88,11 @@ export class Epilogue extends ChapterBase {
     g.setState('ending');
     g.hud.show(false);
     document.querySelector('#ending h1').textContent = t('ep_end_title');
-    document.querySelector('#ending p').innerHTML = t('ep_end_text', { vesk: t(this.f.c3_veskHelped ? 'ep_vesk_helped' : 'ep_vesk_left') });   // (VESK-CHOICE)
+    const vesk = t(this.f.c3_veskHelped ? 'ep_vesk_helped' : 'ep_vesk_left');   // (VESK-CHOICE)
+    // (CAMPAIGN-CLARITY §7.2: with the Ballastra chapters played — the same test as the Cradle Hall's scene before it,
+    //  balances.js sleepersScene — the card names Ballastra too; a base-campaign save keeps the original)
+    const bl = this.story.inCampaign('survey') && !!this.f.wk_awake;
+    document.querySelector('#ending p').innerHTML = bl ? t('ep_end_text_bl', { vesk }) : t('ep_end_text', { vesk });
     g.showScreen('ending');
     g.audio.setMood?.('ending');
   }

@@ -372,16 +372,21 @@ export class Network extends ChapterBase {
     VALVE_EFFECT.forEach((eff, i) => { if (st[i]) eff.forEach((e, k) => { out[k] += e; }); });
     return out;
   }
-  lightRelay(s) { this.relays?.[s]?.userData.setOn?.(true); if (this.relays?.[s]) this.relays[s].visible = true; }
+  lightRelay(s) { this.relays?.[s]?.userData.setOn?.(true); if (this.relays?.[s]) this.relays[s].visible = true; this.b8.dress(); }
   stationDone(s) {
     const g = this.game, f = this.f;
     if (f['c10_' + s]) return;
     f['c10_' + s] = true;
     const n = this.done();
-    g.hud.toast('c10_toast_station', { n });
     this.story.refreshCast({ walk: true });
-    if (n >= 5) this.chain([['balradio', 'c10_all_1']], () => { this.story.refreshCast({ walk: true }); this.showProps(); g.updateObjective(); g.save(false); });
-    else { g.updateObjective(); g.save(false); }
+    // (EXP-3, CAMPAIGN-CLARITY §7.1: Tessa's B-8 on this relay, and whose hand set its band; the friends are in place now)
+    const b8 = this.b8.stationLine(s);
+    const go = () => {
+      g.hud.toast('c10_toast_station', { n });
+      if (n >= 5) this.chain([['balradio', 'c10_all_1']], () => { this.story.refreshCast({ walk: true }); this.showProps(); g.updateObjective(); g.save(false); });
+      else { g.updateObjective(); g.save(false); }
+    };
+    if (b8) this.chain([['narrator', b8]], go); else go();
   }
 
   // Oku's mill: the ball on the north mill's brake holds it still for the climb
@@ -573,6 +578,7 @@ export class Network extends ChapterBase {
     if (this.codeBox) this.codeBox.visible = this.done() >= 5 && ['network', 'shell', 'core'].includes(this.story.cur?.key);
     this.thread.push();   // (CAMPAIGN-8: the code line's joint beside it; the isolator off Kell's feed box)
     for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
+    this.b8.dress();   // (EXP-3: Tessa's boxes on the relays)
   }
   regionBuilt() { this.showProps(); }
   applyFlags() {
@@ -623,6 +629,7 @@ export class Network extends ChapterBase {
       { key: 'c10_j_plan', done: !!f.c10_started },
       { key: 'c10_j_fly', done: !!f.c10_started },
       ...this.thread.journal().filter((l) => l.key !== 'nw_j_held'),
+      ...this.b8.journal(),
       { key: this.thread.line('c10_j_all'), done: !!f.c10_done },
       ...this.thread.journal().filter((l) => l.key === 'nw_j_held'),
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)

@@ -27,10 +27,10 @@ Gap column: **ok** (nothing to fix), **fixed** (this pass; §2), **dep** (needs 
 | 11 | Ballastra | the B-7 lets a station say no; Tessa's label; Oren is on Ballastra (`th_tw_exp2`) | find who makes them and how many (`th_bal_exp2`); Tessa: one job first (`bl_te_3`); a float from Corvin, Halden's numbers (`bl_te_s5`) | Ferro's boat sails, the harbour bridge and gate open; the Water Gardens and the kiln share the water (rafts green later); the spill gate rises, the lower row comes home (`bl_du_home`); Oren names the 304 sleepers (`bl_or_3`) | ok |
 | 12 | The House of Balances | every coil, no regulators (`bl_ba_1`); the numbers are in the House (`bl_te_end4x`) | Baldino: get the numbers, Tessa can't build blind (`bl_ba_2x`); `bh_obj_house`; the order book and the bench against Fennick (`bh_tw_t1`) | HELD chalked on every crate, the SOLD cabinet open (on the spot and every visit); the rig: three right levels, twice (`bh_te_rep`); Tessa starts five B-8s | ok |
 | 13 | The Cradles | Oren keeps 304 sleepers; Twinsen promised to come back (`bl_tw_or3`) | Wenna: her brother (`wk_we_1`), **his own words on his card** (`wk_we_2b`), then the hall (`wk_we_3`, `wk_obj_hall`) | the ring stop shut, Twinsen's arm gives out (fail-safe); the flood bell untied and rung, the row comes up; Jory wakes (`wk_jo_1`); the requests board reads ASKING / NOT YET. MY CHOICE (`wk_board2`) | **fixed**: pacing (§3), journal reason (§2.3) |
-| 14 | Baldino's Network | five stations, one minute; Tessa's B-8s are crated (`wk_te_1`) | `c10_obj_bal` "Hear Baldino out"; `c10_bal_1`–`c10_bal_3`; the B-8 for the valve room (`nwb_bal`) | each relay's lamp; each friend takes the handle (`nw_mira_hold`, `nw_zoe_hold`, …); at the valve room Oren trims the relay, the B-8 set by Mira's needles, its lever doesn't move for him (`nwb_or_brass`); the blast doors open (`c10_shaft`) | dep: the other four B-8s are only told (§7) |
+| 14 | Baldino's Network | five stations, one minute; Tessa's B-8s are crated (`wk_te_1`) | `c10_obj_bal` "Hear Baldino out"; `c10_bal_1`–`c10_bal_3`; the B-8 for the valve room (`nwb_bal`) | each relay's lamp; each friend takes the handle (`nw_mira_hold`, `nw_zoe_hold`, …); at the valve room Oren trims the relay, the B-8 set by Mira's needles, its lever doesn't move for him (`nwb_or_brass`); the blast doors open (`c10_shaft`) | **fixed** (§7.1): a B-8 box on every lit relay; as each other station is done one line says whose hand set its band (`nwb_at_mill` Oku, `nwb_at_light` Zoé, `nwb_at_bore` Dallan, `nwb_at_dome` Sefa); journal `nwb_j_five` |
 | 15 | The Shell | Vesk is below with the only console (`c10_bal_p3`) | `c3_obj_shaft`; Baldino on the radio (`c3_bal_radio1`); her knocks answered (`sh_two`) | the shutter held by her crystal (`sh_held`), the arch grown shut behind him; Sendell's chamber | ok |
 | 16 | The Core | a child of this world, not ready; a stop only holds the cracks (`c3_sendell_2`, `c3_sendell_3`) | three pylons, the bank shot (`c3_bal_radio2`); Vesk's overload and coil; Mill Lane's branch, the central lock | Kell's cart climbs without Vesk's line (`co_irsa_1`); Vesk's key (`co_vesk_key`); Zoé's signal; the field holds (`co_bal_end`); the council's guards name the cut log and the list (`co_guard_1`) | ok |
-| — | Epilogue | the shell holds | `ep_obj_home` "Dinner is waiting" | the kitchen tap runs cold; dinner; the Cradle Hall four days on (three lids open, Nan Odra's choice kept, `ep_bl_odra`); end card | dep: the end card names Kesh and Lhar but not Ballastra (§7) |
+| — | Epilogue | the shell holds | `ep_obj_home` "Dinner is waiting" | the kitchen tap runs cold; dinner; the Cradle Hall four days on (three lids open, Nan Odra's choice kept, `ep_bl_odra`); end card | **fixed** (§7.2): `ep_end_text_bl` when the Ballastra chapters were played |
 
 ## 2. Gaps found and fixed (text, objectives, journal)
 
@@ -76,8 +76,8 @@ first instruction) and the objective.
 
 Jory's wish is the only thing in its box, nothing mechanical follows in the same conversation. Saves: nothing saved in
 the pause; a load or a Save & quit inside it restarts the scene (`applyFlags` clears the wait and `begun` while
-`wk_started` is unset). No save field added. Not done: Wenna turning toward the terrace in the pause (an NPC facing
-command the chapter does not have; §7).
+`wk_started` is unset). No save field added. In the pause Wenna looks off toward the gardens' gate to the Arches (the terrace, the hall) for
+1.5 s (`BlChapter.faceFor`, §7.3).
 
 ## 4. Kept and checked (P90 item 4; Source)
 
@@ -111,7 +111,7 @@ command the chapter does not have; §7).
 | 9 | L: a stop holds, doesn't heal; the doors need every station | (relay) | — | his standing order, the cut log, the stop | L: a network is needed | — |
 | 10 | L: Oren; the B-7 lets a station say no | D: by the door this time, finds the B-7 and the tag | (timing the bangs) | D: hid the B-7 ("Do not fit"); on the wire | D: relays built | Oren: helps first, then pushes a lever shut; "a hand gets tired" |
 | 11–13 | L: who sells; Oren holds through glaze; the sleepers; hands can do what one hand can't | (home) | (wants a glazed float) | his standing order on Ballastra (evidence only; never there) | asks for the numbers | Oren: refuses, says his fear (Bay 2), accepts the families' rule |
-| 14 | D: five stations, the B-8 at the valve room | D: takes the dial bank | D: counts four knocks | (below) | D: the code | Oren: trims the relay; the brass lever doesn't move |
+| 14 | D: five stations, the B-8 at the valve room; sees a B-8 on every relay | D: takes the dial bank; reads the lighthouse B-8's band | D: counts four knocks | (below) | D: the code | Oren: trims the relay; the brass lever doesn't move |
 | 15–16 | L: "a child of this world"; turns the bore | D: the signal | D: hears Dad's two knocks | D: overload, coil; gives his key; taken | D: shield sketch | Sendell: asks for help, not sacrifice |
 
 ### Vesk's location and the deadline (Source)
@@ -153,15 +153,16 @@ consequences show in the network (the valve room's B-8) and before the end card 
 
 ## 7. Dependencies for the coordinator (mechanics, not text)
 
-1. **Chapter 14, the other four B-8s.** Baldino says Tessa's boxes "went out with the relays" (`nwb_bal`); only the
-   valve room's is seen and played. A visible box (a prop on each relay's frame, no new step) at the mill, the
-   lighthouse, the bore and the dome would make the payoff show everywhere. Owner: whoever owns `story/network.js` /
-   the relay props.
-2. **The end card** (`ep_end_text`) names Kesh's oasis and Lhar's village but not Ballastra. A variant for the expanded
-   campaign (e.g. "Ballastra's lower row is home, and its families ask.") needs epilogue.js to choose the text (as it
-   does for `{vesk}`). The Cradle Hall cutaway already shows it, so this is polish.
-3. **Chapter 13's pause:** Wenna turning toward the terrace during the 1.6 s needs an NPC face-toward command the
-   chapter API lacks (NPCs face the hero when near). Optional.
+1. **Done (21.11, night shift).** Chapter 14, the other four B-8s: `NetB8.dress()` (story/balances.js) puts a small B-8
+   (iron body, cream band dial, brass lever; the kit's shared materials, 5 meshes) on the lid of each relay, shown with the
+   relay (network.js `showProps` / `lightRelay`); the valve room's once fitted (`nwb_fit`), its pointer on `nwb_band`.
+   `Network.stationDone` plays `NetB8.stationLine(s)` (narrator, one line) after the friends are placed and before the
+   toast and the save. Journal `nwb_j_five` once all five are held and `nwb_set`. No new flag; base-campaign saves and
+   saves without `bh_test` see nothing new.
+2. **Done.** The end card: epilogue.js `showEnd` uses `ep_end_text_bl` (text/ballastra.js, HE in he/ballastra.js) when
+   `inCampaign('survey') && wk_awake` (the same test as the Cradle Hall's scene), else `ep_end_text`.
+3. **Done.** Chapter 13's pause: `BlChapter.faceFor(id, p, s)` (a listener's turn toward a point for s seconds of game
+   time, via `listenTo`; `unface()` on applyFlags) turns Wenna toward `GD.exits.toArches` for 1.5 s.
 
 ## 8. Open risks
 - Played: none. Whether the 1.6 s pause reads as a breath or as a hitch needs a person (it is in play, not a frozen

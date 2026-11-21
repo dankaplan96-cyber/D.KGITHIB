@@ -492,6 +492,12 @@ Object.assign(STR.en, {
   nwb_or_brass: 'That one has no clay in it.',
   nwb_mi_mine: "So I set it, and nobody else can. That's my job now.",
   nwb_sub_fit: "Fit Tessa's B-8 on the relay", nwb_sub_band: "Set the B-8's band (Mira reads the needles)",
+  // (CAMPAIGN-CLARITY §7.1: the other four boxes, seen on their relays as each station is done; NetB8.stationLine)
+  nwb_at_mill: "(One of Tessa's B-8s rides on the relay's lid. Oku sets its band by the feel of the sails, then checks it twice.)",
+  nwb_at_light: "(Tessa's B-8 sits on the relay's lid. Zoé reads its band off the needle and Twinsen sets it, her hands never leaving the dials.)",
+  nwb_at_bore: "(Tessa's B-8 sits on the relay's lid, steam ticking under it. Dallan sets its band and stays beside it.)",
+  nwb_at_dome: "(Tessa's B-8 sits on the relay's lid. Sefa sets its band herself and writes the number in her log.)",
+  nwb_j_five: "Tessa's B-8s are on all five relays. Mira, Oku, Zoé, Dallan and Sefa each keep one band set.",
 
   // ---- the epilogue, before the end card (story/balances.js sleepersScene)
   ep_bl_1: '(Ballastra, the Cradle Hall, four days later. Three lids stand open. The requests board by the door is full.)',
@@ -499,4 +505,6 @@ Object.assign(STR.en, {
   ep_bl_wenna: 'The families ask, one at a time. The row takes turns at the lever. It takes all morning, and nobody minds.',
   ep_bl_odra: 'Some of us said not yet. My mother is one. That was ours to say.',
   ep_bl_oren: 'They ask. I warm. I listen for the next one.',
+  // the end card when the Ballastra chapters were played (story/epilogue.js showEnd; CAMPAIGN-CLARITY §7.2)
+  ep_end_text_bl: 'The bore still turns under the island, now as a shield run by both worlds. The heat posts glow again at half heat, for every house, on the list or not. Kesh has its oasis and Lhar its village. On Ballastra the lower row is home, and a sleeper wakes when the family asks. {vesk} The well runs cool.<br><br>Thanks for playing LBA3: The Awakening.',
 });

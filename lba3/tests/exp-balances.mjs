@@ -128,14 +128,22 @@ const r2 = await timed(() => {
   d.push(dial(2));               // (C round to LOW)
   T.run(20);
   const t2 = T.talk('tessa');
+  // (CAMPAIGN-CLARITY §7.3: in the pause after "Then let's ask together." Wenna looks off toward the gate to the Arches)
+  const C = T.CH('survey'), ff = C.faceFor.bind(C); let face = null;
+  C.faceFor = (id, p, s) => { ff(id, p, s); const n = C.npc(id); face = { id, at: !!p, s, turned: !!n?.listenTo?.face, a0: n ? n.angle : null, to: n && p ? Math.atan2(p.x - n.pos.x, p.z - n.pos.z) : null }; C.after(1.4, () => { face.a1 = n?.angle; }); };
   for (let i = 0; i < 400 && G.flags.chapterKey === 'balances'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+  for (let i = 0; i < 40 && !G.flags.wk_started; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
   T.run(40);
-  return { d, t1: t1.said, wrong, t2: t2.said, ...T.view(), said: window.__said.slice(-30), bh: T.flags('bh_'), wk: T.flags('wk_') };
+  const wn = C.npc('bl_wenna'); if (face) face.after = wn?.listenTo?.face ?? null;
+  const off = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+  if (face && face.to != null) { face.off0 = +off(face.a0, face.to).toFixed(2); face.off1 = face.a1 != null ? +off(face.a1, face.to).toFixed(2) : null; }
+  return { d, t1: t1.said, wrong, t2: t2.said, ...T.view(), said: window.__said.slice(-30), bh: T.flags('bh_'), wk: T.flags('wk_'), face };
 });
 console.log('run 2 → 13:', JSON.stringify(r2).slice(0, 2200));
 check('a wrong band shows itself and the rig resets (C set high: the row under)', r2.wrong.some((l) => /doorsteps under/.test(l)) && r2.wrong.some((l) => /Draining/.test(l)), r2.wrong);
 check('the right bands hold twice ("It repeats"); Tessa will build five', r2.bh.bh_test && r2.said.some((l) => /It repeats/.test(l)) && r2.said.some((l) => /I'll start now/.test(l)), r2.said.slice(-14));
 check('chapter 13 "The Cradles" follows on Ballastra, numbered 13; Wenna face to face: her brother is one of the 304', r2.key === 'survey' && r2.n === 13 && r2.cards.some((c) => /Chapter 13 · The Cradles/.test(c)) && r2.said.some((l) => /One of them is my brother/.test(l)) && r2.wk.wk_started, { key: r2.key, cards: r2.cards, wk: r2.wk });
+check('in the pause before the hall\'s place, Wenna turns toward the gate to the Arches, and lets go of it after', r2.face?.id === 'bl_wenna' && r2.face.at && r2.face.turned && !r2.face.after && r2.face.off1 != null && r2.face.off1 < Math.max(0.35, r2.face.off0 * 0.5), r2.face);
 
 // handoff 2
 await saveQuit(); await castIn('bl_wenna');
@@ -231,13 +239,45 @@ console.log('the valve room:', JSON.stringify(v).slice(0, 2000));
 check('the gauges green: Oren trims the relay\'s share on a stroke ("The shelters drink first")', v.trim.nwb_trim && v.trim.said.some((l) => /shelters drink first/.test(l)), v.trim);
 check("Tessa's B-8 fitted, its band set from Mira's needles as on the rig; its brass lever doesn't move for Oren; the station done", v.nwb.nwb_fit && v.nwb.nwb_set && v.valves && v.said.concat(v.bands).some((l) => /no clay in it/.test(l)), { fit: v.fit, bands: v.bands, said: v.said });
 
+// ---------------------------------------------------------------- the other four B-8s, seen on their relays (CAMPAIGN-CLARITY §7.1)
+const b8 = await timed(() => {
+  const G = game, net = G.story.chapters.find((c) => c.key === 'network');
+  const vis = (o) => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return !!o?.parent; };
+  const vr = net.relays?.valves, valves = { relay: !!vr?.visible, box: vis(vr?.userData.b8?.grp), knob: +(vr?.userData.b8?.knob.rotation.z ?? NaN).toFixed(2), band: G.flags.nwb_band };
+  // (the areas the stations stand in, built as a flight to each would; their relays put on: network.js decorate)
+  for (const id of ['zeelich', 'desert', 'hamalayi', 'obsv', 'lighttop']) G.regions.ensure(id, 'test');
+  G.story.decorate(); net.showProps();
+  const lines = {};
+  for (const s of ['mill', 'light', 'bore', 'dome']) {
+    const n0 = window.__said.length;
+    if (s === 'bore') G.flags.c10_boreRelay = true;
+    net.lightRelay(s); net.stationDone(s);
+    for (let i = 0; i < 60 && (G.state === 'dialog' || !G.flags['c10_' + s]); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    T.run(10);
+    lines[s] = window.__said.slice(n0);
+  }
+  const ST = ['valves', 'mill', 'light', 'bore', 'dome'];
+  const after = Object.fromEntries(ST.map((s) => { const r = net.relays?.[s]; return [s, { relay: !!r?.visible, box: !!r?.userData.b8 && r.userData.b8.grp.parent === r && r.userData.b8.grp.visible }]; }));
+  // (as a Continue has it: the flags as saved, the props put back from them)
+  G.story.applyFlags(); net.showProps();
+  const again = Object.fromEntries(ST.map((s) => [s, !!net.relays?.[s]?.userData.b8?.grp.visible]));
+  const jl = JSON.stringify(G.story.journal());
+  return { valves, lines, after, again, done: net.done(), journal: /nwb_j_five|B-8s are on all five/.test(jl) };
+});
+console.log('the four B-8s:', JSON.stringify(b8).slice(0, 2500));
+check("the valve room's B-8 is a box on its relay once fitted, its pointer on the band set (MID)", b8.valves.relay && b8.valves.box && b8.valves.band === 1 && b8.valves.knob === 0, b8.valves);
+check("each other station: as it is done, a line says Tessa's B-8 sits on the relay and whose hand set its band (Oku, Zoé, Dallan, Sefa)", /Oku sets its band/.test(b8.lines.mill.join(' ')) && /Zoé reads its band/.test(b8.lines.light.join(' ')) && /Dallan sets its band/.test(b8.lines.bore.join(' ')) && /Sefa sets its band/.test(b8.lines.dome.join(' ')), b8.lines);
+check("…and the box is on every relay that stands lit, the valve room's too; again after the flags are put back", Object.values(b8.after).every((x) => x.relay && x.box) && Object.values(b8.again).every(Boolean) && b8.done === 5, { after: b8.after, again: b8.again, done: b8.done });
+check('the journal says it once all five are held', b8.journal, b8.journal);
+
 // ---------------------------------------------------------------- before the end card: the Cradle Hall, four days on
 await ev(() => { const G = game; Object.assign(G.flags, { chapter: 16, chapterKey: 'home' }); G.story.applyFlags(); window.__said = []; G.story.cur.begin(); });
 // (the scene waits on the Ballastra cast's models and a scene change: the page's own tasks must run between steps)
 for (let k = 0; k < 120; k++) { const st = await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); } return G.state; }); if (st === 'ending') break; await page.waitForTimeout(50); }
-const ep = await ev(() => ({ state: game.state, said: window.__said.slice(), room: game.room?.id, epbl: !!game.flags.ep_bl, heroShown: game.hero.rig.root.visible }));
+const ep = await ev(() => ({ state: game.state, said: window.__said.slice(), room: game.room?.id, epbl: !!game.flags.ep_bl, heroShown: game.hero.rig.root.visible, card: document.querySelector('#ending p')?.textContent || '' }));
 console.log('the epilogue:', JSON.stringify(ep).slice(0, 1500));
 check('after the dinner and before the end card: the Cradle Hall four days on (who is awake, who waits by choice, who decides), then the end card at home', ep.state === 'ending' && ep.epbl && ep.said.some((l) => /Eleven of us awake/.test(l)) && ep.said.some((l) => /That was ours to say/.test(l)) && ep.room === 'house' && ep.heroShown, ep);
+check("the end card names Ballastra too (its lower row home, a sleeper wakes when the family asks), with Kesh and Lhar and Vesk's line", /Ballastra the lower row is home/.test(ep.card) && /Kesh has its oasis/.test(ep.card) && /Vesk waits/.test(ep.card) && !/[{]/.test(ep.card), ep.card);
 
 // ---------------------------------------------------------------- a legacy base-campaign save: the original ending
 await open(page, '?nocine');
@@ -253,11 +293,13 @@ const L = await ev((F) => {
   Object.assign(G.flags, { chapter: 16, chapterKey: 'home' }); G.story.applyFlags();
   window.__said = []; G.story.cur.begin();
   for (let i = 0; i < 900 && G.state !== 'ending'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
-  return { ...out, state: G.state, room: G.room?.id, said: window.__said.slice(), exp3: Object.keys(G.flags).filter((k) => /^(bh_|wk_|nwb_|ep_bl)/.test(k)) };
+  return { ...out, state: G.state, room: G.room?.id, said: window.__said.slice(), exp3: Object.keys(G.flags).filter((k) => /^(bh_|wk_|nwb_|ep_bl)/.test(k)), card: document.querySelector('#ending p')?.textContent || '',
+    boxes: Object.values(G.story.chapters.find((c) => c.key === 'network').relays || {}).filter((r) => r.userData.b8?.grp.visible).length };
 }, BASE);
 console.log('legacy exp_base:', JSON.stringify(L).slice(0, 1200));
 check('a legacy exp_base save: no expansion chapters in its campaign, the network numbered 10, no B-8', !L.order.includes('balances') && !L.order.includes('survey') && L.n === 10 && !L.b8on && !L.b8has, L);
 check('…and its epilogue reaches the original end card with no Cradle Hall and no expansion flags', L.state === 'ending' && L.room === 'house' && !L.said.some((l) => /Eleven of us awake/.test(l)) && L.exp3.length === 0, { state: L.state, said: L.said, exp3: L.exp3 });
+check('…its end card is the original (Kesh and Lhar, no Ballastra), and no B-8 box on any relay', /Kesh has its oasis/.test(L.card) && !/Ballastra/.test(L.card) && L.boxes === 0, { card: L.card, boxes: L.boxes });
 
 console.log(`bot game time, chapter 11's last talk to chapter 14's first station: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor, not a first-play estimate)`);
 
