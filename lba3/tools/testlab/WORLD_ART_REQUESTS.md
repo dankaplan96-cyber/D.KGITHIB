@@ -5820,3 +5820,39 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   - Zoé's reach (6) and her shoulder (7) since.
 
   Nothing open on order 57 on the desktop's side.
+
+## FPS30-PRESENT (60.0) · the presented frames at 30 and 60 · the desktop, 21.11 — plugged in done; battery in progress
+**Where:**
+- GTX 1050 (Chrome's WebGL: ANGLE D3D11 on the NVIDIA, as the page reports it; the Intel UHD 630 drives the panel).
+- Windows reports the panel at 60 Hz.
+- Chrome 158 (Playwright's channel, a fresh profile: Energy Saver at Chrome's default, on at 20 % battery).
+- Window 1536×864 at devicePixelRatio 1.25.
+- v113 (`f9aa0309`'s build) and **v114** (`4450455b`, P88), each served directly; Quality Auto (it picked High).
+- **Not done:** inside claude.ai's frame. That needs the user's signed-in browser.
+
+**Method (`docs/lba-maturity/fps30-present/fps30present.mjs`):**
+- 20 s of play: 12 s running a circle on the square (Up + Left held, the Follow camera turning with him), then the house through the game's own transition.
+- Recorded: a CDP trace (`devtools.timeline` and `disabled-by-default-devtools.timeline.frame`, plus cc/viz/gpu), every rAF timestamp in the page, the F9 overlay's pacing line each second, and the game's GPU timer.
+- Presented frames are PipelineReporter's states: PRESENTED_ALL/PARTIAL against DROPPED; NO_UPDATE_DESIRED is a refresh with nothing new, as 30 means. Their begin times' intervals are counted in refreshes.
+- Per run: `fps30-present/{ac,bat}-<build>-<fps>-<k>.json`. The traces, trimmed to the frame events, are in `fps30-present/traces-frames.zip`.
+
+**Plugged in, 2 rounds each:**
+
+| Build · limit | rAF interval p50 / p95 | Game frames (20 s) | Presented / dropped | Presented intervals p50 / p95 / p99 | Intervals of 3+ refreshes (≥ 50 ms) | GPU ms p50 | F9 |
+|---|---|---|---|---|---|---|---|
+| v113 · 30 | 16.7 / 16.8 | 598–599 | 628–630 / 2–4 | 33.3 / 33.5 / **50** | **8 and 6** (+ 1 longer) | 6.7–9.4 | on pace 100 % |
+| v114 · 30 | 16.7 / 16.8–16.9 | 598–600 | 629–632 / 3–6 | 33.3 / 33.5 / **33.5–33.6** | **0 and 0** (1 longer each) | 6.7–9.7 | on pace 100 % |
+| v113 · 60 | 16.7 / 16.8 | 1196 | 1935–1937 / 0 | 16.6 / 16.8 / 16.9 | 0 | 6.0 | on pace 100 % |
+| v114 · 60 | 16.7 / 16.9 | 1196–1197 | 1936 / 0 | 16.5–16.6 / 16.8 / 16.9 | 0 | 6.1 | on pace 100 % |
+
+**Plugged in, the answer:**
+- rAF is an even 16.7 ms, and at 30 the game draws every second refresh in both builds.
+- In **v113**, about 7 frames in 20 s are **presented a refresh late** (50 ms on screen). Main-thread work was at most 27–30 ms and GPU p95 10–14 ms, so these are not slow frames: they are the 30 limit's choice of refresh.
+- **v114 (P88) removes them** on this machine: p99 33.6 ms. The other one-refresh intervals (~70 in 20 s) are compositor-only presents between game frames (the F9 text, the HUD), not new game pictures.
+
+**On battery (first run, v113 · 30, 96–99 %):**
+- rAF p50 16.7 but **p95 33.4** (callbacks a refresh late themselves).
+- **980 presented, 381 dropped**, and the presented intervals spread over 1–6 refreshes: p95 33.5, **p99 66.7**.
+- **The F9 line still read "on pace 100 %"** — the overlay measures the game's draw intervals, not presentation, so on battery it does not see the jumps the user describes.
+- The rest of the battery set (v114 at 30, both at 60, Benchmark: Frame Rates) is running; it will follow in this section.
+- Earlier on this machine (GTX1050-BATTERY): on battery the panel's pace drops to 41–48 Hz at times — the likely root of an uneven 30 there.
