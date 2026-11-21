@@ -99,9 +99,11 @@ function house(parts, r, x, y, z, ry, { w = 3.6, d = 3.2, h = 2.6, stilts = true
     P(bbox(w + 0.4, 0.22, d + 0.4, 0.03), '#a08060', 0, -0.11, 0);
     P(bbox(w + 0.4, 0.06, 1.0, 0.01), '#b89474', 0, 0.02, d / 2 + 0.7);   // (a landing before the door)
   } else P(bbox(w + 0.2, 0.5, d + 0.2, 0.04), '#cdbd9c', 0, -0.2, 0);
-  P(bbox(w, h, d, 0.05), wall, 0, h / 2, 0);
+  // (OVERLAP-3: the walls and the corner posts stop 3 cm inside the beam over them: their tops were in the beam's top's
+  //  plane, seen under the open gables)
+  P(bbox(w, h - 0.03, d, 0.05), wall, 0, (h - 0.03) / 2, 0);
   // corner posts and a floor beam (the timber frame)
-  for (const a of [-1, 1]) for (const b of [-1, 1]) P(bbox(0.16, h, 0.16, 0.02), '#7a5c40', a * w / 2, h / 2, b * d / 2);
+  for (const a of [-1, 1]) for (const b of [-1, 1]) P(bbox(0.16, h - 0.03, 0.16, 0.02), '#7a5c40', a * w / 2, (h - 0.03) / 2, b * d / 2);
   P(bbox(w + 0.1, 0.14, d + 0.1, 0.02), '#7a5c40', 0, h - 0.07, 0);
   // door and windows: dark recesses in a lighter frame
   P(bbox(0.86, 1.7, 0.04, 0.01), '#f0e4c8', -w * 0.18, 0.86, d / 2 + 0.01);

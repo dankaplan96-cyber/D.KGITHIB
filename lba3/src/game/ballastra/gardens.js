@@ -61,7 +61,7 @@
 import * as THREE from 'three';
 import { Batch, cached, bbox, cyl, lathe, tube, compose, tint, tm, pm, ctex, boxUV } from '../kit.js';
 import { Place } from '../props-esmer.js';
-import { BM, M4, deckSlab, railRun, stepsGeo, lantern, crateStack, sack, herbPot, ballastPot, barrow, buoyGeo, bobbed, bobGeo, BOB } from './look.js';
+import { BM, M4, deckSlab, railRun, stepsGeo, lantern, crateStack, sack, herbPot, ballastPot, barrow, buoyGeo, bobbed, bobGeo, BOB, capLift } from './look.js';
 import { AM, tallHouse, tideMarks, weedGeo } from './archhouses.js';
 import { seaSetup, setBedShape } from './sea.js';
 import { buildGardenRooms, GROOMS } from './gardenrooms.js';
@@ -196,11 +196,14 @@ export function* buildGardensSteps(scene, physics) {
 
   // ================================================================ stone: the plaza, the paths, the yard, the east terrace, the rig
   const pave = tm('stone', { color: '#efe2c4', rough: 0.88 });
+  // (OVERLAP-3: the caps of masses side by side, and of parapets at a corner, overlapped with their tops in one plane:
+  //  each is raised 5 mm over those it overlaps at its height — look.js capLift)
+  const lift = capLift();
   const mass = (x0, z0, x1, z1, top, { paveM = pave, bottom = -2.4, wetTop = 0.9, cap = true, colTop = true, stone = BM.stone() } = {}) => {
     const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     if (wetTop > bottom) B.add(sb(w, wetTop - bottom, d, 1.7), BM.wet(), cx, (bottom + wetTop) / 2, cz);
     B.add(sb(w + 0.02, top - 0.14 - wetTop, d + 0.02, 1.8), stone, cx, wetTop + (top - 0.14 - wetTop) / 2, cz);
-    if (cap) B.add(sb(w + 0.16, 0.18, d + 0.16, 1.2), BM.cap(), cx, top - 0.09, cz);
+    if (cap) B.add(sb(w + 0.16, 0.18, d + 0.16, 1.2), BM.cap(), cx, top - 0.09 + lift(x0 - 0.08, z0 - 0.08, x1 + 0.08, z1 + 0.08, top), cz);
     if (paveM) B.add(sb(w - 0.12, 0.04, d - 0.12, 1.9), paveM, cx, top + 0.005, cz);
     if (colTop) box(x0, z0, x1, z1, top);
   };
@@ -263,7 +266,7 @@ export function* buildGardensSteps(scene, physics) {
   const rc = [];
   const rail = (ax, az, bx, bz, y, o) => railRun(B, rc, ax, az, bx, bz, y, o);
   const kerb = (x0, z0, x1, z1, y) => { const w = Math.max(0.3, x1 - x0), d = Math.max(0.3, z1 - z0); B.add(sb(w, 0.36, d, 1.2), BM.cap(), (x0 + x1) / 2, y + 0.18, (z0 + z1) / 2); box(x0, z0, x1, z1, y + 0.36, { block: true }); };
-  const parapet = (x0, z0, x1, z1, y) => { const w = Math.max(0.4, x1 - x0), d = Math.max(0.4, z1 - z0); B.add(sb(w, 0.7, d, 1.6), AM.ashlar(), (x0 + x1) / 2, y + 0.35, (z0 + z1) / 2); B.add(sb(w + 0.12, 0.12, d + 0.12, 1.2), BM.cap(), (x0 + x1) / 2, y + 0.76, (z0 + z1) / 2); box(x0, z0, x1, z1, y + 0.82, { block: true }); };
+  const parapet = (x0, z0, x1, z1, y) => { const w = Math.max(0.4, x1 - x0), d = Math.max(0.4, z1 - z0); B.add(sb(w, 0.7, d, 1.6), AM.ashlar(), (x0 + x1) / 2, y + 0.35, (z0 + z1) / 2); B.add(sb(w + 0.12, 0.12, d + 0.12, 1.2), BM.cap(), (x0 + x1) / 2, y + 0.76 + lift((x0 + x1 - w) / 2 - 0.06, (z0 + z1 - d) / 2 - 0.06, (x0 + x1 + w) / 2 + 0.06, (z0 + z1 + d) / 2 + 0.06, y + 0.82), (z0 + z1) / 2); box(x0, z0, x1, z1, y + 0.82, { block: true }); };
   // along the basins (open at each gangway)
   BAS.forEach((b) => {
     for (const [z0, z1] of [[BZ0 - 0.3, BZ0], [BZ1, BZ1 + 0.3]]) {
@@ -286,7 +289,7 @@ export function* buildGardensSteps(scene, physics) {
   parapet(PLAZA.x0, SP.z1, STAIRS[0].x0, SP.z1 + 0.4, UP);
   rail(STAIRS[0].x0, SP.z1 + 0.15, STAIRS[0].x1, SP.z1 + 0.15, MID, { kind: 'timber' }); rail(STAIRS[1].x0, SP.z1 + 0.15, STAIRS[1].x1, SP.z1 + 0.15, LOW, { kind: 'timber' });
   parapet(RIG.x0 - 0.4, RIG.z0, RIG.x0, RIG.z1 + 0.4, MID); parapet(RIG.x0, RIG.z1, RIG.x1, RIG.z1 + 0.4, MID); parapet(RIG.x1, SP.z1, RIG.x1 + 0.4, RIG.z1 + 0.4, MID);
-  parapet(STAIRS[1].x1, SP.z1, EAST.x0, SP.z1 + 0.4, LOW);
+  parapet(STAIRS[1].x1, SP.z1, EAST.x0 - 0.4, SP.z1 + 0.4, LOW);   // (OVERLAP-3: to the east terrace's west run, not into it)
   parapet(EAST.x0, EAST.z1, EAST.x1, EAST.z1 + 0.4, LOW); parapet(EAST.x1, EAST.z0, EAST.x1 + 0.4, CAUSE.z0, LOW); parapet(EAST.x1, CAUSE.z1, EAST.x1 + 0.4, EAST.z1 + 0.4, LOW);
   parapet(EAST.x0, EAST.z0 - 0.4, EAST.x1 + 0.4, EAST.z0, LOW); parapet(EAST.x0 - 0.4, SP.z1, EAST.x0, EAST.z1, LOW);
   // the wheel's pit: an iron railing round it on the terrace
@@ -315,7 +318,7 @@ export function* buildGardensSteps(scene, physics) {
     const g = new THREE.ExtrudeGeometry(s, { depth: AQ.w, bevelEnabled: false, curveSegments: 8 }); g.translate(0, 0, -AQ.w / 2); g.rotateY(Math.PI / 2);
     boxUV(g, 2.2);
     const m = new THREE.Mesh(g, AM.ashlar()); m.position.set(AQ.x, 0, (AQ.z0 + AQ.z1) / 2); m.castShadow = true; m.receiveShadow = true; m.name = 'bl_aqueduct'; group.add(m);
-    for (const sd of [-1, 1]) B.add(sb(0.3, 0.6, L, 1.2), BM.celadonDeep(), AQ.x + sd * (AQ.w / 2 - 0.15), AQ.bed + 0.1, (AQ.z0 + AQ.z1) / 2);
+    for (const sd of [-1, 1]) B.add(sb(0.32, 0.6, L, 1.2), BM.celadonDeep(), AQ.x + sd * (AQ.w / 2 - 0.14), AQ.bed + 0.1, (AQ.z0 + AQ.z1) / 2);   // (OVERLAP-3: 2 cm proud of the arches' sides, not in their planes; the inner face where the full channel's water meets it)
     B.add(sb(AQ.w - 0.6, 0.12, L, 1.4), BM.wet(), AQ.x, AQ.bed - 0.06, (AQ.z0 + AQ.z1) / 2);
     box(AQ.x - AQ.w / 2, PLAZA.z0 - 0.4, AQ.x + AQ.w / 2, HOUSE.z - HOUSE.d / 2, AQ.bed + 0.6, { block: true });
     // where it comes from: a rocky islet to the north, the channel's head cut into it
@@ -363,7 +366,7 @@ export function* buildGardensSteps(scene, physics) {
     const tops = [bank(-24, STAIRS[0].x1, UP), bank(STAIRS[0].x1, STAIRS[1].x1, MID), bank(STAIRS[1].x1, EAST.x0, LOW)];
     // where the paths step down, the bank steps with them behind a dressed retaining wall (and at the east terrace)
     for (const [x, hi] of [[STAIRS[0].x1, tops[0]], [STAIRS[1].x1, tops[1]], [EAST.x0, tops[2]]]) {
-      B.add(sb(0.6, hi + 2.4 + 0.3, bankD, 1.8), AM.ashlar(), x, (hi + 0.3 - 2.4) / 2, (LEAT.z1 + NP.z0) / 2);
+      B.add(sb(0.6, hi + 2.4 + 0.3, bankD - 0.02, 1.8), AM.ashlar(), x, (hi + 0.3 - 2.4) / 2, (LEAT.z1 + 0.02 + NP.z0) / 2);   // (OVERLAP-3: its back 2 cm in from the bank's)
       B.add(sb(0.76, 0.14, bankD + 0.1, 1.2), BM.cap(), x, hi + 0.37, (LEAT.z1 + NP.z0) / 2);
     }
     const clumps = [], r = rng(41);

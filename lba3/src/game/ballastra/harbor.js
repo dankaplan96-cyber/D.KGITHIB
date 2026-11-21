@@ -48,7 +48,7 @@
 import * as THREE from 'three';
 import { Batch, cached, bbox, cyl, lathe, tube, compose, tint, tm, pm, ctex } from '../kit.js';
 import { Place } from '../props-esmer.js';
-import { BM, BOB, bobbed, bobGeo, M4, deckSlab, railRun, stepsGeo, lantern, bollard, crate, crateStack, jarCrate, sack, netPile, netRack, washingLine, herbPot, ballastPot, barrow, buoyGeo } from './look.js';
+import { BM, BOB, bobbed, bobGeo, M4, deckSlab, railRun, stepsGeo, lantern, bollard, crate, crateStack, jarCrate, sack, netPile, netRack, washingLine, herbPot, ballastPot, barrow, buoyGeo, capLift } from './look.js';
 import { building } from './build.js';
 import { seaSetup, setBedShape } from './sea.js';
 import { buildSkyline, archPicture } from './skyline.js';
@@ -141,15 +141,18 @@ export function* buildBallastraSteps(scene, physics) {
 
   // ================================================================ stone: the quay, the lift's walls, the basin, the pad
   const pave = tm('cobble', { color: '#f4e4c4', rough: 0.9 });
+  // (OVERLAP-3: the caps of quays side by side overlapped along each joint, their tops in one plane: each is raised 5 mm
+  //  over those it overlaps at its height — look.js capLift)
+  const lift = capLift();
   const mass = (x0, z0, x1, z1, top, { paveM = pave, parapet = false, bottom = -2.6, colTop = true } = {}) => {
     const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, wetTop = 0.5;
     B.add(bbox(w, wetTop - bottom, d, 0.04, 1.7), BM.wet(), cx, (bottom + wetTop) / 2, cz);
     B.add(bbox(w + 0.02, top - 0.12 - wetTop, d + 0.02, 0.04, 1.8), BM.stone(), cx, wetTop + (top - 0.12 - wetTop) / 2, cz);
-    B.add(bbox(w + 0.14, 0.16, d + 0.14, 0.04, 1.2), BM.cap(), cx, top - 0.08, cz);
+    B.add(bbox(w + 0.14, 0.16, d + 0.14, 0.04, 1.2), BM.cap(), cx, top - 0.08 + lift(x0 - 0.07, z0 - 0.07, x1 + 0.07, z1 + 0.07, top), cz);
     if (paveM) B.add(bbox(w - 0.12, 0.04, d - 0.12, 0.01, 1.9), paveM, cx, top + 0.005, cz);
     if (parapet) {
       B.add(bbox(w - 0.1, 0.55, d - 0.1, 0.05, 1.8), BM.stone(), cx, top + 0.27, cz);
-      B.add(bbox(w + 0.04, 0.12, d + 0.04, 0.04, 1.2), BM.cap(), cx, top + 0.6, cz);
+      B.add(bbox(w + 0.04, 0.12, d + 0.04, 0.04, 1.2), BM.cap(), cx, top + 0.6 + lift(x0 - 0.02, z0 - 0.02, x1 + 0.02, z1 + 0.02, top + 0.66), cz);
       box(x0, z0, x1, z1, top + 0.66, { block: true });
     } else if (colTop) box(x0, z0, x1, z1, top);
   };
@@ -290,11 +293,13 @@ export function* buildBallastraSteps(scene, physics) {
   const cais = new THREE.Group(); liftG.add(cais);
   const cB = new Batch(cais);
   const R0 = LEVEL_Y[0], cw = CA.x1 - CA.x0 - 0.2, cd = CA.z1 - CA.z0;
-  for (const s of [-1, 1]) cB.add(bbox(0.3, 2.4, cd, 0.04, 1.6), BM.timber(), s * (cw / 2 - 0.15), R0 - 1.2, (CA.z0 + CA.z1) / 2);
-  for (const z of [CA.z0 + 0.15, CA.z1 - 0.15]) cB.add(bbox(cw, 2.4, 0.3, 0.04, 1.6), BM.timber(), 0, R0 - 1.2, z);
+  // (OVERLAP-3: the walls' tops 2 cm under the rims laid on them, the end walls between the side walls (their ends were
+  //  in the end walls' outer faces), the rims 2 cm in from the walls' outer faces and side by side, not over each other)
+  for (const s of [-1, 1]) cB.add(bbox(0.3, 2.38, cd, 0.04, 1.6), BM.timber(), s * (cw / 2 - 0.15), R0 - 1.21, (CA.z0 + CA.z1) / 2);
+  for (const z of [CA.z0 + 0.15, CA.z1 - 0.15]) cB.add(bbox(cw - 0.6, 2.38, 0.3, 0.04, 1.6), BM.timber(), 0, R0 - 1.21, z);
   for (let i = 0; i < 6; i++) for (const s of [-1, 1]) cB.add(cached('blcband', () => bbox(0.06, 2.42, 0.12, 0.01)), BM.bronze(), s * (cw / 2 + 0.01), R0 - 1.2, CA.z0 + 0.8 + i * 2.2);
   // the rims to walk on
-  for (const [x0, x1, z0, z1, m] of [[CA.x0 + 0.1, CA.x0 + 1.0, CA.z0, CA.z1, BM.deck()], [CA.x1 - 1.0, CA.x1 - 0.1, CA.z0, CA.stair0, BM.deck()], [CA.x0 + 0.1, CA.x1 - 0.1, CA.z0, CA.z0 + 0.8, BM.deck()], [CA.x0 + 0.1, CA.x1 - 1.0, CA.z1 - 0.8, CA.z1, BM.deck()]])
+  for (const [x0, x1, z0, z1, m] of [[CA.x0 + 0.12, CA.x0 + 1.0, CA.z0 + 0.02, CA.z1 - 0.02, BM.deck()], [CA.x1 - 1.0, CA.x1 - 0.12, CA.z0 + 0.02, CA.stair0, BM.deck()], [CA.x0 + 1.0, CA.x1 - 1.0, CA.z0 + 0.02, CA.z0 + 0.8, BM.deck()], [CA.x0 + 1.0, CA.x1 - 1.0, CA.z1 - 0.8, CA.z1 - 0.02, BM.deck()]])
     cB.add(bbox(x1 - x0, 0.12, z1 - z0, 0.02, 2.2), m, (x0 + x1) / 2, R0 - 0.06, (z0 + z1) / 2);
   // the stair up its east side to a landing at the quay's height from the bottom level
   const STEPN = 8, run = (CA.land0 - CA.stair0) / STEPN;

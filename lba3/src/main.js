@@ -2449,6 +2449,9 @@ class Game {
     let faced = null, fd = 1e9, fa = 0;
     for (const n of this.npcs) {
       if (!n.present || n.def.noTalk || h.pos.y - n.pos.y > TALK_ABOVE) continue;
+      // (FACE-3's open item: someone behind a counter (def.talkAhead m) answers only from in front of it; from the kiosk's
+      //  back corner Corla's prompt opened through its back wall and she turned away from her hatch)
+      if (n.def.talkAhead != null && (h.pos.x - n.pos.x) * Math.sin(n.def.angle) + (h.pos.z - n.pos.z) * Math.cos(n.def.angle) < n.def.talkAhead) continue;
       const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z);
       if (!(d < 2.6)) continue;   // (STABILIZATION: out of reach either way — consider() takes 2.6 m at most, faced 2.2 —: no prompt object a frame for each of the ~70 people)
       const a = aim(n.pos.x, n.pos.z);

@@ -38,7 +38,8 @@ const DRINK_EVERY = 20;   // s between two drinks that give life back
 export class CitadelStands extends ChapterBase {
   npcDefs() {
     const c = KIOSK.clerk;
-    return [{ id: 'cs_corla', name: 'n_cs_corla', char: 'clerk', color: '#9fd0f0', x: c.x, z: c.z, angle: c.a }];
+    // (talkAhead: talked to only from in front of her hatch, not through the booth's back or side walls: main.js findInteractable)
+    return [{ id: 'cs_corla', name: 'n_cs_corla', char: 'clerk', color: '#9fd0f0', x: c.x, z: c.z, angle: c.a, talkAhead: 0.7 }];
   }
   // she keeps her kiosk in every chapter (in the evacuation too: water and directions)
   place(id) {

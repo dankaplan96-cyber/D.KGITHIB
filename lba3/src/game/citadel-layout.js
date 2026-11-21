@@ -52,7 +52,9 @@ export const PROPS = {
   // benches [x, z, facing]
   benches: [[-94.4, 30.3, 0], [-67.9, 28.4, 1], [-53.3, 34.4, 2], [-47.3, 34.4, 2], [-117.3, 93, 3], [-49.4, 75.1, 2]],
   // bollard runs, 4.4 m: two posts and a rail [x, z, facing, y]
-  bollards: [[-92.8, 42.6, 2, 1.3], [-97.9, 42.6, 2, 1.3], [-108, 42.6, 2, 1.3], [-113.1, 42.6, 2, 1.3], [-76.9, 33.1, 1, 1.3],
+  // (the harbour platform's south quay: the runs stand at the brink, z 43.0, where its level top ends and the bank drops to the
+  //  water; at 42.6 they left a strip of quay outside the rail with no footing below it: slidetraps (−91.67, 44.22))
+  bollards: [[-92.8, 43.0, 2, 1.3], [-97.9, 43.0, 2, 1.3], [-108, 42.6, 2, 1.3], [-113.1, 42.6, 2, 1.3], [-76.9, 33.1, 1, 1.3],
     [-76.9, 38.3, 1, 1.3], [-76.9, 43.4, 1, 1.3], [-68.2, 18.7, 2, 4.3], [-72.8, 18.7, 2, 4.3]],
   // railings, 6 m [x, z, facing, y]
   rails: [[-74.7, -25.1, 3, 4.2], [-74.7, -15.7, 3, 4.2], [-74.7, -6.3, 3, 4.2], [-74.7, 3.2, 3, 4.2], [-74.7, 12.6, 3, 4.2],
