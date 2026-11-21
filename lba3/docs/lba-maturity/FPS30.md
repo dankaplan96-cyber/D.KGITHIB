@@ -550,7 +550,7 @@ here only while the clock is 60 Hz; the "after" should be run in both states.
   - in the 57 Hz state both builds have the ~400 ms gaps (1–6 per pass) and ~20 early frames per run;
   - v122 (P96) removes the early frames and most of the gaps in T1/T2, fewer in T3;
   - v122's GPU timer reads ~21 ms against 11–12 (P96-HW.md).
-- **T3's camera at 30 (keyboard lock-on, mouse + keys):** not better after. Similar jump counts, and one pass of the cloud's T3 with a 2.96 m camera step (yaw 0.097 rad) that the before passes did not have — worth a look in that run's JSON (`fps30-feel/cloud62/after-30/`).
+- **T3's camera at 30 (keyboard lock-on, mouse + keys):** not better after. Similar jump counts, and one pass of the cloud's T3 with a 2.96 m camera step (yaw 0.097 rad) that the before passes did not have — worth a look (that run's JSON is kept on the desktop, `lba3-bench/feel/cloud62/after-30/T3-kbd-real-2.json`; the text output is in `fps30-feel/cloud62/after-30.txt`).
 - At 60, before and after equal.
 
 **Not done:** battery; the 60 FPS film; a real mouse or pad by hand (the probes are synthetic); a Chrome trace of presented frames for the cloud's test (the desktop runner's CDP-trace numbers above cover T1–T3 on the street).
