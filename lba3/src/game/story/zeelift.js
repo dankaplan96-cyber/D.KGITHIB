@@ -76,7 +76,7 @@ export class LiftThread {
     if (!this.open || this.busy) return;
     if (!f.zt_bell && up) {
       if (!f.zt_hook) consider(dist(L.hook.x, L.hook.z), 1.3, { kind: 'zt_hook', label: 'p_hook' });
-      consider(dist(L.bell.x, L.bell.z), 1.3, { kind: 'zt_bell', label: 'p_bell' });
+      consider(dist(L.bell.x, L.bell.z), 1.3, { kind: 'zt_bell', label: 'p_zt_bell' });
     }
     if (f.zt_bell && !f.zt_feed && down) consider(dist(L.feed.x, L.feed.z), 1.4, { kind: 'zt_feed', label: 'p_feed' });
     if (f.zt_feed && !f.zt_ride && !L.moving && Math.abs(L.deckY - L.low) < 0.05 && h.pos.y < L.y0 + 0.6) consider(dist(L.deck.x, L.deck.z), 2.3, { kind: 'zt_ride', label: 'p_ride' });

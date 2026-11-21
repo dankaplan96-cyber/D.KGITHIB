@@ -8,7 +8,7 @@ Object.assign(STR.en, {
   p_tap: 'Try', p_feel: 'Touch', p_listen: 'Listen', p_cock: 'Open', p_strip: 'Tear Off', p_plate: 'Read',
   // (P39: the pump room's two cocks, each its own prompt naming its line, as its tag and the wall diagram name it)
   p_cock_sq: "Open the square's line", p_cock_ho: "Open the houses' line",
-  p_hook: 'Hook', p_bell: 'Ring', p_feed: 'Switch', p_ride: 'Step On', p_cart: 'Push', p_dial: 'Turn', p_crank: 'Crank', p_enter: 'Go In', p_draw: 'Draw',
+  p_hook: 'Hook Chain', p_bell: 'Ring', p_zt_bell: 'Ring Bell', p_feed: 'Start Motor', p_ride: 'Step On', p_cart: 'Push', p_dial: 'Turn', p_crank: 'Crank', p_enter: 'Go In', p_draw: 'Draw',
 
   // ------------------------------------------------------------ chapter 1: home
   // (OPENING-TUT: Arthur's cup and Zoé's lines at the sink are gone; Zoé is next door, as the film showed)
