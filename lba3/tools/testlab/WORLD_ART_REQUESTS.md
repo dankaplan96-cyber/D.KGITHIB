@@ -5559,3 +5559,5 @@ Logs: `docs/lba3-performance/HARDWARE/2026-11-16-owp2/`. **Left:** one person's 
   transition itself (a prep step a black frame, the warm-up hold and the settle frames that keep the first frames in
   view clean), not by this work. Shortening it would mean more prep a frame behind the black — a trade against the
   in-view hitches those holds were made for; not done. The first arrival's ~2.3 s black (later visits ~0.3 s) stays.
+
+- **21.11 (cloud coordinator): SMOOTH-1 merged** on `ccr-c1c2c4b9-dep6ed` (commit 7faa6fe6's merge). Order 61 SMOOTH-HW can run now: base = the commit before that merge, after = the merge. `tests/smooth-routes.mjs`, procedure in `docs/lba3-performance/SMOOTH-1.md` §7. Order 62 FPS30-FEEL: take its "before" now; "after" when "P94 merged" appears here.
