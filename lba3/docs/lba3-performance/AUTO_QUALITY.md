@@ -10,6 +10,15 @@ accepted on the target hardware.** No frame rate, GPU time or pacing figure in t
 user's Vega 8. Every decision threshold is a starting value derived from the user's own Vega 8 reports (builds 241,
 244, 251 and 255, plugged in and on battery). The next benchmark on the laptop is the acceptance run (§8).
 
+**P95 (21.11) is the current state; read [AUTO-P95.md](AUTO-P95.md) first.** P95 changed four things:
+
+- the profiles are High · Medium · **Medium-lean** · Low;
+- a panel at 40 / 48 Hz on battery counts as the display's pace;
+- under the 30 limit, a frame must be ready by the next refresh;
+- a step down that did not help goes back.
+
+The sections below describe the design before P95.
+
 **PERF-CPU (29.10) replaced the build-251 governor.** Build 251 moved one knob at a time on two ladders (GPU, CPU),
 stepped every few seconds and stepped back up between areas; on battery it raised shadows on a light window and the
 next area (the arrival) paid for it. Now Auto chooses one of **five complete, named profiles**, evaluates the first
