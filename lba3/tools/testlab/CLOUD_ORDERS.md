@@ -779,6 +779,25 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
     artifact v113"). Tonight the cloud published v110 FACE-2 (dialogue camera, `docs/lba-maturity/FACE-2.md`), v111
     ARRIVAL-2, v112 P87b and v113 P87c (`docs/lba3-performance/PERF_ARRIVAL.md` §ARRIVAL-2/P87b/P87c). Every number
     there is SwiftShader only. Work these one at a time, in this order:
+
+    0. **FPS30-PRESENT — first, before everything else (the user, 21.11, P88: "30fps is still not even and doesn't look
+       good, still jumps, not steady at 30").** Order 55 (FPS30-HW) was never reported; do it now with the real
+       presented frames, on this laptop (GTX 1050), in Chrome, the artifact build (v113) served directly and inside
+       claude.ai's frame:
+       - Note the screen's refresh rate (Windows display settings), plugged in vs battery, Chrome's Energy Saver state,
+         and whether the GTX or the Intel GPU draws Chrome (chrome://gpu). Do not change OS power or GPU settings.
+       - Pause → Benchmark: Frame Rates, plugged in and on battery; paste both reports.
+       - At Settings → Display → Frame Rate 30, record a Chrome Performance trace (DevTools or Playwright CDP
+         `Tracing` with the `devtools.timeline` and `disabled-by-default-devtools.timeline.frame` categories) for 20 s:
+         square running while turning the camera, then the house. From it: the rAF callback intervals, the
+         **presented / dropped frames** (the Frames track), main-thread time per frame and GPU time per frame. The
+         question is whether rAF is an even 33.3 ms while presentation is not (the compositor showing a frame one
+         refresh late when the GPU time crosses a refresh), or rAF itself is uneven.
+       - The F9 overlay's pacing line at 30 (on pace %, ≥1.5× count) in the same walk.
+       - Then the same at 60 for comparison.
+       Report as FPS30-PRESENT in WORLD_ART_REQUESTS.md with the numbers and the trace files (zipped, under
+       `docs/lba-maturity/fps30-present/`). **Measure only, no code change**; the cloud will fix from your numbers.
+       Never write a number not measured on this machine.
     1. **ARRIVAL-HW (short, measure only).** On this machine's real GPU, in Chrome, plugged in, Medium and High:
        Zeelich arrival from Citadel, the tavern from the street, and the return to Citadel from Zeelich. Base
        `a4e1fb45` (v109) against `ccr-c1c2c4b9-dep6ed` (v113). Use `tests/arrival-steps.mjs` and the probes in
