@@ -774,3 +774,30 @@ Questions for the cloud: in `WORLD_ART_REQUESTS.md`, pushed. The cloud reads it 
 
     **Order with the other jobs:** do this before POLISH-SWEEP (58), because it is short; JOINTS-BLENDER (57) as it stands.
     Never commit LBA1/LBA2 files. Test lightly.
+
+60. **The user, 21.11 morning: "give the local agent tasks".** State: artifact **v113** (stamp commit "Build stamp for
+    artifact v113"). Tonight the cloud published v110 FACE-2 (dialogue camera, `docs/lba-maturity/FACE-2.md`), v111
+    ARRIVAL-2, v112 P87b and v113 P87c (`docs/lba3-performance/PERF_ARRIVAL.md` §ARRIVAL-2/P87b/P87c). Every number
+    there is SwiftShader only. Work these one at a time, in this order:
+    1. **ARRIVAL-HW (short, measure only).** On this machine's real GPU, in Chrome, plugged in, Medium and High:
+       Zeelich arrival from Citadel, the tavern from the street, and the return to Citadel from Zeelich. Base
+       `a4e1fb45` (v109) against `ccr-c1c2c4b9-dep6ed` (v113). Use `tests/arrival-steps.mjs` and the probes in
+       `docs/lba3-performance/ARRIVAL-2/probes/`. Report the longest frame, p95 frame time and any visible hitch for
+       each. Name the machine and GPU; never write a GTX 1050 or UHD 620 number unless measured on that machine. Add a
+       "Real GPU" section to PERF_ARRIVAL.md. No code change.
+    2. **FACE-2-HW (look and report).** Play the chapter-1 talk with Zoé in the yard, Granny Ume, Maro and Tilde, and
+       one later talk of your choice (chapters 1–2 only in anything shown to the user). Record frames or a short clip
+       at the dialogue camera. Judge the cuts between speakers (the 2.2 s hold), whether a face is ever covered, and
+       whether the head posture (curious tilt, concerned head down) reads. Report as FACE-2-HW in
+       WORLD_ART_REQUESTS.md with captures in `captures/face-2-hw/`. **No code change:** the cloud owns
+       `src/engine/camera.js` today (FACE-2 leftovers).
+    3. **P58 (Twinsen hidden at the station).** The cloud's AUDIT-FIX tried 351 spots and found him hidden only at the
+       fort wall's corner near the station. With the real GPU, walk the station area at the play camera (Follow
+       mode, and also Fixed) and look for spots where Twinsen is hidden by a roof, wall or hut. For each, record the
+       spot (x, z), the camera mode and a capture. Fix only at the world's side (a wall's or roof's fade/cut in
+       `src/game/roomocc.js`, or the piece's placement); do not touch `camera.js`. Report as P58-HW.
+    4. **JOINTS-BLENDER (order 57) continues:** sword, landing, walk-to-stop, pickup.
+    **Deliver:** each job on its own branch from `ccr-c1c2c4b9-dep6ed` (`arrival-hw`, `face-2-hw`, `p58-hw`, and
+    `joints-blender` as before), pushed, plus a line in WORLD_ART_REQUESTS.md when you start and finish each. Stay out
+    of `camera.js`, `rig.js` (except order 57), `src/game/story/*` and `src/game/text/*`: the cloud works there.
+    Never commit LBA1/LBA2 files. Test lightly; the cloud runs the full test.
