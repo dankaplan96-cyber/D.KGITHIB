@@ -5898,3 +5898,11 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   - On battery the CPU work doubles (15–17 ms vs 7 ms), still within 33 ms.
   - Not done: the 60 FPS film, the mouse and controller, and the bank shot at 60 (with the "after").
   - Next: 61 SMOOTH-HW (the user's order: 62 then 61); 62 "after" when "P94 merged" appears here.
+- **61 SMOOTH-HW · plugged-in half done** (the desktop, 21.11 night) — branch **`smooth-hw`** (`2d20b6d3`, from
+  `a333b00d`), SMOOTH-1.md §8 with tables, runs' summaries and tools in `docs/lba3-performance/smooth-hw/`.
+  - Before `05c32d81` vs after `18f607cf`, headed Chrome 158 on the GTX 1050, plugged in, Medium and High at 60 and 30.
+  - **At 60, equal within the spread.** Combat after takes about 1.4 ms more CPU at Medium. No interval over 50 ms. GPU 4–10 ms, so no resolution or edge trade was needed.
+  - **New, important for "30 isn't even":** for most of the evening the frame clock ran at 57 Hz (17.5 ms; cause not found). In that state, at 30, **the browser stops calling rAF for ~400 ms, 2–14 times a pass**. That held in both builds, and in Chrome and the desktop app's Electron alike. At 60 it doesn't happen.
+  - **A 1 px change every refresh removes it entirely** (diagnosis only). Proposed: give the skipped refreshes something to present, then measure.
+  - FPS30.md §8 on `fps30-feel` got an addendum: 62's even "before" was in the 60 Hz state.
+  - Left: the battery half (needs the user to unplug) and the clips.
