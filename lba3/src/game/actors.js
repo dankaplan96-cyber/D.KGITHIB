@@ -1496,10 +1496,15 @@ export class MagicBall {
         let px = m.x, pz = m.z;
         if (dy < -0.02) {
           // on down the ray to the ground (never far: the camera looks down on Twinsen)
+          // (P94: to where the ray crosses the ground between the last two 0.25 m samples — it was the last sample above
+          //  it, so as the cursor or the view moved the aimed point stood still, then hopped 0.15-0.2 m when the count of
+          //  samples changed, and the aim's arc with it: the middle dot 0.47 m in one frame while strafing at the bell,
+          //  tests/fps30-feel.mjs T3, docs/lba-maturity/FPS30.md §8)
+          let a0 = py - P.groundAt(m.x, m.z, py + 0.5);
           for (let s = 0.25, n = 0; n < 160; n++, s += 0.25) {
-            const x = m.x + dx * s, y = py + dy * s, z = m.z + dz * s;
-            if (y <= P.groundAt(x, z, y + 0.5)) break;
-            px = x; pz = z;
+            const x = m.x + dx * s, y = py + dy * s, z = m.z + dz * s, a1 = y - P.groundAt(x, z, y + 0.5);
+            if (a1 <= 0) { if (a0 > 0) { const f = a0 / (a0 - a1); px += (x - px) * f; pz += (z - pz) * f; } break; }
+            px = x; pz = z; a0 = a1;
           }
         }
         d = Math.hypot(px - h.x, pz - h.z);
@@ -1562,21 +1567,29 @@ export class MagicBall {
     this.armReach(hero, p);   // (where it will leave from: short of a wall in front of him)
     const pl = this.plan(hero, hero.behaviour, aim, tgt, !!full, p);
     // follow the arc in small steps to its first contact: the ground, a wall, or the target
-    const v = pl.vel, G = pl.grav, pts = [], tp = tgt ? (tgt.pos || tgt) : null;
-    let x = p.x, y = p.y, z = p.z, vy = v.y, land = null;
+    // (SMOOTH-1, applied and measured in P94 — FPS30.md §8: the touch-down is where the arc crosses the ground between the
+    //  last two 10 ms samples, and the dots stand at even shares of the flight to it on the arc the samples trace (exact at
+    //  each sample, continuous between). They
+    //  used to sit on the samples themselves: as he strafed, the ring hopped by up to a sample's 10 ms of flight and each dot
+    //  jumped to the next sample whenever the count changed — spikes of 0.3 m in one frame against 0.02 m in the frames
+    //  around it, at a perfectly even frame time: tests/smooth-routes.mjs combat, docs/lba3-performance/SMOOTH-1.md)
+    const v = pl.vel, G = pl.grav, tp = tgt ? (tgt.pos || tgt) : null, h = 0.01;
+    let x = p.x, y = p.y, z = p.z, vy = v.y, land = null, sc = 400;
     for (let i = 0; i < 400 && !land; i++) {
-      const h = 0.01;
+      const x0 = x, y0 = y, z0 = z;
       x += v.x * h; z += v.z * h; vy -= G * h; y += vy * h;
-      if (i % 2 === 0) pts.push([x, y, z]);
       const gy = P.groundAt(x, z, y + 0.3) + 0.17;
-      if (y <= gy) land = [x, gy, z];
-      else if (P.solidAt(x, z, y, 0.1)) land = [x, y, z, 'wall'];
-      else if (tp && Math.hypot(tp.x - x, tp.z - z) < 0.35) land = [x, y, z, 'target'];
+      if (y <= gy) {
+        const g0 = i ? P.groundAt(x0, z0, y0 + 0.3) + 0.17 : gy, a0 = y0 - g0, a1 = y - gy, f = i && a0 > 0 && a0 - a1 > 1e-9 ? a0 / (a0 - a1) : 1;
+        sc = i + f; land = [x0 + (x - x0) * f, g0 + (gy - g0) * f, z0 + (z - z0) * f];
+      } else if (P.solidAt(x, z, y, 0.1)) { sc = i + 1; land = [x, y, z, 'wall']; }
+      else if (tp && Math.hypot(tp.x - x, tp.z - z) < 0.35) { sc = i + 1; land = [x, y, z, 'target']; }
     }
-    const n = this.dots.length, m = pts.length;
+    // (the arc after s steps of h, as the steps above integrate it: y = y0 + vy0·h·s − G·h²·s(s+1)/2)
+    const n = this.dots.length;
     this.dots.forEach((d, i) => {
-      const q = pts[Math.min(m - 1, Math.round(((i + 1) / (n + 1)) * (m - 1)))];
-      d.visible = !!q; if (q) d.position.set(q[0], q[1], q[2]);
+      const s = 1 + ((i + 1) / (n + 1)) * Math.max(0, sc - 1);
+      d.visible = true; d.position.set(p.x + v.x * h * s, p.y + v.y * h * s - G * h * h * s * (s + 1) / 2, p.z + v.z * h * s);
     });
     this.landMark.visible = !!land && !land[3];
     if (this.landMark.visible) this.landMark.position.set(land[0], land[1] - 0.15, land[2]);
