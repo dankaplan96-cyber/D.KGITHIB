@@ -1,5 +1,6 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+- Night: TEST-DEBT merged (well-town 32/32, world-consistency 37/37, 06-zeelich from base-05 PASS, slidetraps Citadel house corner fixed via world.js rocks; harbour strip + camclear ch10 filed). world.js awaits the next publish. Running: WORLD-POLISH-3 (+ harbour strip), COMBAT-30 (dodge at 30, follow-through), CAMERA-NIGHT (after-talk Follow, camfollow, single-frame steps).
 - Night 21–22.11: running P94 (30 FPS feel), TEST-DEBT (well-town, slidetraps, world-consistency, 06-zeelich fixture, fps30 D), WORLD-POLISH-3 (Ballastra coplanar 128, Corla talk reach, P58 leftovers). v120 = P92 UI + HE infinitive prompts, after hebrew + ui-p92 rerun. Full test at the end of the night.
 - v118 (21.11): P93 depot, P90/P91 story and dialogue, P58-HW station occluders published (opening-tutorial 43/43, dialogue-check PASS). Running: P94, P92, P95.
 - v116 (21.11): P65-2 overlap fixes (Hamalayi, desert, isles) published. P90+P91 narrative worker started; P94 (30 FPS feel) queued after SMOOTH-1, local order 62.
