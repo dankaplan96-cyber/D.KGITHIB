@@ -5890,3 +5890,11 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
     other computer, so the "30 isn't even" report from that computer is still wanted.
   - **Next on the desktop:** the queue as written (62 FPS30-FEEL "before" → 61 SMOOTH-HW → 63 DEPOT-CLIP → JOINTS);
     the user picks the order on this side, a line here when each starts.
+- **62 FPS30-FEEL "before" · done** (the desktop, 21.11 evening) — branch **`fps30-feel`** (`0fc43944`, from `a333b00d`),
+  `docs/lba-maturity/FPS30.md` §8, runner and runs in `docs/lba-maturity/fps30-feel/`.
+  - Where: the desktop app's Electron (the packaged build of `a333b00d`) on the GTX 1050; Medium, Follow, Citadel street. T1–T3 3 runs each at 30, and T3 at 60; battery first, then plugged in.
+  - At 30, images on screen every 33.3 ms (p99 33.5), each shown in its own frame. One 50 ms interval in 18 runs (T3, battery).
+  - T1 and T2 have no motion spikes. T3 (lock-on, strafe, aim) has 4–14 camera and view spikes per run at a stable frame time, at 30 and at 60 alike: that is P94's ground.
+  - On battery the CPU work doubles (15–17 ms vs 7 ms), still within 33 ms.
+  - Not done: the 60 FPS film, the mouse and controller, and the bank shot at 60 (with the "after").
+  - Next: 61 SMOOTH-HW (the user's order: 62 then 61); 62 "after" when "P94 merged" appears here.
