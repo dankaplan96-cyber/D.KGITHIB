@@ -50,7 +50,12 @@ export function twinOf(m, rm = false) {
   let t = TWINS.get(k);
   if (!t) {
     let map = null;
-    if (t0) { map = t0.clone(); map.repeat.set(1, 1); map.offset.set(0, 0); map.rotation = 0; map.center.set(0, 0); map.matrixAutoUpdate = true; map.updateMatrix(); map.needsUpdate = true; }   // (shares the GPU copy of its source)
+    // (ARRIVAL-2: the clone's needsUpdate — three's copy() sets it too — also moved the shared source's version (+2), as if
+    //  its canvas had been repainted: three sent the canvas again, and every batched piece with that texture in another
+    //  area left its draw batch on that area's next frame (a twin made arriving in Zeelich: 12 of Citadel's station,
+    //  pipeline and harbour pieces left on the return's first frame, their cells rebuilt in it). The source's version is
+    //  kept as it was: its pixels did not change; the twin's own version still makes three set it up.)
+    if (t0) { const sv = t0.source.version; map = t0.clone(); map.repeat.set(1, 1); map.offset.set(0, 0); map.rotation = 0; map.center.set(0, 0); map.matrixAutoUpdate = true; map.updateMatrix(); map.needsUpdate = true; map.source.version = sv; }   // (shares the GPU copy of its source)
     t = new THREE.MeshStandardMaterial({ color: '#ffffff', vertexColors: true, map, roughness: m.roughness, metalness: m.metalness, side: m.side, flatShading: m.flatShading, fog: m.fog, polygonOffset: m.polygonOffset, polygonOffsetFactor: m.polygonOffsetFactor, polygonOffsetUnits: m.polygonOffsetUnits });
     t.name = (map ? 'merged-vct' : 'merged-vc') + (rm ? 'rm' : ''); t.userData.twin = true;
     if (rm) perVertexRM(t);
