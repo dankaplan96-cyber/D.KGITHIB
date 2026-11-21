@@ -386,9 +386,14 @@ export class Cradles extends BlChapter {
     // (P90: Jory's own words, his card, are a line of their own; a breath of play after Twinsen's answer, and only then
     // does Wenna say where the hall is: the chapter's first instruction)
     this.chain([['bl_wenna', 'wk_we_1'], ['hero', 'wk_tw_1'], ['bl_wenna', 'wk_we_2'], ['bl_wenna', 'wk_we_2b'], ['hero', 'wk_tw_2']], () => {
-      this.after(1.6, () => this.chain([['bl_wenna', 'wk_we_3']], () => {
-        f.wk_started = true; this.sync(true); this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
-      }));
+      // (if he has started another talk or gone through a door in the pause, she waits until he is free)
+      const where = () => {
+        if (g.state !== 'play' || g.trans || g.cine) { this.after(0.3, where); return; }
+        this.chain([['bl_wenna', 'wk_we_3']], () => {
+          f.wk_started = true; this.sync(true); this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);
+        });
+      };
+      this.after(1.6, where);
     });
     this.begun = true;
   }
