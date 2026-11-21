@@ -413,3 +413,76 @@ The 75–235 s frames inside first visits are SwiftShader's canvas read-back sta
   moved: 95 % of the pixels more than 8 levels apart are on the animated water, and the other 1 383 are scattered
   moving things. A pixel-identical capture at the same simulated moment was not made.
 - NOT TESTED: a 30-minute session; Ballastra on the play route; any hardware.
+
+## P87c (21.11) — the off-the-wall slate and sand repaints (follow-up to P87b "Remaining")
+
+**Automated runtime only (SwiftShader)**: headless Chromium, ANGLE on SwiftShader, 4-core shared container, Medium,
+1366×768. Base = `70eaf3c6` (an export, port 8221), candidate = this branch (port 8222). One browser at a time, no
+other agent's browser at the start of any run. No hardware number here. Probes: `P87c/probes/`; results:
+`P87c/results/` (`summary.json` is the machine-readable before/after).
+
+### What was probed
+
+`probes/run_ow.mjs` + `q_ow.js`: the save `tests/fixtures/campaign/base-07-dig` continued as a player does (chapter 4
+on Desert Island, Tali's court open; only the save's own areas built at load, the rest on first visit, as with
+`NOPREP=1`). Then the game's own scene changes: Desert Island > school > Desert Island > tent > Desert Island >
+Zeelich > sewers > Zeelich > Desert Island > Citadel > tavern > Citadel > Bazoo > Citadel > Desert Island. Per visit:
+`OW.score` / `OW.marks` calls, real repaints (the canvas texture's version moved), ms in those calls, and the two
+canvases sent to the GPU (count, KB at mip 0, ms in `texImage2D`). Then the story's own changes on the island (the same
+`applyWorld` the game runs), and a frame on the island rendered and finished on the GPU (`gl.finish`) with both canvases
+repainted, against one without.
+
+### Findings (MEASURED, base)
+
+- Every first-visit build calls `story.decorate` (`main.js regionBuilt`), which runs `OffTheWall.applyWorld`, which
+  repaints both canvases: 6 of 6 builds on the route, 12 repaints, with the same lines and marks each time.
+- Each return to Desert Island after such a build sent both canvases again: 4 returns, 8 sends, 6 234 KB (1 558 KB
+  each time: the slate 640 KB, the sand 918 KB, mip 0).
+- The cost is small. The calls take 0.0–0.4 ms of main-thread time (the canvas commands are only recorded). The
+  `texImage2D` calls take 0.0–0.1 ms on the route and 2–8 ms when the send follows straight after the repaint on the
+  island. The full cost, measured on the island with `gl.finish`, is about 2 ms a frame: 5.7 ms with both canvases
+  repainted and sent against 3.5 ms without (medians of 6, SwiftShader). The first visits' own stalls (75–200 s here,
+  the SwiftShader read-back stall of ARRIVAL-2) are many orders of magnitude larger.
+- So this was never a cause of a visible hitch on the measured route. It is wasted work, about 1.5 MB uploaded on most
+  returns to Desert Island, and the fix is a few lines, so it was changed anyway.
+
+### Change
+
+`src/game/offwall.js`: `OW.score(lines)` and `OW.marks(list)` keep a signature of what they last drew
+(`JSON.stringify` of the lines / the marks) and return without drawing if it is the same. The drawing depends on those
+arguments alone, so the canvas already shows what a repaint would draw. The first call (at build) always draws, and any
+change of lines or marks draws as before. No other code writes to these two canvases. Nothing is saved, so old saves
+load as before. No new shipped file (`tools/game-files.mjs`: 509).
+
+### Before / after (Automated runtime only, SwiftShader)
+
+| | base | candidate |
+|---|---|---|
+| route: OW calls / repaints (6 first-visit builds) | 12 / 12 | 12 / **0** |
+| route: canvases sent again on the 4 returns to Desert Island | 8 (6 234 KB) | **0** |
+| on the island: `applyWorld` with nothing changed | 2 repaints, 1 558 KB sent | **0, 0** |
+| the board moved (court, 4 rings) | 2 repaints, 1 558 KB sent | 2 repaints, 1 558 KB sent |
+| a ring counted (TWINSEN 5) | 1 repaint, 640 KB sent | 1 repaint, 640 KB sent |
+| the board's spot changed by flags (the marks show every spot, so nothing to draw) | 2 repaints, same pixels | 0 |
+
+Image check (`probes/pngcmp.py`): the slate and sand canvases read back after the route (the save's state: TALI 31,
+JOSS 2, her ring) and after the board moved (TALI 31, JOSS 2, TWINSEN 5, the court's spots) are pixel-identical between
+base and candidate. Note for later probes: a canvas read back with `getImageData` gives slightly different pixels when it
+is drawn again afterwards (both builds; Chromium draws it another way after a read-back), so compare captures taken at
+the same point of the same sequence.
+
+Seen only in the probe (not investigated): calling `story.decorate()` by hand after the court flags were set by hand
+built 9 more areas in that frame (each through `main.js regionBuilt`). On the play route each build called `applyWorld`
+once.
+
+### Verification (candidate, GAME_URL=http://localhost:8222/)
+
+- `tests/off-the-wall.mjs` (the only test that covers the slate): PASS 24/24, including old saves base-07-dig,
+  new-13-desert and base-12 loading with Tali at her bell and the court as the flags have it.
+- `tests/arrival-steps.mjs`: PASS 12/12. `tests/lazyregions.mjs`: PASS 13/13.
+- `tests/travel.mjs`: PASS 27/27 (load 1.5). A first run straight after the three tests above, at load 3.8–4.2,
+  FAILed one check (chapter 10: the walk to Hesk at Citadel ended "stuck", so his glider menu did not open; the log of
+  that run was overwritten). Base, run next at load 1.3, PASSed 27/27, and so did the candidate's second run. The
+  check is on Citadel, where nothing of the off-the-wall court is, so it is taken as a load-related flake (INFERRED).
+- NOT TESTED: a 30-minute session; any hardware. Only one sample of the probe for each build (the counts are exact;
+  the ms are single samples).

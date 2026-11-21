@@ -195,7 +195,10 @@ export function buildOffWall(game, D) {
     const w = W(p.x, p.z); OW.boardCol.x = w.x; OW.boardCol.z = w.z; OW.boardCol.rot = p.rot || 0; OW.boardCol.enabled = up >= 1 && !p.down; PH.update(OW.boardCol);
   };
   OW.boardStanding = () => OW.boardCol.enabled;
-  OW.score = (lines) => { slateDraw(slateC.getContext('2d'), slateC.width, slateC.height, lines); slateT.needsUpdate = true; };
+  // (P87c: the story asks again after every area's build (story.decorate > applyWorld); the same lines are not drawn
+  //  again, so the canvas is not sent to the GPU again either. What is drawn depends on the lines alone.)
+  let slateSig = null;
+  OW.score = (lines) => { const s = JSON.stringify(lines); if (s === slateSig) return; slateSig = s; slateDraw(slateC.getContext('2d'), slateC.width, slateC.height, lines); slateT.needsUpdate = true; };
   OW.score(['TALI 31', 'JOSS 2']);
 
   // ---- her X on the east block's face (its north face, z −74.4: the play camera looks south at it)
@@ -208,7 +211,9 @@ export function buildOffWall(game, D) {
   const sandT = new THREE.CanvasTexture(sandC); sandT.colorSpace = THREE.SRGBColorSpace; sandT.anisotropy = 4;
   const sand = new THREE.Mesh(plane(cw, cd), new THREE.MeshStandardMaterial({ map: sandT, transparent: true, depthWrite: false, roughness: 1, polygonOffset: true, polygonOffsetFactor: -4 }));
   sand.rotation.x = -Math.PI / 2; sand.position.set((C.x0 + C.x1) / 2, g + 0.02, (C.z0 + C.z1) / 2); sand.renderOrder = 1; sand.receiveShadow = true; root.add(sand);
+  let marksSig = null;   // (P87c: as score's: the same marks are not drawn again)
   OW.marks = (list) => {
+    const sig = JSON.stringify(list); if (sig === marksSig) return; marksSig = sig;
     const x = sandC.getContext('2d'); x.clearRect(0, 0, sandC.width, sandC.height);
     const px = (X) => (X - C.x0) * PX, pz = (Z) => (Z - C.z0) * PX;
     x.lineCap = 'round';
