@@ -3,8 +3,9 @@
 //       not how to set it; each gauge sits over the branch it reads; steam let in with nowhere to go shakes the shut
 //       branches and flutters their needles; one branch open settles its own needle (progress); the aquifer branch
 //       opened with steam on sends its needle into the red; a save halfway keeps the valves and the shaking.
-//   c15 chapter 15, the cooling machinery (story/chapter3.js, underground.js): the diagram shows where the pipes run, the
-//       drain no longer crossed out; B opened is the wrong try (his line, the drain's glow, the sight glasses amber).
+//   c15 chapter 15, the cooling machinery (story/chapter3.js, underground.js; phase 2): one pump feeds the drill's drive
+//       and the exchanger; the drain (B) is found open; both feeds with it running starve the drive (it slows, its lamp
+//       red, his line); shut, the loop closes and the exchanger cools with the drive at speed; a save halfway keeps it.
 //   c7  chapter 7, the vent's seal (story/observatory.js, hamalayi.js): three of the five discs steam already, two are
 //       capped with ice; a ball at a steaming one only rings (said once); the ice broken (ball, or a blow) lets that
 //       one breathe; with all five breathing the seal turns; a save halfway keeps what was freed.
@@ -152,12 +153,26 @@ if (PARTS.includes('c15')) {
   await ev(() => { const D = game.room.diagram; P.go(D.x + 2.2, D.z + 0.6, { tol: 0.5 }); P.face(D.x, D.z); game.step(0.6); });
   await shot('c15-diagram');
   if (!BEFORE) {
-    is('c15: the diagram (input): where the pipes run, no answer crossed out', await ev(() => { const D = game.room.diagram, n = window.SAID.length; P.use(D.x, D.z, { kind: 'c3diagram' }); P.settle(); return T.said(n)[0] || ''; }),
-      (v) => /drain/i.test(v) && /catwalk/i.test(v) && !/crossed|A and C/i.test(v));
-    is('c15: a wrong try: B (the drain) opened: his line; not cooled', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'), n = window.SAID.length; P.use(v.x, v.z, { kind: 'c3valve', near: 1.2 }); game.step(1); P.settle(); return [v.open, !!game.flags.c3_cooled, T.said(n)]; }),
-      (v) => v[0] && !v[1] && v[2].some((s) => /drain/i.test(s)));
-    await ev(() => { game.step(1.5); });
-    await shot('c15-drain-open');
+    is('c15: arrival: the drain (B) found running, the drive turning at speed, nothing cooled', await ev(() => { const D = game.room, v = D.valves.find((x) => x.id === 'B'); return [v.open, !!game.flags.c3_cooled, D.drive.starved, +D.drive.speed.toFixed(2)]; }),
+      (v) => v[0] && !v[1] && v[2] === false && v[3] > 0.9);
+    is('c15: the diagram (input): one pump for the drive and the exchanger, the drain', await ev(() => { const D = game.room.diagram, n = window.SAID.length; P.use(D.x, D.z, { kind: 'c3diagram' }); P.settle(); return T.said(n)[0] || ''; }),
+      (v) => /pump/i.test(v) && /drive/i.test(v) && /drain/i.test(v) && !/crossed|A and C/i.test(v));
+    is('c15: valve A (input): one feed, the drive still at speed', await ev(() => { const D = game.room, v = D.valves.find((x) => x.id === 'A'); P.use(v.x, v.z, { kind: 'c3valve', near: 1.2 }); game.step(3); P.settle(); return [v.open, D.drive.starved, +D.drive.speed.toFixed(2), !!game.flags.c3_cooled]; }),
+      (v) => v[0] && !v[1] && v[2] > 0.9 && !v[3]);
+    // (valve C is on the catwalk: the stair and the knocker are chapter3.mjs's; here he is set on the catwalk by it: staged)
+    is('c15: valve C with the drain running: the drive starves (it slows, his line), nothing cooled', await ev(() => { const G = game, D = G.room, v = D.valves.find((x) => x.id === 'C'), n = window.SAID.length; T.useAt(v.x, v.z, v.y); G.step(4); P.settle();
+      return [v.open, D.drive.starved, +D.drive.speed.toFixed(2), !!G.flags.c3_cooled, T.said(n)]; }), (v) => v[0] && v[1] && v[2] < 0.6 && !v[3] && v[4].some((s) => /drive/i.test(s)));
+    await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.tp(v.x - 1.6, v.z - 1.2); P.face(v.x, v.z); game.step(0.6); });
+    await shot('c15-starved');
+    await ev(() => { game.save(false); });
+    await boot('continue');
+    is('c15: save → Continue halfway: the three valves open, the drive still starving', await ev(() => { const G = game; G.step(3); P.settle(); const D = G.room; return [G.room?.id, D.valves.map((v) => v.open).join(), D.drive.starved]; }),
+      (v) => v[0] === 'c3deep' && v[1] === 'true,true,true' && v[2]);
+    is('c15: the drain (B) shut (input): the loop closes, the exchanger cools, the drive back to speed', await ev(() => { const G = game, D = G.room, v = D.valves.find((x) => x.id === 'B');
+      for (const en of G.enemies) if (en.alive && en.group === 'c3deep') { for (let k = 0; k < 12 && en.alive; k++) { (en.take || en.damage).call(en, 3, G.hero.pos); G.step(0.1); } }
+      P.use(v.x, v.z, { kind: 'c3valve', near: 1.2 }); G.step(5); P.settle(); return [v.open, !!G.flags.c3_cooled, D.drive.starved, +D.drive.speed.toFixed(2)]; }),
+      (v) => !v[0] && v[1] && !v[2] && v[3] > 0.9);
+    await shot('c15-cooled');
   }
 }
 

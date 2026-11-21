@@ -10,8 +10,10 @@
 //
 // Twinsen follows Vesk down the drill shaft at Citadel's station (SHAFT-CITADEL: its top is the bore's collar in the old
 // fort's yard; the network's code opened its blast doors in chapter 10, and the lift comes back up there). In the project's deep installation he cools the bore's heat
-// exchanger to free a jammed shutter (a cooling diagram on the wall gives the circuit: valves A and C to
-// the exchanger, B to a drain; valve C sits on a catwalk reached by knocking a ladder down with the ball),
+// exchanger to free a jammed shutter (a cooling diagram on the wall shows the circuit: one pump for the bore's drive
+// and, by valves A and C, the exchanger; B from the exchanger to a drain, found open. PUZZLES P-C phase 2: both feeds
+// open with the drain running starve the drive, which must not stop halfway; shut the drain and the loop closes; valve
+// C sits on a catwalk reached by knocking a ladder down with the ball),
 // past a maintenance drone. In the crystal galleries the well's crystals have grown huge; waking three
 // pillars with the ball raises stepping stones across the chasm (the cliffs' mechanic, bigger). Sendell
 // tells him plainly what lies under the shell and why stopping the drill is not enough. In the core Vesk
@@ -172,7 +174,11 @@ export class Chapter3 extends ChapterBase {
           (f.c3_valves ||= {})[v.id] = open;
           g.audio.play(open ? 'chest' : 'select');
           g.hud.toast(open ? 'c3_toast_valve_open' : 'c3_toast_valve_closed', { v: v.id });
-          if (v.id === 'B' && open) { this.chain([['hero', 'c3_valve_drain']]); return; }
+          this.turnedAt = g.time;
+          // (PUZZLES P-C 2: what the room shows, said once where it is news: the drive starving; the drain taking the feed)
+          const c = this.R.c3deep?.coolState?.() || {};
+          if (c.starve && !f.c3_starve) { f.c3_starve = true; this.chain([['hero', 'c3_starve']]); return; }
+          if (v.id === 'B' && open && c.feeds) { this.chain([['hero', 'c3_valve_drain']]); return; }
           this.checkCooling();
         }, 0.45);
         return true;
@@ -362,6 +368,8 @@ export class Chapter3 extends ChapterBase {
   onEnterRoom(id) {
     const g = this.game, f = this.f;
     if (!this.on()) return;
+    // (PUZZLES P-C 2: the crew left the drain open: reaching the hall with no valve turned, B is found running)
+    if (id === 'c3deep' && this.part === 1 && !f.c3_cooled && !f.c3_valves) { f.c3_valves = { B: true }; for (const v of this.R.c3deep?.valves || []) { v.setOpen?.(v.id === 'B'); v.open = v.id === 'B'; } }
     if (id === 'c3deep' && !f.c3_deepSeen) { f.c3_deepSeen = true; this.chain([['hero', 'c3_deep_in']], () => g.updateObjective()); }
     if (id === 'c3gallery' && !f.c3_gallerySeen) { f.c3_gallerySeen = true; this.chain([['hero', 'c3_gallery_in'], ['hero', 'c3_gallery_hint']], () => g.updateObjective()); }
     // (CAMPAIGN-9: the arch he came in by grows shut behind him first, shown; Sendell explains it in her words)
@@ -448,6 +456,8 @@ export class Chapter3 extends ChapterBase {
     if (g.room?.id === 'c3core' && f.c3_overload && f.c3_bleed && !f.c3_turned) {
       this.ensureCoil();   // (it animates itself: finale-fx.js, on the room's updaters)
     }
+    // (PUZZLES P-C 2: the drive seen starving, then a while with nothing turned: the drain)
+    this.nudge(dt, 'c3drain', g.room?.id === 'c3deep' && !!f.c3_starve && !f.c3_cooled && g.time - (this.turnedAt ?? -1e9) > 20, 35, 'c3_nudge_drain');
     // nudges for a stuck player only (HINTS-LESS): no pylon after 40 s of the fight, no hit on the coil after 25 s
     const core = g.room?.id === 'c3core';
     this.nudge(dt, 'pylons', core && f.c3_fight && !f.c3_overload && this.pylons() === 0, 40, 'c3_toast_fight');
@@ -480,6 +490,8 @@ export class Chapter3 extends ChapterBase {
     const f = this.f, R = this.R;
     const D = R.c3deep, G = R.c3gallery, C = R.c3core;
     if (D) {
+      // (PUZZLES P-C 2: the crew left the drain open: a game that reaches the hall with no valve turned finds B running)
+      if (this.isCur() && this.part === 1 && !f.c3_cooled && !f.c3_valves) f.c3_valves = { B: true };
       for (const v of D.valves || []) { const o = !!f.c3_valves?.[v.id]; v.setOpen?.(o); v.open = o; }
       if (f.c3_ladder) { for (const tg of D.ballTargets || []) if (tg.ballSwitch) tg.done = true; this.lowerLadder(true); }
       if (f.c3_cooled) D.coolDoor?.open?.();

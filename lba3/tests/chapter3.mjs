@@ -82,8 +82,9 @@ is('the machinery: steam out of all four vents over the catwalk; near the stair 
   (v) => v[0] === 'false,false,false,false' && v[1] === true && v[2] === 'false,false,true,true');
 await shot('C3-01-deep.png');
 is('the cooling diagram read', await ev(() => { const D = game.room; T.useAt(D.diagram.x, D.diagram.z); return [game.flags.c3_diagram, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
-is('the wrong valve (B) opens but cools nothing', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }), (v) => v[0] === true && !v[1]);
-await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); });
+// (PUZZLES P-C phase 2, 21.11: changed on purpose. The drain (B) is found open; both feeds open with it running starve
+//  the drill's drive; shutting it closes the loop: the drive keeps turning and the exchanger cools)
+is('the drain (B) found open, the drive turning, nothing cooled', await ev(() => { const D = game.room, v = D.valves.find((x) => x.id === 'B'); return [v.open, game.flags.c3_cooled, D.drive.starved]; }), (v) => v[0] === true && !v[1] && v[2] === false);
 is('valve A opened (not cooled yet)', await ev(() => { const v = game.room.valves.find((x) => x.id === 'A'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }), (v) => v[0] === true && !v[1]);
 is("the ladder's ball switch hit, the ladder down", await ev(() => { const tg = game.room.ballTargets.find((x) => x.ballSwitch); return [T.hit(tg), game.flags.c3_ladder]; }), (v) => v[0] !== 'FAILED' && v[1] === true);
 is('on the catwalk, a step into the west end\'s steam burns and pushes him back', await ev(() => { const G = game, D = G.room, h = G.hero, W = D.vents[1]; T.tp(W.x + 0.9, W.z, -Math.PI / 2, 3.0); h.hp = h.maxHp; h.invuln = 0; const hp = h.hp;
@@ -93,7 +94,8 @@ is('the knocker: three knocks are answered with two (nothing changes); two knock
   const knock = (n) => { T.tp(K.x - 0.38, K.z + 0.55, Math.PI, 3.0); for (let i = 0; i < n; i++) { for (let w = 0; w < 60 && h.actT > 0; w++) G.step(0.05); T.tap('KeyE'); for (let w = 0; w < 40 && (h.steer || h.actT > 0); w++) G.step(0.05); } for (let i = 0; i < 200 && (sh.msg || sh.busy || G.state === 'dialog'); i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); };
   knock(3); const a = [f.sh_reply ?? null, D.vents.map((v) => v.latched).join()]; knock(2); return [...a, f.sh_reply, D.vents.map((v) => v.latched).join()]; }),
   (v) => v[0] === null && v[1] === 'false,false,true,true' && v[2] === true && v[3] === 'true,true,true,true');
-is('valve C on the catwalk: cooled', await ev(() => { const v = game.room.valves.find((x) => x.id === 'C'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled, game.hero.pos.y.toFixed(2), v.y]; }), (v) => v[0] === true && v[1] === true);
+is('valve C on the catwalk with the drain open: the drive starves (said), not cooled', await ev(() => { const v = game.room.valves.find((x) => x.id === 'C'); T.useAt(v.x, v.z, v.y); game.step(3); return [v.open, game.flags.c3_cooled, game.flags.c3_starve, game.room.drive.starved, +game.room.drive.speed.toFixed(2)]; }), (v) => v[0] === true && !v[1] && v[2] === true && v[3] === true && v[4] < 0.6);
+is('the drain (B) shut: the loop closes, cooled, the drive back up to speed', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); game.step(5); T.talkAll(); return [v.open, game.flags.c3_cooled, game.room.drive.starved, +game.room.drive.speed.toFixed(2)]; }), (v) => v[0] === false && v[1] === true && v[2] === false && v[3] > 0.9);
 is('the machinery cooled, an objective set', await ev(() => [game.flags.c3_cooled, T.obj()]), (v) => v[0] === true && v[1].length > 0);
 await shot('C3-02-cooled.png');
 
