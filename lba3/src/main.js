@@ -474,6 +474,17 @@ class Game {
       for (const a of this.talkers) if (a.pos && a.present !== false && Math.hypot(a.pos.x - h.x, a.pos.z - h.z) < 9) out.push(a.pos);
       return out.length ? out : null;
     };
+    // (FACE-2, P86: the two-shot favours whoever speaks — him ('hero') or one of the talkers (their place) — and frames
+    //  that face; where a face is: its head's middle, its scale, and for someone seated or asleep the way it keeps facing)
+    this.camRig.speaker = () => (this.state !== 'dialog' || !this.speaker ? null : this.speaker === this.hero ? 'hero' : this.speaker.pos || null);
+    this.camRig.faceOf = (p) => {
+      let a = p === this.hero.pos ? this.hero : null;
+      if (!a) for (const n of this.talkers || []) if (n.pos === p) { a = n; break; }
+      const hd = a?.rig?.j?.head;
+      if (!hd) return null;
+      const v = hd.getWorldPosition(new THREE.Vector3()), s = a.rig.root.scale.y || 1;
+      return { x: v.x, y: v.y + 0.05 * s, z: v.z, s, yaw: a !== this.hero && (a.pinY != null || a.forceAnim === 'doze') ? a.angle : null };
+    };
     // (CAM-CROWD, PLAYTHROUGH PT-8: the people standing round a dialogue, not in it — its two-shot keeps them out of the way)
     this.camRig.crowd = () => {
       const h = this.hero.pos, out = [];
@@ -3063,6 +3074,7 @@ class Game {
         this.hud.updateDialog(dt);
         if (input.pressed('interact') || input.pressed('action') || input.pressed('click') || input.pressed('recenter')) { this.tutorial.event('advance'); this.hud.advance(); }
         this.tutorial.dialog();   // (OPENING-TUT: the box's key hint, in the device in use)
+        if (this.tutorial._mk?.group.visible) this.tutorial._mk.group.visible = false;   // (FACE-2: the step's gold marker, over the head the two-shot frames, waits out the talk; play puts it back)
         this.updateBubble();
         {
           // Twinsen gestures when he speaks and turns to whoever else is talking

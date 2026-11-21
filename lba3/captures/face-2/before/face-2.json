@@ -1,0 +1,99 @@
+{
+ "W": 1280,
+ "H": 720,
+ "SPOT": "yard",
+ "lines": [
+  {
+   "who": "zoe",
+   "fav": "",
+   "line": "Same next door. Their tap ran warm, knocked thre",
+   "head": {
+    "px": 73,
+    "x": 762,
+    "bottom": 289,
+    "top": 216,
+    "turn": 36
+   },
+   "other": {
+    "px": 108,
+    "x": 432,
+    "bottom": 370,
+    "top": 262,
+    "turn": 121
+   },
+   "box": 552
+  },
+  {
+   "who": "zoe",
+   "fav": "",
+   "line": "And look at their kettle. Furred with these sinc",
+   "head": {
+    "px": 73,
+    "x": 758,
+    "bottom": 289,
+    "top": 216,
+    "turn": 36
+   },
+   "other": {
+    "px": 107,
+    "x": 440,
+    "bottom": 364,
+    "top": 258,
+    "turn": 121
+   },
+   "box": 552
+  },
+  {
+   "who": "hero",
+   "fav": "",
+   "line": "(Tiny crystals. Still warm.)",
+   "head": {
+    "px": 107,
+    "x": 437,
+    "bottom": 366,
+    "top": 259,
+    "turn": 122
+   },
+   "other": {
+    "px": 73,
+    "x": 761,
+    "bottom": 289,
+    "top": 216,
+    "turn": 37
+   },
+   "box": 552
+  },
+  {
+   "who": "zoe",
+   "fav": "",
+   "line": "Mira's got the well padlocked, and she's telling",
+   "head": {
+    "px": 72,
+    "x": 762,
+    "bottom": 289,
+    "top": 217,
+    "turn": 35
+   },
+   "other": {
+    "px": 108,
+    "x": 427,
+    "bottom": 372,
+    "top": 264,
+    "turn": 120
+   },
+   "box": 534
+  }
+ ],
+ "after": {
+  "state": "found",
+  "fav": "",
+  "keep": true,
+  "talk": 1
+ },
+ "path": {
+  "frames": 1152,
+  "cuts": [],
+  "maxMovePerFrame": 0.141,
+  "solidFrames": 0
+ }
+}
