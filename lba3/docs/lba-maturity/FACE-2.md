@@ -237,6 +237,12 @@ Saves: nothing saved or loaded changed (no save field; the camera's talk state i
   (74 px, the kiosk's back wall in view). That is the talk prompt's reach, not the camera's. Proposal for the owner of
   the NPC/talk code (not done here: outside these files): a kiosk clerk answers only from the hatch's side, or turns to
   the hatch.
+  **Done (OVERLAP-3 night, 21.11):** an NPC def may carry `talkAhead` (metres): `findInteractable` (main.js, one isolated
+  line in the people loop, not the frame loop) offers Talk only when Twinsen stands at least that far ahead of the way
+  the NPC is placed facing. Corla has `talkAhead: 0.7` (story/stands.js): the hatch side only; from the back corner and
+  the side walls there is no prompt. Automated runtime only: face-3 PASS (from the hatch 132 px, 36°; the staged side
+  case now opens no talk: INFO line empty), face-2-tour PASS (its walker reaches her back corner and gets no prompt,
+  `cs_corla: no prompt`; the tour talks to three others), citadel-structures and spaceport-2 talk to her from the path.
 - The booth rule trusts that someone placed inside a box collider faces its open side (true for Corla; not checked for
   every NPC: only small box colliders round a face, with a placement direction, are affected).
 - Free's heads are 99–103 px, just at the 100-px target (the camera's wider lens and the side of the line).
