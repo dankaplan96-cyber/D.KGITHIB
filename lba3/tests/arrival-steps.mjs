@@ -80,12 +80,12 @@ for (const id of (process.env.AREAS ? process.env.AREAS.replace('room', room).sp
     // (texture layers: printed, not judged — its first canvas read-back waits for the browser's raster of the area's
     //  canvases, 11–19 s on SwiftShader whatever the slice; the game's own work there is one read per piece)
     const kinds = new Set(['shadow batches', 'draw batches', 'draw batches settle', 'draw batches back', 'shader warm-up', 'shader warm-up (early)']);
-    const by = {}; for (const e of L) { const v = (by[e.k] ??= { n: 0, max: 0, total: 0, prog: 0 }); v.n++; v.total += e.ms; if (e.p) v.prog++; else v.max = Math.max(v.max, e.ms); }
+    const by = {}; for (const e of L) { const v = (by[e.k] ??= { n: 0, max: 0, total: 0, prog: 0 }); v.n++; v.total += e.ms; if (e.p) v.prog++; else if (e.ms >= v.max) { v.max = e.ms; if (e.u) v.u = `${e.u.label} ${e.u.ms}`; } }
     const over = L.filter((e) => kinds.has(e.k) && !e.p && e.ms > window.LIMIT);
     const progSteps = L.filter((e) => e.p).map((e) => `${e.k} ${e.ms} ms (+${e.p} program${e.p > 1 ? 's' : ''})`);
-    return { id, frames, black, revealed: !G.trans, room: G.room?.id, steps: L.length, by, over: over.map((e) => `${e.k} ${e.ms}`), progSteps, inView };
+    return { id, frames, black, revealed: !G.trans, room: G.room?.id, steps: L.length, by, over: over.map((e) => `${e.k} ${e.ms}${e.u ? ` (unit ${e.u.label} ${e.u.ms} ms)` : ''}`), progSteps, inView };
   }, id);
-  console.log(`  ${id}: ${r.frames} frames, ${r.black} black · ${r.steps} steps · ` + Object.entries(r.by).map(([k, v]) => `${k} ${v.n}×, longest ${v.max} ms${v.prog ? ` (+${v.prog} with programs)` : ''}`).join(' · '));
+  console.log(`  ${id}: ${r.frames} frames, ${r.black} black · ${r.steps} steps · ` + Object.entries(r.by).map(([k, v]) => `${k} ${v.n}×, longest ${v.max} ms${v.u ? ` [${v.u}]` : ''}${v.prog ? ` (+${v.prog} with programs)` : ''}`).join(' · '));
   if (r.progSteps.length) console.log(`    steps that compiled programs: ${r.progSteps.join(' · ')}`);
   check(`B ${id}: the arrival came through (in the area, the screen revealed)`, r.revealed && r.room === id, { room: r.room, revealed: r.revealed });
   check(`B ${id}: every batch / settle / layer / warm-up slice ≤ ${SLICE_LIMIT} ms`, r.over.length === 0, r.over);
