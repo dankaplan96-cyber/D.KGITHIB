@@ -198,3 +198,19 @@ top ends; `captures/overlap-3/c1-quay-rails-*`): no quay outside the rail, and t
 bank under the sea wall's paving (the terrain grid slopes from z 43.25; the drawn paving is level to 44.0): unreachable
 now, and still its one failing spot. Levelling the terrain under the paving to the wall's face (world.js, the harbour's
 sea cut) is the root fix; not done here.
+
+### Tests (Automated runtime only; this branch with origin merged)
+
+| Suite | Verdict |
+|---|---|
+| overlap-sweep (rays, the default) | PASS, 0 open; known a 2 / b 13 / c 128 / d 294 / e 23 (as P65-2) |
+| overlap-sweep PLACE=1 WORLDFIT=1 | **PASS, 0 open** (P65-2: 128 open, all Ballastra's); known a 96 / b 15 / c 218 / d 294 / e 23 |
+| worldfit, Ballastra's three areas | pairs ≥ 0.15 m²: 128 → 0 |
+| face-3 (scenes) | PASS (Corla from the hatch 132 px, 36°) |
+| face-2-tour | PASS (3 talks; Corla: no prompt from her back corner) |
+| citadel-structures, spaceport-2 | PASS (Corla talked to from the path, chapters 1, 4, 5, 8) |
+| ballastra-harbor, exp-ballastra | PASS (the harbour's cost 85 main draw calls at the pad) |
+| ballastra-arches, ballastra-gardens | FAIL on one check each, the same on the base: the area's room list now has EXP-3's `bl_cradles` / `bl_house`, the tests expect the older lists. Every walk, state and cost check passes (gardens: 30–126 draw calls a view) |
+| occluders | PASS |
+| slidetraps | FAIL, 1 spot (the harbour's, above) |
+| the P58 walk, Fixed and Follow | table above |
