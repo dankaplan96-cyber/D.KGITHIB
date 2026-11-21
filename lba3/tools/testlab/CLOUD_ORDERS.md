@@ -880,3 +880,6 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     forced one profile higher by hand: did that hold the pace too (Auto left quality unused) or not? Screenshots at the
     same spot for each profile to judge sharpness. Measure only; report as AUTO-HW on branch `auto-hw`.
     Queue: after 62, before 61.
+    **The cloud's P95 work is written up in `docs/lba3-performance/AUTO-P95.md`.** §7 is the exact step-by-step (console
+    lines to clear the cache, read Auto's decisions and force a profile up or down; Medium-lean is a new profile there).
+    §4 is the synthetic before/after table to compare against. §8 is the empty "Real hardware" section to fill in.
