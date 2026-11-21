@@ -262,7 +262,7 @@ const CH_TALK_K = [1, 1.3, 0.8, 1.65], CH_TALK_PS = [CH_TALK_P, 0.5], CH_TALK_K_
 // and only in the first FV_LATE s of a line; when the talk ends it is back on his side before the chase takes over.
 // FV_CHECK s into a shot it looks once more: someone who was still stepping when it was set (more than FV_MOVED m since),
 // or a face that has not turned to the talk (a pair chatting on a bench), gets the shot set again from where they are.
-const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.12, 0.9, 1.28, 1.5], FV_Q = [0.2, 0.3, 0.12], FV_FACE = 1.25, FV_NEAR = 1.7, FV_HOLD = 2.2, FV_LATE = 2.5, FV_MIX = [0.3, 0.42], FV_CHECK = 0.8, FV_MOVED = 0.3, FV_FG = 3, FV_FG_PAD = 0.45, FV_K_FG = 0.45;
+const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.12, 0.9, 1.28, 1.5], FV_Q = [0.2, 0.3, 0.12], FV_FACE = 1.25, FV_NEAR = 1.7, FV_HOLD = 2.2, FV_LATE = 2.5, FV_MIX = [0.3, 0.42], FV_CHECK = 0.8, FV_MOVED = 0.3, FV_FG = 3, FV_FG_PAD = 0.45, FV_K_FG = 0.3;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -1754,7 +1754,7 @@ export class CameraRig {
     const side = (x, z) => Math.sign((cx - hero.x) * (z - hero.z) - (cz - hero.z) * (x - hero.x));
     const tv = Math.tan(((this.cam.fov || CH_FOV) * Math.PI) / 360), A = this.cam.aspect || 1.78, zT = (0.54 * fi.s) / (FV_HEAD * 2 * tv);
     const cands = [];
-    for (const ang of FV_ANG) for (const k of FV_K) for (const q of FV_Q) for (const sg of [1, -1]) for (const mx of FV_MIX) cands.push([ang, k, q, sg, Math.abs(ang - FV_ANG[0]) * 1.2 + Math.abs(Math.log(k)) * 2.5 + Math.abs(q - FV_Q[0]) * 1.5 + (mx - FV_MIX[0]) * 0.5, mx]);
+    for (const ang of FV_ANG) for (const k of FV_K) for (const q of FV_Q) for (const sg of [1, -1]) for (const mx of FV_MIX) cands.push([ang, k, q, sg, Math.abs(ang - FV_ANG[0]) * 1.2 + Math.abs(Math.log(k)) * 3 + Math.abs(q - FV_Q[0]) * 1.5 + (mx - FV_MIX[0]) * 0.5, mx]);
     cands.sort((a, b) => a[4] - b[4]);
     const crowd = this.crowd?.() || [], look = new THREE.Vector3(), piv = new THREE.Vector3(F.x, F.y, F.z);
     let best = null, bc = Infinity;
