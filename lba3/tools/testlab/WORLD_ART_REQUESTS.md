@@ -5789,3 +5789,34 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   street/interior/combat stayed 92–100 % but **the arrival route at 30 alternated 16.7 / 33.3 ms intervals**
   (GTX1050-BATTERY, `bat-benchfps-auto.txt` "arrival at 30") — an uneven 30 of the kind the user describes. That
   computer's own report (Pause → Benchmark: Frame Rates, and F9's "on pace" line at 30) is what would show which.
+- **P58-HW (60.3) · done** — branch `p58-hw` (`b7e3b75e`), `src/game/island.js` only. GTX 1050, Chrome, 1280×720, v113.
+  - **How it was found:**
+    - Twinsen walked by input (`P.go`, stepped at 1/60) round both huts (clockwise and back), between them, behind them, along their fronts and round the yard.
+    - Note: the station's design coordinates are shifted by `SHIFT.station` (−76, −101); the huts stand at (−32.8, −55.5) and (−25.7, −55.4).
+    - The walk ran in Follow and in Fixed (LBA2). Every frame, two rays went from the camera to his chest and head against the drawn opaque world; both blocked counts as hidden. A run of 0.4 s or more is a finding, with a picture remade from the recorded camera.
+    - Script and data: `docs/lba3-performance/HARDWARE/2026-11-21-p58-hw/`; pictures in `captures/p58-hw/before|after/`.
+  - **The cause, at the main spot:** the station's big main and the pump's riser (the teal flanged pipe) gave the camera no shape. The huts and the fort walls do (`addOccluder`); the main did not. A shot therefore stood behind the pipe with him only as his outline:
+    - in the corner between the main's drop, the barrels and the fort wall (about (−37.6, −59.8)): up to 4.3 s in Follow;
+    - along the main and the riser in Fixed: up to 16 s.
+  - **The fix:** their shapes are registered as the huts' are (the bridge over the gate lane, the drop, the riser and its run west). The camera now rises over them by LBA2's rule, and the bridge is passed through while he walks under it.
+  - **Before → after** (`captures/p58-hw/pipe-corner-before-after.jpg`):
+
+    | Mode | Hidden frames | The pipe corner's longest |
+    |---|---|---|
+    | Follow | 2,030 → 698 of ~18,200 | 4.3 → 1.0 s |
+    | Fixed | 4,756 → 2,087 | 16 → 5.6 s (thin trestle legs now; he is mostly seen) |
+
+  - **Left, for the cloud (camera.js is yours today):**
+    - the Follow camera pressed against a hut's roof at the control hut's east side (−22.4, −54.0) and at the office's west corner (−35.8, −58.3), up to 1 s;
+    - the fort wall's west corner (−40, −63.8; known, up to 1.4 s);
+    - the east fort wall (−18.3, −53.7; 1.3 s);
+    - in Fixed, a shot that does not re-centre while he stands behind the control hut, (−21.1, −53.7), 8.2 s.
+
+    Each has its picture in `captures/p58-hw/after/`.
+  - **Not run:** camsteady and camcitadel (the cloud's full test). The walk is the only check run.
+- **JOINTS-BLENDER (60.4):** the sword, the landing, walk-to-stop and the pickup were measured on 20.11 (JOINTS-BLENDER 5, merged as part of `4c8715d7`'s history):
+  - the sword, walk, stop, pickup and the standing jump already hold their feet (≤ 0.7 cm), unchanged;
+  - the Normal hop and the robe's run were fixed;
+  - Zoé's reach (6) and her shoulder (7) since.
+
+  Nothing open on order 57 on the desktop's side.
