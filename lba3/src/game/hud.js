@@ -1,6 +1,6 @@
 // DOM-based HUD: stats, behaviour selector, prompts, toasts, dialogue,
 // shop, minimap and the full-screen Holomap.
-import { t, getLang, keyHints, hintLine } from './i18n.js';
+import { t, getLang, keyHints, hintLine, STR } from './i18n.js';
 import { BEHAVIOURS } from './actors.js';
 import { Color, Vector3 } from 'three';
 import { WEAPON_INFO } from './combat.js';
@@ -482,10 +482,15 @@ export class HUD {
       const sel = list[this.shopSel];
       const rows = list.map((it, i) => { const u = stage.thumb(lookOf(it.id, it.id)); return `<button class="item${h.coins < it.price && !it.disabled ? ' poor' : ''}" data-i="${i}" ${it.disabled ? 'disabled' : ''}>${u ? `<img class="pic" src="${u}" alt="">` : ''}<span>${t(it.key)}</span><b>${coin()}${it.price}</b></button>`; }).join('');
       const why = !sel ? '' : sel.disabled ? t(sel.why || 'shop_max') : h.coins < sel.price ? t('shop_need', { n: sel.price - h.coins }) : t('shop_buy_key', { k: this.key('interact') });
-      el.innerHTML = `<h2>${t(titleKey)}</h2><div class="coins" aria-label="${t('it_kashes')}">${coin()}${h.coins}</div>` +
+      // SHOP-UI (the user, 22.11): the title and the purse share one header row, the purse at its end, so a title of
+      // any length or language wraps beside the purse instead of running under it (it was placed over the panel's corner)
+      const what = sel ? this.shopWhat(sel) : '';
+      el.innerHTML = `<div class="shop-head"><h2>${t(titleKey)}</h2><div class="coins" aria-label="${t('it_kashes')}">${coin()}${h.coins}</div></div>` +
         `<div class="shop-body"><div class="shop-list">${rows}<button class="leave">${t('shop_leave')}</button></div>` +
         `<div class="shop-look${sel ? '' : ' none'}"><div class="shop-big lba-frame"><canvas width="320" height="320"></canvas></div>` +
-        (sel ? `<div class="shop-name">${t(sel.key)}</div><div class="shop-price">${coin()}${sel.price}</div><div class="shop-why${sel.disabled || h.coins < sel.price ? ' no' : ''}">${why}</div>` : '') + '</div></div>';
+        (sel ? `<div class="shop-info"><div class="shop-name">${t(sel.key)}</div><div class="shop-price">${coin()}${sel.price}</div>` +
+          (what ? `<div class="shop-what">${t(what)}</div>` : '') +
+          `<div class="shop-why${sel.disabled || h.coins < sel.price ? ' no' : ''}">${why}</div></div>` : '') + '</div></div>';
       el.querySelectorAll('.item').forEach((b) => {
         b.addEventListener('click', () => { this.shopSel = +b.dataset.i; onBuy(items()[+b.dataset.i]); if (this.shopOpen) render(); });
         b.addEventListener('mousemove', (e) => hover(e, +b.dataset.i));
@@ -507,6 +512,9 @@ export class HUD {
     el.classList.remove('hidden');
     render();
   }
+  // SHOP-UI: the key of the line saying what a good does and how it is used (text/shops.js): the item's own `desc`, or
+  // shd_<id>; '' when there is none (nothing is shown then)
+  shopWhat(it) { const k = it?.desc || (it?.id ? 'shd_' + it.id : ''); return k && STR.en[k] ? k : ''; }
   // a list of choices in the shop's panel (Hesk's glider): items [{key, note?, disabled?}]
   // opts.forced (UI-PASS): a choice that must be made — no Cancel button, and Back (Esc, B) does nothing
   openMenu(titleKey, items, onPick, onClose, opts = {}) {

@@ -13,6 +13,29 @@ Object.assign(STR.en, {
   sh_honey: 'Mosquibee honey', sh_ticket: 'Cabin ticket, Desert Island ferry', sh_tea: 'Zeelich spice tea: refill magic',
   sh_why_hp: "You're in good health.", sh_why_mp: 'Your magic is full.', sh_why_carry: "You can't carry any more.",
 
+  // ---- SHOP-UI (the user, 22.11: "it doesn't say what each thing does"): under the selected good's name and price
+  // (hud.js shopWhat: shd_<item id>, or the item's own `desc`), one line: what it does and how it is used. Every shop's
+  // goods: Pippa's stall (main.js SHOP), the town's shops (story/shops.js), the arsenal's stalls (story/arsenal.js),
+  // the islands' counters (story/islandpeople.js)
+  shd_potion: 'Drunk on the spot: all your life back.',
+  shd_flask: 'Drunk on the spot: half your magic back.',
+  shd_tea: 'Drunk on the spot: all your magic back.',
+  shd_cordial: 'Drunk on the spot: all your magic back.',
+  shd_clover: 'Kept for later. When your life runs out, it puts you back on your feet. Up to nine.',
+  shd_honey: 'When your life runs low, a spoonful is taken by itself: half your life back. Carry up to three.',
+  shd_ticket: 'Board the Desert Island ferry with it and step off with full life and magic. Carry up to three.',
+  shd_blowgun: 'A weapon. Choose it and Attack fires darts, fast and straight; light damage. Six darts come with it.',
+  shd_darts: 'Three more darts for your blowgun. You carry up to thirty.',
+  shd_darts10: 'Ten more darts for your blowgun. You carry up to thirty.',
+  shd_blowtron: "A weapon. It fires the blowgun's darts twice as fast, and harder.",
+  shd_penguin: 'Set it down from your inventory on open ground: it waddles off, enemies go for it, then it goes bang. Up to five.',
+  shd_laser: 'A weapon. Choose it and Attack fires straight shots, hardest on machines. Comes with one cell: five shots.',
+  shd_cell: 'Five more laser shots. With no cell left, each shot burns 2 magic.',
+  shd_lantern: 'Switch it on from your inventory: it lights dark corners and shows what they hide.',
+  shd_line: 'Choose it and Attack casts it, 14 m at most: a cord ring reels you across; a loose thing or a light enemy comes to you.',
+  shd_lens: 'The glass a harbour light shines through. Fit it to a light that has gone dark.',
+  shd_pcell: "Fitted to Arthur's pocket set, its squeal is ready again twice as soon.",
+
   // ---- the inventory
   it_honey: 'Mosquibee Honey', itd_honey: 'Honey from the Mosquibees of Zeelich, in a glazed jar. When life runs low, a spoonful is taken by itself: half your life back. Up to three jars.',
   it_ticket: 'Cabin Ticket', itd_ticket: 'For the ferry between Citadel and Desert Island. The deck is free; the cabin has cushions and tea. Board with it and you step off with full life and magic. Up to three.',
