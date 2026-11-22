@@ -255,3 +255,81 @@ No contract change for the default look and for `hairtone`, `haircap`, `hairline
 tail1 / tail2 weights along the lock, so the existing follow-through bends one continuous lock (no gaps possible
 between balls). Nothing for the animator to change; if `hairform` is taken, the tail bones' swing may want a second look
 on the longer single shape.
+
+## The hair from splines, and the hair tie (HAIR-SPLINE / HAIR-BAND, P106, 22.11)
+
+**The user, after the hair sheets:** "Make the hair with splines." Then: "And the hair tie is missing at the edge of the
+scalp, where it joins the hair" (with LBA2's box art: a gold ring round the root of the ponytail; a promotional render,
+not the game's model). Evidence: **Automated runtime only** (SwiftShader, as above); the comparisons are the worker's.
+**The default is unchanged**: new switches only.
+
+### What was built (`src/game/characters.js`: `hsSpine`, `splineLock`, `hsLevel`, `hairBand`, `swapHair`)
+| Switch | What it is | Triangles (Twinsen model) |
+|---|---|---|
+| `hairspline` | the balls replaced by a lock swept along a `THREE.CatmullRomCurve3` spine: from a root under the scalp in front of the crown ball, up and back through the three balls' centres (so the place, the size and the dome seen from the front are hairform's, i.e. the crown ball's) to a soft point with a slight outward flick. The section (32 points round, 24 rings) is swept along it, its width on a spline profile (0.6 of the crown ball's radius at the root, the full radius at its centre, then tapering to the tip), round at the root and flattening to 0.62 toward the tip, with five soft strand ridges that twist a little toward the tip (crests lighter, grooves darker). Smooth normals, **levelled for LBA's ramp**: the ramp mixes white into any surface facing its fixed light past 0.6, which turned a smooth-shaded brown top grey, so the hair keeps its sideways shading and drops most of its upward part (it shades between 0.27× its colour, the old flat shade, and its colour). Browns from the root to the tip, a soft painted sheen band up and back. The cap's painted hairline round it (the scalp's normals there levelled the same way). With the band | 6,148 (the balls' 672 out; lock 1,536 + band 240 in) |
+| `hairsmooth` | the same lock without the strand ridges (one smooth lock); with the band | 6,148 |
+| `hairband` | the hair tie: a slim brass cuff (20 × 6 segments, 24 mm along the hair, 15 mm thick) swept round the line where the lock comes out of the scalp, found on the model itself (each line along the lock's surface tested against the skull's triangles), set so its lower edge presses 3–7 mm into the scalp all round (measured on all 20 sections: no gap, nothing floating) and its inner side into the hair. Head bone only, so it does not sway. On with `hairspline` and `hairsmooth`; `hairspline,-hairband` takes it off. It does nothing for the balls or `hairform` (their root sits on the skull, so there is no line all round where hair leaves scalp) | +240 |
+
+Skinning: the lock's vertices carry head → tail0 → tail1 → tail2 by their place along the spine (hairform's `w_hair`
+mapping), normalised to sum 1 (hairform's now too, through the shared `swapHair`). Node check on `twinsen.json`
+(scratch): no NaN or negative weight, every vertex's weights sum to 1 (within the model's own 1e-4), indices in range,
+unit normals; no ring of the sweep folds over (each section is set square to the tangent averaged along the curve:
+square to the curve itself they crossed on the inside of the bend over the crown, a notch in the first pictures). Bones
+19, bind pose, sockets, eyes, mouth and the 3 brow morphs unchanged; 1 material, no texture, no new shader program; no
+new file under `src/` or `assets/`.
+
+### What the pictures show (`captures/twinsen-zoe-look/sheets/hairspline-*`; one column or row each: current, hairtone, hairform, hairspline, hairspline,-hairband, hairsmooth)
+- **Heads** (`hairspline-heads.jpg`): from the front the same dome as hairform (smoothly shaded instead of one flat
+  brown). From the side and ¾ one clean swept lock with a soft flicked point: a smooth outline with no facets, beads
+  or waist. It reads as a ponytail rather than a pipe because it tapers and flattens, and the tie marks where it is
+  gathered. From behind a tapering teardrop with strands. The band shows from the side and ¾.
+- **Play camera from behind** (`hairspline-still-far.png`, `-still-medium.png`, `hairspline-walk-*.png`; 1.0 with MSAA
+  and 0.7 without): a lighter brown lock with visible light and dark strands, where the balls were a near-black
+  keyhole and hairform a darker, flatter lock. Edge contrast round the head (`tools/hair-sheet.py edge` as before; 6
+  places × 2 settings, 7 frames each) against the current look: hairform 0.89–1.05, **hairspline 0.71–0.83**,
+  hairsmooth 0.72–0.82, the softest of all the options so far. The pale skull ring round the hair stays (LBA2's bald
+  head), and at 0.7 without MSAA its outline still stair-steps (the render scale). The strands stay steady through the
+  walk strips.
+- **The band from behind**: hidden. The Follow camera looks down at his back, and the lock's dome sits between it and
+  the line where the hair leaves the scalp, so at Far and Medium from behind `hairspline` and `hairspline,-hairband`
+  look the same. To show from behind it would need a wider root or a thicker collar. A wider root does not stay
+  under the scalp at the sides (tried, dropped), and a thicker band would read as a pipe collar.
+- **Talk camera** (`hairspline-talk.jpg`): her line shows his lock and the gold tie in profile. His answer is still
+  framed behind the LIGHTHOUSE signpost (all looks; a camera matter).
+- **Turn** (`hairspline-turn.jpg`): the whole figure from the front, ¾, side and back. The lock's shading follows the
+  fixed light as the body's does (before, it was one flat shade).
+- **Motion** (lookdev walk and run frames, scratch): the lock bends as one piece on the tail bones, the tie stays on
+  the scalp, and nothing crumples.
+
+### Honest comparison with `hairform`
+It is better from behind (lighter, with strands that read as hair, lower edge contrast, steady in motion), from the
+side and ¾ (a smooth swept outline with a soft point instead of a faceted one, and the tie), and close up (smooth
+curves). From the front it has the same outline, smoothly shaded where hairform is one flat brown. Where it is not
+better: its shading now depends on which way he faces the fixed light (as the rest of him does), so the same lock looks
+a little darker or lighter from one heading to the next; the tie cannot be seen from behind; at 0.7 without MSAA its
+strands break into a few pixel streaks (no worse than hairform's grooves); and it uses about twice the triangles of
+hairform's lock (1,536 + 240 against 720). Whether the side silhouette is the ponytail the user wants (and not the
+15.11 "bulge" or the 12.11 "pipe") is the user's call. `hairsmooth` is the plainer variant: almost as soft from behind,
+but behind and close up it reads more as one smooth shape than as hair.
+
+Seen in passing: a few single dark or pale pixels near his head in some walk frames of every look (the current one
+included). Not traced, not changed.
+
+### Tests (SwiftShader, one browser at a time; Automated runtime only)
+| Suite | Look | Result |
+|---|---|---|
+| `tests/twinsen-zoe-look.mjs` | hairspline, hairspline,-hairband, hairsmooth, hairtone | PASS 3/3 each (19 bones, eyes, mouth, 3 brow morphs) |
+| `tests/twinsen-back-look.mjs` (STILLS 1:msaa, 0.7:msaa, 0.7:off; WALKS 1:msaa, 0.7:off) | hairspline, hairspline,-hairband, hairsmooth | PASS 3/3 each |
+| `tests/char-form.mjs` | current (default) | PASS 7/7 |
+| `tests/faces.mjs` | current (default) | PASS 7/7 |
+| `tests/anim-polish.mjs` | current (default) | PASS 55/55 |
+| node check of the steps on `twinsen.json` (scratch) | hairspline, hairsmooth, hairform, hairtone, with and without hairband | no NaN; weights sum to 1; the band 3–7 mm into the scalp on every section |
+
+The current, hairtone and hairform back-view columns are the second pass's pictures (the code for those looks is the
+same).
+
+### For the animator
+No contract change: the bones, bind pose, sockets, clips and face controls are the same. With `hairspline` or
+`hairsmooth` the lock carries head / tail0 / tail1 / tail2 weights along its spine, as hairform's did, and the tie is
+on the head bone. If one of them is taken, the tail bones' swing may want a look on the longer, smoother lock (no
+change asked).
