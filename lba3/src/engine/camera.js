@@ -156,6 +156,7 @@ const CH_OVER_TOP = 1.565, CH_OVER_TOP_ARMS = [3.2, 4.4, 5.6];   // (P58, CAM-TO
 const CH_LEAD_CONFIRM = 0.25, CH_SW_V_OVER = (110 * Math.PI) / 180, CH_SW_A_OVER = (300 * Math.PI) / 180;   // (CAM-ALLEY, see _chase and _chaseClear)
 const CH_OVER_SEE = [0.1, 0.2, 0.35, 0.5, 0.75, 1], CH_OVER_SEE_STEP = 0.9;   // (CAM-OVERSIGHT: the steps along the way over his head, see _chase)
 const CH_KI_A = 60, CH_KI_STEP = 0.5;   // (CAM-EASE-IN: the keep rules' entry eased over play time when it steps more than this a 1/60 s, m: _chase)
+const CH_KI_WAYS = 3, CH_KI_BLEND = 1, CH_KI_MID = [0.5, 0.4, 0.6];   // (CAM-EASE-ROUND: the ways tried for that entry's next spot — straight, round his pivot, round it tilt first: _easeWay; an entry over CH_KI_BLEND m none of them eases, split over two frames at a spot CH_KI_MID of the way: _chase)
 const CH_KT_A = 30, CH_KT_T = 0.6, CH_VCAP_A = 30, CH_VCAP_AFTER = 1;   // (CAM-EASE: the "tilt" keep-out let go over play time — speeding up at most CH_KT_A m/s², for at most CH_KT_T s —; the turn's cap, under a lock-on and CH_VCAP_AFTER s after it, at most CH_VCAP_A rad/s²: _chase)
 // CAM-KEYWALK: the pad off a tall box's sides near its top (m: pad, the band under the top, how tall over the ground)
 const CH_CAP_PAD = 0.5, CH_CAP_BAND = 1.8, CH_CAP_TALL = 3.5, CH_CAP_UP = 0.45;
@@ -941,6 +942,28 @@ export class CameraRig {
       : (this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z)) && (this._lowOff || this._line(p, hero.x, hero.y + CH_LOW_SEE, hero.z, false, false, hero.y + CH_LOW_WALL));
     if (this._busy && M.n < 48) { const j = M.n++ * 8; A[j] = p.x; A[j + 1] = p.y; A[j + 2] = p.z; A[j + 3] = hero.x; A[j + 4] = hero.y; A[j + 5] = hero.z; A[j + 6] = st; A[j + 7] = r ? 1 : 0; }
     return r;
+  }
+
+  // CAM-EASE-ROUND: a spot s m from p0 on the way `way` from p0 to p1 → out (false: none). 0: the straight line; 1: round
+  // the pivot T — the heading, the arm's length and the tilt over T eased together; 2: the same with the tilt going twice
+  // as fast (up first). Along 1 and 2 the spot is the furthest one found (by halving) whose distance from p0 is s at most
+  _easeWay(out, p0, p1, T, s, way) {
+    const d = p0.distanceTo(p1);
+    if (d <= s) { out.copy(p1); return true; }
+    if (way === 0) { out.copy(p0).lerp(p1, s / d); return true; }
+    const x0 = p0.x - T.x, y0 = p0.y - T.y, z0 = p0.z - T.z, x1 = p1.x - T.x, y1 = p1.y - T.y, z1 = p1.z - T.z;
+    const h0 = Math.hypot(x0, z0), h1 = Math.hypot(x1, z1), a0 = Math.hypot(h0, y0), a1 = Math.hypot(h1, y1);
+    if (a0 < 0.5 || a1 < 0.5 || h0 < 0.05 || h1 < 0.05) return false;
+    const w0 = Math.atan2(x0, z0), dw = angleDiff(w0, Math.atan2(x1, z1)), e0 = Math.atan2(y0, h0), e1 = Math.atan2(y1, h1);
+    const at = (f) => {
+      const w = w0 + dw * f, a = a0 + (a1 - a0) * f, e = e0 + (e1 - e0) * (way === 2 ? Math.min(1, 2 * f) : f), c = Math.cos(e) * a;
+      return out.set(T.x + Math.sin(w) * c, T.y + Math.sin(e) * a, T.z + Math.cos(w) * c);
+    };
+    let lo = 0, hi = 1;
+    for (let i = 0; i < 12; i++) { const m = (lo + hi) / 2; if (at(m).distanceTo(p0) <= s) lo = m; else hi = m; }
+    if (lo <= 0) return false;
+    at(lo);
+    return true;
   }
 
   // (CAM-EASE-IN, CAM-BOB: his head or his chest in sight, counting everything a line may meet — the posts, the
@@ -1866,8 +1889,27 @@ export class CameraRig {
           K.inT += dt;
           if (d <= v * dt || K.inT > CH_KT_T) K.inOn = false;
           else {
-            _os.copy(K.p).lerp(cam.position, (v * dt) / d);
-            if (this._solidAt(_os, CH_INSIDE) || this._overRoof(_os) || (!this._seesAny(_os, hero) && this._seesAny(cam.position, hero))) K.inOn = false;
+            // (CAM-EASE-ROUND: the straight way first, as before; where its spot fails, the way round his pivot — the arm,
+            // the tilt and the heading each eased — and then the same with the tilt going first, up over what is in the
+            // way: each spot as far from the last as the straight one, held to the same rules)
+            const gs = this._seesAny(cam.position, hero);
+            let ok = false;
+            for (let way = 0; way < CH_KI_WAYS && !ok; way++) {
+              if (!this._easeWay(_os, K.p, cam.position, T, v * dt, way)) continue;
+              ok = !(this._solidAt(_os, CH_INSIDE) || this._overRoof(_os) || (gs && !this._seesAny(_os, hero)));
+            }
+            // (CAM-EASE-ROUND: none — from a spot that does not see him, the few centimetres an ease starts with see him no
+            // better, at the staged wall corners' 1.9-2.8 m entries —: an entry over CH_KI_BLEND m is split over
+            // two frames instead, through a spot CH_KI_MID of the way on (any of the ways) that stands clear, off a roof,
+            // and sees him wherever the goal does; else at once, as before)
+            if (!ok && d > CH_KI_BLEND) for (const f of CH_KI_MID) {
+              for (let way = 0; way < CH_KI_WAYS && !ok; way++) {
+                if (!this._easeWay(_os, K.p, cam.position, T, d * f, way)) continue;
+                ok = !(this._solidAt(_os, CH_INSIDE) || this._overRoof(_os) || (gs && !this._seesAny(_os, hero)));
+              }
+              if (ok) break;
+            }
+            if (!ok) K.inOn = false;
             else { cam.position.copy(_os); W.keepBy = 'easein'; }
           }
         }
