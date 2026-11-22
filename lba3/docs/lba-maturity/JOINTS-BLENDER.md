@@ -152,3 +152,14 @@ play camera's distance (8 m, 4.6 m up) and at dialogue distance (2.1 m, front 3/
   byte for byte (checked).
 - `captures/joints-blender/arthur-motion-before-after.jpg` (pairs, before left: walk ×2, run ×2, the shrug, talk, the
   run and the kneel from the side), `arthur-play-before-after.jpg` (the play camera: walk, run, shrug, talk).
+
+### A Grobo: Baldino (`baldino_poly.py`)
+- **Seen:** the arms (one sleeve over a rounded elbow, JOINTS-BLENDER 3) and the trunk hold in every motion. The legs —
+  LBA2's short square stumps, measured from the original — had one ring at the knee inside a 10 cm weight blend, so a
+  walking or running knee folded at that ring: two square posts on a hinge, a sharp corner at the front and the back.
+- **Fixed:** five rings through the blend (the knee ± 0.025 H), the front a little fuller over the knee cap; the bend now
+  rounds at the outside and folds in behind. The square section, the stump's size and its place are as before.
+- Triangles 6,277 → 6,469 (+192); bones, eyes, mouths, the trunk and materials unchanged. `JOINTS8_OLD=1` rebuilds the
+  shipped model byte for byte (checked).
+- `captures/joints-blender/baldino-knee-motion-before-after.jpg` (pairs, before left: the walk and the run from the side,
+  then 3/4 front), `baldino-motion-before-after.jpg` (dialogue distance: walk, run, talk, the walk and run from the side).
