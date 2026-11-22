@@ -62,8 +62,11 @@ for (const v of valves) {
     //  again, the watch fights while he turns the wheel: up to six goes, his health topped up (ISO, as the rest here))
     await ev((v) => { const G = game; for (let k = 0; k < 6 && !G.world.valves.find((w) => w.id === v.id).open; k++) { G.hero.hp = Math.max(G.hero.hp, 6); T.useAt(v.x, v.z); for (let i = 0; i < 20 && (G.state !== 'play' || G.trans); i++) { T.talkAll(); G.step(0.3); } } T.talkAll(); }, v);
   } else {
-    // ball: from a spot ~6 m away, facing the valve, throw (normal behaviour)
-    await ev((v) => { const G = game; const a = Math.random() * 6.28; for (let k = 0; k < 16 && !G.world.valves.find((w) => w.id === v.id).open; k++) { const aa = a + k * 0.4; T.tp(v.x + Math.sin(aa) * 6, v.z + Math.cos(aa) * 6); G.hero.angle = Math.atan2(v.x - G.hero.pos.x, v.z - G.hero.pos.z); T.tap('KeyF'); G.step(2.5); } }, v);
+    // ball: from a spot 6 m away, facing the valve, throw (normal behaviour). The spots are fixed, on the cage's gate side
+    // (east, the path's side, as island.js ORCHARD_SHOT): from a random bearing round the cage a third of the spots have
+    // the bars or the main in the lob's way, which made this check intermittent (FIX-PASS 22.11). Probed: every throw
+    // from a bearing of 1.15 … 2.1 rad at 6 m opened it (4 of 4 each); these five span 1.27 … 1.87
+    await ev((v) => { const G = game; const spots = [0, 0.15, -0.15, 0.3, -0.3].map((d) => Math.PI / 2 + d); for (let k = 0; k < spots.length * 2 && !G.world.valves.find((w) => w.id === v.id).open; k++) { const aa = spots[k % spots.length]; T.tp(v.x + Math.sin(aa) * 6, v.z + Math.cos(aa) * 6); G.hero.angle = Math.atan2(v.x - G.hero.pos.x, v.z - G.hero.pos.z); T.tap('KeyF'); G.step(2.5); } }, v);
   }
   is(`valve ${v.id} (${v.kind}) opened`, await ev((id) => game.world.valves.find((w) => w.id === id).open, v.id), (o) => o === true);
 }

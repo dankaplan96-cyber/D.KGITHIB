@@ -594,7 +594,7 @@ export class Network extends ChapterBase {
     this.game.regions.whenBuilt('zeelich', (Z) => {
       // the mills turn again (chapter 9), the north one held still for the climb
       for (const m of Z.mills) m.setSpinning(!(m === Z.mills[0] && f.c10_millBraked && !f.c10_mill));
-      Z.ferry?.setVisible?.(false);
+      Z.ferry?.setVisible?.(!!this.story.ferry?.open);   // (U-1's laid-up ferry at the dock: its own rule, story/ferry.js, as chapter2.js)
     });
     if (f.c10_bore === 'pending') f.c10_bore = false;
     this.setupRoom();
