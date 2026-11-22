@@ -82,6 +82,15 @@ Automated runtime only (headless Chromium, SwiftShader, base `bf348951`). `comba
 height bar (3–17 cm from one landing, on the old and the new step alike): a foot stepping in this frame or the last is no
 longer counted (0.1 / 0.1 / 0.3 cm after; the old step 0.1 / 0.2 / 0.2).
 
+## Intermittent, seen in FULL-TEST-22-11 (v128, partial; Automated runtime only)
+
+| Suite | Seen | Re-run | Notes |
+|---|---|---|---|
+| `face-3` | 5/6: "sign: no prop … over a head, chest or waist". On Zoé's 4th line the Bug St. board (1.17 m from the lens) is over Twinsen's waist | 6/6 alone. A/B: `63416c4a` (pre CAMERA-NIGHT) 2× PASS, `d6a9df6a` 1× FAIL, HEAD 1× FAIL + 1× PASS | The same shot every run. The waist ray clips the board's top edge by a few cm (a threshold effect). CAMERA-NIGHT is not excluded (FULL-TEST-22-11 §1.1). Owner: camera (FACE-3) |
+| `autoquality-game` | section 7's reopen: `page.goto` 180 s timeout, twice at load 10–12; sections 1–6 21/21 | not re-run here (P95: sections 7–8 alone 8/8) | Load; `boot.mjs` `open`'s goto timeout is fixed at 180 s, not `BOOT_TIMEOUT` |
+| `exp-ballastra` | 32/33: "Ferro tosses his kashes", coins +5 (expected ≥ 10) | 33/33 alone | The two coins pop in a random direction, and the bot's `P.grab(12)` reached one |
+| `prologue` | the listed mites crash again (above) | 29/29 alone | — |
+
 ## Intermittent, passed on v96
 
 `saveslots` (the slot picture's timeout: 25/25 as committed), `overlaps` (Lhar's roof spots: pass), `sewers` (three
