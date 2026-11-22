@@ -910,7 +910,12 @@ def build(name):
         SB_ = (sh[0] - sx * 0.025, sh[1] - 0.02, sh[2]) if aT else None
         wrist = lerp(el, hd, 0.82)
         if ONE:
-            AW.update(arm_sleeve(up, SB_ if aT else (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7, sh[2]), el, wrist, ra,
+            # (JOINTS-BLENDER 8, order 66: the sleeve's dome began 3 cm over the shoulder joint and rose 16 % of the upper arm
+            # above that, past the coat's own shoulder line on most of the cast: a round knob at the top of the arm, a ball
+            # joint stuck on, plainest walking and talking (Rabbibunnies, Quetch men and women). Now it starts lower by
+            # SH8_DROP (into the body; the Grobos' big round shoulders are theirs and stay). JOINTS8_OLD=1: as before.)
+            sh8 = 0.0 if (JOINTS8_OLD or grobo) else float(os.environ.get('SH8_DROP', '0.05'))
+            AW.update(arm_sleeve(up, SB_ if aT else (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7 - sh8, sh[2]), el, wrist, ra,
                                  fore_k=(0.85, 0.8) if gown else (1.0, 1.0), u_max=1.12 if ROLL_ else 2.0))
         elif aT:
             tube(up, SB_, el, ra * 1.04, ra, 10)

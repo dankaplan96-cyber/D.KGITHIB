@@ -163,3 +163,19 @@ play camera's distance (8 m, 4.6 m up) and at dialogue distance (2.1 m, front 3/
   shipped model byte for byte (checked).
 - `captures/joints-blender/baldino-knee-motion-before-after.jpg` (pairs, before left: the walk and the run from the side,
   then 3/4 front), `baldino-motion-before-after.jpg` (dialogue distance: walk, run, talk, the walk and run from the side).
+
+### A Rabbibunny (Pippa) — and the cast's shoulders (`cast_poly.py arm_sleeve`)
+- **Seen:** Pippa's elbows (one sleeve, JOINTS-BLENDER 2) and her legs (thin trouser legs under the coat) hold in motion;
+  **her shoulder is a ball**: the sleeve's dome began 3 cm over the shoulder joint and rose a further 16 % of the upper
+  arm, past the coat's own shoulder line, so a round knob stood at the top of each arm, plainest walking and talking.
+  A sample of the cast showed the same knob on most of them: the Rabbibunnies (Mira, Magus, the weaver), Quetch men
+  and women (Bersimon, Gilbert, the worker, the farmer, Tarra, Nell). Not on Arthur (his own shoulder, ARTHUR-LOOK) or the
+  Grobos (their big round shoulders are the race's).
+- **Fixed for all of them (a shared defect):** the dome starts 5 cm lower, inside the body (`SH8_DROP`, 3 cm still left a
+  smaller knob); the coat runs over a round shoulder into the sleeve. With the arm raised overhead (`reachHigh`) the
+  shoulder stays closed.
+- 31 of the cast's 70 models changed; triangles 215,787 → 215,787 (vertices moved only); bones, eyes, mouths and materials
+  unchanged. `JOINTS8_OLD=1` rebuilds all 70 byte for byte as shipped (checked).
+- `captures/joints-blender/pippa-motion-before-after.jpg` (pairs, before left: shoulders walking, running, the shrug and
+  talking; then walk, run and both from the side), `cast-shoulder-before-after.jpg` (nine of the cast walking),
+  `cast-shoulder-raised-after.jpg` (Pippa, Mira and Gilbert with an arm raised, after).
