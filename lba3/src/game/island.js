@@ -3160,7 +3160,7 @@ function buildFlatTown(W, root) {
     const S = LAWN.steps, sx = (S.x0 + S.x1) / 2, sw = S.x1 - S.x0;
     for (const [z0, z1, top] of [[S.z0, S.zm, LAWN.ring + 0.21 + 0.015], [S.zm, S.z1, LAWN.bed + 0.02]]) {
       B.add(bbox(sw, top - foot, z1 - z0, 0.02, TILE.stone), step, sx, (top + foot) / 2, (z0 + z1) / 2);
-      physics.add({ type: 'box', x: sx, z: (z0 + z1) / 2, hw: sw / 2, hd: (z1 - z0) / 2, rot: 0, top, seeThrough: true });
+      physics.add({ type: 'box', x: sx, z: (z0 + z1) / 2, hw: sw / 2, hd: (z1 - z0) / 2, rot: 0, top, seeThrough: true, stair: true });   // (a stair: the residents' planner walks up it, walknav.js lowBrick)
     }
   }
   // FLAT-TOWN-2: the east shore's wall (EAST_WALL), down to the water; under the footbridge's planks no coping, its rubble
