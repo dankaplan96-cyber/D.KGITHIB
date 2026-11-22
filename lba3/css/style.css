@@ -431,7 +431,11 @@ body.big-text .inv-hint { font-size: 15px; }
 /* SHOPS-ITEMS: the shop's goods with their look; the purse shows a Kash */
 #shop.goods { width: min(780px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
 #shop .coins { display: flex; align-items: center; gap: 6px; color: #ffe35a; font-size: 18px; font-weight: 800; }
-#shop.goods .coins { position: absolute; top: 18px; inset-inline-end: 20px; margin: 0; }
+/* SHOP-UI (the user, 22.11: the purse lay over the Hebrew title): the title and the purse share one header row, the purse
+   at its end (the right in both languages, HE-LTR); a long title wraps beside it, never under it */
+#shop .shop-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 4px; }
+#shop .shop-head h2 { flex: 1; min-width: 0; margin: 0; line-height: 1.2; overflow-wrap: anywhere; }
+#shop .shop-head .coins { flex: none; margin: 0; padding: 2px 0 2px 14px; border-inline-start: 1px solid rgba(255, 255, 255, 0.35); }
 #shop .kc { width: 20px; height: 20px; flex: none; }
 #shop.goods .shop-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(170px, 1fr); gap: 18px; min-height: 0; margin-top: 10px; }
 #shop.goods .shop-list { overflow-y: auto; min-height: 0; padding: 2px 4px 2px 2px; }
@@ -448,12 +452,15 @@ body.big-text .inv-hint { font-size: 15px; }
 .shop-look.none .shop-big { visibility: hidden; }
 .shop-name { font-weight: 700; font-size: 16px; }
 .shop-price { display: flex; align-items: center; gap: 5px; color: #ffe35a; font-weight: 800; font-size: 18px; }
+.shop-info { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+/* SHOP-UI: what the selected good does and how it is used, under its name and price */
+.shop-what { font-size: 14px; line-height: 1.4; color: var(--ink); }
 .shop-why { font-size: 14px; color: var(--ink-dim); }
 .shop-why.no { color: #ffb4a0; }
 body.big-text #shop button { font-size: 18px; }
 body.big-text .shop-name { font-size: 19px; }
-body.big-text .shop-why { font-size: 17px; }
-@media (max-width: 640px), (max-height: 520px) { #shop.goods .shop-body { grid-template-columns: 1fr; } #shop.goods .shop-look { order: -1; flex-direction: row; justify-content: center; } .shop-big { width: 96px; } }
+body.big-text .shop-why, body.big-text .shop-what { font-size: 17px; }
+@media (max-width: 640px), (max-height: 520px) { #shop.goods .shop-body { grid-template-columns: 1fr; } #shop.goods .shop-look { order: -1; flex-direction: row; justify-content: center; gap: 12px; } #shop.goods .shop-info { align-items: flex-start; text-align: start; gap: 4px; } .shop-big { width: 96px; flex: none; } }
 
 /* I-24: the found-object box (found.js): LBA2's place and size (centred, top at 10 % of the height, 27 % tall), the
    inside shaded, the name under it in Twinsen's colour; it grows from its centre in 0.4 s and shrinks in 0.3 s */

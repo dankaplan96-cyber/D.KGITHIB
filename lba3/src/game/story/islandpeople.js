@@ -198,7 +198,7 @@ export class IslandPeople extends ChapterBase {
       }
       case 'or_pell': {
         const k = this.linesFor(npc), n = (npc.talkN = (npc.talkN ?? -1) + 1);
-        return c([k.length ? k[n % k.length] : 'ip_or_pell_0'], () => this.sell(() => [{ id: 'flask', key: 'ip_sh_cordial', price: IP_PRICE.cordial, disabled: g.hero.mp >= g.hero.mpMax, why: 'sh_why_mp' }], 'ip_sh_pell', () => { g.hero.mp = g.hero.mpMax; g.audio.play('heal'); }, true));
+        return c([k.length ? k[n % k.length] : 'ip_or_pell_0'], () => this.sell(() => [{ id: 'flask', key: 'ip_sh_cordial', desc: 'shd_cordial', price: IP_PRICE.cordial, disabled: g.hero.mp >= g.hero.mpMax, why: 'sh_why_mp' }], 'ip_sh_pell', () => { g.hero.mp = g.hero.mpMax; g.audio.play('heal'); }, true));
       }
       case 'ce_lanterns':
         if (!A.lantern) return c(['ip_lant_sell'], () => this.sell([{ id: 'lantern', key: 'a_sh_lantern', price: IP_PRICE.lantern }], 'ip_sh_lant', () => this.story.arsenal.gain('lantern', 'it_lantern')));
