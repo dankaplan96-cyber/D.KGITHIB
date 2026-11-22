@@ -140,6 +140,7 @@ const CH_HIGH_ARMS = [6.5, 5.5, 4.6, 3.9], CH_HIGH_P = [0.62, 0.75, 0.88, 1.0, 1
 const CH_HIGH_ROOF_Q = 0.88;
 const CH_LEAD_CONFIRM = 0.25, CH_SW_V_OVER = (110 * Math.PI) / 180, CH_SW_A_OVER = (300 * Math.PI) / 180;   // (CAM-ALLEY, see _chase and _chaseClear)
 const CH_OVER_SEE = [0.1, 0.2, 0.35, 0.5, 0.75, 1], CH_OVER_SEE_STEP = 0.9;   // (CAM-OVERSIGHT: the steps along the way over his head, see _chase)
+const CH_KT_A = 30, CH_KT_T = 0.6, CH_VCAP_A = 30, CH_VCAP_AFTER = 1;   // (CAM-EASE: the "tilt" keep-out let go over play time — speeding up at most CH_KT_A m/s², for at most CH_KT_T s —; the turn's cap, under a lock-on and CH_VCAP_AFTER s after it, at most CH_VCAP_A rad/s²: _chase)
 // CAM-KEYWALK: the pad off a tall box's sides near its top (m: pad, the band under the top, how tall over the ground)
 const CH_CAP_PAD = 0.5, CH_CAP_BAND = 1.8, CH_CAP_TALL = 3.5, CH_CAP_UP = 0.45;
 const CH_OVER_SET = [[CH_OVER_ARMS[0], CH_OVER_P], ...CH_OVER_HI.map((a) => [a, CH_OVER_HI_P]), ...CH_OVER_ARMS.slice(1).map((a) => [a, CH_OVER_P])];
@@ -1243,17 +1244,25 @@ export class CameraRig {
       //  the mouse untouched, at 30 and at 60 alike: tests/fps30-feel.mjs probes, docs/lba-maturity/FPS30.md §8. Thrown, the
       //  view comes round behind him as after any turn. Not with a lock-on, which frames the target itself)
       const aimHeld = !lock && !fresh && !!this.aimHold?.();
+      const vt = CH_VMAX * clamp(1 - ((C.arm ?? 0) - (C.want ?? 0)) / CH_LAG, 0.2, 1);   // (the turn's cap, below)
       if (C.hold || aimHeld) { C.vyaw *= Math.exp(-CH_W * dt); C.yaw += C.vyaw * dt; C.goal = C.yaw; }
       else if (!fresh) {
         C.y = C.yaw; C.vy = C.vyaw;
         // (the arm still far out from where it must come in to: the view turns no faster than it can come in — never a
         // swing into the wall of a house it is passing)
-        const vmax = (C.vmaxNow = CH_VMAX * clamp(1 - ((C.arm ?? 0) - (C.want ?? 0)) / CH_LAG, 0.2, 1));
+        // (CAM-EASE, SMOOTH-1 §3.4: that cap follows `want`, which the arm search moves by metres in a frame: under a
+        //  lock-on, and as the lock's longer arm comes back in after it (CH_VCAP_AFTER s), the turn fell 4.1 → 1.6 rad/s
+        //  from one drawn frame to the next (combat route, 30@60; 4.0 → 1.6 at 60 just after a lock, 10.1 → 7.5 m). There
+        //  it moves at most CH_VCAP_A rad/s a second either way, over play time. Elsewhere — walking the town, where the
+        //  view swinging on a little longer by a wall changed camsteady's street routes — it is applied at once, as before)
+        const v0 = C.vcap ?? vt, easeCap = lock || C.lockAgo < CH_VCAP_AFTER;
+        const vmax = (C.vmaxNow = easeCap ? clamp(vt, v0 - CH_VCAP_A * dt, v0 + CH_VCAP_A * dt) : vt);
         spring(C, 'y', C.yaw + angleDiff(C.yaw, C.goal), CH_W, dt);
         C.vyaw = clamp(C.vy, -vmax, vmax);
         C.yaw += clamp(C.y - C.yaw, -vmax * dt, vmax * dt);
       }
-      C.dyc = angleDiff(y0, C.yaw); W.swingBy = C.hold ? 'hold' : aimHeld ? 'aim' : lock ? 'lock' : 'chase';
+      C.dyc = angleDiff(y0, C.yaw); W.swingBy = C.hold ? 'hold' : aimHeld ? 'aim' : lock ? 'lock' : 'chase'; C.vcap = C.hold || aimHeld || fresh ? vt : C.vmaxNow;   // (held, or afresh: the cap as it stands, not the free CH_VMAX)
+      C.lockAgo = lock ? 0 : fresh ? Infinity : (C.lockAgo ?? Infinity) + dt;
     }
     // the pivot's height: a dead band (a kerb, a step), then its spring (stairs and slopes glide)
     {
@@ -1640,6 +1649,31 @@ export class CameraRig {
       }
     }
     this._lowOff = low0;
+    // CAM-EASE (SMOOTH-1 §3.4: in combat at 60 Hz the camera dropped 0.39 m in one frame, y 7.59 → 7.20): the "tilt" rule
+    // places the camera outright, up at its own arm out of something solid, and leaves the arm as it was — the frame it
+    // was no longer needed, the camera fell back to the arm's own spot at once. Now, let go, it goes back to the arm's
+    // spot over play time: from where it stood, at no more than the speed it had plus CH_KT_A m/s² since, and no faster
+    // than lets it come to rest on that spot (moving as the arm's spot moves) — the same at any frame rate. Held only
+    // while the spot on the way stands clear, off a roof, and sees him wherever the arm's own spot does; another keep
+    // rule, a new scene, CH_KT_T s gone, or a spot not clear: the arm's own spot at once, as before. Nothing else changes
+    {
+      const K = (C.kt ??= { on: false, t: 0, p: new THREE.Vector3(), v: 0, q: new THREE.Vector3(), init: false });
+      at(_os, yaw, arm, T, pitch); _os.y += C.lift;   // (the arm's own spot this frame)
+      const vq = K.init ? _os.distanceTo(K.q) / dt : 0; K.q.copy(_os);
+      if (fresh || !K.init) K.on = false;
+      else if (W.keepBy === 'tilt') { K.on = true; K.t = 0; }
+      else if (K.on && !W.keep) {
+        const d = K.p.distanceTo(cam.position), v = Math.min(K.v + CH_KT_A * dt, vq + Math.sqrt(2 * CH_KT_A * d));
+        K.t += dt;
+        if (d <= v * dt || K.t > CH_KT_T) K.on = false;
+        else {
+          _os.copy(K.p).lerp(cam.position, (v * dt) / d);
+          if (this._solidAt(_os, CH_INSIDE) || this._overRoof(_os) || (!this._sees(_os, hero) && this._sees(cam.position, hero))) K.on = false;
+          else { cam.position.copy(_os); W.keepBy = 'ease'; }
+        }
+      } else K.on = false;
+      K.v = K.init && !fresh ? K.p.distanceTo(cam.position) / dt : 0; K.p.copy(cam.position); K.init = true;
+    }
     // (drawn in and lifted over a slope or a terrace beside him, it would look down steeply on him: it looks further
     // along its way instead, no steeper than CH_EL_MAX — or as little more as keeps his chest CH_EL_KEEP inside the
     // frame's lower edge)
