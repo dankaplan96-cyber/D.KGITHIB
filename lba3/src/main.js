@@ -2974,12 +2974,12 @@ class Game {
     // refresh) starts the count from itself: no catch-up. Other ratios (75, 144 Hz) keep the grid below.
     const nR = cap ? Math.round(cap / refresh) : 0;
     if (cap && nR >= 2 && Math.abs(cap / refresh - nR) < 0.12 && !this.testFreeze && !this.preparing) {
-      if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); this.preStep(now); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
       this._drawT = now; this._due = 0;
     } else if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
       this._drawT = 0;
       const due = this._due || 0;
-      if (due && now < due - refresh / 2) { this.input.poll?.(); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      if (due && now < due - refresh / 2) { this.input.poll?.(); this.preStep(now); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
       let nx = (due || now) + cap;
       if (!due || nx - now < cap - 0.75 * refresh) nx = now + cap;   // (late by most of a refresh or more: a new grid from this frame)
       this._due = nx;
@@ -2988,6 +2988,7 @@ class Game {
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
     if (!this.testFreeze && !this.preparing) { this.advance(real); if (!this.settings.qualityAuto) this.fit?.frame(real); }   // (AUTO-QUALITY: Auto adjusts itself: no suggestion)
+    this._preSim = 0;   // (STREET-CPU: taken by advance; dropped with the interval when nothing was simulated)
     requestAnimationFrame((t2) => this.loop(t2));
   }
 
@@ -3044,12 +3045,38 @@ class Game {
     if (b.aq > a.aq) o.push('Auto quality step');
     return o.join(', ');
   }
+  // STREET-CPU (P95's leftover: the UHD 620's Citadel street at Frame Rate 30, its CPU work past a refresh on every
+  // profile): under the 30 limit the simulation runs in 60 Hz steps, two a drawn frame (FPS30-SMOOTH §4), and both ran in
+  // the drawn refresh's callback — the catch-up step, then the drawn one and the render — while the refresh between drawn
+  // frames did nothing. Now that skipped refresh runs the catch-up step itself, when its time has come (at least most of a
+  // step since the last simulated moment): the same step (an inner one, 1/60 s, nothing drawn, no detail levels or
+  // lamps), the same input read once a step, the same total simulated time — the drawn frame simulates what is left of
+  // its interval (`pre` is taken off it). So the drawn refresh does one step and the render instead of two steps and the
+  // render: the work a frame must finish within one refresh to be shown on time (P95 PRESENT) falls by a step's
+  // simulation. Only in play with no scene change under way (a door's fade, its settle frames and the reveal count drawn
+  // frames: they keep both steps in the drawn frame, as before), never in the background, under the tests' fixed
+  // stepping or a forced step (game.simStep), and only where the limit simulates in 60 Hz steps (> 20 ms). `_preSim` is
+  // taken by the next advance (a wrapper of advance(real) keeps it); game.preStepOff = true: as before (the A/B).
+  preStep(now) {
+    if (this.state !== 'play' || this.trans || this.background || this.simStep || this.testFreeze || this.preparing || this.preStepOff) return;
+    const cap = this.benching ? this.benchCapMs : this.frameCapMs;
+    if (!(cap > 20) || !(now >= this.last)) return;
+    const st = 1 / 60, pre = this._preSim || 0;
+    if ((now - this.last) / 1000 - pre < st * (1 - STEP_TOL)) return;   // (not yet a step's time since the last simulated moment)
+    if (pre + st > MAX_STEP * MAX_SUB - st) return;                     // (the drawn frame keeps at least a step)
+    const t0 = performance.now();
+    this._inner = true;
+    try { this.frame(st, false); } finally { this._inner = false; }
+    this._preSim = pre + st;
+    this._preMs = (this._preMs || 0) + performance.now() - t0;
+  }
   advance(real) {
     const t0 = performance.now(), jc = this.jobCounters();
+    const pre = this._preSim || 0; this._preSim = 0;   // (STREET-CPU: the part of this interval a skipped refresh simulated)
     this._frameNo = (this._frameNo || 0) + 1; this._lastRealMs = real * 1000;   // (I-11: updateTransition's settle frames)
     // (a heap that shrank since the last frame: a garbage collection ran in the interval)
     const gc = this._jc && this._jc.h && jc.h && this._jc.h - jc.h > 8e6 ? `GC −${((this._jc.h - jc.h) / 1048576).toFixed(0)} MB` : '';
-    const dt = Math.min(real, MAX_STEP * MAX_SUB);
+    const dt0 = Math.min(real, MAX_STEP * MAX_SUB), dt = Math.max(0, dt0 - pre);   // (STREET-CPU: less what a skipped refresh simulated)
     // (FPS30: a frame up to 10 % over a whole number of steps keeps that number: at the 30 limit the frame's timestamps
     //  jitter round 33.3 ms, and a frame of 33.5 ms was simulated as two steps of 16.8, the next as one of 33.2 — alike now)
     // (FPS30-SMOOTH §4: under the 30 limit the frame is simulated in 60 Hz steps — two steps a drawn frame — so the camera's
@@ -3076,7 +3103,8 @@ class Game {
     this._shownBlack = !!this.trans && (this.trans.hold || this._fadeOp >= 0.999);
     let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
     const why = real * 1000 > 33.4 ? [this._jobsPrev, gc].filter(Boolean).join(', ') : '';
-    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background, why: why || undefined });
+    const preMs = this._preMs || 0; this._preMs = 0;
+    this.perf.record({ real, ms: real * 1000, steps: n + (pre > 0 ? Math.round(pre * 60) : 0), lost: real - dt0, sim: ms - this._renderMs, pre: preMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background, why: why || undefined });
     { const jc1 = this.jobCounters(), j = this.jobsBetween(jc, jc1); this._jobsPrev = `frame before: work ${ms.toFixed(0)} ms${j ? ', ' + j : ''}`; this._jc = jc1;
       // (ROTATE-STALL: and anything new on the GPU — a geometry or texture made in the frame — or pieces leaving draw batches
       //  (their cells rebuilt and sent again): the scene is not ready to show while its first draws still upload)

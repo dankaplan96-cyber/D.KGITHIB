@@ -94,6 +94,8 @@ export class Perf {
       frameMs: { p50: pct('ms', 0.5), p95: pct('ms', 0.95), p99: pct('ms', 0.99), max: pct('ms', 1) },
       simMs: { p50: pct('sim', 0.5), p95: pct('sim', 0.95) },
       renderMs: { p50: pct('render', 0.5), p95: pct('render', 0.95) },
+      // (STREET-CPU: the catch-up step a skipped refresh ran under the 30 limit, in its own callback: not in sim / work)
+      preMs: b.some((f) => f.pre > 0) ? { p50: +b.map((f) => f.pre || 0).sort((x, y) => x - y)[Math.floor(b.length / 2)].toFixed(2), p95: +b.map((f) => f.pre || 0).sort((x, y) => x - y)[Math.min(b.length - 1, Math.floor(0.95 * b.length))].toFixed(2) } : null,
       steps: { mean: +(sum('steps') / b.length).toFixed(2), max: Math.max(...b.map((f) => f.steps)) },
       lostS: +sum('lost').toFixed(3), // real time not simulated (stalls beyond the catch-up limit)
       calls: pct('calls', 0.5), tris: pct('tris', 0.5),

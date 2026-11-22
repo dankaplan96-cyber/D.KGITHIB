@@ -62,7 +62,9 @@ export function pacingStats(frames, L, refresh) {
   const real = ms.reduce((a, b) => a + b, 0) / 1000;
   return { n: F.length, fps: +(F.length / Math.max(real, 1e-6)).toFixed(1), p50: pc(0.5), p95: pc(0.95), p99: pc(0.99), max: pc(1), pace: +pace.toFixed(2),
     onPace: Math.round((100 * ms.filter((x) => Math.abs(x - pace) <= 0.12 * pace).length) / F.length), slow: ms.filter((x) => x >= 1.5 * pace).length, catchUp,
-    over50: frames.filter((f) => f.ms > 50).length, black: frames.filter((f) => f.ms > 50 && f.black).length, blackFrames: all - F.length, work50: wp(0.5), work95: wp(0.95) };
+    over50: frames.filter((f) => f.ms > 50).length, black: frames.filter((f) => f.ms > 50 && f.black).length, blackFrames: all - F.length, work50: wp(0.5), work95: wp(0.95),
+    // (STREET-CPU: the catch-up step a skipped refresh ran under the 30 limit: not in a drawn frame's work, in its CPU per second)
+    pre50: (() => { const q = F.map((f) => f.pre || 0).sort((a, b) => a - b); return +q[Math.floor(q.length / 2)].toFixed(1); })() };
 }
 export const BENCH_AREAS = ['house', 'arena', 'zeelich', 'desert', 'hamalayi'];
 // ROTATE-STALL: the sweep route's turn (s per 360°), and a route's frames by their label (the sweep: the view's compass
@@ -719,14 +721,14 @@ export class Bench {
       const g = x.gpu; rows.push({ x, S });
       lines.push(`  ${x.id.padEnd(9)} ${name(x.L).padEnd(10)} ${String(S.fps).padStart(5)}   ${S.p50} / ${S.p95} / ${S.p99} / ${S.max}`.padEnd(70)
         + `${String(S.onPace).padStart(4)} %   ${String(S.slow).padStart(5)}        ${String(S.catchUp).padStart(4)}          ${S.over50} (${S.black})`.padEnd(52)
-        + `${g ? `${g.p50} / ${g.p95} · ${(g.p50 * S.fps).toFixed(0)}` : 'n/a'}`.padEnd(28) + `${S.work50} / ${S.work95} · ${(S.work50 * S.fps).toFixed(0)}`);
+        + `${g ? `${g.p50} / ${g.p95} · ${(g.p50 * S.fps).toFixed(0)}` : 'n/a'}`.padEnd(28) + `${S.work50} / ${S.work95} · ${((S.work50 + S.pre50) * S.fps).toFixed(0)}`);
     }
     // the answer per limit, over the routes (without frames behind black)
     lines.push('', 'per limit, over the routes: fps · interval p95 / p99 · on pace · >=1.5x pace · GPU ms per second · CPU work ms per second');
     for (const L of [...new Set(results.map((x) => x.L))]) {
       const R = rows.filter((y) => y.x.L === L); if (!R.length) continue;
       const m = (f) => R.reduce((a, y) => a + f(y), 0) / R.length;
-      lines.push(`  ${name(L).padEnd(10)} ${m((y) => y.S.fps).toFixed(1)} fps · ${m((y) => y.S.p95).toFixed(1)} / ${m((y) => y.S.p99).toFixed(1)} ms · ${m((y) => y.S.onPace).toFixed(0)} % · ${R.reduce((a, y) => a + y.S.slow, 0)} · GPU ${R.every((y) => y.x.gpu) ? m((y) => y.x.gpu.p50 * y.S.fps).toFixed(0) : 'n/a'} ms/s · CPU ${m((y) => y.S.work50 * y.S.fps).toFixed(0)} ms/s`);
+      lines.push(`  ${name(L).padEnd(10)} ${m((y) => y.S.fps).toFixed(1)} fps · ${m((y) => y.S.p95).toFixed(1)} / ${m((y) => y.S.p99).toFixed(1)} ms · ${m((y) => y.S.onPace).toFixed(0)} % · ${R.reduce((a, y) => a + y.S.slow, 0)} · GPU ${R.every((y) => y.x.gpu) ? m((y) => y.x.gpu.p50 * y.S.fps).toFixed(0) : 'n/a'} ms/s · CPU ${m((y) => (y.S.work50 + y.S.pre50) * y.S.fps).toFixed(0)} ms/s`);
     }
     // the frame callbacks themselves: how far each callback's timestamp interval is from a whole number of refreshes (the
     // display's clock as the browser hands it over; a jitter over ~1.5 ms broke the old 30 limit), and the 30 runs' first

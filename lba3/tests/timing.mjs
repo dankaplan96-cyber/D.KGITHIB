@@ -124,11 +124,13 @@ check('loadTimes: Citadel, its steps and each area built at startup timed on its
 // recorder: which refreshes are simulated/drawn and the intervals between them; a 120 ms hitch is not caught up with
 // a burst; a key tapped on a skipped refresh is still there for the next frame; the automatic resolution reads a
 // steady 33 ms at the 30 limit as on budget (no step down) but as missed without the limit.
+const G0state = await ev(() => game.state);
 const cap = await ev(() => {
   const G = game, raf = window.requestAnimationFrame, adv = G.advance, out = {};
-  const run = (fps, hz, n, hitchAt = -1) => {
-    G.settings.fps = fps; G.applySettings();
-    const got = []; let now = 1000, skippedTapKept = null;
+  const run = (fps, hz, n, hitchAt = -1, preOff = false) => {
+    G.settings.fps = fps; G.applySettings(); G.preStepOff = preOff;
+    const got = []; let now = 1000, skippedTapKept = null, skippedTapSeen = 0;
+    const u0 = G.input.update; G.input.update = function () { u0.call(this); if (this.pressed('ball')) skippedTapSeen++; };
     G.advance = (real) => got.push(+(real * 1000).toFixed(2));
     G.last = now; G._rafT = undefined; G._vsync = 0; G._due = 0; G._rafBuf = null; G._refresh = 0; G.testFreeze = false;   // (a new display: the measured refresh starts over, FPS30-SMOOTH's median of 32)
     for (let i = 0; i < n; i++) {
@@ -137,16 +139,19 @@ const cap = await ev(() => {
       if (tap) G.input.taps.add('KeyF');
       G.loop(now);
       // (the first refresh from the 50th on that is skipped: the tap must still be waiting)
-      if (tap) { if (got.length === before) skippedTapKept = G.input.taps.has('KeyF'); G.input.taps.delete('KeyF'); }
+      if (tap) { if (got.length === before) skippedTapKept = G.input.taps.has('KeyF'); else skippedTapSeen = 0; G.input.taps.delete('KeyF'); }
+      else if (skippedTapKept === null) skippedTapSeen = 0;
     }
+    G.input.update = u0; G.preStepOff = false;
     G.testFreeze = true; G.input.taps.clear();
     const iv = got.slice(5), mean = iv.reduce((a, b) => a + b, 0) / iv.length;
-    return { frames: got.length, mean: +mean.toFixed(2), min: Math.min(...iv), max: Math.max(...iv), after: got.slice(got.findIndex((x) => x > 100) + 1, got.findIndex((x) => x > 100) + 4), skippedTapKept };
+    return { frames: got.length, mean: +mean.toFixed(2), min: Math.min(...iv), max: Math.max(...iv), after: got.slice(got.findIndex((x) => x > 100) + 1, got.findIndex((x) => x > 100) + 4), skippedTapKept, skippedTapSeen };
   };
   window.requestAnimationFrame = () => 0;
   try {
     out.off60 = run('auto', 60, 600); out.cap30at60 = run('30', 60, 600); out.cap60at60 = run('60', 60, 600);
     out.cap60at144 = run('60', 144, 1440); out.cap30at144 = run('30', 144, 1440); out.hitch = run('30', 60, 300, 100);
+    out.cap30off = run('30', 60, 300, -1, true);   // (STREET-CPU's switch off: no catch-up step in a skipped refresh, as before)
     // the automatic resolution at the 30 limit: 90 frames of 33.3 ms
     const R = G.renderer, d0 = R.dyn, a0 = R.autoRes;
     R.setAutoRes(true); for (let i = 0; i < 90; i++) R.adapt(33.3, 1e6); out.dynAt30 = R.dyn;
@@ -161,7 +166,9 @@ check('limit 60 on a 60 Hz screen: every refresh', cap.cap60at60.frames >= 599 &
 check('limit 60 on a 144 Hz screen: 60 frames a second on average (13.9/20.8 ms: 144 is not a multiple of 60)', Math.abs(cap.cap60at144.mean - 16.67) < 0.3 && cap.cap60at144.max < 21, cap.cap60at144);
 check('limit 30 on a 144 Hz screen: 30 a second on average', Math.abs(cap.cap30at144.mean - 33.3) < 0.6 && cap.cap30at144.max < 35, cap.cap30at144);
 check('limit 30: after a 120 ms hitch, back to 33.3 ms frames (no burst to catch up)', cap.hitch.after.length === 3 && cap.hitch.after.every((x) => x > 33.2 && x < 33.4), cap.hitch);
-check('limit 30: a key tapped on a skipped refresh waits for the next frame', cap.cap30at60.skippedTapKept === true, cap.cap30at60);
+// (STREET-CPU: in play a skipped refresh at 30 runs the catch-up 60 Hz step, which reads the input as every step does: the tap
+//  is used there, once; with the catch-up step off — or where none runs — it waits for the next frame, as before)
+check('limit 30: a key tapped on a skipped refresh is read once — by that refresh\'s catch-up step in play, else it waits for the next frame', cap.cap30at60.skippedTapKept === (G0state !== 'play') && cap.cap30at60.skippedTapSeen === (G0state === 'play' ? 1 : 0) && cap.cap30off.skippedTapKept === true, { on: cap.cap30at60, off: cap.cap30off, state: G0state });
 check('automatic resolution: 33 ms frames at the 30 limit are on budget (no step down); without the limit they are not', cap.dynAt30 === 1 && cap.dynUncapped < 1, cap);
 
 const fails = done();
