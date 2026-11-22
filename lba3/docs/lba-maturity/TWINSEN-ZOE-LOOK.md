@@ -100,8 +100,8 @@ Shapes, triangles, weights, normals, eyes, mouth, brows and every other colour: 
 are exactly the approved ones.
 
 ### Switching
-- In the game's address: `?look=v2` (every step; today only `hairtone`), `?look=hairtone` (a list of steps),
-  `?look=v2,-hairtone` (all but some). `lookdev.html` takes the same parameter.
+- In the game's address: `?look=v2` (the first candidate: `hairtone`), `?look=hairtone,haircap` (a list of steps; the
+  hair-edge options below are named one by one), `?look=v2,-hairtone` (all but some). `lookdev.html` takes the same parameter.
 - Where no address can be given (the artifact): the settings' hidden key `charLook` (`localStorage
   sunshard_settings_v1`, e.g. `"charLook":"v2"`), read once at start. No menu entry was added (the coordinator added
   one for TWINSEN-FIGURE in 764e844e; the same pattern would work: a Display row writing `charLook`).
@@ -162,3 +162,96 @@ are exactly the approved ones.
 ## For the animator
 No contract change: no bone, weight, bind pose, socket, clip or face control changed. The hair's follow-through
 (tail0–tail2) moves the same geometry in its new colours.
+
+## The hair from behind, second pass (HAIR-EDGE, P106, 22.11)
+
+**The user's answers.** "Pixelated" means the hair, not the whole picture ("the problem is the hair"). Later that
+day: "Maybe not 3 balls. Try to turn the 3 balls more into hair." Evidence: **Automated runtime only** (SwiftShader,
+the game's High preset with Quality Auto's knobs, 1280 × 720, pixel ratio 1); the comparisons are the worker's.
+**The default is unchanged**: every option is a switch (`?look=…` or `charLook`, as above).
+
+### Options (each its own switch; combine with commas)
+| Switch | What it changes | Triangles (Twinsen) |
+|---|---|---|
+| `hairtone` | (first pass) the three balls in three browns | 5,044 (same) |
+| `haircap` | the scalp right round the hair (all within 2 cm, fading out by 6.5 cm; behind the crown only) painted in the hair's own flat shade (vertex colour + normal turned down, as the balls'): a soft painted hairline on the skull | 5,044 (same) |
+| `hairline` | the scalp round the hair (fading out by 11 cm, forward to the top of the crown) shaded toward a darker skin, like the hair's shadow | 5,044 (same) |
+| `hairtone,haircap`, `hairtone,hairline` | the combinations tested | 5,044 |
+| `hairform` | the three balls replaced by **one lock** in their place: rooted on the crown as the crown ball's dome (unchanged from the front), it sweeps back and down through the balls' centres along their hull (no waists), tapers to a short point with a slight outward flick; 6 broad strands along it (a 6 % ridge in the outline, lighter crests and darker grooves) that twist a little toward the tip; brown from the root to the tip (hairtone's browns) with a soft painted sheen up and back; flat shaded as the balls (normals down: the same from every heading under the fixed light); with `haircap`'s painted hairline. Weights pass head → tail0 → tail1 → tail2 along it (the model's own `w_hair`), so the follow-through sways it | 5,092 (the lock 720 where the balls were 672) |
+
+All are built at load from `assets/poly/twinsen.json` in `src/game/characters.js` (`LOOK_STEPS`, `LOOK_MODEL`,
+`hairLock`, `paintScalp`): no new file under `src/` or `assets/`, one material, no texture, no new shader program. The
+face (eyes, brows, nose, mouth, forehead) is untouched: in the lookdev front view every changed pixel is in the hair
+dome above the brow (`hair-heads.jpg`; measured: rows 131–211 of the 720, the face starts below 250).
+
+### What the pictures show
+- **The hair itself.** At Far (head ≈ 25 px) and Medium the balls read as a near-black keyhole; `hairtone` makes it a
+  brown bun. **A new finding**: where the crown ball meets the first tuft ball there is a crease, and along it a dotted
+  arc of light pixels that moves from frame to frame (`hair-zoom-medium.png`, every look built on the balls). With
+  the sun's shadow switched off (a diagnostic) it is all but gone (`hair-zoom-shadowdiag.png`): the hero's own shadow
+  map aliasing in the crease. `hairform` has no crease, and none of those dots.
+- **The pale ring** (the bald skull round the hair, lit from above) and its outline on the background stay in every
+  option: it is LBA2's design (bald, three discs), and its outer edge is the strongest edge on his head at every
+  setting. At 0.6–0.7 without MSAA that outline stair-steps whatever the hair does (`hair-scales-*.png`): that part is
+  the render scale (the renderer's, P30's family), not the model.
+- **`haircap` alone** paints the near-black onto the skull: the dark shape gets a little larger, no softer; with
+  `hairtone` it gives a visible soft hairline at the sides at Medium, little at Far. **`hairline`**: a slightly darker
+  top of the skull round the hair; at Far hard to tell from `hairtone` alone.
+- **`hairform`** from behind reads as one brown lock with strands, not a keyhole; the strands stay steady in the walk
+  strips at 1.0; at 0.6–0.7 without MSAA its grooves turn into a few darker pixel lines (no worse than the balls'
+  edges). The lock is narrower than the balls toward the nape, so a little more pale skull shows low on the sides.
+  From the side and ¾ (`hair-heads.jpg`, `hair-turn.jpg`, `hair-talk.jpg`) its outline is one swept lock with a
+  flicked tip where the balls were a cluster: the size and place are the balls', the shape is new. Front: the same dome.
+- **Edge contrast, measured** (`tools/hair-sheet.py edge`: the mean of the strongest 3 % of neighbour-pixel steps round
+  the head; 6 places/distances × 8 render settings, 7 frames each): against the current look `hairtone` 0.92–0.95,
+  `haircap` 0.99, `hairtone,haircap` 0.93–0.94, `hairtone,hairline` 0.92–0.93, `hairform` 0.92–0.94. A small drop,
+  much the same for every brown option; the outline of the skull dominates the number.
+
+### Recommendation
+**No option is clearly better from every angle, so none is recommended as a default.** The one to look at first is
+**`hairform`**: from behind, where the user sees him, it is the only option that changes what reads as "pixelated"
+(the keyhole and the crease's sparkle are gone; it reads as hair). But from the side and ¾ it is a new silhouette (one
+swept lock instead of three balls), which is where earlier attempts failed (the 15.11 "bulge", the 12.11 "pipe"); only
+the user can judge that. If it fails there, **`hairtone`** remains the small safe step; `haircap` and `hairline` add
+too little at play distance to be worth a switch of their own. What none of them can fix: the skull's pale outline
+stair-stepping at a lowered resolution without MSAA (render scale), and the crease's shadow sparkle for the ball looks
+(the hero's shadow map; for the renderer if the balls stay: e.g. no self-shadow on the hair, or a larger normal bias
+for the hero).
+
+### Evidence (`captures/twinsen-zoe-look/sheets/`)
+- `hair-still-far.png`, `hair-still-medium.png`: standing, from behind, the house, the yard and a street; render scale
+  1.0 with MSAA, 0.7 with MSAA, 0.7 without; current | hairtone | haircap | hairtone,haircap | hairtone,hairline |
+  hairform; each the game's own pixels and ×3. (The standing frames are not always the same pose: his idle head turn
+  differs between boots; the walk strips are the steadier comparison.)
+- `hair-walk-house-far.png`, `-yard-far.png`, `-street-far.png`, `-street-medium.png`: six walk frames 0.1 s apart, ×3,
+  each look at 1.0 MSAA and 0.7 without.
+- `hair-scales-yard-far.png`, `hair-scales-street-medium.png`: all eight settings (1.0 / 0.8 / 0.7 / 0.6, MSAA on and
+  off) for every look.
+- `hair-zoom-medium.png` (×8: the crease), `hair-zoom-shadowdiag.png` (the current look with the sun's shadow on and off).
+- `hair-heads.jpg` (front, ¾, side, back of the head, lookdev), `hair-turn.jpg` (the whole figure, four sides),
+  `hair-talk.jpg` (the talk camera: her line, his answer): current | hairtone,haircap | hairtone,hairline | hairform.
+- Taken by `tests/twinsen-back-look.mjs` (new: `STILLS=`/`WALKS=` render settings `scale:msaa|off`, held for each
+  picture; `ONLY=` places; `NOSIL=1`; the street spot is now one where nothing hides his head along the walk) and
+  `tests/twinsen-zoe-look.mjs`; sheets by `tools/hair-sheet.py` and `tools/hair-sheet-front.py`.
+- Seen in passing: the old street spot (beside Ume) put a tree crown between the camera and his head (the silhouette
+  drew him: the first pass's street pictures); in the talk the camera still frames his answer behind the LIGHTHOUSE
+  signpost (all looks).
+
+### Tests (SwiftShader, one browser at a time; Automated runtime only)
+| Suite | Look | Result |
+|---|---|---|
+| `tests/twinsen-back-look.mjs` (back views; 8 render settings for the still, 4 for the walk) | current, hairtone, haircap, hairtone+haircap, hairtone+hairline, hairform | PASS 3/3 each |
+| `tests/twinsen-back-look.mjs` (diagnostics: `DIAG=1`, `NOSIL=1`) | current | PASS 3/3, PASS 3/3 |
+| `tests/twinsen-back-look.mjs` (as shipped: no switch, defaults) | current | PASS 3/3 |
+| `tests/twinsen-zoe-look.mjs` (lookdev four sides and heads, play camera, talk camera) | current, hairtone+haircap, hairtone+hairline, hairform | PASS 3/3 each (the models keep 19 bones, eyes, mouth, 3 brow morphs) |
+| `tests/char-form.mjs` | current (default) | PASS 7/7 |
+| `tests/faces.mjs` | current (default) | PASS 7/7 |
+| `tests/anim-polish.mjs` | current (default) | PASS 55/55 |
+| a node check of every step on `twinsen.json` (scratch) | all | no NaN; every vertex's weights sum to 1; triangles as in the table above |
+
+### For the animator
+No contract change for the default look and for `hairtone`, `haircap`, `hairline` (colours and normals only). With
+`hairform` the bones, bind pose, sockets and clips are the same; the hair's triangles are new and carry head / tail0 /
+tail1 / tail2 weights along the lock, so the existing follow-through bends one continuous lock (no gaps possible
+between balls). Nothing for the animator to change; if `hairform` is taken, the tail bones' swing may want a second look
+on the longer single shape.
