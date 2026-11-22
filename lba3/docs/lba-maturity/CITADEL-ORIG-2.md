@@ -388,3 +388,5 @@ LBA3=<snapshot> GAME_URL=http://localhost:8988/ node tools/map-orig/ours.mjs /de
 ```
 The spot lists, the sea's tuning scripts (`seatune.mjs`, `deserttune.mjs`), the film and arrival frame scripts
 (`openframes.mjs`, `arrival.mjs`) and the sheet script are in `/dev/shm/cit2/` (not committed).
+
+**The user, 22.11: "we don't move the harbour."** The harbour platform stays at its own levels; not to be proposed again.
