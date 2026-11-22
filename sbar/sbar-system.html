@@ -643,6 +643,21 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
 .shower-signed-cell{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted)}
 .shower-others .shower-table-wrap{margin-top:6px}
 @media(max-width:900px){.shower-staff{grid-template-columns:1fr}}
+/* v68 pick patients to print */
+.pick-modal{width:min(720px,100%)}
+.pick-kind{display:flex;gap:8px;margin-bottom:12px}
+.pick-kind label{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:2px solid var(--line-strong);border-radius:12px;font-weight:800;cursor:pointer;background:#fff}
+.pick-kind label:has(input:checked){background:var(--brand-soft);border-color:var(--brand);color:var(--brand-dark)}
+.pick-kind input{width:20px;height:20px}
+.pick-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.pick-tools input[type=search]{flex:1;min-width:150px;min-height:38px;border:1px solid var(--line-strong);border-radius:10px;padding:2px 10px;font-size:15px}
+.pick-sides{display:flex;gap:6px;flex-wrap:wrap}
+.pick-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;max-height:52vh;overflow:auto;padding:2px}
+.pick-item{display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 10px;border:1px solid var(--line-strong);border-radius:12px;background:#fff;cursor:pointer;font-size:15px}
+.pick-item input{width:22px;height:22px;flex:0 0 22px}
+.pick-item .pr{font-weight:900;min-width:34px;text-align:center;font-size:17px}
+.pick-item small{display:block;color:var(--muted);font-size:12px}
+.pick-item:has(input:checked){background:var(--good-soft);border-color:#6ea988;box-shadow:inset 0 0 0 1px #6ea988}
 
 @media(max-width:900px){
   .beds{grid-template-columns:1fr!important}
@@ -753,7 +768,7 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
   <section class="view" id="view-sbar">
     <div class="page-head">
       <div><h2>SBAR – העברת משמרת</h2><p class="hint">אפשר לכתוב ישירות בטבלה. שדה ששונה נצבע בצהוב, והשינוי נשמר רק אחרי לחיצה על <strong>“אשר ושמור”</strong>.</p></div>
-      <div class="page-actions"><button class="btn primary big" data-print="sbar">🖨️ הדפס SBAR</button><button class="btn" data-print="sbar-nurses">דף לכל אחות</button></div>
+      <div class="page-actions"><button class="btn primary big" data-print="sbar">🖨️ הדפס SBAR</button><button class="btn" data-print="sbar-nurses">דף לכל אחות</button><button class="btn" data-pick="sbar">☑️ בחירת מטופלים</button></div>
     </div>
     <div class="assignment-summary" id="sbarAssignments"></div>
     <div class="sbar-list" id="sbarList"></div>
@@ -763,7 +778,7 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
   <section class="view" id="view-vitals">
     <div class="page-head">
       <div><h2>סימנים חיוניים</h2><p class="hint" id="vitalsDateLabel"></p></div>
-      <div class="page-actions"><button class="btn primary big" data-print="vitals-nurses">🖨️ דף לכל אחות</button><button class="btn" data-print="vitals-ward">דף אחד לכל המחלקה</button></div>
+      <div class="page-actions"><button class="btn primary big" data-print="vitals-nurses">🖨️ דף לכל אחות</button><button class="btn" data-print="vitals-ward">דף אחד לכל המחלקה</button><button class="btn" data-pick="vitals">☑️ בחירת מטופלים</button></div>
     </div>
     <p class="hint">הדף מיועד לכתיבה ביד. תא כהה = אין צורך למדוד באותה שעה. מדידת חום רקטלית מסומנת "PR" בתא החום; בכל השאר המדידה פומית (PO).</p>
     <div class="assignment-summary" id="vitalsAssignments"></div>
@@ -815,11 +830,13 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
         <div class="print-icon" aria-hidden="true">📋</div><h3>SBAR</h3><p class="hint">טופס העברת משמרת.</p>
         <button class="btn primary big" data-print="sbar">דף אחד לכל המחלקה</button>
         <button class="btn" data-print="sbar-nurses">דף נפרד לכל אחות</button>
+        <button class="btn" data-pick="sbar">☑️ בחירת מטופלים להדפסה</button>
       </div>
       <div class="print-card">
         <div class="print-icon" aria-hidden="true">🌡️</div><h3>סימנים חיוניים</h3><p class="hint">דף לכתיבה ביד לפי שעות המדידה.</p>
         <button class="btn primary big" data-print="vitals-nurses">דף נפרד לכל אחות</button>
         <button class="btn" data-print="vitals-ward">דף אחד לכל המחלקה</button>
+        <button class="btn" data-pick="vitals">☑️ בחירת מטופלים להדפסה</button>
       </div>
       <div class="print-card">
         <div class="print-icon" aria-hidden="true">🏖️</div><h3>יציאות לחופש</h3><p class="hint">רשימה לסימון יציאה וחזרה בסוף השבוע.</p>
@@ -1073,6 +1090,25 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
       <label class="sign-check"><input type="checkbox" id="showerSignConfirm"> אני מאשר/ת שהסימונים נכונים</label>
     </div>
     <div class="modal-foot"><button class="btn" id="showerSignCancel">ביטול</button><button class="btn primary big" id="showerSignConfirmBtn">✍️ חתום ושמור</button></div>
+  </div>
+</div>
+<div class="modal-backdrop" id="pickPrintModal" aria-hidden="true">
+  <div class="modal move-patient-modal pick-modal">
+    <div class="modal-head"><h2 id="pickPrintTitle">בחירת מטופלים להדפסה</h2><button class="btn" id="pickPrintClose">✕ סגור</button></div>
+    <div class="modal-body">
+      <div class="pick-kind" role="group" aria-label="איזה דף להדפיס">
+        <label><input type="radio" name="pickKind" value="sbar"> 📋 SBAR</label>
+        <label><input type="radio" name="pickKind" value="vitals"> 🌡️ סימנים חיוניים</label>
+      </div>
+      <div class="pick-tools">
+        <button type="button" class="btn small" id="pickAll">בחר הכל</button>
+        <button type="button" class="btn small" id="pickNone">נקה הכל</button>
+        <span id="pickSides" class="pick-sides"></span>
+        <input type="search" id="pickSearch" placeholder="חיפוש שם או חדר" aria-label="חיפוש מטופל">
+      </div>
+      <div class="pick-list" id="pickList"></div>
+    </div>
+    <div class="modal-foot"><strong id="pickCount">לא נבחרו מטופלים</strong><div class="foot-group"><button class="btn" id="pickCancel">ביטול</button><button class="btn primary big" id="pickPrintGo">🖨️ הדפס נבחרים</button></div></div>
   </div>
 </div>
 <div id="printArea"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -2325,7 +2361,7 @@ async function saveNetworkReport(filename,content,date=state.reportDate){
   if(!await ensureWorkingFolder(false))return false;
   try{await prepareSharedFolders();const dateDir=await reportsDirHandle.getDirectoryHandle(date,{create:true});await writeTextToDir(dateDir,filename,content);return true}catch(e){console.warn('Report save failed',e);setNetworkStatus('הדוח לא נשמר בתיקיית הרשת','warn');return false}
 }
-function reportFilenameFor(type){if(type==='showers-day')return `רחצות_${showerDate||state.reportDate}.html`;if(type==='shower-report')return 'דוח_רחצות.html';const shift=SHIFT_LABEL[state.activeShift];if(type==='tasks')return `משימות_${shift}.html`;if(type==='showers')return 'רחצה_יומי.html';if(type==='sbar'||type==='sbar-nurses')return `SBAR_${shift}.html`;if(type==='vitals'||type==='vitals-nurses')return `סימנים_${shift}.html`;if(type==='weekend-leave')return 'רשימת_יציאות_לחופש.html';if(type==='patients-by-room')return `רשימת_מטופלים_לפי_חדרים_${shift}.html`;return `דוח_${shift}.html`}
+function reportFilenameFor(type){if(type==='showers-day')return `רחצות_${showerDate||state.reportDate}.html`;if(type==='shower-report')return 'דוח_רחצות.html';const shift=SHIFT_LABEL[state.activeShift];if(type==='sbar-picked')return `SBAR_${shift}_נבחרים.html`;if(type==='vitals-picked')return `סימנים_${shift}_נבחרים.html`;if(type==='tasks')return `משימות_${shift}.html`;if(type==='showers')return 'רחצה_יומי.html';if(type==='sbar'||type==='sbar-nurses')return `SBAR_${shift}.html`;if(type==='vitals'||type==='vitals-nurses')return `סימנים_${shift}.html`;if(type==='weekend-leave')return 'רשימת_יציאות_לחופש.html';if(type==='patients-by-room')return `רשימת_מטופלים_לפי_חדרים_${shift}.html`;return `דוח_${shift}.html`}
 async function savePrintedReportToNetwork(type,title,content){if(!workingDirHandle)return;const full=standaloneReport(`${state.wardName} · ${title} · ${SHIFT_LABEL[state.activeShift]} · ${fmtDate(state.reportDate)}`,content);const ok=await saveNetworkReport(reportFilenameFor(type),full);if(ok)setNetworkStatus(`מסונכרן · דוח ${SHIFT_LABEL[state.activeShift]} נשמר`,'connected')}
 async function saveAllShiftReportsToNetwork(){
   if(!await ensureWorkingFolder(true))return;await networkSaveNow(false);if(networkConflict){alert('קיימת התנגשות מידע. יש לרענן לפני שמירת דפי המשמרת.');return}
@@ -2421,7 +2457,7 @@ function fitPrintPages(root){
 }
 function doPrint(type){
   if(sbarDraftCount()){resolveSbarDraftBefore('הדפיס').then(ok=>{if(ok)doPrint(type)});return}
-  let html='',title='';if(type==='sbar'){html=makeSbarPrint(false);title='SBAR'}else if(type==='sbar-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeSbarPrint(true);title='SBAR לפי צדדים'}else if(type==='vitals-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeVitalsPrint(true);title=`סימנים ${SHIFT_LABEL[state.activeShift]}`}else if(type==='weekend-leave'){html=makeWeekendLeavePrint();title='רשימת יציאות לחופש'}else if(type==='patients-by-room'){html=makePatientsByRoomPrint();title='רשימת מטופלים'}else if(type==='showers-day'){html=makeShowerDayPrint();title='רשימת רחצות'}else{html=makeVitalsPrint(false);title=`סימנים ${SHIFT_LABEL[state.activeShift]} מחלקתי`}
+  let html='',title='';if(type==='sbar'){html=makeSbarPrint(false);title='SBAR'}else if(type==='sbar-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeSbarPrint(true);title='SBAR לפי צדדים'}else if(type==='vitals-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeVitalsPrint(true);title=`סימנים ${SHIFT_LABEL[state.activeShift]}`}else if(type==='weekend-leave'){html=makeWeekendLeavePrint();title='רשימת יציאות לחופש'}else if(type==='patients-by-room'){html=makePatientsByRoomPrint();title='רשימת מטופלים'}else if(type==='showers-day'){html=makeShowerDayPrint();title='רשימת רחצות'}else if(type==='sbar-picked'){const pts=pickedPatients();if(!pts.length){alert('לא נבחרו מטופלים.');return}html=sbarPage(pts,'מטופלים נבחרים');title='SBAR נבחרים'}else if(type==='vitals-picked'){const pts=pickedPatients();if(!pts.length){alert('לא נבחרו מטופלים.');return}html=vitalPage(pts,'נבחרים',true);title=`סימנים ${SHIFT_LABEL[state.activeShift]} נבחרים`}else{html=makeVitalsPrint(false);title=`סימנים ${SHIFT_LABEL[state.activeShift]} מחלקתי`}
   const area=$('#printArea');area.innerHTML=html;const overflow=fitPrintPages(area);if(overflow)toast('יש יותר מדי מידע לדף אחד – הדף יודפס על יותר מעמוד אחד');const old=document.title;document.title=`${state.wardName}_${title}_${state.reportDate}`;savePrintedReportToNetwork(type,title,area.innerHTML);setTimeout(()=>{window.print();setTimeout(()=>document.title=old,500)},80);
 }
 function exportBackup(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`גיבוי_${state.wardName}_${state.reportDate}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),800)}
@@ -2592,6 +2628,34 @@ $('#countButtons').addEventListener('click',e=>{const b=e.target.closest('.count
 $('#autoDivideCurrent').onclick=()=>{const c=shiftCount();if(!c){alert('בחר תחילה מספר אחים למשמרת.');return}dividePatients(state.activeShift,c)};
 $('#clearManualCurrent').onclick=()=>{const sh=state.activeShift;state.shiftNurseCounts[sh]=0;for(const r of roomNumbers())setRoomSide(r,sh,0);save();renderAll();toast(`החלוקה של משמרת ${SHIFT_LABEL[sh]} אופסה`)};
 $$('[data-print]').forEach(b=>b.onclick=()=>doPrint(b.dataset.print));
+/* v68 — print only selected patients (SBAR / vitals). Selection is kept for this session. */
+let pickSelected=new Set();
+function pickedPatients(){return reportingPatients().filter(p=>pickSelected.has(p.id))}
+function pickKind(){return document.querySelector('input[name="pickKind"]:checked')?.value||'sbar'}
+function renderPickList(){
+  const pts=reportingPatients(),live=new Set(pts.map(p=>p.id));pickSelected=new Set([...pickSelected].filter(id=>live.has(id)));
+  const q=($('#pickSearch').value||'').trim().toLowerCase();
+  const shown=pts.filter(p=>!q||String(p.room).includes(q)||String(p.name||'').toLowerCase().includes(q));
+  $('#pickList').innerHTML=shown.map(p=>{const g=groupOf(p);return `<label class="pick-item"><input type="checkbox" data-pick-id="${p.id}" ${pickSelected.has(p.id)?'checked':''}><span class="pr">${p.room}</span><span><strong>${esc(p.name||'ללא שם')}</strong><small>מיטה ${esc(p.bed)}${g?` · ${esc(sideName(g))}`:''}${p.isolation?' · בידוד':''}</small></span></label>`}).join('')||'<div class="hint">אין מטופלים להצגה</div>';
+  $('#pickList').querySelectorAll('[data-pick-id]').forEach(c=>c.onchange=()=>{c.checked?pickSelected.add(c.dataset.pickId):pickSelected.delete(c.dataset.pickId);updatePickCount()});
+  const c=shiftCount();$('#pickSides').innerHTML=c?Array.from({length:c},(_,i)=>i+1).filter(g=>groupPatients(g).length).map(g=>`<button type="button" class="btn small" data-pick-side="${g}">${esc(sideName(g))}</button>`).join(''):'';
+  $('#pickSides').querySelectorAll('[data-pick-side]').forEach(b=>b.onclick=()=>{const ids=groupPatients(Number(b.dataset.pickSide)).map(p=>p.id),all=ids.every(id=>pickSelected.has(id));ids.forEach(id=>all?pickSelected.delete(id):pickSelected.add(id));renderPickList()});
+  updatePickCount();
+}
+function updatePickCount(){const n=pickedPatients().length;$('#pickCount').textContent=n?`נבחרו ${n} מטופלים`:'לא נבחרו מטופלים';$('#pickPrintGo').disabled=!n}
+function openPickPrint(kind){
+  document.querySelectorAll('input[name="pickKind"]').forEach(r=>r.checked=r.value===kind);
+  $('#pickSearch').value='';renderPickList();
+  $('#pickPrintModal').classList.add('open');$('#pickPrintModal').setAttribute('aria-hidden','false');
+}
+function closePickPrint(){$('#pickPrintModal').classList.remove('open');$('#pickPrintModal').setAttribute('aria-hidden','true')}
+$$('[data-pick]').forEach(b=>b.onclick=()=>openPickPrint(b.dataset.pick));
+$('#pickAll').onclick=()=>{reportingPatients().forEach(p=>pickSelected.add(p.id));renderPickList()};
+$('#pickNone').onclick=()=>{pickSelected.clear();renderPickList()};
+$('#pickSearch').oninput=renderPickList;
+$('#pickPrintClose').onclick=closePickPrint;$('#pickCancel').onclick=closePickPrint;
+$('#pickPrintModal').addEventListener('click',e=>{if(e.target.id==='pickPrintModal')closePickPrint()});
+$('#pickPrintGo').onclick=()=>{if(!pickedPatients().length)return;const k=pickKind();closePickPrint();doPrint(k==='vitals'?'vitals-picked':'sbar-picked')};
 $('#wardNameSetting').oninput=e=>{state.wardName=e.target.value;$('#wardNameTop').textContent=state.wardName||'מחלקה';save()};
 $('#quickBuildRooms').onclick=()=>quickBuildRooms($('#quickRoomCount').value,$('#quickBedsPerRoom').value);$('#addRoomBtn').onclick=()=>addRoom($('#newRoomNumber').value,$('#newRoomBeds').value);
 $('#reportDateTop').onchange=e=>{state.reportDate=e.target.value||todayISO();lastObservedLocalDate=todayISO();save();renderAll();toast('תאריך העבודה נשמר ויסונכרן לכל העמדות')};
