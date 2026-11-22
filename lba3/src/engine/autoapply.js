@@ -63,7 +63,8 @@ export class AutoApply {
       this.source = 'guess';
     }
     const T = G.perf?.gpuTimer;
-    if (T) T.onFrame = (ms) => { if (this.cal && !this.cal.done) this.cal.gpu(ms); else this.gov.gpu(performance.now(), ms); };
+    // (GPU-TIMER-KA: ka — the frame was measured after a keep-alive mark: autoquality.js treats such a reading with care)
+    if (T) T.onFrame = (ms, ka) => { if (this.cal && !this.cal.done) this.cal.gpu(ms, ka); else this.gov.gpu(performance.now(), ms, ka); };
   }
   // a cached entry for this machine and power source: its settled profile (held), or one higher to try when the last
   // session there had lots of room (evaluated), or a calibration's start (evaluated). false: nothing usable cached
@@ -211,8 +212,8 @@ export class AutoApply {
     const S = this.state(), out = [];
     out.push(`quality: ${this.on() ? `Auto — ${S.label}${S.pending.length ? ` (→ ${profileOf(S.p).name} at the next scene change or menu)` : ''} · ${S.phase === 'hold' ? 'held' : `evaluating (${S.eval?.s ?? 0} s, ${S.eval?.scenes ?? 0} scene${S.eval?.scenes === 1 ? '' : 's'})`}` : `${this.G.settings.quality} (chosen by hand${this.G.settings.qualityChosenByHand ? '' : '?'})`} · governor ${this.test ? 'off (automated test)' : this.gov.enabled ? 'on' : 'off'} · GPU timer in play: ${S.gpuTimer ? 'yes' : 'no'}`);
     out.push(`  runs: ${spell(S.applied)}`);
-    out.push(`  start: ${this.source}${S.cached ? ` · cached for this machine (${S.cached.src}${S.cached.margin ? ', room to spare' : ''}, ${S.cached.at}): ${profileOf(S.cached.p).name}` : ' · nothing cached for this machine'}${this.calResult ? ` · title calibration: GPU p90 ${this.calResult.gpuMs ?? 'n/a'} ms, CPU p90 ${this.calResult.cpuMs} ms, frame p50 ${this.calResult.frameMs} ms (at ${profileOf(this.calResult.p0).name}) → ${profileOf(this.calResult.p).name}` : ''} · key ${this.key}`);
-    if (S.last) out.push(`  last window: ${S.last.kind}${S.last.late ? ' (on time, but past the next refresh: shown late under the limit)' : ''} · ${S.last.fps} fps · frame p90 ${S.last.p90} ms · CPU p90 ${S.last.cpu ?? '?'} ms · GPU p90 ${S.last.gpu ?? 'n/a'} ms · missed ${Math.round(100 * S.last.miss)} %`);
+    out.push(`  start: ${this.source}${S.cached ? ` · cached for this machine (${S.cached.src}${S.cached.margin ? ', room to spare' : ''}, ${S.cached.at}): ${profileOf(S.cached.p).name}` : ' · nothing cached for this machine'}${this.calResult ? ` · title calibration: GPU p90 ${this.calResult.gpuMs ?? (this.calResult.gpuAside ? `set aside (${this.calResult.gpuAside} frames after keep-alive marks)` : 'n/a')} ms, CPU p90 ${this.calResult.cpuMs} ms, frame p50 ${this.calResult.frameMs} ms (at ${profileOf(this.calResult.p0).name}) → ${profileOf(this.calResult.p).name}` : ''} · key ${this.key}`);
+    if (S.last) out.push(`  last window: ${S.last.kind}${S.last.late ? ' (on time, but past the next refresh: shown late under the limit)' : ''} · ${S.last.fps} fps · frame p90 ${S.last.p90} ms · CPU p90 ${S.last.cpu ?? '?'} ms · GPU p90 ${S.last.gpu ?? 'n/a'} ms${S.last.gka ? ` (${Math.round(100 * S.last.gka)} % measured after a keep-alive mark${S.last.suspect ? ': late by that reading alone — a step down for it waits for the ladder\'s verdict, never in hold' : ''})` : ''} · missed ${Math.round(100 * S.last.miss)} %`);
     if (S.noHelp && Object.keys(S.noHelp).length) out.push(`  no further step down this session for ${Object.entries(S.noHelp).map(([k, p]) => `${k.toUpperCase()} pressure below ${profileOf(p).name}`).join(', ')} (a step down there bought nothing: P95)`);
     return out;
   }

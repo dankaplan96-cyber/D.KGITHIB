@@ -883,3 +883,41 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     **The cloud's P95 work is written up in `docs/lba3-performance/AUTO-P95.md`.** §7 is the exact step-by-step (console
     lines to clear the cache, read Auto's decisions and force a profile up or down; Medium-lean is a new profile there).
     §4 is the synthetic before/after table to compare against. §8 is the empty "Real hardware" section to fill in.
+
+65. **GPU-TIMER-KA (P96-HW follow-up: "the game's GPU timer reads 16–20 ms with v122 against 6–8"; docs/lba-maturity/FPS30.md
+    §9).** The cloud found no flaw in how the query is opened and closed: it begins and ends round `composer.render()` in
+    one task, so it cannot span a skipped refresh. Most likely the TIME_ELAPSED query on ANGLE/D3D11 is two GPU timestamps
+    on the queue the whole browser shares, so it now also counts the compositor's extra frames/presents (or a wait for
+    them) that the keep-alive mark brings. Auto (P95) would have read those 16–20 ms as "GPU past the next refresh" and
+    walked down at 30 (to Low in the cloud's synthetic GTX run). Now a frame measured after a mark is tagged; a window
+    late by such a reading alone is "suspect": one judged step at most (it comes back when the reading does not fall
+    with the profile), never a step in hold; the title calibration sets such readings aside. Two diagnostic switches,
+    read once at the first mark; type them in the console, then reload: `localStorage.lba3_keepalive = '0'` (no mark)
+    and `localStorage.lba3_keepalive = 'opaque'` (an opaque near-black pixel instead of the 1–2 % alpha one; your P96-HW
+    diagnosis changed an opaque pixel on every callback and read 7.5–8.7 ms). `localStorage.removeItem('lba3_keepalive')`
+    restores the default. The F9 overlay now has a line `GPU (timer) p50 · p95 — <each pass's p50>` and, under a limit,
+    `after a keep-alive mark N % (p50 …; others …)`.
+    On the GTX 1050, **plugged in**, headed Chrome (`--use-angle=d3d11` as in P96-HW), 1366×768, Follow, the clock in the
+    **57 Hz state** (rAF p50 17.4–17.7 ms; say if it is not), on **this branch once merged** (the coordinator writes
+    "GPU-TIMER-KA merged" in WORLD_ART_REQUESTS.md):
+    1. **Frame Rate 30, Medium by hand**, Citadel street, 2 minutes each with the keep-alive **default**, **`'0'`** and
+       **`'opaque'`** (a preset chosen by hand runs no timer in play: start it in the console with
+       `game.renderer.timer = game.perf.gpuTimer; game.perf.gpuTimer.stride = 2; game.perf.gpuTimer.reset()`, or use
+       P96-HW's runner as before): the overlay's GPU line (p50/p95 and **each pass's p50**: is the extra time in one pass, `output` or
+       `scene`, or spread?), `game.perf.gpuTimer.stats()`, rAF gaps ≥ 45 ms and > 300 ms per pass, presented intervals
+       as in P96-HW (`fps30feel.mjs` T2), nvidia-smi average. 3 passes each, interleaved.
+    2. **Frame Rate 60**, the same 2 minutes, default and `'0'`: the GPU line should read the same both ways (no mark at
+       60). 1 pass each.
+    3. **Auto, fresh cache** (`localStorage.removeItem('lba3_autoq_v5')`, reload), Frame Rate 30, keep-alive default:
+       play 3 minutes as AUTO-P95.md §7 (street, house, back to the street, a fight, the street again). Record
+       `game.autoQ.report()` (its `last window` line now says how much of the GPU reading came after a mark) and
+       `game.autoQ.state().log`: the profile it settles at in the street, every step with its reason ("judged at the
+       revisit", "did not help … back to …") and the title calibration line ("set aside"). Then the same with
+       `lba3_keepalive = '0'` (fresh cache again). Expected on this build: High, or one step that comes back, with the
+       mark; with `'0'` the timer should read 6–8 ms and Auto settle as it does at 60. Then reload once more without
+       clearing the cache: it should hold the settled profile with no step. The same at Frame Rate 60 once (default).
+    4. Optional, if the UHD 620 laptop is at hand: step 1's default vs `'0'` at 30 only (does its timer grow with the mark
+       too? the cloud's synthetic test cannot tell, and Auto's judgement of a really late UHD frame depends on it), and
+       step 3 at 30 once.
+    Measure only; no OS power or GPU setting changes. Report as GPU-TIMER-KA in FPS30.md §9 "Real hardware" on branch
+    `gpu-timer-ka`, raw logs beside P96-HW. Queue: before 61, after anything already running.

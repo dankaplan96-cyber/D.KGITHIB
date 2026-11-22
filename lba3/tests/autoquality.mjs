@@ -222,7 +222,10 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
   // drawn; the GPU clocks down and its timer reads ~1.4× longer); battery with Chrome's pacing (12 % of the callbacks a
   // refresh late: FPS30-PRESENT, rAF p95 33.4) — the browser's, not the game's
   const POWER = { mains: { R: 16.67 }, battery: { R: 16.67, bat: true }, 'battery 41 Hz': { R: 24.4, bat: true, slowGpu: 1.4 }, 'battery paced': { R: 16.67, bat: true, slip: 0.12 } };
-  const simulate = (mod, mk, pw, fps, secs = 480, seed0 = +process.env.P95SEED || 11) => {
+  // ka (GPU-TIMER-KA): the keep-alive mark on each refresh the limit skips (main.js _keepAlive) — { add: ms the GPU timer
+  // reads on top of the frame's own work for a frame drawn after one (P96-HW, GTX 1050 in the 57 Hz state: 6–8 → 16–20 ms,
+  // about +11), tag: the reading is passed on as taken after a mark (false: the P95 code, which did not know) }
+  const simulate = (mod, mk, pw, fps, secs = 480, seed0 = +process.env.P95SEED || 11, ka = null) => {
     const M = MACH[mk], P = POWER[pw], cap = fps === 30 ? 1000 / 30 : 0, R = P.R, bat = !!P.bat;
     const ids = mod.PROFILES.map((x) => x.id), idx = (id) => ids.indexOf(id);
     const skip = (p) => bat && ids[p] === 'lean';
@@ -233,7 +236,7 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
     let t = 0, k = 0, si = 0, sceneEnd = SC[0][1], transUntil = -1, lastDraw = null, due = 0, drawT = 0;
     const nR = cap ? Math.round(cap / R) : 0, whole = cap && nR >= 2 && Math.abs(cap / R - nR) < 0.08;
     const tr = [], changes = [];
-    let lateNow = null, flips = 0, lateN = 0, drawn = 0, street = { n: 0, ms: 0 };
+    let lateNow = null, flips = 0, lateN = 0, drawn = 0, street = { n: 0, ms: 0 }, skipped = 0;
     while (t < secs * 1000) {
       // a refresh tick: rAF calls back
       const now = k * R;
@@ -243,7 +246,8 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
       let draw = true;
       if (whole) { if (drawT && now - drawT < (nR - 0.5) * R) draw = false; else drawT = now; }
       else if (cap && cap > R + 1) { if (due && now < due - R / 2) draw = false; else { let nx = (due || now) + cap; if (!due || nx - now < cap - 0.75 * R) nx = now + cap; due = nx; } }
-      if (!draw) { k++; t = k * R; continue; }
+      if (!draw) { skipped++; k++; t = k * R; continue; }
+      const marked = !!ka && skipped > 0; skipped = 0;
       const id = ids[G.applied], base = M.sc[scene], q = () => 1 - M.noise + 2 * M.noise * rnd();
       let gpu = base[0] * M.gpuF[id] * q(), cpu = base[1] * M.cpuF[id] * q();
       if (bat) { gpu *= M.bat?.gpu ?? 1.3; cpu *= (M.bat?.cpu ?? 1.3) * (P.cpu ?? 1); if (id === 'high' || id === 'medium') gpu *= M.bat?.cuts ?? 1; }
@@ -252,7 +256,7 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
       const play = now > transUntil;
       if (play) {
         G.frame({ t: now, ms, cpu, play: true, scene });
-        G.gpu(now + 30, gpu);
+        if (ka) G.gpu(now + 30, gpu + (marked ? ka.add * (1 - 0.1 + 0.2 * rnd()) : 0), marked && ka.tag); else G.gpu(now + 30, gpu);
         drawn++;
         if (scene === 'citadel' && now > (secs - 180) * 1000) { street.n++; street.ms += ms; }
         if (whole) { const late = Math.max(cpu, gpu) > R; if (late) lateN++; if (lateNow != null && late !== lateNow) flips++; lateNow = late; }
@@ -295,6 +299,39 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
   check('P95 UHD 620 with a light CPU at 30: the frames shown a refresh late (GPU past one refresh) are seen: it steps down until they are rare (≤ 5 % of frames) or it is at Low, and never back up into a profile that showed them', ['uhd620gpu|mains|30', 'uhd620gpu|battery|30'].every((k) => (at(k).lateShare <= 0.05 || at(k).name === 'Low') && !at(k).steps.some((x) => /up/.test(x))), ['uhd620gpu|mains|30', 'uhd620gpu|battery|30'].map((k) => [at(k).name, at(k).lateShare, at(k).steps]));
   check('P95 ... where the old governor held Medium at 30 with 19–32 % of the frames shown late (it judged 30 on 33.3 ms alone): now ≤ 8 %', ['uhd620gpu|mains|30', 'uhd620gpu|battery|30'].every((k) => at(k).lateShare <= 0.08), ['uhd620gpu|mains|30', 'uhd620gpu|battery|30'].map((k) => at(k).lateShare));
   check('P95 on battery the ladder steps over Medium-lean (the battery profile already takes MSAA and lamps): no battery run settles on it', Object.entries(R).filter(([k]) => /battery/.test(k)).every(([, r]) => r.name !== 'Medium-lean' && !r.steps.some((x) => /Medium-lean/.test(x))), Object.entries(R).filter(([k]) => /battery/.test(k)).map(([k, r]) => [k, r.name]));
+  // GPU-TIMER-KA: the keep-alive's GPU timer reading under the 30 limit (Automated runtime only: the +11 ms is the desktop's
+  // P96-HW reading on the GTX 1050, modelled as added to every frame drawn after a mark; whether the UHD 620's reading grows
+  // too is not measured, so it runs both ways)
+  { const KA = [['gtx1050', 'mains', 11], ['gtx1050', 'battery', 11], ['uhd620gpu', 'mains', 0], ['uhd620gpu', 'battery', 0], ['uhd620gpu', 'mains', 11], ['fast', 'mains', 11]];
+    const out = ['GPU-TIMER-KA decision table at 30 (Automated runtime only: synthetic machines, 8 min; "+N ms": what the GPU timer adds after a keep-alive mark)',
+      'machine | power | timer after a mark | P95 code (readings not marked) | this build (readings marked)'];
+    const kr = {};
+    for (const [mk, pw, add] of KA) {
+      const old = simulate(mod, mk, pw, 30, 480, undefined, { add, tag: false }), now = simulate(mod, mk, pw, 30, 480, undefined, { add, tag: true });
+      kr[`${mk}|${pw}|${add}`] = { old, now };
+      const cell = (r) => `${r.name}${r.phase === 'hold' ? '' : ' (evaluating)'} — ${r.steps.join(', ') || 'no step'} — late ${r.lateShare}`;
+      out.push(`${MACH[mk].label} | ${pw} | +${add} ms | ${cell(old)} | ${cell(now)}`);
+    }
+    console.log(out.join('\n') + '\n');
+    if (process.env.KALOG) for (const e of kr[process.env.KALOG]?.now.log || []) console.log(`  ${(e.t / 1000).toFixed(1)}s ${e.kind} ${e.what || ''} — ${e.why || ''} [${e.state}${e.pending ? ' → ' + e.pending : ''}]`);   // (KALOG=machine|power|add)
+    const g = kr['gtx1050|mains|11'];
+    check('GPU-TIMER-KA the risk, reproduced: GTX 1050-like at 30 plugged in, the timer +11 ms after each mark, read as the frame\'s own (the P95 code): Auto walks down below High', g.old.name !== 'High', [g.old.name, g.old.steps]);
+    check('GPU-TIMER-KA ... with the readings marked: High at the end, held — at most one step down for it, which goes back (judged at the revisit), never two in a row', g.now.name === 'High' && g.now.phase === 'hold' && g.now.steps.filter((x) => /down/.test(x)).length <= 1, [g.now.name, g.now.steps]);
+    const gb = kr['gtx1050|battery|11'];
+    check('GPU-TIMER-KA GTX 1050-like on battery at 30 with the inflated readings marked: Medium held as without the mark (no step down kept)', gb.now.name === 'Medium' && gb.now.phase === 'hold', [gb.now.name, gb.now.steps]);
+    const f = kr['fast|mains|11'];
+    check('GPU-TIMER-KA a fast GPU at 30 with the inflated readings marked: High, held', f.now.name === 'High' && f.now.phase === 'hold', [f.now.name, f.now.steps]);
+    // (UHD 620 with its reading ALSO inflated by the mark is not measured anywhere; with +11 ms on top of a real 15–19 ms the
+    //  one judged step Medium → Medium-lean is a close call: by seed it stays and goes on to Low, or comes back to Medium with
+    //  ~16 % of the frames shown late. Printed, not checked: order 65 measures whether the UHD's reading grows at all.)
+    { const r = kr['uhd620gpu|mains|11'].now; console.log(`GPU-TIMER-KA limitation (not a check): UHD 620-like at 30, timer +11 ms after a mark: ${r.name}, late ${r.lateShare}, ${r.steps.join(', ')}`); }
+    for (const k of ['uhd620gpu|mains|0', 'uhd620gpu|battery|0']) {
+      const r = kr[k].now;
+      check(`GPU-TIMER-KA the real overload still found: UHD 620-like (light CPU) at 30, ${k.split('|')[1]}, timer +${k.split('|')[2]} ms after a mark, readings marked: steps down, one judged step at a time, until the frames shown late are rare (≤ 8 %) or it is at Low; never back up into a profile that showed them`,
+        (r.lateShare <= 0.08 || r.name === 'Low') && r.steps.some((x) => /down/.test(x)) && !r.steps.some((x) => /up(?! \(back\))/.test(x) && !/back/.test(x)), [r.name, r.lateShare, r.steps]);
+    }
+    check('GPU-TIMER-KA every marked run settles (held)', Object.values(kr).every((x) => x.now.phase === 'hold'), Object.entries(kr).map(([k, x]) => [k, x.now.phase, x.now.steps]));
+  }
   check('P95 every run settles (held) and changes at most 3 times in 8 minutes', Object.values(R).every((r) => r.phase === 'hold' && r.steps.length <= 3), Object.entries(R).map(([k, r]) => [k, r.phase, r.steps.length]));
 }
 // ---------------------------------------------------------------- P95, the rules one by one (synthetic windows)
@@ -310,6 +347,38 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
     const G3 = new Governor({ budget: () => 1000 / 30, upBudget: () => 1000 / 60, refresh: () => 24.4 }); G3.setProfile(1, 'test', { commitNow: true, t: 0 }); feed(G3, { secs: 6, ms: 33.33, cpu: 7, gpu: 17.5 });
     check('P95 PRESENT: at 30 on a 60 Hz screen, GPU p90 17.5 ms (past one refresh) is GPU pressure though every interval is 33.3 ms; 12 ms is ok; on a 41 Hz panel (no whole number of refreshes) the rule does not apply',
       G.lastWindow.kind === 'gpu' && G.lastWindow.late && G2.lastWindow.kind === 'ok' && G3.lastWindow.kind === 'ok', [G.lastWindow, G2.lastWindow, G3.lastWindow]); }
+  // GPU-TIMER-KA: the same 'late' window with its GPU readings taken after keep-alive marks is suspect; a CPU-late one is not
+  { const feedKa = (G, { secs, ms, cpu, gpu, ka, scene = 's', t0 = G.since || 0 }) => { let t = t0; while (t < t0 + secs * 1000) { t += ms; G.frame({ t, ms, cpu, play: true, scene }); G.gpu(t, gpu, ka); } return t; };
+    const mk = (R) => { const G = new Governor({ budget: () => 1000 / 30, upBudget: () => 1000 / 60, refresh: () => R }); G.setProfile(0, 'test', { commitNow: true, t: 0 }); return G; };
+    const A = mk(17.5); feedKa(A, { secs: 6, ms: 35, cpu: 6, gpu: 18, ka: true });          // (the GTX 1050's 57 Hz state, P96-HW's reading)
+    const B = mk(17.5); feedKa(B, { secs: 6, ms: 35, cpu: 6, gpu: 18, ka: false });         // (the same reading without a mark: P95 as it was)
+    const C = mk(16.67); feedKa(C, { secs: 6, ms: 33.33, cpu: 16, gpu: 9, ka: true });      // (CPU past the refresh)
+    const D = mk(16.67); feedKa(D, { secs: 6, ms: 33.33, cpu: 6, gpu: 9, ka: true });       // (inside the refresh)
+    check('GPU-TIMER-KA classify: at 30 in a 57 Hz clock, GPU p90 18 ms read after keep-alive marks → late GPU, suspect; the same unmarked → late GPU, not suspect (P95 unchanged); CPU-late with marks → not suspect; GPU 9 ms with marks → ok',
+      A.lastWindow.kind === 'gpu' && A.lastWindow.late && A.lastWindow.suspect && A.lastWindow.gka === 1 && B.lastWindow.kind === 'gpu' && B.lastWindow.late && !B.lastWindow.suspect && C.lastWindow.kind === 'cpu' && C.lastWindow.late && !C.lastWindow.suspect && D.lastWindow.kind === 'ok',
+      [A.lastWindow, B.lastWindow, C.lastWindow, D.lastWindow]);
+    // the evaluation: one suspect step, then no further one until the revisit judges it; the unmarked reading walks on
+    let t = feedKa(A, { secs: 10, ms: 35, cpu: 6, gpu: 18, ka: true, scene: 'street' }); const q1 = A.p; A.commit('test');
+    t = feedKa(A, { secs: 20, ms: 35, cpu: 6, gpu: 17.6, ka: true, scene: 'house', t0: t + 2000 }); const q2 = A.p;
+    let u = feedKa(B, { secs: 10, ms: 35, cpu: 6, gpu: 18, ka: false, scene: 'street' }); B.commit('test');
+    u = feedKa(B, { secs: 20, ms: 35, cpu: 6, gpu: 17.6, ka: false, scene: 'house', t0: u + 2000 });
+    check('GPU-TIMER-KA evaluate: suspect pressure takes one step (High → Medium) and waits in the next scene with the reading as high (no second step until judged); the unmarked reading queues the next step there as P95 did',
+      q1 === 1 && q2 === 1 && A.applied === 1 && B.p === 2, { A: A.log.filter((e) => e.kind === 'down').map((e) => e.why), Bp: B.p });
+    t = feedKa(A, { secs: 12, ms: 35, cpu: 6, gpu: 17.6, ka: true, scene: 'street', t0: t + 2000 });
+    const back = A.log.find((e) => e.revert);
+    check('GPU-TIMER-KA judgeStep: back in the street the reading fell 18 → 17.6 ms where the model predicts −44 % for High → Medium: the step comes back to High, no further GPU step this session',
+      !!back && A.p === 0 && A.noHelp.gpu === 0, { back: back?.why, p: A.p, noHelp: A.noHelp }); }
+  // GPU-TIMER-KA: in hold, suspect windows are not a sustained problem; the same unmarked are, as before
+  { const run2 = (ka) => { const G = new Governor({ budget: () => 1000 / 30, upBudget: () => 1000 / 60, refresh: () => 17.5 }); G.setProfile(0, 'test', { phase: 'hold', commitNow: true, t: 0 });
+      let t = 0; for (let k = 0; k < 6; k++) { const sc = k % 2 ? 'a' : 'b', t0 = t; while (t < t0 + 25000) { t += 35; G.frame({ t, ms: 35, cpu: 6, play: true, scene: sc }); G.gpu(t, 18, ka); } } return G; };
+    const H1 = run2(true), H2 = run2(false);
+    check('GPU-TIMER-KA hold: 150 s across scene changes, GPU 18 ms at 30 in a 57 Hz clock read after keep-alive marks → held at High; unmarked → one step down (P95 unchanged)',
+      H1.p === 0 && !H1.log.some((e) => e.kind === 'down') && H2.p === 1, { H1: H1.log.slice(-2), H2: H2.log.filter((e) => e.kind === 'down').map((e) => e.why) }); }
+  // GPU-TIMER-KA: the title calibration sets marked readings aside (the guess stands) and does not take the no-timer rule
+  { const c = new Calibration({ p0: 0 }); c.t0 = 0; for (let i = 0; i < 40; i++) { c.f.push(33.3); c.cpu.push(5); c.gpu(18, true); } const r = c.finish();
+    const c2 = new Calibration({ p0: 0 }); c2.t0 = 0; for (let i = 0; i < 40; i++) { c2.f.push(33.3); c2.cpu.push(5); c2.gpu(18, false); } const r2 = c2.finish();
+    check('GPU-TIMER-KA calibration: title GPU 18 ms all read after keep-alive marks under the 30 limit → set aside, the guess (High) stands; the same unmarked → a lower start as before',
+      r.p === 0 && r.gpuMs == null && r.gpuAside === 40 && r2.p > 0 && r2.gpuMs === 18, [r, r2]); }
   // stalls never decide a window
   { const G = new Governor(); G.setProfile(1, 'test', { commitNow: true, t: 0 }); let i = 0; feed(G, { secs: 9, ms: () => (i++ % 60 === 0 ? 180 : 16.67), cpu: 9, gpu: 14 });
     check('P95 a 180 ms stall in every window, steady 16.7 ms frames between (GPU 14 ms): ok, not pressure', G.log.filter((e) => e.kind === 'down').length === 0 && G.lastWindow.kind === 'ok', G.lastWindow); }

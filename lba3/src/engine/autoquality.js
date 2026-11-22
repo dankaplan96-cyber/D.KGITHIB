@@ -191,7 +191,27 @@ export const SLOW_PANEL = 0.85, PRESENT = 0.85;
 // Low at 60 on battery still missed refreshes, main thread p95 28.8 ms) — and the sharper profile comes back (queued,
 // at a commit point, once per step) and no further step of that kind is taken this session: Auto keeps the picture
 // rather than lose sharpness for nothing.
-export const REVISIT_BEFORE = 2, REVISIT_AFTER = 4, REVISIT_GAIN = 0.07, REC_KEEP = 8;
+export const REVISIT_BEFORE = 2, REVISIT_AFTER = 4, REVISIT_GAIN = 0.07, REC_KEEP = 8, KA_SCALE = 0.5;
+// GPU-TIMER-KA (P96-HW, the desktop 21.11: with the keep-alive mark — main.js _keepAlive, a 1 px change on each refresh the
+// frame-rate limit skips — the GTX 1050's GPU timer read 16–20 ms a frame at 30 against 6–8 ms without it, while
+// nvidia-smi's load did not rise; at 60 (no skipped refresh, no mark) it read as before). The query cannot span a skipped
+// refresh (renderer.js begins and ends it round composer.render() in one task); on ANGLE/D3D11 a TIME_ELAPSED query is two
+// GPU timestamps on the queue the whole browser shares, so it also counts whatever the GPU process runs or waits for
+// between them — most likely the compositor's extra frames and presents the mark brings. Such a reading is not the frame's
+// own work, so it cannot by itself say a frame is shown late. A window that is 'late' by the GPU reading alone (every
+// interval on time, CPU p90 within PRESENT) with most of its GPU samples taken after a mark is `suspect`:
+//   - in the evaluation it is pressure as before, but a step down it causes is the only one of its kind until P95's
+//     revisit has judged it (the step back when it bought nothing, REVISIT_*): a reading the mark inflates barely falls
+//     with the profile, so the step comes back and no further GPU step is taken this session; a GPU that is really past
+//     the refresh (the UHD 620 at 30, FPS30.md §7) falls with it and keeps going down, one judged step at a time;
+//     (Kept when its GPU reading fell by ≥ KA_SCALE of the drop the profiles' cost model predicts for the step — a reading
+//     made of the frame's own work falls about as predicted: the UHD 620's street, Medium → Medium-lean, truth 0.85
+//     against the model's 0.82 — or when the part that fell, scaled back by the model (fall / (1 − ratio)), was itself
+//     past the 'heavy' line: the frame's own work was late, whatever fixed share the mark adds. Otherwise it comes back.)
+//   - in hold it is not a sustained problem (the evaluation, where steps are judged, decides);
+//   - the title calibration sets such readings aside (the name's guess stands; the CPU side may still lower it).
+// Everything else — CPU 'late', windows with missed intervals, readings without a mark (no limit, or
+// localStorage.lba3_keepalive = '0') — is judged exactly as before.
 
 const pct = (a, p) => { if (!a.length) return null; const v = a.slice().sort((x, y) => x - y); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
 const med = (a) => pct(a, 0.5);
@@ -275,7 +295,8 @@ export class Governor {
     return this.phase === 'evaluate' ? this.evaluate(w, f.t) : this.held(w, f.t);
   }
   // the GPU's own time for a frame drawn at about time t (arrives a few frames late)
-  gpu(t, ms) { (this.gpuBuf ??= []).push([t, ms]); this.gpuSeen = true; if (this.gpuBuf.length > 600) this.gpuBuf.splice(0, 300); }
+  // (GPU-TIMER-KA: ka — measured after a keep-alive mark)
+  gpu(t, ms, ka = false) { (this.gpuBuf ??= []).push([t, ms, !!ka]); this.gpuSeen = true; if (this.gpuBuf.length > 600) this.gpuBuf.splice(0, 300); }
 
   classify(W, t) {
     const B = this.budget(), R = this.refresh(), L = R > 0 && R < 50 ? R : 1000 / 60;
@@ -285,8 +306,8 @@ export class Governor {
     const fps = (nS * 1000) / Math.max(1, durS), p50 = pct(f, 0.5) ?? B, p10 = pct(f, 0.1) ?? B, p90 = pct(f, 0.9) ?? B;
     const missN = f.filter((x) => x > 1.2 * B).length, miss = missN / Math.max(1, nS);
     const cpu = pct(W.cpu, 0.9);
-    const g = (this.gpuBuf || []).filter(([ts]) => ts >= W.t0 - 100 && ts <= t + 100).map((x) => x[1]);
-    const gpu = g.length >= 8 ? pct(g, 0.9) : null;
+    const gs = (this.gpuBuf || []).filter(([ts]) => ts >= W.t0 - 100 && ts <= t + 100), g = gs.map((x) => x[1]);
+    const gpu = g.length >= 8 ? pct(g, 0.9) : null, gka = g.length ? gs.filter((x) => x[2]).length / g.length : 0;
     const want = (1000 / B) * (55 / 60), onTime = fps >= want && miss < 0.06;
     // under a limit of ≥ 2 refreshes (P95 PRESENT): a frame must be ready by the next refresh; the 'heavy' line is that
     // share of a refresh (at most 16.7 ms counted) instead of 0.75 of the budget
@@ -299,7 +320,9 @@ export class Governor {
       const slowPanel = p50 >= 1.1 * B && p10 >= 0.85 * p50 && p90 <= 1.2 * p50 && gpu <= SLOW_PANEL * p50 && (cpu ?? 0) <= SLOW_PANEL * p50;
       kind = ((cpu ?? 0) <= H && gpu <= H) || slowPanel ? 'paced' : gpu >= (cpu ?? 0) ? 'gpu' : 'cpu';
     } else kind = cpu > H ? 'cpu' : miss < 0.08 && p90 <= 1.17 * B ? 'paced' : 'gpu';
-    return { t: Math.round(t), dur: W.dur, n, kind, late: onTime && late, fps: +fps.toFixed(1), p50: +p50.toFixed(1), p90: +p90.toFixed(1), miss: +miss.toFixed(3), missN, cpu: cpu == null ? null : +cpu.toFixed(1), gpu: gpu == null ? null : +gpu.toFixed(1), stalls: W.stalls };
+    // (GPU-TIMER-KA: on time, late by the GPU reading alone, and that reading mostly taken after keep-alive marks)
+    const suspect = onTime && late && kind === 'gpu' && gka >= 0.5 && !(cpu != null && cpu > H);
+    return { t: Math.round(t), dur: W.dur, n, kind, late: onTime && late, suspect, gka: +gka.toFixed(2), line: +H.toFixed(1), fps: +fps.toFixed(1), p50: +p50.toFixed(1), p90: +p90.toFixed(1), miss: +miss.toFixed(3), missN, cpu: cpu == null ? null : +cpu.toFixed(1), gpu: gpu == null ? null : +gpu.toFixed(1), stalls: W.stalls };
   }
   why(ws) {
     if (!ws.length) return '';
@@ -321,11 +344,11 @@ export class Governor {
     return ws.filter((w) => this.fitsAbove(w, up)).length >= Math.max(1, Math.ceil(UP_FIT * ws.length));
   }
   // a step (queued: in force at the next commit point) to profile `to`; kind/late: the pressure it answers (a step down)
-  stepTo(to, t, why, { kind = null, late = false, revert = false } = {}) {
+  stepTo(to, t, why, { kind = null, late = false, suspect = false, revert = false } = {}) {
     if (to == null || to < 0 || to >= N_PROFILES || to === this.applied || this.p !== this.applied) return null;
     const dir = to > this.applied ? 'down' : 'up';
     const info = { kind: dir, what: `${profileOf(this.applied).name} → ${profileOf(to).name} (at the next scene change or menu)`, why, from: this.applied, to, revert };
-    if (dir === 'down') { this.lastDown = { from: this.applied, to, kind, late, t, done: false }; this.pressured.add(this.applied); }
+    if (dir === 'down') { this.lastDown = { from: this.applied, to, kind, late, suspect, t, done: false }; this.pressured.add(this.applied); }
     this.p = to; this.lastStep = t;
     this.note(info); this.onChange(info);
     return info;
@@ -335,8 +358,10 @@ export class Governor {
   pressureOf(ws) {
     const P = ws.filter(isPressure); if (!P.length) return { kind: null, late: false };
     const g = P.filter((x) => x.kind === 'gpu').length;
-    return { kind: g * 2 >= P.length ? 'gpu' : 'cpu', late: P.filter((x) => x.late).length * 2 > P.length };
+    return { kind: g * 2 >= P.length ? 'gpu' : 'cpu', late: P.filter((x) => x.late).length * 2 > P.length, suspect: P.filter((x) => x.suspect).length * 2 > P.length };
   }
+  // (GPU-TIMER-KA: a step down taken for suspect pressure, in force and not yet judged by the revisit)
+  suspectPending() { const D = this.lastDown; return !!D && D.suspect && !D.done && this.applied === D.to; }
   // may it step down for this kind of pressure? (not from where a step of that kind already bought nothing, or lower)
   mayStepDown(kind) { return this.below(this.applied) != null && !(kind && this.noHelp[kind] != null && this.applied >= this.noHelp[kind]); }
   // (the windows of each scene at each profile, for judging a step: the last REC_KEEP)
@@ -356,10 +381,17 @@ export class Governor {
     const side = D.kind === 'cpu' ? 'cpu' : 'gpu', b = med(before.map((x) => x[side]).filter((x) => x != null)), a = med(after.map((x) => x[side]).filter((x) => x != null));
     const fb = med(before.map((x) => x.fps)), fa = med(after.map((x) => x.fps));
     const gain = D.late ? (b > 0 && a != null ? 1 - a / b : 0) : fa / Math.max(1, fb) - 1;
-    if (gain >= REVISIT_GAIN) return null;
+    // (GPU-TIMER-KA: a step taken for suspect pressure is kept when its GPU reading fell by at least KA_SCALE of what the
+    //  profiles' cost model predicts for it — a reading of the frame's own work falls about that much, one with a share
+    //  the step cannot touch falls by less; or when the part of the reading that fell, scaled back to the profile above
+    //  (own = fall / (1 − c), c the model's ratio), was itself past the 'heavy' line: the frame's own work was late,
+    //  whatever else the reading holds)
+    const c = costAt(D.to, 'gpu') / costAt(D.from, 'gpu'), need = D.suspect ? Math.max(REVISIT_GAIN, KA_SCALE * (1 - c)) : REVISIT_GAIN;
+    const line = med(before.map((x) => x.line).filter((x) => x != null));
+    if (gain >= need || (D.suspect && b > 0 && a != null && c < 1 && line != null && (b - a) / (1 - c) > line)) return null;
     const k = D.kind || 'gpu';
     this.noHelp[k] = D.from;
-    const what = D.late ? `${side.toUpperCase()} p90 ${b} → ${a} ms` : `${fb} → ${fa} fps`;
+    const what = (D.late ? `${side.toUpperCase()} p90 ${b} → ${a} ms` : `${fb} → ${fa} fps`) + (D.suspect ? `, a reading taken after keep-alive marks: needed −${Math.round(100 * need)} %` : '');
     return this.stepTo(D.from, t, `the step down to ${profileOf(D.to).name} did not help in ${w.scene} (${what}): back to ${profileOf(D.from).name}, no further ${k.toUpperCase()} step this session`, { revert: true });
   }
   // (a step down is being judged in this scene: no further step down until it is)
@@ -377,8 +409,9 @@ export class Governor {
       const P = this.pressureOf(last);
       if (this.below(this.applied) == null) { this.lock(`evaluation: pressure at the lowest profile (${this.why(last)})`, t); return { kind: 'settled', p: this.p }; }
       if (!this.mayStepDown(P.kind)) { this.lock(`evaluation: ${P.kind.toUpperCase()} pressure, but a lower profile did not help here: held (${this.why(last)})`, t); return { kind: 'settled', p: this.p }; }
+      if (P.suspect && this.suspectPending()) return null;   // (GPU-TIMER-KA: the last such step is still to be judged)
       if (this.trial && this.applied === this.trial.from) { this.trial.failed = true; }
-      return this.step(+1, t, `evaluation: ${P.kind.toUpperCase()} pressure${P.late ? ' (frames shown a refresh late under the limit)' : ''}: ${this.why(last)}`, P);
+      return this.step(+1, t, `evaluation: ${P.kind.toUpperCase()} pressure${P.late ? ' (frames shown a refresh late under the limit)' : ''}${P.suspect ? ' (by a GPU reading taken after keep-alive marks: judged at the revisit before any further such step)' : ''}: ${this.why(last)}`, P);
     }
     // room for the profile above: once per evaluation, never in a trial that is already one up, never back to a profile
     // this evaluation stepped down from under pressure (P95: it went down and straight back up between two scenes)
@@ -394,7 +427,8 @@ export class Governor {
       const P = this.pressureOf(L), k = P.kind || 'gpu';
       if (this.below(this.applied) == null) { this.lock(`evaluation: the lowest profile (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
       if (!this.mayStepDown(k)) { this.lock(`evaluation: a lower profile did not help here: held (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
-      return this.step(+1, t, `evaluation failed (${Math.round(pr * 100)} % of windows under pressure): ${this.why(L)}`, { kind: k, late: P.late });
+      if (P.suspect && this.suspectPending()) { this.lock(`evaluation: GPU readings taken after keep-alive marks, the last step down for them not yet judged: held (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
+      return this.step(+1, t, `evaluation failed (${Math.round(pr * 100)} % of windows under pressure): ${this.why(L)}`, { kind: k, late: P.late, suspect: P.suspect });
     }
     return null;
   }
@@ -415,11 +449,13 @@ export class Governor {
     // the last HOLD_SPAN (spanning a scene change) or HOLD_ONE_SCENE of play
     const span = (lim) => { const out = []; let s = 0; for (let i = H.w.length - 1; i >= 0 && s < lim; i--) { out.unshift(H.w[i]); s += H.w[i].dur; } return s >= lim ? out : null; };
     // (a 'late' window's frames are all shown a refresh late at worst: they count as missed here; paced ones not at all)
-    const bad = (ws) => { if (!ws) return false; const own = ws.filter((x) => x.kind !== 'paced'), n = own.reduce((s, x) => s + x.n, 0), m = own.reduce((s, x) => s + (x.late ? x.n : x.missN), 0); return ws.filter(isPressure).length / ws.length >= HOLD_PRESSURE && m / Math.max(1, n) > HOLD_MISS; };
+    // (GPU-TIMER-KA: a suspect window — late by a GPU reading taken after keep-alive marks — is not a real problem here)
+    const real = (x) => isPressure(x) && !x.suspect;
+    const bad = (ws) => { if (!ws) return false; const own = ws.filter((x) => x.kind !== 'paced'), n = own.reduce((s, x) => s + x.n, 0), m = own.reduce((s, x) => s + (x.late && !x.suspect ? x.n : x.missN), 0); return ws.filter(real).length / ws.length >= HOLD_PRESSURE && m / Math.max(1, n) > HOLD_MISS; };
     const a = span(HOLD_SPAN), b = span(HOLD_ONE_SCENE);
-    const scenes = (ws) => new Set(ws.filter(isPressure).map((x) => x.scene)).size;
+    const scenes = (ws) => new Set(ws.filter(real).map((x) => x.scene)).size;
     if ((bad(a) && scenes(a) >= 2) || bad(b)) {
-      const ws = a && bad(a) ? a : b, P = this.pressureOf(ws);
+      const ws = (a && bad(a) ? a : b).filter((x) => !x.suspect), P = this.pressureOf(ws);
       if (!this.mayStepDown(P.kind)) { if (t - (this._floorNoted || -1e9) > 120000) { this._floorNoted = t; this.note({ kind: 'floor', why: `a sustained problem ${this.below(this.applied) == null ? 'at the lowest profile' : 'that a lower profile did not help'}: ${this.why(ws)}` }); } return null; }
       H.cool = t; H.w = [];
       return this.step(+1, t, `held, but a sustained problem${bad(a) && scenes(a) >= 2 ? ' across scene changes' : ' for 60 s'}: ${this.why(ws)}`, P);
@@ -436,7 +472,7 @@ export class Governor {
 
 // Calibration on the title screen: frames measured for CAL_MS after CAL_WAIT; then estimate()
 export class Calibration {
-  constructor({ p0 = 0, budget = () => 1000 / 60 } = {}) { this.p0 = p0; this.budget = budget; this.t0 = null; this.f = []; this.cpu = []; this.g = []; this.done = false; this.result = null; }
+  constructor({ p0 = 0, budget = () => 1000 / 60 } = {}) { this.p0 = p0; this.budget = budget; this.t0 = null; this.f = []; this.cpu = []; this.g = []; this.gAside = 0; this.done = false; this.result = null; }
   frame(t, ms, cpu) {
     if (this.done) return null;
     if (this.t0 == null) this.t0 = t;
@@ -445,15 +481,21 @@ export class Calibration {
     if (t - this.t0 < CAL_WAIT + CAL_MS || this.f.length < 30) return null;
     return this.finish();
   }
-  gpu(ms) { if (!this.done && this.t0 != null) this.g.push(ms); }
+  // (GPU-TIMER-KA: a reading taken after a keep-alive mark is set aside, counted)
+  gpu(ms, ka = false) { if (!this.done && this.t0 != null) { if (ka) this.gAside++; else this.g.push(ms); } }
   finish() {
     this.done = true;
     const gpuMs = this.g.length >= 8 ? pct(this.g, 0.9) : null, cpuMs = pct(this.cpu, 0.9), fMs = pct(this.f, 0.5);
     let est = estimate({ gpuMs, cpuMs, p0: this.p0, budget: this.budget() });
+    const aside = gpuMs == null && this.gAside >= 8;
+    // (GPU-TIMER-KA: the title's GPU readings all taken after keep-alive marks — under a frame-rate limit — are not used: the
+    //  name's guess stands for the GPU side, the CPU side may lower it; and the no-timer rule below does not apply: there
+    //  is a timer, and the limit, not the GPU, spaces the title's frames)
+    if (aside) est = { p: Math.max(est.p, this.p0) };
     // (no GPU timer: a title already missing refreshes with light CPU work is GPU-bound at the guess — one profile down)
-    if (gpuMs == null && fMs > 1.2 * this.budget() && cpuMs < 0.75 * this.budget()) est = { p: Math.max(est.p, Math.min(N_PROFILES - 1, this.p0 + 1)) };
+    else if (gpuMs == null && fMs > 1.2 * this.budget() && cpuMs < 0.75 * this.budget()) est = { p: Math.max(est.p, Math.min(N_PROFILES - 1, this.p0 + 1)) };
     est = { ...est, p: Math.min(est.p, START_FLOOR) };   // (AUTO-FLOOR: the title's frames start no lower than Medium; play decides lower)
-    this.result = { ...est, gpuMs: gpuMs == null ? null : +gpuMs.toFixed(2), cpuMs: cpuMs == null ? null : +cpuMs.toFixed(2), frameMs: fMs == null ? null : +fMs.toFixed(2), frames: this.f.length, gpuFrames: this.g.length, p0: this.p0 };
+    this.result = { ...est, gpuMs: gpuMs == null ? null : +gpuMs.toFixed(2), cpuMs: cpuMs == null ? null : +cpuMs.toFixed(2), frameMs: fMs == null ? null : +fMs.toFixed(2), frames: this.f.length, gpuFrames: this.g.length, gpuAside: this.gAside, p0: this.p0 };
     return this.result;
   }
 }

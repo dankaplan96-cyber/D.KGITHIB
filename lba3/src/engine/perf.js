@@ -127,8 +127,18 @@ export class Perf {
       + `sim ${s.simMs.p50} ms · render (CPU) ${s.renderMs.p50} ms · steps ${s.steps.mean}/${s.steps.max}\n`
       + `draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k${s.lostS ? ` · lost ${s.lostS}s` : ''}\n`
       + `pixel ratio ${(this.game?.renderer?.pixelRatio?.() ?? this.r?.getPixelRatio?.())?.toFixed(2)}${this.game?.renderer?.autoRes ? ` (auto ×${this.game.renderer.effScale()})` : ''} · ${this.game?.settings?.quality ?? ''}\n`
-      + paceLine(this) + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
+      + paceLine(this) + gpuLine(s.gpuMs) + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
   }
+}
+
+// GPU-TIMER-KA: the overlay's GPU timer line (where the browser has the query and something reads it: Auto in play, a
+// benchmark): p50 / p95, the passes' p50, and the share measured after a keep-alive mark with the two groups' p50 apart
+function gpuLine(g) {
+  if (!g) return '';
+  const P = Object.entries(g.passes || {}).map(([l, v]) => `${l} ${v}`).join(' · ');
+  let ka = null; try { ka = localStorage.getItem('lba3_keepalive'); } catch { /* (storage unavailable) */ }
+  return `GPU (timer) p50 ${g.p50} · p95 ${g.p95} ms${P ? ` — ${P}` : ''}\n`
+    + (g.afterMark ? `  after a keep-alive mark ${Math.round(100 * g.afterMark)} % (p50 ${g.p50AfterMark ?? '–'} ms; others ${g.p50NoMark ?? '–'} ms)${ka ? ` · lba3_keepalive=${ka}` : ''}\n` : '');
 }
 
 // FPS30: the overlay's pacing line — the frame-rate limit (or the refresh), and the share of the last 120 drawn intervals
@@ -157,7 +167,9 @@ export class GpuTimer {
   begin(label = 'scene') {
     if (this.f || this.frames.length > 6) return;
     if (this.stride > 1 && ((this.k = (this.k || 0) + 1) % this.stride)) return;
-    this.f = { q: [], tag: this.tag ?? null }; this.mark(label);   // (ROTATE-STALL: tag, the frame's label, set by a benchmark route)
+    // (GPU-TIMER-KA: ka — a keep-alive mark (main.js _keepAlive, on a refresh the frame-rate limit skipped) since the last
+    //  drawn frame: on the GTX 1050 such frames read 2.5–3× longer (P96-HW); Auto treats a reading of one with care)
+    this.f = { q: [], tag: this.tag ?? null, ka: (this.kaMarks || 0) !== (this.kaSeen || 0) }; this.mark(label);   // (ROTATE-STALL: tag, the frame's label, set by a benchmark route)
   }
   mark(label) {
     const gl = this.gl; if (!this.f) return;
@@ -167,6 +179,7 @@ export class GpuTimer {
   }
   end() {
     const gl = this.gl;
+    this.kaSeen = this.kaMarks || 0;   // (every render, measured or not: the marks before the next drawn frame start from here)
     if (this.f) {
       if (this.cur) { gl.endQuery(this.ext.TIME_ELAPSED_EXT); this.cur = null; }
       this.frames.push(this.f); this.f = null;
@@ -184,17 +197,21 @@ export class GpuTimer {
       // (ZPERF-1: a result no frame can have — 737 873 ms came back, not marked disjoint, on the user's Vega 8 under load —
       //  is dropped and counted apart, so it reaches neither a percentile nor the Auto governor)
       if (!(tot >= 0 && tot < GPU_MS_MAX)) { this.invalid = (this.invalid || 0) + 1; continue; }
-      this.onFrame?.(tot);
+      this.onFrame?.(tot, F.ka);
       this.ms.push(tot); if (this.ms.length > 1200) this.ms.shift();
+      (this.kaOf ??= []).push(F.ka); if (this.kaOf.length > 1200) this.kaOf.shift();
       if (F.tag != null) { const T = (this.tags ??= new Map()); let a = T.get(F.tag); if (!a) T.set(F.tag, (a = [])); a.push(tot); if (a.length > 600) a.shift(); }
       for (const [label, ms] of Object.entries(by)) { let a = this.pass.get(label); if (!a) this.pass.set(label, (a = [])); a.push(ms); if (a.length > 1200) a.shift(); }
     }
   }
-  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; this.invalid = 0; this.tags?.clear(); }
+  reset() { this.ms.length = 0; if (this.kaOf) this.kaOf.length = 0; this.pass.clear(); this.disjoint = 0; this.invalid = 0; this.tags?.clear(); }
   stats() {
     if (!this.ms.length) return null;
     const pc = (a, k) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(k * v.length))].toFixed(2); };
-    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, invalid: this.invalid || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
+    // (GPU-TIMER-KA: afterMark — the share of the frames measured after a keep-alive mark; their p50 and the others' apart)
+    const K = this.kaOf || [], a = this.ms.filter((_, i) => K[i]), b = this.ms.filter((_, i) => !K[i]);
+    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, invalid: this.invalid || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])),
+      afterMark: +(a.length / this.ms.length).toFixed(2), p50AfterMark: a.length ? pc(a, 0.5) : null, p50NoMark: b.length ? pc(b, 0.5) : null };
   }
 }
 
