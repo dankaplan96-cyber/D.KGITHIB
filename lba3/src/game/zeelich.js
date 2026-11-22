@@ -1206,9 +1206,14 @@ export function* buildZeelichSteps(scene, physics) {
     const friezeY = h - 0.66 - base;   // (the tiled frieze's foot, in the walls' coordinates: nothing on a wall reaches above it)
     const holes = { front: [door], back: [], left: [], right: [], fl: [], fr: [], bl: [], br: [] };
     const winY = 1.15;
-    const addWin = (side, x, ww = 0.82, hh = 1.25) => holes[side].push({ x, y: winY, w: ww, h: hh, horse: true });
     // (ZSTYLE-2: o.octa, an octagonal hall: the rectangle's corners chamfered by C; its straight faces fw and fd long)
     const C = o.octa || 0, fw = C ? w - 2 * C : w, fd = C ? d - 2 * C : d;
+    // (WORLD-FIX: a window and its sill keep clear of the wall's corner piers — the octagonal hall's back window at 1.2
+    //  ran its sill 8 cm into the chamfer's pier — as the fit registers them: tests/worldfit.mjs)
+    const addWin = (side, x, ww = 0.82, hh = 1.25) => {
+      const free = C ? (side === 'front' || side === 'back' ? fw : fd) / 2 - 0.2 : (side === 'front' || side === 'back' ? w : d) / 2 - 0.4, lim = free - ww / 2 - 0.175;
+      holes[side].push({ x: Math.max(-lim, Math.min(lim, x)), y: winY, w: ww, h: hh, horse: true });
+    };
     if (o.workshop) {
       holes.front.push({ x: doorX + 2.6, y: 0.95, w: 1.9, h: 1.9, round: true, big: true });
       addWin('left', 0); addWin('right', -0.8); addWin('back', 1.5);
@@ -1275,8 +1280,9 @@ export function* buildZeelichSteps(scene, physics) {
           if (ah - 0.07 >= op.y + op.h + 0.22) {
             for (const s of [-1, 1]) HB.addM(bbox(0.14, ah, 0.08, 0.02, 1), trimM, at(op.x + s * aw / 2, ah / 2, t + 0.03));
             // (TECH-ART-1: the alfiz's head is a stone lintel, 0.2 m proud of the wall, its shadow line over the arch)
-            HB.addM(cached('lintel' + aw.toFixed(2), () => boxUV(bbox(aw + 0.3, 0.18, 0.2, 0.03, 1), TILE.stone)), stoneM, at(op.x, ah - 0.02, t + 0.1));
-            Object.assign(fe, { x0: op.x - aw / 2 - 0.15, x1: op.x + aw / 2 + 0.15, y1: ah + 0.07 });
+            // (WORLD-FIX: 0.1 m past each post, not 0.15: the wider lintel ran 5 cm into the wall lantern beside the door)
+            HB.addM(cached('lintel' + aw.toFixed(2), () => boxUV(bbox(aw + 0.2, 0.18, 0.2, 0.03, 1), TILE.stone)), stoneM, at(op.x, ah - 0.02, t + 0.1));
+            Object.assign(fe, { x0: op.x - aw / 2 - 0.1, x1: op.x + aw / 2 + 0.1, y1: ah + 0.07 });
           }
           HB.addM(boxUV(bbox(1.9, 0.14, 0.7, 0.03, 1), 1), stoneM, at(op.x, -base + 0.07, t + 0.35));
         } else {

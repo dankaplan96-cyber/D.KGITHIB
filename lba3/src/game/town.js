@@ -97,7 +97,7 @@ const HOUSES = [
   { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', awning: '#e58aa0', awningW: 6.6, awningX: 0, roof: 'planks', pitch: 0.38, shutters: '#d8a13b', chimney: false,
     windows: [{ side: 'front', x: -0.6 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: at 1.2 the window ran under the door's surround)
   { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0, w: 1.6, h: 2.4, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubble', tint: '#ece8e2', roof: 'thatch', shutters: '#3f9a6a', chimney: false,
-    windows: [{ side: 'front', x: -1.5 }, { side: 'left', x: 0 }] },
+    windows: [{ side: 'front', x: -1.65, w: 0.65 }, { side: 'left', x: 0 }] },   // (WORLD-FIX: a 0.8 m window at −1.5 opened its shutter onto the wide carved door's surround; between the surround and the corner quoins there is room for 0.65 m)
   // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
   // (CITADEL-85: LBA2's long hall has a grey barrel vault along its length, ribbed; its gable across the front is gone)
   { id: 'baggage', x: -84.2, z: 25.4, ry: 0, w: 15, d: 8.8, h: 3.6, door: { x: -4.6 }, wall: 'stone', tint: '#ece4d4', roof: 'slate', barrel: { axis: 'x', rise: 0.27, ribs: true }, shutters: '#3b5bb8', chimney: false,
