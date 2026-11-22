@@ -15,6 +15,7 @@
 //   F. the real requestAnimationFrame of this headless browser, the draw stubbed: the drawn intervals at 30 and 60
 //   G. animation events crossed between updates, exactly once at 30 / 60 / 144 / uneven 30 (FPS30-SMOOTH §6): footsteps per
 //      metre, a sword combo's swing sounds and hits, ball throws, releases and catches, jumps and landings
+//      A9 (STREET-CPU): the catch-up step in the skipped refresh, one step a callback, the simulated time the real time
 //   ONLY=AB (letters) runs those parts only. The numbers of the scheduler before FPS30 (same test, same harness) are in
 //   docs/lba-maturity/FPS30.md.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
@@ -147,6 +148,24 @@ if (ONLY.includes('A')) {
   result.move = { first: r.iv.slice(0, 8), tail: summ(tail) };
   log('30, moved from 60 Hz to 120 Hz', result.move);
   check('A8 moved to a 120 Hz screen at 30: after a second the drawn interval is still 33.3 ms, and no interval under 16 ms on the way', near(result.move.tail.p50, 33.3, 0.5) && result.move.tail.max < 34 && r.iv.every((x) => x > 16), result.move);
+  // A9 (STREET-CPU): at 30 on 60 Hz the catch-up step runs in the skipped refresh's callback, so the drawn refresh's
+  // callback simulates one 60 Hz step; the simulated time is the real time (none lost, none twice); with the switch off
+  // (game.preStepOff) both steps are in the drawn refresh as before
+  await warm(60); await setFps('30');
+  const pre = await ev(() => {
+    const S = SYN, G = game, per = 1000 / 60, out = {};
+    for (const off of [false, true]) {
+      G.preStepOff = off; let t = S.t; for (let i = 0; i < 20; i++) { t += per; S.tick(t); }
+      const f0 = G.frame, per0 = []; let calls = 0, sim = 0; G.frame = function (dt, r) { calls++; sim += dt; return f0.call(this, dt, r); };
+      const time0 = G.time, drawn0 = S.drawn.length;
+      for (let i = 0; i < 120; i++) { t += per; const c0 = calls; S.tick(t); per0.push(calls - c0); }
+      G.frame = f0;
+      out[off ? 'off' : 'on'] = { steps: calls, drawn: S.drawn.length - drawn0, perRefresh: [...new Set(per0)].sort(), simMs: +((G.time - time0) * 1000).toFixed(1), realMs: +(120 * per).toFixed(1), maxPerCallback: Math.max(...per0) };
+    }
+    G.preStepOff = false; return out;
+  });
+  result.preStep = pre; log('30 on 60 Hz: steps per callback with the catch-up step in the skipped refresh (on) and as before (off)', pre);
+  check('A9 at 30 on 60 Hz each refresh runs one 60 Hz step (the skipped one the catch-up step, the drawn one its own), the simulated time is the real time; off: two steps in the drawn refresh as before', pre.on.drawn === 60 && pre.on.steps === 120 && pre.on.maxPerCallback === 1 && Math.abs(pre.on.simMs - pre.on.realMs) < 1 && pre.off.maxPerCallback === 2 && pre.off.steps === 120 && Math.abs(pre.off.simMs - pre.off.realMs) < 1, pre);
 }
 
 // ---------------------------------------------------------------- B. pause / resume, background, hidden tab

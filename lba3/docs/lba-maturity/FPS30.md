@@ -501,3 +501,37 @@ A suspect step down that comes back is still one visible change at a scene chang
 
 #### Real hardware
 Not measured yet (order 65).
+
+## 10. STREET-CPU (22.11): the catch-up step moves to the skipped refresh
+
+P95's leftover (AUTO-P95 §4): on the UHD 620 the Citadel street's CPU work ran past a refresh at 30 on every profile, so
+frames were shown a refresh late. Cause found in the loop, not in a profile: under the 30 limit the game simulates two
+60 Hz steps a drawn frame (§4) and both ran in the drawn refresh's callback, ahead of the render, while the refresh
+between drawn frames did nothing (it only polled the pad and set P96's mark). `Game.preStep` (src/main.js) now runs the
+catch-up step in that skipped refresh's callback once a step's time has come: the same inner step (1/60 s, nothing drawn,
+no detail levels / lamps / shadow culling / map slice), input read once a step as before, and the drawn frame simulates
+what is left of its interval (`_preSim`, taken by `advance`). Same steps, same total simulated time, same image; the
+drawn refresh does one step + the render instead of two steps + the render. Not during a scene change (its settle and
+reveal count drawn frames), in the background, under fixed test stepping or `game.simStep`; `game.preStepOff = true` is
+the A/B switch. The pre-step's time is recorded per drawn frame as `pre` (perf.stats `preMs`; the Frame Rates
+benchmark's "CPU ms per second" adds it; its per-frame "CPU work" is the drawn callback's, the one that must fit a refresh).
+
+Measured, **automated runtime only (SwiftShader)**, on this shared 4-core machine (load 11–13): Medium, 960×540, the
+`street` benchmark route on the game's real `loop` with a synthetic 60 Hz display at Frame Rate 30, GL drained before each
+callback, A/B interleaved in blocks of 40 refreshes in one browser (90 drawn frames a side):
+
+| main-thread work per callback (ms) | before | after |
+|---|---|---|
+| drawn refresh: p50 / p95 / p99 | 16.7 / 36.7 / 96.6 | **11.7 / 20.3 / 29.1** |
+| of it simulation p50 / p95 | 7.9 / 20.9 | 4.0 / 5.8 |
+| of it render submission p50 / p95 | 8.6 / 15.1 | 7.7 / 13.9 |
+| drawn callbacks over 16.7 ms | 50 % | 11 % |
+| skipped refresh: p50 / p95 | 0.1 / 0.2 | 4.2 / 8.7 |
+
+The total CPU per drawn frame does not change in principle (the same steps run). In this run it read 20.4 before and
+17.5 ms after, which is machine noise. On the UHD 620, the 19.11 report's street at 60 (one step + render) measured CPU
+p50 16.4 / p95 22.3 ms. At 30 the drawn callback now carries about that one-step load instead of two steps'. Whether
+that fits under a refresh there is for the hardware to show (order AUTO-HW, the Frame Rates benchmark); it is not
+claimed here. Tests: fps30 A (new A9: one step a callback, simulated time = real time; with the switch off, two steps
+in the drawn refresh), fps30 C and F. timing.mjs's skipped-refresh tap check now reads "used once by the catch-up step
+in play, else it waits"; its old rule is checked with the switch off.
