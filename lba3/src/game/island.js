@@ -386,7 +386,7 @@ function barrelGeo() {
 }
 function barrels(W, parent, list, r) {
   const B = barrelGeo();
-  const items = list.map(([x, z, lying]) => ({ x, y: W.H(x, z) + (lying ? 0.4 : 0), z, ry: r() * 6, rz: lying ? Math.PI / 2 : (r() - 0.5) * 0.04 }));
+  const items = list.map(([x, z, lying, y0]) => ({ x, y: (y0 ?? W.H(x, z)) + (lying ? 0.4 : 0), z, ry: r() * 6, rz: lying ? Math.PI / 2 : (r() - 0.5) * 0.04 }));
   instances(parent, B.body, tm('wood', { color: '#c89060' }), items);
   instances(parent, B.hoops, pm('#3a3a3a', 0.5, { metalness: 0.5 }), items);
   for (const it of items) W.physics.add({ type: 'cyl', x: it.x, z: it.z, r: 0.42, top: it.y + 1, noStand: true, seeThrough: true });
@@ -691,11 +691,21 @@ function buildHarbour(W0, root, r) {
     // west and south faces, railed
     {
       const P = HARBOUR_PLAT, qx1 = QX + 13, z1 = Z1, platPosts = [];
-      wallRun(B, QX + QUAY_R, z1, qx1, z1, QH, [[-1, 99]], platPosts);
-      wallRun(B, qx1, z1, qx1, P.zS - d.z, QH, [[-1, 99]], platPosts, 1);
-      wallRun(B, qx1, P.zS - d.z, P.x1 - d.x, P.zS - d.z, P.h, [[-1, 99]], platPosts);
-      wallRun(B, P.x1 - d.x, P.zS - d.z, P.x1 - d.x, P.zSE - d.z, P.h, [], platPosts, 2);
-      wallRun(B, P.x1 - d.x, P.zSE - d.z, P.x2 - d.x, P.zSE - d.z, P.h, [], platPosts, 1);
+      // HARBOUR-BRINK: each run's walkable top (the wall's top, 1 m in from the face; at the coping's height, 2 cm over
+      // the paving), 0.1 m out past the face and its ends, as the quay's west face has: the terrain grid can't step at
+      // the face (world.js keeps the last grid row inside level and sinks the first one out, so the bank between them
+      // meets the sea 0.1 m past the face), so this holds the paving's level out to the face
+      const lip = (ax, az, bx, bz, top) => {
+        const len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az), o = 0.45;
+        physics.add({ type: 'box', x: (ax + bx) / 2 + Math.cos(ry) * o, z: (az + bz) / 2 - Math.sin(ry) * o, hw: 0.55, hd: len / 2 + 0.1, rot: ry, top: top + 0.02, seeThrough: true });
+      };
+      for (const [ax, az, bx, bz, top, gaps, j] of [
+        [QX + QUAY_R, z1, qx1, z1, QH, [[-1, 99]], 0],
+        [qx1, z1, qx1, P.zS - d.z, QH, [[-1, 99]], 1],
+        [qx1, P.zS - d.z, P.x1 - d.x, P.zS - d.z, P.h, [[-1, 99]], 0],
+        [P.x1 - d.x, P.zS - d.z, P.x1 - d.x, P.zSE - d.z, P.h, [], 2],
+        [P.x1 - d.x, P.zSE - d.z, P.x2 - d.x, P.zSE - d.z, P.h, [], 1],
+      ]) { wallRun(B, ax, az, bx, bz, top, gaps, platPosts, j); lip(ax, az, bx, bz, top); }
       instances(g, bollard, post, [...armPosts, ...platPosts]);   // (the arm's and the platform's posts: one draw)
       for (const p of platPosts) physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: P.h + 1.1, seeThrough: true });
       for (const [a, b] of B._rails || []) physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: P.h + 1.05, seeThrough: true, noStand: true });
@@ -772,7 +782,7 @@ function buildHarbour(W0, root, r) {
   lamp(W, g, -63.2, -11.2);
   { const tacc = { list: [], cups: [], parent: g }; tulipBed(W, g, -64.8, -9.0, 4.2, 1.4, 0, r, tacc); tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r, tacc); tulipFlush(tacc); }
   bench(W, g, -65.0, -6.6, Math.PI, r);   // (BENCHES-1: 0.4 m back from the tulip bed before it: 1.2 m clear for the sitter's feet)
-  barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-70.3, 6.2, true]], r);   // (PLACE-2: the lying one 0.5 m off the harbour master's shed: its end was 21 cm in the wall)
+  barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-70.3, 6.2, true, QH]], r);   // (PLACE-2: the lying one 0.5 m off the harbour master's shed: its end was 21 cm in the wall. HARBOUR-BRINK: it lies on the south face's top, at the quay's level, QH: the terrain under it is the bank inside the face)
   W.givers.push({ id: 'quay-barrels', x: -72.6 + d.x, z: 5.4 + d.z, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
   crateStack(W, g, [[-71.6, -11.6, 2], [-70.5, -12.0, 1], [-72.6, -10.6, 1, 0.8]], r);
   netHeap(W, g, -73.0, 2.2, r);

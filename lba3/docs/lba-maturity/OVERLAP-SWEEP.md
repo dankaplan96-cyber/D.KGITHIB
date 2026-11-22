@@ -199,6 +199,22 @@ bank under the sea wall's paving (the terrain grid slopes from z 43.25; the draw
 now, and still its one failing spot. Levelling the terrain under the paving to the wall's face (world.js, the harbour's
 sea cut) is the root fix; not done here.
 
+**HARBOUR-BRINK (done after OVERLAP-3; Automated runtime only).** Cause: the harbour's straight sea cuts were soft
+(`smoothstep(-0.3, 0.6)` on the distance to the face), so the terrain grid's last row inside a face was lowered (the
+yard's south face: 0.44 m, the paving's ground sloping from z 42.9, steep from 43.86) and the bank ran on past the face
+above the sea (to z 44.3): a slide there was stopped dead by the sea. Every unrailed brink (the yard's south face west of
+the rails, the quay's south and east faces) let him walk onto that bank, slide to the water and be hopped back. Fix:
+`world.js` — beside the faces that are built, no grid point inside a face is lowered and the first point out is sunk just
+so far that the bank from the last point in meets the sea 0.1 m past the face (−0.45 to −10.7 m by face; the scatter
+sees the old ground, `BRINK_OFF`, so no random draw moves); `island.js` — each platform wall run gets the walkable top
+the quay's west face has (its top, 1 m in, 0.1 m out past the face, at the coping's height; colliders only, no mesh), and
+the lying quay barrel lies at the quay's level. Walked (probe): on every unrailed face he now stops standing on the wall
+top 0.15 m past the face, no slide (before: a slide down to the water, then the hop back). `captures/harbour-brink/`:
+the bank that showed in front of the yard's south wall under its coping is gone. The south bollard runs keep z 43.0,
+their rails now on level ground (2.30, was 2.27); the island's colliders otherwise unchanged (the 5 walkable tops added).
+Tests (Automated runtime only): slidetraps PASS (Citadel 43 spots, 0 bad; the scan spot is sea now), citadel-structures,
+spaceport-2, world-consistency, overlap-sweep (default), chapter1: PASS.
+
 ### Tests (Automated runtime only; this branch with origin merged)
 
 | Suite | Verdict |

@@ -323,10 +323,34 @@ function baseHeight(x, z) {
     if (x > P.x0 - 1 && x < P.x2 + 1 && z > P.zS - 4.5 && z < P.zS + 1) h = lerp(h, P.h, smoothstep(P.x0 - 1, P.x0 + 0.5, x) * smoothstep(P.zS - 4.5, P.zS - 3, z));
     if (x > P.x1 - 0.6 && x < P.x2 + 1 && z > P.zS - 1 && z < P.zSE + 1) h = lerp(h, P.h, smoothstep(P.x2 + 1, P.x2 - 0.5, x));
     // (only near the walls: from P.zFar on south the ground is the island's own again — the bay, the lighthouse's headland)
-    const sea = (dw) => { dw -= smoothstep(P.zFar, P.zFar + 3, z) * 9; const k = smoothstep(-0.3, 0.6, dw); if (k > 0) h = lerp(h, Math.min(h, -3.2), k); };
-    if (x > QUAY.x1 - 1 && x < P.x1 + 1 && z > P.zS - 1 && z < P.zFar + 3) sea(Math.min(x - QUAY.x1, P.x1 - x, z - P.zS));   // (the notch inside the L)
-    if (x >= P.x1 - 0.3 && x < P.x2 && z > P.zSE - 1 && z < P.zFar + 3) sea(z - P.zSE - (1 - smoothstep(P.x2, P.x2 - 1.5, x)) * 5);   // (before the trading house's ground)
-    if (x > QUAY.x0 + QUAY_R && x < QUAY.x1 + 0.6 && z > QUAY.z1 - 1 && z < P.zFar + 3) sea(z - QUAY.z1);                     // (before the quay's south face)
+    // HARBOUR-BRINK (slidetraps (−91.67, 44.22)): where a sea wall stands (`wall`; `faces`: the faces really built in
+    // island.js, [distance out from the face, the level behind it]), the ground is that level right up to the face and
+    // sea from it on. The terrain grid (0.93 m) can't hold a step there, so: no grid point inside a face is lowered (the
+    // soft cut lowered the last row inside the yard's south face 0.44 m: the paving's ground sloped from z 42.9 and
+    // turned steep 0.14 m before the face, a bank too steep to stand on that ran 0.3 m out past the face over the water,
+    // where the sea stopped a slide dead); the first point out from a face (f under one grid step) is sunk just so far
+    // that the bank from the last point in, level, reaches the sea (−0.35, physics.js WATER_FLOOR; −0.4 here) 0.1 m past
+    // the face; island.js lays the walls' walkable tops over the bank, out to 0.1 m past the face. Points farther out are
+    // the basin's floor, as before. Away from the walls (south of them, round their ends) the cut is the soft one it was.
+    const sea = (dw, wall, faces) => {
+      dw -= smoothstep(P.zFar, P.zFar + 3, z) * 9;
+      if (wall && z < P.zFar && !BRINK_OFF) {
+        if (dw <= 0) return;
+        const st = TERRAIN_SIZE / TERRAIN_SEGS;
+        let d = 0;
+        for (const [f, L] of faces) if (f > 0 && f < st) d = Math.min(d, Math.max(-16, Math.min(-0.45, L - (L + 0.4) * st / (st - f + 0.1))));
+        h = Math.min(h, d < 0 ? d : -3.2);
+        return;
+      }
+      const k = smoothstep(-0.3, 0.6, dw); if (k > 0) h = lerp(h, Math.min(h, -3.2), k);
+    };
+    if (x > QUAY.x1 - 1 && x < P.x1 + 1 && z > P.zS - 1 && z < P.zFar + 3) {   // (the notch inside the L)
+      const fq = x - QUAY.x1, f1 = P.x1 - x, fs = z - P.zS;   // (the quay's east face runs to z QUAY.z1, the trading house ground's west face to zSE)
+      const faces = [[fs, P.h]]; if (z < QUAY.z1) faces.push([fq, QUAY.h]); if (z < P.zSE) faces.push([f1, P.h]);
+      sea(Math.min(fq, f1, fs), z < P.zSE || (z < QUAY.z1 && fq < f1), faces);
+    }
+    if (x >= P.x1 - 0.3 && x < P.x2 && z > P.zSE - 1 && z < P.zFar + 3) sea(z - P.zSE - (1 - smoothstep(P.x2, P.x2 - 1.5, x)) * 5, x >= P.x1 && x < P.x2 - 1.5, [[z - P.zSE, P.h]]);   // (before the trading house's ground)
+    if (x > QUAY.x0 + QUAY_R && x < QUAY.x1 + 0.6 && z > QUAY.z1 - 1 && z < P.zFar + 3) sea(z - QUAY.z1, x < QUAY.x1, [[z - QUAY.z1, QUAY.h]]);   // (before the quay's south face)
   }
   // the Whispering Cliffs: a rock stack on the plateau's rim
   {
@@ -429,6 +453,11 @@ export function islandHeight(x, z) {
 // (scatterGround, KNOLL_OFF: no random draw moves); the rocks of the old face are shaped on the new one.
 const KNOLL_BOX = [-68.6, 15.2, -62.5, 21.4], KNOLL_FOOT = -66.2, KNOLL_Y = 2.45;
 let KNOLL_OFF = false;
+// HARBOUR-BRINK: the harbour platform's sea walls (baseHeight's harbour cut; BRINK_OFF: the soft cut as it stood, for
+// the scatter's view of the ground — a rock in the shallows by the quay's south-west corner dropped out of the scatter
+// and every rock drawn after it moved)
+const BRINK_BOX = [-119.5, 42.5, -78, 60.5];
+let BRINK_OFF = false;
 function waterKnoll(x, z, h) {
   if (KNOLL_OFF || x < KNOLL_BOX[0] || x > KNOLL_BOX[2] || z < KNOLL_BOX[1] || z > KNOLL_BOX[3]) return h;
   return Math.min(h, KNOLL_Y + Math.max(0, KNOLL_FOOT - x) * 2.2);
@@ -680,10 +709,21 @@ function scatterGround(T) {
       if (d !== 0) pre.set(k, T.heights[k] + d);
     }
   }
+  // (HARBOUR-BRINK: and the ground by the harbour platform's sea walls as it stood before the brink was made level)
+  {
+    const [x0, z0, x1, z1] = BRINK_BOX;
+    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
+      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
+      if (pre.has(k)) continue;
+      BRINK_OFF = true; const before = islandHeight(x, z); BRINK_OFF = false;
+      const d = before - islandHeight(x, z);
+      if (d !== 0) pre.set(k, T.heights[k] + d);
+    }
+  }
   // (CAVE-STAIR: and the ground under the plateau's stair as it stood before it was cut to the flight's line)
   for (const [k, v] of STAIR_PRE) if (!pre.has(k)) pre.set(k, v);
   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
-  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX, PLATEAU_STAIR_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX, BRINK_BOX, PLATEAU_STAIR_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const heightAt = (x, z) => {
     if (!near(x, z, 2)) return T.heightAt(x, z);
     const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
