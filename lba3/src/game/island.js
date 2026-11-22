@@ -22,7 +22,7 @@ import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA } from './citadel-layout.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA, LAWN, EAST_WALL } from './citadel-layout.js';
 
 // ================================================================== layout
 // Everything that the vegetation scatter must keep clear of (world.js asks
@@ -3134,11 +3134,46 @@ function buildFlatTown(W, root) {
   const grp = new THREE.Group(); grp.name = 'flat-town'; root.add(grp);
   const B = new Batch(grp);
   const rub = tm('rubble', { color: '#cfcac8' }), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
+  // FLAT-TOWN-2: the walls that face east, away from the sun (the inland wall behind the water office, the east shore's),
+  // read near black in their shade beside the sunlit sea wall: the same rubble, lifted by its own texture as light
+  // (colour only: an emissive map, ~a third of the stones' own tone)
+  const rubS = MC.get('rubble-shade') || (() => { const map = textures().rubble, m = new THREE.MeshStandardMaterial({ map, color: '#d6d2d0', roughness: 0.88, emissive: '#8c8884', emissiveMap: map }); MC.set('rubble-shade', m); return m; })();
   for (const w of PROM_WALLS) {
     const wx = w.x1 - w.x0, wz = w.z1 - w.z0, top = PROM_H - 0.18, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2;
-    B.add(bbox(wx, top - w.foot, wz, 0.04, TILE.rubble), rub, cx, (top + w.foot) / 2, cz);
+    B.add(bbox(wx, top - w.foot, wz, 0.04, TILE.rubble), w.id === 'inland' ? rubS : rub, cx, (top + w.foot) / 2, cz);
     B.add(bbox(wx + 0.06, 0.22, wz + 0.06, 0.03, TILE.stone), cope, cx, PROM_H + 0.02 - 0.11, cz);
     physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.03, hd: wz / 2 + 0.03, rot: 0, top: PROM_H + 0.02, seeThrough: true });
+  }
+  // FLAT-TOWN-2: the south block's lawns (LAWN): the kerbs and the bed's walls, rubble under the coping (on a kerb, 0.23 m,
+  // nearly all coping), each top a walkable collider; the coping overhangs 3 cm on the sides toward lower ground and the
+  // free ends only (two tops at one height never overlap); the two steps up from the north kerb into the bed, the flight's
+  // paler stone, each its own collider (the ground under them the bank, 3–5 cm below their treads)
+  {
+    const foot = TOWN_FLAT - 0.4, o = 0.03;
+    for (const w of LAWN.walls) {
+      const has = (c) => w.out.includes(c), x0 = w.x0 - (has('w') ? o : 0), x1 = w.x1 + (has('e') ? o : 0), z0 = w.z0 - (has('n') ? o : 0), z1 = w.z1 + (has('s') ? o : 0);
+      const wx = w.x1 - w.x0, wz = w.z1 - w.z0, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2, rt = w.top - 0.2;
+      B.add(bbox(wx, rt - foot, wz, 0.03, TILE.rubble), rubS, cx, (rt + foot) / 2, cz);
+      B.add(bbox(x1 - x0, 0.22, z1 - z0, 0.03, TILE.stone), cope, (x0 + x1) / 2, w.top - 0.11, (z0 + z1) / 2);
+      physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.02, hd: wz / 2 + 0.02, rot: 0, top: w.top, seeThrough: true });
+    }
+    const S = LAWN.steps, sx = (S.x0 + S.x1) / 2, sw = S.x1 - S.x0;
+    for (const [z0, z1, top] of [[S.z0, S.zm, LAWN.ring + 0.21 + 0.015], [S.zm, S.z1, LAWN.bed + 0.02]]) {
+      B.add(bbox(sw, top - foot, z1 - z0, 0.02, TILE.stone), step, sx, (top + foot) / 2, (z0 + z1) / 2);
+      physics.add({ type: 'box', x: sx, z: (z0 + z1) / 2, hw: sw / 2, hd: (z1 - z0) / 2, rot: 0, top, seeThrough: true, stair: true });   // (a stair: the residents' planner walks up it, walknav.js lowBrick)
+    }
+  }
+  // FLAT-TOWN-2: the east shore's wall (EAST_WALL), down to the water; under the footbridge's planks no coping, its rubble
+  // just under their top (the bridge rests on it)
+  {
+    const E = EAST_WALL, wx = E.x1 - E.x0, cx = (E.x0 + E.x1) / 2, [g0, g1] = E.bridge, rt = E.top - 0.2;
+    for (const [z0, z1, bare] of [[E.z0, g0, false], [g0, g1, true], [g1, E.z1, false]]) {
+      const wz = z1 - z0, cz = (z0 + z1) / 2, t = bare ? TOWN_FLAT - 0.02 : rt;
+      B.add(bbox(wx, t - E.foot, wz, 0.04, TILE.rubble), rubS, cx, (t + E.foot) / 2, cz);
+      if (bare) continue;
+      B.add(bbox(wx + 0.06, 0.22, wz + (z0 === E.z0 ? 0.03 : 0) + (z1 === E.z1 ? 0.03 : 0), 0.03, TILE.stone), cope, cx, E.top - 0.11, cz + ((z1 === E.z1 ? 0.03 : 0) - (z0 === E.z0 ? 0.03 : 0)) / 2);
+      physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.03, hd: wz / 2, rot: 0, top: E.top, seeThrough: true });
+    }
   }
   {
     const S = PROM_STAIR, L = S.xa - S.xb, tr = L / S.n, rise = (PROM_H - TOWN_FLAT) / S.n, base = 0.3, depth = S.zS - S.zN;

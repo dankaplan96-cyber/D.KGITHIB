@@ -63,7 +63,10 @@ export const PROPS = {
   pickets: [[-93.8, 21.6, 0], [-95.5, 21.6, 0], [-97.2, 21.6, 0], [-33.4, 70.9, 0], [-35.1, 70.9, 0], [-36.7, 70.9, 0], [-38.4, 70.9, 0],
     [-40.1, 70.9, 0], [-41.7, 70.9, 0], [-41.8, 72.6, 1], [-41.8, 74.2, 1], [-41.8, 75.9, 1], [-41.8, 77.6, 1], [-40.2, 77.7, 2], [-38.5, 77.7, 2]],
   // tulip rows (plants 0.7 m apart, 1.1 m deep) [first x, last x, z]
-  tulips: [[-46.5, -43.9, 8.7], [-40.5, -37.9, 8.7], [-95.3, -93.5, 32.7], [-53.3, -51.6, 49.8], [-49, -47.3, 49.8], [-41.5, -31.1, 70.1]],
+  // (FLAT-TOWN-2: the south block's rows on its raised bed: the first 0.25 m north, clear of the bed's south wall; the
+  //  second, LBA2's x −49..−47.3 by the bed's south edge, would stand in our narrower block's east wall: on the bed,
+  //  between its two trees)
+  tulips: [[-46.5, -43.9, 8.7], [-40.5, -37.9, 8.7], [-95.3, -93.5, 32.7], [-53.3, -51.6, 49.55], [-51.3, -49.6, 44.6], [-41.5, -31.1, 70.1]],
   // trees [x, z, kind]: 0 a round crown (2.7 m wide, 3.7 m tall), 1 a tall one (2.2, 4.6), 4 a palm (3.1 m)
   trees: [[-90.8, -75, 0], [-85.3, -61.5, 0], [-89.1, -69.4, 1], [-93.5, -63.2, 1], [-79, -58.9, 1], [-115, -80.3, 4], [-123.5, -70.9, 4],
     [-26.8, -59.2, 0], [-30.2, -53.8, 0], [-33.6, -55.5, 0], [-37.9, -61.5, 0], [-33.6, -64.9, 0], [-64.3, -46.6, 0], [-60.2, -43.7, 1],
@@ -122,13 +125,75 @@ export const PROM_WALLS = [
 // the flight's block); its north side against the shelf's face. n steps.
 export const PROM_STAIR = { xa: GX(151), xb: PROM.x1, zN: -5.8, zS: GZ(120) + 0.05, n: 20 };   // (xa −65.786: its foot on a grid column, the street's level)
 // what the scatter's leftovers must keep out of (world.js filters them after the scatter, so no random draw moves)
+// (FLAT-TOWN-2: and the east shore's wall and the sea before it; the lawns' masonry has its own, lawnClear: its plants
+//  keep off by their size)
 export function flatClear(x, z, pad = 0) {
   for (const W of PROM_WALLS) if (x > W.x0 - pad && x < W.x1 + pad && z > W.z0 - pad && z < W.z1 + pad) return true;
+  const E = EAST_WALL;
+  if (x > E.x0 - pad && z > E.z0 - pad && z < E.z1 + pad) return true;
   const S = PROM_STAIR;
   return x > S.xb - pad && x < S.xa + 0.4 + pad && z > S.zN - 0.3 - pad && z < S.zS + 0.3 + pad;
 }
-// and the way onto the flight: its foot, 2.4 m before the first step, the flight's width (a placed prop keeps off it)
+// and the way onto the flight: its foot, 2.4 m before the first step, the flight's width (a placed prop keeps off it);
+// FLAT-TOWN-2: the lawns' masonry and the way onto their steps
 export function flatKeep(x, z, pad = 0) {
-  const S = PROM_STAIR;
-  return flatClear(x, z, pad) || (x > S.xa - pad && x < S.xa + 2.4 + pad && z > S.zN - pad && z < S.zS + pad);
+  const S = PROM_STAIR, L = LAWN.steps;
+  return flatClear(x, z, pad) || lawnClear(x, z, pad) || (x > L.x0 - pad && x < L.x1 + pad && z > LAWN.box[1] - 1.6 - pad && z < LAWN.box[1] + pad)
+    || (x > S.xa - pad && x < S.xa + 2.4 + pad && z > S.zN - pad && z < S.zS + pad);
 }
+
+// ---- FLAT-TOWN-2 (P106, 22.11): the south block's raised lawns, the east shore's wall ----
+// LBA2's island grid (tools/worldscore/ref/citadel.json, in our frame) has the block south of the cross street (ours
+// between the west street, the fields' path and the two cross streets: world.js TOWN_BLOCK) raised: a ring one cell
+// wide at +0.21 over the street round beds at +0.63, a strip of the street's level along its north side (the benches
+// and their lamps) and its west side. Ours is 2.8 m narrower than LBA2's (the fields' path runs where LBA2's block's
+// east part is), so: on the west and north a kerb (the ring, +0.21) and the bed's retaining wall (+0.63) above it, each
+// on one cell of the terrain's grid as the promenade's walls (the bank between a low row and a level row is inside the
+// masonry, its top a walkable collider); on the east (by the fields' path) and the south the bed's wall straight from
+// the street. The bed: the lawn with its trees, the hopscotch and Maro and Tilde's meeting place. Steps where people go
+// on and off it: the north side's middle, from the benches (the kerb, then two steps cut into the bed's wall).
+// Grid rows (indices): the bed level at i 163..170, j 163..177; the ring's level rows i 162 (west), j 162 (north);
+// the low rows i 161, j 161 (west, north), i 171, j 178 (east, south).
+const LG = { i0: 163, i1: 170, j0: 163, j1: 177 };
+export const LAWN = {
+  ring: TOWN_FLAT + 0.21, bed: TOWN_FLAT + 0.63,
+  // the level regions (world.js lawns: grid points inside are at that level)
+  bedBox: [GX(LG.i0), GZ(LG.j0), GX(LG.i1), GZ(LG.j1)],
+  ringBox: [GX(LG.i0 - 1), GZ(LG.j0 - 1), GX(LG.i1), GZ(LG.j1)],
+  // the masonry [x0, x1, z0, z1, top]: the north and west kerbs, the bed's four walls (the north one in two, either
+  // side of the steps); each face 0.05 m past its low row, each back 0.08 m inside its level row, and where two meet
+  // one ends where the other begins (no two tops overlapping)
+  steps: { x0: -52.4, x1: -50.6, z0: GZ(LG.j0 - 1) - 0.05, zm: GZ(LG.j0 - 1) + 0.40, z1: GZ(LG.j0) + 0.08 },
+};
+{
+  const L = LAWN, r = L.ring + 0.02, b = L.bed + 0.02, xw = GX(LG.i0 - 2) - 0.05, xr = GX(LG.i0 - 1) - 0.05, xb = GX(LG.i0) + 0.08,
+    xe = GX(LG.i1) - 0.08, xE = GX(LG.i1 + 1) + 0.05, zn = GZ(LG.j0 - 2) - 0.05, zr = GZ(LG.j0 - 1) - 0.05, zb = GZ(LG.j0) + 0.08,
+    zs = GZ(LG.j1) - 0.08, zS = GZ(LG.j1 + 1) + 0.05;
+  // (out: the sides whose coping overhangs 3 cm: the faces toward lower ground and the free ends)
+  L.walls = [
+    { id: 'kerbN', x0: xw, x1: xE, z0: zn, z1: zr, top: r, out: 'nwe' },
+    { id: 'kerbW', x0: xw, x1: xr, z0: zr, z1: zs, top: r, out: 'w' },
+    { id: 'bedNW', x0: xr, x1: L.steps.x0, z0: zr, z1: zb, top: b, out: 'nw' },
+    { id: 'bedNE', x0: L.steps.x1, x1: xE, z0: zr, z1: zb, top: b, out: 'ne' },
+    { id: 'bedW', x0: xr, x1: xb, z0: zb, z1: zs, top: b, out: 'w' },
+    { id: 'bedE', x0: xe, x1: xE, z0: zb, z1: zs, top: b, out: 'e' },
+    { id: 'bedS', x0: xw, x1: xE, z0: zs, z1: zS, top: b, out: 'swe' },
+  ];
+  L.box = [xw, zn, xE, zS];
+}
+// the lawns' masonry and steps (a plant keeps out by its size; a placed prop keeps off)
+export function lawnClear(x, z, pad = 0) {
+  const [x0, z0, x1, z1] = LAWN.box;
+  if (x < x0 - pad || x > x1 + pad || z < z0 - pad || z > z1 + pad) return false;
+  if (x < x0 + 2 * GS + 0.13 + pad || x > x1 - GS - 0.13 - pad || z < z0 + 2 * GS + 0.13 + pad || z > z1 - GS - 0.13 - pad) return true;
+  return false;
+}
+// EAST_WALL: LBA2's east shore by the town is one straight line (its grid: the street's level to the edge, then the
+// water); ours was a natural drop of 2.3 → −2.6 m in ~2 m, in and out round three coves. A built wall on the grid's
+// lines: the town's level to column 197 (x −23.07; the coves filled, the points past it that stood up sunk), its face
+// 0.05 m past column 198 (x −22.14, under the water's floor), from the terraces' foot (z −25.8) to the south end of
+// the town's ground (z 74.5); rubble down to the water, the promenade's coping. The footbridge to the spaceport rests
+// on it (z 38–42: no coping under its planks).
+export const EAST_WALL = { x0: GX(197) - 0.08, x1: GX(198) + 0.05, lvl: GX(197), low: GX(198), z0: GZ(95) - 0.05, z1: GZ(203) + 0.05, top: TOWN_FLAT + 0.02, foot: -3.4, fill: -29.0,
+  bridge: [38.05, 41.95] };   // (bridge: under the footbridge's planks, spaceport.js BRIDGE z 40 ± 2.0, 5 cm in from their sides)
+const GS = 260 / 280;

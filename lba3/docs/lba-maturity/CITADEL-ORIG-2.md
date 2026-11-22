@@ -276,8 +276,8 @@ statue that LBA2 has not), the promenade a ridge (1.2–3.8 m) on the old cliff.
 | north street, west end (the old rise) | 0 | +0.65..+1.02 | 0 |
 | Bug Street pair, before the doors | 0 | +0.26 | 0 |
 | west street, cross street, east plots | 0 | −0.38..+0.13 | 0 |
-| south block lawn | +0.21..+0.63 | −0.09..+0.14 | 0 (not done: needs an edge of masonry) |
-| harbour yard | +0.83 | −0.02 | 0 (not done: HARBOUR-BRINK's walls stand at today's level) |
+| south block lawn | +0.21..+0.63 | −0.09..+0.14 | 0 (FLAT-TOWN-2: +0.21 kerb, +0.63 bed) |
+| harbour yard | +0.83 | −0.02 | 0 (FLAT-TOWN-2: left, see there) |
 | promenade (sea wall) | +3.76 | +1.19..+3.81 | +3.76 |
 | knoll by the water office | +3.76 | +3.77 | +3.77 |
 
@@ -304,10 +304,80 @@ statue that LBA2 has not), the promenade a ridge (1.2–3.8 m) on the old cliff.
 - Cost: three meshes (rubble, coping, steps), 23 colliders; the grid build +~25 ms (the old grid for the scatter).
 
 **Left:** the south block's raised lawns and the harbour platform's +0.83 (above); the east shore is a short natural
-drop (2.3 → −2.6 m in ~2 m), not a built wall; the inland wall's rubble is dark in its shade.
+drop (2.3 → −2.6 m in ~2 m), not a built wall; the inland wall's rubble is dark in its shade. (FLAT-TOWN-2, below: all
+done but the harbour platform.)
 
 **Tests** (port 8167, SwiftShader, one browser at a time; on the final build): slidetraps PASS (Citadel 49 spots, 0 bad), citadel-structures PASS, world-consistency PASS, chapter1 PASS (33), walkers PASS, overlap-sweep (default) PASS (its first two runs found the flight's first tread and the plaza's outer step flush with the ground: the ground under them now 3–4 cm lower, the flight's foot on a grid column). **Pictures** (before | after, play camera unless
 named top): `captures/flat-town/`.
+
+## FLAT-TOWN-2 (22.11): the lawns, the east shore, the inland wall's tone; the harbour left
+
+FLAT-TOWN's leftovers (the user, 22.11: "yes"; the standing rule: not one flat plane, LBA2's own levels, steps, ramps
+and walls). **Automated runtime only (SwiftShader).** Build `eb385287` + this change. Reference as FLAT-TOWN's
+(`tools/worldscore/ref/citadel.json`, its streets at 42 cm; our frame = its frame + (−76, +16)).
+
+| area | LBA2 (m over its streets) | ours before | ours after |
+|---|---|---|---|
+| south block, the ring (west and north) | +0.21 (one cell, 1.7 m) | 0 | +0.21 (a kerb, one grid cell, its top +0.23) |
+| south block, the beds | +0.63 (a few spots +0.83) | 0 | +0.63 (one bed, the lawn; its walls' tops +0.65) |
+| south block, the strips before it (north: benches, lamps; west) | 0 | 0 | 0 |
+| south block, east and south edges | the ring +0.21 (LBA2's block is 2.8 m wider) | 0 | the bed's wall straight from the street |
+| east shore | the street's level to one straight edge, then water | 0, a drop to −4.9 in ~2 m round three coves | 0 to a straight wall (face x −22.09), the water before it |
+| harbour platform | +0.83 (the quay and the pier too) | 0 (the quay −0.50, the pier −0.55) | unchanged (below) |
+
+**What changed** (`citadel-layout.js` LAWN, EAST_WALL; `world.js` lawns, eastShore; `island.js` buildFlatTown):
+- **The lawns.** The block between the west street, the fields' path and the two cross streets, on the terrain's grid
+  as the promenade's walls are (each level change on one cell, the bank inside the masonry, each top a walkable
+  collider): on the west and north a kerb (LBA2's ring) and above it the bed's retaining wall; on the east and south
+  the bed's wall from the street (the block is 2.8 m narrower than LBA2's: two tiers there would leave no lawn). The
+  street-level strips before the north and west kerbs keep the benches, the bin and the lamps (LBA2's strip). Two steps
+  cut into the north wall's middle from the kerb (three even risers of 0.21 with the kerb) lead onto the bed by the
+  benches, Maro and Tilde's meeting place and the hopscotch. Rubble under the promenade's coping, the flight's stone
+  for the steps; merged with the promenade's masonry (no new material). Re-seated on the new ground: the two trees, the
+  hopscotch, the residents' stops (physics), the tulip beds (the first row 0.25 m north, clear of the south wall; the
+  second, LBA2's x −49..−47.3, would be in our east wall: on the bed between the two trees) and the planter (0.7 m
+  west, onto the bed). Scattered bushes in the masonry or on the tulip beds' places, and grass in the masonry, are
+  left out after the scatter.
+- **The east shore.** A wall from the terraces' foot (z −25.8) to the town ground's south end (z 74.5): the town's level
+  to grid column x −23.07 (three coves filled, up to 3.7 m), its face 0.05 m past column x −22.14, the four columns out
+  under the water's floor (a ledge 1.6 m high stood 1 m out at z 25–30 with no way up), rubble down to −3.4 under
+  the coping. The spaceport's footbridge rests on it (no coping under its planks). The old drop's cliff rocks on the
+  ground behind the face, in the coves and up to 3.6 m out before it are dropped whole (LBA2's wall goes straight
+  into the water).
+- **The inland wall's tone.** The walls that face east, away from the sun (the inland wall behind the water office, the
+  east shore's) and the lawns' share one rubble material lifted by its own texture as light (an emissive map; colour
+  only): in shade they read as the sunlit sea wall does. The sea and south walls keep the harbour's rubble.
+- **Random streams.** The scatter decides on the ground as it stood (FLAT_OFF covers the new ground); trees, rocks and
+  the tulip beds' plants compared by position before and after: only the filtered ones and the moved beds differ (one
+  hand-placed tree on the east shore's edge, x −24, within 1 m of the wall's back, is left out by FLAT-TOWN's own filter).
+- **Old saves.** The save holds x/z; the loader grounds him. Checked 15 spots on changed ground (bed, kerb, walls,
+  steps, strips, the filled coves, under the footbridge, the old shore's edge and the ledge now in the water): all
+  standing on standable ground, no life lost. A spot now in the water before the east wall loads 0.4 m behind the wall
+  (`world.js flatSpot`, `main.js applySave`).
+- **Cost.** One material more in the town's masonry (the shaded rubble: +1 draw call where it is in view); 9
+  colliders for the lawns' masonry and steps, 2 for the east wall.
+
+**Left: the harbour platform at +0.83.** Not raised. LBA2's harbour is one level: the platform, the quay and the pier
+at +0.83. Ours is two built levels below the street's: the yard at 0, the quay and the L pier at −0.50/−0.55, with the
+ferry's berth, the barge, the cargo lift, the moorings and the boats' decks fitted to the pier's deck (island.js
+HARBOUR0.deck, QH), the sheds on the quay, and the platform's sea walls, rails and posts at HARBOUR_PLAT.h. Raising
+the yard alone leaves a 1.33 m step to the quay that LBA2 does not have; raising all of it moves the pier's deck
+against the ferry, the boats and chapter 1's arrival on it. Not clean in this pass: a separate task that moves the
+whole harbour by one offset (pier, quay, berth, boats, sheds, walls, the arrival's marks) and adds LBA2's step at its
+east side, x −75.
+
+- **Residents.** The two steps are a stair for the residents' planner (walknav.js lowBrick): Maro and Tilde go up to
+  their meeting place and Dot to the hopscotch by them (the first walkers run found no route onto the bed).
+
+**Tests** (port 8274, SwiftShader, one browser at a time; slidetraps and overlap-sweep on the final build, walkers
+before the flower-bed filter, the other three before that and the steps' stair flag, neither of which they touch): slidetraps PASS (Citadel 49 spots, 0
+bad), citadel-structures PASS, world-consistency PASS (37), chapter1 PASS (33), walkers PASS (37; its first run failed
+the four route checks above), overlap-sweep (default) PASS (its first run found a scattered tulip bed 1–4 cm into the
+north kerb: the lawns' masonry now leaves such a bed out whole). The town's containers are where they were.
+
+**Pictures** (before | after, set cameras; Automated runtime only): `captures/flat-town/lawns-obl.jpg`,
+`lawns-top.jpg`, `lawns-low.jpg` (the north steps from the street), `east-obl.jpg`, `east-top.jpg`, `east-sea.jpg`,
+`inland-wall.jpg`; `harbour-unchanged.jpg` (the harbour left as it was).
 
 ## Rerun
 
