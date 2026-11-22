@@ -163,8 +163,9 @@ const cap = await ev(() => {
 check('frame-rate limit off: every refresh is a frame (60 Hz → 16.7 ms)', cap.off60.frames === 600 && Math.abs(cap.off60.mean - 16.67) < 0.05, cap.off60);
 check('limit 30 on a 60 Hz screen: every other refresh, an even 33.3 ms', Math.abs(cap.cap30at60.frames - 300) <= 1 && cap.cap30at60.min > 33.2 && cap.cap30at60.max < 33.4, cap.cap30at60);
 check('limit 60 on a 60 Hz screen: every refresh', cap.cap60at60.frames >= 599 && cap.cap60at60.max < 16.8, cap.cap60at60);
-check('limit 60 on a 144 Hz screen: 60 frames a second on average (13.9/20.8 ms: 144 is not a multiple of 60)', Math.abs(cap.cap60at144.mean - 16.67) < 0.3 && cap.cap60at144.max < 21, cap.cap60at144);
-check('limit 30 on a 144 Hz screen: 30 a second on average', Math.abs(cap.cap30at144.mean - 33.3) < 0.6 && cap.cap30at144.max < 35, cap.cap30at144);
+// (P101, 22.11: a limit is drawn on whole refreshes, the nearest count — an even pace, not an exact average)
+check('limit 60 on a 144 Hz screen: every 2nd refresh, an even 13.9 ms (72 a second: the nearest steady pace)', Math.abs(cap.cap60at144.mean - 13.89) < 0.2 && cap.cap60at144.min > 13.5 && cap.cap60at144.max < 14.3, cap.cap60at144);
+check('limit 30 on a 144 Hz screen: every 5th refresh, an even 34.7 ms (28.8 a second)', Math.abs(cap.cap30at144.mean - 34.72) < 0.3 && cap.cap30at144.min > 34.3 && cap.cap30at144.max < 35.2, cap.cap30at144);
 check('limit 30: after a 120 ms hitch, back to 33.3 ms frames (no burst to catch up)', cap.hitch.after.length === 3 && cap.hitch.after.every((x) => x > 33.2 && x < 33.4), cap.hitch);
 // (STREET-CPU: in play a skipped refresh at 30 runs the catch-up 60 Hz step, which reads the input as every step does: the tap
 //  is used there, once; with the catch-up step off — or where none runs — it waits for the next frame, as before)

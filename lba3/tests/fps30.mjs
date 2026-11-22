@@ -135,7 +135,8 @@ if (ONLY.includes('A')) {
   await warm(144); await setFps('30'); r = await drive({ hz: 144, ms: 4000 }); result.hz144_30 = { ...summ(r.iv), fps: +(1000 * r.iv.length / r.iv.reduce((a, b) => a + b, 0)).toFixed(1) };
   await warm(75); await setFps('30'); r = await drive({ hz: 75, ms: 4000 }); result.hz75_30 = { ...summ(r.iv), fps: +(1000 * r.iv.length / r.iv.reduce((a, b) => a + b, 0)).toFixed(1) };
   log('30 on 144 Hz / 75 Hz', [result.hz144_30, result.hz75_30]);
-  check('A6 30 on 144 Hz and 75 Hz: 29–31 drawn frames a second, each interval a whole number of refreshes next to 33.3 ms (27.8/34.7; 26.7/40)', near(result.hz144_30.fps, 30, 1.05) && result.hz144_30.min > 27 && result.hz144_30.max < 35.5 && near(result.hz75_30.fps, 30, 1.05) && result.hz75_30.min > 26 && result.hz75_30.max < 41, result);
+  // (P101, 22.11, the user's 100 Hz benchmark: 30 / 30 / 40 ms is not even — a limit is drawn on whole refreshes, the nearest count)
+  check('A6 30 on 144 Hz and 75 Hz: an even pace on whole refreshes, the nearest to 33.3 ms (144 Hz: every 5th, 34.7 ms; 75 Hz: every 3rd, 40 ms)', result.hz144_30.min > 34.2 && result.hz144_30.max < 35.3 && result.hz75_30.min > 39.5 && result.hz75_30.max < 40.6, result);
   // A7. 60 at a 60 Hz display: no limiting (every refresh drawn); Unlimited at 60 Hz: every refresh
   await warm(60); await setFps('60'); r = await drive({ hz: 60, ms: 2000, jitter: 1.8 }); result.hz60_60 = summ(r.iv);
   log('60 on 60 Hz ±1.8 ms', result.hz60_60);

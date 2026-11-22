@@ -2272,7 +2272,7 @@ class Game {
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
       voiceMode: () => t('set_h_vm_' + (s.voiceMode === 'classic' ? 'classic' : 'expressive')),
     };
-    hint.fps = () => t('set_h_fps_' + (s.fps === '30' ? '30' : s.fps === '60' ? '60' : 'auto'));   // (the user, 18.11: a steady 30 FPS option)
+    hint.fps = () => { const base = t('set_h_fps_' + (s.fps === '30' ? '30' : s.fps === '60' ? '60' : 'auto')), on = this.frameRateOnScreen(); return on ? base + ' ' + t('set_h_fps_screen', on) : base; };   // (the user, 18.11: a steady 30 FPS option)
     const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
     this._setHint = hint;
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { const h = row.querySelector('.set-hint'); if (h) h.textContent = hint[row.dataset.hint]?.() ?? ''; });
@@ -2975,18 +2975,16 @@ class Game {
     // a long one followed. Now a frame is drawn on the n-th refresh after the last drawn one (at least n − ½ refreshes
     // after it, by the rAF timestamps, which follow the display): no drift whatever the refresh. A late frame (a missed
     // refresh) starts the count from itself: no catch-up. Other ratios (75, 144 Hz) keep the grid below.
-    const nR = cap ? Math.round(cap / refresh) : 0;
-    if (cap && nR >= 2 && Math.abs(cap / refresh - nR) < 0.12 && !this.testFreeze && !this.preparing) {
+    // P101 (the user's benchmark, 22.11, a 100 Hz screen: 30 drew 30 / 30 / 40 ms and 60 drew 20 / 20 / 10 — the grid kept
+    // the average exact and the pace uneven): a limit is always drawn on whole refreshes, the nearest count to it, so the
+    // pace is even on every screen — 30 on 100 Hz is every 3rd refresh (33.3 fps), 60 on 100 Hz every 2nd (50), 30 on
+    // 144 Hz every 5th (28.8), 30 on 60 Hz every 2nd as before. A limit within one refresh of the screen's own rate draws
+    // every refresh. Settings → Frame Rate says the rate it runs at on this screen when it differs (frameRateOnScreen).
+    const nR = cap && cap > refresh + 1 ? Math.max(1, Math.round(cap / refresh)) : 0;
+    if (nR >= 2 && !this.testFreeze && !this.preparing) {
       if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); this.preStep(now); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
       this._drawT = now; this._due = 0;
-    } else if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
-      this._drawT = 0;
-      const due = this._due || 0;
-      if (due && now < due - refresh / 2) { this.input.poll?.(); this.preStep(now); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
-      let nx = (due || now) + cap;
-      if (!due || nx - now < cap - 0.75 * refresh) nx = now + cap;   // (late by most of a refresh or more: a new grid from this frame)
-      this._due = nx;
-    } else { this._due = 0; this._drawT = 0; }   // (no limit: the next limited frame is due at once)
+    } else { this._due = 0; this._drawT = 0; }   // (no limit, or one within a refresh of the screen's: every refresh)
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
@@ -3008,6 +3006,15 @@ class Game {
   // anything else (the default) is the mark as above. Every mark is counted on the GPU timer (perf.js GpuTimer.kaMarks), so
   // a frame measured after one is known as such: on such a reading alone Auto takes at most one step down, judged and
   // taken back if the reading does not fall with the profile, and none in hold (autoquality.js GPU-TIMER-KA).
+  // P101: the rate a Frame Rate limit runs at on this screen (whole refreshes, the nearest count: loop), when it differs
+  // from the limit by more than 1 fps; null otherwise (or no limit, or the refresh not measured yet).
+  frameRateOnScreen() {
+    const cap = this.frameCapMs, refresh = this._refresh;
+    if (!cap || !refresh) return null;
+    const n = cap > refresh + 1 ? Math.max(1, Math.round(cap / refresh)) : 1, f = 1000 / (n * refresh), lim = 1000 / cap;
+    return Math.abs(f - lim) > 1 ? { hz: Math.round(1000 / refresh), f: Math.round(f) } : null;
+  }
+
   _keepAlive() {
     if (this.background || this.testFreeze) return;
     const mode = (this._kaMode ??= (() => { try { return localStorage.getItem('lba3_keepalive') || 'on'; } catch { return 'on'; } })());

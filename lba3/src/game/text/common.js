@@ -68,6 +68,7 @@ Object.assign(STR.en, {
   set_h_aa: 'How far an attack turns toward a nearby enemy.',
   set_h_lm_toggle: '{k} locks onto a target. Press it again to let go.', set_h_lm_hold: 'Stays locked onto a target while {k} is held.',
   set_h_q_hand: 'Kept as chosen. Lower runs faster on slower computers.',
+  set_h_fps_screen: 'On this {hz} Hz screen it runs at an even {f} a second: the nearest steady pace.', 
   set_h_fps_auto: 'Draws as often as the screen allows.', set_h_fps_60: 'At most 60 frames a second.', set_h_fps_30: 'An even 30 frames a second: less work for the computer (a laptop on battery runs cooler and quieter). The game runs at the same speed; motion is less fluid than at 60.',
   set_h_vis_2026: 'Full lighting and view distance.', set_h_vis_1997: 'Low resolution, near fog and hard camera cuts, as in 1997.',
   set_h_hud_lba: 'Life, magic and kashes appear only when they change.', set_h_hud_modern: 'Life, magic, minimap, behaviours and weapon stay on screen.',
