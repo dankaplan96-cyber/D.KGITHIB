@@ -2998,17 +2998,27 @@ class Game {
   // desktop's diagnosis the gaps went to 0 (≥ 45 ms intervals) and T2's motion spikes 0/153. Not in the background
   // (BG_FPS) and not under the tests' fixed stepping. (The tolerance above went 0.08 → 0.12 for the same report: at
   // 57 Hz, 30 is 1.90 refreshes, and the grid it fell back to drew 1 frame in 8 a refresh early.)
+  // GPU-TIMER-KA (P96-HW: with the mark the game's GPU timer read 16–20 ms a frame on the GTX 1050 against 6–8 without,
+  // nvidia-smi's load not higher): a diagnostic switch, read once — localStorage.lba3_keepalive = '0' turns the mark off,
+  // 'opaque' makes it an opaque near-black pixel (the desktop's own diagnosis changed an opaque pixel and read 7.5–8.7 ms);
+  // anything else (the default) is the mark as above. Every mark is counted on the GPU timer (perf.js GpuTimer.kaMarks), so
+  // a frame measured after one is known as such: on such a reading alone Auto takes at most one step down, judged and
+  // taken back if the reading does not fall with the profile, and none in hold (autoquality.js GPU-TIMER-KA).
   _keepAlive() {
     if (this.background || this.testFreeze) return;
+    const mode = (this._kaMode ??= (() => { try { return localStorage.getItem('lba3_keepalive') || 'on'; } catch { return 'on'; } })());
+    if (mode === '0') return;
     let k = this._kaEl;
+    const lo = mode === 'opaque' ? 'rgb(0,0,0)' : 'rgba(0,0,0,0.01)', hi = mode === 'opaque' ? 'rgb(2,2,2)' : 'rgba(0,0,0,0.02)';
     if (!k) {
       k = this._kaEl = document.createElement('div');
       k.setAttribute('aria-hidden', 'true');
-      k.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;height:1px;pointer-events:none;z-index:2147483647;background:rgba(0,0,0,0.01)';
+      k.style.cssText = `position:fixed;left:0;bottom:0;width:1px;height:1px;pointer-events:none;z-index:2147483647;background:${lo}`;
       document.body.appendChild(k);
     }
     this._kaOn = !this._kaOn;
-    k.style.backgroundColor = this._kaOn ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.01)';
+    k.style.backgroundColor = this._kaOn ? hi : lo;
+    const T = this.perf?.gpuTimer; if (T) T.kaMarks = (T.kaMarks || 0) + 1;
   }
 
   // Real time → simulation. A slow frame is simulated in steps of at most MAX_STEP (so the game keeps real

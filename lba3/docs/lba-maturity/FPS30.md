@@ -422,3 +422,82 @@ ball, cursor beside him: the view should stay put and the ring stay under the cu
 
 #### Real hardware
 Not measured yet (order 62). Nothing in §8.1–8.6 is a hardware result.
+
+## 9. GPU-TIMER-KA (22.11): the GPU timer under P96's keep-alive mark, and Auto
+
+**What the desktop measured (P96-HW, branch `smooth-hw`, GTX 1050, plugged in, 57 Hz clock state, Frame Rate 30,
+Medium):** the game's GPU timer read p50 16.2–19.6 ms a frame with v122 (the keep-alive mark) against 5.8–8.7 ms with
+v121; nvidia-smi's average utilisation did not rise (7 % against 12 %). With the desktop's own diagnosis (an opaque 1 px
+change on every rAF callback, drawn ones included) it read 7.5–8.7 ms. At 60 nothing changed (no refresh is skipped, so
+there is no mark).
+
+**Read in code (no defect found in the bracketing):**
+- `renderer.render()` calls `timer.begin()` just before `composer.render()` and `timer.end()` in its `finally`, in the
+  same JavaScript task; the passes only `mark()` inside it. `_keepAlive` runs only on callbacks the limit skips, which
+  draw nothing and never touch the timer. So the query cannot be left open across a skipped refresh, and it does not
+  include the idle time to the next present on the JavaScript side.
+- Auto reads every other measured frame in play (`autoapply.timer()`, stride 2) and P95's PRESENT rule (`classify()`)
+  calls a window `late` when the GPU p90 passes 0.85 of a refresh (14.9 ms at 57 Hz) while every interval is on time.
+
+**Mechanism (most likely, not proven):** on Windows, Chrome's WebGL runs on ANGLE/D3D11, where a TIME_ELAPSED query is a
+pair of GPU timestamps on the device queue the whole GPU process shares (the compositor included). The reading is the
+GPU time between the frame's first and last command, including whatever else the GPU process runs or waits for in
+between. With the mark, the compositor produces and presents a frame on every refresh instead of every other one, and
+some of that work, or a wait on a present, falls inside the game's query. The diagnosis's reading (an opaque change on
+every callback: 7.5–8.7 ms) shows that presenting on every refresh is not enough on its own. Two candidates remain: the
+alternation (DOM damage only on skipped refreshes, canvas damage only on drawn ones), or the translucent pixel over the
+canvas (which may change how Chrome composites or promotes the canvas). Per-pass medians on the desktop can tell where
+the extra time sits. Either way, the reading is not the frame's own work, so it cannot by itself say that a frame is
+shown late.
+
+**The risk, reproduced (Automated runtime only):** `tests/autoquality.mjs`'s synthetic GTX 1050 at 30 with +11 ms on
+every reading taken after a mark (P96-HW's difference) walks High → Medium → Medium-lean → Low under the P95 code.
+
+**Change:**
+- `src/main.js` `_keepAlive` only: `localStorage.lba3_keepalive` is read once: `'0'` gives no mark; `'opaque'` gives an
+  opaque near-black pixel (rgb 0/2); anything else is the default mark, unchanged. Each mark increments
+  `perf.gpuTimer.kaMarks`.
+- `src/engine/perf.js` `GpuTimer`: a measured frame is tagged `ka` when a mark came after the previous render.
+  `onFrame(ms, ka)` passes the tag on. `stats()` adds `afterMark` (the share of tagged frames), `p50AfterMark` and
+  `p50NoMark`. The F9 overlay gets a GPU line (p50/p95, each pass's p50, the share after a mark).
+- `src/engine/autoquality.js` (GPU-TIMER-KA, the header comment beside P95): a window that is on time, `late` by the GPU
+  reading alone (CPU p90 within the line), with ≥ half of its GPU samples tagged, is `suspect`. In the evaluation it is
+  still pressure, but a step down taken for it is the only one of its kind until P95's revisit judges it. The step is
+  kept if the GPU reading fell by ≥ half of what the profiles' cost model predicts (KA_SCALE 0.5), or if the share that
+  fell, scaled back by the model, was itself over the line. Otherwise the step comes back and no further GPU step is
+  taken that session. In hold, a suspect window is not a sustained problem. The title calibration sets tagged readings
+  aside (the GPU name's guess stands; the CPU side may still lower it) and skips its no-timer rule. Nothing else
+  changes: CPU-late windows, windows with missed intervals, and untagged readings (no limit, or `lba3_keepalive = '0'`)
+  are judged as before. The P95 decision table in `tests/autoquality.mjs` (20 rows, untagged) is identical before and
+  after.
+- `src/engine/autoapply.js`: passes the tag on. Its report prints the tagged share and the suspect state of the last
+  window, and "set aside" for the calibration.
+
+**Tests (Automated runtime only; SwiftShader, synthetic machines and a synthetic 60 Hz display, no GPU number):**
+- `tests/autoquality.mjs` 73/73 PASS (seed 11 and seeds 3, 5, 23, 41 for the new checks). New checks: classify (tagged
+  18 ms at 30 in a 57 Hz clock is suspect; untagged stays P95's late GPU; CPU-late is never suspect); evaluate (one
+  suspect step, then it waits); judgeStep (18 → 17.6 ms brings High back); hold (tagged: held; untagged: one step as
+  before); calibration (set aside). The GPU-TIMER-KA table at 30:
+  - GTX 1050-like, +11 ms: plugged in Low → High (one step down at 4 s, back at 73 s); on battery Low → Medium (the
+    same, back).
+  - fast GPU, +11 ms: Medium → High (back).
+  - UHD 620-like (light CPU), readings tagged but not inflated (+0): still steps down to Low, with frames shown late
+    3–6 %, as before.
+  - **Limitation:** a UHD 620 whose reading is also inflated by the mark (+11 ms on top of a real 15–19 ms) is a close
+    call. By seed, it reaches Medium-lean/Low, or comes back to Medium with ~16 % of frames shown late. It is printed,
+    not checked: nobody has measured whether the UHD's reading grows with the mark (order 65, step 4).
+- `tests/keepalive.mjs` (new) 6/6 PASS: GpuTimer's tag (stand-in WebGL context); at 30 on a synthetic 60 Hz display the
+  default mark exists and changes, with 115–118 marks over 120 skipped refreshes counted on the timer. `'0'` gives no
+  mark and `'opaque'` gives rgb(0/2). SwiftShader here offers the timer query, but no result came back under the
+  synthetic display (7 pending), so a real reading with the tag is not exercised in the browser.
+- `tests/fps30.mjs` ONLY=AB 13/13 PASS. `tests/autoquality-game.mjs` 28/29: the one FAIL is unrelated and was already
+  there. The Settings hint check expects "55–60 fps", but `set_h_q_auto` (`src/game/text/common.js`) says "to hold {f} fps";
+  this change touches no text.
+
+**Not known / needs the desktop (order 65 GPU-TIMER-KA):** whether the extra time sits in one pass; whether `'opaque'`
+alone gives a normal reading (if so, the default can become opaque, and the timer and Auto no longer need the guard);
+what Auto settles at in the street at 30 with the mark on and off; whether the UHD 620's reading grows with the mark.
+A suspect step down that comes back is still one visible change at a scene change during a first evaluation at 30.
+
+#### Real hardware
+Not measured yet (order 65).
