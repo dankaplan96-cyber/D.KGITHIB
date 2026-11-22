@@ -85,7 +85,7 @@ the pause; a load or a Save & quit inside it restarts the scene (`applyFlags` cl
   (`wk_od_rule`, `wk_or_7`) `wk_od_mine` "My mother waits. She'd wake to a daughter older than she ever was. Not yet. But
   it's mine to say now." → `wk_board2` "a few: NOT YET. MY CHOICE." → `wk_od_later` "Still my choice, still not yet." →
   epilogue `ep_bl_odra` "Some of us said not yet. My mother is one. That was ours to say." No later line says every
-  sleeper woke (`ep_bl_jory` "Eleven of us awake now"). Not undercut. Unchanged.
+  sleeper woke (`ep_bl_jory` "Three of us awake now", PLOT-CONSISTENCY item 8). Not undercut. Unchanged.
 - **Vesk's practical reasons**, in order: the 30 % as capacity, everyone on it lives (`c1_conf_vesk2`, `c1_conf_vesk3`);
   backing out cracks it faster (`c1_conf_vesk4`); the districts with the hospital and pumps (`c2_vesk_2`); he gives Mill
   Lane the mill line (`zt_vesk_1`) and Kesh the bore's steam (`dt_w5_2`); a stop before the bypass drains the lane
