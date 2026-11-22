@@ -7,6 +7,7 @@
 (22.11, CAM-FIXTOP: the Fixed view's spots by the station's bridge mostly fixed (below); FACE-3's waist line for props (the intermittent `face-3` sign, 2/2 after).)
 (22.11, FIX-PASS 3: the FULL-TEST-22-11 intermittents — `prologue` (the test: spots 1.5 m off the rope's foot, back down if shoved out), `exp-ballastra` (the game: a popped bonus no longer drifts over water or a drop; Ferro's kashes fell into the lift chamber 1 time in 8), `autoquality-game` section 7 (the harness: `open`'s navigation follows `BOOT_TIMEOUT`), `arrival-steps` (the long units it found cut into steps; still load-bound).)
 (22.11, CAM-FIX, the camera fix pass: `camsteady` and `controls` fixed and moved to "Fixed by the camera fix pass"; P58's SE tower corner fixed.)
+(22.11, camera night: CAM-SIGNPOST — the talk shot counts the merged signposts' boards (the yard's LIGHTHOUSE arrow; FACE-2.md) —; CAM-EASE-ROUND — the keep-rule entries, under "Keep-rule entries" below. Open, not the camera's: `camfollow`'s "Medium for a new player" check is stale since P100 (Far by default); `camsteady`'s default order fails follow · harbour pier's heading reversals (12/min > 8.6) on the build before the camera night too.)
 
 Updated 17.11.2026 by AUDIT-FIX (RELEASE-AUDIT-v96 A-13) from the audit's suite table (section 7, run on v96 =
 `39d1a538`) and AUDIT-FIX's own reruns on its branch (base `20b5da55`, the coordinator's `ccr-c1c2c4b9-dep6ed` with
@@ -48,6 +49,21 @@ largest keep step 1.25 → 1.20 m, out of the house door 0.74 → 0.74, through 
 rules); judged by the camera's own sight (before the strict lines) it reached 0.50 m but hid him for a frame at camfollow's
 wall (2 checks failed): the guard keeps most entries outright, so the staged corners' 1–2.6 m entries mostly remain.
 camfollow 31/31, camclear 47/47 after.
+
+(22.11, camera night, CAM-EASE-ROUND, `camera.js` only.) Those entries again, with the strict lines kept: where the
+straight way's next spot fails, the way round his pivot (heading, arm and tilt eased together) and the same tilt first;
+and an entry over 1 m none of them eases is split over two frames at a spot 0.4–0.6 of the way that is clear, off a roof
+and sees him wherever the goal does. Measured with a scratch probe (24 staged spots 0.75–0.9 m off tall boxes' corners
+and faces on Citadel, back to the wall, stand / full turn / back / back up / turn, 1/60 s, by input): unsmoothed "high" or
+"oversee" entries over 0.5 m, Medium 4 → 2 (over 1 m: 2 → 1; the 1.87 m one in two steps ≤ 0.94 m, a 0.9 m one eased),
+Far 7 → 4 (over 1 m: 3 → 2; 2.08 m → two of ≤ 1.03 m); frames unseen by the strict lines unchanged (80 / 85, of which
+newly unseen 10 / 11). **Left:** the 2.4–2.8 m entries at the face (−75.8, 25.4): the camera on its way stood where the
+strict lines did not see him and the goal is the only pocket that does — of 27 spots tried along the three ways (0.1–0.9)
+only the tilt-first way's 0.9 sees him, so any ease or split adds unseen frames; they stay a jump. camfollow 30/31 (the
+one: its "Medium for a new player" settings check, stale since P100 made Far the default — not the camera), camsteady
+110/110 (`MODES=follow,lba,free`) and 109/110 in the default order (follow · harbour pier heading reversals 12.2/min > 8.7;
+the build before this change, same order: 108/111, the pier 12/min and two Modern-street checks; the pier alone passes on
+both, 8.5 ≤ 8.5: order-dependent, not this change), controls 92/92. Automated runtime only (SwiftShader).
 
 ## Fixed by the camera pass (22.11: CAM-HANDBACK, CAM-OVERSIGHT, CAM-EASE)
 
