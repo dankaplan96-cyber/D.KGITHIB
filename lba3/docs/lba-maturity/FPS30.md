@@ -535,3 +535,26 @@ that fits under a refresh there is for the hardware to show (order AUTO-HW, the 
 claimed here. Tests: fps30 A (new A9: one step a callback, simulated time = real time; with the switch off, two steps
 in the drawn refresh), fps30 C and F. timing.mjs's skipped-refresh tap check now reads "used once by the catch-up step
 in play, else it waits"; its old rule is checked with the switch off.
+
+## 11. GC-STREET (22.11): less garbage per frame on the Citadel street
+
+The objects, arrays and closures made every step at the places STREET-CPU's profile named are gone, with the same
+results: walknav.js (the A* open list as two number arrays instead of a [cost, key] pair per neighbour; a route's own
+cells instead of copies; the job list compacted in place; no cellOf arrays in walkable / nearest / lineOK); rig.js (one
+targets object per rig, emptied each update; the stance blend's holder reused; the face's nine keys by name instead of a
+keyed for-in; no arrays, closures or forEach in _plant, the leg copy, the eyes, trunk, tail and flash); camera.js (a
+collider or a volume already seen in a query carries that query's stamp, `_cam`, instead of a shared Set whose clear()
+allocated a new table; _keepOut's list reused); physics.js (_push answers in one shared vector; groundAt, move and
+steepAt read the ground without groundInfo's object; move's tryMove is a method). Same results: an A/B with a seeded
+Math.random over 360 fixed steps of the `street` route hashes 30 236 values (every resident's place, every rig joint,
+the hero, the camera) identically before and after. (A `set` that named the Euler axis as a module function was tried
+and left out: npc-feet's residents lost their planted feet in the full suite, though not alone; the closure is as before.)
+
+Measured, **automated runtime only (SwiftShader)**: the `street` route at Frame Rate 30 on a synthetic 60 Hz display,
+240 shown frames after 120 warm, CDP heap sampling including objects later collected. **Before 1177 / 1185 KB per shown
+frame, after 1067 / 1101 / 1102 KB**; these files' own share fell from ~295 to ~225-235 KB. What remains in them is mostly
+numbers boxed by V8's lower tiers (after the run Rig.update, Rig._plant and WalkNav._run were still in the baseline tier,
+%GetOptimizationStatus; Rig.update alone is over TurboFan's bytecode limit) and Math.hypot, which allocates in every
+tier. The larger part of the frame's garbage is elsewhere: three.js (program parameters, light setup, curve sampling)
+and other game files. Tests: walkers, npc-feet, anim-polish, camfollow, fps30 A pass; camsteady fails on HEAD as well
+(different checks run to run on this loaded machine).

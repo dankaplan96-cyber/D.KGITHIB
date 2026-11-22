@@ -126,10 +126,12 @@ export class WalkNav {
     }
     return false;
   }
-  walkable(x, z) { const [ix, iz] = this.cellOf(x, z); return this.info(ix, iz).ok; }
+  // (GC-STREET: the cell's indices inline, not cellOf's two-element array: walkable and lineOK run thousands of times a frame
+  //  on the street, and each array was garbage)
+  walkable(x, z) { return this.info(Math.round(x / this.cell), Math.round(z / this.cell)).ok; }
   // the nearest walkable cell to a point, within `maxR` metres
   nearest(x, z, maxR = 4) {
-    const [cx, cz] = this.cellOf(x, z);
+    const cx = Math.round(x / this.cell), cz = Math.round(z / this.cell);
     const c0 = this.info(cx, cz);
     if (c0.ok) return c0;
     const R = Math.ceil(maxR / this.cell);
@@ -152,7 +154,7 @@ export class WalkNav {
     let py = null;
     for (let i = 0; i <= n; i++) {
       const x = a.x + (b.x - a.x) * i / n, z = a.z + (b.z - a.z) * i / n;
-      const [ix, iz] = this.cellOf(x, z), c = this.info(ix, iz);
+      const c = this.info(Math.round(x / this.cell), Math.round(z / this.cell));
       if (!c.ok) return false;
       if (py != null && Math.abs(c.h - py) > MAX_STEP) return false;
       py = c.h;
@@ -165,7 +167,7 @@ export class WalkNav {
   request(from, to, { key = null, prio = 0 } = {}) {
     const ck = (key || this.key(from, to)) + '#' + this.sig;
     const hit = this.cache.get(ck);
-    const job = { from: { x: from.x, z: from.z }, to: { x: to.x, z: to.z }, ck, done: false, ok: false, pts: null, prio, open: null, best: null, prev: null, closed: null, n: 0, cancelled: false };
+    const job = { from: { x: from.x, z: from.z }, to: { x: to.x, z: to.z }, ck, done: false, ok: false, pts: null, prio, openF: null, openK: null, best: null, prev: null, closed: null, node: null, s: null, g: null, n: 0, closestD: null, closestK: undefined, cancelled: false };
     if (hit) { job.done = true; job.ok = hit.ok; job.pts = hit.pts; job.cached = true; return job; }
     this.jobs.push(job);
     this.stats.jobs++;
@@ -175,25 +177,46 @@ export class WalkNav {
   _begin(job) {
     const s = this.nearest(job.from.x, job.from.z, 5), g = this.nearest(job.to.x, job.to.z, 5);
     if (!s || !g) { job.done = true; job.ok = false; job.pts = null; return; }
-    job.s = s; job.g = g; job.open = []; job.best = new Map(); job.prev = new Map(); job.closed = new Set();
+    job.s = s; job.g = g; job.openF = []; job.openK = []; job.best = new Map(); job.prev = new Map(); job.closed = new Set();
     const k0 = K(Math.round(s.x / this.cell), Math.round(s.z / this.cell));
     job.best.set(k0, 0); job.node = new Map([[k0, s]]);
-    this._push(job.open, [this._h(s, g), k0]);
+    this._push(job.openF, job.openK, this._h(s, g), k0);
   }
   _h(a, b) { return Math.hypot(a.x - b.x, a.z - b.z) * 1.15; }
   // (PERF-CPU: swaps through a temporary, not a destructuring array: the planner runs ~120 expansions every frame)
-  _push(h, it) { h.push(it); let i = h.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (h[p][0] <= h[i][0]) break; const t = h[p]; h[p] = h[i]; h[i] = t; i = p; } }
-  _pop(h) { const top = h[0], last = h.pop(); if (h.length) { h[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < h.length && h[l][0] < h[m][0]) m = l; if (r < h.length && h[r][0] < h[m][0]) m = r; if (m === i) break; const t = h[m]; h[m] = h[i]; h[i] = t; i = m; } } return top; }
+  // (GC-STREET: the open list is two parallel arrays — the cost to sort by (F) and the cell's key (Kk) — not an array of
+  //  [cost, key] pairs, one garbage pair per neighbour pushed; the same comparisons in the same order, so the same pops)
+  _push(F, Kk, f, k) {
+    F.push(f); Kk.push(k);
+    let i = F.length - 1;
+    while (i > 0) { const p = (i - 1) >> 1; if (F[p] <= F[i]) break; const t = F[p]; F[p] = F[i]; F[i] = t; const u = Kk[p]; Kk[p] = Kk[i]; Kk[i] = u; i = p; }
+  }
+  // the cheapest entry's key, taken off the list
+  _pop(F, Kk) {
+    const top = Kk[0], lastF = F.pop(), lastK = Kk.pop();
+    if (F.length) {
+      F[0] = lastF; Kk[0] = lastK;
+      let i = 0;
+      for (;;) {
+        const l = 2 * i + 1, r = l + 1; let m = i;
+        if (l < F.length && F[l] < F[m]) m = l;
+        if (r < F.length && F[r] < F[m]) m = r;
+        if (m === i) break;
+        const t = F[m]; F[m] = F[i]; F[i] = t; const u = Kk[m]; Kk[m] = Kk[i]; Kk[i] = u; i = m;
+      }
+    }
+    return top;
+  }
   // run a job for up to `n` expansions; true when it finished
   _run(job, n) {
     if (job.done) return true;
-    if (!job.open) this._begin(job);
+    if (!job.openF) this._begin(job);
     if (job.done) return true;
-    const { open, best, prev, closed, node, g } = job;
+    const openF = job.openF, openK = job.openK, best = job.best, prev = job.prev, closed = job.closed, node = job.node, g = job.g;
     const gk = K(Math.round(g.x / this.cell), Math.round(g.z / this.cell));
     for (let it = 0; it < n; it++) {
-      if (!open.length) { job.done = true; job.ok = false; this._finish(job, job.closestK); return true; }
-      const k = this._pop(open)[1];
+      if (!openF.length) { job.done = true; job.ok = false; this._finish(job, job.closestK); return true; }
+      const k = this._pop(openF, openK);
       if (closed.has(k)) continue;
       closed.add(k);
       const c = node.get(k);
@@ -215,14 +238,15 @@ export class WalkNav {
         const ng = gc + Math.hypot(dx, dz) * this.cell * (c.c + nb.c + sm) * 0.5;
         if (ng >= (best.get(nk) ?? 1e18)) continue;
         best.set(nk, ng); prev.set(nk, k); node.set(nk, nb);
-        this._push(open, [ng + this._h(nb, g), nk]);
+        this._push(openF, openK, ng + this._h(nb, g), nk);
       }
     }
     return false;
   }
   _finish(job, endK) {
-    const { prev, node } = job, raw = [];
-    for (let k = endK; k != null; k = prev.get(k)) { const c = node.get(k); raw.push({ x: c.x, z: c.z, h: c.h }); }
+    const prev = job.prev, node = job.node, raw = [];
+    // (GC-STREET: the route's cells themselves, not copies of their x, z, h: cells are never changed once made)
+    for (let k = endK; k != null; k = prev.get(k)) raw.push(node.get(k));
     raw.reverse();
     // the exact start and end the caller asked for are walkable by contract (a stop's slot), keep them as the ends
     const pts = [];
@@ -235,16 +259,22 @@ export class WalkNav {
       }
     }
     job.pts = pts;
-    job.open = job.best = job.prev = job.closed = job.node = null;
+    job.openF = job.openK = job.best = job.prev = job.closed = job.node = null;
     if (job.ok) this.cache.set(job.ck, { ok: true, pts });
   }
   // the queued jobs get `budget` expansions a frame between them (the oldest first)
   step(budget = 160) {
-    if (!this.jobs.length) return;
-    this.jobs = this.jobs.filter((j) => !j.cancelled && !j.done);
+    const J = this.jobs;
+    if (!J.length) return;
+    // (GC-STREET: the finished and cancelled jobs dropped in place, in order, not by two new filtered arrays a frame)
+    let w = 0;
+    for (let i = 0; i < J.length; i++) { const j = J[i]; if (!j.cancelled && !j.done) J[w++] = j; }
+    J.length = w;
     let left = budget;
-    for (const j of this.jobs) { if (left <= 0) break; const before = j.n; this._run(j, left); left -= Math.max(1, j.n - before); }
-    this.jobs = this.jobs.filter((j) => !j.done);
+    for (let i = 0; i < J.length; i++) { if (left <= 0) break; const j = J[i], before = j.n; this._run(j, left); left -= Math.max(1, j.n - before); }
+    w = 0;
+    for (let i = 0; i < J.length; i++) { const j = J[i]; if (!j.done) J[w++] = j; }
+    J.length = w;
   }
   planSync(from, to, { key = null } = {}) {
     const j = this.request(from, to, { key });
