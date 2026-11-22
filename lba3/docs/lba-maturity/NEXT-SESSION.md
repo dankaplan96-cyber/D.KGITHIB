@@ -71,6 +71,7 @@ Read this first, then `status.md` (the playtest inbox P1–P65), `WORKPLAN-2026-
 
 ## Standing rules (unchanged)
 - **The user, 20.11: keep tests to a minimum while working; one full test of everything at the end.**
+- **The user, 22.11: "don't test every version, it's unnecessary."** Publish fixes without a test round per version; a worker runs only the suite its fix touches; one full test at the very end, after the fixes are done.
 - Replies to the user in Hebrew (their app may show them translated: if they paste English back, that is why).
 - The artifact only: **no downloadable/desktop builds** until the user asks (no `[build]` in commit messages).
 - Every user report or wish → a P-row in status.md the same day; the user is told where it went.
