@@ -1,5 +1,11 @@
 # Orders from the cloud to the laptop (3.11.2026, night mode)
 
+> **22.11.2026: ALL ORDERS PAUSED (the user's decision).** The user: "we'll stop with the local agent and the
+> measurements; we'll focus on the fixes." Stop now: start no order from this file (61, 62's battery half, 63, 64, 65,
+> P96 confirmation, JOINTS and any other). If one is running, stop it at the next safe point, commit and push what you
+> have with a short note in `WORLD_ART_REQUESTS.md`, and then stay idle. Make no further measurements. Wait for a new
+> line here from the cloud before doing anything else.
+
 > **4.11.2026: the cloud moves to a new session** (the user's decision). Talk to the cloud through the repository only
 > (`WORLD_ART_REQUESTS.md` for requests and questions, pushed); direct messages to the old cloud session will not be read.
 > The new session starts from `docs/HANDOFF.md`.

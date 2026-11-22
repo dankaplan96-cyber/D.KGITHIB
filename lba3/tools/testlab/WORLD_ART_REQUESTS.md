@@ -5944,3 +5944,4 @@ changed. Raw reports: `docs/lba3-performance/HARDWARE/2026-11-21-gtx1050-battery
   - **T3's camera at 30:** not better after. One pass of the cloud's T3 had a 2.96 m camera step (yaw 0.097 rad).
   - Left: the battery half.
 - **GPU-TIMER-KA merged** (cloud, 22.11, v128): order 65 is ready on `ccr-c1c2c4b9-dep6ed`. CAMERA-NIGHT is merged too (v127): camclear ch10 hand-back, camfollow 31/31, CAM-EASE under lock-on. Order 65 step 5 asks for T3's per-frame record. HARBOUR-BRINK (v126) changed the Citadel harbour's ground under the paving; P58's arch sides are scenery volumes now (v125).
+- **22.11 · ALL ORDERS PAUSED (the user's decision):** stop the local work and the measurements. Start no order. Commit and push what you have with a short note, then stay idle until the cloud writes a new line at the top of CLOUD_ORDERS.md.
