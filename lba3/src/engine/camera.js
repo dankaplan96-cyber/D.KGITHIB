@@ -287,6 +287,7 @@ const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.
 // (3) the Fixed (LBA2) and Free cameras: a talk out of doors takes the same favoured shot over them (_talkOver), eased in
 //     and out as under Follow (the 1997 look's cuts: cut in and out), and the camera chosen is left as it was: it runs on
 //     under the shot from its own view of the frame before, and is exactly that view again once the talk is over.
+const FV_WAIST = -0.85, FV_FG_DY = [0, -0.6, FV_WAIST, -1.1];   // (FACE-3: _fgClutter's lines, under the face's middle a unit of scale; the waist's for the props alone)
 const FV_PROP_NEAR = 7, FV_PROP_R = 1.6, FV_PROP_MIN = 0.1, FV_PROP_PAD = 0.15, FV_PROP_MOVE = 1.5, FV_K_PROP = 4, FV_BOOTH_R = 2.5, FV_HATCH = 0.75, FV_HATCH_EDGE = 0.2, FV_HATCH_Q = [0.04, 0, 0.08], FV_HATCH_RISE = 0.1;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
@@ -1925,7 +1926,9 @@ export class CameraRig {
     for (let i = 0; i < props.length; i++) { const q = props[i]; if (Math.hypot(q.c.x - p.x, q.c.y - p.y, q.c.z - p.z) < FV_FG + q.r + FV_PROP_PAD) near.push(q); }
     if (!P && !near.length) return 0;
     let n = 0;
-    for (let fi = 0; fi < faces.length; fi++) for (const dy of [0, -0.6, -1.1]) {
+    // (FV_WAIST: and a line to the waist for the props alone — the Bug St. board's top edge passed between the chest's and
+    //  the hips' lines, a few cm over his waist on Zoé's 4th line in the yard: face-3's sign check, 5 of 6 in the full test)
+    for (let fi = 0; fi < faces.length; fi++) for (const dy of FV_FG_DY) {
       const f = faces[fi];
       const tx = f.x - p.x, ty = f.y + dy * f.s - p.y, tz = f.z - p.z, L = Math.hypot(tx, ty, tz), end = Math.min(FV_FG, L - 0.6);
       // (a collider near the line counts once; a prop drawn over it, FV_K_PROP times — the larger, wherever along the line:
@@ -1934,7 +1937,7 @@ export class CameraRig {
       hit: for (let d = 0.3; d < end; d += 0.25) {
         const k = d / L, x = p.x + tx * k, y = p.y + ty * k, z = p.z + tz * k;
         for (let i = 0; i < near.length; i++) if (this._inProp(near[i], x, y, z)) { prop = true; break hit; }
-        if (col || !P) continue;
+        if (col || !P || dy === FV_WAIST) continue;
         const C = P.near(x, z);
         for (let i = 0; i < C.length; i++) { const c = C[i]; if (c !== skip && c.enabled && y > c.bottom - 0.1 && y < c.top + 0.35 && P._inside(c, x, z, FV_FG_PAD)) { col = true; if (!near.length) break hit; break; } }
       }
