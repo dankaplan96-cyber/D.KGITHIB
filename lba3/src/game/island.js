@@ -721,7 +721,7 @@ function buildHarbour(W0, root, r) {
     //  ground from 0.6 m behind its back wall, and its back stood 0.21 m over that slope)
     const sx = -67.2, sz = 3.95, ry = Math.PI;
     // (WORLD-FIX: h 2.65, was 2.5: the door's surround ran into the eave beam)
-    const shed = buildHouse({ w: 4.8, d: 3.6, h: 2.65, pitch: 0.5, overhang: 0.3, wall: 'rubble', tint: '#e8e4e8', roof: 'planks', door: { x: 1.1, arch: false }, doorColor: '#7a5a3a', shutters: '#2a8a7a', chimney: false, seed: 41,
+    const shed = buildHouse({ w: 4.8, d: 3.6, h: 2.65, pitch: 0.5, overhang: 0.3, wall: 'rubbleHouse', tint: '#e8e4e8', roof: 'planks', door: { x: 1.1, arch: false }, doorColor: '#7a5a3a', shutters: '#2a8a7a', chimney: false, seed: 41,
       windows: [{ side: 'front', x: -1.0, y: 1.2, w: 0.7, h: 0.75 }, { side: 'right', x: 0, y: 1.25, w: 0.6, h: 0.6 }] });
     const y = H(sx, sz);
     shed.group.position.set(sx, y - 0.05, sz); shed.group.rotation.y = ry;

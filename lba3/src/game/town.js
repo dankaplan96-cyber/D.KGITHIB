@@ -67,7 +67,10 @@ const HOUSES = [
   // (CITADEL-ORIG-2, the user 16.11: "excellent" to LBA2's roof: a low hip of boards, its ridge 5.2 m up along the long
   //  front, the hips and eaves edged in dark wood, where a steep thatch gable rose to 6.2 m. The door, the chimney, the
   //  windows, the walls and the collider are as they were)
-  { id: 'twinsen', x: -50.6, z: 79.8, ry: Math.PI / 2, pad: 9, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6, w: 1.7, h: 2.5, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubble', tint: '#f2eee8', roof: 'planks', hip: { pitch: 0.5, coping: '#6b4a2e', occEnds: true }, pitch: 0.5, shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
+  // (P42, the user 22.11: the houses' walls lighter, LBA2's tone: the rubble houses — this one, the neighbour's, wing2
+  //  and Doran's shed — in the houses' own pale rubble, textures.js rubbleHouse; the two whose fronts face east, away
+  //  from Citadel's sun, a warmer tint)
+  { id: 'twinsen', x: -50.6, z: 79.8, ry: Math.PI / 2, pad: 9, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6, w: 1.7, h: 2.5, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubbleHouse', tint: '#fff6ea', roof: 'planks', hip: { pitch: 0.5, coping: '#6b4a2e', occEnds: true }, pitch: 0.5, shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
     windows: [{ side: 'front', x: -2.3 }, { side: 'front', x: -0.2, w: 0.7 }, { side: 'left', x: -1.2 }, { side: 'right', x: 1.2 }, { side: 'back', x: 0 }] },
   // the others stand by the original's doors (LBA2's scenes 5, 37, 15, 3, 17, 9, 7, 8, 14), in our own styles
   // WORLD-80: Bug Street's pair, as the original's (LBA2's scenes 5 and 22): two houses side by side at the street's
@@ -96,7 +99,7 @@ const HOUSES = [
     windows: [{ side: 'front', x: -1.65 }, { side: 'left', x: 0.3 }] },   // (WORLD-FIX: the window's open shutter lay on the door's surround at −1.2)
   { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', awning: '#e58aa0', awningW: 6.6, awningX: 0, roof: 'planks', pitch: 0.38, shutters: '#d8a13b', chimney: false,
     windows: [{ side: 'front', x: -0.6 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: at 1.2 the window ran under the door's surround)
-  { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0, w: 1.6, h: 2.4, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubble', tint: '#ece8e2', roof: 'thatch', shutters: '#3f9a6a', chimney: false,
+  { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0, w: 1.6, h: 2.4, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubbleHouse', tint: '#fff4e8', roof: 'thatch', shutters: '#3f9a6a', chimney: false,
     windows: [{ side: 'front', x: -1.65, w: 0.65 }, { side: 'left', x: 0 }] },   // (WORLD-FIX: a 0.8 m window at −1.5 opened its shutter onto the wide carved door's surround; between the surround and the corner quoins there is room for 0.65 m)
   // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
   // (CITADEL-85: LBA2's long hall has a grey barrel vault along its length, ribbed; its gable across the front is gone)
@@ -106,7 +109,7 @@ const HOUSES = [
   // it: the hall in ashlar under slate, the two smaller houses in rubble under boards, LBA2's harbour pair)
   // (CITADEL-85 gave it a barrel too; MAP-ORIG, LBA2 seen from the play camera in lba2remake: only the long hall is vaulted,
   // its neighbour has a hip roof of boards, the end slopes' boards fanned. A plank hip at LBA2's pitch, its edges in dark wood)
-  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubble', tint: '#f4f0e8', roof: 'planks', hip: { pitch: 0.55, coping: '#6b4a2e' }, pitch: 0.55, shutters: '#c8452f', chimneyX: -0.25,
+  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'rubbleHouse', tint: '#f4f0e8', roof: 'planks', hip: { pitch: 0.55, coping: '#6b4a2e' }, pitch: 0.55, shutters: '#c8452f', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
   { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'stone', tint: '#f2eef0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
     windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)
