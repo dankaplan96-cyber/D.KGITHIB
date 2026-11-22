@@ -253,6 +253,62 @@ PASS, chapter1 PASS (33/33). chapter2 not run (the harbour and the ferry did not
 LBA2 | ours before | after: `/dev/shm/p42/f_streets.jpg`, `f_walls.jpg`, `north_LBA2_before_after.jpg`,
 `harbour_pair_LBA2_ours.jpg`.
 
+## FLAT-TOWN (22.11): level paved areas at LBA2's heights, built walls at the sea edge
+
+The user, with a play-camera picture of the square by the statue: "Everything on the floor is crooked ... where hills
+are needed, have them; where not, then not"; of the promenade by the water office: "In the original game it was
+really built like a wall"; then: "Don't make Citadel one single flat plane! Check what was in LBA2!" **Automated
+runtime only (SwiftShader).** Build `872a85f0` + this change.
+
+**Reference.** LBA2's island height grid, `tools/worldscore/ref/citadel.json` (1.71 m cells, our frame = its frame +
+(−76, +16); numbers only). LBA2's levels, m over its streets: streets and most plots 0; the square a raised plaza,
++0.21/+0.42 in two steps all round, +0.63 at the middle; the south block's lawns +0.21..+0.63; the harbour platform
++0.83; the west shore's promenade +3.76, ending at a rail over the harbour (z 18.7); the terraces' foot ramps (up to
+the stepping stones' shelf at x −58..−66, z −22..−18; up to the fort at x −46..−38) from the street's level; every
+shore a straight drop of ~6 m. Ours had the town on the terrain's rolling grid (±0.3 m, a 0.7 m "rise" west of the
+statue that LBA2 has not), the promenade a ridge (1.2–3.8 m) on the old cliff.
+
+| area | LBA2 (m over its streets) | ours before | ours after |
+|---|---|---|---|
+| square, middle (well) | +0.63 | −0.10 | +0.42 |
+| square, platform | +0.42 | −0.10..0.01 | +0.42 (two 0.21 steps round it) |
+| streets round the square | 0 | −0.10..+0.65 | 0 |
+| north street, west end (the old rise) | 0 | +0.65..+1.02 | 0 |
+| Bug Street pair, before the doors | 0 | +0.26 | 0 |
+| west street, cross street, east plots | 0 | −0.38..+0.13 | 0 |
+| south block lawn | +0.21..+0.63 | −0.09..+0.14 | 0 (not done: needs an edge of masonry) |
+| harbour yard | +0.83 | −0.02 | 0 (not done: HARBOUR-BRINK's walls stand at today's level) |
+| promenade (sea wall) | +3.76 | +1.19..+3.81 | +3.76 |
+| knoll by the water office | +3.76 | +3.77 | +3.77 |
+
+**What changed** (`src/game/flattown.js` the shapes; `world.js` the ground; `island.js` the masonry):
+- `flatTown`: in the town (x −74.5..−20, z −24..66) and the harbour wing, no bump under 1.1 m, the shelves' faces and
+  the sea cliff (over 2.8 m) kept; on the paving the street's level even where a shelf's foot ran in. One street level,
+  TOWN_FLAT 2.3 (TOWN_Y). The house floors follow (their level is the ground before the door).
+- `plaza`: the square inside its old kerb ring at +0.42, two stone steps (rings, 0.5 m treads) round it in place of the
+  kerb ring (`town.js`). The ground under the steps is the incline through their edges (walked, no colliders).
+- `promenade`: one level strip at PROM_H (6.06) from the north end (z −29.4) to the knoll's rail (z 18.8), x −75.07 to
+  −72.29, faces on the terrain grid's lines: the sea wall (straight down to −3.4, rows out from it under the water's
+  floor so the trap filler builds no bank before it), a wall at its south end over the harbour's ground, an inland wall
+  behind the water office (z −2.6..16.4). Quay rubble under a pale coping 2 cm over the walk; each top a walkable
+  collider (HARBOUR-BRINK's way). The lanterns and rails (PROPS) stand on it level, the knoll's rail (z 18.7) now too.
+- `promStair`: the way up from the harbour street (PATHS[5]'s line), where a twisted ramp ran up the shelf's face: a
+  straight flight of 20 steps (0.19 m) from x −65.8 to the strip, each step a collider; its foot paved (GRID_STREETS);
+  props keep off it (`containers.js` flatKeep). LBA2's flight there runs north–south into the notch; ours east–west.
+- The stepping stones' path (PATHS[4]) now runs level from Bug Street to the shelf's foot and ramps up from there
+  (LBA2's ramp, the same place); the first stone's base is unchanged (4.9047 m both).
+- Kept random streams: the scatter decides on the ground as it stood (`FLAT_OFF`, and `FLAT_THEN`, the grid built
+  from it, trap filler and all); trees, bushes, grass, flowers, tulip beds identical to before (compared by position);
+  rocks of the old ridge under the walls and flight dropped whole. Old saves: the save holds x/z only and the loader
+  grounds him (`exitRoom`); checked on five spots where the ground moved (all standing, no life lost).
+- Cost: three meshes (rubble, coping, steps), 23 colliders; the grid build +~25 ms (the old grid for the scatter).
+
+**Left:** the south block's raised lawns and the harbour platform's +0.83 (above); the east shore is a short natural
+drop (2.3 → −2.6 m in ~2 m), not a built wall; the inland wall's rubble is dark in its shade.
+
+**Tests** (port 8167, SwiftShader, one browser at a time; on the final build): slidetraps PASS (Citadel 49 spots, 0 bad), citadel-structures PASS, world-consistency PASS, chapter1 PASS (33), walkers PASS, overlap-sweep (default) PASS (its first two runs found the flight's first tread and the plaza's outer step flush with the ground: the ground under them now 3–4 cm lower, the flight's foot on a grid column). **Pictures** (before | after, play camera unless
+named top): `captures/flat-town/`.
+
 ## Rerun
 
 ```

@@ -25,6 +25,7 @@ import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
 import { ASYLUM_DOOR, climbPaveDist, climbClear, climbDropRock, climbShelfRows, climbRampFill, CLIMB_RAMP, CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT, CLIMB_FOOT_Y } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 import { HATCHES } from './sewers.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear } from './flattown.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -142,7 +143,7 @@ const GRID_STREETS = [
   [-63.4, 31.3, -30.0, 31.3, 3.0],   // the cross street past Chez Luc, toward the footbridge
   [-45.6, 31.3, -45.6, 53.1, 3.0],   // south from it along the fields' path
   [-60.4, 53.1, -44.1, 53.1, 3.0],   // the south cross street
-  [-73.5, -27.0, -73.5, 8.5, 2.6],   // the promenade on the sea wall, inside its rail
+  [-73.68, -27.0, -73.68, 17.5, 2.9],   // the promenade on the sea wall, inside its rail (FLAT-TOWN: from the wall's coping to its inland edge, on to the knoll)
   // CITADEL-ORIG-2 (the user, 16.11: "excellent" to the grid past the square): LBA2's east street runs at x −31 from the
   // square's block to the cross street, where Pippa's shop and Fosse's office stand now. They stay: the street runs
   // 3.5 m west of LBA2's, before their west-facing doors, from the square's paved ring down to the cross street
@@ -156,6 +157,8 @@ const GRID_STREETS = [
   [-52.0, -15.8, -32.5, -15.8, 3.0],
   [-52.0, -15.8, -52.0, 2.9, 3.0],
   [-32.5, -15.8, -32.5, -4.0, 3.0],
+  // FLAT-TOWN: the street down to the harbour's end (town.js STREETS, x −64) on to the foot of the promenade's flight
+  [-63.5, -4.16, -66.0, -4.16, 3.2],
 ];
 // (AUDIT-FIX, the user's P49: from the quay's east face, x0 QUAY.x1 − 0.5 — it began at −104.5 and the quay's paving stopped
 //  at −108, so between them, by the PIER signpost and the ferry's board, the old harbour path's dirt and the grass beside it
@@ -429,18 +432,95 @@ function islandHeight0(x, z) {
   let h = pathRamp(x, z, baseHeight(x, z));
   const k = townKeep(x, z);
   if (k > 0) h = lerp(h, townCoreHeight(x, z), k);
-  return h;
+  return flatTown(x, z, h);
 }
 // the ramp's height on its axis, as islandHeight0 had it before the fill
-function rampAxisHeight(x, z) { let h = pathRamp(x, z, baseHeight(x, z)); const k = townKeep(x, z); return k > 0 ? lerp(h, townCoreHeight(x, z), k) : h; }
+function rampAxisHeight(x, z) { return islandHeight0(x, z); }
+
+// FLAT-TOWN (flattown.js): the town's ground level. In the zones [x0, z0, x1, z1] (eased over `fade` m inside their
+// edges) the old ground's departure from the level is kept only where it is a real feature: nothing under 1.1 m, all
+// of it over 2.8 m (a shelf's face, the sea cliff: their tops and feet now meet the level at a crease, not a bank); on
+// the paving (and 1 m round it) none up to 1.6 m. Kept as it was: the ground round the first stepping stone's foot
+// (its first step is measured from it; off the paving). The stepping stones' path (PATHS[4]) now runs level from Bug
+// Street to the shelf's foot and climbs from there, where it ran up a bank from the street. FLAT_OFF: the ground as it
+// stood, for the scatter's view of it (no random draw moves).
+let FLAT_OFF = false;
+const FLAT_ZONES = [
+  { x0: -74.5, z0: -24.0, x1: -20.0, z1: 66.0, fade: 2.5 },   // the town, from the west shelf's foot to the east shore, the terraces' foot to the fields
+  { x0: -102.0, z0: 21.0, x1: -74.5, z1: 41.0, fade: 2.0 },   // the harbour wing's ground (the quay, 1.8 m, and the platform's brink south of z 42.5 stay as they are)
+];
+function flatTown(x, z, h) {
+  if (FLAT_OFF || PRE80) return h;
+  let w = 0;
+  for (const Z of FLAT_ZONES) {
+    const e = Math.min(x - Z.x0, Z.x1 - x, z - Z.z0, Z.z1 - z);
+    if (e > 0) w = Math.max(w, smoothstep(0, Z.fade, e));
+  }
+  if (w <= 0) return h;
+  const d = h - TOWN_FLAT, a = Math.abs(d);
+  const pave = a < 2.4 ? smoothstep(1.0, -0.1, Math.min(gridPaveDist(x, z), streetDist(x, z), bugFootDist(x, z), Math.hypot(x - POI.village.x, z - POI.village.z) - 9.9)) * smoothstep(2.4, 1.6, a) : 0;
+  w *= Math.max(smoothstep(4.0, 6.0, Math.hypot(x - POI.stonesStart.x, z - POI.stonesStart.z)), pave);
+  if (w <= 0) return h;
+  return TOWN_FLAT + d * lerp(1, smoothstep(1.1, 2.8, a) * (1 - pave), w);
+}
+// The promenade on the sea wall (flattown.js PROM): its strip level at PROM_H from the sea face's row to the inland
+// row; the sea face's foot row (the low side) no higher than the ground a row further out (the bank between is inside
+// the wall); round the strip's inland side and ends the ground eases back over 1.5 m (short of the stepping stones'
+// foot) where it is within 1–1.5 m of the level (the shelf's own top); where it is lower (behind the water office) it
+// is the town's level, under the inland wall.
+const PROM_STEP = 260 / 280;
+// (every grid point FLAT-TOWN may move: the scatter's view of them, scatterGround) [x0, z0, x1, z1]
+const FLAT_BOXES = [
+  ...FLAT_ZONES.map((Z) => [Z.x0, Z.z0, Z.x1, Z.z1]),
+  [PROM.xo - 0.6, PROM.z0 - 2.4, PROM.x1 + 2.4, PROM.z1 + 2.4],
+  [PROM_STAIR.xb - 0.1, PROM_STAIR.zN - 2.1, PROM_STAIR.xa + 3.1, PROM_STAIR.zS + 2.7],
+  // (and round every house: a floor's level is the ground before its door, so its ease reaches past the zones)
+  ...HOUSE_FLATS.map((f) => { const R = f.hw + f.hd + f.flat + f.ease; return [f.x - R, f.z - R, f.x + R, f.z + R]; }),
+];
+function promenade(x, z, h) {
+  if (FLAT_OFF || PRE80 || x < PROM.xo - 1.4 || x > PROM.x1 + 1.6 || z < PROM.z0 - 2.3 || z > PROM.z1 + 2.3) return h;
+  const ez = Math.max(PROM.z0 - z, z - PROM.z1, 0);
+  // (the foot row and the row out from it: where it is water, under the water's floor — the shallow ledges the old
+  //  cliff stood on are cut off from the land by the wall, and the trap filler would build them up into a bank before
+  //  its face; south of z 15, where it is the harbour's ground, its level)
+  if (x < PROM.xo - 0.45) return ez > 0 || z > 15 ? h : Math.min(h, -0.6);
+  if (x < PROM.xo + 0.45) { if (ez > 0) return h; const out = islandHeight(x - PROM_STEP, z); return Math.min(h, z > 15 ? out : Math.min(out, -0.6)); }
+  const de = Math.hypot(Math.max(x - PROM.x1, 0), ez);
+  if (de <= 0) return PROM_H;
+  if (z > PROM_STAIR.zN - 2.0 && z < PROM_STAIR.zS + 2.6) return h;   // (the flight and the low ground south of it: promStair's)
+  const IW = PROM_WALLS[2];
+  if (z > IW.z0 && z < IW.z1 && x < PROM.xi + 1.2) return TOWN_FLAT;   // (before the inland wall: the town's level, two rows out)
+  return lerp(h, PROM_H, (1 - smoothstep(0, 1.5, de)) * smoothstep(1.5, 1.0, Math.abs(h - PROM_H)));
+}
+// The square's plaza (flattown.js PLAZA, LBA2's): level at its top inside r, the ground under its steps the incline
+// through their outer edges (island.js lays the two stone steps over it; the grid's 0.93 m can't hold a step). Not in
+// the climb's measure of the ground (CLIMB_OFF: its line starts at the well, and its smoothing, never falling, would
+// carry the plaza's top on over the north street where the flight begins)
+function plaza(x, z, h) {
+  if (FLAT_OFF || PRE80 || CLIMB_OFF) return h;
+  const P = PLAZA, r = Math.hypot(x - P.x, z - P.z), w = P.n * P.tread;
+  if (r >= P.r + w) return h;
+  return r <= P.r ? TOWN_FLAT + P.n * P.step : TOWN_FLAT + P.n * P.step * (P.r + w - r) / w - 0.03 * Math.min(1, (P.r + w - r) / 0.15);   // (3 cm under the steps: their rings are polygons, a chord inside the circle)
+}
+// the flight up to it (PROM_STAIR): under the steps the ground is the incline through their back edges, level across
+// (the steps' own colliders carry him: island.js); north of it level with it for a grid row, the shelf's face easing down to it within 2 m; south of
+// it, past the flight's south face, the town's level (the old path's bank there, 3–5.6 m, was a hump in the street)
+function promStair(x, z, h) {
+  const S = PROM_STAIR;
+  if (FLAT_OFF || PRE80 || z < S.zN - 2.0 || z > S.zS + 2.6 || x < S.xb - 0.01 || x > S.xa + 3.0) return h;
+  if (x > S.xa) return TOWN_FLAT;   // (before its foot: the street's level, where the old path's ramp began its bank)
+  if (z > S.zS - 0.1) return TOWN_FLAT;
+  const t = Math.max(0, Math.min(1, (S.xa - x) / (S.xa - S.xb))), r = TOWN_FLAT + (PROM_H - TOWN_FLAT) * t - 0.04 * Math.min(1, t * 5);   // (4 cm under the treads' back edges)
+  return lerp(h, r, 1 - smoothstep(0.95, 2.0, S.zN - z));   // (level with the flight one grid row past its north side: the row between ran up over its edge)
+}
 // WORLD-FIX: every house stands on its own level floor (town.js HOUSE_FLATS): the ground under its footprint and a
 // margin round it at the height of the ground before its door, easing back to the land beyond. Applied last, so
 // no ramp, rise or town noise tilts a house again. (The ground round each house was measured by tests/worldfit.mjs.)
-let FLAT_LVL = null, FLAT_LVL_PRE = null;
+let FLAT_LVL = null, FLAT_LVL_PRE = null, FLAT_LVL_OFF = null;   // (FLAT-TOWN: the floors as they stood, for FLAT_OFF)
 const flatLevels = (F) => F.map((f) => islandHeight0(f.door[0], f.door[1])).map((v, i, a) => (F[i].with != null ? a[F[i].with] : v));
 function houseFlats(x, z, h) {
   const FL = PRE80 ? HOUSE_FLATS_PRE : HOUSE_FLATS;
-  const LV = PRE80 ? (FLAT_LVL_PRE ??= flatLevels(FL)) : (FLAT_LVL ??= flatLevels(FL));
+  const LV = PRE80 ? (FLAT_LVL_PRE ??= flatLevels(FL)) : FLAT_OFF ? (FLAT_LVL_OFF ??= flatLevels(FL)) : (FLAT_LVL ??= flatLevels(FL));
   for (let i = 0; i < FL.length; i++) {
     const f = FL[i], dx = x - f.x, dz = z - f.z, R = f.flat + f.ease;
     if (Math.abs(dx) > f.hw + f.hd + R || Math.abs(dz) > f.hw + f.hd + R) continue;
@@ -452,7 +532,8 @@ function houseFlats(x, z, h) {
 }
 export function islandHeight(x, z) {
   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
-  return waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight)));
+  // (FLAT-TOWN: then the promenade's flight and the promenade itself, over the house floors' eases)
+  return promenade(x, z, promStair(x, z, plaza(x, z, waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight))))));
 }
 
 // REVIEW-CITADEL-ART (c): the knoll north of the water office (the first shelf's outline, its wobble, citadel-layout.js)
@@ -478,7 +559,7 @@ function waterKnoll(x, z, h) {
 // is the whole ground within 1.8 m of the middle (the paving, the kerbs, the wall's foot) and eases back to the land
 // by 2.6 m. Past the square's kerb ring to the fork; the ground everywhere else is unchanged, and the physics walks the
 // same heightfield the paving is painted on. (CLIMB_OFF: the ground as it stood before, for the scatter's view of it)
-let CLIMB_OFF = false, CLIMB_PROF = null;
+let CLIMB_OFF = false, CLIMB_PROF = null, CLIMB_PROF_ON = null, CLIMB_PROF_OFF = null;   // (FLAT-TOWN: one for the ground as it stood, FLAT_OFF)
 const CLIMB_S0 = 10.6, CLIMB_FULL = 1.8, CLIMB_EASE = 2.6, CLIMB_DS = 0.25;
 const CLIMB_BOX = [-41.8, -38.4, -29.0, -11.6];   // (CLOUD_ORDERS 17: to the straight's east side, x −29.98; the scatter's view of it as it stood)
 function climbLocal(x, z) {
@@ -516,7 +597,7 @@ const climbProfAt = (s) => { const P = CLIMB_PROF.p, f = Math.max(0, s) / CLIMB_
 // bank comes down to the kerb), and within 0.6 m where it is raised over it (the yard, under the shelf's wall: the walls'
 // faces stand on the terrain's grid lines there, so the paving is level to them, the ground falls away only behind them,
 // and no raised ground reaches the stone house's eaves)
-let CLIMB_NZ = null;
+let CLIMB_NZ = null, CLIMB_NZ_ON = null, CLIMB_NZ_OFF = null;
 const CLIMB_NDZ = 0.25, CLIMB_NZ0 = CLIMB_JOG[3] + 1.5;
 function climbNorthProfile() {
   const z0 = CLIMB_JOG[3], z1 = CLIMB_FOOT[3], [ax, az] = CLIMB_RAMP[1], [bx, bz] = CLIMB_RAMP[2];
@@ -536,14 +617,14 @@ function climbNorth(x, z, h) {
     d = Math.min(d, dx > 0 && dz > 0 ? Math.hypot(dx, dz) : Math.max(dx, dz));
   }
   if (d >= 1.0) return h;
-  CLIMB_NZ ??= climbNorthProfile();
+  CLIMB_NZ = FLAT_OFF ? (CLIMB_NZ_OFF ??= climbNorthProfile()) : (CLIMB_NZ_ON ??= climbNorthProfile());
   const P = CLIMB_NZ, f = Math.max(0, Math.min(P.length - 1.001, (CLIMB_NZ0 - z) / CLIMB_NDZ)), i = Math.floor(f), ph = P[i] + (P[i + 1] - P[i]) * (f - i);
   const r = smoothstep(0.1, 0.4, ph - h), w = 1 - smoothstep(lerp(0.2, 0.5, r), lerp(1.4, 0.6, r), d);
   return lerp(h, ph, w);
 }
 function climbGround(x, z, h) {
   if (CLIMB_OFF || PRE80 || x < CLIMB_BOX[0] || x > CLIMB_BOX[2] || z < CLIMB_BOX[1] || z > CLIMB_BOX[3]) return h;
-  CLIMB_PROF ??= climbProfile();
+  CLIMB_PROF = FLAT_OFF ? (CLIMB_PROF_OFF ??= climbProfile()) : (CLIMB_PROF_ON ??= climbProfile());
   const [s, o, L] = climbLocal(x, z);
   let r = h;
   if (o < CLIMB_EASE && s >= CLIMB_S0 && s <= L) {
@@ -650,6 +731,7 @@ function islandSplat(x, z, h, slope, w) {
   const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
   if (fd < POI.fort.half) w[4] = 3;
   if (boxDist(x, z, POI.fort.x - POI.fort.half - 5, POI.fort.z - 4.5, POI.fort.x - POI.fort.half + 1, POI.fort.z + 4.5) < n * 1.2) w[4] = 3; // the forecourt
+  if (flatClear(x, z, 0.6)) w[2] = 0;   // (FLAT-TOWN: no cliff rock at a wall's or the flight's foot: the steep bank is inside the masonry)
   { const pave = 1 - Math.min(1, w[4] / 1.5); w[3] *= pave; w[0] *= pave; w[1] *= pave; w[2] *= pave; } // paving covers paths, soil and grass
   if (w[2] > 0) { w[0] *= 1 - Math.min(1, w[2]); w[3] *= 1 - Math.min(1, w[2]); w[1] *= 1 - Math.min(1, w[2]); }
 }
@@ -686,53 +768,39 @@ const PRE80_BOXES = [[-186, -40, ISLET_X + 1, 20], [-76, -30, -46, 2], [-33, -38
 function scatterGround(T) {
   const n = T.segs + 1, pre = new Map();
   const ix = (x) => Math.round((x - T.x0) / T.step), jz = (z) => Math.round((z - T.z0) / T.step);
-  // (the difference before − now added to the terrain's own point, so the pit fills and the trap filler's steps stay)
-  for (const [x0, z0, x1, z1] of PRE80_BOXES) {
-    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
-      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
-      if (pre.has(k)) continue;
-      PRE80 = true; const before = islandHeight(x, z); PRE80 = false;
-      const d = before - islandHeight(x, z);
-      if (d !== 0) pre.set(k, T.heights[k] + d);
+  // (the difference before − then added to the terrain's own point as it then stood, so the pit fills and the trap
+  //  filler's steps stay. FLAT-TOWN: "then", the ground before FLAT-TOWN (FLAT_OFF), so every view below is the one the
+  //  scatter had; the terrain's point as it then stood: FLAT_THEN, the grid built from that ground, trap filler and all)
+  const thenAt = (k, x, z) => { FLAT_OFF = true; const old = islandHeight(x, z); FLAT_OFF = false; return [FLAT_THEN[k], old]; };
+  const view = (boxes, off) => {
+    for (const [x0, z0, x1, z1] of boxes) {
+      for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
+        const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
+        if (pre.has(k)) continue;
+        const [base, old] = thenAt(k, x, z);
+        off(true); FLAT_OFF = true; const before = islandHeight(x, z); FLAT_OFF = false; off(false);
+        const d = before - old;
+        if (d !== 0) pre.set(k, base + d);
+      }
     }
-  }
-  // (CLIMB-2: and the ramp's corridor as it stood before its even incline, so no random draw moves)
-  {
-    const [x0, z0, x1, z1] = CLIMB_BOX;
+  };
+  view(PRE80_BOXES, (v) => { PRE80 = v; });
+  view([CLIMB_BOX], (v) => { CLIMB_OFF = v; });   // (CLIMB-2: and the ramp's corridor as it stood before its even incline, so no random draw moves)
+  view([KNOLL_BOX], (v) => { KNOLL_OFF = v; });   // (REVIEW-CITADEL-ART c: and the water office's knoll as it stood before its east face was cut back)
+  view([BRINK_BOX], (v) => { BRINK_OFF = v; });   // (HARBOUR-BRINK: and the ground by the harbour platform's sea walls as it stood before the brink was made level)
+  // (FLAT-TOWN: and the town's ground, the promenade, its flight and the house floors as they stood before they were made level)
+  for (const [x0, z0, x1, z1] of [FLAT_WINDOW]) {
     for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
-      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
+      const k = j * n + i;
       if (pre.has(k)) continue;
-      CLIMB_OFF = true; const before = islandHeight(x, z); CLIMB_OFF = false;
-      const d = before - islandHeight(x, z);
-      if (d !== 0) pre.set(k, T.heights[k] + d);
-    }
-  }
-  // (REVIEW-CITADEL-ART c: and the water office's knoll as it stood before its east face was cut back)
-  {
-    const [x0, z0, x1, z1] = KNOLL_BOX;
-    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
-      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
-      if (pre.has(k)) continue;
-      KNOLL_OFF = true; const before = islandHeight(x, z); KNOLL_OFF = false;
-      const d = before - islandHeight(x, z);
-      if (d !== 0) pre.set(k, T.heights[k] + d);
-    }
-  }
-  // (HARBOUR-BRINK: and the ground by the harbour platform's sea walls as it stood before the brink was made level)
-  {
-    const [x0, z0, x1, z1] = BRINK_BOX;
-    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
-      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
-      if (pre.has(k)) continue;
-      BRINK_OFF = true; const before = islandHeight(x, z); BRINK_OFF = false;
-      const d = before - islandHeight(x, z);
-      if (d !== 0) pre.set(k, T.heights[k] + d);
+      const base = FLAT_THEN[k];
+      if (base !== T.heights[k]) pre.set(k, base);
     }
   }
   // (CAVE-STAIR: and the ground under the plateau's stair as it stood before it was cut to the flight's line)
   for (const [k, v] of STAIR_PRE) if (!pre.has(k)) pre.set(k, v);
   const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
-  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX, BRINK_BOX, PLATEAU_STAIR_BOX].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  const near = (x, z, m) => [...PRE80_BOXES, CLIMB_BOX, KNOLL_BOX, BRINK_BOX, PLATEAU_STAIR_BOX, FLAT_WINDOW].some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
   const heightAt = (x, z) => {
     if (!near(x, z, 2)) return T.heightAt(x, z);
     const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
@@ -750,6 +818,8 @@ function scatterGround(T) {
 
 // ---------- the terrain grid, checked for soft-locks ----------
 let STAIR_PRE = new Map();   // (CAVE-STAIR: the grid's points under the plateau's stair before the cut: index → height)
+let FLAT_THEN = null;   // (FLAT-TOWN: the grid before it, buildHeightGrid)
+const FLAT_WINDOW = [...FLAT_BOXES, CLIMB_BOX].reduce((a, b) => [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])], [Infinity, Infinity, -Infinity, -Infinity]);
 const TERRAIN_SIZE = 260, TERRAIN_SEGS = 280;
 export function buildHeightGrid(size, segs) {
   const n = segs + 1, half = size / 2, step = size / segs, X0 = ISLAND.cx - half, Z0 = ISLAND.cz - half;
@@ -761,6 +831,17 @@ export function buildHeightGrid(size, segs) {
     const x = X0 + i * step, z = Z0 + j * step, dx = Math.max(f.x0 - x, 0, x - f.x1), dz = Math.max(f.z0 - z, 0, z - f.z1);
     const w = 1 - smoothstep(0, 1.5, Math.hypot(dx, dz)), a = j * n + i;
     if (w > 0 && h[a] < f.h) h[a] += (f.h - h[a]) * w;
+  }
+  // FLAT-TOWN: the grid as it stood before (FLAT_OFF), trap filler and all, for the scatter's view (scatterGround): the
+  // same raw points outside FLAT_WINDOW, the ground as it stood inside it
+  {
+    const old = h.slice(), [wx0, wz0, wx1, wz1] = FLAT_WINDOW;
+    FLAT_OFF = true;
+    for (let j = Math.max(0, Math.ceil((wz0 - Z0) / step)); j <= Math.min(segs, Math.floor((wz1 - Z0) / step)); j++)
+      for (let i = Math.max(0, Math.ceil((wx0 - X0) / step)); i <= Math.min(segs, Math.floor((wx1 - X0) / step)); i++) old[j * n + i] = islandHeight(X0 + i * step, Z0 + j * step);
+    FLAT_OFF = false;
+    fixTraps(old, n, X0, Z0, step);
+    FLAT_THEN = old;
   }
   const trapped = fixTraps(h, n, X0, Z0, step);
   // CAVE-STAIR: the ground under the plateau's stair cut to the flight's line (island.js plateauStairGround), after the
@@ -872,6 +953,8 @@ export function* buildWorldSteps(parentScene) {
   });
   climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
   dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
+  // (FLAT-TOWN: the rocks of the old sea cliff and ridge under the promenade, its walls and its flight; flatClear)
+  dropRocks(W_cliffs.mesh, (x, z) => (x > -77.4 && x < PROM.x1 + 0.3 && z > PROM.z0 - 0.4 && z < PROM_WALLS[1].z1 + 0.2) || flatClear(x, z, 0.4), [-78, PROM.z0 - 3, PROM_STAIR.xa + 1, 21]);
   dropRocks(W_cliffs.mesh, (x, z, y) => plateauStairAt(x, z, 0, y), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js; CAVE-STAIR: and a rock standing up through its landing)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
@@ -1192,7 +1275,7 @@ export function* buildWorldSteps(parentScene) {
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
   clearLife(trees); clearLife(bushes);
   const fenceDist = (x, z) => distToSegment(x, z, LAWN_FENCE[0][0], LAWN_FENCE[0][1], LAWN_FENCE[1][0], LAWN_FENCE[1][1]);   // (CITADEL-ORIG-2: the lawn strip's lattice fence)
-  for (const t of [...trees, ...bushes]) if (!t.gone && (gridPaveDist(t.x, t.z) < 1.2 || fenceDist(t.x, t.z) < 1.4)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving; filtered after the scatter, so no random draw moves)
+  for (const t of [...trees, ...bushes]) if (!t.gone && (gridPaveDist(t.x, t.z) < 1.2 || flatClear(t.x, t.z, 1.0) || fenceDist(t.x, t.z) < 1.4)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving; filtered after the scatter, so no random draw moves)
   // (WORLD-FIX / R6: the way out of every house door stays open — no tree or bush in a 4 m lane straight out of it for
   //  11 m, so the first steps out of a door are never into a bush. Filtered after the scatter: no random draw moves.)
   const doorLane = (x, z, pad) => W.houses.some((h) => {
@@ -1323,7 +1406,7 @@ export function* buildWorldSteps(parentScene) {
   for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
   for (const t of [...grass, ...flowers]) if (!t.gone && blockDist(t.x, t.z) < 0) { t.s = 1e-4; t.gone = true; }   // (TREES-1: none in a floor; at a wall's foot they stay)
   for (const t of [...grass, ...flowers]) if (!t.gone && climbClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (CLIMB-1)
-  for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || townBlockEarth(t.x, t.z) > 0.3 || fenceDist(t.x, t.z) < 0.35)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving or the block's earth)
+  for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || flatClear(t.x, t.z, 0.3) || townBlockEarth(t.x, t.z) > 0.3 || fenceDist(t.x, t.z) < 0.35)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving or the block's earth)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   // (OVERLAP-SWEEP: none where the ground is drawn as paving — the terrain's own cobble weight at the tuft's foot, the
   //  nearest vertex of the grid as drawn; 289 tufts and flowers stood on painted cobbles. Filtered after the scatter)
@@ -1379,7 +1462,7 @@ export function* buildWorldSteps(parentScene) {
   }
   // (hidden beyond FAR_SMALL like the grass: a bed far off is a few pixels of colour, and thousands of tulips)
   // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
-  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7 || gridPaveDist(t.x, t.z) < 0.8 || fenceDist(t.x, t.z) < 0.6 || streetDist(t.x, t.z) < 0.7) lifeBeds.add(t.bed);   // (the user, 16.11, a picture: yellow tulips growing out of MAP-ORIG's new paving — a bed touching any paving is left out whole)
+  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7 || gridPaveDist(t.x, t.z) < 0.8 || flatClear(t.x, t.z, 0.6) || fenceDist(t.x, t.z) < 0.6 || streetDist(t.x, t.z) < 0.7) lifeBeds.add(t.bed);   // (the user, 16.11, a picture: yellow tulips growing out of MAP-ORIG's new paving — a bed touching any paving is left out whole)
   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
   for (const list of beds) for (const t of list) if (blockDist(t.x, t.z) < 0) t.s = 1e-4;   // (TREES-1: a bed's tulips that stood in a house's floor)
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
@@ -1401,7 +1484,7 @@ export function* buildWorldSteps(parentScene) {
   //  checks only the new houses, so a boulder stood half inside the stone house's west corner (−31.5, −25.0), stopping
   //  the lane round it dead and holding a slide off the terrace bank in the pocket behind it: SLIDE-RESCUE found no
   //  footing and put him back)
-  for (const r of rocks) if (blockDist(r.x, r.z, false) < r.s * 1.1 + 0.2 || gridPaveDist(r.x, r.z) < r.s * 1.1 || fenceDist(r.x, r.z) < r.s * 1.1 + 0.3 || doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55)) || climbClear(r.x, r.z, r.s * 1.1) || benchRoom(r.x, r.z, r.s * 1.1)) r.s = 1e-4;
+  for (const r of rocks) if (blockDist(r.x, r.z, false) < r.s * 1.1 + 0.2 || gridPaveDist(r.x, r.z) < r.s * 1.1 || flatClear(r.x, r.z, r.s * 1.1) || fenceDist(r.x, r.z) < r.s * 1.1 + 0.3 || doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55)) || climbClear(r.x, r.z, r.s * 1.1) || benchRoom(r.x, r.z, r.s * 1.1)) r.s = 1e-4;
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();
