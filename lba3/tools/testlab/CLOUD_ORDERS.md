@@ -1,10 +1,9 @@
 # Orders from the cloud to the laptop (3.11.2026, night mode)
 
-> **22.11.2026: ALL ORDERS PAUSED (the user's decision).** The user: "we'll stop with the local agent and the
-> measurements; we'll focus on the fixes." Stop now: start no order from this file (61, 62's battery half, 63, 64, 65,
-> P96 confirmation, JOINTS and any other). If one is running, stop it at the next safe point, commit and push what you
-> have with a short note in `WORLD_ART_REQUESTS.md`, and then stay idle. Make no further measurements. Wait for a new
-> line here from the cloud before doing anything else.
+> **22.11.2026 (later): ORDER 66 ONLY — no performance work (the user: "give the local agent tasks that aren't
+> related to performance").** Performance and measurement orders stay paused: 61, 62's battery half, 63, 64, 65, the P96
+> confirmation, and any frame-time, GPU-timer, power or benchmark work. Do order 66 below, step by step, and nothing else.
+> Report each step in `WORLD_ART_REQUESTS.md` and push to your branch as usual. Pictures and judgements, not timings.
 
 > **4.11.2026: the cloud moves to a new session** (the user's decision). Talk to the cloud through the repository only
 > (`WORLD_ART_REQUESTS.md` for requests and questions, pushed); direct messages to the old cloud session will not be read.
@@ -930,3 +929,31 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     5. Also (CAMERA-NIGHT, 22.11): in any `fps30feel` T3 pass at 30 with RATES=real, keep the per-frame record (`OUT`)
        and send it with the report. Order 62's one 2.96 m camera step is most likely a single ~133 ms frame (4/30 s of
        play at ~22 m/s) and not a camera rule; the record settles it.
+
+66. **NO-PERF (the user, 22.11: "give the local agent tasks that aren't related to performance").** Build: the cloud's
+    `ccr-c1c2c4b9-dep6ed` head (artifact v142 or later). Headed Chrome on the desktop. Take pictures and form judgements,
+    and measure no frame times. Steps, in this order:
+    1. **JOINTS-BLENDER 8+ (P82, continuing order 57 with the local Blender):** the cast after Twinsen and Zoé. Do Arthur
+       first, then a Grobo (Baldino-type body), then a Rabbibunny and a Sphero townsperson. For each one: no tube or ball
+       look at the shoulder, elbow, hip or knee in motion (walk, run, the idle gesture, talk). Use the same pipeline as
+       steps 5–7: capture, a working copy, a focused edit, previews, export, an in-game load, a comparison, and
+       `anim-polish` plus any test that covers the character. Send each as its own diff, with before/after pictures from
+       the play camera and at dialogue distance.
+    2. **A look at today's Citadel on the real GPU (P103 FLAT-TOWN, v142).** Take play-camera pictures in Follow (Far is
+       the default now), in the Fixed view and from the top, at these spots: the square by the Twinsen & Zoé statue (the
+       raised plaza and its two steps all round), the north street, the west street, the new flight of 20 steps up to the
+       promenade, the promenade along the west shore with its sea wall, coping, lanterns and rail, the blue-roof house at
+       the edge (the user's picture), and the harbour. Look for anything floating, sunk, clipped, flickering (z-fighting),
+       a seam between paving and wall, a dark or wrong texture (the cloud's note: the inland wall's rubble reads dark in
+       shade), or NPCs walking through the new steps or walls. Walk Twinsen up and down the stair and along the sea wall
+       with real keys. Report each finding with its world position and a picture.
+    3. **The shop panel (P104, v141):** the pharmacy, Pippa's shop and the Zeelich arsenal, in English and Hebrew, at your
+       window size and at 1366×768. Check that the title and the purse never touch, and that each item's "what it does"
+       line reads clearly and is not cut off.
+    4. **POLISH-SWEEP on Citadel after the ground change (P84):** a placement pass over the whole island only, since the
+       ground moved. Look for doors, lamps, benches, crates, planters, signs, fences or trees floating or sunk. Name each
+       one with its position; the cloud fixes them.
+    5. **Play chapter 1 from a new game to the end with real input (keyboard and mouse), in English and once in Hebrew.**
+       Note anything confusing, broken or odd: prompts, goals, camera, the flat town, the shop. Report as play notes
+       with a picture each. Do not report frame rates or timings.
+
