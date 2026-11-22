@@ -149,7 +149,7 @@ Object.assign(STR.en, {
   ],
 
   // ---- ZEELICH-DOORS: inside the street's houses (src/game/zhomes.js)
-  n_zh_lissa: 'Lissa', n_zh_wenna: 'Wenna',
+  n_zh_lissa: 'Lissa', n_zh_wenna: 'Vanna',
   room_zh_pelleck: 'Mr Pelleck\'s house', room_zh_nara: 'Nara\'s flower house', room_zh_oku: 'Oku\'s house', room_zh_bakery: 'Snuff\'s bakehouse',
   zh_pel_radiator: 'A heat radiator, fitted and polished. Its pipe ends in the wall. A tag: NEXT QTR.',
   zh_pel_tiles: 'Tile samples. Two violet, six blue. The violet ones are the last of their kind.',
@@ -183,7 +183,7 @@ Object.assign(STR.en, {
   ],
   zh_lissa_network: [
     'Xil wants sixty pots next time. Sixty!',
-    'The ground is quiet. The flowers like quiet.',
+    "The ground still knocks. The flowers don't like it.",
   ],
   zh_lissa_late: [
     'Xil wants sixty pots next time. Sixty!',
@@ -206,8 +206,8 @@ Object.assign(STR.en, {
     'Oku\'s up at the council house. Someone has to grind the flour.',
   ],
   zh_wenna_network: [
-    'Baldino\'s relays ride on our mills now. Oku pretends he isn\'t proud.',
-    'The ground is quiet. The post outside is still dark.',
+    "Baldino's relay is for the old mill. Oku pretends he isn't proud.",
+    'The ground still knocks. The post outside is still dark.',
   ],
   zh_wenna_late: [
     'Baldino\'s relays ride on our mills now. Oku pretends he isn\'t proud.',
@@ -215,7 +215,7 @@ Object.assign(STR.en, {
   ],
 
   // ---- ZEELICH-LIFE: the street's working people (story/zeelife.js streetFolk)
-  n_zr_fennick: 'Fennick', n_zr_rezz: 'Rezz', n_zr_oma: 'Oma',
+  n_zr_fennick: 'Garn', n_zr_rezz: 'Rezz', n_zr_oma: 'Oma',
   zr_fen_pre: [
     'Three posts lit, three tagged. Hanging the tags is my job too.',
     'The bakery\'s heat box trips the moment its flue chokes. Then Snuff blames me.',

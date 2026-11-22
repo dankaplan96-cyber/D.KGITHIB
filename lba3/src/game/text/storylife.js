@@ -42,7 +42,7 @@ Object.assign(STR.en, {
   rs_dg_clerk_0: "If you're not on my list, you're not here. Officially, you're not here.",
 
   // ---- the School of Magic (from chapter 4)
-  n_sc_master: 'Master Fennick', n_sc_pupa: 'Nisa', n_sc_pupb: 'Joss', n_sc_pupc: 'Rafi',
+  n_sc_master: 'Master Orbo', n_sc_pupa: 'Nisa', n_sc_pupb: 'Joss', n_sc_pupc: 'Rafi',
   n_sc_in1: 'Lila', n_sc_in2: 'Teb', n_sc_in3: 'Oona',
 
   rs_sc_master_0: "Magic is mostly patience. The rest is not setting your sleeve on fire.",
@@ -113,7 +113,7 @@ Object.assign(STR.en, {
   rs_dg_mech_1: "If the drones hum funny, call me. If they hum normally, also call me. They hum a lot.",
   rs_dg_dig_1: "Twelve years ago this was a temple park. Now it's a hole with a fence round it.",
   rs_dg_clerk_1: "Stamps, signatures, crates. The desert doesn't care, but the office does.",
-  rs_sc_pupa_1: "Master Fennick says I'm a natural. A natural what, he didn't say.",
+  rs_sc_pupa_1: "Master Orbo says I'm a natural. A natural what, he didn't say.",
   rs_sc_pupb_1: "Don't step on the sage. It sulks for a week.",
   rs_sc_in2_1: "Rector Hougo has eyes in the back of his hat. I'm sure of it.",
   rs_lh_bero_0: "Lhar's had worse winters. Never a warmer one, though. That's the strange part.",

@@ -191,7 +191,7 @@ Object.assign(STR.en, {
   ro_network_5: "Pippa sold fruit in the tunnels. That proves nothing.",
   ro_deep_0: "No word from Twinsen today.",
   ro_deep_1: "Zoé says no word is good word.",
-  ro_deep_2: "Warm water, still ground. I don't trust it.",
+  ro_deep_2: "Warm water, warm posts. I don't trust it.",   // (PLOT-CONSISTENCY: the ground still knocks until the shield; quiet only from the epilogue, ro_home_0)
   ro_deep_3: "You don't trust a sunny day either.",
   ro_deep_4: "If he's back for dinner, I'm baking.",
   ro_deep_5: "You said that last time. I baked.",

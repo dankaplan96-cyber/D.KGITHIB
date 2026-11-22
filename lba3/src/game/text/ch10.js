@@ -11,7 +11,7 @@ Object.assign(STR.en, {
 
   c10_narr: "Baldino's workshop, hours later. Every bench is covered in wire.",
   c10_narr_exp: "Baldino's workshop again. Every bench is covered in wire.",   // (EXP-1: after chapter 10 "Borrowed Time" of the expanded campaign)
-  c10_bal_1: "Five stations, five friends, one minute. The mains under Citadel, the lighthouse, my mill on Zeelich, the bore on Desert Island, and Sefa's dome.",
+  c10_bal_1: "Five stations, five friends, one minute. The mains under Citadel, the lighthouse, Oku's old mill on Zeelich, the bore on Desert Island, and Sefa's dome.",
   c10_bal_2: "My relays hook into each station's old machine and talk through it. When all five talk at once, the shaft's blast doors hear them too.",
   c10_bal_3: 'Each one runs on what its station has: water, wind, steam, light. Together they hold the signal for one minute, so every station needs a friend standing by it.',
   c10_tw_b1: "Then we need friends at five stations, and a way to reach them all.",
@@ -38,6 +38,8 @@ Object.assign(STR.en, {
 
   // Citadel: Mira's valves
   c10_mira_1: "You still have my key. Good. The valve room is under this floor. The mains run to the fortress, the depot and the lighthouse: the oldest pipes on the island, and still the best.",
+  // (PLOT-CONSISTENCY: where chapter 10 "Borrowed Time" was played, she took him down there already: og_room)
+  c10_mira_1x: "The valve room again. The mains run to the fortress, the depot and the lighthouse: the oldest pipes on the island, and still the best.",
   c10_mira_2: "The relay needs pressure, two marks on every gauge. Each valve feeds two of the mains. Except the fourth. That one's FunFrock's own, and it only floods the fortress. Come down, I'll show you.",
   c10_valves_in: 'FunFrock\'s valve room. Four wheels, three gauges. Mira watches from the stairs with her arms folded.',
   c10_valve_hint: '(Each gauge should rest on the green mark: two.)',

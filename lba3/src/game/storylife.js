@@ -247,7 +247,7 @@ const village = (trip) => (f, S) => {
 // (HAMALAYI-LIFE: from chapter 8, the vent open and the ground still, the village still lives in the camp ('mend': the
 //  camp's rounds, its own lines) but some go down by day to mend Lhar: Bero, Sana and Lhamo are in their houses then, and
 //  Old Dorje in his once Lhar is home again (story/hamlife.js places them indoors); out here they are not there then)
-const MEND = new Set(['evacuation', 'council', 'network', 'shell', 'core']);
+const MEND = new Set(['evacuation', 'council', 'throttle', 'ballastra', 'balances', 'survey', 'network', 'shell', 'core']);   // (PLOT-CONSISTENCY: with the expanded campaign's 10-13, as story/hamlife.js LATE)
 const homeAt = (phase, inside) => (f, S) => { const k = phase(f, S); return k === inside ? null : k; };
 const HAMALAYI_PEOPLE = [
   // Bero: sacks out of house 3 to the hand cart, the sledge's load lashed; up there, logs split and carried to the fire

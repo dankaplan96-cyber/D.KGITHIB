@@ -156,6 +156,11 @@ Object.assign(STR.en, {
   idle_gilbert_pass: "I've packed one bag. Not because of any list. Because Mira keeps asking if I have.",
   idle_gilbert_observatory: "My well water's still hot and my refund's still cold. Some things the project fixes.",
   idle_gilbert_council: "They say you're off to argue with Zeelich's council. Tell them about my bill while you're there.",
+  // (PLOT-CONSISTENCY: the expanded campaign's chapters 11-13, Gilbert in the fortress shelter with the B-7 he holds since
+  //  chapter 10; before, "Hello, Twinsen.")
+  idle_gilbert_ballastra: 'Nobody touches that lever but me. I only let go to say hello.',
+  idle_gilbert_balances: "Mira checks my lever twice a day. It hasn't moved. Neither have I, much.",
+  idle_gilbert_survey: 'Sixty-one people, and every one of them gets a wash. My lever did that.',
   idle_gilbert_network: "Mira's down in FunFrock's old valve room giving orders. She was giving orders when she was a clerk.",
   idle_mira_dig: "Since the broadcast, people come in asking which zone they live in. This is the water office. I tell them: zone wet.",
   idle_mira_steam: "I've written to the project three times about the pump room. They answered once, about my stationery.",

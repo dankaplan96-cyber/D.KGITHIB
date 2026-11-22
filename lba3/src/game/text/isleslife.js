@@ -107,6 +107,8 @@ Object.assign(STR.en, {
   ip_kn_fisher_after_dark: 'Warm harbour office, and the skiff still leaks. The light is still dark. One out of three.',
   ip_ow_kid_after_dark: 'I looked for the Knartas light through the telescope. Still dark. Old Oumi says someone should fix it.',
   ip_ot_boss_after_dark: "You bought the lens, didn't you? Then fit it. Quill's quay is still dark.",
+  // (PLOT-CONSISTENCY: his chapters-4-7 line, "when they sell, I'll be first in line", once he has sold Twinsen the lens)
+  ip_ot_boss_ord_sold: "The project's spare stores sold, every last bolt. You got the best of them.",
   ip_ot_guest_after_dark: "My cousins say the shuttles still cut low over the meadows. The hives are cross. Bzz.",
   ip_ld_load2_after_dark: 'The shuttles still cut low over the meadows. My cousins are not sleeping. Bzz.',
   ip_or_carter_after_dark: 'Crates to the shuttle. The shuttles still come in low. I duck. Bzz.',

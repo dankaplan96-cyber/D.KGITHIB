@@ -27,7 +27,9 @@ import { LAST } from '../storylife.js';
 import { canvasTex, MAT, plane } from '../props.js';
 import '../text/hamlife.js';
 
-const LATE = new Set(['evacuation', 'council', 'network', 'shell', 'core']);
+// (PLOT-CONSISTENCY: the expanded campaign's chapters 10-13 come between the council and the network: Lhar goes on mending,
+//  it does not move back into the camp)
+const LATE = new Set(['evacuation', 'council', 'throttle', 'ballastra', 'balances', 'survey', 'network', 'shell', 'core']);
 const HOUSE = { lhar0: 'lhamo', lhar1: 'yorna', lhar2: 'dorje', lhar3: 'bero', lhar4: 'sana' };
 const TRIP = { lhar0: 'c6_trip1', lhar1: 'c6_trip2', lhar2: LAST, lhar3: 'c6_trip1', lhar4: 'c6_trip1' };   // (lhar2: Old Dorje's, up with the last of Lhar: storylife.js LAST)
 // the indoor selves: their room, when they are home, their outdoor self (storylife.js: dress and tint)

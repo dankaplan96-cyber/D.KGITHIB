@@ -63,7 +63,7 @@ Object.assign(STR.en, {
   cn_cut_kell: "Power's gone! Brake! Everybody out from under it!",
   cn_cut_brel: '...Nothing. Not a drop. The project valve shuts when the line drops. Safe, they told us.',
   cn_vesk_1: "Twinsen. I see the line has dropped. So has Mill Lane's. I wrote it on your door.",
-  cn_vesk_2: "And the ground goes on knocking, as it has for a week. Now the council knows what I knew. Stop wasting my drill.",
+  cn_vesk_2: "And the ground goes on knocking, as it has for weeks. Now the council knows what I knew. Stop wasting my drill.",
   cn_tw_vesk: "You knew both, and you cut one out of the log.",
   cn_bal_stop2: "He's right about one thing. The stop only reached the drill. It keeps the cracks from growing, but it doesn't close them. The bore's own switch is at the bottom of the shaft, behind blast doors that open to a code from every station at once.",
   // (P83 / S-3: the three days Vesk gave in chapter 8 are on hold while the drill is)

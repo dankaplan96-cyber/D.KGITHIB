@@ -276,7 +276,7 @@ await ev(() => { const G = game; Object.assign(G.flags, { chapter: 16, chapterKe
 for (let k = 0; k < 120; k++) { const st = await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); } return G.state; }); if (st === 'ending') break; await page.waitForTimeout(50); }
 const ep = await ev(() => ({ state: game.state, said: window.__said.slice(), room: game.room?.id, epbl: !!game.flags.ep_bl, heroShown: game.hero.rig.root.visible, card: document.querySelector('#ending p')?.textContent || '' }));
 console.log('the epilogue:', JSON.stringify(ep).slice(0, 1500));
-check('after the dinner and before the end card: the Cradle Hall four days on (who is awake, who waits by choice, who decides), then the end card at home', ep.state === 'ending' && ep.epbl && ep.said.some((l) => /Eleven of us awake/.test(l)) && ep.said.some((l) => /That was ours to say/.test(l)) && ep.room === 'house' && ep.heroShown, ep);
+check('after the dinner and before the end card: the Cradle Hall four days on (who is awake, who waits by choice, who decides), then the end card at home', ep.state === 'ending' && ep.epbl && ep.said.some((l) => /Three of us awake/.test(l)) && ep.said.some((l) => /That was ours to say/.test(l)) && ep.room === 'house' && ep.heroShown, ep);
 check("the end card names Ballastra too (its lower row home, a sleeper wakes when the family asks), with Kesh and Lhar and Vesk's line", /Ballastra the lower row is home/.test(ep.card) && /Kesh has its oasis/.test(ep.card) && /Vesk waits/.test(ep.card) && !/[{]/.test(ep.card), ep.card);
 
 // ---------------------------------------------------------------- a legacy base-campaign save: the original ending
@@ -298,7 +298,7 @@ const L = await ev((F) => {
 }, BASE);
 console.log('legacy exp_base:', JSON.stringify(L).slice(0, 1200));
 check('a legacy exp_base save: no expansion chapters in its campaign, the network numbered 10, no B-8', !L.order.includes('balances') && !L.order.includes('survey') && L.n === 10 && !L.b8on && !L.b8has, L);
-check('…and its epilogue reaches the original end card with no Cradle Hall and no expansion flags', L.state === 'ending' && L.room === 'house' && !L.said.some((l) => /Eleven of us awake/.test(l)) && L.exp3.length === 0, { state: L.state, said: L.said, exp3: L.exp3 });
+check('…and its epilogue reaches the original end card with no Cradle Hall and no expansion flags', L.state === 'ending' && L.room === 'house' && !L.said.some((l) => /of us awake now/.test(l)) && L.exp3.length === 0, { state: L.state, said: L.said, exp3: L.exp3 });
 check('…its end card is the original (Kesh and Lhar, no Ballastra), and no B-8 box on any relay', /Kesh has its oasis/.test(L.card) && !/Ballastra/.test(L.card) && L.boxes === 0, { card: L.card, boxes: L.boxes });
 
 console.log(`bot game time, chapter 11's last talk to chapter 14's first station: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor, not a first-play estimate)`);

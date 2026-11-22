@@ -76,7 +76,7 @@ Object.assign(STR.en, {
   th_zoe_r2: "By the door, this time. The council opened the project's records to the evacuation committee. That's me.",
 
   // ---- Zoé in the project office
-  th_guard_1: "Evacuation committee, is it? The last visitor I had in here said she was looking for the washroom.",
+  th_guard_1: "Evacuation committee, is it? Last time Vesk's plan walked out of this room, I never saw who carried it.",
   th_zoe_g1: "Council's order. The project's records are open to the evacuation committee.",
   th_guard_2: "The records, fine. The crates are Vesk's.",
   th_zoe_g2: "We'll see.",

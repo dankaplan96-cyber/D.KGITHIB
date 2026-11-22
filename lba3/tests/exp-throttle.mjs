@@ -116,7 +116,7 @@ const s3 = await timed(() => {
 });
 console.log('the shelter → Zoé:', JSON.stringify(s3));
 check("Gilbert thanks him and Oren; the washroom stays shut; Zoé on the relay knows Balance Works from the project's register", s3.og[5] && s3.said.some((l) => /Oren, if you can hear this/.test(l)) && s3.said.some((l) => /delivery register/.test(l)), s3.said);
-check('played as Zoé in the project office; the guard who never saw her; the objective is the register', s3.body === 'zoe' && s3.room === 'projoffice' && s3.th.zoeGo && s3.said.some((l) => /looking for the washroom/.test(l)) && /register/.test(s3.obj), { body: s3.body, room: s3.room, obj: s3.obj });
+check('played as Zoé in the project office; the guard who never saw her; the objective is the register', s3.body === 'zoe' && s3.room === 'projoffice' && s3.th.zoeGo && s3.said.some((l) => /never saw who carried it/.test(l)) && /register/.test(s3.obj), { body: s3.body, room: s3.room, obj: s3.obj });
 
 const z1 = await timed(() => {
   const ch = T.th(), reg = ch.officeAt([-5.55, -3.3]);

@@ -291,7 +291,9 @@ export class ZeelichLife extends ChapterBase {
   // ---------------------------------------------------------------- people (asked before the chapter)
   talkFirst(npc) {
     if (!this.open || (!this.here() && !ZHOMES.includes(this.game.room?.id))) return false;
-    const g = this.game, f = this.f, id = npc.def.id, ph = this.phase();
+    // (PLOT-CONSISTENCY: as ferry.js and yearslate.js, the chapters inside the shell talk as the network's: 'late''s quiet
+    //  ground only once it is over, in the epilogue. Nara's and Oku's own turn below still asks the phase itself)
+    const g = this.game, f = this.f, id = npc.def.id, ph0 = this.phase(), ph = ph0 === 'late' && this.story.cur?.key !== 'home' ? 'network' : ph0;
     const c = (lines, done) => { this.chain(lines.filter(Boolean), done); return true; };
     // one of a list, a different one each time
     const pick = (key) => { const a = t(key); return Array.isArray(a) ? a[(f['zl_n_' + key] = ((f['zl_n_' + key] ?? -1) + 1) % a.length)] : a; };
@@ -334,9 +336,9 @@ export class ZeelichLife extends ChapterBase {
       case 'ztri2': return f.zl_done ? one('ztri2', 'zl_tavo_done') : false;   // Tavo (his idle lines until then)
       // Nara and Oku when no chapter needs them (chapters 4–8 and after the network; after the ending they have their
       // own word about it: story/epilogue.js EPILOGUE-HOME)
-      case 'nara': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('nara', 'zl_nara') : false;
+      case 'nara': return (ph0 === 'mid' || ph0 === 'late') && this.story.cur?.key !== 'home' ? one('nara', 'zl_nara') : false;
       // (MILLS: Oku remembers whether the brakes came off the same day: chapter2.js millsBack)
-      case 'oku': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('oku', this.story.chapters[this.idx('zeelich')]?.millsBack?.() ? 'zl_oku_back' : 'zl_oku') : false;
+      case 'oku': return (ph0 === 'mid' || ph0 === 'late') && this.story.cur?.key !== 'home' ? one('oku', this.story.chapters[this.idx('zeelich')]?.millsBack?.() ? 'zl_oku_back' : 'zl_oku') : false;
     }
     return false;
   }
