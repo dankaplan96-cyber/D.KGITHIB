@@ -25,7 +25,7 @@ import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
 import { ASYLUM_DOOR, climbPaveDist, climbClear, climbDropRock, climbShelfRows, climbRampFill, CLIMB_RAMP, CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT, CLIMB_FOOT_Y } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear } from './flattown.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear } from './citadel-layout.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)

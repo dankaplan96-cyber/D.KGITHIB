@@ -39,7 +39,7 @@ import { Batch, tm, pm, bbox, cyl } from './kit.js';
 import { DESERT, coastDist, trackDist } from './desert.js';
 import { routeDist, keshClear } from './keshlife.js';
 import { zlClear } from './zeelife.js';
-import { flatKeep } from './flattown.js';
+import { flatKeep } from './citadel-layout.js';
 
 const ANY = ['money', 'life', 'magic'];   // the original's Info0 112 (16 money + 32 life + 64 magic)
 // Citadel, in our frame (the original's place + world.js LAYOUT); n is the original's Info1 (a coin worth n kashes)
