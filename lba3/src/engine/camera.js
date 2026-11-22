@@ -300,6 +300,33 @@ const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.
 //     under the shot from its own view of the frame before, and is exactly that view again once the talk is over.
 const FV_WAIST = -0.85, FV_FG_DY = [0, -0.6, FV_WAIST, -1.1];   // (FACE-3: _fgClutter's lines, under the face's middle a unit of scale; the waist's for the props alone)
 const FV_PROP_NEAR = 7, FV_PROP_R = 1.6, FV_PROP_MIN = 0.1, FV_PROP_PAD = 0.15, FV_PROP_MOVE = 1.5, FV_K_PROP = 4, FV_BOOTH_R = 2.5, FV_HATCH = 0.75, FV_HATCH_EDGE = 0.2, FV_HATCH_Q = [0.04, 0, 0.08], FV_HATCH_RISE = 0.1;
+// CAM-SIGNPOST (the yard's LIGHTHOUSE · SQUARE signpost, citydress.js: Twinsen's line framed behind its LIGHTHOUSE arrow,
+// he showed only as the see-through silhouette; captures/twinsen-zoe-look/sheets/game-talk.jpg). The dressing's signposts,
+// notice boards and lamps are merged into one mesh a 40-64 m cell (citydress.js Kit + mergeStatic; island.js's signposts a
+// 24 m cell), far over FV_PROP_R, and their collider is the post alone (0.2 m round): neither FACE-3's props nor the
+// colliders knew the boards. Now round each thin post near the talk — a collider of type cyl, at most FV_POST_RMAX m
+// round, standing FV_POST_H m over the terrain, no tree (no `sight`) — what is drawn in the merged meshes (over FV_PROP_R)
+// within FV_POST_R m of its axis, from FV_POST_DN m under its top to FV_POST_UP over it, is a prop too: its triangles
+// sampled every FV_VOX_STEP m into cells of FV_VOX m, each marked with its neighbours (≈ FV_PROP_PAD) — none with an edge
+// over FV_VOX_EDGE m, none whose middle is in something solid (_solidAt, FV_PROP_PAD: a wall, a house's stones, a pot, the
+// ground), which the colliders, the volumes and the terrain already answer for. Read once a post (the dressing is
+// static: _postVox), asked with the other props: the shot search's foreground lines (the waist's, FV_WAIST, included)
+// and its line to the speaker's face; and a listener in the frame whose face is behind a prop (its own box or cells,
+// unpadded) costs CH_TALK_K_PART.
+const FV_POST_RMAX = 0.3, FV_POST_H = [1.5, 4.5], FV_POST_R = 1.3, FV_POST_DN = 1.4, FV_POST_UP = 0.4, FV_VOX = 0.1, FV_VOX_STEP = 0.07, FV_VOX_EDGE = 1.8;
+// CAM-SIGNPOST: a grid of cells (x fastest, then z, then y: n = [nx, ny, nz]) grown by one cell along each axis in turn
+// (the 27 round each marked cell)
+function dilate(v, n) {
+  const [nx, ny, nz] = n, t = new Uint8Array(v.length);
+  for (const [st, len] of [[1, nx], [nx, nz], [nx * nz, ny]]) {
+    t.set(v);
+    for (let i = 0; i < v.length; i++) {
+      if (t[i]) continue;
+      const p = Math.floor(i / st) % len;
+      if ((p > 0 && t[i - st]) || (p < len - 1 && t[i + st])) v[i] = 1;
+    }
+  }
+}
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -343,7 +370,8 @@ function outside(c, x, z) {
 //  queries a step: the largest garbage of the camera's clearance)
 let _stamp = 0;
 const _tall = [];   // (_keepOut's colliders too tall to rise over)
-const _cells = [], NO_SKIP = new Set(), NONE_V = [], _near3 = [];
+const _cells = [], NO_SKIP = new Set(), NONE_V = [], _near3 = [], _inF = [];
+const _postVox = new WeakMap();   // (CAM-SIGNPOST: a post's collider → its boards' cells, or null: _postProps)
 // G1-CAM (cost): the scenery volumes by camera.js's own grid of VG m cells (numeric keys; occlude.js's near() builds a
 // string key at every call, ~70 ns, and the Follow camera's sight lines read it at hundreds of samples a frame). Volumes
 // are added once and never move, so the grid is built again only when the list grows. Any volume whose footprint holds
@@ -2026,31 +2054,115 @@ export class CameraRig {
     const S = this.tk;
     if (!this.propsNear) return NONE_V;
     if (S?.props && Math.hypot(S.props.x - x, S.props.z - z) < FV_PROP_MOVE) return S.props.list;
-    const list = [];
-    for (const o of this.propsNear(x, z, FV_PROP_NEAR, FV_PROP_R, FV_PROP_MIN)) {
+    const list = [], posts = this._posts(x, z), big = [], todo = posts.filter((c) => !_postVox.has(c));
+    // (CAM-SIGNPOST: with posts near not read yet, one walk of the scene for the props and for the merged meshes round them)
+    for (const o of todo.length ? this.propsNear(x, z, FV_PROP_NEAR + 2 * FV_POST_R, Infinity, FV_PROP_MIN) : this.propsNear(x, z, FV_PROP_NEAR, FV_PROP_R, FV_PROP_MIN)) {
       const g = o.geometry;
       if (!g.boundingBox) g.computeBoundingBox();
       if (!g.boundingSphere) g.computeBoundingSphere();
       o.getWorldScale(_f3);
-      const sx = Math.abs(_f3.x) || 1, sy = Math.abs(_f3.y) || 1, sz = Math.abs(_f3.z) || 1, box = g.boundingBox.clone();
+      const sx = Math.abs(_f3.x) || 1, sy = Math.abs(_f3.y) || 1, sz = Math.abs(_f3.z) || 1, R = g.boundingSphere.radius * Math.max(sx, sy, sz), c = g.boundingSphere.center.clone().applyMatrix4(o.matrixWorld);
+      if (R > FV_PROP_R) { big.push(o); continue; }
+      if (Math.hypot(c.x - x, c.z - z) >= FV_PROP_NEAR + R) continue;
+      const box = g.boundingBox.clone();
       box.min.x -= FV_PROP_PAD / sx; box.min.y -= FV_PROP_PAD / sy; box.min.z -= FV_PROP_PAD / sz;
       box.max.x += FV_PROP_PAD / sx; box.max.y += FV_PROP_PAD / sy; box.max.z += FV_PROP_PAD / sz;
-      list.push({ inv: o.matrixWorld.clone().invert(), box, raw: g.boundingBox, c: g.boundingSphere.center.clone().applyMatrix4(o.matrixWorld), r: g.boundingSphere.radius * Math.max(sx, sy, sz) });
+      list.push({ inv: o.matrixWorld.clone().invert(), box, raw: g.boundingBox, c, r: R });
     }
+    if (todo.length) this._postProps(todo, big);   // (CAM-SIGNPOST: read once a post, kept: _postVox)
+    for (const c of posts) { const q = _postVox.get(c); if (q) list.push(q); }
     if (S) S.props = { x, z, list };
     return list;
   }
-  _inProp(q, x, y, z) {
+  // CAM-SIGNPOST: the thin posts near (x, z) (see FV_POST_*)
+  _posts(x, z) {
+    const P = this.physics, T = this.terrain, out = [];
+    if (!P || !T) return out;
+    for (const c of P.colliders) {
+      if (c.type !== 'cyl' || !c.enabled || c.sight || c.r > FV_POST_RMAX || Math.hypot(c.x - x, c.z - z) > FV_PROP_NEAR + FV_POST_R) continue;
+      const h = c.top - T.heightAt(c.x, c.z);
+      if (h >= FV_POST_H[0] && h <= FV_POST_H[1]) out.push(c);
+    }
+    return out;
+  }
+  // CAM-SIGNPOST: what the merged meshes `big` draw round each post (its boards): a grid of FV_VOX m cells round the
+  // post's upper part → { vox, o: its corner, n: its cells along x, y, z, c, r, post }, or null, kept in _postVox (the
+  // dressing is static: a post is read once)
+  _postProps(posts, big) {
+    const R = FV_POST_R + FV_VOX, Z = posts.map((c) => {
+      const y0 = c.top - FV_POST_DN - FV_VOX, y1 = c.top + FV_POST_UP + FV_VOX, n = Math.ceil((2 * R) / FV_VOX) + 1, ny = Math.ceil((y1 - y0) / FV_VOX) + 1;
+      return { c, y0, y1, o: [c.x - R, y0, c.z - R], n: [n, ny, n], vox: new Uint8Array(n * ny * n), mn: [Infinity, Infinity, Infinity], mx: [-Infinity, -Infinity, -Infinity], k: 0 };
+    });
+    // (a sample inside a zone marks its cell; the cells round each marked one are marked at the end, dilate)
+    const mark = (z, px, py, pz) => {
+      if (py < z.y0 + FV_VOX || py > z.y1 - FV_VOX || (px - z.c.x) ** 2 + (pz - z.c.z) ** 2 > FV_POST_R * FV_POST_R) return;
+      const n = z.n, ix = Math.floor((px - z.o[0]) / FV_VOX), iy = Math.floor((py - z.o[1]) / FV_VOX), iz = Math.floor((pz - z.o[2]) / FV_VOX);
+      z.vox[(iy * n[2] + iz) * n[0] + ix] = 1;
+      if (px < z.mn[0]) z.mn[0] = px; if (py < z.mn[1]) z.mn[1] = py; if (pz < z.mn[2]) z.mn[2] = pz;
+      if (px > z.mx[0]) z.mx[0] = px; if (py > z.mx[1]) z.mx[1] = py; if (pz > z.mx[2]) z.mx[2] = pz;
+      z.k++;
+    };
+    const wc = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3(), d = new THREE.Vector3(), cen = new THREE.Vector3(), inv = new THREE.Matrix4(), on = [], hit = [];
+    for (const o of big) {
+      const g = o.geometry, pos = g.attributes.position;
+      if (!pos || pos.itemSize !== 3) continue;
+      o.getWorldScale(wc); const rr = g.boundingSphere.radius * Math.max(Math.abs(wc.x), Math.abs(wc.y), Math.abs(wc.z));
+      wc.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
+      on.length = 0;
+      for (const z of Z) if (Math.hypot(wc.x - z.c.x, wc.z - z.c.z) <= rr + R && wc.y - rr <= z.y1 && wc.y + rr >= z.y0) on.push(z);
+      if (!on.length) continue;
+      // (the zones' box in the mesh's own space: a triangle whose box is outside it is passed at once)
+      inv.copy(o.matrixWorld).invert();
+      let lx = Infinity, ly = Infinity, lz = Infinity, hx = -Infinity, hy = -Infinity, hz = -Infinity;
+      for (const z of on) for (let q = 0; q < 8; q++) {
+        a.set(q & 1 ? z.c.x + R : z.c.x - R, q & 2 ? z.y1 : z.y0, q & 4 ? z.c.z + R : z.c.z - R).applyMatrix4(inv);
+        if (a.x < lx) lx = a.x; if (a.y < ly) ly = a.y; if (a.z < lz) lz = a.z; if (a.x > hx) hx = a.x; if (a.y > hy) hy = a.y; if (a.z > hz) hz = a.z;
+      }
+      { if (!g.boundingBox) g.computeBoundingBox(); const B = g.boundingBox; if (B.max.x < lx || B.min.x > hx || B.max.y < ly || B.min.y > hy || B.max.z < lz || B.min.z > hz) continue; }   // (its own box outside the zones')
+      const idx = g.index, n = idx ? idx.count : pos.count, M = o.matrixWorld, il = !!pos.isInterleavedBufferAttribute;
+      const A = il ? null : pos.array, I = idx ? idx.array : null;
+      for (let t = 0; t + 2 < n; t += 3) {
+        const i0 = I ? I[t] : t, i1 = I ? I[t + 1] : t + 1, i2 = I ? I[t + 2] : t + 2;
+        const x0 = il ? pos.getX(i0) : A[i0 * 3], x1 = il ? pos.getX(i1) : A[i1 * 3], x2 = il ? pos.getX(i2) : A[i2 * 3];
+        if ((x0 > x1 ? (x0 > x2 ? x0 : x2) : x1 > x2 ? x1 : x2) < lx || (x0 < x1 ? (x0 < x2 ? x0 : x2) : x1 < x2 ? x1 : x2) > hx) continue;
+        const z0 = il ? pos.getZ(i0) : A[i0 * 3 + 2], z1 = il ? pos.getZ(i1) : A[i1 * 3 + 2], z2 = il ? pos.getZ(i2) : A[i2 * 3 + 2];
+        if ((z0 > z1 ? (z0 > z2 ? z0 : z2) : z1 > z2 ? z1 : z2) < lz || (z0 < z1 ? (z0 < z2 ? z0 : z2) : z1 < z2 ? z1 : z2) > hz) continue;
+        const v0 = il ? pos.getY(i0) : A[i0 * 3 + 1], v1 = il ? pos.getY(i1) : A[i1 * 3 + 1], v2 = il ? pos.getY(i2) : A[i2 * 3 + 1];
+        if (Math.max(v0, v1, v2) < ly || Math.min(v0, v1, v2) > hy) continue;
+        a.set(x0, v0, z0).applyMatrix4(M); b.set(x1, v1, z1).applyMatrix4(M); d.set(x2, v2, z2).applyMatrix4(M);
+        // (the zones whose box, in the world, the triangle's box meets)
+        hit.length = 0;
+        for (const z of on) if (!(Math.max(a.y, b.y, d.y) < z.y0 || Math.min(a.y, b.y, d.y) > z.y1 || Math.max(a.x, b.x, d.x) < z.c.x - R || Math.min(a.x, b.x, d.x) > z.c.x + R || Math.max(a.z, b.z, d.z) < z.c.z - R || Math.min(a.z, b.z, d.z) > z.c.z + R)) hit.push(z);
+        if (!hit.length) continue;
+        const e = Math.max(a.distanceTo(b), b.distanceTo(d), d.distanceTo(a));
+        if (e > FV_VOX_EDGE || this._solidAt(cen.set((a.x + b.x + d.x) / 3, (a.y + b.y + d.y) / 3, (a.z + b.z + d.z) / 3), FV_PROP_PAD)) continue;   // (a wall, a house, a pot: the colliders, the volumes and the terrain answer for what is in them)
+        const m = Math.max(1, Math.ceil(e / FV_VOX_STEP));
+        for (const z of hit) {
+          for (let i = 0; i <= m; i++) for (let j = 0; j <= m - i; j++) {
+            const u = i / m, w = j / m;
+            mark(z, a.x + (b.x - a.x) * u + (d.x - a.x) * w, a.y + (b.y - a.y) * u + (d.y - a.y) * w, a.z + (b.z - a.z) * u + (d.z - a.z) * w);
+          }
+        }
+      }
+    }
+    for (const z of Z) if (!z.k) _postVox.set(z.c, null); else { const raw = z.vox.slice(); dilate(z.vox, z.n); _postVox.set(z.c, { vox: z.vox, raw, o: z.o, n: z.n, c: new THREE.Vector3((z.mn[0] + z.mx[0]) / 2, (z.mn[1] + z.mx[1]) / 2, (z.mn[2] + z.mx[2]) / 2), r: Math.hypot(z.mx[0] - z.mn[0], z.mx[1] - z.mn[1], z.mx[2] - z.mn[2]) / 2 + FV_VOX * 2, post: z.c }); }
+  }
+  // (`raw`: by the prop's own box or cells, unpadded)
+  _inProp(q, x, y, z, raw = false) {
     if ((q.c.x - x) ** 2 + (q.c.y - y) ** 2 + (q.c.z - z) ** 2 > (q.r + FV_PROP_PAD) ** 2) return false;
-    return q.box.containsPoint(_f3.set(x, y, z).applyMatrix4(q.inv));
+    if (q.vox) {   // (CAM-SIGNPOST: a post's boards, by their cells)
+      const ix = Math.floor((x - q.o[0]) / FV_VOX), iy = Math.floor((y - q.o[1]) / FV_VOX), iz = Math.floor((z - q.o[2]) / FV_VOX), n = q.n;
+      return ix >= 0 && iy >= 0 && iz >= 0 && ix < n[0] && iy < n[1] && iz < n[2] && (raw ? q.raw : q.vox)[(iy * n[2] + iz) * n[0] + ix] === 1;
+    }
+    return (raw ? q.raw : q.box).containsPoint(_f3.set(x, y, z).applyMatrix4(q.inv));
   }
   // FACE-3: is a prop over the line from p to the face f (from 0.3 m off the lens to 0.35 m short of the face)?
-  _propOver(p, f, props) {
+  _propOver(p, f, props, raw = false) {
     const tx = f.x - p.x, ty = f.y - p.y, tz = f.z - p.z, L = Math.hypot(tx, ty, tz);
     for (let i = 0; i < props.length; i++) {
       const q = props[i], cx = q.c.x - p.x, cy = q.c.y - p.y, cz = q.c.z - p.z, t = clamp((cx * tx + cy * ty + cz * tz) / (L * L), 0, 1);
       if (Math.hypot(cx - tx * t, cy - ty * t, cz - tz * t) > q.r + FV_PROP_PAD) continue;
-      for (let d = 0.3; d < L - 0.35; d += 0.12) { const k = d / L; if (this._inProp(q, p.x + tx * k, p.y + ty * k, p.z + tz * k)) return true; }
+      for (let d = 0.3; d < L - 0.35; d += 0.12) { const k = d / L; if (this._inProp(q, p.x + tx * k, p.y + ty * k, p.z + tz * k, raw)) return true; }
     }
     return false;
   }
@@ -2097,7 +2209,7 @@ export class CameraRig {
     const tv = Math.tan(((this.cam.fov || CH_FOV) * Math.PI) / 360), A = this.cam.aspect || 1.78, zT = (0.54 * fi.s) / (FV_HEAD * 2 * tv);
     // (FACE-3: the props round them — none whose own box, unpadded, holds one of their heads: a booth or an arch round
     // someone tells nothing —, and the booth the face may stand in, seen into near level: see FV_PROP_*, FV_BOOTH_R)
-    const heads = [fi, ...oi], props = this._fvProps(fi.x, fi.z).filter((q) => !heads.some((o) => q.raw.containsPoint(_f3.set(o.x, o.y, o.z).applyMatrix4(q.inv))));
+    const heads = [fi, ...oi], props = this._fvProps(fi.x, fi.z).filter((q) => q.vox || !heads.some((o) => q.raw.containsPoint(_f3.set(o.x, o.y, o.z).applyMatrix4(q.inv))));   // (CAM-SIGNPOST: a post's boards hold nobody)
     const booth = this._booth(fi), skip = booth?.c || null, QS = booth ? FV_HATCH_Q : FV_Q;
     const cands = [];
     for (const ang of FV_ANG) for (const k of FV_K) for (const q of QS) for (const sg of [1, -1]) for (const mx of FV_MIX) cands.push([ang, k, q, sg, Math.abs(ang - FV_ANG[0]) * 1.2 + Math.abs(Math.log(k)) * 3 + Math.abs(q - QS[0]) * 1.5 + (mx - FV_MIX[0]) * 0.5, mx]);
@@ -2119,6 +2231,7 @@ export class CameraRig {
       if (fd < 1 || Math.abs(fx) > 0.62 || fy - fr < -0.28 || fy + fr + (0.45 * fi.s) / (fd * tv) > 0.92) continue;
       // (nobody's head or shoulders over the speaker's face; the others' heads in the frame, or it costs)
       let hid = false, out = 0;
+      const inF = _inF; inF.length = 0;   // (CAM-SIGNPOST: the listeners whose heads are in the frame)
       for (const o of oi) {
         for (const [dy, rr] of [[0, 0.27], [-0.45, 0.33], [-0.85, 0.36]]) {
           const [ox, oy, od] = this._ndc(p, look, o.x, o.y + dy * o.s, o.z);
@@ -2126,14 +2239,16 @@ export class CameraRig {
         }
         if (hid) break;
         const [ox, oy, od] = this._ndc(p, look, o.x, o.y, o.z), orr = (0.27 * o.s) / (Math.max(od, 0.05) * tv), ow = orr / A;
-        if (od < 0.5 || Math.abs(ox) - ow > 1 || oy + orr < -0.45) out += 0.35;   // (out of the frame: a clean single)
-        else if (Math.abs(ox) > 0.9 || oy < -0.45) out += 0.9;   // (a sliver of a head at the frame's edge)
+        if (od < 0.5 || Math.abs(ox) - ow > 1 || oy + orr < -0.45) { out += 0.35; continue; }   // (out of the frame: a clean single)
+        inF.push(o);
+        if (Math.abs(ox) > 0.9 || oy < -0.45) out += 0.9;   // (a sliver of a head at the frame's edge)
         else if (Math.abs(ox) + ow > 0.97 || oy - orr > 0.95) out += 0.3;   // (over the shoulder: the head cut by the edge)
       }
       if (hid) continue;
       c += out;
       if (c >= bc || this._solidAt(p, CH_GAP) || !this._line(p, fi.x, fi.y, fi.z, true, true, -Infinity, skip) || !this._line(p, fi.x, fi.y - 0.5 * fi.s, fi.z, true, true, -Infinity, skip)) continue;
       if (props.length && this._propOver(p, fi, props)) continue;   // (FACE-3: a prop over the speaker's face)
+      if (props.length) for (const o of inF) if (c < bc && this._propOver(p, o, props, true)) c += CH_TALK_K_PART;   // (CAM-SIGNPOST: and over a listener's in the frame, unpadded: a board's padded edge a few cm under his head, as the yard's Bug St. sign under the shot over his shoulder, is the foreground lines' matter)
       for (const o of oth) if (c < bc && !this._sees(p, o, true)) c += CH_TALK_K_PART * 0.5;
       if (c < bc) c += this._fgClutter(p, [fi, ...oi], props, skip) * FV_K_FG;
       if (c < bc) c += this._crowdIn(p, look, all, crowd) * CH_TALK_K_PART;
