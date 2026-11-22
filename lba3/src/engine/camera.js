@@ -83,6 +83,7 @@ const SWING_V = (60 * Math.PI) / 180, SWING_A = (90 * Math.PI) / 180;   // the v
 // where it stands (a house's roof line grazing the view no longer rocks it up and down); up it goes RISE_PAD over the
 // need, so the next step behind the same roof doesn't start it again; down more gently than up (RISE_V_DOWN)
 const MAX_PITCH = 1.4, RISE_V = (50 * Math.PI) / 180, RISE_V_DOWN = (22 * Math.PI) / 180, RISE_A = 1.5, RISE_HOLD = 2.0, RISE_PAD = 0.03, RISE_BAND = 0.07;
+const RISE_AM = 4;   // (CAM-LURCH: the most the rise's tilt accelerates the camera itself, m/s², see _lba)
 // CAM-2: a steep view (BUILD109_REVIEW §6: "the steep overhead camera makes Twinsen hard to read"). Right beside a house
 // with the view on its far side, LBA2's rise needs up to 80° — looking straight down on him, and back down again a few
 // steps on. The rise stops at STEEP; if more is needed for STEEP_T s, the view turns round instead, by the least
@@ -307,6 +308,7 @@ const CLEAR_R = 1.6, CLEAR_IN = 0.45, CLEAR_TOP = 0.5, LIFT_MAX = 4, HARD = 0.25
 // own look-ahead, so it starts before the wall and slows into it as it slows out of it. The look-at point's own lead stops
 // short of a face (CLIFF_R_F off it) too: it would stand in the rock the view is lifted from.
 const CLIFF_CAP = 3, CLIFF_R = 2.2, CLIFF_R_F = 1.2, CLIFF_P = 1.5, CLIFF_A = 5.5, CLIFF_STEP = 0.1, CLIFF_K_V = 0.4, CLIFF_K_A = 0.3;
+const CLIFF_K_M = 4, CLIFF_K_H = 0.02;   // (CAM-LURCH: the most the swing accelerates the camera itself, m/s²; the step its path is read with: _lba)
 const FACE_DIRS = Array.from({ length: 12 }, (_, i) => [Math.sin((i * Math.PI) / 6), Math.cos((i * Math.PI) / 6)]);
 const RING = [0.4, 0.8, 1.2, 1.6].flatMap((r) => Array.from({ length: 12 }, (_, i) => [r, Math.sin((i * Math.PI) / 6) * r, Math.cos((i * Math.PI) / 6) * r]));
 const CORNERS = [[-CLEAR_R, -CLEAR_R], [CLEAR_R, -CLEAR_R], [-CLEAR_R, CLEAR_R], [CLEAR_R, CLEAR_R]];
@@ -643,16 +645,29 @@ export class CameraRig {
       let goal = need > v.pitch + 1e-3 ? Math.min(MAX_PITCH, need + RISE_PAD) : v.pitch;
       if (!L.noSide && !L.userHold) goal = Math.min(goal, STEEP);
       if (need > L.risePitch - 1e-4 || goal < L.risePitch - RISE_BAND || (goal === v.pitch && goal < L.risePitch)) L.risePitch = goal;
-      const d = L.risePitch - this.pitch, wantV = clamp(d * 2.2, -RISE_V_DOWN, RISE_V), a = RISE_A * dt;
+      // (CAM-LURCH: the tilt's ease is bounded by what it does at the lens — RISE_AM m/s² there, at the arm's length —, and
+      // it slows down in time to stop on its goal: at RISE_A alone the rise started and stopped at 1.5 rad/s² × 15.7 m =
+      // 23.6 m/s², the controls route's lurches over its 12 m/s² budget, on open ground and at Hamalayi's wall)
+      const aR = Math.min(RISE_A, RISE_AM / Math.max(this.dist, 1)), d = L.risePitch - this.pitch;
+      const wantV = Math.sign(d) * Math.min(d > 0 ? RISE_V : RISE_V_DOWN, Math.abs(d) * 2.2, Math.sqrt(1.6 * aR * Math.abs(d))), a = aR * dt;
       L.riseV += clamp(wantV - L.riseV, -a, a);
-      if (Math.abs(d) < 1e-3 && Math.abs(L.riseV) < 1e-3) { this.pitch = L.risePitch; L.riseV = 0; } else this.pitch += L.riseV * dt;
+      if (Math.abs(d) < 2e-5 && Math.abs(L.riseV) < 1e-3) { this.pitch = L.risePitch; L.riseV = 0; } else this.pitch += L.riseV * dt;   // (CAM-LURCH: landing on it from 1e-3 rad moved the lens up to 1.6 cm in a frame from rest: 25-57 m/s²)
     }
     const cp = Math.cos(this.pitch), sn = Math.sin(this.pitch);
     // (ROCK FACES: how far the view is swung up over the look-at point, k; the look-ahead follows the look-at point down its own way)
     {
       const K = L.cp, vf = L.fpv ? [(F.x - L.fpv.x) / dt, (F.y - L.fpv.y) / dt, (F.z - L.fpv.z) / dt] : [0, 0, 0], ks = [this._cliffK(F.x, F.y, F.z, L.yaw, this.pitch, this.dist)];
       if (Math.hypot(vf[0], vf[2]) > 0.5 && Math.hypot(vf[0], vf[2]) < 60) for (const T of LIFT_AHEAD) ks.push(this._cliffK(F.x + vf[0] * T, F.y + vf[1] * T, F.z + vf[2] * T, L.yaw, this.pitch, this.dist));
-      this._ease(K, Math.max(...ks), dt, CLIFF_K_V, CLIFF_K_A);
+      // (CAM-LURCH: bounded by what the swing does at the lens — the arm drawn in by 10 m over 0.7 of k, then tipped up —:
+      // its speed by the path's bend here, its ease by the path's length per unit k, both to CLIFF_K_M m/s²; at the walk to
+      // Hamalayi's wall CLIFF_K_A alone moved the camera at up to 22 m/s², the controls route's lurches over 12 m/s²)
+      let kV = CLIFF_K_V, kA = CLIFF_K_A;
+      {
+        const k0 = clamp(K.lift, CLIFF_K_H, 1 - CLIFF_K_H), am = this._armAt(F.x, F.y, F.z, L.yaw, this.pitch, this.dist, k0 - CLIFF_K_H, _cd).clone(), a0 = this._armAt(F.x, F.y, F.z, L.yaw, this.pitch, this.dist, k0, _cd).clone(), ap = this._armAt(F.x, F.y, F.z, L.yaw, this.pitch, this.dist, k0 + CLIFF_K_H, _cd);
+        const d1 = ap.distanceTo(am) / (2 * CLIFF_K_H), d2 = Math.hypot(ap.x - 2 * a0.x + am.x, ap.y - 2 * a0.y + am.y, ap.z - 2 * a0.z + am.z) / (CLIFF_K_H * CLIFF_K_H);
+        kV = Math.min(kV, Math.sqrt(CLIFF_K_M / Math.max(d2, 1e-3))); kA = Math.min(kA, CLIFF_K_M / Math.max(d1, 1e-3));
+      }
+      this._ease(K, Math.max(...ks), dt, kV, kA);
       K.lift = Math.min(1, K.lift);
       if (L.fresh) { K.lift = ks[0]; K.vlift = 0; }
       (L.fpv ??= {}).x = F.x; L.fpv.y = F.y; L.fpv.z = F.z;
