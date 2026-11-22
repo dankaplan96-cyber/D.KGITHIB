@@ -154,7 +154,9 @@ export class Chapter2 extends ChapterBase {
     g.enterRoom('zeelich', this.arrival(), true);
     g.hero.hasBall = true;
     this.lift.begin(); this.lift.push();
-    Z.ferry?.setVisible?.(false);   // (the sky-ferry at the dock is not how he came: no ferry crosses to Twinsun)
+    // (the sky-ferry at the dock is not how he came — no ferry crosses to Twinsun —, but from here on the old line's ferry
+    //  lies laid up there, U-1 The Last Ferry: its own rule, story/ferry.js, says whether it is seen)
+    Z.ferry?.setVisible?.(!!this.story.ferry?.open);
     this.story.refreshCast({ walk: true });
     this.chain([['narrator', 'c2_arrive'], ['doran', 'c2_doran_1'], ['hero', this.lift.on ? 'zt_tw_arrive' : 'c2_tw_arrive']], () => {
       this.f.c2_started = true;
@@ -628,7 +630,9 @@ export class Chapter2 extends ChapterBase {
     this.game.world.station?.setSealed?.((f.c2_done || this.story.index > this.pos) && !f.c10_done && this.story.index <= this.story.chapters.findIndex((c) => c.key === 'network'), true);
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
-    RG.whenBuilt('zeelich', (Z) => Z.ferry?.setVisible?.(false));   // (the dock's sky-ferry stays away: Twinsun and Zeelich are joined by spaceship only)
+    // (the dock's sky-ferry: Twinsun and Zeelich are joined by spaceship only; the old line's ferry laid up at the dock from
+    //  chapter 3 on is U-1's, story/ferry.js, and its rule says whether it is seen)
+    RG.whenBuilt('zeelich', (Z) => Z.ferry?.setVisible?.(!!this.story.ferry?.open));
     if (!this.reached()) return;
     RG.whenBuilt('zeelich', (Z) => {
       // (MILLS: a mill braked here stays still until it is let go: here, by Oku's errand, or past the council)
