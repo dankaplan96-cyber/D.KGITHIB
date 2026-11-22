@@ -25,7 +25,7 @@ import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
 import { ASYLUM_DOOR, climbPaveDist, climbClear, climbDropRock, climbShelfRows, climbRampFill, CLIMB_RAMP, CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT, CLIMB_FOOT_Y } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear, LAWN, EAST_WALL, lawnClear } from './citadel-layout.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear, LAWN, lawnClear, V143_EAST } from './citadel-layout.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -539,22 +539,11 @@ function lawns(x, z, h) {
   if (x < rx0 - e || x > rx1 + e || z < rz0 - e || z > rz1 + e) return h;
   return x >= bx0 - e && x <= bx1 + e && z >= bz0 - e && z <= bz1 + e ? LAWN.bed : LAWN.ring;
 }
-// FLAT-TOWN-2 (citadel-layout.js EAST_WALL): the east shore's wall: the town's level up to its level column (the coves
-// filled to it), the water's floor from the column past its face on for four columns (where the ground stood up there
-// it is sunk: a ledge 1.6 m high stood 1 m out before the face at z 25–30, with no way back up; the bank between the
-// level column and the next is inside the wall); further out the sea's floor as it was
-function eastShore(x, z, h) {
-  const E = EAST_WALL;
-  if (FLAT_OFF || PRE80 || z < E.z0 - 0.01 || z > E.z1 + 0.01 || x < E.fill || x > E.low + 2.9) return h;
-  if (x > E.low - 0.45) return Math.min(h, -0.6);
-  if (x > E.lvl - 0.45) return TOWN_FLAT;
-  return Math.max(h, TOWN_FLAT);
-}
 export function islandHeight(x, z) {
   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
   // (FLAT-TOWN: then the promenade's flight and the promenade itself, over the house floors' eases)
-  // (FLAT-TOWN-2: then the south block's lawns and the east shore's wall)
-  return eastShore(x, z, lawns(x, z, promenade(x, z, promStair(x, z, plaza(x, z, waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight))))))));
+  // (FLAT-TOWN-2: then the south block's lawns)
+  return lawns(x, z, promenade(x, z, promStair(x, z, plaza(x, z, waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight)))))));
 }
 
 // REVIEW-CITADEL-ART (c): the knoll north of the water office (the first shelf's outline, its wobble, citadel-layout.js)
@@ -569,12 +558,19 @@ let KNOLL_OFF = false;
 // and every rock drawn after it moved)
 const BRINK_BOX = [-119.5, 42.5, -78, 60.5];
 let BRINK_OFF = false;
-// FLAT-TOWN-2: a spot of an older save that is in the water before the east shore's wall now (the points past its face
-// that stood up: the ledge at z 25–30, the shore's edge at z 17–29): on the town's ground 0.4 m behind the wall (main.js
-// applySave); any other spot as it is
-export function flatSpot(at) {
-  const E = EAST_WALL;
-  return at && at.z > E.z0 && at.z < E.z1 && at.x > E.x1 && at.x < E.low + 3.4 ? { ...at, x: E.x0 - 0.4 } : at;
+// FLAT-TOWN-2's east shore wall reverted (22.11): a v143 save's spot on the ground that wall had made (its top, the
+// filled coves, the sunk ledge: V143_EAST) that is now in a cove, on the drop or below the shore: the nearest spot to
+// its west on the town's level, terrain or a walkable top such as the footbridge's (the loader grounds him there:
+// main.js applySave); any other spot as it is
+export function shoreSpot(at, physics) {
+  const E = V143_EAST;
+  if (!at || !physics || !(at.z > E.z0 && at.z < E.z1 && at.x > E.x0 && at.x < E.x1)) return at;
+  // (standable: the ground at the town's level there and 0.6 m round, nothing standing higher over it: a house, a prop)
+  const g = (x, z) => { const h = physics.groundAt(x, z); return h < TOWN_FLAT + 0.8 ? h : -99; }, lo = TOWN_FLAT - 0.5;
+  const ok = (x) => g(x, at.z) > TOWN_FLAT - 0.35 && g(x + 0.6, at.z) > lo && g(x - 0.6, at.z) > lo && g(x, at.z + 0.6) > lo && g(x, at.z - 0.6) > lo;
+  if (ok(at.x)) return at;
+  for (let x = at.x - 0.25; x > E.x0 - 6; x -= 0.25) if (ok(x)) return { ...at, x: x - 0.4 };
+  return at;
 }
 function waterKnoll(x, z, h) {
   if (KNOLL_OFF || x < KNOLL_BOX[0] || x > KNOLL_BOX[2] || z < KNOLL_BOX[1] || z > KNOLL_BOX[3]) return h;
@@ -983,10 +979,6 @@ export function* buildWorldSteps(parentScene) {
   dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
   // (FLAT-TOWN: the rocks of the old sea cliff and ridge under the promenade, its walls and its flight; flatClear)
   dropRocks(W_cliffs.mesh, (x, z) => (x > -77.4 && x < PROM.x1 + 0.3 && z > PROM.z0 - 0.4 && z < PROM_WALLS[1].z1 + 0.2) || flatClear(x, z, 0.4), [-78, PROM.z0 - 3, PROM_STAIR.xa + 1, 21]);
-  // (FLAT-TOWN-2: and those of the east shore's old drop, on the filled coves and in its wall: any with a corner on the
-  //  ground behind its face or 3.6 m out before it (LBA2's wall goes straight into the water), or under the town's level
-  //  in a filled cove)
-  { const E = EAST_WALL; dropRocks(W_cliffs.mesh, (x, z, y) => z > E.z0 - 0.3 && z < E.z1 + 0.3 && ((x > E.lvl - 1.4 && x < E.x1 + 3.6) || (x > E.fill && x < E.x1 && y < TOWN_FLAT - 0.05)), [E.fill - 4, E.z0 - 6, E.x1 + 9, E.z1 + 6]); }
   dropRocks(W_cliffs.mesh, (x, z, y) => plateauStairAt(x, z, 0, y), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js; CAVE-STAIR: and a rock standing up through its landing)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
@@ -1531,7 +1523,7 @@ export function* buildWorldSteps(parentScene) {
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
   W.signs = [];
   W.pathDist = pathDist;
-  W.flatSpot = flatSpot;   // (FLAT-TOWN-2: an older save's spot in the water before the east shore's wall, main.js applySave)
+  W.shoreSpot = (at) => shoreSpot(at, physics);   // (an older save's spot on FLAT-TOWN-2's reverted east shore wall, main.js applySave)
   { const n0 = scene.children.length; buildIsland(scene, W); tagSrc(scene, n0, 'island'); }
   { const n0 = scene.children.length; buildHarbourZeelich(scene, physics, H); tagSrc(scene, n0, 'harbourzeelich'); }   // (WA-15)
 

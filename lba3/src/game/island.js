@@ -22,7 +22,7 @@ import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA, LAWN, EAST_WALL } from './citadel-layout.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA, LAWN } from './citadel-layout.js';
 
 // ================================================================== layout
 // Everything that the vegetation scatter must keep clear of (world.js asks
@@ -3134,7 +3134,7 @@ function buildFlatTown(W, root) {
   const grp = new THREE.Group(); grp.name = 'flat-town'; root.add(grp);
   const B = new Batch(grp);
   const rub = tm('rubble', { color: '#cfcac8' }), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
-  // FLAT-TOWN-2: the walls that face east, away from the sun (the inland wall behind the water office, the east shore's),
+  // FLAT-TOWN-2: the walls that face east, away from the sun (the inland wall behind the water office, the lawns'),
   // read near black in their shade beside the sunlit sea wall: the same rubble, lifted by its own texture as light
   // (colour only: an emissive map, ~a third of the stones' own tone)
   const rubS = MC.get('rubble-shade') || (() => { const map = textures().rubble, m = new THREE.MeshStandardMaterial({ map, color: '#d6d2d0', roughness: 0.88, emissive: '#8c8884', emissiveMap: map }); MC.set('rubble-shade', m); return m; })();
@@ -3161,18 +3161,6 @@ function buildFlatTown(W, root) {
     for (const [z0, z1, top] of [[S.z0, S.zm, LAWN.ring + 0.21 + 0.015], [S.zm, S.z1, LAWN.bed + 0.02]]) {
       B.add(bbox(sw, top - foot, z1 - z0, 0.02, TILE.stone), step, sx, (top + foot) / 2, (z0 + z1) / 2);
       physics.add({ type: 'box', x: sx, z: (z0 + z1) / 2, hw: sw / 2, hd: (z1 - z0) / 2, rot: 0, top, seeThrough: true, stair: true });   // (a stair: the residents' planner walks up it, walknav.js lowBrick)
-    }
-  }
-  // FLAT-TOWN-2: the east shore's wall (EAST_WALL), down to the water; under the footbridge's planks no coping, its rubble
-  // just under their top (the bridge rests on it)
-  {
-    const E = EAST_WALL, wx = E.x1 - E.x0, cx = (E.x0 + E.x1) / 2, [g0, g1] = E.bridge, rt = E.top - 0.2;
-    for (const [z0, z1, bare] of [[E.z0, g0, false], [g0, g1, true], [g1, E.z1, false]]) {
-      const wz = z1 - z0, cz = (z0 + z1) / 2, t = bare ? TOWN_FLAT - 0.02 : rt;
-      B.add(bbox(wx, t - E.foot, wz, 0.04, TILE.rubble), rubS, cx, (t + E.foot) / 2, cz);
-      if (bare) continue;
-      B.add(bbox(wx + 0.06, 0.22, wz + (z0 === E.z0 ? 0.03 : 0) + (z1 === E.z1 ? 0.03 : 0), 0.03, TILE.stone), cope, cx, E.top - 0.11, cz + ((z1 === E.z1 ? 0.03 : 0) - (z0 === E.z0 ? 0.03 : 0)) / 2);
-      physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.03, hd: wz / 2, rot: 0, top: E.top, seeThrough: true });
     }
   }
   {
