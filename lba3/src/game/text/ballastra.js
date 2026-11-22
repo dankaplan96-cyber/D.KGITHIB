@@ -13,8 +13,8 @@ import { STR } from '../i18n.js';
 import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
-  n_tessa: 'Tessa', n_bl_quill: 'Quill', n_bl_hobb: 'Hobb', n_bl_ferro: 'Ferro', n_bl_wenna: 'Wenna', n_bl_corvin: 'Corvin',
-  n_bl_halden: 'Halden', n_bl_mags: 'Mags', n_bl_dunn: 'Dunn', n_bl_sorrel: 'Sorrel', n_bl_brin: 'Brin', n_bl_ottie: 'Ottie', n_bl_nuna: 'Nuna',
+  n_tessa: 'Tessa', n_bl_quill: 'Hollis', n_bl_hobb: 'Tull', n_bl_ferro: 'Ferro', n_bl_wenna: 'Wenna', n_bl_corvin: 'Corvin',
+  n_bl_halden: 'Halden', n_bl_mags: 'Mags', n_bl_dunn: 'Dunn', n_bl_sorrel: 'Sorrel', n_bl_brin: 'Marten', n_bl_ottie: 'Ottie', n_bl_nuna: 'Nuna',
   n_doranradio: 'Doran (radio)',
   tr_ballastra_port: 'Ballastra: Float Harbor',
   map_ballastra: 'Ballastra', map_bl_harbor: 'Float Harbor', map_bl_arches: 'The Arch District', map_bl_gardens: 'The Water Gardens',
@@ -58,8 +58,8 @@ Object.assign(STR.en, {
   bl_fe_1: "Halfway. Too low for the basin, too high for the sea. Four days' catch in the hold, and the ice ran out yesterday.",
   bl_te_3: "One job. Free that boat, then we'll talk about labels.",
   bl_te_h1: "The crank moves the counterweight. I've tried every notch. Try them yourself if you don't believe me.",
-  bl_te_h2: 'Every notch, four days. Hobb thinks the weight is too light. Hobb thinks a lot of things, over by crane B.',
-  bl_te_h3: "Hobb's load hangs from crane B's jib. The red latch up there is too high for anyone with knees.",
+  bl_te_h2: 'Every notch, four days. Tull thinks the weight is too light. Tull thinks a lot of things, over by crane B.',
+  bl_te_h3: "Tull's load hangs from crane B's jib. The red latch up there is too high for anyone with knees.",
   bl_te_h4: "Now the load is lying on my walkway. It wants to sit on the weight, and the weight's in the wrong place for it.",
   bl_te_crank: "High weight, low deck. It's backwards. Everything on this lift is backwards.",
   bl_fe_wait: "Every hour up here the hold gets warmer. I've salted what I can.",
@@ -187,7 +187,7 @@ Object.assign(STR.en, {
   bl_tw_or2: 'To sleep? Where are they?',
   bl_or_3: 'Safe. Three hundred and four. The water is settled now. They are still safe.',
   // (DIALOGUE-2 / FRESH-EYES: Twinsen reacts to the sleepers; chapter 12 is where they are found)
-  bl_tw_or3: "Three hundred and four children, asleep. Their families are on that row, Oren. I'll be back for them.",
+  bl_tw_or3: "Three hundred and four people, asleep. Their families are on that row, Oren. I'll be back for them.",
   bl_du_1: "My door's under silt. Mags lets me have her floor.",
   bl_du_2: "Dry steps! And my door still won't open. That's not water, that's years of mud.",
   bl_tw_du: 'Stand back.',
@@ -224,7 +224,7 @@ Object.assign(STR.en, {
   bl_obj_find: "Find Tessa's Float Repairs",
   bl_obj_lift: "Free Ferro's boat from the lift",
   bl_sub_crank: 'Crank the counterweight',
-  bl_sub_load: "Crane B's load (Hobb)",
+  bl_sub_load: "Crane B's load (Tull)",
   bl_sub_level: 'Bring the deck level with the basin',
   bl_obj_shed: 'Show Tessa the label',
   bl_obj_water: 'Find out why the Water Gardens are dry',
@@ -414,7 +414,7 @@ Object.assign(STR.en, {
   wk_bell_ring: "(He hauls on the rope. The flood bell's voice rolls down over the lower row, and doors open all along it.)",
   wk_ma_bell: 'That bell meant run. What does it mean today?',
   wk_tw_hands: 'Hands. An hour of them, at a lever in the Cradle Hall.',
-  wk_ma_hands: "We've got hands. Dunn! Brin! Ottie! Nuna, bring the tea.",
+  wk_ma_hands: "We've got hands. Dunn! Marten! Ottie! Nuna, bring the tea.",
   wk_tw_rota: "I'll start. When my arm goes, the next hand takes it.",
   wk_ma_rota: "And pass it between Oren's strokes, not on one. Anyone who grew up by the pumps can hear him push.",
   wk_row_wait: "Waiting my turn. I've waited longer for less.",
@@ -496,12 +496,12 @@ Object.assign(STR.en, {
   nwb_at_mill: "(One of Tessa's B-8s rides on the relay's lid. Oku sets its band by the feel of the sails, then checks it twice.)",
   nwb_at_light: "(Tessa's B-8 sits on the relay's lid. Zoé reads its band off the needle and Twinsen sets it, her hands never leaving the dials.)",
   nwb_at_bore: "(Tessa's B-8 sits on the relay's lid, steam ticking under it. Dallan sets its band and stays beside it.)",
-  nwb_at_dome: "(Tessa's B-8 sits on the relay's lid. Sefa sets its band herself and writes the number in her log.)",
+  nwb_at_dome: "(Tessa's B-8 sits on the relay's lid. Sefa sets its band himself and writes the number in his log.)",
   nwb_j_five: "Tessa's B-8s are on all five relays. Mira, Oku, Zoé, Dallan and Sefa each keep one band set.",
 
   // ---- the epilogue, before the end card (story/balances.js sleepersScene)
   ep_bl_1: '(Ballastra, the Cradle Hall, four days later. Three lids stand open. The requests board by the door is full.)',
-  ep_bl_jory: "Eleven of us awake now. Nobody's taught us the new coins.",
+  ep_bl_jory: "Three of us awake now. Nobody's taught us the new coins.",
   ep_bl_wenna: 'The families ask, one at a time. The row takes turns at the lever. It takes all morning, and nobody minds.',
   ep_bl_odra: 'Some of us said not yet. My mother is one. That was ours to say.',
   ep_bl_oren: 'They ask. I warm. I listen for the next one.',

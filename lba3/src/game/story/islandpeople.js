@@ -31,7 +31,7 @@ export const IP_PRICE = { life: 5, magic: 5, lens: 20, lensPaper: 8, honey: 6, h
 const FAVOUR_LINE = {
   ip_kn_kid_after: ['pp_light', 'ip_kn_kid_after_dark'], ip_kn_kid_1: ['pp_light', 'ip_kn_kid_1', 'ip_kn_kid_1_lit'],
   ip_kn_fisher_after: ['pp_light', 'ip_kn_fisher_after_dark'], ip_ow_kid_after: ['pp_light', 'ip_ow_kid_after_dark'],
-  ip_ot_boss_after: ['pp_light', 'ip_ot_boss_after_dark'],
+  ip_ot_boss_after: ['pp_light', 'ip_ot_boss_after_dark'], ip_ot_boss_ord: ['pp_lens', 'ip_ot_boss_ord', 'ip_ot_boss_ord_sold'],
   ip_ot_guest_after: ['pp_beacon', 'ip_ot_guest_after_dark'], ip_ld_load2_after: ['pp_beacon', 'ip_ld_load2_after_dark'],
   ip_or_carter_after: ['pp_beacon', 'ip_or_carter_after_dark'], ip_ce_dancer1_after: ['pp_beacon', 'ip_ce_dancer1_after_dark'],
   ip_or_pick1_after: ['pp_bzzraDone', 'ip_or_pick1_after_dark'], ip_or_pell_ord: ['pp_beacon', 'ip_or_pell_ord', 'ip_or_pell_ord_lit'],

@@ -11,7 +11,7 @@ Object.assign(STR.en, {
 
   c10_narr: "Baldino's workshop, hours later. Every bench is covered in wire.",
   c10_narr_exp: "Baldino's workshop again. Every bench is covered in wire.",   // (EXP-1: after chapter 10 "Borrowed Time" of the expanded campaign)
-  c10_bal_1: "Five stations, five friends, one minute. The mains under Citadel, the lighthouse, my mill on Zeelich, the bore on Desert Island, and Sefa's dome.",
+  c10_bal_1: "Five stations, five friends, one minute. The mains under Citadel, the lighthouse, Oku's old mill on Zeelich, the bore on Desert Island, and Sefa's dome.",
   c10_bal_2: "My relays hook into each station's old machine and talk through it. When all five talk at once, the shaft's blast doors hear them too.",
   c10_bal_3: 'Each one runs on what its station has: water, wind, steam, light. Together they hold the signal for one minute, so every station needs a friend standing by it.',
   c10_tw_b1: "Then we need friends at five stations, and a way to reach them all.",

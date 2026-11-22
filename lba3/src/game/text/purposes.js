@@ -25,7 +25,7 @@ Object.assign(STR.en, {
 
   // ---- the School's dormitory (the great hall in the pool) and its study crystal
   pp_oni_1: "This is our dormitory. Our study crystal went to sleep in the last sandstorm. It's too dark in there to read.",
-  pp_oni_2: "Master Fennick says a sleeping crystal only wakes to a pure note. Not a shout. I tried a shout.",
+  pp_oni_2: "Master Orbo says a sleeping crystal only wakes to a pure note. Not a shout. I tried a shout.",
   pp_oni_nofork: "The scholars at the dig carry a fork that sings. That's a pure note, isn't it?",
   pp_oni_fork: "You have a singing fork? Strike it by the crystal. Please!",
   pp_oni_wait: "Still dark in there. A pure note, close to the crystal.",
