@@ -440,7 +440,7 @@ export class Network extends ChapterBase {
         return c([['oku', f.c10_millBraked ? 'c10_oku_brake' : 'c10_oku_1'], hop]);
       }
       case 'mira':
-        if (!f.c10_miraAsk) return c([['mira', 'c10_mira_1'], ['mira', 'c10_mira_2']], () => { f.c10_miraAsk = true; g.startTransition(() => { g.enterRoom('valves', null, true); ok(); if (!this.thread.valvesIn()) this.chain([['narrator', 'c10_valves_in'], ['hero', 'c10_valve_hint']]); }); });
+        if (!f.c10_miraAsk) return c([['mira', f.og_room ? 'c10_mira_1x' : 'c10_mira_1'], ['mira', 'c10_mira_2']], () => { f.c10_miraAsk = true; g.startTransition(() => { g.enterRoom('valves', null, true); ok(); if (!this.thread.valvesIn()) this.chain([['narrator', 'c10_valves_in'], ['hero', 'c10_valve_hint']]); }); });
         return c([['mira', f.c10_valves ? 'c10_mira_3' : 'c10_mira_2']]);
       case 'zoe':
         if (!f.c10_zoeAsk) return c([['zoe', 'c10_zoe_1'], ['arthur', 'c10_ar_1'], ['zoe', 'c10_zoe_2']], () => { f.c10_zoeAsk = true; ok(); });

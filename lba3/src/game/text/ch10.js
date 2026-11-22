@@ -38,6 +38,8 @@ Object.assign(STR.en, {
 
   // Citadel: Mira's valves
   c10_mira_1: "You still have my key. Good. The valve room is under this floor. The mains run to the fortress, the depot and the lighthouse: the oldest pipes on the island, and still the best.",
+  // (PLOT-CONSISTENCY: where chapter 10 "Borrowed Time" was played, she took him down there already: og_room)
+  c10_mira_1x: "The valve room again. The mains run to the fortress, the depot and the lighthouse: the oldest pipes on the island, and still the best.",
   c10_mira_2: "The relay needs pressure, two marks on every gauge. Each valve feeds two of the mains. Except the fourth. That one's FunFrock's own, and it only floods the fortress. Come down, I'll show you.",
   c10_valves_in: 'FunFrock\'s valve room. Four wheels, three gauges. Mira watches from the stairs with her arms folded.',
   c10_valve_hint: '(Each gauge should rest on the green mark: two.)',

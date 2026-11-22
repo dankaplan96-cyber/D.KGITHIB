@@ -13,6 +13,7 @@ Object.assign(STR.en, {
 
   c2_nara_1: 'A visitor from Twinsun! Here, a cloud flower. Everyone buys one. Nobody knows why.',
   c2_nara_2: "The project's been on Zeelich ten years, and the platform by the rim hums without a break. Now they say it steers a great drill on Twinsun.",   // (P83 / S-6: Zeelich's half is ten years old)
+  c2_tw_nara: "I'm looking for Baldino.",   // (PLOT-CONSISTENCY: Nara's "Baldino?" answered a question nobody asked)
   c2_nara_3: "Baldino? The house with the bent antenna and the weather vane. You'll hear it before you see it. Something in there is always exploding.",
   c2_nara_after: 'Stop that drill and your next flower is free.',
   c2_oku_1: "Before the project, these mills only ground flour. Now they power the platform's shield. Zeelich's wind, working for a drill.",

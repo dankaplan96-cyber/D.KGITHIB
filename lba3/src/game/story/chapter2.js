@@ -281,8 +281,8 @@ export class Chapter2 extends ChapterBase {
       case 'nara':
         if (f.c2_planBack && !f.c2_naraSaw) return c([['hero', 'c2_tw_show_nara'], ['nara', 'c2_nara_plan']], () => { f.c2_naraSaw = true; g.save(false); });
         if (f.c2_shield) return c([['nara', 'c2_nara_after']]);
-        if (!f.c2_metNara) return c([['nara', 'c2_nara_1'], ['nara', 'c2_nara_2'], ['nara', 'c2_nara_3']], () => { f.c2_metNara = true; });
-        return c([['nara', f.c2_plan ? 'c2_nara_2' : 'c2_nara_3']]);
+        if (!f.c2_metNara) return c([['nara', 'c2_nara_1'], ['nara', 'c2_nara_2'], ['hero', 'c2_tw_nara'], ['nara', 'c2_nara_3']], () => { f.c2_metNara = true; });
+        return c(f.c2_plan ? [['nara', 'c2_nara_2']] : [['hero', 'c2_tw_nara'], ['nara', 'c2_nara_3']]);
       case 'oku':
         if (f.c2_planBack && !f.c2_okuOK) return c([['hero', 'c2_tw_show_oku'], ['oku', 'c2_oku_plan']], () => { f.c2_okuOK = true; g.updateObjective(); g.save(false); });
         if (f.c2_plan && f.c2_planTaken && !f.c2_okuOK && !f.c2_cog) return c([['oku', 'c2_oku_1'], ['oku', 'c2_oku_ask']]);

@@ -30,7 +30,7 @@ Object.assign(STR.en, {
   // ---- the temple and the hall, after their chapters
   dl_carving_steam: "The great carving: the shell, and five vents breathing out heat. Ilka's chalk circles the one under this island.",
   dl_carving: "The great carving. Ilka's chalk ticks the vent under this island, and someone has added a second tick, far to the north.",
-  dl_carving_net: 'The great carving. Five chalk ticks now, one on each vent, and a ring drawn round Citadel in the middle.',
+  dl_carving_net: "The great carving. Two chalk ticks, the desert's vent and the ice's, and a ring drawn round Citadel in the middle.",
   dl_carving_home: 'The great carving. Every vent ticked. Under the shell someone has chalked a small, round sun.',
   dl_diagram: "FunFrock's diagram of the condensers, four valves and three lines. Ilka has pinned a note to it: 'Works. Don't touch.'",
   // ---- the oasis
