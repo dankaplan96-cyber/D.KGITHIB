@@ -131,3 +131,24 @@ The battery half of the measurements (the user unplugs).
   gone: the dress's own green edge along the strap is the armhole's trim. Triangles 8,346 → 8,410; bones, eyes and
   mouths unchanged. `ZOE_SHOULDER_OLD=1` rebuilds the previous model byte for byte.
 - Rows of the picture: before / after at rest, before / after with the arm raised forward (front 3/4, close, side).
+
+## The cast after Twinsen and Zoé, in motion (JOINTS-BLENDER 8, CLOUD_ORDERS 66.1, 22.11)
+Each one is made with the game's own `createCharacter` and stood on Citadel's open quay (x 0, z 30), its rig driven
+through a walk (1.3 m/s), a run (3.8 m/s), the idle shrug, talk and (Arthur) the kneel at his boat; pictures from the
+play camera's distance (8 m, 4.6 m up) and at dialogue distance (2.1 m, front 3/4 and side). The script:
+`docs/lba3-performance/HARDWARE/2026-11-20-joints-motion/castmotion.mjs`. Before and after are the same frames.
+
+### Arthur (`cast_poly.py`, ARTHUR-LOOK)
+- **Seen:** the shoulder (the sleeve from a round shoulder) and the elbow (the rolled sleeve over the shaped forearm)
+  hold in every motion. Two faults at the legs: **a ball at the knee** — his knee ball (ARTHUR-12, for the kneel) is
+  r2 × 1.1 inside a one-shell leg whose knee is r2 × 1.08, so a bump stood out at the front of every bent knee, walking
+  and running; and **the thigh through the tunic** — the skirt's front follows the forward leg on a spring and only by
+  its share over each thigh, so in the run and in the kneel the top of the thigh came through the cloth just above the
+  hem as a pale patch.
+- **Fixed:** the knee ball is r2 × 1.0, just inside the shell (unseen in motion, still filling the knee in the kneel);
+  toward the hem half of his tunic rides the thigh on its side (`coatLegs` 0.5, as the guards' coats, CHAR-OPEN; 0.35
+  still showed the patch in the kneel). A speck of the thigh's top is still visible in the kneel from the side.
+- Triangles 4,274 → 4,274; bones, eyes, mouths and materials unchanged. `JOINTS8_OLD=1` rebuilds the shipped model
+  byte for byte (checked).
+- `captures/joints-blender/arthur-motion-before-after.jpg` (pairs, before left: walk ×2, run ×2, the shrug, talk, the
+  run and the kneel from the side), `arthur-play-before-after.jpg` (the play camera: walk, run, shrug, talk).
