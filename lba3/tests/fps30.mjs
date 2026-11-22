@@ -16,6 +16,8 @@
 //   G. animation events crossed between updates, exactly once at 30 / 60 / 144 / uneven 30 (FPS30-SMOOTH §6): footsteps per
 //      metre, a sword combo's swing sounds and hits, ball throws, releases and catches, jumps and landings
 //      A9 (STREET-CPU): the catch-up step in the skipped refresh, one step a callback, the simulated time the real time
+//      A10 / A11 (PACE-ALL, FPS30.md §12): 30 / 60 / Unlimited on 50 … 240 Hz, one even interval each; Unlimited's even
+//      pace on 100 Hz with a modelled slow game, then fast again
 //   ONLY=AB (letters) runs those parts only. The numbers of the scheduler before FPS30 (same test, same harness) are in
 //   docs/lba-maturity/FPS30.md.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
@@ -167,6 +169,46 @@ if (ONLY.includes('A')) {
   });
   result.preStep = pre; log('30 on 60 Hz: steps per callback with the catch-up step in the skipped refresh (on) and as before (off)', pre);
   check('A9 at 30 on 60 Hz each refresh runs one 60 Hz step (the skipped one the catch-up step, the drawn one its own), the simulated time is the real time; off: two steps in the drawn refresh as before', pre.on.drawn === 60 && pre.on.steps === 120 && pre.on.maxPerCallback === 1 && Math.abs(pre.on.simMs - pre.on.realMs) < 1 && pre.off.maxPerCallback === 2 && pre.off.steps === 120 && Math.abs(pre.off.simMs - pre.off.realMs) < 1, pre);
+  // A10 (PACE-ALL, 22.11): every listed screen, the real loop and simulation (draw stubbed): 30 / 60 / Unlimited draw one
+  // even interval, the whole-refresh pace of engine/pace.js's rule
+  const RATES = [50, 59.9, 60, 75, 90, 100, 120, 144, 165, 240];
+  const EXP = { 30: { 50: 2, 59.9: 2, 60: 2, 75: 3, 90: 3, 100: 3, 120: 4, 144: 5, 165: 5, 240: 8 }, 60: { 50: 1, 59.9: 1, 60: 1, 75: 1, 90: 2, 100: 2, 120: 2, 144: 2, 165: 3, 240: 4 } };
+  const allRates = {};
+  for (const hz of RATES) {
+    await warm(hz); allRates[hz] = {};
+    for (const f of ['30', '60', 'auto']) { await setFps(f); await drive({ hz, ms: 300 }); r = await drive({ hz, ms: 1500 }); const s = summ(r.iv); allRates[hz][f] = { n: +(s.p50 * hz / 1000).toFixed(2), min: s.min, max: s.max }; }
+  }
+  result.allRates = allRates; log('30 / 60 / Unlimited on every listed rate (refreshes per frame, min, max)', allRates);
+  const badR = []; for (const hz of RATES) for (const f of ['30', '60', 'auto']) { const x = allRates[hz][f], n = f === 'auto' ? 1 : EXP[f][hz], R = 1000 / hz; if (Math.abs(x.min - n * R) > 0.05 || Math.abs(x.max - n * R) > 0.05) badR.push(`${f}@${hz}`); }
+  check('A10 30 / 60 / Unlimited on 50, 59.9, 60, 75, 90, 100, 120, 144, 165 and 240 Hz: every drawn interval the same whole number of refreshes (the rule\'s pace), on the real loop', !badR.length, { badR, allRates });
+  // A11 (PACE-ALL): Unlimited on a 100 Hz screen the game cannot fill — a modelled frame cost (a drawn callback's next
+  // callback at the first refresh at or after its start + cost; a skipped one at the next refresh): 8 or 13 ms, P101's
+  // 10 / 20 ms street. Paced every 2nd refresh, evenly; the simulated time is the real time (the game's speed does not
+  // change); a key tapped on a skipped refresh waits for the next drawn frame; then 4 ms frames: back to every refresh,
+  // when the CPU work of this machine's real simulation leaves the room the probe asks for (0.7 × a refresh)
+  await warm(100); await setFps('auto');
+  const ad = await ev(() => {
+    const S = SYN, G = game, R = 10; let t = S.t, k = 0;
+    const run = (ms, cost, each) => { const end = t + ms; while (t < end) { const d0 = S.drawn.length; each?.(); S.tick(t); const drew = S.drawn.length > d0; k++; t += drew ? Math.max(1, Math.ceil((cost(k) - 1e-6) / R)) * R : R; } S.t = t; };
+    const slow = (i) => (Math.floor(i / 3) % 2 ? 13 : 8);
+    G.evenPace.log = [];
+    S.drawn.length = 0; run(1000, slow); const before = S.drawn.slice();
+    run(3000, slow); const nOn = G.evenPace.n;
+    S.drawn.length = 0; S.adv.length = 0; const t0 = t; let tapKept = null;
+    run(3000, slow, () => { if (tapKept === null && G.evenPace.n === 2 && G._drawT && t - G._drawT < 15) { G.input.taps.add('KeyF'); tapKept = 'pending'; } else if (tapKept === 'pending') { tapKept = G.input.taps.has('KeyF'); G.input.taps.delete('KeyF'); } });
+    const paced = S.drawn.slice(), simMs = S.adv.reduce((a, b) => a + b, 0) * 1000, realMs = paced[paced.length - 1] - paced[0], first = S.adv[0] * 1000;
+    run(16000, () => 4); const nOff = G.evenPace.n, cpu = G.evenPace.last?.cpu ?? null;
+    S.drawn.length = 0; run(1500, () => 4); const after = S.drawn.slice();
+    const iv = (d) => d.slice(1).map((x, j) => +(x - d[j]).toFixed(2));
+    return { before: iv(before), nOn, paced: iv(paced), simMs: +simMs.toFixed(1), realMs: +(realMs + first).toFixed(1), tapKept, nOff, cpu, after: iv(after), log: G.evenPace.log.map((e) => e.why || e.probe) };
+  });
+  const adS = { before: { ...summ(ad.before), uneven: ad.before.filter((x) => x > 15).length }, paced: summ(ad.paced), after: ad.after.length ? summ(ad.after) : null };
+  result.adaptive100 = { ...adS, nOn: ad.nOn, nOff: ad.nOff, cpu: ad.cpu, simMs: ad.simMs, realMs: ad.realMs, tapKept: ad.tapKept, log: ad.log };
+  log('Unlimited on 100 Hz, a slow game (8 / 13 ms frames) then a fast one (4 ms)', result.adaptive100);
+  check('A11 Unlimited on 100 Hz, a game that cannot fill it (10 / 20 ms intervals): paced every 2nd refresh, every drawn interval 20 ms; the simulated time is the real time; a tap on a skipped refresh waits for the next frame', adS.before.uneven > 10 && ad.nOn === 2 && adS.paced.min > 19.95 && adS.paced.max < 20.05 && Math.abs(ad.simMs - ad.realMs) < 1 && ad.tapKept === true, result.adaptive100);
+  const roomy = ad.cpu != null && ad.cpu <= 7;
+  if (roomy) check('A11b ...fast again (4 ms frames): back to every refresh, every interval 10 ms', ad.nOff === 1 && adS.after && adS.after.min > 9.95 && adS.after.max < 10.05, result.adaptive100);
+  else console.log(`       A11b not judged: this machine's real simulation takes ${ad.cpu} ms a frame here (CPU p90), more than the 7 ms the probe asks for on 100 Hz — it stays paced, as it should (${ad.nOff})`);
 }
 
 // ---------------------------------------------------------------- B. pause / resume, background, hidden tab

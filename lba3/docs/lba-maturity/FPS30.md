@@ -558,3 +558,115 @@ numbers boxed by V8's lower tiers (after the run Rig.update, Rig._plant and Walk
 tier. The larger part of the frame's garbage is elsewhere: three.js (program parameters, light setup, curve sampling)
 and other game files. Tests: walkers, npc-feet, anim-polish, camfollow, fps30 A pass; camsteady fails on HEAD as well
 (different checks run to run on this loaded machine).
+
+## 12. PACE-ALL (22.11): an even pace and the right Auto budget on every screen (the review of P101)
+
+The user, 22.11: "the most important thing is that it fits all kinds of screens." Screens reviewed: 50, 59.9, 60, 75,
+90, 100, 120, 144, 165, 240 Hz, and variable-refresh (VRR) screens, where requestAnimationFrame follows the maximum rate.
+A frame is only ever drawn in a callback, so on a VRR screen the game paces on that maximum rate exactly as on a fixed
+one; whole callbacks are already even, and VRR has nothing left to smooth. No change to the image, no blur, no frame
+generation, no change to game speed (the simulation is handed the real interval as before; fps30 A11: simulated time =
+real time while paced) and nothing in the save. Code: `src/engine/pace.js` (new), `src/main.js` (loop, paceBudget,
+frameRateOnScreen, the Frame Rate hint), `src/engine/autoapply.js` (Auto's budget, onPace, the GPU readings),
+`src/game/text/common.js` + `he/common.js` (`set_h_fps_even`).
+
+### 12.1 A Frame Rate limit (30 / 60): the rule per refresh rate
+
+Of the two whole-refresh rates either side of the limit, the nearer one; when they are about as near (within 10 % of the
+limit), the faster one if it is at most ~20 % over the limit (22 % in code, so a measured 144.1 Hz keeps 60 → 72), else the
+slower one. A limit at or above the screen's rate draws every refresh (`limitRefreshes`).
+
+| screen | 30 → drawn | 60 → drawn |
+|---|---|---|
+| 50 Hz | every 2nd, 25 | every refresh, 50 |
+| 59.9 Hz | every 2nd, 29.95 | every refresh |
+| 60 Hz | every 2nd, 30 | every refresh |
+| 75 Hz | every 3rd, 25 | every refresh, 75 |
+| 90 Hz | every 3rd, 30 | every 2nd, 45 |
+| 100 Hz | every 3rd, 33.3 | every 2nd, 50 |
+| 120 Hz | every 4th, 30 | every 2nd, 60 |
+| 144 Hz | every 5th, 28.8 | every 2nd, 72 |
+| 165 Hz | every 5th, 33 | every 3rd, 55 |
+| 240 Hz | every 8th, 30 | every 4th, 60 |
+
+The only change from P101's interval rounding is 30 on 165 Hz (27.5 → 33: an exact tie in milliseconds that rounded to
+the slower rate). 60 on 90 Hz stays 45: the limit promises at most about 60 (less work, a cooler laptop); 90 would be
+50 % over it and 45 is the nearer steady rate, while Unlimited draws 90. 60 on 75 Hz draws every refresh (75 is nearer
+than 37.5). Settings → Frame Rate names the rate on this screen wherever it differs from the number by more than 1 fps.
+
+### 12.2 The refresh, measured robustly
+
+From every callback, skipped ones included (they call back too). The median of the last 32 intervals read 50 Hz on the
+user's 100 Hz work computer whenever more than half of Unlimited's intervals were 20 ms. Now (`refreshOf`): from the
+median down, a cluster of ≥ 15 % (and ≥ 4) of the intervals under 0.75 × the value replaces it; the result is the mean of
+the intervals within 20 % of it. `RefreshMeter` keeps the shortest refresh read in the last 20 s while what is read now is a
+whole multiple of it (2–6 ×): a game whose every frame takes 2–3 refreshes, or a browser calling back only on drawn
+refreshes, is not a slower screen. A move to a faster screen shows within 5 callbacks (60 → 144 Hz: 6 in timing.mjs §7),
+to a slower one that is no multiple within ~30 (half a second); to one that is a multiple (120 → 60 Hz) after the 20 s
+memory, with the same drawn intervals meanwhile (every 2nd 120 Hz refresh is every 60 Hz one; the hint may name the old
+rate for those seconds).
+
+### 12.3 Unlimited's even pace (`EvenPace`)
+
+Only on screens over 70 Hz; never on 50 / 59.9 / 60 Hz (every refresh stays the target there; Auto handles quality).
+Counted: play and dialogue in view only (no menus, scene changes, loading, pause, background or hidden window, the
+benchmark, the tests' fixed stepping); an interval over max(50 ms, 4 × the pace) is left out, one over 250 ms restarts
+the window.
+- **Engage**: two 1 s windows in a row with ≥ 15 % of the drawn intervals ≥ 1.5 refreshes, or a GPU p90 (a reading not
+  taken after a keep-alive mark) past the refresh. The count: the smallest whole number ≥ 2 whose interval holds the mean
+  interval and the CPU / GPU p90 with a 10 % margin — every 2nd refresh in the P101 case (100 Hz → an even 50), every 3rd
+  for a 16 ms frame on 144 Hz (48). Only if that rate is ≥ 45 fps or ≥ 80 % of what the game draws now: on 75 Hz every 2nd
+  refresh is 37.5, so it is taken only by a game already under ~47 fps there.
+- **Deeper**: paced, two windows with ≥ 15 % of the intervals a refresh late: one more (if allowed).
+- **Release**: by a probe — after 8 s paced (doubling after each failed probe up to 120 s; back to 8 s, and the probe 2 s
+  after a scene change), and only while the CPU p90 is ≤ 0.7 × the faster pace, one 0.6 s window one step faster. It stays
+  when < 5 % of its intervals miss and its CPU and GPU p90 are ≤ 0.85 × that pace; otherwise back. (While paced the GPU
+  timer reads after keep-alive marks, which can inflate it — GPU-TIMER-KA — so only the probe's own mark-free readings
+  decide.) A pace taken again within 5 s of a release counts as a failed probe.
+- Hysteresis: in at ≥ 15 % misses for 2 s, out only at < 5 % with the work ≤ 85 % of the refresh. The disclosed cost: a
+  game that stays too slow shows one 0.6 s probe of its uneven pace after 8, 16, 32, 64, 120, 120 … s (5 in 5 minutes in
+  the synthetic run), plus up to ~2 s of the uneven pace before it engages after a release or a screen change.
+- The skipped refreshes are those of a limit: the input waits for the next drawn frame (Input keeps taps; poll() latches a
+  pad's buttons), the keep-alive mark changes on each, nothing is simulated in them (the catch-up step belongs to the
+  limits' 60 Hz steps), and the drawn frame simulates its whole interval. Counted in the refresh EvenPace holds, so a
+  browser merging callbacks never compounds the skip. A screen change starts it over at every refresh.
+- Settings → Frame Rate, Unlimited, while it paces: "On this 100 Hz screen the game can't fill every refresh here, so it
+  draws an even 50 a second; it goes back to every refresh when there is room." (EN + HE, `set_h_fps_even`.)
+- Off while benchmarking: the Frame Rates benchmark's Unlimited run still shows what the game draws unpaced.
+
+### 12.4 Auto's budget (`paceBudgetMs`)
+
+The time a drawn frame has on this screen: under a limit, its whole-refresh interval (the limit's own when the rate here
+is within 1 fps of it: 30 on 60 Hz = 33.33 ms); Unlimited, one refresh, or n refreshes while EvenPace paces — never under
+60's 16.67 ms (a screen within 1 fps of 60 counts as 60). So Auto never drops quality to chase 75, 100 or 144 Hz (no lower
+image than Auto already gives); on those screens the even pace is the answer — the sharper profile at an even half rate
+rather than a lower one at the full rate. The P95 / GPU-TIMER-KA rules are unchanged (the PRESENT line applies as before
+where the budget is > 20 ms and ≥ 1.5 refreshes). It also fixes a P101 side effect: 60 on 90 Hz (an even 45, 22.2 ms) or
+30 on 75 Hz (25, 40 ms) read as missed frames on the old 16.67 / 33.3 ms budgets, and without a GPU timer query Auto could
+step down for a pace the limit itself chose (autoquality.mjs: the old budget stepped High → Medium; the new one holds
+High). A change of pace starts Auto's window in progress again (`onPace`), not its evaluation. The automatic resolution
+and AUTO-FIT read the same budget. Examples (30 / 60 / Unlimited): 60 Hz 33.33 / 16.67 / 16.67; 100 Hz 30 / 20 / 16.67,
+paced 20; 144 Hz 34.72 / 16.67 / 16.67, paced every 3rd 20.83; 50 Hz 40 / 20 / 20.
+
+### 12.5 Tests (automated runtime only, SwiftShader; synthetic refresh rates check timing, not a real display)
+
+- `node tests/autoquality.mjs` — 90 PASS: the rule table and ±0.5 % measurement noise; the refresh measure (10 / 20 ms
+  mix → 100 Hz; jitter; 60 → 144 in 5 callbacks; the meter's memory); EvenPace engage / even 20 ms / probe / release, a
+  5-minute slow game (5 probes, no flapping), never at 50 / 59.9 / 60 Hz, the counts at 90 / 120 / 144 / 165 / 240 Hz, the
+  75 Hz floor, frames outside play, a GPU past the refresh, merged callbacks and a screen change; the budget table; the
+  governor at 60 on 90 Hz and paced on 100 Hz.
+- `tests/timing.mjs` §7 — 39 PASS: on the real loop with a recorder, 30 / 60 / Unlimited one even interval on all ten
+  rates; the hints; Unlimited on 100 and 144 Hz with a modelled slow game paced every 2nd / 3rd refresh within ~2 s (an
+  even 20 / 20.8 ms), the budget 20 / 20.83 (Auto's too), released when fast again; never at 60 Hz; 60 → 144 Hz
+  re-measured in 6 callbacks.
+- `tests/fps30.mjs` — 60 PASS (A–G): new A10 (all rates × 30 / 60 / Unlimited on the real loop and simulation) and A11
+  (Unlimited on 100 Hz, slow then fast: an even 20 ms, simulated = real time 3000 / 3000 ms, a tap on a skipped refresh
+  kept, back to 10 ms).
+- `tests/keepalive.mjs` 6 PASS; `tests/menus.mjs` 40 PASS (the limit's budget kept after relaunch);
+  `node tests/dialogue-check.mjs` PASS after `node tools/he-bundle.mjs`.
+
+#### Real hardware
+
+Not measured. Whether the even 50 on the work computer's 100 Hz screen looks better than its uneven 76, how often its
+probes recur on the street, and what its GPU timer reads while paced are for the user's Frame Rates benchmark and play
+there. No real-hardware number is claimed here.

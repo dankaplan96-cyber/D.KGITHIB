@@ -37,7 +37,9 @@ export class AutoApply {
     this.log = [];
     // (P95: refresh — the display's measured refresh, for the 30 limit's "ready by the next refresh" rule; skip — on
     //  battery the battery profile already takes MSAA and lamps from every profile, so Medium-lean adds nothing there)
-    this.gov = new Governor({ budget: () => Math.max(1000 / 60, G.frameCapMs || 0), upBudget: () => 1000 / 60, refresh: () => G.refreshMs?.() || null,
+    // (PACE-ALL: budget — the pace a frame is drawn at on this screen, never under 60's 16.67 ms: main.js paceBudget,
+    //  engine/pace.js paceBudgetMs; 30 on 60 Hz 33.3, 60 on 90 Hz 22.2, Unlimited paced every 2nd refresh on 100 Hz 20)
+    this.gov = new Governor({ budget: () => G.paceBudget?.() ?? Math.max(1000 / 60, G.frameCapMs || 0), upBudget: () => 1000 / 60, refresh: () => G.refreshMs?.() || null,
       skip: (p) => profileOf(p).id === 'lean' && !!(G.renderer?.battery && G.renderer?.batteryCuts), onChange: (i) => this.changed(i), log: this.log });
     const gpu = G.perf?.gpu || '', q = typeof location !== 'undefined' ? location.search : '';
     this.test = SOFT.test(gpu) && typeof navigator !== 'undefined' && navigator.webdriver && !/[?&]autoq/.test(q);
@@ -64,7 +66,8 @@ export class AutoApply {
     }
     const T = G.perf?.gpuTimer;
     // (GPU-TIMER-KA: ka — the frame was measured after a keep-alive mark: autoquality.js treats such a reading with care)
-    if (T) T.onFrame = (ms, ka) => { if (this.cal && !this.cal.done) this.cal.gpu(ms, ka); else this.gov.gpu(performance.now(), ms, ka); };
+    // (PACE-ALL: and to Unlimited's even pace, which reads the GPU's p90 against the refresh)
+    if (T) T.onFrame = (ms, ka) => { const t = performance.now(); G.evenPace?.gpu(t, ms, ka); if (this.cal && !this.cal.done) this.cal.gpu(ms, ka); else this.gov.gpu(t, ms, ka); };
   }
   // a cached entry for this machine and power source: its settled profile (held), or one higher to try when the last
   // session there had lots of room (evaluated), or a calibration's start (evaluated). false: nothing usable cached
@@ -97,6 +100,9 @@ export class AutoApply {
     this.gov.resetWin(t + 3000);
     this.note({ kind: 'set', why: `frame-rate limit ${fps === '30' ? '30 (budget 33.3 ms)' : 'off or 60 (budget 16.7 ms)'}`, what: `${profileOf(this.gov.p).name} (evaluating)` });
   }
+  // PACE-ALL: Unlimited's even pace changed (engaged, released, a probe): the budget changed with it, so the window in
+  // progress — frames at the old pace — is not judged; the evaluation and the profile are untouched
+  onPace() { if (this.on() && !this.test) this.gov.resetWin(performance.now() + 1500); }
   on() { const s = this.G.settings; return !!s.qualityAuto && s.visual !== '1997'; }
   tier() { return describe(this.gov.knobs()).tier; }
   label() { return describe(this.gov.knobs()).text; }

@@ -410,5 +410,147 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
       v4.a.p === 3 && v4.a.id === 'low' && v4.a.margin === true && v4.a.noTry === 1 && v4.b.p === 1 && !v4.c && !v4.d && !v4.e && v5.a.p === 3 && v5.b.p === 2 && v5.c.p === 1 && !v5.d, { v4, v5 }); }
 }
 
+// ---------------------------------------------------------------- PACE-ALL (22.11): every screen (engine/pace.js)
+// The Frame Rate limit's whole-refresh rule per refresh rate, the refresh measured robustly, Unlimited's even pace
+// (engage, deeper, probe, release, hysteresis, the rate floor, never at 60 Hz) and the budget Auto works to. Synthetic
+// clocks only: what a real display shows is not measured here.
+{
+  const { limitRefreshes, refreshOf, EvenPace, paceBudgetMs, REFRESH_N } = await import('../src/engine/pace.js');
+  const near = (x, y, tol) => Math.abs(x - y) <= tol;
+  const RATES = [50, 59.9, 60, 75, 90, 100, 120, 144, 165, 240];
+  const table = {}; for (const L of [30, 60]) table[L] = Object.fromEntries(RATES.map((F) => [F, +(F / limitRefreshes(1000 / L, 1000 / F)).toFixed(2)]));
+  const want = { 30: { 50: 25, 59.9: 29.95, 60: 30, 75: 25, 90: 30, 100: 33.33, 120: 30, 144: 28.8, 165: 33, 240: 30 },
+    60: { 50: 50, 59.9: 59.9, 60: 60, 75: 75, 90: 45, 100: 50, 120: 60, 144: 72, 165: 55, 240: 60 } };
+  console.log('       PACE-ALL limit → rate on screen:', JSON.stringify(table));
+  check('PACE-ALL limit rule: the nearer whole-refresh rate, ties to the faster one only within 20 % over (30: 75 Hz → 25, 144 → 28.8, 165 → 33; 60: 75 Hz → 75, 90 → 45, 144 → 72, 165 → 55)', JSON.stringify(table) === JSON.stringify(want), { table, want });
+  // (a refresh measured a little off — each listed rate moved by ±0.5 % — never flips the count: no rate sits on an edge)
+  const flips = []; for (const L of [30, 60]) for (const F of RATES) { const n0 = limitRefreshes(1000 / L, 1000 / F); for (const e of [-0.005, -0.002, 0.002, 0.005]) if (limitRefreshes(1000 / L, 1000 / (F * (1 + e))) !== n0) flips.push(`${L}@${F}${e > 0 ? '+' : ''}${e * 100}%`); }
+  check('PACE-ALL limit rule: steady under measurement noise (every listed rate ±0.5 %: the same count; 60 on 143.9 / 144.1 Hz every 2nd)', !flips.length && limitRefreshes(1000 / 60, 1000 / 144.1) === 2, flips);
+  // the refresh from rAF intervals
+  const ring = () => ({ a: new Float32Array(REFRESH_N), s: new Float32Array(REFRESH_N), n: 0, k: 0 });
+  const push = (B, d) => { B.a[B.k] = d; B.k = (B.k + 1) % REFRESH_N; B.n = Math.min(REFRESH_N, B.n + 1); return refreshOf(B.a, B.n, B.s); };
+  {
+    const B = ring(); let r = 0; for (let i = 0; i < 64; i++) r = push(B, i % 5 < 3 ? 20 : 10);   // 60 % of the intervals 20 ms, 40 % 10 (100 Hz, the game missing)
+    const J = ring(); let rj = 0; seed = 11; for (let i = 0; i < 64; i++) rj = push(J, 16.667 + (rnd() * 2 - 1) * 1.8);   // 60 Hz, ±1.8 ms jitter
+    const P2 = ring(); let rp = 0; for (let i = 0; i < 64; i++) rp = push(P2, i % 3 ? 10 : 20);
+    const M = ring(); for (let i = 0; i < 40; i++) push(M, 16.667);
+    let k60 = 0; while (k60 < 40 && Math.abs(push(M, 6.944) - 6.944) > 0.05) k60++;
+    let k144 = 0; while (k144 < 60 && Math.abs(push(M, 16.667) - 16.667) > 0.05) k144++;
+    const R = { mixed: +r.toFixed(2), jitter60: +rj.toFixed(2), paced: +rp.toFixed(2), to144after: k60 + 1, to60after: k144 + 1 };
+    console.log('       PACE-ALL refresh measure:', JSON.stringify(R));
+    check('PACE-ALL refresh: 10 / 20 ms intervals with most at 20 (the game missing refreshes on 100 Hz) read 100 Hz, not 50; 60 Hz with ±1.8 ms jitter reads 16.7 ms', near(r, 10, 0.01) && near(rj, 16.67, 0.6) && near(rp, 10, 0.01), R);
+    check('PACE-ALL refresh: a move from 60 to 144 Hz shows within 6 callbacks, back to 60 Hz within 30 (half a second)', R.to144after <= 6 && R.to60after <= 30, R);
+  }
+  {
+    // the meter: a game that never makes a single refresh (every frame 2 or 3 refreshes on 144 Hz) after a light second
+    // still reads 144 Hz; a move to a slower screen that is no multiple (144 → 60 Hz) at once; one that is (120 → 60 Hz)
+    // after the memory's 20 s, the drawn intervals the same meanwhile
+    const { RefreshMeter, MEM_MS } = await import('../src/engine/pace.js');
+    const M = new RefreshMeter(); let t = 0; for (let i = 0; i < 144; i++) M.push(6.944, (t += 6.944));
+    let slowR = 0; for (let i = 0; i < 200; i++) slowR = M.push(i % 3 ? 20.83 : 13.89, (t += 17));
+    let k = 0; while (k < 60 && Math.abs(M.push(16.667, (t += 16.667)) - 16.667) > 0.05) k++;
+    const N = new RefreshMeter(); t = 0; for (let i = 0; i < 120; i++) N.push(8.333, (t += 8.333));
+    let held = 0, got = 0; const t1 = t; while (t - t1 < MEM_MS + 2000) { got = N.push(16.667, (t += 16.667)); if (Math.abs(got - 8.333) < 0.05) held = t - t1; }
+    const R = { slowR: +slowR.toFixed(2), to60: k + 1, held120: Math.round(held), after: +got.toFixed(2) };
+    console.log('       PACE-ALL refresh meter:', JSON.stringify(R));
+    check('PACE-ALL refresh meter: every frame 2–3 refreshes on 144 Hz still reads 144 Hz; 144 → 60 Hz within 32 callbacks (half a second); 120 → 60 Hz (a multiple) after the 20 s memory', near(slowR, 6.944, 0.05) && R.to60 <= 32 && held >= MEM_MS - 1000 && held <= MEM_MS + 1000 && near(got, 16.667, 0.05), R);
+  }
+  // EvenPace driven by a modelled game: a drawn frame needs need(t) ms (the next callback comes at the first refresh at or
+  // after its start + need), a skipped refresh calls back at the next one; drawn frames' intervals are fed as main.js does
+  const drive = (EP, hz, secs, need, { t0 = 0, cpu = (t) => need(t) * 0.4, gpu = null, count = () => true, scene = () => 's' } = {}) => {
+    const R = 1000 / hz; let t = t0, last = t0, drawT = 0; const iv = [];
+    while (t < t0 + secs * 1000) {
+      EP.refresh(R);
+      const n = EP.n;
+      if (n >= 2 && drawT && t - drawT < (n - 0.5) * R) { t += R; continue; }
+      drawT = n >= 2 ? t : 0;
+      const w = need(t - t0), d = t - last; last = t;
+      if (d > 0) { iv.push(+d.toFixed(2)); if (gpu) EP.gpu(t, gpu(t - t0), n >= 2); EP.frame(t, d, cpu(t - t0), count(t - t0), scene(t - t0)); }
+      t += Math.max(1, Math.ceil((w - 1e-6) / R)) * R;
+    }
+    return { iv, t };
+  };
+  const slow = (k) => (t) => (Math.floor(t / 10) % 10 < k ? 13 : 8);   // frames of 8 or 13 ms: the P101 street's 10 / 20 ms mix on 100 Hz
+  {
+    const EP = new EvenPace(); let r = drive(EP, 100, 4, slow(5)); const engaged = EP.n, at = EP.log.find((e) => e.to === 2)?.t;
+    r = drive(EP, 100, 6, slow(5), { t0: r.t }); const ivPaced = r.iv.slice(5), nAfter = EP.n;
+    r = drive(EP, 100, 40, () => 5, { t0: r.t }); const released = EP.n, rel = EP.log.filter((e) => e.probe === 'held').length;
+    const tail = r.iv.slice(-100);
+    console.log('       PACE-ALL 100 Hz:', JSON.stringify({ engaged, at, paced: [Math.min(...ivPaced), Math.max(...ivPaced)], released, log: EP.log.map((e) => e.why || e.probe) }));
+    check('PACE-ALL Unlimited on 100 Hz, frames of 8 / 13 ms (10 / 20 ms intervals): every 2nd refresh within ~2 s, then every interval 20 ms', engaged === 2 && at <= 2600 && nAfter === 2 && ivPaced.every((x) => near(x, 20, 0.01)), { engaged, at, ivPaced: ivPaced.slice(0, 12) });
+    check('PACE-ALL ...and fast again (5 ms frames): a probe after the cooldown holds, back to every refresh (10 ms), and stays', released === 1 && rel >= 1 && tail.every((x) => near(x, 10, 0.01)), { released, log: EP.log });
+  }
+  {
+    // a game that stays slow: probes back off (8, 16, 32 … 120 s) — a handful of short probe windows in 5 minutes
+    const EP = new EvenPace(); const r = drive(EP, 100, 300, slow(6), { cpu: () => 3 });
+    const probes = EP.log.filter((e) => /^probe:/.test(e.why || '')).length, back = EP.log.filter((e) => /^probe at/.test(e.why || '')).length;
+    const evenShare = r.iv.filter((x) => x > 15 && x < 25).length / r.iv.length;
+    console.log('       PACE-ALL 100 Hz, 5 min slow:', JSON.stringify({ probes, back, n: EP.n, changes: EP.log.length, evenShare: +evenShare.toFixed(3) }));
+    check('PACE-ALL a slow game on 100 Hz for 5 min: paced throughout but for ≤ 7 short probes (backing off 8 → 120 s), no flapping', EP.n === 2 && probes <= 7 && probes === back && evenShare > 0.9, { probes, back, changes: EP.log.length, evenShare });
+  }
+  {
+    const out = {}; for (const hz of [50, 59.9, 60]) { const EP = new EvenPace(); drive(EP, hz, 20, () => 22); out[hz] = { n: EP.n, log: EP.log.length }; }
+    check('PACE-ALL never on 50 / 59.9 / 60 Hz screens (every refresh stays the target; Auto handles quality)', Object.values(out).every((x) => x.n === 1 && x.log === 0), out);
+  }
+  {
+    // the smallest whole count that holds
+    const out = {};
+    for (const [hz, w] of [[144, 16], [240, 6], [165, 8], [120, 11], [90, 13]]) { const EP = new EvenPace(); const r = drive(EP, hz, 6, (t) => (Math.floor(t / 7) % 3 ? w : w * 0.6)); out[hz] = { n: EP.n, fps: +(hz / EP.n).toFixed(1), tail: [...new Set(r.iv.slice(-30))] }; }
+    console.log('       PACE-ALL counts:', JSON.stringify(out));
+    check('PACE-ALL the smallest whole count that holds: 144 Hz / 16 ms → every 3rd (48), 240 / 6 ms → every 2nd (120), 165 / 8 ms → every 2nd (82.5), 120 / 11 ms → every 2nd (60), 90 / 13 ms → every 2nd (45); each then one even interval',
+      out[144].n === 3 && out[240].n === 2 && out[165].n === 2 && out[120].n === 2 && out[90].n === 2 && Object.values(out).every((x) => x.tail.length === 1), out);
+  }
+  {
+    // 75 Hz: every 2nd refresh is 37.5 fps — not for a game drawing ~60 there; yes for one already under ~47
+    const a = new EvenPace(); const ra = drive(a, 75, 8, (t) => (Math.floor(t / 13.3) % 4 ? 12 : 15));
+    const b = new EvenPace(); const rb = drive(b, 75, 8, (t) => (Math.floor(t / 13.3) % 4 ? 20 : 12));
+    const fa = +(1000 * ra.iv.length / ra.iv.reduce((x, y) => x + y, 0)).toFixed(1), fb = +(1000 * rb.iv.slice(0, 100).length / rb.iv.slice(0, 100).reduce((x, y) => x + y, 0)).toFixed(1);
+    console.log('       PACE-ALL 75 Hz:', JSON.stringify({ a: { n: a.n, fps: fa, log: a.log }, b: { n: b.n, fpsBefore: fb } }));
+    check('PACE-ALL 75 Hz: no 37.5 fps pace for a game drawing ~60 there (the rate floor: ≥ 45 fps or ≥ 80 % of what it draws now); a game under ~47 fps is paced every 2nd refresh', a.n === 1 && a.log.some((e) => e.denied) && b.n === 2, { a: a.log, an: a.n, bn: b.n, fa, fb });
+  }
+  {
+    // not counted (menus, scene changes): no engagement; a scene change while paced brings the probe forward
+    const EP = new EvenPace(); drive(EP, 144, 10, slow(5), { count: () => false });
+    const E2 = new EvenPace(); let r = drive(E2, 100, 4, slow(5)); const c0 = E2.cool;
+    r = drive(E2, 100, 0.5, slow(5), { t0: r.t, scene: () => 'other' }); const c1 = E2.cool;
+    check('PACE-ALL frames outside play (menus, scene changes, loading) never engage it; a scene change while paced brings the probe to ~2 s', EP.n === 1 && EP.log.length === 0 && E2.n === 2 && c1 < c0 && c1 <= r.t + 2100, { c0, c1, t: r.t, n2: E2.n });
+  }
+  {
+    // a GPU past the refresh while every rAF interval is on time (frames shown late): engages; a probe whose own GPU p90 is still past it goes back
+    const EP = new EvenPace(); let r = drive(EP, 100, 4, () => 9, { gpu: () => 12 }); const on = EP.n;
+    r = drive(EP, 100, 30, () => 9, { t0: r.t, gpu: () => 12, cpu: () => 3 });
+    check('PACE-ALL a GPU p90 past the refresh with intervals on time engages (frames shown late); a probe whose own (mark-free) GPU p90 is still past it goes back', on === 2 && EP.n === 2 && EP.log.some((e) => /^probe at/.test(e.why || '')), EP.log.map((e) => e.why || e.probe));
+  }
+  {
+    // a move to another screen while paced starts over; callbacks merged to every 2nd refresh (the browser) are not a new screen
+    const EP = new EvenPace(); drive(EP, 100, 4, slow(5)); const a = EP.n; EP.refresh(20); const b = EP.n; EP.refresh(16.667); const c = EP.n;
+    check('PACE-ALL while paced, a refresh read as 2 × the screen\'s (callbacks merged) keeps the pace; a different screen (60 Hz) starts over at every refresh', a === 2 && b === 2 && c === 1 && near(EP.R0, 16.667, 0.01), { a, b, c, R0: EP.R0 });
+  }
+  // the budget Auto works to
+  const B = {}; for (const F of RATES) B[F] = [paceBudgetMs(1000 / 30, 1000 / F), paceBudgetMs(1000 / 60, 1000 / F), paceBudgetMs(0, 1000 / F, 1), paceBudgetMs(0, 1000 / F, 2)].map((x) => +x.toFixed(2));
+  console.log('       PACE-ALL budget [30, 60, Unlimited, Unlimited paced every 2nd]:', JSON.stringify(B));
+  check('PACE-ALL budget: the pace on this screen, never under 16.67 (60 Hz: 33.33 / 16.67 / 16.67; 100 Hz: 30 / 20 / 16.67 / 20; 90 Hz: 33.33 / 22.22 / 16.67 / 22.22; 50 Hz: 40 / 20 / 20; 144 Hz: 34.72 / 16.67 / 16.67 / 16.67)',
+    JSON.stringify(B[60]) === '[33.33,16.67,16.67,33.33]' && JSON.stringify(B[100]) === '[30,20,16.67,20]' && JSON.stringify(B[90]) === '[33.33,22.22,16.67,22.22]' && B[50][1] === 20 && B[50][2] === 20 && JSON.stringify(B[144]) === '[34.72,16.67,16.67,16.67]' && B[59.9][0] === 33.33 && B[59.9][2] === 16.67, B);
+  {
+    // the governor at 60 on a 90 Hz screen (an even 45: 22.2 ms frames, GPU 9 ms, CPU 7): on the old fixed 16.67 budget
+    // every frame reads as missed and Auto walks down; on the pace's budget it is on time and held
+    const feedP = (gov, ms = 22.22, gpu = null, cpu = 7) => {
+      gov.setProfile(0, 'test', { commitNow: true, t: 0 }); let t = 0; const steps = [];
+      for (let i = 0; i < 6000; i++) { const f = ms * (0.995 + 0.01 * rnd()); t += f; if (gpu != null) gov.gpu(t, gpu); const r = gov.frame({ t, ms: f, cpu, play: true, scene: i < 3000 ? 'a' : 'b' }); if (r?.kind === 'down') { steps.push(r.what); gov.commit('test'); } }
+      return { steps, p: gov.applied, phase: gov.phase, last: gov.lastWindow?.kind };
+    };
+    // (no GPU timer query; and with one reading 13 ms — well inside the 22.2 ms pace, over 0.75 × 16.67)
+    const old = feedP(new Governor({ budget: () => 1000 / 60, refresh: () => 1000 / 90 }));
+    const now = feedP(new Governor({ budget: () => paceBudgetMs(1000 / 60, 1000 / 90), upBudget: () => 1000 / 60, refresh: () => 1000 / 90 }));
+    const oldT = feedP(new Governor({ budget: () => 1000 / 60, refresh: () => 1000 / 90 }), 22.22, 13);
+    const nowT = feedP(new Governor({ budget: () => paceBudgetMs(1000 / 60, 1000 / 90), upBudget: () => 1000 / 60, refresh: () => 1000 / 90 }), 22.22, 13);
+    // Unlimited paced every 2nd refresh on 100 Hz (20 ms frames, GPU 10, CPU 6): held at High, not walked down to chase 100
+    const paced = feedP(new Governor({ budget: () => paceBudgetMs(0, 10, 2), upBudget: () => 1000 / 60, refresh: () => 10 }), 20, 10, 6), pacedNT = feedP(new Governor({ budget: () => paceBudgetMs(0, 10, 2), upBudget: () => 1000 / 60, refresh: () => 10 }), 20, null, 6);
+    console.log('       PACE-ALL governor:', JSON.stringify({ old, now, oldT, nowT, paced }));
+    check('PACE-ALL Auto at 60 on 90 Hz (an even 45): without a GPU timer query the old 16.67 budget stepped down for a pace the limit chose (with one, P95 SLOW_PANEL already held it); on the pace\'s budget (22.2) it holds High, timer or not', old.steps.length >= 1 && !now.steps.length && !nowT.steps.length && now.p === 0 && nowT.p === 0 && now.last === 'ok', { old, now, oldT, nowT });
+    check('PACE-ALL Auto with Unlimited paced every 2nd refresh on 100 Hz (20 ms, GPU 10): held at High — the sharper profile at an even 50 rather than a lower one chasing 100', !paced.steps.length && paced.p === 0 && !pacedNT.steps.length && pacedNT.p === 0, { paced, pacedNT });
+  }
+}
+
 const fails = done();
 process.exit(fails ? 1 : 0);
