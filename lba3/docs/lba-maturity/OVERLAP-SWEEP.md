@@ -215,6 +215,22 @@ their rails now on level ground (2.30, was 2.27); the island's colliders otherwi
 Tests (Automated runtime only): slidetraps PASS (Citadel 43 spots, 0 bad; the scan spot is sea now), citadel-structures,
 spaceport-2, world-consistency, overlap-sweep (default), chapter1: PASS.
 
+**The 2 life lost at (−114, 53) in HARBOUR-BRINK's probe (QUAY-HP, 22.11; Automated runtime only): not a defect, no
+change.** The probe's run "quay south (2)" started at (−114, 52.6) with `groundAt(x, z, 1e9)`, the highest surface
+there: the top of Doran's harbour shed's collider (`island.js`, design (−67.2, 3.95) + SHIFT.harbour = (−112.7, 50.95),
+4.9 × 3.7 m, top = ground + 4 = 5.80; its south face at z 52.85). He stood on the roof and walked south off it: a 3.98 m
+drop, landing at 14.4 m/s, over the hard-landing rule's 13 m/s (`Hero.update`, `actors.js` 388: 2 life and the
+knockdown). The stack of the damage is that line on this build and on the build before HARBOUR-BRINK (`6db08174`).
+Nothing on the quay does it: no enemy within 30 m (`game.enemies`), and the sea cannot be walked into
+(`physics.move`, WATER_FLOOR). Walking or jumping does not reach that roof (STEP_UP 0.55, a jump rises 1.19 m; the
+highest things beside it are the net rack, 3.70, and the crates, 2.73 and 2.04); the hop-pack (chapter 10, 2.4 m over
+the ground it left) could at most from the rack's top (not tried). Either way the 4 m fall is seen.
+Rechecked from the ground, Normal and Athletic with a jump: 80 walks from the quay's south strip (x −119 … −107.5,
+z 53.2; south, ±0.6 rad, east, west), none loses life on the quay; the only losses are two running jumps off the
+south-west corner's post tops (2.9 m) down to the shingle at −0.3 (a seen 3.2 m drop, the same rule). The build
+before: 40 walks, none. (The threshold: 13 m/s with GRAVITY 26 is a fall of 3.25 m; RELEASE-AUDIT-v96 A-1's "about
+8.6 m" took g = 9.8.)
+
 ### Tests (Automated runtime only; this branch with origin merged)
 
 | Suite | Verdict |
