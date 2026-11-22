@@ -94,6 +94,17 @@ const RISE_AM = 4;   // (CAM-LURCH: the most the rise's tilt accelerates the cam
 // A new scene (a door, a load) starts from such a heading at once, behind the fade. Enter's own swing behind him is
 // kept for USER_HOLD s: the view rises there as LBA2's and is not turned away.
 const STEEP = (48 * Math.PI) / 180, STEEP_OK = (40 * Math.PI) / 180, STEEP_T = 0.5, STEEP_COOL = 4, SIDE_MAX = 7, USER_HOLD = 6;
+// CAM-FIXTOP (the Citadel station's beam pad: beside the main's bridge and by its trestle, 6 of 25 spots, and walking in
+// from the east 9 more west of it, Twinsen hidden in the Fixed view at its pitch limit): LBA2's rule sees him by one line,
+// to EYE (0.65 m over his feet), over the scenery volumes alone; the bridge's 4.3 m pipe, its hung sign and its trestle hid
+// his chest and head with the line to his knees clear, and the pipe runs along the heading kept, so no height of the
+// rule's own cleared it. When neither his head nor his chest is seen past the walls and the volumes, the camera's own
+// included (_seesHead), for FIX_T s at the rule's pitch limit while he stands (under FIX_STILL m/s), not under a roof
+// (inside the covered gate passage he stays hidden by design; the silhouette draws him), the least change that shows him is taken: first a heading at most FIX_K × 15° round at no more
+// than STEEP, then over him on the heading it has (the overhead fallback, up to MAX_PITCH), then both. Eased as any swing
+// and rise (SWING_V / SWING_A, the rise's CAM-LURCH bound), its tilt held in place of the rule's until he has walked
+// FIX_GO m and the rule's own view sees him again; not again for FIX_COOL s. Elsewhere the heading stays LBA2's.
+const FIX_T = 0.6, FIX_K = 4, FIX_GO = 1.5, FIX_COOL = 1, FIX_NONE = 4, FIX_STILL = 0.5, FIX_PS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
 // CAM-2, the free orbit: it turns round behind him by itself only with the tank controls (with camera-relative controls a
 // turn of the view turns his way too, and the two chased each other), only while he walks a steady way (STEADY s) and
 // is turned AUTO_MIN..AUTO_MAX from it, eased (≤ AUTO_V, AUTO_A), never while the player turns it (AUTO_IDLE s after);
@@ -287,6 +298,7 @@ const FV_HEAD = 0.18, FV_ANG = [0.62, 0.5, 0.76, 0.38, 0.9, 1.05], FV_K = [1, 1.
 // (3) the Fixed (LBA2) and Free cameras: a talk out of doors takes the same favoured shot over them (_talkOver), eased in
 //     and out as under Follow (the 1997 look's cuts: cut in and out), and the camera chosen is left as it was: it runs on
 //     under the shot from its own view of the frame before, and is exactly that view again once the talk is over.
+const FV_WAIST = -0.85, FV_FG_DY = [0, -0.6, FV_WAIST, -1.1];   // (FACE-3: _fgClutter's lines, under the face's middle a unit of scale; the waist's for the props alone)
 const FV_PROP_NEAR = 7, FV_PROP_R = 1.6, FV_PROP_MIN = 0.1, FV_PROP_PAD = 0.15, FV_PROP_MOVE = 1.5, FV_K_PROP = 4, FV_BOOTH_R = 2.5, FV_HATCH = 0.75, FV_HATCH_EDGE = 0.2, FV_HATCH_Q = [0.04, 0, 0.08], FV_HATCH_RISE = 0.1;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
@@ -563,6 +575,7 @@ export class CameraRig {
       L.gy = L.f.y;
       L.last = { x: hero.x, z: hero.z }; L.vel = { x: 0, z: 0 }; L.lift = 0; L.vlift = 0; L.pv = null; L.fresh = true; L.pull = 0; L.yawV = 0; L.cp = { lift: 0, vlift: 0 };
       L.init = true; L.behind = false; this.hiddenT = 0; L.steepT = 0; L.steepCool = 0; L.userHold = 0; L.swingBy = '';
+      L.fix = null; L.blindT = 0; L.fixCool = 0;   // (CAM-FIXTOP)
       // (a new scene starts already risen over the scenery, as LBA2's CameraCenter does: no rise seen through a fade;
       // CAM-2: and from a heading that needs no steep view — out of a door he faces away from the house, so behind him
       // is over its roof)
@@ -578,7 +591,7 @@ export class CameraRig {
     }
     if (L.behind) {
       // Enter / R3 / hidden: round behind him, aim point straight ahead of his facing (LBA2's CameraCenter(1))
-      L.goalYaw = heroAngle + Math.PI; L.behind = false; L.pull = 1.2; L.swingBy = 'behind'; L.userHold = USER_HOLD;
+      L.goalYaw = heroAngle + Math.PI; L.behind = false; L.pull = 1.2; L.swingBy = 'behind'; L.userHold = USER_HOLD; L.fix = null;
       L.lead.x = Math.sin(heroAngle) * AHEAD; L.lead.z = Math.cos(heroAngle) * AHEAD;
       L.run = { dir: heroAngle, dist: COMMIT };
     }
@@ -650,7 +663,7 @@ export class CameraRig {
       // CAM-2: steeper than STEEP for a moment: round to a heading that sees him lower (see STEEP)
       const swinging = Math.abs(angleDiff(L.yaw, L.goalYaw)) > 0.02;
       L.steepT = want > STEEP && !swinging ? L.steepT + dt : 0;
-      if (L.steepT > STEEP_T && !L.steepCool && !L.userHold) {
+      if (L.steepT > STEEP_T && !L.steepCool && !L.userHold && !L.fix) {
         L.steepT = 0; L.steepCool = STEEP_COOL;
         const b = this._sideYaw(hero, F, L.yaw, v, this.dist, SIDE_MAX, Math.atan2(-L.vel.x, -L.vel.z));
         if (b) { L.goalYaw = b[0]; L.swingBy = 'steep'; H.length = 0; L.noSide = false; } else L.noSide = true;
@@ -658,7 +671,9 @@ export class CameraRig {
       if (want <= STEEP_OK) L.noSide = false;   // (the need has gone: the cap is back)
       let goal = need > v.pitch + 1e-3 ? Math.min(MAX_PITCH, need + RISE_PAD) : v.pitch;
       if (!L.noSide && !L.userHold) goal = Math.min(goal, STEEP);
-      if (need > L.risePitch - 1e-4 || goal < L.risePitch - RISE_BAND || (goal === v.pitch && goal < L.risePitch)) L.risePitch = goal;
+      L.ruleGoal = goal;
+      if (L.fix) goal = L.fix.p;   // (CAM-FIXTOP: the tilt the last resort chose, on its heading: it sees him there)
+      if (need > L.risePitch - 1e-4 || goal < L.risePitch - RISE_BAND || (goal === v.pitch && goal < L.risePitch) || L.fix) L.risePitch = goal;
       // (CAM-LURCH: the tilt's ease is bounded by what it does at the lens — RISE_AM m/s² there, at the arm's length —, and
       // it slows down in time to stop on its goal: at RISE_A alone the rise started and stopped at 1.5 rad/s² × 15.7 m =
       // 23.6 m/s², the controls route's lurches over its 12 m/s² budget, on open ground and at Hamalayi's wall)
@@ -735,7 +750,7 @@ export class CameraRig {
       if (this.occluded(_v, cp, sn, toCam, dHero, true) < dHero - 0.5) this.hiddenT += dt; else this.hiddenT = 0;
       // hidden for most of a second (and not again for 4 s: passing a tree trunk or two doesn't swing the view about):
       // the smallest turn of the view, 15° at a time up to 90° either way, that shows him again (none: it stays)
-      if (this.hiddenT > 0.8 && !L.hideCool) {
+      if (this.hiddenT > 0.8 && !L.hideCool && !L.fix) {
         this.hiddenT = 0; L.hideCool = 4;
         // (CAM-2: first among the headings that need no steep view over the scenery, so the two rules don't trade swings)
         search: for (const lowOnly of [true, false]) for (let k = 1; k <= 6; k++) for (const sg of [1, -1]) {
@@ -746,6 +761,60 @@ export class CameraRig {
         }
       }
     }
+    this._lbaBlind(dt, hero, F, v, heroAngle);
+  }
+
+  // (CAM-FIXTOP: his head or his chest in sight past the walls, the scenery volumes and the camera's own ones — the bridge,
+  //  its sign, the trestles' marks — and the dense crowns; not the posts, rails and see-through things he shows between:
+  //  counted too, by _seesAny's strict lines, a porch's posts set the Fixed view turning beside a house on camsteady's door
+  //  route, tilt reversals 3.1 → 9.2 a minute)
+  _seesHead(p, hero) { return this._line(p, hero.x, hero.y + 1.5, hero.z, false, true, -Infinity, null, true) || this._line(p, hero.x, hero.y + 1.0, hero.z, false, true, -Infinity, null, true); }
+
+  // CAM-FIXTOP: the Fixed view's last resort when _seesHead has not seen him for FIX_T s (see FIX_*)
+  _lbaBlind(dt, hero, F, v, heroAngle) {
+    const L = this.lba, cam = this.cam;
+    L.fixCool = Math.max(0, (L.fixCool || 0) - dt);
+    const covered = () => !this._line(_t.set(hero.x, hero.y + 1.6, hero.z), hero.x, hero.y + 9, hero.z, true, false);
+    // (where a view on heading yw, tilt p stands: the arm as placed, risen over the ground and what stands round it)
+    const posFor = (yw, p) => { const c = this._armAt(F.x, F.y, F.z, yw, p, this.dist, L.cp.lift, _os); c.y += Math.max(0, this._clearance(c.x, c.y, c.z, null, 1.5, 1, true)); return c; };
+    // (let go once he has walked off and the rule's own view sees him; still blind once it has come round — he walked on
+    // as it turned —, it looks again)
+    if (L.fix && Math.hypot(hero.x - L.fix.x, hero.z - L.fix.z) > FIX_GO && this._seesHead(posFor(L.yaw, L.ruleGoal ?? v.pitch), hero)) { L.fix = null; L.fixCool = Math.max(L.fixCool, 0.5); }
+    const swinging = Math.abs(angleDiff(L.yaw, L.goalYaw)) > 0.06 || Math.abs(L.yawV) > 0.1 || Math.abs(L.riseV) > 0.05;   // (a swing's slow last few hundredths no longer count: it crept under 0.02 rad for a second)
+    // (only at the rule's pitch limit — it wants STEEP or more —, and with him standing: lower, the rule's own rise is
+    //  still to come; walking on along the house walls, a turn for each short stretch hidden set the tilt rocking —
+    //  camsteady's walls and door routes, tilt reversals 8.8 / 9.2 and 11.3 a minute over 8 —, and the view stays LBA2's)
+    const still = Math.hypot(L.vel.x, L.vel.z) < FIX_STILL;
+    if (swinging || L.userHold || !still || (!L.fix && (L.ruleGoal ?? 0) < STEEP - 0.03) || this._seesHead(cam.position, hero)) { L.blindT = 0; return; }
+    L.blindT += dt;
+    if (L.blindT < FIX_T || L.fixCool) return;
+    L.blindT = 0; L.fixCool = FIX_COOL;
+    if (covered()) { L.fixCool = FIX_NONE; return; }   // (under a roof — the gate passage —: hidden by design, the silhouette draws him)
+    const prefer = Math.atan2(-L.vel.x, -L.vel.z), s1 = angleDiff(L.yaw, prefer) < 0 ? -1 : 1, base = L.ruleGoal ?? this.pitch;
+    const tryAt = (yw, p) => (this._seesHead(posFor(yw, p), hero) ? { yaw: yw, p } : null);
+    let got = null;
+    // (1) a heading at most FIX_K steps round, no steeper than STEEP; (2) over him on his heading; (3) both
+    for (let k = 1; k <= FIX_K && !got; k++) for (const sg of [s1, -s1]) {
+      const yw = L.yaw + sg * k * (Math.PI / 12), p0 = Math.max(this._scenePitch(hero, F, yw, v.pitch, this.dist, F.y + 1, STEEP)[0], v.pitch);
+      if (p0 > STEEP) continue;
+      // (the tilt it stands at first, if the rule allows it there, then the nearest: a turn alone moves the frame least, and
+      //  the tilt has nothing to come back from — camsteady's door route by the house: 0.84 → 0.46 → 0.84, two reversals)
+      const ps = []; for (let p = p0; p <= STEEP + 1e-6; p += 0.1) ps.push(p);
+      if (this.pitch > p0 && this.pitch <= STEEP + 1e-6) ps.push(this.pitch);
+      ps.sort((a, b) => Math.abs(a - this.pitch) - Math.abs(b - this.pitch));
+      for (let i = 0; i < ps.length && !got; i++) got = tryAt(yw, ps[i]);
+      if (got) break;
+    }
+    for (const dp of FIX_PS) { if (got) break; const p = Math.min(MAX_PITCH, Math.max(base, this.pitch) + dp); got = tryAt(L.yaw, p); if (p >= MAX_PITCH) break; }
+    for (let k = 1; k <= FIX_K && !got; k++) for (const sg of [s1, -s1]) {
+      const yw = L.yaw + sg * k * (Math.PI / 12);
+      for (let p = STEEP + 0.1; p <= MAX_PITCH + 1e-6 && !got; p += 0.1) got = tryAt(yw, p);
+      if (got) break;
+    }
+    if (!got) { L.fixCool = FIX_NONE; return; }
+    L.fix = { p: got.p, x: hero.x, z: hero.z };
+    if (Math.abs(angleDiff(L.yaw, got.yaw)) > 1e-3) { L.goalYaw = got.yaw; L.swingBy = 'blind'; }
+    L.steepCool = Math.max(L.steepCool, STEEP_COOL); L.hideCool = Math.max(L.hideCool || 0, 4);
   }
 
   // CAM-FOLLOW: is p within `gap` of anything solid? (a collider — a house by its scenery volume —, a scenery volume,
@@ -894,7 +963,8 @@ export class CameraRig {
   // (is the line from p to (tx, ty, tz) clear? the end left out: what is right there; `tall`: only what stands higher
   // than that counts — CAM-ROOFEDGE)
   // (FACE-3: `skip`, a collider the line may pass — the booth a face is framed in through its open side, see FV_BOOTH_R)
-  _line(p, tx, ty, tz, strict = false, ground = true, tall = -Infinity, skip = null) {
+  // (CAM-FIXTOP: `own`, the camera's own volumes — camOnly — count without the strict lines' posts and see-through things)
+  _line(p, tx, ty, tz, strict = false, ground = true, tall = -Infinity, skip = null, own = false) {
     const P = this.physics, occ = this.occ?.(), T = ground ? this.terrain : null;
     const dx = tx - p.x, dy = ty - p.y, dz = tz - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
     this._segCands(p, dx, dy, dz, n, 1, n - 1, P, occ);
@@ -918,7 +988,7 @@ export class CameraRig {
       }
       // (occlude.js hit(), every volume: none skipped, the camera's own ones — camOnly — left out; G1-CAM: but they count
       // for a dialogue's two-shot, `strict`: a face is not framed through the pipeline or the beam pad's arch)
-      for (let vi = 0; vi < vols.length; vi++) { const v = vols[vi]; if ((strict || !v.camOnly) && v.top >= tall && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false; }
+      for (let vi = 0; vi < vols.length; vi++) { const v = vols[vi]; if ((strict || own || !v.camOnly) && v.top >= tall && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false; }
     }
     return true;
   }
@@ -1925,7 +1995,9 @@ export class CameraRig {
     for (let i = 0; i < props.length; i++) { const q = props[i]; if (Math.hypot(q.c.x - p.x, q.c.y - p.y, q.c.z - p.z) < FV_FG + q.r + FV_PROP_PAD) near.push(q); }
     if (!P && !near.length) return 0;
     let n = 0;
-    for (let fi = 0; fi < faces.length; fi++) for (const dy of [0, -0.6, -1.1]) {
+    // (FV_WAIST: and a line to the waist for the props alone — the Bug St. board's top edge passed between the chest's and
+    //  the hips' lines, a few cm over his waist on Zoé's 4th line in the yard: face-3's sign check, 5 of 6 in the full test)
+    for (let fi = 0; fi < faces.length; fi++) for (const dy of FV_FG_DY) {
       const f = faces[fi];
       const tx = f.x - p.x, ty = f.y + dy * f.s - p.y, tz = f.z - p.z, L = Math.hypot(tx, ty, tz), end = Math.min(FV_FG, L - 0.6);
       // (a collider near the line counts once; a prop drawn over it, FV_K_PROP times — the larger, wherever along the line:
@@ -1934,7 +2006,7 @@ export class CameraRig {
       hit: for (let d = 0.3; d < end; d += 0.25) {
         const k = d / L, x = p.x + tx * k, y = p.y + ty * k, z = p.z + tz * k;
         for (let i = 0; i < near.length; i++) if (this._inProp(near[i], x, y, z)) { prop = true; break hit; }
-        if (col || !P) continue;
+        if (col || !P || dy === FV_WAIST) continue;
         const C = P.near(x, z);
         for (let i = 0; i < C.length; i++) { const c = C[i]; if (c !== skip && c.enabled && y > c.bottom - 0.1 && y < c.top + 0.35 && P._inside(c, x, z, FV_FG_PAD)) { col = true; if (!near.length) break hit; break; } }
       }

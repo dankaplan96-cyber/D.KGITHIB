@@ -2064,6 +2064,17 @@ function buildStation(W0, root, r) {
     //  over it and the camera keeps out of it; under it he is under the bridge, which is left out as before)
     addOccluder(W, { kind: 'box', x: MX, z: 36.0, hw: 0.14, hd: 1.35, y0: yB - 1.6, y1: yB - 0.4, name: 'station main, the lane sign' });
     addOccluder(W, { kind: 'box', x: MX, z: 41.4, hw: 0.4, hd: 0.4, y0: g, y1: yB + 0.35, name: 'station main, the drop' });
+    // (CAM-FIXTOP, 22.11: the bridge's two A-frame trestles as the camera's own volumes — occlude.js camOnly: LBA2's rule
+    //  passes through them, as OVERLAP-3 wanted (a solid one tipped the Fixed shot to its top-down limit over an open
+    //  frame), but the strict lines see them, so the Fixed view's last resort does not stand behind a leg or the cap beam.
+    //  Each leaning leg as three steps of its lean, the cap beam whole)
+    for (const z of [32.6, 39.6]) {
+      for (const s of [-1, 1]) for (let i = 0; i < 3; i++) {
+        const xa = MX + s * (1.1 - 0.3 * i), xb = MX + s * (1.1 - 0.3 * (i + 1)), y0 = g + ((yB - 0.3 - g) * i) / 3, y1 = g + ((yB - 0.3 - g) * (i + 1)) / 3;
+        addOccluder(W, { kind: 'box', camOnly: true, x: (xa + xb) / 2, z, hw: 0.15 + 0.12, hd: 0.12, y0, y1, name: 'station main, a trestle leg' });
+      }
+      addOccluder(W, { kind: 'box', camOnly: true, x: MX, z, hw: 1.0, hd: 0.15, y0: yB - 0.41, y1: yB - 0.23, name: 'station main, a trestle cap' });
+    }
     addOccluder(W, { kind: 'box', x: PX - 1.0, z: PZ - 0.2, hw: 0.35, hd: 0.35, y0: g, y1: g + 3.2, name: 'pump riser' });
     addOccluder(W, { kind: 'box', x: (PX - 1.0 + 33.4) / 2, z: PZ - 0.2, hw: (PX - 1.0 - 33.4) / 2 + 0.3, hd: 0.35, y0: g + 2.55, y1: g + 3.25, name: 'pump riser, the run west' });
   }

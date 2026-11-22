@@ -4,6 +4,7 @@
 (22.11, CAM-HANDBACK / CAM-EASE, the camera pass: `camfollow` and `camclear` rows fixed and moved to "Fixed by the camera pass"; `camsteady` and `controls` rows annotated.)
 (22.11, FIX-PASS 2: `chapter1`'s orchard throw made stable (fixed spots; 3 of 3 runs 33/33); `jumpreach` fixed (the old mill's stair-stones 27° apart: 4/4); chapters 9 and 10 set the Zeelich dock's ferry by U-1's rule as chapter 2 does (`council.js`, `network.js`; travel 27/27); the Citadel station's lane sign under the main's bridge has a camera volume (Follow: 5 → 0 hidden spots of 25; the Fixed view's spots by the bridge's pipe and trestle left, below).)
 (22.11, FIX-PASS: `worldfit`, `weather`, `prologue`, `interior-life`, `travel` fixed (rows struck through below). P58's barrel nook at the Citadel station: the barrels fill it (`island.js`; by input, the Fixed view's longest hidden run 3.77 → 0.87 s). P5/P10's reservoir branch: already seated by `b763ead1` (12.11), buried 1.6 m under the climb and its landing; checked again (the pipe's drawn segments: none over the landing, it leaves the ground west of it at x −42).)
+(22.11, CAM-FIXTOP: the Fixed view's spots by the station's bridge mostly fixed (below); FACE-3's waist line for props (the intermittent `face-3` sign, 2/2 after).)
 (22.11, CAM-FIX, the camera fix pass: `camsteady` and `controls` fixed and moved to "Fixed by the camera fix pass"; P58's SE tower corner fixed.)
 
 Updated 17.11.2026 by AUDIT-FIX (RELEASE-AUDIT-v96 A-13) from the audit's suite table (section 7, run on v96 =
@@ -108,7 +109,7 @@ longer counted (0.1 / 0.1 / 0.3 cm after; the old step 0.1 / 0.2 / 0.2).
 
 | Suite | Seen | Re-run | Notes |
 |---|---|---|---|
-| `face-3` | 5/6: "sign: no prop … over a head, chest or waist". On Zoé's 4th line the Bug St. board (1.17 m from the lens) is over Twinsen's waist | 6/6 alone. A/B: `63416c4a` (pre CAMERA-NIGHT) 2× PASS, `d6a9df6a` 1× FAIL, HEAD 1× FAIL + 1× PASS | The same shot every run. The waist ray clips the board's top edge by a few cm (a threshold effect). CAMERA-NIGHT is not excluded (FULL-TEST-22-11 §1.1). Owner: camera (FACE-3) |
+| `face-3` | 5/6: "sign: no prop … over a head, chest or waist". On Zoé's 4th line the Bug St. board (1.17 m from the lens) is over Twinsen's waist | 6/6 alone. A/B: `63416c4a` (pre CAMERA-NIGHT) 2× PASS, `d6a9df6a` 1× FAIL, HEAD 1× FAIL + 1× PASS | The same shot every run. The waist ray clips the board's top edge by a few cm (a threshold effect). CAMERA-NIGHT is not excluded (FULL-TEST-22-11 §1.1). Owner: camera (FACE-3) **Fixed 22.11:** the shot search's foreground lines had none to the waist (head, chest, hips), so the board between them cost nothing; a waist line for props now (`camera.js` FV_WAIST): face-3 6/6 twice, no board hit on any line |
 | `autoquality-game` | section 7's reopen: `page.goto` 180 s timeout, twice at load 10–12; sections 1–6 21/21 | not re-run here (P95: sections 7–8 alone 8/8) | Load; `boot.mjs` `open`'s goto timeout is fixed at 180 s, not `BOOT_TIMEOUT` |
 | `exp-ballastra` | 32/33: "Ferro tosses his kashes", coins +5 (expected ≥ 10) | 33/33 alone | The two coins pop in a random direction, and the bot's `P.grab(12)` reached one |
 | `prologue` | the listed mites crash again (above) | 29/29 alone | — |
@@ -138,15 +139,21 @@ Up the mill's 7 stair-stones to the gallery by jumps: the bot is stuck at 12.56 
 7.09 … 11.47, 12.56, 12.56, then falls back). **Fails identically on v99 (ba62aa2c)** and on today's build with the old
 or new physics.js (FPS30): not caused by v100/v101's work. Open: the gallery's lip vs the last stone (a world fix).
 
-## The Citadel station: Twinsen standing still under the main's bridge over the gate lane (FIX-PASS 2, 22.11)
-Probe: by input from the gate passage's mouth to each of 25 spots round the bridge (design x 37.6–40.8, z 34.4–37.6), then
-3 s still; the P58 walk's test (rays from the camera to his chest and head against the drawn opaque meshes, both blocked =
-hidden). **Follow: 5 of 25 hidden → 0 of 25** (and 0 of 25 walking in from the east): the Follow camera came to rest
-0.1–0.2 m behind the project's sign hung under the bridge (it had no volume), him on the far side. The sign has a scenery
-volume under the bridge's now (`island.js`). **Fixed: 6 of 25, unchanged — left.** Straight under the bridge (x 39.2) he is
-seen at 4 of 5 spots; the hidden spots are beside it or at the trestle at z 39.6, where the 4.3 m pipe runs along the view's
-heading and the shot is at its pitch limit (28.6 m): no camera height shows him there under LBA2's rule (the heading kept),
-as in the gate passage; the silhouette pass draws him. A volume for the trestle was declined by OVERLAP-3 (it tips the shot
-to the top-down limit over an open A-frame). Walking in from the east, 9 more Fixed spots west of the bridge (x 38.0–38.8)
-are hidden by the gatehouse's south-east mass at the same pitch limit: camera behaviour, not this bridge. Automated runtime only.
+## The Citadel station: Twinsen standing still under the main's bridge over the gate lane (FIX-PASS 2 and CAM-FIXTOP, 22.11)
+Probe: by input to each of 25 spots round the bridge (design x 37.6–40.8, z 34.4–37.6), then still; the P58 walk's test
+(rays from the camera to his chest and head against the drawn opaque meshes, both blocked = hidden). **Follow: 5 of 25
+hidden → 0 of 25** (FIX-PASS 2: the project's sign under the bridge has a scenery volume, `island.js`).
+**Fixed view (CAM-FIXTOP, `camera.js`; trestle marks, `island.js`): mostly fixed.** Cause: LBA2's rule sees him by one
+line, to 0.65 m over his feet, over the scenery volumes; the bridge's pipe, its sign and the A-frame trestles hid his chest
+and head with that line clear, and the steep turn (CAM-2) could turn the view onto such a heading. Now, at the rule's
+pitch limit (it wants 48° or more) with him standing, when neither his head nor his chest is seen past the walls and the volumes (the
+camera's own included) for 0.6 s and he is not under a roof, the view takes the least change that shows him: a heading up
+to 60° round at no more than 48° (the tilt it has kept where it can), else over him on its heading (up to 80°), else
+both; eased as the view's other swings and rises, held until he has walked 1.5 m and the rule's own view sees him. Walking,
+the view stays LBA2's (turning for each short hidden stretch along the house walls rocked camsteady's tilt). The trestles are the camera's own volumes (camOnly: the rule
+still passes through them, as OVERLAP-3 asked). Probe (`scratchpad/cf2/probe.mjs`), hidden at 3 s / 5 s of standing:
+from the gate passage's mouth 5 / – → 1 / 2 of 25 (the 2 at 5 s straight under the bridge, x 39.2: under it, hidden by
+design as in the passage); walking in from the east 13 / 5 → 3 / 2 of 25 (left: a late steep turn at (39.4, 34.4) onto a
+heading the volumes see him from and the meshes don't, and at (41, 37.6) the view still turning at 5 s). Inside the
+covered gate passage he stays hidden by design (the silhouette draws him). camfollow 31/31; camsteady: the final code's Fixed routes 30/30 (`MODES=lba`), the Follow and Free routes passed in the full run just before the last change (Fixed-only), the full run before that had Follow's Modern street jitter 4 > 3 once (the known order-dependent budget) Automated runtime only.
 
