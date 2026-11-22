@@ -357,7 +357,11 @@ export class Resident extends NPC {
   arrived(s, instant = false) {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
     this.wk = undefined;   // (NO-AIR: the last step up to the stop's thing is still to take: stepTick)
-    this.arrivedAt = instant ? -9 : this.game.time;   // (dwellTick: the stop settles before it turns)
+    // (dwellTick: the stop settles before it turns. A hop of under 1.5 m along the same work — Velo from his till to the
+    //  printer beside it and back — is no arrival to settle from: it turns back to its work at once. Settling, he stood
+    //  1.4 s side-on to his till after every 0.8 m hop: interior-life, 22.11)
+    const hop = this.hop = !instant && !!this.walkFrom && Math.hypot(s.x - this.walkFrom.x, s.z - this.walkFrom.z) < 1.5;
+    this.arrivedAt = instant ? -9 : this.game.time - (hop ? 1.2 : 0);
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
     this.gestT = 1 + this.rnd() * 2;
     if (!stageOk(s, this.W.stage)) this.tmr = Math.min(this.tmr, 0.5 + this.rnd() * 3);   // (it walked here before the town changed: no point staying)
@@ -690,11 +694,13 @@ export class Resident extends NPC {
       if (d > 1.7) { if (K.back) { this.wk = null; this.leave(); } else this.wk = null; return K.back; }
       const sp = Math.min(this.speed, 1.0) * clamp(d / 0.5, 0.4, 1), step = Math.min(d, sp * dt);
       if (d > 1e-4) { this.pos.x += dx / d * step; this.pos.z += dz / d * step; }
-      if (d > 0.08) this.angle = dampAngle(this.angle, Math.atan2(dx, dz), 9, dt);
+      // (after a hop along its work — arrived — the last few centimetres onto the slot are a sidestep: it turns to the work)
+      if (K.slot && this.hop && this.targetAngle != null) this.angle = dampAngle(this.angle, this.targetAngle, 4, dt);
+      else if (d > 0.08) this.angle = dampAngle(this.angle, Math.atan2(dx, dz), 9, dt);
       if (d - step < 0.02) {
         this.pos.x = tx; this.pos.z = tz;
         if (K.back) { this.wk = null; this.gait = 0; this.animate('idle', dt, 0); this.leave(); return true; }
-        if (K.slot) { this.wk = undefined; this.arrivedAt = this.game.time - 0.9; this.animate('idle', dt, 0); return true; }   // (on the slot: now as an arrival there)
+        if (K.slot) { this.wk = undefined; this.arrivedAt = this.game.time - (this.hop ? 1.2 : 0.9); this.animate('idle', dt, 0); return true; }   // (on the slot: now as an arrival there)
         K.go = false; K.in = Math.hypot(K.x - s.x, K.z - s.z); this.arrivedAt = this.game.time - 0.9;
       }
       this.gait += (sp - this.gait) * Math.min(1, dt * 8);
@@ -864,10 +870,14 @@ export class Resident extends NPC {
     this.planTo(this.stop, null);
   }
   // it cannot get to the stop: it stays where it is and has its stop's time here instead, then goes on with the round
+  // (it looks the way the stop looks, turning as at any stop once it has settled: it kept the last stop's heading, and
+  //  Tavi, given up on the shelf behind the café's counter, stood with his back to it — interior-life, 22.11)
   arrivedElsewhere() {
     const s = this.stop;
     this.st = 'dwell'; this.tmr = 2 + this.rnd() * 3; this.stops[this.ri] = { ...s, seat: null, door: null, pair: null, act: 'idle', _gave: true, slotless: true };
-    this.path = null; this.job = null;
+    this.path = null; this.job = null; this.wk = undefined;
+    this.arrivedAt = this.game.time;
+    const a = s.seat ? s.seat.a : s.a; if (a != null) this.targetAngle = a;
   }
   startWalk(pts) {
     this.path = pts; this.wi = 0; this.walkFrom = { x: this.pos.x, z: this.pos.z };

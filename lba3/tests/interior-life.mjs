@@ -55,7 +55,8 @@ await ev(async () => {
       const want = [s?.a, s?.seat?.a, r.angleTo(h)];
       const mate = s?.mate && people(place).find((q) => q.def.id === s.mate); if (mate) want.push(r.angleTo(mate));
       const dA = (a) => Math.abs(Math.atan2(Math.sin(a - r.angle), Math.cos(a - r.angle)));
-      const facing = st === 'walk' || st === 'plan' || want.some((a) => a != null && dA(a) < 0.6);
+      // (a step up to its thing or back to its slot — walkers.js stepTick — is a walk: it faces the way it steps)
+      const facing = st === 'walk' || st === 'plan' || !!(r.wk && (r.wk.go || r.wk.back)) || want.some((a) => a != null && dA(a) < 0.6);
       if (!facing) bad.push('faces ' + r.angle.toFixed(2) + ' (stop ' + (s?.a ?? 0).toFixed(2) + ')');
       if (!seated && Math.abs(p.y - fy) > 0.1) bad.push('not on the floor: y ' + p.y.toFixed(2));
       out.push({ id: r.def.id, st, age: +(G.time - (r.arrivedAt ?? -1e9)).toFixed(1), stop: s?.id, x: +p.x.toFixed(2), z: +p.z.toFixed(2), y: +p.y.toFixed(2), bad });
