@@ -2058,6 +2058,11 @@ function buildStation(W0, root, r) {
     // (up to 16 s). Their shapes now, as the huts': the camera rises over them by LBA2's rule. The bridge over the gate lane
     // is passed through while he walks under it (occlude.js: volumes he stands under are left out).
     addOccluder(W, { kind: 'box', x: MX, z: 35.5, hw: 0.4, hd: 6.2, y0: yB - 0.4, y1: yB + 0.35, name: 'station main, the bridge' });
+    // (FIX-PASS 22.11: the project's sign hung under the bridge over the lane (1.1 × 2.6 m, 2.75 m over the paving) had no
+    //  shape: the Follow camera came to rest a hand's breadth behind it with him on the far side, and in the Fixed view
+    //  it stood in front of him a step west of the bridge. Its own volume, under the bridge's, as the huts': a shot rises
+    //  over it and the camera keeps out of it; under it he is under the bridge, which is left out as before)
+    addOccluder(W, { kind: 'box', x: MX, z: 36.0, hw: 0.14, hd: 1.35, y0: yB - 1.6, y1: yB - 0.4, name: 'station main, the lane sign' });
     addOccluder(W, { kind: 'box', x: MX, z: 41.4, hw: 0.4, hd: 0.4, y0: g, y1: yB + 0.35, name: 'station main, the drop' });
     addOccluder(W, { kind: 'box', x: PX - 1.0, z: PZ - 0.2, hw: 0.35, hd: 0.35, y0: g, y1: g + 3.2, name: 'pump riser' });
     addOccluder(W, { kind: 'box', x: (PX - 1.0 + 33.4) / 2, z: PZ - 0.2, hw: (PX - 1.0 - 33.4) / 2 + 0.3, hd: 0.35, y0: g + 2.55, y1: g + 3.25, name: 'pump riser, the run west' });
