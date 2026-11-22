@@ -6,6 +6,8 @@
 //   3. a press on a slow frame (several steps) acts once
 //   4. a volume slider event rebuilds nothing and does not cut the camera; a quality change does resize
 //   5. game.perf.stats() and game.loadTimes report sensible numbers
+//   6. the frame-rate limit on synthetic displays (FRAME-1)
+//   7. every screen (PACE-ALL, FPS30.md §12): 30 / 60 / Unlimited on 50 … 240 Hz, Unlimited's even pace, a screen move
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -171,6 +173,82 @@ check('limit 30: after a 120 ms hitch, back to 33.3 ms frames (no burst to catch
 //  is used there, once; with the catch-up step off — or where none runs — it waits for the next frame, as before)
 check('limit 30: a key tapped on a skipped refresh is read once — by that refresh\'s catch-up step in play, else it waits for the next frame', cap.cap30at60.skippedTapKept === (G0state !== 'play') && cap.cap30at60.skippedTapSeen === (G0state === 'play' ? 1 : 0) && cap.cap30off.skippedTapKept === true, { on: cap.cap30at60, off: cap.cap30off, state: G0state });
 check('automatic resolution: 33 ms frames at the 30 limit are on budget (no step down); without the limit they are not', cap.dynAt30 === 1 && cap.dynUncapped < 1, cap);
+
+// ---------------------------------------------------------------- 7. every screen (PACE-ALL, 22.11)
+// Game.loop on synthetic displays of 50 … 240 Hz (exact timestamps; advance() replaced by a recorder): the drawn intervals
+// at 30 / 60 / Unlimited are one even value, the whole-refresh pace of engine/pace.js's rule; Unlimited's even pace with a
+// modelled slow game (a drawn frame of W ms: the next callback at the first refresh at or after its start + W; a skipped
+// refresh calls back at the next one) engages, holds an even interval, and releases when the game is fast again; never at
+// 60 Hz; a move from a 60 Hz to a 144 Hz screen is measured again within a few callbacks. Timing logic only: no real
+// display's smoothness is measured here (Automated runtime only, SwiftShader).
+const logP = (label, x) => console.log(`       ${label}: ${JSON.stringify(x)}`);
+const RATES = [50, 59.9, 60, 75, 90, 100, 120, 144, 165, 240];
+const EXPECT = { 30: { 50: 2, 59.9: 2, 60: 2, 75: 3, 90: 3, 100: 3, 120: 4, 144: 5, 165: 5, 240: 8 }, 60: { 50: 1, 59.9: 1, 60: 1, 75: 1, 90: 2, 100: 2, 120: 2, 144: 2, 165: 3, 240: 4 }, auto: Object.fromEntries(RATES.map((r) => [r, 1])) };
+const pace = await ev(({ RATES }) => {
+  const G = game, raf = window.requestAnimationFrame, adv = G.advance, out = { table: {}, adapt: {}, move: {} };
+  let W = 5, got = [], drawnAt = [];
+  G.advance = (real) => { got.push(+(real * 1000).toFixed(3)); G._workMs = W * 0.4; };
+  const fresh = () => { G.last = 1000; G._rafT = undefined; G._vsync = 0; G._due = 0; G._drawT = 0; G._rafBuf = null; G._refresh = 0; G.evenPace.R0 = 0; G.evenPace.reset('test'); G.evenPace.log = []; G.testFreeze = false; got = []; };
+  const setFps = (v) => { if (G.settings.fps !== v) { G.settings.fps = v; G.applySettings(); } };
+  // a synthetic display at hz from time t: the loop is called at refresh times; a drawn callback costs `cost()` ms
+  const display = (hz, secs, t0, cost = () => 0) => {
+    const R = 1000 / hz; let t = t0; const end = t0 + secs * 1000;
+    while (t < end) { const n0 = got.length; G.loop(t); const drew = got.length > n0; t += drew ? Math.max(1, Math.ceil((cost(t) - 1e-6) / R)) * R : R; if (drew) drawnAt.push(t); }
+    return t;
+  };
+  window.requestAnimationFrame = () => 0;
+  try {
+    G.state = 'play';
+    for (const fps of ['30', '60', 'auto']) {
+      out.table[fps] = {};
+      for (const hz of RATES) {
+        setFps(fps); fresh(); W = 3;
+        const t = display(hz, 0.6, 1000); got = []; display(hz, 2, t);
+        const iv = got.slice(1), R = 1000 / hz;
+        out.table[fps][hz] = { n: +(iv.reduce((a, b) => a + b, 0) / iv.length / R).toFixed(3), min: +Math.min(...iv).toFixed(2), max: +Math.max(...iv).toFixed(2), hint: G.frameRateOnScreen()?.f ?? null };
+      }
+    }
+    // Unlimited, a modelled slow game: frames of 8 or 13 ms (10 / 20 ms intervals on 100 Hz, P101's street), then 5 ms
+    const slow = (k) => (t) => (Math.floor(t / 10) % 10 < k ? 13 : 8);
+    for (const hz of [100, 144, 60]) {
+      setFps('auto'); fresh(); const R = 1000 / hz;
+      const cost = hz === 144 ? (t) => (Math.floor(t / 7) % 3 ? 16 : 9) : hz === 60 ? (t) => (Math.floor(t / 10) % 10 < 5 ? 22 : 12) : slow(5);
+      // (a second of light frames first — the title, a menu: the meter sees the refresh — then the slow game)
+      W = 2; let t = display(hz, 1, 1000); got = [];
+      W = 10; t = display(hz, 1, t, cost); const before = got.slice(1); got = [];
+      t = display(hz, 3, t, cost); const nOn = G.evenPace.n, at = G.evenPace.log.find((e) => e.to >= 2)?.t ?? null;
+      got = []; t = display(hz, 4, t, cost); const paced = got.slice(1), hint = (G.syncSettingsUI?.(), G._setHint?.fps?.() ?? ''), onScreen = G.frameRateOnScreen(), budget = +G.renderer.budgetMs.toFixed(2), gov = G.autoQ ? +G.autoQ.gov.budget().toFixed(2) : null;
+      // fast again: 5 ms frames
+      W = 5; got = []; t = display(hz, 14, t, () => 5); const nOff = G.evenPace.n; got = []; display(hz, 2, t, () => 5); const after = got.slice(1);
+      const s = (a) => ({ n: a.length, min: a.length ? +Math.min(...a).toFixed(2) : null, max: a.length ? +Math.max(...a).toFixed(2) : null, uneven: a.filter((x) => x >= 1.5 * R).length });
+      out.adapt[hz] = { before: s(before), nOn, at, paced: s(paced), nOff, after: s(after), hint, onScreen, budget, gov, budgetAfter: +G.renderer.budgetMs.toFixed(2), log: G.evenPace.log.map((e) => e.why || e.probe) };
+    }
+    // a move from a 60 Hz screen to a 144 Hz one: Unlimited, then 30
+    for (const fps of ['auto', '30']) {
+      setFps(fps); fresh(); W = 3;
+      let t = display(60, 1, 1000); const r60 = G.refreshMs();
+      let k = 0; const R144 = 1000 / 144; while (k < 40 && Math.abs(G.refreshMs() - R144) > 0.1) { G.loop(t); t += R144; k++; }
+      got = []; display(144, 1.5, t); const iv = got.slice(1);
+      out.move[fps] = { r60: +r60.toFixed(2), callbacks: k, r144: +G.refreshMs().toFixed(3), min: +Math.min(...iv).toFixed(2), max: +Math.max(...iv).toFixed(2), hz: G.frameRateOnScreen()?.hz ?? null, R0: +G.evenPace.R0.toFixed(2) };
+    }
+  } finally { window.requestAnimationFrame = raf; G.advance = adv; G.settings.fps = 'auto'; G.applySettings(); G.last = performance.now(); G._rafT = undefined; G._rafBuf = null; G._refresh = 0; G.evenPace.R0 = 0; G.evenPace.reset('test end'); G._due = 0; G._drawT = 0; G.testFreeze = true; }
+  return out;
+}, { RATES });
+console.log('       PACE-ALL table (refreshes per drawn frame, min / max interval):', JSON.stringify(pace.table));
+for (const fps of ['30', '60', 'auto']) {
+  const bad = RATES.filter((hz) => { const x = pace.table[fps][hz], R = 1000 / hz; return Math.abs(x.n - EXPECT[fps][hz]) > 0.01 || x.max - x.min > 0.05 || Math.abs(x.min - EXPECT[fps][hz] * R) > 0.05; });
+  check(`PACE-ALL ${fps === 'auto' ? 'Unlimited' : fps} on 50 / 59.9 / 60 / 75 / 90 / 100 / 120 / 144 / 165 / 240 Hz: one even drawn interval on each, ${fps === 'auto' ? 'every refresh' : 'the whole-refresh pace of the rule'}`, !bad.length, { bad, table: pace.table[fps] });
+}
+check('PACE-ALL Settings → Frame Rate hint: the rate on this screen where it differs from the limit (60 on 90 Hz → 45, on 144 → 72; 30 on 75 → 25, on 165 → 33), none where it is the limit', pace.table['60'][90].hint === 45 && pace.table['60'][144].hint === 72 && pace.table['30'][75].hint === 25 && pace.table['30'][165].hint === 33 && pace.table['30'][60].hint === null && pace.table['60'][120].hint === null && pace.table.auto[144].hint === null, { 60: pace.table['60'], 30: pace.table['30'] });
+for (const hz of [100, 144]) {
+  const a = pace.adapt[hz], R = 1000 / hz, n = hz === 144 ? 3 : 2;
+  logP(`Unlimited ${hz} Hz, a slow game then a fast one`, a);
+  check(`PACE-ALL Unlimited on ${hz} Hz, a game that cannot fill it (${a.before.uneven} of ${a.before.n} intervals ≥ 1.5 refreshes): within ~2.5 s every ${n === 2 ? '2nd' : '3rd'} refresh, every interval then ${(n * R).toFixed(1)} ms; Settings says so; the budget follows`, a.nOn === n && a.at - 2000 <= 2600 && Math.abs(a.paced.min - n * R) < 0.05 && Math.abs(a.paced.max - n * R) < 0.05 && a.onScreen?.even && a.onScreen.f === Math.round(hz / n) && new RegExp(`even ${Math.round(hz / n)} a second`).test(a.hint) && a.budget === +Math.max(1000 / 60, n * R).toFixed(2) && (a.gov == null || a.gov === a.budget), a);
+  check(`PACE-ALL ...fast again on ${hz} Hz: back to every refresh (a probe that held), every interval ${R.toFixed(2)} ms, budget back to 16.67`, a.nOff === 1 && a.after.uneven === 0 && Math.abs(a.after.max - R) < 0.05 && a.budgetAfter === 16.67, a);
+}
+check('PACE-ALL a slow game on a 60 Hz screen: never paced (every refresh stays the target)', pace.adapt[60].nOn === 1 && pace.adapt[60].nOff === 1 && pace.adapt[60].log.length === 0, pace.adapt[60]);
+logP('moved from 60 Hz to 144 Hz', pace.move);
+check('PACE-ALL a move from a 60 Hz to a 144 Hz screen is measured again within 6 callbacks; Unlimited then draws every 144 Hz refresh, 30 every 5th (34.7 ms)', ['auto', '30'].every((f) => Math.abs(pace.move[f].r60 - 16.67) < 0.05 && pace.move[f].callbacks <= 6 && Math.abs(pace.move[f].r144 - 6.944) < 0.05) && Math.abs(pace.move.auto.max - 6.94) < 0.05 && Math.abs(pace.move.auto.min - 6.94) < 0.05 && Math.abs(pace.move['30'].min - 34.72) < 0.05 && Math.abs(pace.move['30'].max - 34.72) < 0.05 && pace.move.auto.R0 > 6.9 && pace.move.auto.R0 < 7, pace.move);
 
 const fails = done();
 await browser.close();

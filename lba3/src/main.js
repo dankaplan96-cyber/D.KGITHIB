@@ -14,6 +14,7 @@ import { Perf, gpuQuality, oldGpuQuality, integratedGpu, startupMark, startupRep
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
+import { RefreshMeter, limitRefreshes, EvenPace, paceBudgetMs } from './engine/pace.js';
 import { FarCull, BlobBatch, BoxCull, MW, FOGCULL, setFogCull, CASTER_ONLY } from './engine/drawcull.js';
 import { BLOBS, PLANT_VIEW } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
@@ -592,6 +593,10 @@ class Game {
     L.total = Math.round(performance.now() - tm);
     L.regions = this.regions.summary();
     this.fit = new FitWatch(this);   // (AUTO-FIT: one suggestion when the preset can't hold ~50 fps in play: engine/autofit.js)
+    // PACE-ALL: Unlimited's even pace on a fast screen the game cannot fill (engine/pace.js). A change of pace starts Auto's
+    // window again (its budget follows the pace: paceBudget) and refreshes Settings' Frame Rate hint
+    this.evenPace = new EvenPace();
+    this.evenPace.onChange = () => { this.renderer.budgetMs = this.paceBudget(); this.autoQ?.onPace?.(); if (this.screen === 'settings') this.syncSettingsUI?.(); };
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
     this.applySettings();
@@ -2272,7 +2277,7 @@ class Game {
       music: () => t('set_h_music'), sfx: () => t('set_h_sfx'), voice: () => t('set_h_voice'),
       voiceMode: () => t('set_h_vm_' + (s.voiceMode === 'classic' ? 'classic' : 'expressive')),
     };
-    hint.fps = () => { const base = t('set_h_fps_' + (s.fps === '30' ? '30' : s.fps === '60' ? '60' : 'auto')), on = this.frameRateOnScreen(); return on ? base + ' ' + t('set_h_fps_screen', on) : base; };   // (the user, 18.11: a steady 30 FPS option)
+    hint.fps = () => { const base = t('set_h_fps_' + (s.fps === '30' ? '30' : s.fps === '60' ? '60' : 'auto')), on = this.frameRateOnScreen(); return on ? base + ' ' + t(on.even ? 'set_h_fps_even' : 'set_h_fps_screen', on) : base; };   // (PACE-ALL: Unlimited's even pace)   // (the user, 18.11: a steady 30 FPS option)
     const q = hint.quality; hint.quality = () => q() || t('set_h_q_hand');
     this._setHint = hint;
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { const h = row.querySelector('.set-hint'); if (h) h.textContent = hint[row.dataset.hint]?.() ?? ''; });
@@ -2369,7 +2374,7 @@ class Game {
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
-    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; this._drawT = 0; this.autoQ?.onBudget?.(); }
+    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.evenPace?.reset('Frame Rate changed'); this.renderer.budgetMs = this.paceBudget(); this._due = 0; this._drawT = 0; this.autoQ?.onBudget?.(); }
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
@@ -2943,10 +2948,18 @@ class Game {
     // the display's refresh interval (ms, smoothed), from the rAF timestamps
     const d = now - (this._rafT ?? now); this._rafT = now;
     if (d > 0) this._vsync = this._vsync ? this._vsync + (Math.min(50, d) - this._vsync) * 0.1 : Math.min(50, d);
-    // FRAME-2: the display's refresh measured from requestAnimationFrame: the median of the last 32 intervals
-    // (recomputed every 8 frames: it follows a move to another screen within half a second), for the frame-rate limit
-    // and the benchmark's report. (A skipped refresh still calls back, so the limit itself never skews it.)
-    if (d > 0 && d < 100) { const B = (this._rafBuf ??= { a: new Float32Array(32), n: 0, k: 0 }); B.a[B.k] = d; B.k = (B.k + 1) % 32; B.n = Math.min(32, B.n + 1); if (B.k % 8 === 0 || B.n < 8) this._refresh = medianOf(B.a, B.n); }
+    // FRAME-2: the display's refresh measured from requestAnimationFrame, from every callback (a refresh the pace skips calls
+    // back too: the pace never skews it). PACE-ALL: not the median of the last 32 intervals any more — on the user's 100 Hz
+    // work computer Unlimited drew 10 / 20 ms intervals, and with more than half at 20 the median read 50 Hz; the refresh is
+    // the shortest interval that recurs (engine/pace.js refreshOf / RefreshMeter: a reading that is a whole multiple of the
+    // refresh seen in the last 20 s is skipped refreshes, not a slower screen), recomputed on every callback: a move to a
+    // faster screen shows within 5 callbacks, to a slower one within ~28 (half a second at 60 Hz). Intervals under 3 ms
+    // and over 100 ms are not counted. (_rafBuf: the meter; a test sets it null for a new display)
+    if (d > 0) {
+      const M = (this._rafBuf ??= new RefreshMeter());
+      const r = M.push(d, now);
+      if (r) { this._refresh = r; this.evenPace?.refresh(r); }
+    }
     // PERF-HIGH (benchmark only): how late this callback runs after the frame's timestamp (the main thread busy with
     // something else), and the benchmark's "nothing drawn" probe: a few refreshes with no simulation and no render, to
     // tell the display's own pace from the game's (engine/bench.js idleProbe). The time is not simulated.
@@ -2980,15 +2993,25 @@ class Game {
     // pace is even on every screen — 30 on 100 Hz is every 3rd refresh (33.3 fps), 60 on 100 Hz every 2nd (50), 30 on
     // 144 Hz every 5th (28.8), 30 on 60 Hz every 2nd as before. A limit within one refresh of the screen's own rate draws
     // every refresh. Settings → Frame Rate says the rate it runs at on this screen when it differs (frameRateOnScreen).
-    const nR = cap && cap > refresh + 1 ? Math.max(1, Math.round(cap / refresh)) : 0;
+    // PACE-ALL (the review of P101 for 50 … 240 Hz, 22.11): the count is now the nearer whole-refresh RATE, ties to the faster
+    // one when it is at most 20 % over the limit (engine/pace.js limitRefreshes: 60 on 90 Hz → 45, 30 on 165 Hz → 33, 60 on
+    // 75 Hz → every refresh). Unlimited (no limit) on a screen over ~70 Hz the game cannot fill: EvenPace's count — every
+    // 2nd refresh (or the smallest whole count that holds), evenly, back to every refresh when there is room; counted in the
+    // refresh EvenPace holds (R0), so callbacks the browser itself merges never compound the skip.
+    const P = this.evenPace, adapt = !cap && !this.benching && P ? P.n : 1;
+    const nR = cap ? limitRefreshes(cap, refresh) : adapt, Rp = cap || adapt < 2 ? refresh : (P.R0 || refresh);
     if (nR >= 2 && !this.testFreeze && !this.preparing) {
-      if (this._drawT && now - this._drawT < (nR - 0.5) * refresh && now >= this._drawT) { this.input.poll?.(); this.preStep(now); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
+      if (this._drawT && now - this._drawT < (nR - 0.5) * Rp && now >= this._drawT) { this.input.poll?.(); this.preStep(now); this._keepAlive(); requestAnimationFrame((t2) => this.loop(t2)); return; }
       this._drawT = now; this._due = 0;
     } else { this._due = 0; this._drawT = 0; }   // (no limit, or one within a refresh of the screen's: every refresh)
+    { const pb = this.paceBudget(); if (Math.abs(pb - (this.renderer.budgetMs || 0)) > 0.05) this.renderer.budgetMs = pb; }   // (the screen's pace: the automatic resolution's and AUTO-FIT's budget)
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
     if (!this.testFreeze && !this.preparing) { this.advance(real); if (!this.settings.qualityAuto) this.fit?.frame(real); }   // (AUTO-QUALITY: Auto adjusts itself: no suggestion)
+    // PACE-ALL: Unlimited's drawn frames feed the even pace (counted: play and dialogue in view, no scene change, no fixed stepping)
+    if (P && !cap && !this.benching) P.frame(now, real * 1000, this._workMs ?? null,
+      (this.state === 'play' || this.state === 'dialog') && !this.trans && !this.gfxHold && !this._shownBlack && !this.testFreeze && !this.preparing && !(typeof document !== 'undefined' && document.hidden), this.room?.id || 'citadel');
     this._preSim = 0;   // (STREET-CPU: taken by advance; dropped with the interval when nothing was simulated)
     requestAnimationFrame((t2) => this.loop(t2));
   }
@@ -3006,13 +3029,21 @@ class Game {
   // anything else (the default) is the mark as above. Every mark is counted on the GPU timer (perf.js GpuTimer.kaMarks), so
   // a frame measured after one is known as such: on such a reading alone Auto takes at most one step down, judged and
   // taken back if the reading does not fall with the profile, and none in hold (autoquality.js GPU-TIMER-KA).
-  // P101: the rate a Frame Rate limit runs at on this screen (whole refreshes, the nearest count: loop), when it differs
-  // from the limit by more than 1 fps; null otherwise (or no limit, or the refresh not measured yet).
+  // P101 / PACE-ALL: the rate the game runs at on this screen when it differs from the setting: a limit (whole refreshes,
+  // engine/pace.js limitRefreshes) more than 1 fps from its number → { hz, f }; Unlimited while EvenPace paces → { hz, f,
+  // even: true }; null otherwise (or the refresh not measured yet)
   frameRateOnScreen() {
     const cap = this.frameCapMs, refresh = this._refresh;
-    if (!cap || !refresh) return null;
-    const n = cap > refresh + 1 ? Math.max(1, Math.round(cap / refresh)) : 1, f = 1000 / (n * refresh), lim = 1000 / cap;
+    if (!refresh) return null;
+    if (!cap) { const P = this.evenPace; return P && P.n >= 2 && P.R0 ? { hz: Math.round(1000 / P.R0), f: Math.round(1000 / (P.n * P.R0)), n: P.n, even: true } : null; }
+    const n = limitRefreshes(cap, refresh), f = 1000 / (n * refresh), lim = 1000 / cap;
     return Math.abs(f - lim) > 1 ? { hz: Math.round(1000 / refresh), f: Math.round(f) } : null;
+  }
+  // PACE-ALL: the frame budget on this screen (ms) — Auto's (autoapply.js), the automatic resolution's and AUTO-FIT's:
+  // engine/pace.js paceBudgetMs (the pace a frame is drawn at here, never under 60's 16.67 ms)
+  paceBudget() {
+    const P = this.evenPace, paced = !this.frameCapMs && P && P.n > 1;
+    return paceBudgetMs(this.frameCapMs || 0, paced ? P.R0 : this._refresh, paced ? P.n : 1);
   }
 
   _keepAlive() {
@@ -3450,7 +3481,6 @@ async function sliced(list, fn, name) {
 // ROTATE-STALL: a scene change's reveal waits for readiness (Game.updateTransition) at most this many frames / ms
 const REVEAL_MAX = 12, REVEAL_MS = 1500;
 const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
-function medianOf(a, n) { const b = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return n ? b[n >> 1] : 0; }
 const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
 const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e && !startupFailed.shown) e.textContent = text; };
 // BOOT-FAIL (P73, the user's review of an exported build: "when WebGL context creation failed, the screen stayed on

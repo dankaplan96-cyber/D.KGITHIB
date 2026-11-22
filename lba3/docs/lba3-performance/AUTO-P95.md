@@ -245,3 +245,13 @@ the base `5e927e5e` ("before"), once after the merge ("P95 merged" in WORLD_ART_
 ## 8. Real hardware
 
 (empty — order 64 AUTO-HW)
+
+## 9. PACE-ALL (22.11): the budget follows the pace on this screen
+
+Auto's budget was `max(16.67, the limit)`. It is now the time a drawn frame has on this screen (engine/pace.js
+`paceBudgetMs`, main.js `paceBudget`): under a limit its whole-refresh interval (P101: 60 on 90 Hz is an even 45, 22.2 ms;
+30 on 60 Hz stays 33.33), Unlimited one refresh or Unlimited's even pace (every n-th refresh, FPS30.md §12.3) — never under
+16.67 ms, so Auto never drops quality to chase more than 60 frames a second; on a fast screen the game cannot fill, the
+even pace keeps the sharper profile at an even half rate. upBudget stays 16.67; the PRESENT, SLOW_PANEL, REVISIT and
+GPU-TIMER-KA rules are unchanged. A change of pace resets the window in progress (AutoApply.onPace), not the evaluation;
+the cache keys are unchanged. Details and tests: docs/lba-maturity/FPS30.md §12.
