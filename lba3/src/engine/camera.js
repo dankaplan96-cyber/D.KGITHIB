@@ -141,6 +141,7 @@ const CH_MIN_VIEW = 3.2, CH_OVER_ARMS = [3.2, 2.4], CH_RISE_Q = 1.45;
 // that is not clear (something taller than it right behind him)
 const CH_HIGH_ARMS = [6.5, 5.5, 4.6, 3.9], CH_HIGH_P = [0.62, 0.75, 0.88, 1.0, 1.12], CH_OVER_HI = [4.4, 5.6], CH_OVER_HI_P = [1.2, 1.32, 1.45, 1.52];
 const CH_HIGH_ROOF_Q = 0.88;
+const CH_OVER_TOP = 1.565, CH_OVER_TOP_ARMS = [3.2, 4.4, 5.6];   // (P58, CAM-TOP: straight over his head, the last view that may see him: armFor)
 const CH_LEAD_CONFIRM = 0.25, CH_SW_V_OVER = (110 * Math.PI) / 180, CH_SW_A_OVER = (300 * Math.PI) / 180;   // (CAM-ALLEY, see _chase and _chaseClear)
 const CH_OVER_SEE = [0.1, 0.2, 0.35, 0.5, 0.75, 1], CH_OVER_SEE_STEP = 0.9;   // (CAM-OVERSIGHT: the steps along the way over his head, see _chase)
 const CH_KI_A = 60, CH_KI_STEP = 0.5;   // (CAM-EASE-IN: the keep rules' entry eased over play time when it steps more than this a 1/60 s, m: _chase)
@@ -1406,6 +1407,11 @@ export class CameraRig {
       // 2.4 m over his head, at its foot to 1.3-1.5 m in the doorway's reveal behind him)
       let clearQ = null;
       for (const [oa, qs] of CH_OVER_SET) for (const q of qs) { at(_b, yw, oa, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true); if (!this._solidAt(_b, CH_NEAR) && !this._overRoof(_b)) { clearQ ??= [q, oa]; if (this._sees(_b, _v)) return [oa, true, 2, q, oa]; } }
+      // (P58, CAM-TOP: and only then straight over him, CH_OVER_TOP: at the Citadel station's south-east tower, his back to
+      // its foot 0.1 m outside its slate roof's rim, every tilt up to CH_OVER_HI_P's last (1.52 rad) stood the camera 0.2-0.3 m
+      // behind him over the rim, and the rim hid him — 1.3 s unseen, the outline only, turning there. Straight over his head
+      // the line to him passes outside the rim)
+      for (const oa of CH_OVER_TOP_ARMS) { at(_b, yw, oa, T, CH_OVER_TOP); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true); if (!this._solidAt(_b, CH_NEAR) && !this._overRoof(_b) && this._sees(_b, _v)) return [oa, true, 2, CH_OVER_TOP, oa]; }
       if (far) return far;
       if (clearQ) return [clearQ[1], false, 2, clearQ[0], clearQ[1]];   // (none sees him: the least tilt that stands clear; the silhouette)
       const near = tiers(Math.min(cut, CH_MIN_VIEW - 0.25), CH_MIN);
