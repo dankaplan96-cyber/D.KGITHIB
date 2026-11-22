@@ -1,0 +1,92 @@
+{
+ "lookdevCounts": [
+  {
+   "tris": 8410,
+   "meshes": 3
+  }
+ ],
+ "hero": {
+  "skinned": 2,
+  "tris": 10088,
+  "bones": 24,
+  "eyes": true,
+  "mouth": true,
+  "morphs": 3,
+  "settings": {
+   "camera": "follow",
+   "camDist": "far"
+  }
+ },
+ "zoe": {
+  "skinned": 1,
+  "eyes": true,
+  "mouth": true,
+  "morphs": 3
+ },
+ "game-play-far-standing": {
+  "hero": [
+   609,
+   321,
+   670,
+   446
+  ],
+  "zoe": [
+   608,
+   234,
+   640,
+   341
+  ]
+ },
+ "game-play-far-walk": {
+  "hero": [
+   609,
+   315,
+   671,
+   448
+  ],
+  "zoe": [
+   869,
+   353,
+   912,
+   484
+  ]
+ },
+ "game-talk-1": {
+  "hero": [
+   865,
+   196,
+   1143,
+   723
+  ],
+  "zoe": [
+   522,
+   187,
+   702,
+   633
+  ]
+ },
+ "game-talk-2": {
+  "hero": [
+   584,
+   165,
+   751,
+   638
+  ],
+  "zoe": [
+   256,
+   250,
+   482,
+   850
+  ]
+ },
+ "talk": [
+  {
+   "state": "dialog",
+   "speaker": "zoe"
+  },
+  {
+   "state": "dialog",
+   "speaker": "hero"
+  }
+ ]
+}
