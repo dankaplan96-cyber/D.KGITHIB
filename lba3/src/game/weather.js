@@ -110,11 +110,12 @@ const T_LIGHT = {
   noon: NOON,
   golden: lstate({ sunK: 1.0, hemiK: 0.82, fogK: 0.95, sun: [1.22, 0.86, 0.58], hemi: [1.06, 0.95, 0.82], fog: '#f6cc9c', fogMix: 0.55, sky: [1.0, 0.92, 0.84], sea: [1.08, 0.95, 0.8], cloud: [1.0, 0.86, 0.68], frame: [1.06, 1.0, 0.9] }),
 };
-// Zeelich's: the same day, its tints kept inside the pink-violet
+// Zeelich's: the same day, its tints kept inside the pink-violet (golden hour's fog a warm rose, its blue kept over its
+// green: a peach one, '#f6c8b4', took the region's lilac fog to a sandy orange at the evening's height)
 const Z_LIGHT = {
   morning: lstate({ sunK: 0.88, hemiK: 0.97, fogK: 0.85, sun: [0.92, 0.94, 1.08], hemi: [0.95, 0.97, 1.05], fog: '#e2d6f0', fogMix: 0.4, frame: [0.98, 0.99, 1.03] }),
   noon: NOON,
-  golden: lstate({ sunK: 1.0, hemiK: 0.85, fogK: 0.95, sun: [1.16, 0.88, 0.7], hemi: [1.05, 0.95, 0.88], fog: '#f6c8b4', fogMix: 0.5, frame: [1.05, 0.99, 0.93] }),
+  golden: lstate({ sunK: 1.0, hemiK: 0.85, fogK: 0.95, sun: [1.16, 0.88, 0.7], hemi: [1.05, 0.95, 0.88], fog: '#f6c2c6', fogMix: 0.5, frame: [1.05, 0.99, 0.93] }),
 };
 // the day: [phase, light]; between two keys a smoothstep; 1 wraps to 0 (golden hour back to morning, never to dark)
 const DAY = [[0, 'morning'], [0.08, 'morning'], [0.26, 'noon'], [0.55, 'noon'], [0.72, 'golden'], [0.86, 'golden'], [1, 'morning']];
