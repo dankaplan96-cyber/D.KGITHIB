@@ -2,6 +2,7 @@
 
 (21.11, TEST-DEBT: `slidetraps` and `camclear` rows added; what it fixed is under "Fixed by TEST-DEBT".)
 (22.11, CAM-HANDBACK / CAM-EASE, the camera pass: `camfollow` and `camclear` rows fixed and moved to "Fixed by the camera pass"; `camsteady` and `controls` rows annotated.)
+(22.11, FIX-PASS 2: `chapter1`'s orchard throw made stable (fixed spots; 3 of 3 runs 33/33); `jumpreach` fixed (the old mill's stair-stones 27° apart: 4/4); chapters 9 and 10 set the Zeelich dock's ferry by U-1's rule as chapter 2 does (`council.js`, `network.js`; travel 27/27); the Citadel station's lane sign under the main's bridge has a camera volume (Follow: 5 → 0 hidden spots of 25; the Fixed view's spots by the bridge's pipe and trestle left, below).)
 (22.11, FIX-PASS: `worldfit`, `weather`, `prologue`, `interior-life`, `travel` fixed (rows struck through below). P58's barrel nook at the Citadel station: the barrels fill it (`island.js`; by input, the Fixed view's longest hidden run 3.77 → 0.87 s). P5/P10's reservoir branch: already seated by `b763ead1` (12.11), buried 1.6 m under the climb and its landing; checked again (the pipe's drawn segments: none over the landing, it leaves the ground west of it at x −42).)
 
 Updated 17.11.2026 by AUDIT-FIX (RELEASE-AUDIT-v96 A-13) from the audit's suite table (section 7, run on v96 =
@@ -85,7 +86,7 @@ longer counted (0.1 / 0.1 / 0.3 cm after; the old step 0.1 / 0.2 / 0.2).
 
 ## Intermittent, passed on v96
 
-`chapter1` (FIX-PASS 22.11: 1 of 2 runs, "valve orchard (ball) opened" false after its 16 throws from random spots 6 m round the cage, and the chain after it; the rerun 33/33. The spots are `Math.random`: not separated), `saveslots` (the slot picture's timeout: 25/25 as committed), `overlaps` (Lhar's roof spots: pass), `sewers` (three
+~~`chapter1`~~ (**fixed 22.11, FIX-PASS 2: the test.** It threw from `Math.random` bearings 6 m round the orchard cage; a third of the bearings have the bars or the main in the lob's way. Probed, 4 throws a bearing: every throw from 1.15 … 2.1 rad (the cage's gate side, east) opened it, none from about a third of the rest. Five fixed spots on that side (1.27 … 1.87 rad): 3 of 3 runs 33/33), `saveslots` (the slot picture's timeout: 25/25 as committed), `overlaps` (Lhar's roof spots: pass), `sewers` (three
 well-house lift checks: 32/32), `sewers-ways` (two out-of-door spots: 34/34).
 
 ## Not rerun since v96
@@ -94,7 +95,29 @@ well-house lift checks: 32/32), `sewers-ways` (two out-of-door spots: 34/34).
 the coordinator, on a quiet machine, `BATCH=8`), `door-sweep`, `room-cutaway`, `npc-feet`, `walkers`, `wizards`, `shops`,
 `chapter2`–`chapter10` (but `chapter1` and `chapter4`: AUDIT-FIX). Their last known state is RELEASE-AUDIT-v75's.
 
-## tests/jumpreach.mjs — "Zeelich's old mill" (found 19.11)
+## ~~tests/jumpreach.mjs — "Zeelich's old mill" (found 19.11)~~ fixed 22.11 (FIX-PASS 2), 4/4
+**The game.** Traced hop by hop (P.climbOldMill): the bot reached stone 6 and every hop to stone 7 fell back. A hop from the
+middle of a stone with a short run-up crests 1.14 m up (the 30 fps apex) 0.95 m short of the next stone's middle, 0.04 m over
+its top and before its edge; from 1.54 m it lands. Every stone was that marginal (each first try fell back); stone 6's
+retries started at 1.66 m. The stones stand 27° apart round the tower, not 30° (1.54 m between the places to stand, not
+1.71; `zeelich.js`); heights and the gallery unchanged, its gap and landing follow the stones. jumpreach 4/4 (one pass:
+7.09 … 13.66, the gallery 14.75). Pictures before/after looked at. Automated runtime only. Not rerun: the playthrough's
+06-zeelich and 13-network segments (they climb the mill by the same harness).
+
+The row as it stood:
 Up the mill's 7 stair-stones to the gallery by jumps: the bot is stuck at 12.56 m on the hop onto the gallery (heights
 7.09 … 11.47, 12.56, 12.56, then falls back). **Fails identically on v99 (ba62aa2c)** and on today's build with the old
 or new physics.js (FPS30): not caused by v100/v101's work. Open: the gallery's lip vs the last stone (a world fix).
+
+## The Citadel station: Twinsen standing still under the main's bridge over the gate lane (FIX-PASS 2, 22.11)
+Probe: by input from the gate passage's mouth to each of 25 spots round the bridge (design x 37.6–40.8, z 34.4–37.6), then
+3 s still; the P58 walk's test (rays from the camera to his chest and head against the drawn opaque meshes, both blocked =
+hidden). **Follow: 5 of 25 hidden → 0 of 25** (and 0 of 25 walking in from the east): the Follow camera came to rest
+0.1–0.2 m behind the project's sign hung under the bridge (it had no volume), him on the far side. The sign has a scenery
+volume under the bridge's now (`island.js`). **Fixed: 6 of 25, unchanged — left.** Straight under the bridge (x 39.2) he is
+seen at 4 of 5 spots; the hidden spots are beside it or at the trestle at z 39.6, where the 4.3 m pipe runs along the view's
+heading and the shot is at its pitch limit (28.6 m): no camera height shows him there under LBA2's rule (the heading kept),
+as in the gate passage; the silhouette pass draws him. A volume for the trestle was declined by OVERLAP-3 (it tips the shot
+to the top-down limit over an open A-frame). Walking in from the east, 9 more Fixed spots west of the bridge (x 38.0–38.8)
+are hidden by the gatehouse's south-east mass at the same pitch limit: camera behaviour, not this bridge. Automated runtime only.
+
