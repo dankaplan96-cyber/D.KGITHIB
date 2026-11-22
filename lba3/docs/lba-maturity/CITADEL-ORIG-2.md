@@ -203,8 +203,55 @@ LBA2 | ours before | ours after, the same views: `/dev/shm/cit2/sheets/` (not co
   off its west face: the harbour reaches 7 m further west than LBA2's, where it reached 16.5 m. LBA2's platform-centre
   planter with its tree and its paving over our hall's yard pattern are not built.
 - The streets: the north cross streets round the square's block (the climb's paving is in the way); our blocks still
-  carry more grass than LBA2's.
-- Twinsen's walls stay our pale rubble; LBA2's are darker.
+  carry more grass than LBA2's. (P42, below: the ring round the square's block done.)
+- Twinsen's walls stay our pale rubble; LBA2's are darker. (P42, below: wrong way round from the play camera; LBA2's
+  are paler, and ours are lighter now.)
+
+## P42 leftovers (22.11)
+
+The user chose to finish the three items left above. **Automated runtime only**: pictures by script (`tools/map-orig`,
+the same cameras both sides), looked at; suites headless. LBA2's side stays in `/dev/shm/p42/` (not committed).
+
+**1. The north cross streets: done** (`world.js` GRID_STREETS; ground texture only, no height, collider or route).
+- LBA2 rings the square's block with 3 m streets. Ours now: along the square's north rim at z −15.8 (x −52 to −32.5,
+  tangent to its kerb ring, across the climb's paving); the block's west side at x −52 (LBA2's line) down to the west
+  street's foot; its east side at x −32.5 (LBA2's line) down to Pippa's street by her shop's north wall.
+- Trees, rocks, grass and tulip beds come off the new paving after the scatter (no random draw moves).
+- Left out: LBA2's second cross street 3.5 m further north, along the terraces' foot. Our ground rises and falls
+  3.1–4.6 m along its line (the first shelf's slope); tried, it read as a paved hillside.
+
+**2. The harbour's width: not done, it needs the user's decision.** Nothing in the harbour changed (OVERLAP-3's
+bollards and HARBOUR-BRINK's ground and wall tops are untouched).
+- Measured straight down, the same camera (`captures/p42/harbour_top_now.jpg`; LBA2's beside it in `/dev/shm/p42/`):
+  LBA2's L *is* our quay. Its arm (z 36–43) is our quay's north half; its leg (x −121 to −115, to z 50) our quay's west
+  strip; its notch (open water x −115 to −93, south of z 43) covers our quay's south half and our notch. Our stone L
+  hangs off the quay's west face, to x −127.
+- So LBA2's proportion means: the stone L goes; the quay's west 3.2 m carry on south as the leg; the quay south of
+  z 44.6 opens into the notch; the ferry berths along the leg (7 m east of now); the lift, the barge and Doran's boat
+  lie in the notch beside the leg (chapter 1's arrival, the opening and the prologue follow the pier's frame).
+- That takes the ground from under **Doran's shed and the harbour master's shed**, the quay's barrels, net heap, a
+  lamp, a tulip bed, a bitt and about ten placed spots (townbusy, containers, citydress, the handcart, a bollard run).
+  LBA2 has open water there, so where the two sheds go is the user's call.
+- Shifting the whole quay 7 m east instead (nothing relocated) would narrow the notch from 15.7 m to 8.7 m (LBA2's is
+  22 m): one disproportion for another. Not done.
+
+**3. The houses' walls lighter: done** (colour only).
+- `textures.js` `rubbleHouse`, the houses' own rubble: pale whitish-grey stones packed close in darker joints, as LBA2's
+  house rubble from the play camera. On Twinsen's, the neighbour's, wing2 and Doran's shed (`town.js`, `island.js`);
+  the embankments, quay and pier walls keep `rubble`. Twinsen's and the neighbour's fronts face east, away from
+  Citadel's sun: a warmer tint.
+- Mean colour of Twinsen's front from the play camera: (30, 32, 36) → **(71, 72, 76)**; LBA2's (96, 88, 77), lit
+  there. Even a white wall reaches only ~90 in our shade, so the rest is lighting, not colour. wing2's sunlit south face
+  (78, 71, 63) → (105, 98, 90).
+- Cost: one 256² texture; no new mesh.
+
+**Tests** (port 8844, SwiftShader, one browser at a time): slidetraps PASS, citadel-structures PASS, world-consistency
+PASS, chapter1 PASS (33/33). chapter2 not run (the harbour and the ferry did not move).
+
+**Pictures** (ours before | after, `captures/p42/`): `streets_north.jpg`, `streets_north_w.jpg`, `streets_west.jpg`,
+`streets_top.jpg`; `walls_twinsen.jpg`, `walls_neighbour.jpg`, `walls_wing2.jpg`; the harbour now: `harbour_top_now.jpg`.
+LBA2 | ours before | after: `/dev/shm/p42/f_streets.jpg`, `f_walls.jpg`, `north_LBA2_before_after.jpg`,
+`harbour_pair_LBA2_ours.jpg`.
 
 ## Rerun
 
