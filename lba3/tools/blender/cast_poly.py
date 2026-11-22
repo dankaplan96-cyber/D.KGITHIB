@@ -3086,8 +3086,17 @@ def build_sphero(name):
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         sphere(b.P('shBall' + s, coatD, 'sh' + s, 50), sh, 21 * u, 7, 5)
-        tube(b.P('upper' + s, coat, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), sh, el, 14 * u, 13 * u, 6)
-        tube(b.P('fore' + s, coat, 'el' + s, 50), el, hd, 13 * u, 12 * u, 6)
+        if JOINTS8_OLD:
+            tube(b.P('upper' + s, coat, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), sh, el, 14 * u, 13 * u, 6)
+            tube(b.P('fore' + s, coat, 'el' + s, 50), el, hd, 13 * u, 12 * u, 6)
+        else:
+            # (JOINTS-BLENDER 8, order 66: the thin arm was two straight tubes meeting at the elbow, so a bent arm walking
+            # or running showed a corner, two sticks on a hinge. Now one thin shell along the bones through rings round the
+            # elbow (arm_sleeve, as the cast's sleeves), as thin as before; the ball at the star's tip and the ball hand are
+            # LBA1's and stay. JOINTS8_OLD=1: as before.)
+            SW = {}
+            arm_ = b.P('upper' + s, coat, lambda p, s=s, SW=SW: {k + s: v for k, v in SW.get(tuple(round(x, 6) for x in p), {'sh': 1.0}).items()}, 50)
+            SW.update(arm_sleeve(arm_, sh, el, hd, 13.5 * u, fore_k=(0.92, 0.84), n=8))
         hp_ = b.P('hand' + s, '#c3936f', 'hand' + s, 60)
         sphere(hp_, hd, 57 * u, 9, 6)
         hand_detail(hp_, hd, 57 * u, sx, grobo=True)   # (CAST-POLISH: a thumb and knuckles on the big ball)

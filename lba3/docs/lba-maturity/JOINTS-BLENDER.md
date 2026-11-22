@@ -179,3 +179,17 @@ play camera's distance (8 m, 4.6 m up) and at dialogue distance (2.1 m, front 3/
 - `captures/joints-blender/pippa-motion-before-after.jpg` (pairs, before left: shoulders walking, running, the shrug and
   talking; then walk, run and both from the side), `cast-shoulder-before-after.jpg` (nine of the cast walking),
   `cast-shoulder-raised-after.jpg` (Pippa, Mira and Gilbert with an arm raised, after).
+
+### A Sphero (`cast_poly.py build_sphero`)
+- **Seen:** LBA1's Sphero has thin stick arms from the star's points with a small ball at each tip, big ball hands, and
+  stick legs with ball knees; those balls are the original's design and are kept (the knee ball covers the joint in every
+  motion; the flat shoe's heel is closed — checked drawn double-sided, it only reads as an opening in its shading). The
+  fault in motion was the **elbow**: two straight tubes meeting there, so a bent arm walking, running or talking showed
+  a corner, two sticks on a hinge.
+- **Fixed:** the arm is one thin shell along the bones (the cast's `arm_sleeve`, 8 sides) through rings round the elbow,
+  as thin as before (13.5 units, the forearm tapering to 0.84 of it); the bend now curves. Both Spheros.
+- Triangles 4,920 → 5,160 each; bones, eyes, mouths and materials unchanged. `JOINTS8_OLD=1` rebuilds them byte for byte.
+- `captures/joints-blender/sphero-arm-before-after.jpg` (pairs, before left: walk, run, talk from the front 3/4; the walk
+  and an arm raised from behind).
+- **A question for the cloud and the user:** the Sphero's balls (shoulder tips, knees) are LBA1's look; if "no ball look
+  at the knee" is meant for it too, that is a design change (the knee as one shell like the cast's), not a joint fix.
