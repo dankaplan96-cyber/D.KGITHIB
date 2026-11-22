@@ -143,11 +143,15 @@ const n1d = await timed(() => {
   const G = game, H = G.rooms.ballastra.harbor, c0 = G.hero.coins;
   const c = T.use(H.spots.crank, 'bl_crank', 0.9);
   for (let i = 0; i < 120; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+  // (Ferro's two kashes, walked to one by one where they lie — they pop a random way: P.grab's nearest-first round
+  //  took one and stopped short of the other, FULL-TEST-22-11 — then anything else lying about)
+  for (let k = 0; k < 3; k++) { const ps = G.pickups.list.filter((q) => q.owe === 'bl_oweKash'); if (!ps.length) break; for (const p of ps) { P.go(p.pos.x, p.pos.z, { tol: 0.4, maxT: 15, fight: false }); G.step(0.5); P.settle(); } }
   P.grab?.(12); P.settle(); for (let i = 0; i < 40; i++) G.step(0.1);
-  return { c, lv: H.lift.level, balanced: H.balanced, blocked: H.walkway.blocked, boatOut: H.boat.out, bridge: H.shortcut.open, gate: G.rooms.ballastra.exits.includes(H.exits.toArches), coins: G.hero.coins - c0, ...T.view() };
+  const kash = G.pickups.list.filter((q) => q.owe === 'bl_oweKash').map((q) => [+q.pos.x.toFixed(1), +q.pos.y.toFixed(1), +q.pos.z.toFixed(1)]);
+  return { c, lv: H.lift.level, balanced: H.balanced, blocked: H.walkway.blocked, boatOut: H.boat.out, bridge: H.shortcut.open, gate: G.rooms.ballastra.exits.includes(H.exits.toArches), coins: G.hero.coins - c0, kashLeft: kash, ...T.view() };
 });
 check('the crank to the middle: the load seats on the weight, the deck level with the basin, the boat sails out', n1d.bl.n1 && n1d.balanced && n1d.lv === 2 && !n1d.blocked && n1d.boatOut && n1d.c.said.some((l) => /floats free/.test(l)), n1d);
-check('the harbour opens: the pier bridge swung back, the district gate open; Ferro tosses his kashes', n1d.bridge && n1d.gate && n1d.coins >= 10, { bridge: n1d.bridge, gate: n1d.gate, coins: n1d.coins });
+check('the harbour opens: the pier bridge swung back, the district gate open; Ferro tosses his kashes', n1d.bridge && n1d.gate && n1d.coins >= 10, { bridge: n1d.bridge, gate: n1d.gate, coins: n1d.coins, kashLeft: n1d.kashLeft });
 const n1e = await timed(() => { const te = T.talk('tessa'); return { te, ...T.view() }; });
 check("Tessa and the label: she mended the B-7, was told it was rejected; a bounded job (the box) needing Corvin's float and Halden's numbers", n1e.bl.tessa2 && n1e.te.said.some((l) => /Rejected/.test(l)) && n1e.te.said.some((l) => /A bounded job/.test(l)) && n1e.te.said.some((l) => /Corvin's kiln/.test(l)) && /Water Gardens are dry/.test(n1e.obj) && !n1e.items.includes('bl_label'), { said: n1e.te.said, obj: n1e.obj, items: n1e.items });
 

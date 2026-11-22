@@ -90,8 +90,11 @@ export async function launch({ width = 960, height = 540, storageState, locale, 
 // load the page and wait for the title screen; `query` e.g. '?nocine' skips the opening cinematic
 export async function open(page, query = '', { freeze = true } = {}) {
   // a navigation the game started itself (Quit's delayed reload) can abort ours under heavy load: let it land, retry
+  // (the navigation's own wait follows BOOT_TIMEOUT like the boot's below, never under 180 s: a reopen at load 10–12
+  //  took longer than 180 s to fire 'load' — FULL-TEST-22-11, autoquality-game section 7)
+  const navT = Math.max(180000, +process.env.BOOT_TIMEOUT || 0);
   for (let i = 0; ; i++) {
-    try { await page.goto(URL0 + query, { waitUntil: 'load', timeout: 180000 }); break; }
+    try { await page.goto(URL0 + query, { waitUntil: 'load', timeout: navT }); break; }
     catch (e) { if (i >= 2 || !/ERR_ABORTED|frame was detached/.test(e.message)) throw e; await page.waitForLoadState('load').catch(() => {}); await page.waitForTimeout(1500); }
   }
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: +process.env.BOOT_TIMEOUT || 300000 }); // (BOOT_TIMEOUT: a loaded machine)

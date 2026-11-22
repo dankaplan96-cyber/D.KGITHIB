@@ -1980,6 +1980,12 @@ export class Pickups {
         p.vel.y -= 20 * dt;
         // (a popped bonus doesn't drift through a wall: it drops at the wall's foot, as a giver's does in flyStep)
         if ((p.vel.x || p.vel.z) && g.physics.solidAt(p.pos.x + p.vel.x * dt, p.pos.z + p.vel.z * dt, p.pos.y, 0.12)) { p.vel.x = 0; p.vel.z = 0; }
+        // (nor over the sea or a drop, as a container's bonus in flyStep: Ferro's kashes, popped on the lift's quay, fell
+        //  5 m into the chamber's water one time in eight, where no walk reaches them — FULL-TEST-22-11)
+        if (p.vel.x || p.vel.z) {
+          const nx = p.pos.x + p.vel.x * dt * 6, nz = p.pos.z + p.vel.z * dt * 6, gy = g.physics.groundAt(nx, nz, p.pos.y), here = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y);
+          if (gy < WATER_FLOOR || gy < here - 0.8) { p.vel.x = 0; p.vel.z = 0; }
+        }
         p.pos.addScaledVector(p.vel, dt);
         const gy = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y) + 0.45;
         if (p.pos.y < gy) { p.pos.y = gy; p.vel.y = Math.abs(p.vel.y) * 0.35; p.vel.x *= 0.6; p.vel.z *= 0.6; if (Math.abs(p.vel.y) < 1) p.vel.set(0, 0, 0); }

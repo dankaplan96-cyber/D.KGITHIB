@@ -570,6 +570,7 @@ class Game {
     // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
     this.drawBatch = new DrawBatch();
     TEXARRAY.init = (t) => this.renderer.renderer.initTexture(t);   // (PERF-CPU: the world's texture array, sent to the GPU when made)
+    TEXARRAY.renderer = this.renderer.renderer;   // (FIX-PASS 3: a large array's upload in steps, layers at a time: texarray.js)
     // (PERF-BATTERY-2: then the draw batches, terrain tiles and instanced tiles wholly outside the view by their boxes)
     this.boxCull = new BoxCull();
     this.renderer.mid = () => {
