@@ -239,7 +239,7 @@ const CH_KEEP_EASE = 0.3, CH_KEEP_K = 0.4;
 //    either of these times on along his walk (_walkClears): he walks clear of it. CH_SW_PART: walking, a new swing the
 //    same way as the one under way and less than this short of it keeps the one it has.
 const CH_IN_KEEP = 0.25, CH_OVER_Q_HOLD = 0.5, CH_OVER_Q_UP = 0.15, CH_WALK_OUT_V = 0.2, CH_WALK_SEE = [0.5, 1.0], CH_SW_PART = 0.26, CH_HIGH_HYST = 1.0, CH_EL_MAX_DOOR = (43.5 * Math.PI) / 180, CH_BACK_WAIT = 1.0;
-const CH_SW_SMALL = 0.27, CH_BACK_WAIT_SMALL = 4, CH_FOLD_T = 0.5, CH_FOLD_D = 1.0, CH_BOB = 0.035;   // (CAM-RIDE: a walk's one-step swing comes back on his next turn its way, at the latest after this long: _chaseClear)
+const CH_SW_SMALL = 0.27, CH_BACK_WAIT_SMALL = 4, CH_FOLD_T = 0.5, CH_FOLD_D = 1.0, CH_BOB = 0.035;   // (CAM-RIDE: a walk's swing this small (rad) comes back on his next turn its way, at the latest after this long (s); CAM-FOLD: his back read this far on along his walk (s), or this far ahead of him pushed on (m); CAM-BOB: the height's backlash (m): _chaseClear, _chase)
 const CH_SW_V = (70 * Math.PI) / 180, CH_SW_A = (160 * Math.PI) / 180, CH_RISE_V = 0.35, CH_RIM_EL = 0.96, CH_DIP_V = 1.0, CH_DIP_A = 5, CH_PREDIP = -0.25;
 // the candidates, cheapest first: [swing, rise, cost]; at the full arm and 0.8 of it every swing to CH_SW_MAX; shorter, a
 // coarser set to CH_SW_FAR (every other swing, a rise and the dips)
@@ -1216,8 +1216,9 @@ export class CameraRig {
       // (CAM-STEADY: a walk's swing too waits for the chase to stand still or turn its way, CH_BACK_WAIT s at the most)
       // (CAM-RIDE, camsteady's Modern street at Far: heading reversals 103.4/min over his own 101.7: turning by Bug Street's
       // pair the walk took a one-step swing, 10°, the way the chase turned, and 0.3 s after the chase stood it came back
-      // the other way — a turn of the view he never made, twice on the route. A swing that small waits for the chase to turn
-      // its way — it rides on his next turn — or CH_BACK_WAIT_SMALL s at the most; standing, as before, it settles back)
+      // the other way — a turn of the view he never made, twice on the route; off the harbour pier's end the 6° CAM-FOLD left
+      // came back the same way. A walk's swing of CH_SW_SMALL or less waits for the chase to turn its way — it rides on his
+      // next turn — or CH_BACK_WAIT_SMALL s at the most; standing, as before, it settles back)
       const small = C.walkSw && Math.abs(C.sw) <= CH_SW_SMALL, ride = small && moving && (C.backT || 0) < CH_BACK_WAIT_SMALL && (C.want ?? full) >= CH_MIN_VIEW;   // (held so while the view where it stands keeps MIN-VIEW's arm or more: a view that small a turn off his back needs about the arm his back does, and an arm still letting out after an in-cut is no reason to turn back)
       const walkBack = C.walkSw && (small ? !ride : C.stillT >= CH_SW_STILL || (C.backT || 0) >= CH_BACK_WAIT);
       const hold = back ? (ride && C.turnDir && Math.sign(e) !== C.turnDir) || !cut && !settle && !walkBack && (!(moving || C.walkSw) || (C.turnDir && Math.sign(e) !== C.turnDir))
