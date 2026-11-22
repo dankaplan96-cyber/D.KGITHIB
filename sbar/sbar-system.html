@@ -8,6 +8,7 @@
 :root{--doc-font:"David","David Libre","Times New Roman",serif}
 .fit-inner tr.blank-row td.name::after{content:"\00a0"}
 .print-page.fitted{overflow:hidden}
+.on-leave-page .weekend-leave-table tbody td{height:12mm!important;line-height:1.15!important}.on-leave-page .weekend-leave-table tbody td.weekend-leave-empty{height:30mm!important}
 .shower-day-page td.assign{text-align:right;font-weight:700}.shower-day-page td.assign small{font-weight:400;font-size:.8em}.iso-mini{font-size:.75em;font-weight:900;color:#8a2626}.shower-assign-summary{margin-top:2mm;padding:1.5mm 2mm;border:1px solid #555;font-size:8.5pt;line-height:1.35;columns:2;column-gap:6mm}
 .shower-report{direction:rtl;font-family:var(--doc-font);color:#000}.sr-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;margin-bottom:4mm;font-size:10pt}.sr-head>div:last-child{text-align:left}.sr-title{font-size:18pt;font-weight:900}.sr-table{width:100%;border-collapse:collapse;font-size:10pt}.sr-table th{background:#242424!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:1.5mm;border:1px solid #333}.sr-table td{border:1px solid #666;padding:1.2mm 1.5mm;text-align:center}.sr-table td.name{text-align:right;font-weight:700}.sr-table thead{display:table-header-group}.sr-table tr{break-inside:avoid}.sr-foot{margin-top:3mm;font-size:9pt}
 @media print{#printArea .shower-report{display:block}}
@@ -841,6 +842,10 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
       <div class="print-card">
         <div class="print-icon" aria-hidden="true">🏖️</div><h3>יציאות לחופש</h3><p class="hint">רשימה לסימון יציאה וחזרה בסוף השבוע.</p>
         <button class="btn primary big" data-print="weekend-leave">הדפס רשימת חופשות</button>
+      </div>
+      <div class="print-card">
+        <div class="print-icon" aria-hidden="true">🧳</div><h3>מטופלים בחופשה</h3><p class="hint">מי נמצא עכשיו בחופשה, ממתי ולכמה ימים.</p>
+        <button class="btn primary big" data-print="on-leave">הדפס מטופלים בחופשה</button>
       </div>
       <div class="print-card">
         <div class="print-icon" aria-hidden="true">📄</div><h3>רשימת מטופלים</h3><p class="hint">חדר ושם המטופל בלבד.</p>
@@ -2361,7 +2366,7 @@ async function saveNetworkReport(filename,content,date=state.reportDate){
   if(!await ensureWorkingFolder(false))return false;
   try{await prepareSharedFolders();const dateDir=await reportsDirHandle.getDirectoryHandle(date,{create:true});await writeTextToDir(dateDir,filename,content);return true}catch(e){console.warn('Report save failed',e);setNetworkStatus('הדוח לא נשמר בתיקיית הרשת','warn');return false}
 }
-function reportFilenameFor(type){if(type==='showers-day')return `רחצות_${showerDate||state.reportDate}.html`;if(type==='shower-report')return 'דוח_רחצות.html';const shift=SHIFT_LABEL[state.activeShift];if(type==='sbar-picked')return `SBAR_${shift}_נבחרים.html`;if(type==='vitals-picked')return `סימנים_${shift}_נבחרים.html`;if(type==='tasks')return `משימות_${shift}.html`;if(type==='showers')return 'רחצה_יומי.html';if(type==='sbar'||type==='sbar-nurses')return `SBAR_${shift}.html`;if(type==='vitals'||type==='vitals-nurses')return `סימנים_${shift}.html`;if(type==='weekend-leave')return 'רשימת_יציאות_לחופש.html';if(type==='patients-by-room')return `רשימת_מטופלים_לפי_חדרים_${shift}.html`;return `דוח_${shift}.html`}
+function reportFilenameFor(type){if(type==='on-leave')return `מטופלים_בחופשה_${state.reportDate}.html`;if(type==='showers-day')return `רחצות_${showerDate||state.reportDate}.html`;if(type==='shower-report')return 'דוח_רחצות.html';const shift=SHIFT_LABEL[state.activeShift];if(type==='sbar-picked')return `SBAR_${shift}_נבחרים.html`;if(type==='vitals-picked')return `סימנים_${shift}_נבחרים.html`;if(type==='tasks')return `משימות_${shift}.html`;if(type==='showers')return 'רחצה_יומי.html';if(type==='sbar'||type==='sbar-nurses')return `SBAR_${shift}.html`;if(type==='vitals'||type==='vitals-nurses')return `סימנים_${shift}.html`;if(type==='weekend-leave')return 'רשימת_יציאות_לחופש.html';if(type==='patients-by-room')return `רשימת_מטופלים_לפי_חדרים_${shift}.html`;return `דוח_${shift}.html`}
 async function savePrintedReportToNetwork(type,title,content){if(!workingDirHandle)return;const full=standaloneReport(`${state.wardName} · ${title} · ${SHIFT_LABEL[state.activeShift]} · ${fmtDate(state.reportDate)}`,content);const ok=await saveNetworkReport(reportFilenameFor(type),full);if(ok)setNetworkStatus(`מסונכרן · דוח ${SHIFT_LABEL[state.activeShift]} נשמר`,'connected')}
 async function saveAllShiftReportsToNetwork(){
   if(!await ensureWorkingFolder(true))return;await networkSaveNow(false);if(networkConflict){alert('קיימת התנגשות מידע. יש לרענן לפני שמירת דפי המשמרת.');return}
@@ -2416,6 +2421,13 @@ function makePatientsByRoomPrint(){
   return `<style>@page{size:A4 portrait;margin:0}</style><section class="print-page patient-room-page" style="--patient-list-row-h:${rowH}mm;--patient-list-font:${font}pt"><div class="patient-room-head"><div class="date">${esc(fmtDate(state.reportDate))}</div><div class="title">רשימת מטופלים</div><div class="ward">${esc(state.wardName)}</div></div><div class="patient-list-columns"><div class="patient-list-box"><div class="patient-list-title">לפי חדרים</div><table class="simple-patient-table"><colgroup><col style="width:22%"><col style="width:78%"></colgroup><thead><tr><th>חדר</th><th>שם המטופל</th></tr></thead><tbody>${rowsFor(byRoom)}</tbody></table></div><div class="patient-list-box"><div class="patient-list-title">לפי א׳–ב׳</div><table class="simple-patient-table"><colgroup><col style="width:22%"><col style="width:78%"></colgroup><thead><tr><th>חדר</th><th>שם המטופל</th></tr></thead><tbody>${rowsFor(byName)}</tbody></table></div></div><div class="patient-room-foot"><span>רשימת מטופלים נוכחית</span><span>סה״כ מטופלים: ${patients.length}</span></div></section>`;
 }
 
+function makeOnLeavePrint(){
+  const pts=activePatients().filter(p=>p.onLeave).sort((a,b)=>a.room-b.room||String(a.bed).localeCompare(String(b.bed),'he'));
+  const ref=todayISO();
+  const since=p=>{if(!p.leaveSince)return {date:'',time:'',days:''};const d=new Date(p.leaveSince);if(isNaN(d))return {date:'',time:'',days:''};const iso=dateISO(d),days=Math.max(0,Math.round((new Date(ref+'T12:00:00')-new Date(iso+'T12:00:00'))/864e5));return {date:`${hebDay(iso)} ${fmtDate(iso)}`,time:d.toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}),days:days===0?'היום':days===1?'יום אחד':`${days} ימים`}};
+  const rows=pts.map(p=>{const s=since(p),g=groupOf(p);return `<tr><td>${esc(p.room)}</td><td>${esc(p.bed)}</td><td class="name">${esc(p.name||'')}</td><td>${esc(s.date)}${s.time?`<span class="weekend-leave-sub" style="color:#333">${esc(s.time)}</span>`:''}</td><td>${esc(s.days)}</td><td>${g>0?esc(sideName(g)):''}</td><td class="check">□</td><td></td></tr>`}).join('')||'<tr><td colspan="8" class="weekend-leave-empty">אין כרגע מטופלים בחופשה</td></tr>';
+  return `<style>@page{size:A4 portrait;margin:0}@media print{html,body{width:210mm!important;height:auto!important}}</style><section class="print-page weekend-leave-page on-leave-page"><div class="weekend-leave-head"><div class="date">הופק: ${esc(hebDay(ref))} ${esc(fmtDate(ref))}</div><div class="title">מטופלים בחופשה</div><div class="ward">${esc(state.wardName)}</div></div><table class="weekend-leave-table"><colgroup><col style="width:7%"><col style="width:6%"><col style="width:25%"><col style="width:19%"><col style="width:11%"><col style="width:8%"><col style="width:8%"><col style="width:16%"></colgroup><thead><tr><th>חדר</th><th>מיטה</th><th>מטופל</th><th>יצא/ה לחופשה</th><th>בחופשה</th><th>צד</th><th>חזר/ה</th><th>הערות</th></tr></thead><tbody>${rows}</tbody></table><div class="weekend-leave-note"><span>סה״כ בחופשה: ${pts.length}</span><span>מטופלים בחופשה אינם מופיעים ב־SBAR ובדפי הסימנים.</span></div><div class="weekend-leave-sign"><span>אח/ות אחראי/ת: ____________________</span><span>חתימה: ______________</span></div></section>`;
+}
 function makeWeekendLeavePrint(){
   const patients=activePatients();
   const thu=upcomingThursdayISO(state.reportDate),fri=addDaysISO(thu,1),sat=addDaysISO(thu,2),sun=addDaysISO(thu,3);
@@ -2433,7 +2445,7 @@ function fitPrintPages(root){
   const prevStyle=root.getAttribute('style');let overflow=0;
   root.style.cssText='display:block;position:fixed;inset:0 auto auto 0;visibility:hidden;pointer-events:none;z-index:-1';
   for(const page of root.querySelectorAll('.print-page')){
-    const portrait=page.matches('.weekend-leave-page,.patient-room-page,.shower-day-page');
+    const portrait=page.matches('.weekend-leave-page,.patient-room-page,.shower-day-page,.on-leave-page');
     const W=portrait?210:297,H=portrait?296:209,pad=page.matches('.patient-room-page')?8:portrait?7:4;
     const maxZ=portrait?1.4:page.matches('.vitals-page')?1.5:1.9,minZ=0.45;
     let inner=page.querySelector(':scope>.fit-inner');
@@ -2448,7 +2460,7 @@ function fitPrintPages(root){
     }
     let lo=minZ,hi=maxZ;if(measure(hi)*hi<=ch)lo=hi;else for(let i=0;i<18;i++){const mid=(lo+hi)/2;if(measure(mid)*mid<=ch)lo=mid;else hi=mid}
     const z=lo,h=measure(z),extra=ch/z-h-1;
-    if(extra>1&&tables.length){const tallest=Math.max(...tables.map(t=>t.offsetHeight));tables.forEach(t=>t.style.height=(tallest+extra)+'px')}
+    if(extra>1&&tables.length&&!page.matches('.on-leave-page')){const tallest=Math.max(...tables.map(t=>t.offsetHeight));tables.forEach(t=>t.style.height=(tallest+extra)+'px')}
     Object.assign(inner.style,{transform:`scale(${z})`,transformOrigin:'top right'});
     page.classList.add('fitted');page.dataset.scale=z.toFixed(2);
   }
@@ -2457,7 +2469,7 @@ function fitPrintPages(root){
 }
 function doPrint(type){
   if(sbarDraftCount()){resolveSbarDraftBefore('הדפיס').then(ok=>{if(ok)doPrint(type)});return}
-  let html='',title='';if(type==='sbar'){html=makeSbarPrint(false);title='SBAR'}else if(type==='sbar-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeSbarPrint(true);title='SBAR לפי צדדים'}else if(type==='vitals-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeVitalsPrint(true);title=`סימנים ${SHIFT_LABEL[state.activeShift]}`}else if(type==='weekend-leave'){html=makeWeekendLeavePrint();title='רשימת יציאות לחופש'}else if(type==='patients-by-room'){html=makePatientsByRoomPrint();title='רשימת מטופלים'}else if(type==='showers-day'){html=makeShowerDayPrint();title='רשימת רחצות'}else if(type==='sbar-picked'){const pts=pickedPatients();if(!pts.length){alert('לא נבחרו מטופלים.');return}html=sbarPage(pts,'מטופלים נבחרים');title='SBAR נבחרים'}else if(type==='vitals-picked'){const pts=pickedPatients();if(!pts.length){alert('לא נבחרו מטופלים.');return}html=vitalPage(pts,'נבחרים',true);title=`סימנים ${SHIFT_LABEL[state.activeShift]} נבחרים`}else{html=makeVitalsPrint(false);title=`סימנים ${SHIFT_LABEL[state.activeShift]} מחלקתי`}
+  let html='',title='';if(type==='sbar'){html=makeSbarPrint(false);title='SBAR'}else if(type==='sbar-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeSbarPrint(true);title='SBAR לפי צדדים'}else if(type==='vitals-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeVitalsPrint(true);title=`סימנים ${SHIFT_LABEL[state.activeShift]}`}else if(type==='weekend-leave'){html=makeWeekendLeavePrint();title='רשימת יציאות לחופש'}else if(type==='on-leave'){html=makeOnLeavePrint();title='מטופלים בחופשה'}else if(type==='patients-by-room'){html=makePatientsByRoomPrint();title='רשימת מטופלים'}else if(type==='showers-day'){html=makeShowerDayPrint();title='רשימת רחצות'}else if(type==='sbar-picked'){const pts=pickedPatients();if(!pts.length){alert('לא נבחרו מטופלים.');return}html=sbarPage(pts,'מטופלים נבחרים');title='SBAR נבחרים'}else if(type==='vitals-picked'){const pts=pickedPatients();if(!pts.length){alert('לא נבחרו מטופלים.');return}html=vitalPage(pts,'נבחרים',true);title=`סימנים ${SHIFT_LABEL[state.activeShift]} נבחרים`}else{html=makeVitalsPrint(false);title=`סימנים ${SHIFT_LABEL[state.activeShift]} מחלקתי`}
   const area=$('#printArea');area.innerHTML=html;const overflow=fitPrintPages(area);if(overflow)toast('יש יותר מדי מידע לדף אחד – הדף יודפס על יותר מעמוד אחד');const old=document.title;document.title=`${state.wardName}_${title}_${state.reportDate}`;savePrintedReportToNetwork(type,title,area.innerHTML);setTimeout(()=>{window.print();setTimeout(()=>document.title=old,500)},80);
 }
 function exportBackup(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`גיבוי_${state.wardName}_${state.reportDate}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),800)}
