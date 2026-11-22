@@ -147,6 +147,15 @@ const GRID_STREETS = [
   // square's block to the cross street, where Pippa's shop and Fosse's office stand now. They stay: the street runs
   // 3.5 m west of LBA2's, before their west-facing doors, from the square's paved ring down to the cross street
   [-35.0, 3.6, -35.0, 31.3, 3.0],
+  // P42 (the user, 22.11: the north cross streets as LBA2's): LBA2 rings the square's block with streets. Ours: the
+  // street along the square's north rim (tangent to its kerb ring, across the climb's paving), the block's west side
+  // from it down past the square to the west street's foot (LBA2's x −52), its east side on LBA2's line from it down to
+  // Pippa's street by her shop's north wall. (LBA2's second cross street, 3.5 m further north along the terraces'
+  // foot, is left out: our ground there rises and falls 3.1–4.6 m along its line, the first shelf's slope; paving it
+  // read as a paved hillside)
+  [-52.0, -15.8, -32.5, -15.8, 3.0],
+  [-52.0, -15.8, -52.0, 2.9, 3.0],
+  [-32.5, -15.8, -32.5, -4.0, 3.0],
 ];
 // (AUDIT-FIX, the user's P49: from the quay's east face, x0 QUAY.x1 − 0.5 — it began at −104.5 and the quay's paving stopped
 //  at −108, so between them, by the PIER signpost and the ferry's board, the old harbour path's dirt and the grass beside it
