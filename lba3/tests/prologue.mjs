@@ -111,15 +111,20 @@ is('the pool is warm to his hand; the pump starts and the growth leans toward it
 // wall: 4–6 m west of them is inside the rock. He throws from 4–6 m on whichever side is open floor with a clear line
 // to it — west first, as before —, never from inside a wall, and never on the rope's foot: the shaft's way out, r 0.7
 // (KNOWN-FAILING 22.11: a spot there took him up the rope and out of the well, room null, all four beaten)
+// (FULL-TEST-22-11: kept 1.5 m clear of it, more than a mite's hit can shove him over the 3 s a throw waits; and if he
+// is out of the well all the same, he goes back down by the well's own prompt, as a player would, and fights on: the
+// departure stays in the result. The check is the fight, not where a shove left him)
 const mites = await ev(() => { const G = game, h = G.hero, Ph = G.physics; h.hp = 10; let kills = 0; const well = G.enemies.filter((m) => /^mite\d+$/.test(m.def.id)); let side = 0, tries = 0;
   const OFF = [[-1, 0], [-0.71, 0.71], [-0.71, -0.71], [0, 1], [0, -1], [0.71, 0.71], [0.71, -0.71], [1, 0]];
-  const exits = G.room.exits, offExit = (x, z) => exits.every((e) => Math.hypot(x - e.x, z - e.z) > e.r + 0.6);
+  const exits = G.room.exits.map((e) => ({ x: e.x, z: e.z, r: e.r })), offExit = (x, z) => exits.every((e) => Math.hypot(x - e.x, z - e.z) > e.r + 1.5);
+  const backDown = () => { for (let i = 0; i < 3 && G.room?.id !== 'well'; i++) { if (G.state !== 'play') T.talkAll(); G.step(1.6); T.atWell(); T.tap('KeyE'); G.step(0.05); T.talkAll(); G.step(1); T.talkAll(); } };
   const spot = (m, d) => { for (const [ox, oz] of OFF) { const x = m.pos.x + ox * d, z = m.pos.z + oz * d; if (offExit(x, z) && !Ph.blockedAt(x, z, 0, 0.45) && Ph.lineOfSight(x, 1.0, z, m.pos.x, 0.6, m.pos.z) && !Ph.ballFenceBetween(x, 1.0, z, m.pos.x, 0.6, m.pos.z, 0.5)) { if (ox !== -1) side++; return [x, z]; } } return [m.pos.x - d, m.pos.z]; };
-  let left = null;
-  for (const m of well) { for (let i = 0; i < 16 && m.alive && !left; i++) { const [sx, sz] = spot(m, 4 + (i % 3)); tries++; h.pos.set(sx, 0, sz); h.angle = h.angleTo(m) + (i % 4 === 3 ? 0.2 : 0); if (G.ball.state !== 'idle') G.ball.state = 'idle'; T.tap('KeyF'); for (let k = 0; k < 30 && m.alive && !(k > 3 && G.ball.state === 'idle'); k++) G.step(0.1); if (G.room?.id !== 'well') left = { at: [+sx.toFixed(2), +sz.toFixed(2)], room: G.room?.id ?? null, state: G.state }; h.hp = 10; h.mp = Math.max(h.mp, 4); } if (!m.alive) kills++; } return [kills, well.length, G.room?.id, { tries, notWest: side, left }]; });
+  const left = [];
+  for (const m of well) { for (let i = 0; i < 16 && m.alive; i++) { if (G.room?.id !== 'well') backDown(); if (G.room?.id !== 'well') break; const [sx, sz] = spot(m, 4 + (i % 3)); tries++; h.pos.set(sx, 0, sz); h.angle = h.angleTo(m) + (i % 4 === 3 ? 0.2 : 0); if (G.ball.state !== 'idle') G.ball.state = 'idle'; T.tap('KeyF'); for (let k = 0; k < 30 && m.alive && !(k > 3 && G.ball.state === 'idle'); k++) G.step(0.1); if (G.room?.id !== 'well') left.push({ at: [+sx.toFixed(2), +sz.toFixed(2)], hero: [+h.pos.x.toFixed(2), +h.pos.z.toFixed(2)], room: G.room?.id ?? null, state: G.state }); h.hp = 10; h.mp = Math.max(h.mp, 4); } if (!m.alive) kills++; }
+  if (G.room?.id !== 'well') backDown(); return [kills, well.length, G.room?.id ?? null, { tries, notWest: side, left }]; });
 is("the well's mites beaten with the ball", mites, (v) => v[1] > 0 && v[0] === v[1] && v[2] === 'well');
 // wake the nodes
-const nodes = await ev(() => { const G = game, h = G.hero; const out = []; for (const n of G.room.nodes) { for (let i = 0; i < 12 && !n.lit; i++) { const a = i * 0.52, r = 3 + (i % 3); h.pos.set(n.x - Math.cos(a) * r, 0, n.z - Math.sin(a) * r); h.onGround = true; h.angle = Math.atan2(n.x - h.pos.x, n.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); } out.push(n.lit); } G.step(1.5); return [out, G.flags.nodes, G.rooms.well.barrier.c.enabled]; });
+const nodes = await ev(() => { const G = game, h = G.hero; const out = []; for (const n of G.room?.nodes || []) { for (let i = 0; i < 12 && !n.lit; i++) { const a = i * 0.52, r = 3 + (i % 3); h.pos.set(n.x - Math.cos(a) * r, 0, n.z - Math.sin(a) * r); h.onGround = true; h.angle = Math.atan2(n.x - h.pos.x, n.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); } out.push(n.lit); } G.step(1.5); return [out, G.flags.nodes, G.rooms.well.barrier.c.enabled]; });
 is('the nodes woken by the ball, the barrier down', nodes, (v) => v[0].length > 0 && v[0].every(Boolean) && v[2] === false);
 await shot('P8-nodes.png');
 // walk to the vein
