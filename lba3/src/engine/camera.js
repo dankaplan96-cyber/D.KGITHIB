@@ -83,6 +83,9 @@ const SWING_V = (60 * Math.PI) / 180, SWING_A = (90 * Math.PI) / 180;   // the v
 // where it stands (a house's roof line grazing the view no longer rocks it up and down); up it goes RISE_PAD over the
 // need, so the next step behind the same roof doesn't start it again; down more gently than up (RISE_V_DOWN)
 const MAX_PITCH = 1.4, RISE_V = (50 * Math.PI) / 180, RISE_V_DOWN = (22 * Math.PI) / 180, RISE_A = 1.5, RISE_HOLD = 2.0, RISE_PAD = 0.03, RISE_BAND = 0.07;
+const FREE_HARD_A = 300;   // (CAM-JOLT: the free orbit's rise onto its least margins, m/s², see _free)
+const RISE_CONFIRM = 0.3, RISE_BIG = 0.12;   // (CAM-GRAZE: a need the rise takes once wanted this long, s, or at once when this much over the view's tilt, rad: _lba)
+const RISE_AM = 4;   // (CAM-LURCH: the most the rise's tilt accelerates the camera itself, m/s², see _lba)
 // CAM-2: a steep view (BUILD109_REVIEW §6: "the steep overhead camera makes Twinsen hard to read"). Right beside a house
 // with the view on its far side, LBA2's rise needs up to 80° — looking straight down on him, and back down again a few
 // steps on. The rise stops at STEEP; if more is needed for STEEP_T s, the view turns round instead, by the least
@@ -138,8 +141,10 @@ const CH_MIN_VIEW = 3.2, CH_OVER_ARMS = [3.2, 2.4], CH_RISE_Q = 1.45;
 // that is not clear (something taller than it right behind him)
 const CH_HIGH_ARMS = [6.5, 5.5, 4.6, 3.9], CH_HIGH_P = [0.62, 0.75, 0.88, 1.0, 1.12], CH_OVER_HI = [4.4, 5.6], CH_OVER_HI_P = [1.2, 1.32, 1.45, 1.52];
 const CH_HIGH_ROOF_Q = 0.88;
+const CH_OVER_TOP = 1.565, CH_OVER_TOP_ARMS = [3.2, 4.4, 5.6];   // (P58, CAM-TOP: straight over his head, the last view that may see him: armFor)
 const CH_LEAD_CONFIRM = 0.25, CH_SW_V_OVER = (110 * Math.PI) / 180, CH_SW_A_OVER = (300 * Math.PI) / 180;   // (CAM-ALLEY, see _chase and _chaseClear)
 const CH_OVER_SEE = [0.1, 0.2, 0.35, 0.5, 0.75, 1], CH_OVER_SEE_STEP = 0.9;   // (CAM-OVERSIGHT: the steps along the way over his head, see _chase)
+const CH_KI_A = 60, CH_KI_STEP = 0.5;   // (CAM-EASE-IN: the keep rules' entry eased over play time when it steps more than this a 1/60 s, m: _chase)
 const CH_KT_A = 30, CH_KT_T = 0.6, CH_VCAP_A = 30, CH_VCAP_AFTER = 1;   // (CAM-EASE: the "tilt" keep-out let go over play time — speeding up at most CH_KT_A m/s², for at most CH_KT_T s —; the turn's cap, under a lock-on and CH_VCAP_AFTER s after it, at most CH_VCAP_A rad/s²: _chase)
 // CAM-KEYWALK: the pad off a tall box's sides near its top (m: pad, the band under the top, how tall over the ground)
 const CH_CAP_PAD = 0.5, CH_CAP_BAND = 1.8, CH_CAP_TALL = 3.5, CH_CAP_UP = 0.45;
@@ -234,6 +239,7 @@ const CH_KEEP_EASE = 0.3, CH_KEEP_K = 0.4;
 //    either of these times on along his walk (_walkClears): he walks clear of it. CH_SW_PART: walking, a new swing the
 //    same way as the one under way and less than this short of it keeps the one it has.
 const CH_IN_KEEP = 0.25, CH_OVER_Q_HOLD = 0.5, CH_OVER_Q_UP = 0.15, CH_WALK_OUT_V = 0.2, CH_WALK_SEE = [0.5, 1.0], CH_SW_PART = 0.26, CH_HIGH_HYST = 1.0, CH_EL_MAX_DOOR = (43.5 * Math.PI) / 180, CH_BACK_WAIT = 1.0;
+const CH_SW_SMALL = 0.27, CH_BACK_WAIT_SMALL = 4, CH_FOLD_T = 0.5, CH_FOLD_D = 1.0, CH_BOB = 0.035;   // (CAM-RIDE: a walk's swing this small (rad) comes back on his next turn its way, at the latest after this long (s); CAM-FOLD: his back read this far on along his walk (s), or this far ahead of him pushed on (m); CAM-BOB: the height's backlash (m): _chaseClear, _chase)
 const CH_SW_V = (70 * Math.PI) / 180, CH_SW_A = (160 * Math.PI) / 180, CH_RISE_V = 0.35, CH_RIM_EL = 0.96, CH_DIP_V = 1.0, CH_DIP_A = 5, CH_PREDIP = -0.25;
 // the candidates, cheapest first: [swing, rise, cost]; at the full arm and 0.8 of it every swing to CH_SW_MAX; shorter, a
 // coarser set to CH_SW_FAR (every other swing, a rise and the dips)
@@ -307,6 +313,7 @@ const CLEAR_R = 1.6, CLEAR_IN = 0.45, CLEAR_TOP = 0.5, LIFT_MAX = 4, HARD = 0.25
 // own look-ahead, so it starts before the wall and slows into it as it slows out of it. The look-at point's own lead stops
 // short of a face (CLIFF_R_F off it) too: it would stand in the rock the view is lifted from.
 const CLIFF_CAP = 3, CLIFF_R = 2.2, CLIFF_R_F = 1.2, CLIFF_P = 1.5, CLIFF_A = 5.5, CLIFF_STEP = 0.1, CLIFF_K_V = 0.4, CLIFF_K_A = 0.3;
+const CLIFF_K_M = 4, CLIFF_K_H = 0.02;   // (CAM-LURCH: the most the swing accelerates the camera itself, m/s²; the step its path is read with: _lba)
 const FACE_DIRS = Array.from({ length: 12 }, (_, i) => [Math.sin((i * Math.PI) / 6), Math.cos((i * Math.PI) / 6)]);
 const RING = [0.4, 0.8, 1.2, 1.6].flatMap((r) => Array.from({ length: 12 }, (_, i) => [r, Math.sin((i * Math.PI) / 6) * r, Math.cos((i * Math.PI) / 6) * r]));
 const CORNERS = [[-CLEAR_R, -CLEAR_R], [CLEAR_R, -CLEAR_R], [-CLEAR_R, CLEAR_R], [CLEAR_R, CLEAR_R]];
@@ -561,7 +568,7 @@ export class CameraRig {
       // is over its roof)
       let [p] = this._scenePitch(hero, L.f, L.yaw, v.pitch, v.dist, L.f.y + 1);
       if (p > STEEP_OK) { const b = this._sideYaw(hero, L.f, L.yaw, v, v.dist, 12, heroAngle + Math.PI); if (b) { L.goalYaw = L.yaw = b[0]; p = b[1]; } }
-      this.pitch = L.risePitch = p; L.riseV = 0; L.clearT = 0; L.riseHist = []; L.clock = 0; this.dist = v.dist;
+      this.pitch = L.risePitch = p; L.riseV = 0; L.clearT = 0; L.riseHist = []; L.confH = []; L.clock = 0; this.dist = v.dist;
     }
     // the way he really moves (resolved ground velocity, lightly smoothed)
     {
@@ -628,7 +635,16 @@ export class CameraRig {
       const [want, clear] = this._scenePitch(hero, F, L.yaw, v.pitch, this.dist, F.y + 1);
       L.clear = clear;
       // (the highest need over the last RISE_HOLD s)
-      const H = L.riseHist; L.clock += dt; H.push(L.clock, want);
+      // (CAM-GRAZE, camsteady's LBA view near the cliffs: height reversals 10.6/min over 8: walking down from the bay the line
+      // to him grazed the scenery three times, for 0.1, 0.17 and 0.8 s and 1.6-2.5° more tilt, and each started a rise and,
+      // two seconds on, its fall — six of the route's seven. A need counts once it has been wanted RISE_CONFIRM s (the least
+      // over that while), or at once when it is RISE_BIG over where the view stands: hidden behind a house, it still rises
+      // at once; a graze shows his outline for its moment)
+      const CH = (L.confH ??= []); CH.push(L.clock + dt, want);
+      while (CH.length > 2 && CH[2] <= L.clock + dt - RISE_CONFIRM) CH.splice(0, 2);
+      let conf = want; if (CH[0] <= L.clock + dt - RISE_CONFIRM + 1e-6) for (let i = 1; i < CH.length; i += 2) conf = Math.min(conf, CH[i]);
+      else conf = Math.min(want, Math.max(v.pitch, L.risePitch));   // (a new shot's first moments: no more than it stands at)
+      const H = L.riseHist; L.clock += dt; H.push(L.clock, want > this.pitch + RISE_BIG ? want : conf);
       while (H.length > 2 && H[0] < L.clock - RISE_HOLD) H.splice(0, 2);
       let need = v.pitch; for (let i = 1; i < H.length; i += 2) need = Math.max(need, H[i]);
       // CAM-2: steeper than STEEP for a moment: round to a heading that sees him lower (see STEEP)
@@ -643,16 +659,29 @@ export class CameraRig {
       let goal = need > v.pitch + 1e-3 ? Math.min(MAX_PITCH, need + RISE_PAD) : v.pitch;
       if (!L.noSide && !L.userHold) goal = Math.min(goal, STEEP);
       if (need > L.risePitch - 1e-4 || goal < L.risePitch - RISE_BAND || (goal === v.pitch && goal < L.risePitch)) L.risePitch = goal;
-      const d = L.risePitch - this.pitch, wantV = clamp(d * 2.2, -RISE_V_DOWN, RISE_V), a = RISE_A * dt;
+      // (CAM-LURCH: the tilt's ease is bounded by what it does at the lens — RISE_AM m/s² there, at the arm's length —, and
+      // it slows down in time to stop on its goal: at RISE_A alone the rise started and stopped at 1.5 rad/s² × 15.7 m =
+      // 23.6 m/s², the controls route's lurches over its 12 m/s² budget, on open ground and at Hamalayi's wall)
+      const aR = Math.min(RISE_A, RISE_AM / Math.max(this.dist, 1)), d = L.risePitch - this.pitch;
+      const wantV = Math.sign(d) * Math.min(d > 0 ? RISE_V : RISE_V_DOWN, Math.abs(d) * 2.2, Math.sqrt(1.6 * aR * Math.abs(d))), a = aR * dt;
       L.riseV += clamp(wantV - L.riseV, -a, a);
-      if (Math.abs(d) < 1e-3 && Math.abs(L.riseV) < 1e-3) { this.pitch = L.risePitch; L.riseV = 0; } else this.pitch += L.riseV * dt;
+      if (Math.abs(d) < 2e-5 && Math.abs(L.riseV) < 1e-3) { this.pitch = L.risePitch; L.riseV = 0; } else this.pitch += L.riseV * dt;   // (CAM-LURCH: landing on it from 1e-3 rad moved the lens up to 1.6 cm in a frame from rest: 25-57 m/s²)
     }
     const cp = Math.cos(this.pitch), sn = Math.sin(this.pitch);
     // (ROCK FACES: how far the view is swung up over the look-at point, k; the look-ahead follows the look-at point down its own way)
     {
       const K = L.cp, vf = L.fpv ? [(F.x - L.fpv.x) / dt, (F.y - L.fpv.y) / dt, (F.z - L.fpv.z) / dt] : [0, 0, 0], ks = [this._cliffK(F.x, F.y, F.z, L.yaw, this.pitch, this.dist)];
       if (Math.hypot(vf[0], vf[2]) > 0.5 && Math.hypot(vf[0], vf[2]) < 60) for (const T of LIFT_AHEAD) ks.push(this._cliffK(F.x + vf[0] * T, F.y + vf[1] * T, F.z + vf[2] * T, L.yaw, this.pitch, this.dist));
-      this._ease(K, Math.max(...ks), dt, CLIFF_K_V, CLIFF_K_A);
+      // (CAM-LURCH: bounded by what the swing does at the lens — the arm drawn in by 10 m over 0.7 of k, then tipped up —:
+      // its speed by the path's bend here, its ease by the path's length per unit k, both to CLIFF_K_M m/s²; at the walk to
+      // Hamalayi's wall CLIFF_K_A alone moved the camera at up to 22 m/s², the controls route's lurches over 12 m/s²)
+      let kV = CLIFF_K_V, kA = CLIFF_K_A;
+      {
+        const k0 = clamp(K.lift, CLIFF_K_H, 1 - CLIFF_K_H), am = this._armAt(F.x, F.y, F.z, L.yaw, this.pitch, this.dist, k0 - CLIFF_K_H, _cd).clone(), a0 = this._armAt(F.x, F.y, F.z, L.yaw, this.pitch, this.dist, k0, _cd).clone(), ap = this._armAt(F.x, F.y, F.z, L.yaw, this.pitch, this.dist, k0 + CLIFF_K_H, _cd);
+        const d1 = ap.distanceTo(am) / (2 * CLIFF_K_H), d2 = Math.hypot(ap.x - 2 * a0.x + am.x, ap.y - 2 * a0.y + am.y, ap.z - 2 * a0.z + am.z) / (CLIFF_K_H * CLIFF_K_H);
+        kV = Math.min(kV, Math.sqrt(CLIFF_K_M / Math.max(d2, 1e-3))); kA = Math.min(kA, CLIFF_K_M / Math.max(d1, 1e-3));
+      }
+      this._ease(K, Math.max(...ks), dt, kV, kA);
       K.lift = Math.min(1, K.lift);
       if (L.fresh) { K.lift = ks[0]; K.vlift = 0; }
       (L.fpv ??= {}).x = F.x; L.fpv.y = F.y; L.fpv.z = F.z;
@@ -810,6 +839,14 @@ export class CameraRig {
       : (this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z)) && (this._lowOff || this._line(p, hero.x, hero.y + CH_LOW_SEE, hero.z, false, false, hero.y + CH_LOW_WALL));
     if (this._busy && M.n < 48) { const j = M.n++ * 8; A[j] = p.x; A[j + 1] = p.y; A[j + 2] = p.z; A[j + 3] = hero.x; A[j + 4] = hero.y; A[j + 5] = hero.z; A[j + 6] = st; A[j + 7] = r ? 1 : 0; }
     return r;
+  }
+
+  // (CAM-EASE-IN, CAM-BOB: his head or his chest in sight, counting everything a line may meet — the posts, the
+  // see-through things, the camera's own volumes, as a dialogue's strict lines do —: a spot those two rules hold the camera
+  // on instead of the rules' own must see him so whenever the rules' own does — the camera's sight (_sees) passes the
+  // camera's own volumes, and a spot it judged seen hid him for a frame at camfollow's wall)
+  _seesAny(p, hero) {
+    return this._line(p, hero.x, hero.y + 1.5, hero.z, true) || this._line(p, hero.x, hero.y + 1.0, hero.z, true);
   }
 
   // G1-CAM (cost): the colliders and the scenery volumes that could hold one of the samples i0 ≤ i < i1 of the line
@@ -1078,6 +1115,26 @@ export class CameraRig {
       // turned the chase, a 10° swing was taken and came back, and the view turned more often than he did)
       if (deepGo && walking && !deep && !fresh && !lock && !C.door && backArm) { const r = kr ?? backArm(yaw0); if (r[1] && r[0] >= CH_WALK_KEEP) deepGo = false; }
       C.kbT = backKeep ? (C.kbT || 0) + dt : 0;
+      // CAM-FOLD (camsteady, Follow, off the harbour pier's end: heading reversals 12/min over his own 8.6): turned round at
+      // the end with his back to the posts, the view over his head, a swing of 40-47° was chosen as he stepped off — the
+      // same way the chase still turned —: his back was clear again a step on (3.2 m over his head, then 6.5 m) but the
+      // swing went on out past his back and came back, two turns of the view he never made. A swing still on its way out
+      // is let go once he walks on ahead and his back, CH_FOLD_T s on along his walk, gives CH_WALK_KEEP m of arm that sees
+      // him (CAM-KEYWALK's bar, the risen arm included; a stretch of wall he walks along still has its swing: CAM-WALKSWING); what of it lies
+      // between the chase and his back is folded into the chase's own heading (the view does not move for it: the chase
+      // carries on from there to his back, the way it was turning), the rest comes back
+      if (!fresh && !lock && !C.door && ahead && backArm && C.swGoal && Math.abs(C.sw) < Math.abs(C.swGoal) - 1e-3 && Math.sign(C.sw || C.swGoal) === Math.sign(C.swGoal)) {
+        const k = CH_FOLD_T / dt, r = backArm(yaw0, (C._fT ??= new THREE.Vector3()).set(T.x + (T.x - C.pT.x) * k, T.y, T.z + (T.z - C.pT.z) * k));
+        if (r[1] && r[0] >= CH_WALK_KEEP) {
+          C.swGoal = 0; C.riseGoal = 0; C.swCost = 0; C.coolT = CH_SW_COOL; C.walkSw = true; C.srch = null;
+          const g = angleDiff(C.yaw, yaw0), take = Math.sign(C.sw) === Math.sign(g) ? Math.sign(C.sw) * Math.min(Math.abs(C.sw), Math.abs(g)) : 0;
+          if (take) {
+            const k = take / C.sw, v = C.vyaw + C.swV * k, rest = Math.abs(g - take);
+            C.yaw += take; C.sw -= take; C.swV = 0;   // (the rest stops where it stands: no further out)
+            C.vyaw = Math.sign(v) === Math.sign(g) ? Math.sign(v) * Math.min(Math.abs(v), CH_W * rest) : v;   // (and never faster than the chase's spring can stop on his back from there)
+          }
+        }
+      }
       if (base) C.srch = null;
       // (CAM-STAIRS: a swung view drawn in past CH_COOL_ARM of the arm while his back stands clear at the full arm goes
       // back at once: by the fort's south-west tower a swing chosen while he stood under the slope was kept 1.2 s more as
@@ -1114,13 +1171,20 @@ export class CameraRig {
           C.srch = { fi: 0, ci: 0, maxSw: backKeep ? CH_WALK_SW : Infinity, walk: ahead, best: keep < Infinity ? { keep: true, cost: keep - CH_K_KEEP, k0: keep } : null };
         }
         if (this._chaseSearch(C.srch, T, yaw0, full, pq, heroV, fresh ? Infinity : CH_SEARCH_N)) {
-          const b = C.srch.best;
+          let b = C.srch.best;
           C.srch = null;
           // (kept at the full arm, it looks again less often)
           C.searchT = b?.keep && b.k0 - Math.abs(C.swGoal) * CH_K_SW - Math.abs(C.riseGoal) * CH_K_RISE < 0.5 ? CH_SEARCH_T * 4 : CH_SEARCH_T;
           // (CAM-STEADY: walking, a new swing the same way as the one under way and a little less of it keeps the one it
           // has: 0.87 → 0.70 rad turned the view back 8° for nothing)
           if (b && !b.keep && !fresh && walking && b.sw && Math.sign(b.sw) === Math.sign(C.sw) && Math.abs(b.sw) < Math.abs(C.sw) && Math.abs(C.sw) - Math.abs(b.sw) < CH_SW_PART) b.sw = C.sw;
+          // (CAM-FOLD: nor is one taken while he is pushed on ahead — the stick forward, walking or about to — when his back
+          // CH_FOLD_T s on that way, at a walk, gives CH_WALK_KEEP m of arm that sees him: off the pier's end the swing began
+          // as he stepped off, and the view stood past his back before he walked clear of the posts)
+          if (b && !b.keep && C.fwd && backArm) {
+            const r = backArm(yaw0, (C._fT ??= new THREE.Vector3()).set(T.x - Math.sin(yaw0) * CH_FOLD_D, T.y, T.z - Math.cos(yaw0) * CH_FOLD_D));
+            if (r[1] && r[0] >= CH_WALK_KEEP) b = { keep: true, k0: C.swCost };   // (as if the view it has were kept)
+          }
           if (b && !b.keep) { C.swGoal = b.sw; C.riseGoal = b.rise; C.swCost = b.cost; C.walkSw = walking || deep; C.swAt = C.clk ?? 0; }
           else if (b) C.swCost = b.k0;
           else { C.swGoal = 0; C.riseGoal = 0; C.swCost = Infinity; }   // (nothing clear round him: at his back, the arm comes in)
@@ -1150,8 +1214,14 @@ export class CameraRig {
       // view at the school's wall 0.6 s more)
       if (C.swGoal === 0 && Math.abs(C.sw) < 0.01) C.walkSw = false;
       // (CAM-STEADY: a walk's swing too waits for the chase to stand still or turn its way, CH_BACK_WAIT s at the most)
-      const walkBack = C.walkSw && (C.stillT >= CH_SW_STILL || (C.backT || 0) >= CH_BACK_WAIT);
-      const hold = back ? !cut && !settle && !walkBack && (!(moving || C.walkSw) || (C.turnDir && Math.sign(e) !== C.turnDir))
+      // (CAM-RIDE, camsteady's Modern street at Far: heading reversals 103.4/min over his own 101.7: turning by Bug Street's
+      // pair the walk took a one-step swing, 10°, the way the chase turned, and 0.3 s after the chase stood it came back
+      // the other way — a turn of the view he never made, twice on the route; off the harbour pier's end the 6° CAM-FOLD left
+      // came back the same way. A walk's swing of CH_SW_SMALL or less waits for the chase to turn its way — it rides on his
+      // next turn — or CH_BACK_WAIT_SMALL s at the most; standing, as before, it settles back)
+      const small = C.walkSw && Math.abs(C.sw) <= CH_SW_SMALL, ride = small && moving && (C.backT || 0) < CH_BACK_WAIT_SMALL && (C.want ?? full) >= CH_MIN_VIEW;   // (held so while the view where it stands keeps MIN-VIEW's arm or more: a view that small a turn off his back needs about the arm his back does, and an arm still letting out after an in-cut is no reason to turn back)
+      const walkBack = C.walkSw && (small ? !ride : C.stillT >= CH_SW_STILL || (C.backT || 0) >= CH_BACK_WAIT);
+      const hold = back ? (ride && C.turnDir && Math.sign(e) !== C.turnDir) || !cut && !settle && !walkBack && (!(moving || C.walkSw) || (C.turnDir && Math.sign(e) !== C.turnDir))
         : Math.abs(e) > 1e-4 && Math.sign(C.swV) !== Math.sign(e) && C.turnDir && Math.sign(e) !== C.turnDir && C.stillT < CH_SW_STILL && !(C.walkSw && Math.abs(C.vyaw) < CH_WALK_OUT_V);
       C.backT = back && hold ? (C.backT || 0) + dt : 0;
       // (CAM-ALLEY: standing with the view over his head — his back to a wall, in an alley — the swing out to a clear view
@@ -1261,6 +1331,7 @@ export class CameraRig {
         C.vyaw = clamp(C.vy, -vmax, vmax);
         C.yaw += clamp(C.y - C.yaw, -vmax * dt, vmax * dt);
       }
+      { const m = input?.move ? input.move() : null; C.fwd = !!m && m.y > 0.3; }   // (CAM-FOLD: the stick pushed on ahead)
       C.dyc = angleDiff(y0, C.yaw); W.swingBy = C.hold ? 'hold' : aimHeld ? 'aim' : lock ? 'lock' : 'chase'; C.vcap = C.hold || aimHeld || fresh ? vt : C.vmaxNow;   // (held, or afresh: the cap as it stands, not the free CH_VMAX)
       C.lockAgo = lock ? 0 : fresh ? Infinity : (C.lockAgo ?? Infinity) + dt;
     }
@@ -1345,6 +1416,11 @@ export class CameraRig {
       // 2.4 m over his head, at its foot to 1.3-1.5 m in the doorway's reveal behind him)
       let clearQ = null;
       for (const [oa, qs] of CH_OVER_SET) for (const q of qs) { at(_b, yw, oa, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true); if (!this._solidAt(_b, CH_NEAR) && !this._overRoof(_b)) { clearQ ??= [q, oa]; if (this._sees(_b, _v)) return [oa, true, 2, q, oa]; } }
+      // (P58, CAM-TOP: and only then straight over him, CH_OVER_TOP: at the Citadel station's south-east tower, his back to
+      // its foot 0.1 m outside its slate roof's rim, every tilt up to CH_OVER_HI_P's last (1.52 rad) stood the camera 0.2-0.3 m
+      // behind him over the rim, and the rim hid him — 1.3 s unseen, the outline only, turning there. Straight over his head
+      // the line to him passes outside the rim)
+      for (const oa of CH_OVER_TOP_ARMS) { at(_b, yw, oa, T, CH_OVER_TOP); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true); if (!this._solidAt(_b, CH_NEAR) && !this._overRoof(_b) && this._sees(_b, _v)) return [oa, true, 2, CH_OVER_TOP, oa]; }
       if (far) return far;
       if (clearQ) return [clearQ[1], false, 2, clearQ[0], clearQ[1]];   // (none sees him: the least tilt that stands clear; the silhouette)
       const near = tiers(Math.min(cut, CH_MIN_VIEW - 0.25), CH_MIN);
@@ -1355,7 +1431,7 @@ export class CameraRig {
       const y1 = C.yaw + (C.sw ?? 0);
       // (CAM-WALKSWING: looked for round the heading the chase is turning to — its goal — not where it is on the way: the
       // School's channel, turning toward the camp, the view turned its back into the school's wall and came in to 1 m)
-      this._chaseClear(dt, C, T, C.hold || lock ? C.yaw : C.yaw + angleDiff(C.yaw, C.goal), full, pq, _t.set(hero.x, hero.y, hero.z), fresh, lock, C.dyc ?? 0, C.vmaxNow ?? CH_VMAX, (yw) => armFor(yw, T, true));
+      this._chaseClear(dt, C, T, C.hold || lock ? C.yaw : C.yaw + angleDiff(C.yaw, C.goal), full, pq, _t.set(hero.x, hero.y, hero.z), fresh, lock, C.dyc ?? 0, C.vmaxNow ?? CH_VMAX, (yw, T2 = T) => armFor(yw, T2, true));
       W.swing = angleDiff(y1 - (C.dyc ?? 0), C.yaw + C.sw); W.off = C.sw; W.chase = C.dyc ?? 0;   // (the swing off his back, and the chase's own turn this frame: tests/lib/camrec.js traces)
     }
     // CAM-CLEAR-2: stuck close behind a post (the way out through it blocked, the arm it wants clear beyond it): the
@@ -1672,7 +1748,43 @@ export class CameraRig {
           else { cam.position.copy(_os); W.keepBy = 'ease'; }
         }
       } else K.on = false;
+      // CAM-EASE-IN (the entry, as CAM-EASE eases the release): the "high" rule (over his head at a longer arm, out of
+      // something solid) and CAM-OVERSIGHT's step place the camera outright — on camsteady's routes along the house walls
+      // and through a door 1.25-1.42 m in a frame, at staged wall corners up to 2.6 m. Where the step from the spot it stood
+      // on is more than CH_KI_STEP (per 1/60 s of play), it goes there over play time instead: from where it stood, at no
+      // more than the speed it had plus CH_KI_A m/s², slowing to rest on the goal (which moves as the arm's spot does), and
+      // on toward wherever the camera is placed in the frames after, up to CH_KT_T s. Held only while the spot on the way
+      // stands clear, off a roof, and sees him wherever the goal does (no frame unseen that was not); else at once, as before
+      if (!fresh && K.init && !lock && W.keepBy !== 'ease') {
+        const d = K.p.distanceTo(cam.position);
+        if ((W.keepBy === 'high' || W.keepBy === 'oversee') && !K.inOn && d > CH_KI_STEP * Math.min(2, dt * 60)) { K.inOn = true; K.inT = 0; }
+        if (K.inOn) {
+          const v = Math.min(K.v + CH_KI_A * dt, vq + Math.sqrt(2 * CH_KI_A * d));
+          K.inT += dt;
+          if (d <= v * dt || K.inT > CH_KT_T) K.inOn = false;
+          else {
+            _os.copy(K.p).lerp(cam.position, (v * dt) / d);
+            if (this._solidAt(_os, CH_INSIDE) || this._overRoof(_os) || (!this._seesAny(_os, hero) && this._seesAny(cam.position, hero))) K.inOn = false;
+            else { cam.position.copy(_os); W.keepBy = 'easein'; }
+          }
+        }
+      } else K.inOn = false;
       K.v = K.init && !fresh ? K.p.distanceTo(cam.position) / dt : 0; K.p.copy(cam.position); K.init = true;
+    }
+    // CAM-BOB (camsteady's Follow routes, "no jitter": height reversals within 0.5 s, 4 against 3 on the pier and the
+    // Modern street, the count varying run to run): most were bobs of a few centimetres — the pivot stepping up a kerb as
+    // the ground's lift let down after the arm came in, the lift's hold ending as the tilt eased. The camera's height
+    // takes up a reversal only past CH_BOB m (a backlash: it stays within CH_BOB of the height the rules give, and moves
+    // with them once they pull further), so a bob smaller than twice that does not reach the screen; at the height
+    // the rules give whenever the other spot is in something or loses sight of him, after a new shot and under a lock-on
+    {
+      const yr = cam.position.y;
+      if (fresh || lock || C.yb == null) C.yb = yr;
+      else {
+        const yb = clamp(C.yb, yr - CH_BOB, yr + CH_BOB);
+        if (yb !== yr) { cam.position.y = yb; if (this._solidAt(cam.position, CH_INSIDE) || (!this._seesAny(cam.position, hero) && this._seesAny(_os.set(cam.position.x, yr, cam.position.z), hero))) cam.position.y = yr; }
+        C.yb = cam.position.y;
+      }
     }
     // (drawn in and lifted over a slope or a terrace beside him, it would look down steeply on him: it looks further
     // along its way instead, no steeper than CH_EL_MAX — or as little more as keeps his chest CH_EL_KEEP inside the
@@ -2377,7 +2489,19 @@ export class CameraRig {
     cam.position.set(x, y, z);
     this.look.set(t.x, t.y + 1.3, t.z);
     const hard = this._keepOut(cam.position, this.look, A.lift, 0.4, HARD);   // (BUG-WALL: the least margins, at once)
-    if (hard > A.lift) { A.lift = hard; A.vlift = Math.max(0, A.vlift); }   // (CAM-2: and let down eased, as in _lba)
+    // (CAM-JOLT, camsteady's Free orbit on the Modern street: by Bug Street's pair the least margins over an eave stood
+    // 0.5 m over the eased lift in one frame, and the camera rose 0.5 m in that frame — 1,749 m/s². Now that rise is
+    // taken at no more than FREE_HARD_A m/s², coming to rest on it, while the spot under it is in nothing (CH_INSIDE, as the
+    // Follow camera's never-in-anything); a spot that is: at once, as before)
+    let hv = 0;
+    if (hard > A.lift + 1e-4 && !snap && A.hv != null) {
+      const e = hard - A.lift, v = Math.min(A.hv + FREE_HARD_A * dt, Math.sqrt(2 * FREE_HARD_A * e)), st = Math.min(e, v * dt);
+      _b.copy(cam.position); _b.y -= e - st;
+      if (st < e && !this._solidAt(_b, CH_INSIDE)) { cam.position.y = _b.y; A.lift += st; hv = st / dt; }
+      else A.lift = hard;
+      A.vlift = Math.max(0, A.vlift);
+    } else if (hard > A.lift) { A.lift = hard; A.vlift = Math.max(0, A.vlift); }   // (CAM-2: and let down eased, as in _lba)
+    A.hv = hv;
     { const ko = [cam.position.x - x, cam.position.y - y - A.lift, cam.position.z - z], k0 = this._ko || ko; W.keep = Math.hypot(ko[0] - k0[0], ko[1] - k0[1], ko[2] - k0[2]); this._ko = ko; }
     cam.lookAt(this.look);
   }
