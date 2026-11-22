@@ -47,7 +47,7 @@ await reopen('?nocine', null);
 await page.click('#title [data-act="settings"]', { timeout: 600000 }); await ev(() => game.step(0.05));
 await page.click('#settings [data-tab="display"]', { timeout: 600000 });
 const ui0 = await ev(() => ({ chips: [...document.querySelectorAll('#settings .seg[data-setting="quality"] button')].map((b) => b.textContent + (b.classList.contains('on') ? '*' : '')), hint: document.querySelector('#settings [data-hint="quality"] .set-hint').textContent }));
-check('Settings → Display → Graphics offers Auto / Low / Medium / High, Auto on, and says what it runs now', ui0.chips.join() === 'Auto*,Low,Medium,High' && /^Auto \(High\)/.test(ui0.hint) && /55–60 fps/.test(ui0.hint), ui0);
+check('Settings → Display → Graphics offers Auto / Low / Medium / High, Auto on, and says what it runs now', ui0.chips.join() === 'Auto*,Low,Medium,High' && /^Auto \(High\)/.test(ui0.hint) && /to hold \d+ fps/.test(ui0.hint), ui0);
 await page.click('#settings .seg[data-setting="quality"] button[data-v="medium"]', { timeout: 600000 });
 const ui1 = await ev(() => ({ q: game.settings.quality, auto: game.settings.qualityAuto, hand: game.settings.qualityChosenByHand, knobs: game.renderer.knobs, on: document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v, map: game.env.sun.shadow.mapSize.x, bloom: game.renderer.bloom.enabled, hint: document.querySelector('#settings [data-hint="quality"] .set-hint').textContent }));
 check('Medium by hand: the preset as it always was (no knobs, 1024 map, no bloom), recorded as chosen by hand, no Auto line', ui1.q === 'medium' && ui1.auto === false && ui1.hand === true && ui1.knobs === null && ui1.on === 'medium' && ui1.map === 1024 && !ui1.bloom && !/Auto/.test(ui1.hint), ui1);

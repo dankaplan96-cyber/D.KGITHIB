@@ -921,3 +921,6 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
        step 3 at 30 once.
     Measure only; no OS power or GPU setting changes. Report as GPU-TIMER-KA in FPS30.md §9 "Real hardware" on branch
     `gpu-timer-ka`, raw logs beside P96-HW. Queue: before 61, after anything already running.
+    5. Also (CAMERA-NIGHT, 22.11): in any `fps30feel` T3 pass at 30 with RATES=real, keep the per-frame record (`OUT`)
+       and send it with the report. Order 62's one 2.96 m camera step is most likely a single ~133 ms frame (4/30 s of
+       play at ~22 m/s) and not a camera rule; the record settles it.
