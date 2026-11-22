@@ -517,7 +517,9 @@ class Area {
       // (ARRIVAL-STEPS: a large piece's attributes one a step, its matrices its own meanwhile; ARRIVAL-2: a piece of 1 024
       //  vertices or more also between its attributes once the unit is long)
       const big = nf >= 8192, part = nf >= 1024, Mm = part ? _m.clone() : _m, Nm = part ? _nm.clone() : _nm;
-      for (const n of names) {
+      // (FIX-PASS 3: a piece of 8 192 vertices or more also within each attribute, 4 096 vertices at a time once the unit is
+      //  long: one 18 848-vertex piece's positions were a 25 ms unit of the tavern's arrival here. The same values, in order)
+      const fill = (n, k0, k1) => {
         const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
         // (PERF-CALLS: positions and normals without a call per vertex — three's own arithmetic, in its order, so the
         //  same floats: the first build on an arrival was ~300 ms on the user's laptop, most of it here)
@@ -525,13 +527,13 @@ class Area {
           const A = a.array, e = n === 'position' ? Mm.elements : Nm.elements;
           if (n === 'position') {
             const w = e[3] === 0 && e[7] === 0 && e[11] === 0 && e[15] === 1;
-            for (let k = 0; k < nf; k++) {
+            for (let k = k0; k < k1; k++) {
               const i = (from ? from[k] : k) * 3, x = A[i], y = A[i + 1], z = A[i + 2], o3 = (vo + k) * 3;
               if (w) { d[o3] = e[0] * x + e[4] * y + e[8] * z + e[12]; d[o3 + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; d[o3 + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]; }
               else { const ww = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]); d[o3] = (e[0] * x + e[4] * y + e[8] * z + e[12]) * ww; d[o3 + 1] = (e[1] * x + e[5] * y + e[9] * z + e[13]) * ww; d[o3 + 2] = (e[2] * x + e[6] * y + e[10] * z + e[14]) * ww; }
             }
           } else {
-            for (let k = 0; k < nf; k++) {
+            for (let k = k0; k < k1; k++) {
               const i = (from ? from[k] : k) * 3, x0 = A[i], y0 = A[i + 1], z0 = A[i + 2], o3 = (vo + k) * 3;
               let x = e[0] * x0 + e[3] * y0 + e[6] * z0, y = e[1] * x0 + e[4] * y0 + e[7] * z0, z = e[2] * x0 + e[5] * y0 + e[8] * z0;
               const sc = 1 / (Math.sqrt(x * x + y * y + z * z) || 1); x *= sc; y *= sc; z *= sc;
@@ -539,23 +541,27 @@ class Area {
             }
           }
         }
-        else if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(Mm); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
-        else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(Nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
-        else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, vo * 2, (vo + nf) * 2);   // (a plain piece: the white layer, anywhere)
-        else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
-        else if (fold && n === 'em') { const e = m.emissive, k = m.emissiveIntensity ?? 1, r = e ? e.r * k : 0, gg = e ? e.g * k : 0, b = e ? e.b * k : 0; for (let q = 0; q < nf; q++) { d[(vo + q) * 3] = r; d[(vo + q) * 3 + 1] = gg; d[(vo + q) * 3 + 2] = b; } }
+        else if (n === 'position') for (let k = k0; k < k1; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(Mm); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (n === 'normal') for (let k = k0; k < k1; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(Nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, (vo + k0) * 2, (vo + k1) * 2);   // (a plain piece: the white layer, anywhere)
+        else if (fold && n === 'layer') d.fill(M.fold.layer, vo + k0, vo + k1);
+        else if (fold && n === 'em') { const e = m.emissive, k = m.emissiveIntensity ?? 1, r = e ? e.r * k : 0, gg = e ? e.g * k : 0, b = e ? e.b * k : 0; for (let q = k0; q < k1; q++) { d[(vo + q) * 3] = r; d[(vo + q) * 3 + 1] = gg; d[(vo + q) * 3 + 2] = b; } }
         // (FIRST-BUILD: the map transform, colours and rm read straight from a plain attribute's array — the same values
         //  getX/getY return and the same arithmetic as Vector3.applyMatrix3 with z = 1, in its order — without a call per
         //  vertex: the per-cell build was 200–650 ms of a region's first build here)
-        else if (fold && (n === 'uv' || n === 'auv') && !a.normalized) { const e = m.map.matrix.elements, e0 = e[0], e1 = e[1], e3 = e[3], e4 = e[4], e6 = e[6], e7 = e[7], A = a.array, sz = a.itemSize, z = 1; for (let k = 0; k < nf; k++) { const i = (from ? from[k] : k) * sz, x = A[i], y = A[i + 1], o2 = (vo + k) * 2; d[o2] = e0 * x + e3 * y + e6 * z; d[o2 + 1] = e1 * x + e4 * y + e7 * z; } }
-        else if (fold && (n === 'uv' || n === 'auv')) { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
-        else if (fold && n === 'color' && (!M.fold.vc || !a.normalized)) { const c = m.color, cr = c.r, cg = c.g, cb = c.b; if (M.fold.vc) { const A = a.array, sz = a.itemSize; for (let k = 0; k < nf; k++) { const i = (from ? from[k] : k) * sz, o3 = (vo + k) * 3; d[o3] = A[i] * cr; d[o3 + 1] = A[i + 1] * cg; d[o3 + 2] = A[i + 2] * cb; } } else for (let k = 0; k < nf; k++) { const o3 = (vo + k) * 3; d[o3] = 1 * cr; d[o3 + 1] = 1 * cg; d[o3 + 2] = 1 * cb; } }
-        else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
-        else if (fold && n === 'rm' && M.fold.preRM && !a.normalized) { const A = a.array, sz = a.itemSize; for (let k = 0; k < nf; k++) { const i = (from ? from[k] : k) * sz; d[(vo + k) * 2] = A[i]; d[(vo + k) * 2 + 1] = A[i + 1]; } }
-        else if (fold && n === 'rm' && M.fold.preRM) for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 2] = a.getX(i); d[(vo + k) * 2 + 1] = a.getY(i); }
-        else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
-        else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
-        else { const sz = a.itemSize, A = a.array; for (let k = 0; k < nf; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
+        else if (fold && (n === 'uv' || n === 'auv') && !a.normalized) { const e = m.map.matrix.elements, e0 = e[0], e1 = e[1], e3 = e[3], e4 = e[4], e6 = e[6], e7 = e[7], A = a.array, sz = a.itemSize, z = 1; for (let k = k0; k < k1; k++) { const i = (from ? from[k] : k) * sz, x = A[i], y = A[i + 1], o2 = (vo + k) * 2; d[o2] = e0 * x + e3 * y + e6 * z; d[o2 + 1] = e1 * x + e4 * y + e7 * z; } }
+        else if (fold && (n === 'uv' || n === 'auv')) { const U = m.map.matrix; for (let k = k0; k < k1; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
+        else if (fold && n === 'color' && (!M.fold.vc || !a.normalized)) { const c = m.color, cr = c.r, cg = c.g, cb = c.b; if (M.fold.vc) { const A = a.array, sz = a.itemSize; for (let k = k0; k < k1; k++) { const i = (from ? from[k] : k) * sz, o3 = (vo + k) * 3; d[o3] = A[i] * cr; d[o3 + 1] = A[i + 1] * cg; d[o3 + 2] = A[i + 2] * cb; } } else for (let k = k0; k < k1; k++) { const o3 = (vo + k) * 3; d[o3] = 1 * cr; d[o3 + 1] = 1 * cg; d[o3 + 2] = 1 * cb; } }
+        else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = k0; k < k1; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
+        else if (fold && n === 'rm' && M.fold.preRM && !a.normalized) { const A = a.array, sz = a.itemSize; for (let k = k0; k < k1; k++) { const i = (from ? from[k] : k) * sz; d[(vo + k) * 2] = A[i]; d[(vo + k) * 2 + 1] = A[i + 1]; } }
+        else if (fold && n === 'rm' && M.fold.preRM) for (let k = k0; k < k1; k++) { const i = src(k); d[(vo + k) * 2] = a.getX(i); d[(vo + k) * 2 + 1] = a.getY(i); }
+        else if (fold && n === 'rm') for (let k = k0; k < k1; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
+        else if (!from) d.set(a.array.subarray(k0 * a.itemSize, k1 * a.itemSize), (vo + k0) * a.itemSize);   // (same array type: the cell's key has the layout)
+        else { const sz = a.itemSize, A = a.array; for (let k = k0; k < k1; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
+      };
+      for (const n of names) {
+        if (big) for (let k0 = 0; k0 < nf; k0 += 4096) { fill(n, k0, Math.min(nf, k0 + 4096)); if (k0 + 4096 < nf && long()) yield 'cell part'; }
+        else fill(n, 0, nf);
         if (big || (part && long())) yield 'cell part';
       }
       if (!T) {
@@ -572,7 +578,8 @@ class Area {
     const geo = new THREE.BufferGeometry();
     for (const n of names) geo.setAttribute(n, new THREE.BufferAttribute(out[n].data, out[n].size, out[n].norm));
     geo.setIndex(new THREE.BufferAttribute(index, 1));
-    geo.computeBoundingSphere();
+    const pd = out.position?.data;
+    if (nv > 4096 && pd instanceof Float32Array && out.position.size === 3) yield* sphereSteps(geo, pd, nv); else geo.computeBoundingSphere();
     const mesh = new THREE.Mesh(geo, C.material);
     mesh.castShadow = false; mesh.receiveShadow = C.receiveShadow; mesh.renderOrder = C.renderOrder;
     mesh.matrixAutoUpdate = false; mesh.name = 'drawBatch'; mesh.userData.drawBatch = true;
@@ -774,6 +781,25 @@ export class DrawBatch {
   // every piece drawn on its own again, batches removed (A/B comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); if (this.pending) { for (const A of this.pending.values()) A.restore(); this.pending.clear(); } }
   stats() { const s = {}; for (const [r, A] of this.areas) s[r.name || r.uuid.slice(0, 6)] = A.stats(); return s; }
+}
+
+// FIX-PASS 3: a large batch's bounding sphere, in steps once the unit is long: three's computeBoundingSphere (the box of
+// the positions, its centre, the largest squared distance from it) with its arithmetic in its order, so the same sphere
+function* sphereSteps(geo, P, n) {
+  let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
+  for (let i = 0; i < n; i++) {
+    if ((i & 8191) === 8191 && long()) yield 'cell part';
+    const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2];
+    x0 = Math.min(x0, x); y0 = Math.min(y0, y); z0 = Math.min(z0, z); x1 = Math.max(x1, x); y1 = Math.max(y1, y); z1 = Math.max(z1, z);
+  }
+  const empty = x1 < x0 || y1 < y0 || z1 < z0, cx = empty ? 0 : (x0 + x1) * 0.5, cy = empty ? 0 : (y0 + y1) * 0.5, cz = empty ? 0 : (z0 + z1) * 0.5;
+  let r = 0;
+  for (let i = 0; i < n; i++) {
+    if ((i & 8191) === 8191 && long()) yield 'cell part';
+    const dx = cx - P[i * 3], dy = cy - P[i * 3 + 1], dz = cz - P[i * 3 + 2];
+    r = Math.max(r, dx * dx + dy * dy + dz * dz);
+  }
+  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, cy, cz), Math.sqrt(r));
 }
 
 // ARRIVAL-STEPS: runs a build's generator until `ms` have passed (a slice ends after the unit — a piece, a cell — that

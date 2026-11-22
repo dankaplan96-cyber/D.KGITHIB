@@ -26,7 +26,9 @@
 //    only changes with distance, so a turning camera never sees one late).
 import * as THREE from 'three';
 import { MW } from './drawcull.js';
-import { runFor } from './drawbatch.js';
+import { runFor, UNIT } from './drawbatch.js';
+// (FIX-PASS 3: the unit runFor is running has passed UNIT.ms — never outside a staged build: UNIT.t0 is Infinity there)
+const long = () => performance.now() - UNIT.t0 > UNIT.ms;
 
 export const SMALL_FAR = { high: 24, medium: 18, low: 18 };
 export const MIN_PX = { high: 0, medium: 4, low: 7 };
@@ -88,7 +90,7 @@ class Area {
       if (!batchable(o) || keptIn(o, root) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } continue; }
       const m = o.material;
       C.side = m.side; C.shadowSide = m.shadowSide; C.mat = o.matrixWorld.clone();
-      this.assign(C);
+      yield* this.assignSteps(C);
       this.members.push(C);
       o.castShadow = false;
       if (C.parts.size > 1 || C.parts.values().next().value) yield 'large piece';   // (a large piece, cut triangle by triangle)
@@ -99,7 +101,9 @@ class Area {
   // PERF-BATTERY: the cells a piece's triangles go to. A piece up to half a cell across goes whole into the cell of its
   // centre (as before); a larger one triangle by triangle, each to the cell of its own centre. C.parts: cell id →
   // the piece's triangles there (null: all of them); C.cells: those cells.
-  assign(C) {
+  // (FIX-PASS 3: a large piece's triangles also in steps once the unit is long — 1 024 at a time: one of the tavern's
+  //  was a 38 ms unit here. The same cells and lists, in the same order; the piece joins its cells at the end, as before)
+  *assignSteps(C) {
     const o = C.o, g = o.geometry, I = g.index, P = g.attributes.position, nt = Math.floor((I ? I.count : P.count) / 3), side = C.side + '|' + C.shadowSide;
     const W = o.matrixWorld, cellAt = (x, z) => {
       const key = Math.floor(x / this.cell) + ',' + Math.floor(z / this.cell) + '|' + side;
@@ -116,6 +120,7 @@ class Area {
     }
     const lists = new Map(), cx = _c.x, cz = _c.z;
     for (let t = 0; t < nt; t++) {
+      if ((t & 1023) === 1023 && long()) yield 'large piece';
       let x = 0, z = 0;
       for (let j = 0; j < 3; j++) { _v.fromBufferAttribute(P, I ? I.getX(t * 3 + j) : t * 3 + j).applyMatrix4(W); x += _v.x; z += _v.z; }
       x /= 3; z /= 3;
@@ -143,7 +148,7 @@ class Area {
       const map = new Int32Array(cnt).fill(-1), from = [];
       for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = I ? I.getX(T[k] * 3 + j) : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
       parts.push({ C, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
-      if (T.length > 4096) yield 'cell part';
+      if (T.length > 4096 || long()) yield 'cell part';
     }
     if (!ni) return;
     const pos = new Float32Array(nv * 3), idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
@@ -169,7 +174,7 @@ class Area {
     let acc = 0;
     for (const { C, T, map, from, vo } of parts) {
       const g = C.o.geometry, I = g.index, P = g.attributes.position;
-      if ((acc += from ? from.length : P.count) > 4096) { acc = 0; yield 'cell part'; }
+      if ((acc += from ? from.length : P.count) > 4096 || long()) { acc = 0; yield 'cell part'; }
       _m.multiplyMatrices(this.inv, C.o.matrixWorld);
       const flip = _m.determinant() < 0;
       const raw = !P.normalized && !P.isInterleavedBufferAttribute && P.itemSize === 3 ? P.array : null;

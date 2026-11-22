@@ -16,7 +16,8 @@ import * as THREE from 'three';
 
 export const TEXARRAY = { on: !(typeof location !== 'undefined' && /[?&]notexarray/.test(location.search)), init: null };
 export const WHITE = 0;  // (layer 0 of every array: white, for plain-colour pieces: colour × 1)
-const ARR = new Map();   // key (w×h|anisotropy) → { w, h, aniso, data, n, layer: Map(source → index), tex, users: Set(uniform), dirty }
+const UPLOAD_BYTES = 2 << 20;   // (FIX-PASS 3: an array's upload, at most this much a step: flushOne)
+const ARR = new Map();   // key (w×h|anisotropy) → { w, h, aniso, data, n, layer: Map(source → index), tex, users: Set(uniform), dirty, sending }
 
 export function registerStatic() { /* (kept for textures.js: every qualifying canvas texture is taken as it is met) */ }
 
@@ -71,11 +72,37 @@ function* flushOne(A) {
     tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.anisotropy = A.aniso;
     tex.minFilter = THREE.LinearMipmapLinearFilter; tex.magFilter = THREE.LinearFilter; tex.generateMipmaps = true; tex.flipY = false; tex.unpackAlignment = 4;
     tex.name = `world.textureArray ${A.key} ×${A.n}`; tex.needsUpdate = true;
-    const old = A.tex; A.tex = tex;
-    for (const u of A.users) u.value = tex;
-    old?.dispose();
-    TEXARRAY.init?.(tex);   // (sent to the GPU now — behind the black or the loading screen — not on the first frame drawn)
+    const use = () => { const old = A.tex; A.tex = tex; for (const u of A.users) u.value = tex; old?.dispose(); };
+    // (sent to the GPU now — behind the black or the loading screen — not on the first frame drawn)
+    // FIX-PASS 3: an array over UPLOAD_BYTES goes up in steps: three makes the texture (every mip level) and sends its
+    // first layers, then each step sends the next layers itself, and the last makes the mipmaps, once, from the whole
+    // array: the same texels and mip levels as the one upload. That upload was one unit of 17–34 ms here (the tavern,
+    // Zeelich), most of it waiting on SwiftShader's GPU process while the 10–13 MB went across; under load more.
+    // (Three makes mipmaps after every send it does: on its first, part-filled one that pass is held back — the context's
+    //  generateMipmap stands in for that one call — so the array still gets one pass, not two: a second full pass kept
+    //  SwiftShader's GPU process busy and the next step waited on it, 102 ms once here.) The twins keep the previous
+    // texture until the last step: a send left half-way (its build dropped) leaves the array dirty, to be sent again.
+    const R = TEXARRAY.renderer, S4 = A.w * A.h * 4, n = A.n, per = Math.max(1, Math.floor(UPLOAD_BYTES / S4));
+    if (!R || !TEXARRAY.init || n <= per) { A.sending = null; use(); TEXARRAY.init?.(tex); yield; return; }
+    const tok = (A.sending = {}), gl = R.getContext(), data = tex.image.data;
+    A.dirty = true;
+    for (let l = 0; l < per; l++) tex.addLayerUpdate(l);
+    gl.generateMipmap = () => {};
+    try { TEXARRAY.init(tex); } finally { delete gl.generateMipmap; }
     yield;
+    for (let l0 = per; l0 < n; l0 += per) {
+      const wt = R.properties.get(tex).__webglTexture;
+      if (A.sending !== tok || !wt) { tex.dispose(); return; }   // (a newer send of this array took over: it sends it whole)
+      const c = Math.min(per, n - l0);
+      R.state.bindTexture(gl.TEXTURE_2D_ARRAY, wt);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4);
+      gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, l0, A.w, A.h, c, gl.RGBA, gl.UNSIGNED_BYTE, data.subarray(l0 * S4, (l0 + c) * S4));
+      const last = l0 + c >= n;
+      if (last) gl.generateMipmap(gl.TEXTURE_2D_ARRAY);
+      R.state.unbindTexture();
+      if (last) { A.sending = null; if (A.n === n) A.dirty = false; use(); }
+      yield;
+    }
   }
 }
 export const arrays = () => [...ARR.values()].map((A) => ({ key: A.key, layers: A.n }));
