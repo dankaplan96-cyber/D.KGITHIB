@@ -1499,7 +1499,7 @@ export function* buildWorldSteps(parentScene) {
   }
   // (hidden beyond FAR_SMALL like the grass: a bed far off is a few pixels of colour, and thousands of tulips)
   // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
-  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7 || gridPaveDist(t.x, t.z) < 0.8 || flatClear(t.x, t.z, 0.6) || fenceDist(t.x, t.z) < 0.6 || streetDist(t.x, t.z) < 0.7) lifeBeds.add(t.bed);   // (the user, 16.11, a picture: yellow tulips growing out of MAP-ORIG's new paving — a bed touching any paving is left out whole)
+  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7 || gridPaveDist(t.x, t.z) < 0.8 || flatClear(t.x, t.z, 0.6) || lawnClear(t.x, t.z, 0.3) || fenceDist(t.x, t.z) < 0.6 || streetDist(t.x, t.z) < 0.7) lifeBeds.add(t.bed);   // (the user, 16.11, a picture: yellow tulips growing out of MAP-ORIG's new paving — a bed touching any paving is left out whole; FLAT-TOWN-2: or the lawns' masonry)
   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
   for (const list of beds) for (const t of list) if (blockDist(t.x, t.z) < 0) t.s = 1e-4;   // (TREES-1: a bed's tulips that stood in a house's floor)
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });

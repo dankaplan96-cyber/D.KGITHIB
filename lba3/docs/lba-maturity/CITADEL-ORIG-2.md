@@ -366,7 +366,18 @@ against the ferry, the boats and chapter 1's arrival on it. Not clean in this pa
 whole harbour by one offset (pier, quay, berth, boats, sheds, walls, the arrival's marks) and adds LBA2's step at its
 east side, x −75.
 
-**Pictures** (before | after): `captures/flat-town/lawns-*.jpg`, `east-*.jpg`, `inland-wall.jpg`.
+- **Residents.** The two steps are a stair for the residents' planner (walknav.js lowBrick): Maro and Tilde go up to
+  their meeting place and Dot to the hopscotch by them (the first walkers run found no route onto the bed).
+
+**Tests** (port 8274, SwiftShader, one browser at a time; slidetraps and overlap-sweep on the final build, walkers
+before the flower-bed filter, the other three before that and the steps' stair flag, neither of which they touch): slidetraps PASS (Citadel 49 spots, 0
+bad), citadel-structures PASS, world-consistency PASS (37), chapter1 PASS (33), walkers PASS (37; its first run failed
+the four route checks above), overlap-sweep (default) PASS (its first run found a scattered tulip bed 1–4 cm into the
+north kerb: the lawns' masonry now leaves such a bed out whole). The town's containers are where they were.
+
+**Pictures** (before | after, set cameras; Automated runtime only): `captures/flat-town/lawns-obl.jpg`,
+`lawns-top.jpg`, `lawns-low.jpg` (the north steps from the street), `east-obl.jpg`, `east-top.jpg`, `east-sea.jpg`,
+`inland-wall.jpg`; `harbour-unchanged.jpg` (the harbour left as it was).
 
 ## Rerun
 
