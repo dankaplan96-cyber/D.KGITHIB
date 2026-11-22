@@ -1637,4 +1637,52 @@ export async function preloadCharacters() {
   await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
+  if (LOOK.size) for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
 }
+// TWINSEN-ZOE-LOOK (the user, 22.11: Twinsen and Zoé "more like the original … keep the current one and we'll compare";
+// then the focus: Twinsen from behind under the Follow camera, "the hair is a bit too pixelated, but I'm not sure";
+// docs/lba-maturity/TWINSEN-ZOE-LOOK.md). A candidate in small steps, each its own switch, for the user to take or leave
+// one by one. The shipped look is the default: nothing changes without a switch. ?look=v2 turns every step on;
+// ?look=hairtone (a comma list) only those; ?look=v2,-hairtone all but those. The same text in the settings' `charLook`
+// (no menu entry; read once at start) does the same where a URL cannot be given. A step changes only the vertex colours
+// or normals of the models it names, as loaded: the same triangles in the same order, weights, eyes, mouth and brows.
+//   hairtone  Twinsen's three hair balls in three flat tones, darkest at the crown and lighter toward the tip (LBA2's
+//             order, palette 17 → 19), each lighter than now: from behind at play distance the hair reads as a brown bun
+//             of three balls instead of one near-black keyhole, and its edge on the skull has less contrast to
+//             stair-step. Still one flat shade a ball from every side (the normals still point down); the shapes as approved.
+export const LOOK_STEPS = { hairtone: ['twinsen'] };
+export const LOOK = (() => {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('look')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.charLook || ''; } catch { /* no storage */ }
+  const on = new Set();
+  for (const w of String(s).toLowerCase().split(',').map((x) => x.trim()).filter(Boolean)) {
+    if (w === 'v2') Object.keys(LOOK_STEPS).forEach((k) => on.add(k));
+    else if (w[0] === '-') on.delete(w.slice(1));
+    else if (LOOK_STEPS[w]) on.add(w);
+  }
+  return on;
+})();
+function lookModel(name, P) {
+  const steps = [...LOOK].filter((s) => LOOK_STEPS[s].includes(name));
+  if (!steps.length) return P;
+  const Q = { ...P, nrm: P.nrm.slice(), col: P.col.slice() };
+  for (const s of steps) LOOK_MODEL[s](Q);
+  return Q;
+}
+// the vertices of a colour [r, g, b] that a bone carries at least `min` of
+function lookVerts(P, rgb, bone, min = 0.99) {
+  const bi = P.bones.indexOf(bone), out = [];
+  for (let v = 0, n = P.pos.length / 3; v < n; v++) {
+    if (P.col[v * 3] !== rgb[0] || P.col[v * 3 + 1] !== rgb[1] || P.col[v * 3 + 2] !== rgb[2]) continue;
+    let w = 0;
+    for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === bi) w += P.sw[v * 4 + k];
+    if (w >= min) out.push(v);
+  }
+  return out;
+}
+// (baked colour, the ball's bone, its least weight there, new colour): the crown ball on the head, the tuft's two on
+// tail0 (0.74, with tail1) and tail2 (tools/blender/twinsen_poly.py w_hair; COL hair #553916, hairTuft #6a4722)
+const HAIRTONE = [[[0x55, 0x39, 0x16], 'head', 0.99, [0x7a, 0x52, 0x26]], [[0x6a, 0x47, 0x22], 'tail0', 0.7, [0x8a, 0x5e, 0x2e]], [[0x6a, 0x47, 0x22], 'tail2', 0.99, [0x98, 0x6a, 0x36]]];
+const LOOK_MODEL = {
+  hairtone(P) { for (const [from, bone, min, to] of HAIRTONE) for (const v of lookVerts(P, from, bone, min)) P.col.splice(v * 3, 3, ...to); },
+};
