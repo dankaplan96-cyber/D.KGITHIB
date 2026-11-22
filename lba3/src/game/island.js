@@ -2127,7 +2127,15 @@ function buildStation(W0, root, r) {
   }
   crateStack(W, grp, [[58.3, 31.4, 2], [58.6, 32.6, 1], [57.2, 32.2, 1, 0.8]], r);
   techCrates(W, grp, [[57.8, 34.6, 2, 0.95], [58.4, 36.0, 1, 0.95]], r);
-  barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.8, 40.6, false]], r);   // (PLACE-2: out of the station's corner and its downpipe, which went through them; 1 m apart, not 15 cm into each other)
+  // (PLACE-2: out of the station's corner and its downpipe, which went through them; 1 m apart, not 15 cm into each other)
+  // (P58's leftover: the third stood at (37.8, 40.6) and left a nook west of the main's drop, between it, the drop and
+  //  the bridge's west trestle leg: there the drop stood between him and the Fixed view's eastern shots (and the leg in
+  //  its north-eastern ones), and the camera, which reads its volumes and not that thin pipe, held the shot up to 3.8 s.
+  //  One barrel stands in that nook now, and the third moves up between the fort wall and the leg, so the strip behind
+  //  the leg is closed too (pushing into it, he stood hidden behind the leg 3.2 s when only the nook was filled). Instances:
+  //  no draw added. The fourth takes its turn from a stream of its own: the island's shared one, r, goes on unchanged
+  //  to the depot, the pipeline and the dressing)
+  { let k = 0; const r4 = () => (k++ < 6 ? r() : 0.31); barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.6, 39.7, false], [38.75, 40.8]], r4); }
   // walkway plates from the gate passage to the pad
   // (WORLD-FIX: every other plate 5 mm higher: where the walk turns, two plates overlap and their tops z-fought)
   for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025 + (i % 2) * 0.005, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
