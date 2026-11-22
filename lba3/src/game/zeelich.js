@@ -1801,7 +1801,10 @@ export function* buildZeelichSteps(scene, physics) {
     if (old) {
       // (CONTROL-FEEL: seven stones 1.09 m apart, and the gallery 1.09 m over the last; it was six 1.25 m apart, made
       // for a jump that rose 1.77 m. LBA2's jump, ours now, rises 1.19 m and takes a ledge ~1.4 m up: a margin kept)
-      const phi0 = 0.9, dphi = (30 * Math.PI) / 180, rs = 3.475, balY = 8.75, nS = 7;
+      // (FIX-PASS 22.11: 27° round the tower from stone to stone, not 30°: 1.54 m between the places to stand, not 1.71.
+      //  A hop from the middle of a stone with a short run-up crested 0.04 m over the next one 0.95 m short of its middle
+      //  and fell back (the 30 fps apex is 1.14 m over the 1.09 rise): the 6 → 7 hop failed every try in jumpreach)
+      const phi0 = 0.9, dphi = (27 * Math.PI) / 180, rs = 3.475, balY = 8.75, nS = 7;
       const tops = Array.from({ length: nS }, (_, k) => +((balY * (k + 1)) / (nS + 1)).toFixed(3));
       const stones = [];
       const stone = tm(graniteTex(), { color: '#d8d4ce' });
