@@ -841,6 +841,14 @@ export class CameraRig {
     return r;
   }
 
+  // (CAM-EASE-IN, CAM-BOB: his head or his chest in sight, counting everything a line may meet — the posts, the
+  // see-through things, the camera's own volumes, as a dialogue's strict lines do —: a spot those two rules hold the camera
+  // on instead of the rules' own must see him so whenever the rules' own does — the camera's sight (_sees) passes the
+  // camera's own volumes, and a spot it judged seen hid him for a frame at camfollow's wall)
+  _seesAny(p, hero) {
+    return this._line(p, hero.x, hero.y + 1.5, hero.z, true) || this._line(p, hero.x, hero.y + 1.0, hero.z, true);
+  }
+
   // G1-CAM (cost): the colliders and the scenery volumes that could hold one of the samples i0 ≤ i < i1 of the line
   // from p (p + d·i/n, as the callers place them) — those filed in the samples' own grid cells, near enough the line
   // across, and up and down — into _segCols / _segVols. Gathered once a line instead of looked up at every 0.25 m
@@ -1755,7 +1763,7 @@ export class CameraRig {
           if (d <= v * dt || K.inT > CH_KT_T) K.inOn = false;
           else {
             _os.copy(K.p).lerp(cam.position, (v * dt) / d);
-            if (this._solidAt(_os, CH_INSIDE) || this._overRoof(_os) || (!this._sees(_os, hero) && this._sees(cam.position, hero))) K.inOn = false;
+            if (this._solidAt(_os, CH_INSIDE) || this._overRoof(_os) || (!this._seesAny(_os, hero) && this._seesAny(cam.position, hero))) K.inOn = false;
             else { cam.position.copy(_os); W.keepBy = 'easein'; }
           }
         }
@@ -1773,7 +1781,7 @@ export class CameraRig {
       if (fresh || lock || C.yb == null) C.yb = yr;
       else {
         const yb = clamp(C.yb, yr - CH_BOB, yr + CH_BOB);
-        if (yb !== yr) { cam.position.y = yb; if (this._solidAt(cam.position, CH_INSIDE) || (!this._sees(cam.position, hero) && this._sees(_os.set(cam.position.x, yr, cam.position.z), hero))) cam.position.y = yr; }
+        if (yb !== yr) { cam.position.y = yb; if (this._solidAt(cam.position, CH_INSIDE) || (!this._seesAny(cam.position, hero) && this._seesAny(_os.set(cam.position.x, yr, cam.position.z), hero))) cam.position.y = yr; }
         C.yb = cam.position.y;
       }
     }
