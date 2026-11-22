@@ -425,39 +425,43 @@ function islandTextures(T) {
   }
   // rubble stone (LBA2 harbour houses and embankments): rounded irregular
   // stones, lit from the upper left, dark mortar
-  {
+  // (P42, the user 22.11: the houses' walls lighter, LBA2's tone. `rubbleHouse` is the houses' own: LBA2's house rubble,
+  //  seen from the play camera in lba2remake, is pale whitish-grey stones packed close in thin dark joints, where ours
+  //  read dark blue-grey on the shaded fronts. Paler stones, packed closer; the embankments and walls keep `rubble`)
+  for (const [key, o] of [['rubble', { mortar: '#5c5550', tries: 900, max: 90, gap: 0.62, grow: 1, base: 136, span: 60, hi: 70, lo: 60 }],
+    ['rubbleHouse', { mortar: '#58524e', tries: 1600, max: 130, gap: 0.45, grow: 1.12, base: 212, span: 38, hi: 40, lo: 46 }]]) {
     const N = 256;
     const [c, x] = canvas(N); const r = rng(102);
     // (GFX-LOOK-2: the mortar #3e3a3a → #5c5550: with ~40 % of the tile mortar the wall averaged a dark grey, so the
     //  lighthouse's cream footing and the harbour's embankments read as a black heap from the play camera; LBA2's
     //  rubble walls are mid-grey stones in a darker but not black bed)
-    x.fillStyle = '#5c5550'; x.fillRect(0, 0, N, N);
+    x.fillStyle = o.mortar; x.fillRect(0, 0, N, N);
     const stones = [];
-    for (let i = 0; i < 900 && stones.length < 90; i++) {
+    for (let i = 0; i < o.tries && stones.length < o.max; i++) {
       const px = r() * N, py = r() * N, rx = 9 + r() * 13, ry = 7 + r() * 8;
       let ok = true;
       for (const s of stones) {
         let dx = Math.abs(s[0] - px), dy = Math.abs(s[1] - py);
         dx = Math.min(dx, N - dx); dy = Math.min(dy, N - dy);
-        if ((dx / (s[2] + rx)) ** 2 + (dy / (s[3] + ry)) ** 2 < 0.62) { ok = false; break; }
+        if ((dx / (s[2] + rx)) ** 2 + (dy / (s[3] + ry)) ** 2 < o.gap) { ok = false; break; }
       }
-      if (ok) stones.push([px, py, rx, ry, r() * 0.6 - 0.3, r()]);
+      if (ok) stones.push([px, py, rx * o.grow, ry * o.grow, r() * 0.6 - 0.3, r()]);
     }
     for (const [px, py, rx, ry, rot, tone] of stones) {
-      const base = 136 + tone * 60;   // (GFX-LOOK-2: was 120 + 70: with the darker mortar, a black heap from afar)
+      const base = o.base + tone * o.span;   // (GFX-LOOK-2: was 120 + 70: with the darker mortar, a black heap from afar)
       wrap(N, (ox, oy) => {
         x.save(); x.translate(px + ox, py + oy); x.rotate(rot);
         x.fillStyle = 'rgba(20,16,16,0.5)'; x.beginPath(); x.ellipse(1.5, 2, rx, ry, 0, 0, 7); x.fill();
         const g = x.createRadialGradient(-rx * 0.35, -ry * 0.45, 0, 0, 0, Math.max(rx, ry) * 1.1);
-        g.addColorStop(0, `rgb(${base + 70},${base + 66},${base + 62})`);
+        g.addColorStop(0, `rgb(${base + o.hi},${base + o.hi - 4},${base + o.hi - 8})`);
         g.addColorStop(0.55, `rgb(${base},${base - 4},${base - 6})`);
-        g.addColorStop(1, `rgb(${base - 60},${base - 64},${base - 64})`);
+        g.addColorStop(1, `rgb(${base - o.lo},${base - o.lo - 4},${base - o.lo - 4})`);
         x.fillStyle = g; x.beginPath(); x.ellipse(0, 0, rx, ry, 0, 0, 7); x.fill();
         x.restore();
       });
     }
     speckle(x, N, r, 300, ['#e8e2da', '#2a2626'], 0.35, 0.3);
-    T.rubble = toTex(c);
+    T[key] = toTex(c);
   }
   // weathered planks (pier deck, plank roofs): horizontal boards, nail heads
   {
