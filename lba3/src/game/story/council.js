@@ -321,7 +321,9 @@ export class Council extends ChapterBase {
     this.game.regions?.whenBuilt?.('archive', (A) => A.keys?.setTaken(!!this.f.c9_key));
     if (!this.isCur() || !this.Z) return;
     this.freezeMills();
-    this.Z.ferry?.setVisible?.(false);
+    // (the dock's sky-ferry: the old line's ferry laid up there from chapter 3 on is U-1's, story/ferry.js, and its rule
+    //  says whether it is seen — as chapter2.js; hiding it here held only until a load, where ferry.js ran last)
+    this.Z.ferry?.setVisible?.(!!this.story.ferry?.open);
     if (this.game.hero?.disguised) this.wearCoat(false);
   }
 
