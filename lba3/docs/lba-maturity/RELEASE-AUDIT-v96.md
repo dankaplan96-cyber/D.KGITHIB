@@ -296,7 +296,7 @@ five side quests' own tests. (A-1 and A-2 below must still be fixed before anyon
 ### Major
 
 **A-1 · A hard landing that empties his life spends a clover but never refills it** — game rule, chapters everywhere.
-- What happens: a landing faster than 13 m/s (a fall of about 8.6 m or more) costs 2 life and starts a knockdown
+- What happens: a landing faster than 13 m/s (a fall of about 3.25 m or more at the game's gravity of 26 m/s²; corrected 22.11, QUAY-HP) costs 2 life and starts a knockdown
   (`src/game/actors.js` 386). When those 2 life take him to 0 and he has a clover, `damage()` spends the clover and starts
   its own knockdown whose get-up refills his life (actors.js 866–876); the landing code then calls `act('knockdown', …)`
   again, **replacing the clover's knockdown and its get-up**, so the refill never runs. He gets up at **0 life with one
