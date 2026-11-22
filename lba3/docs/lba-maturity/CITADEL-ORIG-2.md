@@ -415,3 +415,63 @@ The spot lists, the sea's tuning scripts (`seatune.mjs`, `deserttune.mjs`), the 
 (`openframes.mjs`, `arrival.mjs`) and the sheet script are in `/dev/shm/cit2/` (not committed).
 
 **The user, 22.11: "we don't move the harbour."** The harbour platform stays at its own levels; not to be proposed again.
+
+## WALL-LOOK (22.11): three candidate faces for the town's built walls, switchable; the default unchanged
+
+The user, 22.11, a play-camera picture of the new 20-step stair with the inland wall behind it (near-black, noisy
+pebbles): "The wall's texture isn't good, it needs replacing." By P107 (visible world changes are shown first) no new
+default: `?wall=a|b|c` switches a candidate on; without it the walls are as before. **Automated runtime only
+(SwiftShader).** Build `407c2ec7` + this change.
+
+**The candidates** (`src/engine/textures.js` wallTexture; `src/game/island.js` WALL_LOOK, wallMat, wallBox):
+- **a, pale dressed blocks in courses** (LBA2's light cut-stone terrace walls): a generated 256 px tile at 1.7 m, five
+  courses (~34 cm), blocks 46–85 cm with broken joints, thin warm-grey joints (never dark), each block lighter at its
+  top arris; tint `#eee6d8`.
+- **b, the houses' pale rubble, larger, in mortar**: a generated 256 px tile at 1.7 m, ~70 stones about twice the
+  houses' (`rubbleHouse`) size, a pale lime mortar between them; tint `#eee6d8`.
+- **c, the fort's stone**: the fort's own `fortStone` at its scale (3.2 m) and tint (`#e6eaf2`); no texture of its own.
+
+**What takes it:** every wall made with the sea wall's rubble material: the promenade's sea, south and inland walls
+(the inland one behind the stair), the south lawns' kerbs and bed walls, the east shore's wall while it stands
+(EAST-REVERT removes it; nothing of it was touched here), the harbour's L pier and platform walls (the same material
+object as the sea wall's: HARBOUR-BRINK's `wallRun`), and the quay's embankment (its own tint, the same texture: the
+harbour's merge folds it with the pier's walls into one draw per cell; a candidate on the pier alone split them, a draw
+more). Nothing moves: shapes, colliders, copings, steps and the harbour's levels are as they were. The walls facing
+east keep FLAT-TOWN-2's emissive lift, smaller on the pale faces (a/b `#4a453e`, c `#6c7078`, the rubble's `#8c8884`).
+The candidates in courses get their UVs projected per face (`boxUV`: along the face, up the height; ExtrudeGeometry's
+side faces ran the texture's rows up the wall, which the rubble's round stones never showed); the rubble keeps its UVs.
+
+**Cost** (one browser, 1280×720, Follow at Far, quality high, a new game per look, one frame counted after the view
+settled; `renderBufferDirect` counted by pass, main + shadow):
+
+| view | current | a | b | c |
+|---|---|---|---|---|
+| the stair (the user's view) | 147 + 21 | 147 + 21 | 147 + 21 | 147 + 21 |
+| the lawns (north-west) | 182 + 35 | 182 + 35 | 182 + 35 | 182 + 35 |
+| the L pier | 95 + 31 | 95 + 31 | 95 + 31 | 95 + 31 |
+| the harbour by the customs | 111 + 30 | 109 + 30 | 111 + 30 | 111 + 30 |
+| the square | 156 + 49 | 156 + 49 | 156 + 49 | 156 + 49 |
+
+Triangles the same (the harbour with a: 68 fewer, its batches cut differently; a pixel diff against the current shows
+only the walls and the idle animations). Textures: a and b one 256 px canvas more (one layer more in the world's
+texture array, made only with the flag), c none. Each candidate is made where the rubble's materials were made, one
+per tint as theirs: the draw batches keep pieces in their materials' creation order (drawbatch.js `ord`), and the
+first try (one material for the quay and the pier) left the walls a run of their own, a draw more at the stair and the
+pier. CPU frame time (60 frames after 20, the whole frame: update and submission; SwiftShader on a shared machine with
+two other test browsers running, so the tails are the machine's, not the walls'): p50 6–14 ms in every look and view.
+No GPU figure (software rendering).
+
+**Pictures** (current | a | b | c, the play camera at Far): `captures/wall-texture/stair.jpg` (the user's view, from
+the street below the stair), `stair-wall-detail.jpg` (the same, the wall at full size), `bluehouse.jpg` (the inland
+wall from the blue-roofed house), `promsouth.jpg` (the promenade's south end over the harbour's ground; the sea face
+itself is seen only from the water), `lawns-nw.jpg` and `lawns-s.jpg` (the south lawns' kerbs, steps and walls),
+`pier.jpg` (the L pier's and the quay's walls).
+
+**Recommendation: a.** It reads as a built, coursed retaining wall at the play camera (LBA2's terrace walls), the
+coping stays the lightest band over it, nothing goes near black in shade, and its pattern is large and low-contrast
+enough not to swim at distance. b is calm but at Far becomes an even grey mottle; c is the fort's blue-grey, darker in
+shade (the pier's north face nearly navy), and ties the town's walls to Funfrock's fort.
+
+**Tests** (port 8452, SwiftShader, one browser at a time): a boot with each flag and with none (the captures: no page
+or console error, no missing file); overlap-sweep (default) PASS (citadel a 0, b 0, c 0, d 0, e 0 open; the default
+look is the build's: its materials, geometry and UVs are made as before).

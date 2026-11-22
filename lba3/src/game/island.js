@@ -7,7 +7,7 @@
 // textures with world-scaled UVs, sculpted geometry for organic shapes,
 // instancing/merging for repeated parts, a collider for every solid thing.
 import * as THREE from 'three';
-import { textures, keyJSON } from '../engine/textures.js';
+import { textures, keyJSON, wallTexture } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
@@ -142,6 +142,42 @@ function pm(color, rough = 0.8, extra = {}) {
   return m;
 }
 const VC = () => pm('#ffffff', 0.85, { vertexColors: true });
+// WALL-LOOK (22.11): candidate faces for the town's built walls, for the user to choose from (?wall=a|b|c; none: the
+// quay's rubble as before, the default until the user picks). The walls that take it: the promenade's (sea, south,
+// inland behind the stair), the lawns' kerbs and bed walls, the east shore's, and the harbour's pier and platform walls
+// (the same material as the sea wall's), and the quay's embankment in the same rubble, its own tint (merged with the
+// pier's walls into one draw per cell: a candidate on the pier alone split them, a draw more). Each candidate is one
+// material for the sunlit walls and one for those in shade (as the rubble's two: the same draws), its tile per metre
+// baked in the walls' UVs. a: pale dressed blocks in courses; b: the houses' pale rubble, larger, in mortar; c: the
+// fort's stone (`fortStone`, its scale and tint). `shade`: the emissive lift of the walls facing east (FLAT-TOWN-2's),
+// smaller on the pale faces.
+const WALL_LOOK = (() => { const m = typeof location !== 'undefined' && /[?&]wall=([abc])\b/.exec(location.search); return m ? m[1] : null; })();
+const WALLS = {
+  a: { tex: () => wallTexture('a'), tile: 1.7, color: '#eee6d8', shade: '#4a453e' },
+  b: { tex: () => wallTexture('b'), tile: 1.7, color: '#eee6d8', shade: '#4a453e' },
+  c: { tex: () => textures().fortStone, tile: TILE.fortStone, color: '#e6eaf2', shade: '#6c7078' },
+};
+const WALL_TILE = WALL_LOOK ? WALLS[WALL_LOOK].tile : TILE.rubble;
+// a wall's box: the rubble's (isotropic: its side faces' UVs run up the height, as ExtrudeGeometry makes them); a
+// candidate in courses gets its UVs projected on each face (boxUV: along the face, up the height), a copy of the box
+function wallBox(w, h, d, r) {
+  if (!WALL_LOOK) return bbox(w, h, d, r, TILE.rubble);
+  return cached(`wb${w.toFixed(3)},${h.toFixed(3)},${d.toFixed(3)},${r}`, () => boxUV(bbox(w, h, d, r, 1).clone(), WALL_TILE));
+}
+// (a candidate: one material per tint, made where the rubble's was: the draw batches keep pieces in the order of their
+//  materials' ids, drawbatch.js `ord`, so a candidate's pieces batch as the rubble's did)
+function wallMat(shade = false, tint = '#cfcac8') {
+  if (!WALL_LOOK && !shade) return tm('rubble', { color: tint });
+  const key = 'wall-' + (WALL_LOOK || '') + (shade ? '-shade' : tint);
+  if (MC.has(key)) return MC.get(key);
+  const L = WALL_LOOK && WALLS[WALL_LOOK];
+  // (FLAT-TOWN-2's shade lift: the walls facing east read near black beside the sunlit sea wall; an emissive map)
+  const map = L ? L.tex() : textures().rubble;
+  const m = shade ? new THREE.MeshStandardMaterial({ map, color: L ? L.color : '#d6d2d0', roughness: 0.88, emissive: L ? L.shade : '#8c8884', emissiveMap: map })
+    : new THREE.MeshStandardMaterial({ map, color: L.color, roughness: 0.88 });
+  MC.set(key, m);
+  return m;
+}
 
 // ================================================================== geometry helpers
 const GC = new Map();
@@ -518,7 +554,7 @@ function quayCornerWall(sign, R, QH) {
     if (cr[0] * n[0] + cr[1] * n[1] + cr[2] * n[2] >= 0) idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
     else idx.push(base, base + 2, base + 1, base, base + 3, base + 2);
   };
-  const T = TILE.rubble, phiAt = (i) => -Math.PI / 2 + sign * (i / N) * (Math.PI / 2);
+  const T = WALL_TILE, phiAt = (i) => -Math.PI / 2 + sign * (i / N) * (Math.PI / 2);
   const vtx = (j, i, nrm) => { const phi = phiAt(i), [r, y] = P[j]; return { p: at(r, y, phi), n: nrm(phi), uv: [(r * (Math.PI / 2) * (i / N)) / T, y / T] }; };
   const ey = QH + 3.42, el = Math.hypot(ey, 0.38);
   const outer = (phi) => [(Math.sin(phi) * ey) / el, 0.38 / el, (Math.cos(phi) * ey) / el];   // the battered face leans back: its normal tips up a little
@@ -562,10 +598,10 @@ function buildHarbour(W0, root, r) {
   {
     const s = new THREE.Shape();
     s.moveTo(-0.2, -3.6); s.lineTo(1.6, -3.6); s.lineTo(1.6, QH - 0.18); s.lineTo(0.18, QH - 0.18); s.lineTo(-0.2, -3.6);
-    const wallGeo = extrude(s, zB - zA, TILE.rubble);
+    const wallGeo = WALL_LOOK ? boxUV(extrude(s, zB - zA, 1), WALL_TILE) : extrude(s, zB - zA, TILE.rubble);
     // shape is in XY (x outward→inward, y up), extruded along z
-    B.add(wallGeo, tm('rubble', { color: '#d8d4dc' }), QX, 0, zA);
-    for (const c of corners) B.add(quayCornerWall(c.sign, QR, QH), tm('rubble', { color: '#d8d4dc' }), QX + QR, 0, c.cz);
+    B.add(wallGeo, wallMat(false, '#d8d4dc'), QX, 0, zA);
+    for (const c of corners) B.add(quayCornerWall(c.sign, QR, QH), wallMat(false, '#d8d4dc'), QX + QR, 0, c.cz);
     // (no side returns: the quay's ends meet the rock shore; the old returns stood 1.2 m out in the water, OPEN-3 #02)
     // coping stones: individual bevelled blocks with slight jitter
     const cope = [];
@@ -623,7 +659,7 @@ function buildHarbour(W0, root, r) {
     const x0 = QX + 0.3, x1 = QX - plen;
     for (let x = x0; x > x1; x -= 0.3) { r(); r(); r(); r(); }
     for (let x = x0 - 0.4; x > x1 - 0.2; x -= 2.75) for (let s = 0; s < 2; s++) { r(); r(); r(); }
-    const rub = tm('rubble', { color: '#cfcac8' }), pave = tm('stone', { color: '#c8c2b8' }), cope = tm('stone', { color: '#e8e4dc' });
+    const rub = wallMat(), pave = tm('stone', { color: '#c8c2b8' }), cope = tm('stone', { color: '#e8e4dc' });
     const teal = pm('#2a9a8a', 0.4, { metalness: 0.5 }), post = tm('concrete', { color: '#f4f2ee', rough: 0.75 });
     const ax1 = E.x - pw / 2;   // (the arm's west end: the far side of the leg)
     // a straight run of the quay's wall section in the frame of B2 (land on the run's right), its coping, its posts and
@@ -639,7 +675,7 @@ function buildHarbour(W0, root, r) {
       const len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az);
       const sh = new THREE.Shape(), wt = top - 0.18 - (j & 1 ? 0.006 : 0), c0 = j & 1 ? 0.62 : 0;
       sh.moveTo(-0.2, -3.6); sh.lineTo(1.0, -3.6); sh.lineTo(1.0, wt); sh.lineTo(0.18, wt); sh.lineTo(-0.2, -3.6);
-      B2.add(extrude(sh, len, TILE.rubble), rub, ax, 0, az, 0, ry, 0);
+      B2.add(WALL_LOOK ? boxUV(extrude(sh, len, 1), WALL_TILE) : extrude(sh, len, TILE.rubble), rub, ax, 0, az, 0, ry, 0);
       B2.add(bbox(0.62, 0.22, len - c0, 0.03, TILE.stone), cope, (ax + bx) / 2 + Math.cos(ry) * 0.3 + Math.sin(ry) * c0 / 2, top - 0.09, (az + bz) / 2 - Math.sin(ry) * 0.3 + Math.cos(ry) * c0 / 2, 0, ry, 0);   // (bbox is cached: placed by its middle, never translated)
       const ix = Math.cos(ry) * 0.45, iz = -Math.sin(ry) * 0.45, uA = j & 1 ? 0.45 : 0, uB = j & 2 ? len - 0.45 : len, n = Math.max(1, Math.round((uB - uA) / 3));
       const us = []; for (let i = 0; i <= n; i++) us.push(uA + ((uB - uA) * i) / n);
@@ -3133,14 +3169,14 @@ function buildFlatTown(W, root) {
   const { physics } = W;
   const grp = new THREE.Group(); grp.name = 'flat-town'; root.add(grp);
   const B = new Batch(grp);
-  const rub = tm('rubble', { color: '#cfcac8' }), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
+  const rub = wallMat(), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
   // FLAT-TOWN-2: the walls that face east, away from the sun (the inland wall behind the water office, the lawns'),
   // read near black in their shade beside the sunlit sea wall: the same rubble, lifted by its own texture as light
   // (colour only: an emissive map, ~a third of the stones' own tone)
-  const rubS = MC.get('rubble-shade') || (() => { const map = textures().rubble, m = new THREE.MeshStandardMaterial({ map, color: '#d6d2d0', roughness: 0.88, emissive: '#8c8884', emissiveMap: map }); MC.set('rubble-shade', m); return m; })();
+  const rubS = wallMat(true);   // (WALL-LOOK: wallMat)
   for (const w of PROM_WALLS) {
     const wx = w.x1 - w.x0, wz = w.z1 - w.z0, top = PROM_H - 0.18, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2;
-    B.add(bbox(wx, top - w.foot, wz, 0.04, TILE.rubble), w.id === 'inland' ? rubS : rub, cx, (top + w.foot) / 2, cz);
+    B.add(wallBox(wx, top - w.foot, wz, 0.04), w.id === 'inland' ? rubS : rub, cx, (top + w.foot) / 2, cz);
     B.add(bbox(wx + 0.06, 0.22, wz + 0.06, 0.03, TILE.stone), cope, cx, PROM_H + 0.02 - 0.11, cz);
     physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.03, hd: wz / 2 + 0.03, rot: 0, top: PROM_H + 0.02, seeThrough: true });
   }
@@ -3153,7 +3189,7 @@ function buildFlatTown(W, root) {
     for (const w of LAWN.walls) {
       const has = (c) => w.out.includes(c), x0 = w.x0 - (has('w') ? o : 0), x1 = w.x1 + (has('e') ? o : 0), z0 = w.z0 - (has('n') ? o : 0), z1 = w.z1 + (has('s') ? o : 0);
       const wx = w.x1 - w.x0, wz = w.z1 - w.z0, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2, rt = w.top - 0.2;
-      B.add(bbox(wx, rt - foot, wz, 0.03, TILE.rubble), rubS, cx, (rt + foot) / 2, cz);
+      B.add(wallBox(wx, rt - foot, wz, 0.03), rubS, cx, (rt + foot) / 2, cz);
       B.add(bbox(x1 - x0, 0.22, z1 - z0, 0.03, TILE.stone), cope, (x0 + x1) / 2, w.top - 0.11, (z0 + z1) / 2);
       physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.02, hd: wz / 2 + 0.02, rot: 0, top: w.top, seeThrough: true });
     }
