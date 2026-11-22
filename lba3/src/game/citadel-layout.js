@@ -125,12 +125,9 @@ export const PROM_WALLS = [
 // the flight's block); its north side against the shelf's face. n steps.
 export const PROM_STAIR = { xa: GX(151), xb: PROM.x1, zN: -5.8, zS: GZ(120) + 0.05, n: 20 };   // (xa −65.786: its foot on a grid column, the street's level)
 // what the scatter's leftovers must keep out of (world.js filters them after the scatter, so no random draw moves)
-// (FLAT-TOWN-2: and the east shore's wall and the sea before it; the lawns' masonry has its own, lawnClear: its plants
-//  keep off by their size)
+// (FLAT-TOWN-2: the lawns' masonry has its own, lawnClear: its plants keep off by their size)
 export function flatClear(x, z, pad = 0) {
   for (const W of PROM_WALLS) if (x > W.x0 - pad && x < W.x1 + pad && z > W.z0 - pad && z < W.z1 + pad) return true;
-  const E = EAST_WALL;
-  if (x > E.x0 - pad && z > E.z0 - pad && z < E.z1 + pad) return true;
   const S = PROM_STAIR;
   return x > S.xb - pad && x < S.xa + 0.4 + pad && z > S.zN - 0.3 - pad && z < S.zS + 0.3 + pad;
 }
@@ -142,7 +139,7 @@ export function flatKeep(x, z, pad = 0) {
     || (x > S.xa - pad && x < S.xa + 2.4 + pad && z > S.zN - pad && z < S.zS + pad);
 }
 
-// ---- FLAT-TOWN-2 (P106, 22.11): the south block's raised lawns, the east shore's wall ----
+// ---- FLAT-TOWN-2 (P106, 22.11): the south block's raised lawns ----
 // LBA2's island grid (tools/worldscore/ref/citadel.json, in our frame) has the block south of the cross street (ours
 // between the west street, the fields' path and the two cross streets: world.js TOWN_BLOCK) raised: a ring one cell
 // wide at +0.21 over the street round beds at +0.63, a strip of the street's level along its north side (the benches
@@ -188,12 +185,8 @@ export function lawnClear(x, z, pad = 0) {
   if (x < x0 + 2 * GS + 0.13 + pad || x > x1 - GS - 0.13 - pad || z < z0 + 2 * GS + 0.13 + pad || z > z1 - GS - 0.13 - pad) return true;
   return false;
 }
-// EAST_WALL: LBA2's east shore by the town is one straight line (its grid: the street's level to the edge, then the
-// water); ours was a natural drop of 2.3 → −2.6 m in ~2 m, in and out round three coves. A built wall on the grid's
-// lines: the town's level to column 197 (x −23.07; the coves filled, the points past it that stood up sunk), its face
-// 0.05 m past column 198 (x −22.14, under the water's floor), from the terraces' foot (z −25.8) to the south end of
-// the town's ground (z 74.5); rubble down to the water, the promenade's coping. The footbridge to the spaceport rests
-// on it (z 38–42: no coping under its planks).
-export const EAST_WALL = { x0: GX(197) - 0.08, x1: GX(198) + 0.05, lvl: GX(197), low: GX(198), z0: GZ(95) - 0.05, z1: GZ(203) + 0.05, top: TOWN_FLAT + 0.02, foot: -3.4, fill: -29.0,
-  bridge: [38.05, 41.95] };   // (bridge: under the footbridge's planks, spaceport.js BRIDGE z 40 ± 2.0, 5 cm in from their sides)
+// (FLAT-TOWN-2's east shore wall, EAST_WALL, is reverted (the user, 22.11): the shore is its natural drop round its
+//  three coves again. V143_EAST: the ground v143 had changed there (the wall's top, the filled coves, the sunk ledge),
+//  for an older save's spot only: world.js shoreSpot)
+export const V143_EAST = { x0: -29.0, x1: -18.75, z0: GZ(95) - 0.05, z1: GZ(203) + 0.05 };
 const GS = 260 / 280;

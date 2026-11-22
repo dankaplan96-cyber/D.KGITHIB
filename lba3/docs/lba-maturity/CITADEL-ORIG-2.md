@@ -322,7 +322,7 @@ and walls). **Automated runtime only (SwiftShader).** Build `eb385287` + this ch
 | south block, the beds | +0.63 (a few spots +0.83) | 0 | +0.63 (one bed, the lawn; its walls' tops +0.65) |
 | south block, the strips before it (north: benches, lamps; west) | 0 | 0 | 0 |
 | south block, east and south edges | the ring +0.21 (LBA2's block is 2.8 m wider) | 0 | the bed's wall straight from the street |
-| east shore | the street's level to one straight edge, then water | 0, a drop to −4.9 in ~2 m round three coves | 0 to a straight wall (face x −22.09), the water before it |
+| east shore | the street's level to one straight edge, then water | 0, a drop to −4.9 in ~2 m round three coves | (v143: a straight wall, face x −22.09; **reverted**, below: the natural drop as before) |
 | harbour platform | +0.83 (the quay and the pier too) | 0 (the quay −0.50, the pier −0.55) | unchanged (below) |
 
 **What changed** (`citadel-layout.js` LAWN, EAST_WALL; `world.js` lawns, eastShore; `island.js` buildFlatTown):
@@ -338,7 +338,7 @@ and walls). **Automated runtime only (SwiftShader).** Build `eb385287` + this ch
   second, LBA2's x −49..−47.3, would be in our east wall: on the bed between the two trees) and the planter (0.7 m
   west, onto the bed). Scattered bushes in the masonry or on the tulip beds' places, and grass in the masonry, are
   left out after the scatter.
-- **The east shore.** A wall from the terraces' foot (z −25.8) to the town ground's south end (z 74.5): the town's level
+- **The east shore (reverted 22.11, below).** A wall from the terraces' foot (z −25.8) to the town ground's south end (z 74.5): the town's level
   to grid column x −23.07 (three coves filled, up to 3.7 m), its face 0.05 m past column x −22.14, the four columns out
   under the water's floor (a ledge 1.6 m high stood 1 m out at z 25–30 with no way up), rubble down to −3.4 under
   the coping. The spaceport's footbridge rests on it (no coping under its planks). The old drop's cliff rocks on the
@@ -378,6 +378,31 @@ north kerb: the lawns' masonry now leaves such a bed out whole). The town's cont
 **Pictures** (before | after, set cameras; Automated runtime only): `captures/flat-town/lawns-obl.jpg`,
 `lawns-top.jpg`, `lawns-low.jpg` (the north steps from the street), `east-obl.jpg`, `east-top.jpg`, `east-sea.jpg`,
 `inland-wall.jpg`; `harbour-unchanged.jpg` (the harbour left as it was).
+
+### East shore wall reverted (the user, 22.11)
+
+The user kept FLAT-TOWN's and FLAT-TOWN-2's other changes (the raised square, the level streets, the sea wall, the
+20-step flight, the south lawns, the north cross streets, the pale walls) and asked for one back: **the east shore
+goes back to its natural drop round its three coves, with its cliff rocks.** **Automated runtime only (SwiftShader).**
+- Undone (from `0c03f622`): `citadel-layout.js` EAST_WALL and its part of `flatClear`; `world.js` eastShore (the
+  filled coves, the sunk ledge before the face) and the east shore's `dropRocks` (the cliff rocks are back);
+  `island.js` the wall's rubble, coping and its 2 colliders; `world.js flatSpot`. The footbridge to the spaceport
+  rests on the natural shore and its stilts again (`spaceport.js` was never changed: its deck height comes from the
+  shore under its west end, 2.33 as before). The scatter's leftovers by the shore come back with `flatClear` (filtered
+  after the scatter: no random draw moved).
+- Kept: the lawns, kerbs, steps and their stair flag; the tulip-bed filter; the lifted rubble on the inland wall and
+  the lawns' walls; the scatter deciding on the old ground.
+- Checked against the build before FLAT-TOWN-2 (`0c03f622^`), box x −32..−15, z −27..76: terrain heights (0.5 m
+  grid) identical (max diff 0.000), colliders identical (38), vertex counts of every mesh and instance counts
+  identical (cliff rocks, the town's batches, shadows). v143 differs there by up to 6.0 m (the probe sees the wall).
+- Old saves: a v143 spot on the wall's top, a filled cove or the sunk ledge (`V143_EAST`) that is now off the town's
+  level loads on the nearest standable town ground to its west (`world.js shoreSpot`, `main.js applySave`; a spot on
+  the footbridge stays). 13 v143 spots loaded and played 3 s: all standing on standable ground at 2.28–2.33, not in
+  the water, no hp lost, no jump.
+- Tests (ports 8391/8392, SwiftShader, one browser at a time, on the final build): slidetraps PASS (Citadel 49 spots,
+  0 bad), citadel-structures PASS (7), world-consistency PASS (37), walkers PASS (37), spaceport-2 PASS (21; the
+  footbridge), overlap-sweep (default) PASS.
+- Picture (v143 | reverted, the `east-obl.jpg` camera): `captures/flat-town/east-reverted.jpg`.
 
 ## Rerun
 
