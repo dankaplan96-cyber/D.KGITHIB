@@ -10,6 +10,7 @@ export const MAX_SLOPE = 1.1;     // steepest walkable terrain (rise / run)
 export const BLOCK_LOW = 0.12;   // a `block` collider lower than this over the feet is stepped over (it is under them)
 
 const NONE = Object.freeze([]);   // (PERF-CPU: near()'s answer for an empty cell)
+const _pushOut = { x: 0, z: 0 };   // (GC-STREET: _push's answer)
 
 export class Physics {
   constructor(terrain) {
@@ -17,6 +18,7 @@ export class Physics {
     this.colliders = [];
     this.cell = 8;
     this.grid = new Map();
+    this._brick = false;   // (GC-STREET: _ground's second answer)
   }
 
   _key(ix, iz) { return ix * 73856093 ^ iz * 19349663; }
@@ -28,6 +30,7 @@ export class Physics {
     c.bottom ??= -50;
     if (c.block) c.noStand = true;
     c.enabled ??= true;
+    c._cam = 0;   // (GC-STREET: the camera's per-query mark, camera.js _stamp)
     if (c.type === 'box') {
       c.cos = Math.cos(c.rot || 0);
       c.sin = Math.sin(c.rot || 0);
@@ -69,14 +72,16 @@ export class Physics {
 
   // Signed penetration test of a circle (x,z,r) against a collider.
   // Returns push-out vector or null.
+  // (GC-STREET: the vector is one shared object, overwritten by the next call: every caller reads it at once)
   _push(c, x, z, r) {
+    const out = _pushOut;
     if (c.type === 'cyl') {
       const dx = x - c.x, dz = z - c.z;
       const d = Math.hypot(dx, dz);
       const min = c.r + r;
       if (d >= min) return null;
-      if (d < 1e-5) return { x: min, z: 0 };
-      return { x: (dx / d) * (min - d), z: (dz / d) * (min - d) };
+      if (d < 1e-5) { out.x = min; out.z = 0; return out; }
+      out.x = (dx / d) * (min - d); out.z = (dz / d) * (min - d); return out;
     }
     // oriented box -> local space
     const dx = x - c.x, dz = z - c.z;
@@ -97,7 +102,7 @@ export class Physics {
       else { ox = 0; oz = Math.sign(lz || 1) * (ez + r); }
     }
     // back to world
-    return { x: ox * c.cos + oz * c.sin, z: -ox * c.sin + oz * c.cos };
+    out.x = ox * c.cos + oz * c.sin; out.z = -ox * c.sin + oz * c.cos; return out;
   }
 
   _inside(c, x, z, r = 0) {
@@ -109,9 +114,12 @@ export class Physics {
   }
 
   // Highest surface under (x,z) that is reachable from height y.
-  groundAt(x, z, y = Infinity) { return this.groundInfo(x, z, y).h; }
+  groundAt(x, z, y = Infinity) { return this._ground(x, z, y); }
 
-  groundInfo(x, z, y = Infinity) {
+  groundInfo(x, z, y = Infinity) { const h = this._ground(x, z, y); return { h, brick: this._brick }; }
+  // (GC-STREET) groundInfo's height, with whether a brick gives it in this._brick (read at once): groundAt, move and steepAt
+  // ask it without the object groundInfo returns
+  _ground(x, z, y) {
     let g = this.terrain.heightAt(x, z), brick = false;
     for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
       if (!c.enabled || c.noStand) continue;
@@ -127,13 +135,14 @@ export class Physics {
         if (c.top <= y + STEP_UP && c.top > g && this._inside(c, x, z, 0.06)) { g = c.top; brick = true; }
       }
     }
-    return { h: g, brick };
+    this._brick = brick;
+    return g;
   }
 
   // Standing on bare terrain steeper than walkable? Returns the downhill direction (actors slide and can't
   // jump from there — otherwise a cliff can be climbed by hopping from one steep landing to the next).
   steepAt(x, z, y = Infinity, limit = MAX_SLOPE * 1.35) {
-    if (this.groundInfo(x, z, y).brick) return null;
+    this._ground(x, z, y); if (this._brick) return null;
     const e = 0.25, H = (a, b) => this.terrain.heightAt(a, b);
     const gx = (H(x + e, z) - H(x - e, z)) / (2 * e), gz = (H(x, z + e) - H(x, z - e)) / (2 * e);
     const s = Math.hypot(gx, gz);
@@ -188,30 +197,31 @@ export class Physics {
   }
 
   // Move an actor (pos: Vector3, radius) by dx,dz with sliding + step/slope rules.
+  // (GC-STREET: a method, not a closure made at every move; the ground asked without groundInfo's object)
+  _tryMove(actor, p, nx, nz) {
+    const g = this._ground(nx, nz, p.y), brick = this._brick;
+    if (g < WATER_FLOOR && !brick && !actor.canSwim) return false; // (a floor or stairs below sea level are not sea)
+    const rise = g - p.y;
+    if (actor.onGround) {
+      if (rise > STEP_UP) return false;
+      // terrain steeper than MAX_SLOPE is a cliff; bricks are steps
+      if (!brick && rise > 0.01 && rise > Math.hypot(nx - p.x, nz - p.z) * MAX_SLOPE) return false;
+    } else if (rise > 0.25) return false;
+    return true;
+  }
+
   move(actor, dx, dz) {
     const p = actor.pos;
     const r = actor.radius;
-    const tryMove = (nx, nz) => {
-      const gi = this.groundInfo(nx, nz, p.y);
-      const g = gi.h;
-      if (g < WATER_FLOOR && !gi.brick && !actor.canSwim) return false; // (a floor or stairs below sea level are not sea)
-      const rise = g - p.y;
-      if (actor.onGround) {
-        if (rise > STEP_UP) return false;
-        // terrain steeper than MAX_SLOPE is a cliff; bricks are steps
-        if (!gi.brick && rise > 0.01 && rise > Math.hypot(nx - p.x, nz - p.z) * MAX_SLOPE) return false;
-      } else if (rise > 0.25) return false;
-      return true;
-    };
     let nx = p.x + dx, nz = p.z + dz;
-    if (!tryMove(nx, nz)) {
-      if (tryMove(p.x + dx, p.z)) { nx = p.x + dx; nz = p.z; }
-      else if (tryMove(p.x, p.z + dz)) { nx = p.x; nz = p.z + dz; }
+    if (!this._tryMove(actor, p, nx, nz)) {
+      if (this._tryMove(actor, p, p.x + dx, p.z)) { nx = p.x + dx; nz = p.z; }
+      else if (this._tryMove(actor, p, p.x, p.z + dz)) { nx = p.x; nz = p.z + dz; }
       else { nx = p.x; nz = p.z; }
     }
     // push out of blocking bricks
     for (let it = 0; it < 2; it++) {
-      for (const c of this.near(nx, nz)) {
+      for (let ni = 0, NL = this.near(nx, nz); ni < NL.length; ni++) { const c = NL[ni];
         if (!c.enabled || c.stair) continue; // (stairs: the height under the feet decides, step by step)
         if ((c.top <= p.y + STEP_UP && !(c.block && c.top > p.y + BLOCK_LOW)) || c.bottom > p.y + 1.7) continue;
         const push = this._push(c, nx, nz, r);
@@ -219,7 +229,7 @@ export class Physics {
       }
     }
     // the push may have shoved us into the sea or up a cliff — refuse in that case
-    if (!tryMove(nx, nz)) { nx = p.x; nz = p.z; }
+    if (!this._tryMove(actor, p, nx, nz)) { nx = p.x; nz = p.z; }
     p.x = nx; p.z = nz;
   }
 

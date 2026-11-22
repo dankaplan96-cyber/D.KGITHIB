@@ -338,7 +338,12 @@ function outside(c, x, z) {
   const lx = dx * c.cos - dz * c.sin, lz = dx * c.sin + dz * c.cos;
   return Math.hypot(Math.max(0, Math.abs(lx) - c.hw), Math.max(0, Math.abs(lz) - c.hd));
 }
-const _seen = new Set(), _cells = [], NO_SKIP = new Set(), NONE_V = [], _near3 = [];
+// (GC-STREET: a collider or a volume already looked at in this query carries the query's stamp (`_cam`, set to 0 when it is
+//  added: physics.js, occlude.js); was a shared Set, whose clear() made a new table and whose adds grew it again, a dozen
+//  queries a step: the largest garbage of the camera's clearance)
+let _stamp = 0;
+const _tall = [];   // (_keepOut's colliders too tall to rise over)
+const _cells = [], NO_SKIP = new Set(), NONE_V = [], _near3 = [];
 // G1-CAM (cost): the scenery volumes by camera.js's own grid of VG m cells (numeric keys; occlude.js's near() builds a
 // string key at every call, ~70 ns, and the Follow camera's sight lines read it at hundreds of samples a frame). Volumes
 // are added once and never move, so the grid is built again only when the list grows. Any volume whose footprint holds
@@ -490,10 +495,10 @@ export class CameraRig {
     for (let d = maxD; d > 2; d -= 0.25) {
       const x = t.x + Math.sin(yaw) * cp * d, z = t.z + Math.cos(yaw) * cp * d, y = t.y + 1.4 + sp * d;
       let ok = true;
-      _seen.clear();
+      const sv = ++_stamp;
       for (const [dx, dz] of CORNERS) { for (const c of P.near(x + dx, z + dz)) {
-        if (_seen.has(c)) continue;
-        _seen.add(c);
+        if (c._cam === sv) continue;
+        c._cam = sv;
         if (!c.enabled || (c.camSkip && occ) || c.bottom > y + 1 || c.top + CLEAR_TOP - y <= LIFT_MAX) continue;
         if (outside(c, x, z) < TALL_FREE) { ok = false; break; }
       } if (!ok) break; }
@@ -823,7 +828,7 @@ export class CameraRig {
     const P = this.physics, occ = this.occ?.(), T = this.terrain;
     if (T && T.heightAt(p.x, p.z) > p.y - 0.3 - gap) return true;
     if (P) {
-      _seen.clear();
+      const sv = ++_stamp;
       // (CAM-KEYWALK: within CH_CAP_BAND under the top of a tall box — a pier, a portico, a tower's block, more than
       // CH_CAP_TALL over the ground — it keeps CH_CAP_PAD off its sides: the cornice and the coping drawn there stand
       // out of the collider, and the camera stood in the hostel portico's cornice, 0.3 m outside its piers' boxes)
@@ -832,8 +837,8 @@ export class CameraRig {
         const L = P.near(p.x + GAP4[gi][0] * gl, p.z + GAP4[gi][1] * gl);
         for (let ci = 0; ci < L.length; ci++) {
           const c = L[ci];
-          if (_seen.has(c)) continue;
-          _seen.add(c);
+          if (c._cam === sv) continue;
+          c._cam = sv;
           if (!c.enabled || (c.camSkip && occ) || p.y <= c.bottom - gap) continue;
           if (p.y < c.top + gap && P._inside(c, p.x, p.z, gap)) return true;
           // (and CH_CAP_UP over it: the portico's pediment roof stands 0.2 m over its piers' boxes)
@@ -2328,10 +2333,10 @@ export class CameraRig {
     //  largest single source of garbage in a frame, ~175 KB)
     for (let i = 0; i < RING.length; i++) { const e = RING[i], r = e[0]; if (k < 1 && r > HARD_R) break; const n = Math.min(lim, T.heightAt(x + e[1], z + e[2]) + lerp(base, 0.3 * k, r / CLEAR_R) - y); if (n > need) need = n; }
     if (P) {
-      _seen.clear();
+      const sv = ++_stamp;
       for (let q = 0; q < 4; q++) { const L = P.near(x + CORNERS[q][0], z + CORNERS[q][1]); for (let ci = 0; ci < L.length; ci++) { const c = L[ci];
-        if (_seen.has(c)) continue;
-        _seen.add(c);
+        if (c._cam === sv) continue;
+        c._cam = sv;
         // (camSkip: a house or a dome, whose scenery volume below stands for its taller box; bottom: overhead)
         if (!c.enabled || (c.camSkip && occ) || c.bottom > y + 1) continue;
         const up = c.top + top - y;
@@ -2343,10 +2348,10 @@ export class CameraRig {
       } }
     }
     if (occ) {
-      _seen.clear();
+      const sv = ++_stamp;
       for (let q = 0; q < 4; q++) { const L = occ.near(x + CORNERS[q][0], z + CORNERS[q][1]); for (let vi = 0; vi < L.length; vi++) { const v = L[vi];
-        if (_seen.has(v)) continue;
-        _seen.add(v);
+        if (v._cam === sv) continue;
+        v._cam = sv;
         if (v.y0 > y + 1 || v.top + top <= y) continue;
         let t = occ.topAt(v, x, z), n = t > -Infinity ? t + top - y : 0;
         for (let i = 0; i < RING.length; i++) { const e = RING[i], r = e[0]; if (k < 1 && r > HARD_R) break; t = occ.topAt(v, x + e[1], z + e[2]); if (t > -Infinity) n = Math.max(n, (t + top - y) * W(r)); }
@@ -2398,7 +2403,8 @@ export class CameraRig {
   // `base`: the height kept over the ground straight under it; `k`: the margins' scale (see _clearance)
   _keepOut(p, look, lift = 0, base = 1.5, k = 1) {
     if (!this.terrain) return 0;
-    const tall = [];
+    // (GC-STREET: one list reused, emptied per call, and a plain loop for `every`: no array and no closure a call)
+    const tall = _tall; tall.length = 0;
     this._clearance(p.x, p.y, p.z, tall, base, k);
     if (tall.length) {
       _c.subVectors(look, p);
@@ -2406,8 +2412,11 @@ export class CameraRig {
       _c.divideScalar(L || 1);
       for (let d = 0.1; d < L - 2; d += 0.1) {
         const x = p.x + _c.x * d, z = p.z + _c.z * d;
-        if (tall.every((c) => outside(c, x, z) >= CLEAR_IN)) { p.addScaledVector(_c, d); break; }
+        let clear = true;
+        for (let i = 0; i < tall.length; i++) if (!(outside(tall[i], x, z) >= CLEAR_IN)) { clear = false; break; }
+        if (clear) { p.addScaledVector(_c, d); break; }
       }
+      tall.length = 0;
     }
     const need = this._clearance(p.x, p.y, p.z, null, base, k);
     p.y += Math.max(lift, need);

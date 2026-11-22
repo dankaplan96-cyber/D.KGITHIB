@@ -47,6 +47,8 @@ export const PUMP_POSE = {
   down: { th: 0.28, arm: -0.6, el: -0.7, torso: 0.36 },
 };
 export const PUMP_STROKE = PUMP_POSE.lift + PUMP_POSE.push + PUMP_POSE.back;
+// (GC-STREET) how far a stepping foot is through its arc's lift (0 when it stands): Rig.update's stepping turns
+const stepUp = (f) => (f?.stepping ? Math.sin(Math.PI * f.u) : 0);
 const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 export function pumpAngle(t) {
   const Q = PUMP_POSE, up = Q.up.th, dn = Q.down.th;
@@ -77,6 +79,8 @@ const LOCO = new Set(['walk', 'run', 'sneak', 'idle', 'talk', 'listen', 'turnL',
 const MOVING = new Set(['walk', 'run', 'sneak']);
 const XF_KEYS = ['legL', 'kneeL', 'footL', 'legR', 'kneeR', 'footR', 'sideL', 'sideR', 'armL', 'elL', 'outL', 'twL', 'armR', 'elR', 'outR', 'twR'];
 const XF_VARS = ['hipsY', 'torsoX', 'torsoY', 'torsoZ', 'headX', 'headY', 'headZ', 'armOut', 'hipsZ', 'bodyRotX'];
+// (GC-STREET) a rig's reused targets (Rig.update's T): every XF_KEYS key, empty
+const newTargets = () => { const T = {}; for (const k of XF_KEYS) T[k] = undefined; return T; };
 const newFoot = () => ({ on: false, w: 0, yaw0: 0, dwell: 0, P: new THREE.Vector3(), from: new THREE.Vector3(), stepping: false, u: 0, dur: 0.1, lift: 0 });
 const wrap = (x) => Math.atan2(Math.sin(x), Math.cos(x));
 const _fp = new THREE.Vector3(), _v3 = new THREE.Vector3(), _m4 = new THREE.Matrix4(), _hp = new THREE.Vector3(), _sp = new THREE.Vector3();
@@ -422,8 +426,18 @@ export class Rig {
   _faceStep(dt) {
     if (this.faceHold !== Infinity && (this.faceHold -= dt) <= 0 && this.faceName !== 'neutral') this.setFace('neutral');
     const F = this.face, T = this.faceTo, k = Math.min(1, dt * 7);
-    let moved = false;
-    for (const key in T) { const d = T[key] - F[key]; if (Math.abs(d) > 1e-4) { F[key] += d * k; moved = true; } }
+    let moved = false, d;
+    // (GC-STREET: FACES' nine keys by name — every expression, and setFace's blends, have exactly these — not a for-in with
+    //  keyed reads and writes, which boxed every number; a key a target lacked would read NaN and be left, as before)
+    d = T.up - F.up; if (Math.abs(d) > 1e-4) { F.up += d * k; moved = true; }
+    d = T.cross - F.cross; if (Math.abs(d) > 1e-4) { F.cross += d * k; moved = true; }
+    d = T.sad - F.sad; if (Math.abs(d) > 1e-4) { F.sad += d * k; moved = true; }
+    d = T.lid - F.lid; if (Math.abs(d) > 1e-4) { F.lid += d * k; moved = true; }
+    d = T.smile - F.smile; if (Math.abs(d) > 1e-4) { F.smile += d * k; moved = true; }
+    d = T.wide - F.wide; if (Math.abs(d) > 1e-4) { F.wide += d * k; moved = true; }
+    d = T.nod - F.nod; if (Math.abs(d) > 1e-4) { F.nod += d * k; moved = true; }
+    d = T.tilt - F.tilt; if (Math.abs(d) > 1e-4) { F.tilt += d * k; moved = true; }
+    d = T.bow - F.bow; if (Math.abs(d) > 1e-4) { F.bow += d * k; moved = true; }
     const m = this.mesh, inf = m?.morphTargetInfluences;
     if (inf && inf.length >= 3 && (moved || this._browSet !== true)) { inf[0] = F.up; inf[1] = F.cross; inf[2] = F.sad; this._browSet = true; }
   }
@@ -447,11 +461,11 @@ export class Rig {
     this.gx += (this.gxTo - this.gx) * k; this.gy += (this.gyTo - this.gy) * k;
     if (Math.abs(this.gx - gx0) < 1e-4 && Math.abs(this.gy - gy0) < 1e-4 && this._gazeDone) return;
     this._gazeDone = true;
-    for (const e of eyes) {
-      const I = e.userData.iris, mesh = e.children[0];
+    for (let ei = 0; ei < eyes.length; ei++) {   // (GC-STREET: indexed loops)
+      const e = eyes[ei], I = e.userData.iris, mesh = e.children[0];
       if (!I || !mesh) continue;
-      const P = mesh.geometry.attributes.position, a = P.array, dx = this.gx * I.w * 0.1, dy = this.gy * I.w * 0.05;
-      for (const i of I.idx) { a[i * 3] = I.base[i * 3] + dx; a[i * 3 + 1] = I.base[i * 3 + 1] + dy; }
+      const P = mesh.geometry.attributes.position, a = P.array, dx = this.gx * I.w * 0.1, dy = this.gy * I.w * 0.05, idx = I.idx;
+      for (let ii = 0; ii < idx.length; ii++) { const i = idx[ii]; a[i * 3] = I.base[i * 3] + dx; a[i * 3 + 1] = I.base[i * 3 + 1] + dy; }
       P.needsUpdate = true;
     }
   }
@@ -680,8 +694,9 @@ export class Rig {
     // one down where it is and steps the other: their heights on the pose this frame, before either is planted)
     let upL = 0, upR = 0;
     if (stopWin && this.plantLite && this._settleAge < 0.3 && !F.L.on && !F.R.on) { upL = j.legL.foot.getWorldPosition(_fp).y - groundY; upR = j.legR.foot.getWorldPosition(_fp).y - groundY; }
-    for (const s of ['L', 'R']) {
-      const leg = s === 'L' ? j.legL : j.legR, st = F[s], other = F[s === 'L' ? 'R' : 'L'];
+    // (GC-STREET: an indexed loop over the two feet and the release window as two numbers: no arrays made a frame)
+    for (let si = 0; si < 2; si++) {
+      const s = si === 0 ? 'L' : 'R', leg = s === 'L' ? j.legL : j.legR, st = F[s], other = F[s === 'L' ? 'R' : 'L'];
       leg.foot.getWorldPosition(_fp);
       if (touch) { st.on = true; st.w = 1; st.locked = false; st.stepping = false; st.landing = false; st.lead = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; }
       if (gait) {
@@ -689,16 +704,16 @@ export class Rig {
         const ph = ((this.phase / (Math.PI * 2) - (this._lagPhase || 0) + (s === 'L' ? 0 : 0.5)) % 1 + 1) % 1;
         // (the sneak holds its foot to the end of its stance and lets it go over the next 3 % of the cycle, while the heel is already
         // peeling up: turning, the pose it goes back to stands a few cm off the held spot, and it slid there along the ground)
-        const rel = sneak ? [SNEAK.stance, 0.03] : this.plantLite ? PLANT_LITE_RELEASE : [0.38, 0.12];
+        const rel0 = sneak ? SNEAK.stance : this.plantLite ? PLANT_LITE_RELEASE[0] : 0.38, rel1 = sneak ? 0.03 : this.plantLite ? PLANT_LITE_RELEASE[1] : 0.12;
         // (GAIT-CADENCE: another character's stance foot stays down until the other foot has struck, to 62 % of its cycle at most: the
         // other's keyed contact comes down 0.1-0.15 of a cycle after its phase says, and the foot let go at 44-50 % left both in the
         // air meanwhile, the one just let go dragged forward along the ground at 1.2-1.5 m/s, a centimetre or two up). Only while the leg
         // still reaches it (1.05 leg lengths: the heel up a centimetre or two, as at a push-off); past that it goes as before, once in
         // its stance (waited: no second hold)
-        let waitOther = this.plantLite && !sneak && st.on && !st.waited && (st.reach || 0) <= 1.05 && !other.on && ph >= rel[0] && ph < 0.62;
-        if (!waitOther && st.on && ph >= rel[0] && ph < 0.62) st.waited = true;
+        let waitOther = this.plantLite && !sneak && st.on && !st.waited && (st.reach || 0) <= 1.05 && !other.on && ph >= rel0 && ph < 0.62;
+        if (!waitOther && st.on && ph >= rel0 && ph < 0.62) st.waited = true;
         const stance = ph < (sneak ? SNEAK.stance + 0.03 : 0.5) || waitOther;
-        let wgt = waitOther ? 1 : stance ? smooth(ph / 0.05) * (1 - smooth((ph - rel[0]) / rel[1])) : 0;
+        let wgt = waitOther ? 1 : stance ? smooth(ph / 0.05) * (1 - smooth((ph - rel0) / rel1)) : 0;
         if (st.on && (this.accel ?? 0) < -4) wgt = Math.max(wgt, st.w);   // (braking to a stop: the foot it stands on is not let go)
         // (the heel strikes when the leg can reach the ground below the foot: where the pose puts it far ahead of a high hip it
         // would hang in the air, or be pulled back to the ground in a frame)
@@ -1014,7 +1029,10 @@ export class Rig {
       const r = Math.abs(this._ayRate);
       this._autoPivot = SETTLE.has(a) && this.plantFrame && (this._autoPivot ? r > 0.35 : r > 0.8);
     }
-    const T = {};
+    // (GC-STREET: the joints' targets in one object per rig, every key emptied each update — the same as a new {} to every
+    //  reader (`?? 0`, `|| 0`); every key update and its helpers set is one of XF_KEYS)
+    const T = this._T ??= newTargets();
+    for (let i = 0; i < XF_KEYS.length; i++) T[XF_KEYS[i]] = undefined;
     if (this.accel !== undefined) this._leanSpring(dt);
     let armOut = 0, hipsY = 0.95, bodyRotX = 0, torsoX = 0, torsoY = 0, torsoZ = 0, headX = 0, headY = 0, headZ = 0;
     // (ANIM-COMBAT: hipsZ carries the pelvis forward/back (× pelvis height / 0.95), hipsYaw turns it; T.outL / T.outR
@@ -1080,8 +1098,8 @@ export class Rig {
         if (ks < 1) {
           // the thigh swings about the middle of its stance (contact -46, push-off +25 degrees), the arms with it; the knee folds
           // and the foot rolls as before (the passing foot still clears the ground: shortened with the thigh, it scraped along it)
-          const th = (v) => W.thighMid + (v - W.thighMid) * ks;
-          T.legL = th(key(W.thigh, p)); T.legR = th(key(W.thigh, q));
+          // (GC-STREET: written out, no closure: every walking resident passes here every step)
+          T.legL = W.thighMid + (key(W.thigh, p) - W.thighMid) * ks; T.legR = W.thighMid + (key(W.thigh, q) - W.thighMid) * ks;
           T.armL = key(W.arm, p) * ks; T.armR = key(W.arm, q) * ks;
         } else {
           T.legL = key(W.thigh, p); T.legR = key(W.thigh, q);
@@ -1209,7 +1227,7 @@ export class Rig {
       if (this._autoPivot) {
         // (ANIM-POLISH-3) another character turning where it stands: the weight over the standing foot while the other steps, as the
         // hero's stepping turn below (the chest over it, the pelvis hiked on the stepping side, the opposite arm a little forward)
-        const F = this._feet, up = (f) => (f?.stepping ? Math.sin(Math.PI * f.u) : 0), eL = up(F?.L), eR = up(F?.R);
+        const F = this._feet, eL = stepUp(F?.L), eR = stepUp(F?.R);
         torsoZ += 0.06 * (eL - eR); this._stepTilt = 0.07 * (eL - eR); hipsY += 0.01 * (eL + eR);
         T.armL -= 0.16 * eR; T.armR -= 0.16 * eL; T.elL -= 0.12 * eR; T.elR -= 0.12 * eL;
       }
@@ -1454,7 +1472,7 @@ export class Rig {
         // (ANIM-POLISH-2) the weight goes over the standing foot while the other steps: the chest leans over it, the pelvis
         // hikes on the stepping side, the body rises a touch onto the standing leg and settles as the foot comes down, the
         // arm opposite the stepping leg swings a little forward (read from last frame's steps, Rig._plant)
-        const F = this._feet, up = (f) => (f?.stepping ? Math.sin(Math.PI * f.u) : 0), eL = up(F?.L), eR = up(F?.R);
+        const F = this._feet, eL = stepUp(F?.L), eR = stepUp(F?.R);
         torsoZ = 0.06 * (eL - eR); this._stepTilt = 0.07 * (eL - eR); hipsY += 0.01 * (eL + eR);
         T.armL -= 0.16 * eR; T.armR -= 0.16 * eL; T.elL -= 0.12 * eR; T.elR -= 0.12 * eL;
       }
@@ -1558,9 +1576,11 @@ export class Rig {
       hipsY -= 0.04 * d; T.kneeL = (T.kneeL || 0) + 0.3 * d; T.kneeR = (T.kneeR || 0) + 0.3 * d; T.legL = (T.legL || 0) - 0.12 * d; T.legR = (T.legR || 0) - 0.12 * d; torsoX += 0.05 * d;
     }
     if (this.planting && LOCO.has(a)) {
-      const v = { hipsY, torsoX, torsoY, torsoZ, headX, headY, headZ, armOut, hipsZ, bodyRotX };
+      // (GC-STREET: one holder per rig, filled and read back field by field: no object and no destructuring a frame)
+      const v = this._xv ??= { hipsY: 0, torsoX: 0, torsoY: 0, torsoZ: 0, headX: 0, headY: 0, headZ: 0, armOut: 0, hipsZ: 0, bodyRotX: 0 };
+      v.hipsY = hipsY; v.torsoX = torsoX; v.torsoY = torsoY; v.torsoZ = torsoZ; v.headX = headX; v.headY = headY; v.headZ = headZ; v.armOut = armOut; v.hipsZ = hipsZ; v.bodyRotX = bodyRotX;
       this._xfade(dt, T, v);
-      ({ hipsY, torsoX, torsoY, torsoZ, headX, headY, headZ, armOut, hipsZ, bodyRotX } = v);
+      hipsY = v.hipsY; torsoX = v.torsoX; torsoY = v.torsoY; torsoZ = v.torsoZ; headX = v.headX; headY = v.headY; headZ = v.headZ; armOut = v.armOut; hipsZ = v.hipsZ; bodyRotX = v.bodyRotX;
     }
     // the upper-body layer (see overlay)
     const O = this.over, walkTwist = torsoY;
@@ -1630,7 +1650,12 @@ export class Rig {
     set(LL.knee, T.kneeL); set(LR.knee, T.kneeR);
     set(LL.foot, T.footL); set(LR.foot, T.footR);
     set(LL.hip, T.sideL, 'z'); set(LR.hip, T.sideR, 'z');
-    if (fk) for (const [s, B] of [[fk.L, j.legL], [fk.R, j.legR]]) for (const b of ['hip', 'knee', 'foot']) B[b].rotation.set(s[b].rotation.x, s[b].rotation.y, s[b].rotation.z);
+    // (GC-STREET: written out, no arrays of pairs and names a frame)
+    if (fk) {
+      const L = fk.L, R2 = fk.R, BL = j.legL, BR = j.legR;
+      BL.hip.rotation.set(L.hip.rotation.x, L.hip.rotation.y, L.hip.rotation.z); BL.knee.rotation.set(L.knee.rotation.x, L.knee.rotation.y, L.knee.rotation.z); BL.foot.rotation.set(L.foot.rotation.x, L.foot.rotation.y, L.foot.rotation.z);
+      BR.hip.rotation.set(R2.hip.rotation.x, R2.hip.rotation.y, R2.hip.rotation.z); BR.knee.rotation.set(R2.knee.rotation.x, R2.knee.rotation.y, R2.knee.rotation.z); BR.foot.rotation.set(R2.foot.rotation.x, R2.foot.rotation.y, R2.foot.rotation.z);
+    }
     set(j.armL.sh, T.armL, 'x', Ru); set(j.armR.sh, T.armR, 'x', Ru);
     set(j.armL.el, T.elL, 'x', Ru); set(j.armR.el, T.elR, 'x', Ru);
     set(j.armR.sh, T.twR, 'y', Ru); set(j.armL.sh, -(T.twL ?? 0), 'y', Ru);
@@ -1690,7 +1715,7 @@ export class Rig {
     if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
     this._faceStep(dt);
     const lid = this.face.lid;
-    for (const e of j.eyes) e.scale.y = blink ? 0.12 : lid;
+    for (let ei = 0; ei < j.eyes.length; ei++) j.eyes[ei].scale.y = blink ? 0.12 : lid;
     this._gazeStep(dt);
 
     // the talking mouth (FACES-HANDS): a thin closed line at rest; open, it is taller, a touch narrower when pursed (o, u) and
@@ -1724,12 +1749,13 @@ export class Rig {
       // and settles while he talks (a gesture, not lip-sync). It never swings back into the belly (+x).
       const idleP = Math.PI * 2 / (this.idlePeriod || 2.4);
       const talkLift = a === 'talk' ? 0.5 - 0.5 * Math.cos(this.actionT * Math.PI * 2 / 1.6) : 0;
-      j.trunk.forEach((s, i) => {
+      for (let i = 0; i < j.trunk.length; i++) {
+        const s = j.trunk[i];
         const sw = walkLike ? Math.sin(this.phase - 0.45 * i) * 0.21 : Math.sin(this.t * 0.9 - 0.5 * i) * 0.035;
         set(s, sw * (0.55 + 0.25 * i) - this.roll * 0.3, 'z', 9 - 2 * i);
         const cx = (walkLike ? -Math.min(speed, 4) * 0.025 : -0.03 * (0.5 + 0.5 * Math.sin(this.t * idleP)) * i) - talkLift * 0.07 * i - (this.lean || 0) * 0.3 * (i + 1);
         set(s, Math.min(0.02, cx), 'x', 8 - 2 * i);
-      });
+      }
     }
 
     // ponytail follows motion with lag
@@ -1738,19 +1764,21 @@ export class Rig {
       // it back a little and every footfall bounces it — never so much that it stands up like a spike
       const v = Math.min(speed, 7);
       const sway = -0.04 + v * 0.022 + Math.sin(this.phase * 2) * v * 0.012 - (this.lean || 0) * 0.2;
-      j.tail.segs.forEach((s, i) => {
+      for (let i = 0; i < j.tail.segs.length; i++) {
+        const s = j.tail.segs[i];
         s.rotation.x = damp(s.rotation.x, sway * (i + 1) * 0.28 + Math.sin(this.t * 2 + i) * 0.02, 9 - i, dt);
         s.rotation.z = damp(s.rotation.z, -this.roll * (i + 1) * 0.6, 8, dt);
-      });
+      }
     }
 
     if (this.flash > 0) {
       if (!this._mats) this._collectMats();
       this.flash = Math.max(0, this.flash - dt * 4);
-      this._mats.forEach((m, i) => {
+      for (let i = 0; i < this._mats.length; i++) {
+        const m = this._mats[i];
         m.emissive.copy(this._baseEmissive[i]).lerp(_white, this.flash);
         m.emissiveIntensity = Math.max(this._baseIntensity[i], this.flash * 1.2);
-      });
+      }
     }
     if (this.contact) this.contact(this, dt);
   }

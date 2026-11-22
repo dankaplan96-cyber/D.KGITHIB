@@ -36,6 +36,7 @@ export class Occluders {
 
   add(v) {
     v.rot ??= 0; v.slope ??= 0;
+    v._cam = 0;   // (GC-STREET: the camera's per-query mark, camera.js _stamp)
     v.cos = Math.cos(v.rot); v.sin = Math.sin(v.rot);
     if (v.kind === 'rev') v.R = v.profile[v.profile.length - 1][0];
     const R = v.kind === 'rev' ? v.R : Math.hypot(v.hw, v.hd);
