@@ -471,12 +471,8 @@ function curbs(parent, H) {
       }
     }
   }
-  // a ring of curb stones around the square, open where the streets leave it
-  for (let a = 0; a < Math.PI * 2; a += 0.55 / 9.4) {
-    const x = V.x + Math.sin(a) * 9.4, z = V.z + Math.cos(a) * 9.4;
-    if (streetDist(x, z) < 0.15 || bugFootDist(x, z) < 0) continue;
-    pos.push([x, H(x, z), z, a + Math.PI / 2]);
-  }
+  // (FLAT-TOWN: the ring of curb stones round the square is gone: the square is LBA2's raised plaza now, two stone
+  //  steps all round it, island.js buildFlatTown)
   // Bug Street's foot: its north kerb on to the north house's front
   { const [[ax, az], [bx, bz]] = BUG_FOOT_KERB, len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az);
     for (let d = 0.28; d < len - 0.2; d += 0.55) { const x = ax + (bx - ax) * d / len, z = az + (bz - az) * d / len; pos.push([x, H(x, z), z, ang]); } }

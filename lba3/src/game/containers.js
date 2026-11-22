@@ -39,6 +39,7 @@ import { Batch, tm, pm, bbox, cyl } from './kit.js';
 import { DESERT, coastDist, trackDist } from './desert.js';
 import { routeDist, keshClear } from './keshlife.js';
 import { zlClear } from './zeelife.js';
+import { flatKeep } from './flattown.js';
 
 const ANY = ['money', 'life', 'magic'];   // the original's Info0 112 (16 money + 32 life + 64 magic)
 // Citadel, in our frame (the original's place + world.js LAYOUT); n is the original's Info1 (a coin worth n kashes)
@@ -235,6 +236,7 @@ export function citadelFit(W, physics) {
     if (W.pathDist && W.pathDist(x, z) < 1.0 + r) return why('path');
     if (streetDist(x, z) < r - 0.5) return why('street');
     if (lifeClear(x, z)) return why('townlife');
+    if (flatKeep(x, z, r)) return why('flight');   // (FLAT-TOWN: off the promenade's walls, its flight and the way onto it)
     if (doorLane(x, z, r)) return why('door');
     for (const s of W.signs || []) if (Math.hypot(x - s.x, z - s.z) < 1.4 + r) return why('sign');
     for (const v of W.givers || []) if (Math.hypot(x - v.x, z - v.z) < 2.5) return why('giver');

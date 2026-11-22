@@ -22,6 +22,7 @@ import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
 import { HATCHES } from './sewers.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA } from './flattown.js';
 
 // ================================================================== layout
 // Everything that the vegetation scatter must keep clear of (world.js asks
@@ -3123,6 +3124,46 @@ function plateauStair(W, root, o) {
   B.build();
 }
 
+// FLAT-TOWN (flattown.js): the promenade's walls, in the quay's rubble under a pale coping flush with the walk (the
+// sea wall straight down to the water, its south end over the harbour's ground, the inland wall behind the water
+// office), and the flight of steps up to it from the street, the quay's paler stone. One mesh per material (three
+// draws); each wall's top a walkable collider at the coping (the terrain grid can't step at the face: world.js keeps
+// the last row level, the bank to the low row inside the wall), each step its own (risers 0.19 m)
+function buildFlatTown(W, root) {
+  const { physics } = W;
+  const grp = new THREE.Group(); grp.name = 'flat-town'; root.add(grp);
+  const B = new Batch(grp);
+  const rub = tm('rubble', { color: '#cfcac8' }), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
+  for (const w of PROM_WALLS) {
+    const wx = w.x1 - w.x0, wz = w.z1 - w.z0, top = PROM_H - 0.18, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2;
+    B.add(bbox(wx, top - w.foot, wz, 0.04, TILE.rubble), rub, cx, (top + w.foot) / 2, cz);
+    B.add(bbox(wx + 0.06, 0.22, wz + 0.06, 0.03, TILE.stone), cope, cx, PROM_H + 0.02 - 0.11, cz);
+    physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.03, hd: wz / 2 + 0.03, rot: 0, top: PROM_H + 0.02, seeThrough: true });
+  }
+  {
+    const S = PROM_STAIR, L = S.xa - S.xb, tr = L / S.n, rise = (PROM_H - TOWN_FLAT) / S.n, base = 0.3, depth = S.zS - S.zN;
+    const sh = new THREE.Shape();
+    sh.moveTo(0, 0); sh.lineTo(0, base);
+    for (let i = 0; i < S.n; i++) { sh.lineTo(i * tr, base + (i + 1) * rise); sh.lineTo((i + 1) * tr, base + (i + 1) * rise); }
+    sh.lineTo(L, 0); sh.lineTo(0, 0);
+    B.add(extrude(sh, depth, TILE.stone), step, S.xa, TOWN_FLAT - base, S.zS, 0, Math.PI, 0);
+    for (let i = 0; i < S.n; i++) physics.add({ type: 'box', x: S.xa - (i + 0.5) * tr, z: (S.zN + S.zS) / 2, hw: tr / 2, hd: depth / 2, rot: 0, top: TOWN_FLAT + (i + 1) * rise, seeThrough: true });
+  }
+  // the square's plaza: its steps, stone rings round it, each from under the street to its tread (world.js plaza walks
+  // the incline under them: no colliders, a step of 0.21 m is no wall)
+  {
+    const P = PLAZA;
+    for (let k = 0; k < P.n; k++) {
+      const ro = P.r + (P.n - k) * P.tread, ri = ro - P.tread, top = TOWN_FLAT + (k + 1) * P.step + 0.015, foot = TOWN_FLAT - 0.06;   // (1.5 cm over the ground at its inner edge: no shared plane)
+      const sh = new THREE.Shape(); sh.absarc(0, 0, ro, 0, Math.PI * 2, false);
+      const hole = new THREE.Path(); hole.absarc(0, 0, ri, 0, Math.PI * 2, true); sh.holes.push(hole);
+      const g = new THREE.ExtrudeGeometry(sh, { depth: top - foot, bevelEnabled: false, curveSegments: 48 });
+      B.add(scaleUV(g, TILE.stone), step, P.x, foot, P.z, -Math.PI / 2, 0, 0);
+    }
+  }
+  B.build();
+}
+
 function buildOldPlaces(W, root) {
   buildWestIslet(W, root);
   tunnelMouth(W, root, 'plateau', OLD_DOORS.plateau);
@@ -3154,7 +3195,9 @@ function buildOriginalProps(W, root, r) {
   };
   const okAt = (x, z, rad, y0, open) => {
     const h = W.H(x, z);
-    if (h < 1.2 || h < y0 - 0.3 || T.slopeAt(x, z) > 0.5) return false;
+    // (FLAT-TOWN: the promenade's strip is level to its walls' faces; the slope's samples, a grid step off, reach the bank
+    //  inside the sea wall, and the lanterns and rails along its edge were turned away)
+    if (h < 1.2 || h < y0 - 0.3 || (T.slopeAt(x, z) > 0.5 && !(x > PROM.x0 - 0.05 && x < PROM.x1 + 0.05 && z > PROM.z0 && z < PROM.z1))) return false;
     if (keepClear(x, z, rad)) return false;
     if (W.pathDist && W.pathDist(x, z) < (open ? 0.9 : 1.3) + rad) return false;
     if (streetDist(x, z) < (open ? -0.6 : 0.2) + rad) return false;
@@ -3264,6 +3307,7 @@ export function buildIsland(scene, W) {
   buildPipeline(W, scene, r);
   buildDressing(W, scene, r);
   buildOldPlaces(W, scene);
+  buildFlatTown(W, scene);
   buildOriginalProps(W, scene, r);
   console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms, depot+pipe ${(performance.now() - T2) | 0} ms`);
   W.island = { keepClear };
