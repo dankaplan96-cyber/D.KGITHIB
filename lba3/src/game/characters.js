@@ -1640,33 +1640,52 @@ export async function preloadCharacters() {
   if (LOOK.size) for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
 }
 // TWINSEN-ZOE-LOOK (the user, 22.11: Twinsen and Zoé "more like the original … keep the current one and we'll compare";
-// then the focus: Twinsen from behind under the Follow camera, "the hair is a bit too pixelated, but I'm not sure";
-// docs/lba-maturity/TWINSEN-ZOE-LOOK.md). A candidate in small steps, each its own switch, for the user to take or leave
-// one by one. The shipped look is the default: nothing changes without a switch. ?look=v2 turns every step on;
-// ?look=hairtone (a comma list) only those; ?look=v2,-hairtone all but those. The same text in the settings' `charLook`
-// (no menu entry; read once at start) does the same where a URL cannot be given. A step changes only the vertex colours
-// or normals of the models it names, as loaded: the same triangles in the same order, weights, eyes, mouth and brows.
+// then the focus: Twinsen from behind under the Follow camera, "the hair is a bit too pixelated, but I'm not sure"; then
+// "the problem is the hair"; then "maybe not 3 balls: try to turn the 3 balls more into hair";
+// docs/lba-maturity/TWINSEN-ZOE-LOOK.md). Options in small steps, each its own switch, for the user to take or leave
+// one by one. The shipped look is the default: nothing changes without a switch. ?look=hairtone,haircap (a comma list)
+// turns those on; ?look=v2 is the first candidate (hairtone); ?look=v2,-hairtone all of it but those. The same text in
+// the settings' `charLook` (no menu entry; read once at start) does the same where a URL cannot be given. A step changes
+// only the model it names, as loaded; the skeleton, the other weights, the eyes, the mouth and the brows are untouched.
 //   hairtone  Twinsen's three hair balls in three flat tones, darkest at the crown and lighter toward the tip (LBA2's
 //             order, palette 17 → 19), each lighter than now: from behind at play distance the hair reads as a brown bun
 //             of three balls instead of one near-black keyhole, and its edge on the skull has less contrast to
 //             stair-step. Still one flat shade a ball from every side (the normals still point down); the shapes as approved.
-export const LOOK_STEPS = { hairtone: ['twinsen'] };
+//   haircap   HAIR-EDGE (P106): the scalp right round the hair (all of it within 2 cm, fading out by 6.5 cm; behind the
+//             crown only: the forehead and the face are not touched) painted in the hair's own flat shade: the hair meets
+//             the skin in a soft painted hairline on the skull, not only in the balls' hard outline over the pale scalp,
+//             the edge that stair-stepped and flickered. Vertex colours and normals only (the hair's flat shade is its
+//             normal pointing down); no triangle added.
+//   hairline  HAIR-EDGE: a softer step than the cap: the skin round the hair (fading out by 11 cm, as far forward as the
+//             top of the crown) shaded toward a darker skin, like the hair's shadow on the scalp, so the edge goes mid skin
+//             → hair instead of near-white → hair. Colours and normals only.
+//   hairform  HAIR-EDGE (the user, 22.11: "maybe not 3 balls … turn the 3 balls more into hair"): the three balls made
+//             one lock of hair in their place and outline: rooted on the crown, it sweeps back and down through the
+//             balls' centres and tapers to a point (no waists, no beads), a few broad strands along it that twist a
+//             little toward the tip, brown tones from the root to the tip with a soft painted sheen; still flat shaded
+//             (normals down, so the same from every heading under the fixed light). Its weights pass from the head to
+//             tail0–tail2 along it, as the balls' did, so the follow-through sways it. With the cap's painted hairline.
+//             720 triangles where the balls had 672.
+export const LOOK_STEPS = { hairform: ['twinsen'], hairtone: ['twinsen'], haircap: ['twinsen'], hairline: ['twinsen'] };
+const LOOK_V2 = ['hairtone'];   // (?look=v2: the first candidate as proposed; the hair-edge options are named one by one)
 export const LOOK = (() => {
   let s = '';
   try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('look')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.charLook || ''; } catch { /* no storage */ }
   const on = new Set();
   for (const w of String(s).toLowerCase().split(',').map((x) => x.trim()).filter(Boolean)) {
-    if (w === 'v2') Object.keys(LOOK_STEPS).forEach((k) => on.add(k));
+    if (w === 'v2') LOOK_V2.forEach((k) => on.add(k));
     else if (w[0] === '-') on.delete(w.slice(1));
     else if (LOOK_STEPS[w]) on.add(w);
   }
   return on;
 })();
 function lookModel(name, P) {
-  const steps = [...LOOK].filter((s) => LOOK_STEPS[s].includes(name));
+  const steps = Object.keys(LOOK_STEPS).filter((s) => LOOK.has(s) && LOOK_STEPS[s].includes(name));
   if (!steps.length) return P;
-  const Q = { ...P, nrm: P.nrm.slice(), col: P.col.slice() };
-  for (const s of steps) LOOK_MODEL[s](Q);
+  const Q = { ...P, pos: P.pos.slice(), nrm: P.nrm.slice(), col: P.col.slice(), si: P.si.slice(), sw: P.sw.slice() };
+  const ctx = { balls: hairBalls(P) };
+  for (const s of steps) LOOK_MODEL[s](Q, ctx);
+  if (ctx.cap || ctx.line) paintScalp(Q, ctx);
   return Q;
 }
 // the vertices of a colour [r, g, b] that a bone carries at least `min` of
@@ -1683,6 +1702,126 @@ function lookVerts(P, rgb, bone, min = 0.99) {
 // (baked colour, the ball's bone, its least weight there, new colour): the crown ball on the head, the tuft's two on
 // tail0 (0.74, with tail1) and tail2 (tools/blender/twinsen_poly.py w_hair; COL hair #553916, hairTuft #6a4722)
 const HAIRTONE = [[[0x55, 0x39, 0x16], 'head', 0.99, [0x7a, 0x52, 0x26]], [[0x6a, 0x47, 0x22], 'tail0', 0.7, [0x8a, 0x5e, 0x2e]], [[0x6a, 0x47, 0x22], 'tail2', 0.99, [0x98, 0x6a, 0x36]]];
+const SKIN_RGB = [0xe2, 0xbc, 0x90];
+const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const mixc = (a, b, t) => a.map((v, k) => Math.round(v + (b[k] - v) * t));
+// the three balls as built, from their own vertices: centre, radius, vertex list (crown, tuft 1, tuft 2)
+function hairBalls(P) {
+  return HAIRTONE.map(([c, b, m]) => {
+    const vs = lookVerts(P, c, b, m), lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+    for (const v of vs) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], P.pos[v * 3 + k]); hi[k] = Math.max(hi[k], P.pos[v * 3 + k]); }
+    return { c: lo.map((l, k) => (l + hi[k]) / 2), r: (hi[1] - lo[1]) / 2, vs };
+  });
+}
+// how far p lies outside the hair (the lock's stations once hairform has built it, else the balls); and the hair's own
+// flat colour nearest p
+const hairDist = (ctx, p) => {
+  let d = 1e9, col = null;
+  for (const s of ctx.sdf || ctx.balls) { const e = Math.hypot(p[0] - s.c[0], p[1] - s.c[1], p[2] - s.c[2]) - s.r; if (e < d) { d = e; col = s.col; } }
+  return [d, col];
+};
+// a normal turned toward straight down by t (0 … 1) along the great circle (the hair's normal is down: its flat shade)
+function towardDown(n, t) {
+  const c = Math.max(-1, Math.min(1, -n[1])), th = Math.acos(c), s = Math.sin(th);
+  if (s < 0.05) return t > 0.5 || c > 0 ? [0, -1, 0] : n;
+  const a = Math.sin((1 - t) * th) / s, b = Math.sin(t * th) / s;
+  const r = [n[0] * a, n[1] * a - b, n[2] * a], l = Math.hypot(...r);
+  return r.map((x) => x / l);
+}
+// the scalp round the hair (skin on the head bone): haircap paints the hair's own shade on it near the hair, hairline a
+// warm shadow further out; both only behind the crown (the front of the skull, the forehead and the face keep theirs)
+function paintScalp(P, ctx) {
+  const hb = P.bones.indexOf('head'), c0 = ctx.balls[0].c, hair = ctx.cap ? ctx.sdf || ctx.balls.map((b, i) => ({ ...b, col: P.col.slice(b.vs[0] * 3, b.vs[0] * 3 + 3) })) : null;
+  for (let v = 0, n = P.pos.length / 3; v < n; v++) {
+    if (P.col[v * 3] !== SKIN_RGB[0] || P.col[v * 3 + 1] !== SKIN_RGB[1] || P.col[v * 3 + 2] !== SKIN_RGB[2]) continue;
+    let w = 0;
+    for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k];
+    if (w < 0.99) continue;
+    const p = [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]];
+    const back = 1 - sstep(c0[2] + ctx.front[0], c0[2] + ctx.front[1], p[2]), backL = ctx.line ? 1 - sstep(c0[2] + ctx.line.front[0], c0[2] + ctx.line.front[1], p[2]) : 0;
+    if (back <= 0 && backL <= 0) continue;
+    const [d, hc] = hairDist(hair ? { sdf: hair } : ctx, p);
+    const wc = ctx.cap ? (1 - sstep(ctx.cap[0], ctx.cap[1], d)) * back : 0;
+    const wl = ctx.line ? (1 - sstep(0, ctx.line.w, d)) * backL : 0;
+    if (wc <= 0 && wl <= 0) continue;
+    let col = mixc(SKIN_RGB, ctx.line?.col || SKIN_RGB, wl * (ctx.line?.k || 0));
+    if (wc > 0) col = mixc(col, hc, wc);
+    const nrm = towardDown([P.nrm[v * 3], P.nrm[v * 3 + 1], P.nrm[v * 3 + 2]], Math.max(wc, wl * (ctx.line?.tilt || 0)));
+    P.col.splice(v * 3, 3, ...col);
+    P.nrm.splice(v * 3, 3, ...nrm);
+  }
+}
+// hairform's lock: stations along the balls' centre line (y, z; x 0), each a ring of HF_M points
+const HF_M = 24, HF_RIDGES = 6, HF_TONE = [[-1, [0x6c, 0x46, 0x20]], [0.3, [0x7a, 0x52, 0x26]], [1, [0x8a, 0x5e, 0x2e]], [2.4, [0x9c, 0x6e, 0x3a]]];
+const HF_SHEEN = [0xc4, 0x92, 0x58];
+const hfTone = (u) => {
+  for (let i = 1; i < HF_TONE.length; i++) if (u <= HF_TONE[i][0]) return mixc(HF_TONE[i - 1][1], HF_TONE[i][1], Math.max(0, (u - HF_TONE[i - 1][0]) / (HF_TONE[i][0] - HF_TONE[i - 1][0])));
+  return HF_TONE[HF_TONE.length - 1][1];
+};
+// the balls' weights along the lock (tools/blender/twinsen_poly.py w_hair): u 0 the crown ball's centre, 1 tuft 1, 2 tuft 2
+const hfWeights = (u) => { const a = sstep(0.2, 0.8, u), b = sstep(0.8, 1.4, u), c = sstep(1.4, 2.0, u); return [['head', 1 - a], ['tail0', a - b], ['tail1', b - c], ['tail2', c]].filter((e) => e[1] > 1e-4); };
+function hairLock(ctx) {
+  const C = ctx.balls.map((b) => [b.c[1], b.c[2]]), R = ctx.balls.map((b) => b.r);
+  const unit = (a) => { const l = Math.hypot(a[0], a[1]); return [a[0] / l, a[1] / l]; };
+  const d0 = unit([C[1][0] - C[0][0], C[1][1] - C[0][1]]);
+  const st = [];   // [centre (y, z), tangent, radius, u]
+  // the root: the front of the crown, as the crown ball's (a dome over the top of the skull, as seen from the front)
+  for (let k = 1; k <= 4; k++) { const ph = (Math.PI / 2) * k / 4; st.push([[C[0][0] - d0[0] * R[0] * Math.cos(ph), C[0][1] - d0[1] * R[0] * Math.cos(ph)], d0, R[0] * Math.sin(ph), -Math.cos(ph)]); }
+  // through the centres: a Catmull-Rom curve; the radius the hull of the balls there (no waists), tapering
+  const Pp = [[2 * C[0][0] - C[1][0], 2 * C[0][1] - C[1][1]], ...C, [2 * C[2][0] - C[1][0], 2 * C[2][1] - C[1][1]]];
+  const cr = (i, t) => [0, 1].map((k) => { const [a, b, c, d] = [Pp[i][k], Pp[i + 1][k], Pp[i + 2][k], Pp[i + 3][k]]; return 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t ** 3); });
+  for (let seg = 0; seg < 2; seg++) for (let k = 1; k <= 4; k++) { const t = k / 4; st.push([cr(seg, t), null, R[seg] + (R[seg + 1] - R[seg]) * t, seg + t]); }
+  // the tip: on along the end of the curve, curling a little under, to a point
+  const e = unit([C[2][0] - C[1][0], C[2][1] - C[1][1]]);
+  for (let k = 1; k <= 3; k++) { const s = k / 4, curl = -0.25 * s * s; const dir = unit([e[0] + curl * -e[1] * -1, e[1] + curl * e[0] * -1]); st.push([[C[2][0] + dir[0] * R[2] * 1.9 * s, C[2][1] + dir[1] * R[2] * 1.3 * s], null, R[2] * Math.pow(1 - s, 0.55), 2 + 0.6 * s]); }
+  const tipC = (() => { const dir = unit([e[0] - 0.25 * e[1], e[1] + 0.25 * e[0]]); return [C[2][0] + dir[0] * R[2] * 1.3, C[2][1] + dir[1] * R[2] * 1.3]; })();
+  // ring planes turned gradually (smoothed tangents, as hair_sweep: square to a sharp bend they would cross)
+  let tg = st.map((s, j) => s[1] || unit([(st[j + 1] ? st[j + 1][0][0] : tipC[0]) - st[j - 1][0][0], (st[j + 1] ? st[j + 1][0][1] : tipC[1]) - st[j - 1][0][1]]));
+  for (let i = 0; i < 3; i++) tg = tg.map((t, j) => (j < 4 ? t : unit([tg[j - 1][0] + 2 * t[0] + (tg[j + 1] || t)[0], tg[j - 1][1] + 2 * t[1] + (tg[j + 1] || t)[1]])));
+  const verts = [], ring = [];   // verts: [pos, col, u]
+  st.forEach(([c, , r, u], j) => {
+    const [ty, tz] = tg[j], ny = -tz, nz = ty;
+    const g = (0.06 + 0.04 * sstep(1.6, 2.6, u)) * sstep(-0.6, 0.4, u), twist = 0.45 * Math.max(0, u);
+    const row = [];
+    for (let i = 0; i < HF_M; i++) {
+      const a = (2 * Math.PI * i) / HF_M, rid = Math.cos(HF_RIDGES * a + twist), rr = r * (1 + g * rid);
+      const p = [rr * Math.sin(a), c[0] + ny * rr * 0.94 * Math.cos(a), c[1] + nz * rr * 0.94 * Math.cos(a)];
+      // strands: crests lighter, grooves darker; a soft sheen where the lock faces up and back
+      const o = [Math.sin(a), ny * Math.cos(a), nz * Math.cos(a)], sh = sstep(0.4, 0.95, o[1] * 0.8 - o[2] * 0.6);
+      let col = hfTone(u).map((x) => x * (1 + 0.16 * rid * sstep(-0.6, 0.4, u)));
+      col = mixc(col, HF_SHEEN, 0.26 * sh * (0.75 + 0.25 * rid));
+      row.push(verts.push([p, col.map((x) => Math.max(0, Math.min(255, Math.round(x)))), u]) - 1);
+    }
+    ring.push(row);
+  });
+  const front = [[0, C[0][0] - d0[0] * R[0], C[0][1] - d0[1] * R[0]], hfTone(-1), -1];
+  const tip = [[0, tipC[0], tipC[1]], hfTone(2.6), 2.6];
+  const fi = verts.push(front) - 1, ti = verts.push(tip) - 1;
+  const tris = [];
+  for (let j = 0; j + 1 < ring.length; j++) for (let i = 0; i < HF_M; i++) { const a = ring[j][i], b = ring[j][(i + 1) % HF_M], c = ring[j + 1][(i + 1) % HF_M], d = ring[j + 1][i]; tris.push([a, b, c], [a, c, d]); }
+  for (let i = 0; i < HF_M; i++) { tris.push([fi, ring[0][(i + 1) % HF_M], ring[0][i]]); const L = ring[ring.length - 1]; tris.push([ti, L[i], L[(i + 1) % HF_M]]); }
+  ctx.sdf = st.map(([c, , r, u]) => ({ c: [0, c[0], c[1]], r, col: hfTone(u) }));
+  return { verts, tris };
+}
 const LOOK_MODEL = {
   hairtone(P) { for (const [from, bone, min, to] of HAIRTONE) for (const v of lookVerts(P, from, bone, min)) P.col.splice(v * 3, 3, ...to); },
+  haircap(P, ctx) { ctx.cap = [0.02, 0.065]; ctx.front = [0.06, 0.12]; },
+  hairline(P, ctx) { ctx.line = { w: 0.11, col: [0xb0, 0x93, 0x70], k: 0.7, tilt: 0.3, front: [0.1, 0.17] }; ctx.front ??= [0.06, 0.12]; },
+  hairform(P, ctx) {
+    const drop = new Set(ctx.balls.flatMap((b) => b.vs)), { verts, tris } = hairLock(ctx);
+    const out = { pos: [], nrm: [], col: [], si: [], sw: [] };
+    for (let v = 0, n = P.pos.length / 3; v < n; v++) {
+      if (drop.has(v)) continue;
+      out.pos.push(P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]); out.nrm.push(P.nrm[v * 3], P.nrm[v * 3 + 1], P.nrm[v * 3 + 2]);
+      out.col.push(P.col[v * 3], P.col[v * 3 + 1], P.col[v * 3 + 2]);
+      for (let k = 0; k < 4; k++) { out.si.push(P.si[v * 4 + k]); out.sw.push(P.sw[v * 4 + k]); }
+    }
+    for (const t of tris) for (const i of t) {
+      const [p, col, u] = verts[i], w = hfWeights(u);
+      out.pos.push(...p); out.nrm.push(0, -1, 0); out.col.push(...col);
+      for (let k = 0; k < 4; k++) { out.si.push(w[k] ? P.bones.indexOf(w[k][0]) : 0); out.sw.push(w[k] ? w[k][1] : 0); }
+    }
+    Object.assign(P, out);
+    ctx.cap = [0.02, 0.065]; ctx.front ??= [0.06, 0.12];
+  },
 };
