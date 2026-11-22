@@ -3,7 +3,7 @@ import { STR } from '../i18n.js';
 import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
 
 Object.assign(STR.en, {
-  n_farmer1: 'Farmer Joss', n_farmer2: 'Mother Bryn', n_farmer3: 'Grull',
+  n_farmer1: 'Farmer Harro', n_farmer2: 'Mother Bryn', n_farmer3: 'Grull',
   p_lever: 'Pull', p_shelter: 'Inspect',
 
   c8_narr: 'The glider skims the cliffs and comes down on the plateau above the town. Below, Citadel is not the island Twinsen left.',
@@ -61,7 +61,7 @@ Object.assign(STR.en, {
   c8_nudge_kids: 'Tim and Lulu could fit through that gap.',
 
   c8_tw_z2: "The shelters are open, Zoé, and the town's going down. Gilbert's leading them.",
-  c8_zoe_5: "Then it's my turn. The hill farms. Joss, Bryn and Grull won't leave their animals for anyone but me.",
+  c8_zoe_5: "Then it's my turn. The hill farms. Harro, Bryn and Grull won't leave their animals for anyone but me.",
   c8_f1_1: "Zoé? At this hour? ...The cliffs? With the goats? ...All right, all right. For you.",
   c8_f2_1: "The project said to wait for instructions. You're the instructions? Good. Children, coats!",
   c8_f3_1: "Grull doesn't leave the farm. Grull... Grull will make an exception. Only because you asked.",

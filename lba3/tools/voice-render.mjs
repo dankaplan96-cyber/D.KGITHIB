@@ -18,7 +18,7 @@ const LINE = 'Hello there! Have you seen the lighthouse keeper? The water gets w
 // [id, who] — the five who must be unmistakable, then one or two of each race
 const CAST = [
   ['hero', 'Twinsen (Quetch)'], ['zoe', 'Zoé (Quetch)'], ['arthur', 'Arthur (Quetch child)'], ['baldino', 'Baldino'], ['vesk', 'Vesk'],
-  ['farmer1', 'Farmer Joss (Quetch villager)'], ['doran', 'Doran (Grobo)'], ['guard', 'Guard (Grobo)'], ['pippa', 'Pippa (Rabbibunny)'],
+  ['farmer1', 'Farmer Harro (Quetch villager)'], ['doran', 'Doran (Grobo)'], ['guard', 'Guard (Grobo)'], ['pippa', 'Pippa (Rabbibunny)'],
   ['mira', 'Mira (Rabbibunny)'], ['sphero1', 'Pom (Sphero)'], ['nara', 'Nara (Esmer)'], ['oku', 'Oku (Esmer)'], ['zbee1', 'Bzizz (Mosquibee)'],
   ['zmole1', 'Old Grumm (mole)'], ['zmole2', 'Mother Snuff (mole)'], ['joe', 'Joe the Elf'], ['ztri1', 'Mr Pelleck (Zeelich)'], ['sendell', 'Sendell'],
 ];

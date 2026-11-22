@@ -143,7 +143,7 @@ check('cost: in the tavern its people are simulated in full; with the hero on th
 
 // ---- Citadel Spaceport
 // (WC-4: the evacuation's deck: the mechanic, Dov, the family; SPACEPORT-3: the apron's crew — Gurt, Rhun the technician in
-//  every chapter, Pema the fueller while ships fly — and two travellers at the boarding rope while flights run)
+//  every chapter, Ambo the fueller while ships fly — and two travellers at the boarding rope while flights run)
 const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['gurt', 'rhun', 'dov'], flying: ['gurt', 'rhun', 'pema', 'kesa', 'brin', 'esren', 'gunda', 'bibi'], evac: ['gurt', 'rhun', 'pema', 'dov', 'gunda', 'bibi'] }));
 // (SPACEPORT-3: the crew works at the ship, in the pad's ring: only the others keep out of it)
 const CREW = ['gurt', 'rhun', 'pema'];

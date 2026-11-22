@@ -142,7 +142,7 @@ export const VOICES = {
   worker: { race: 'quetch', seed: 111, f0: 138, k: 0.98, rate: 1.05, legato: 0.6, contour: 'fall' },
   archivist: { race: 'quetch', seed: 112, f0: 150, rate: 0.82, legato: 0.85, contour: 'flat', range: 3, tilt: 1.9 },
   councilB: { race: 'quetch', seed: 113, f0: 205, k: 1.08, contour: 'arc', rate: 0.9 },                           // Councillor Sela
-  farmer1: { race: 'quetch', seed: 114, f0: 128, k: 0.96, rate: 1.15, contour: 'fall', swing: 0.2, legato: 0.28},             // Farmer Joss
+  farmer1: { race: 'quetch', seed: 114, f0: 128, k: 0.96, rate: 1.15, contour: 'fall', swing: 0.2, legato: 0.28},             // Farmer Harro
   lhar1: { race: 'quetch', seed: 115, f0: 152, k: 1.0, rate: 1.0, contour: 'sing', range: 4 },                    // Tashi
   lhar2: { race: 'quetch', seed: 116, f0: 215, k: 1.1, contour: 'sing', range: 5, breath: 0.1 },                  // Dawa
   tarra: { race: 'quetch', seed: 117, f0: 222, k: 1.12, rate: 0.95, contour: 'arc', range: 5 },

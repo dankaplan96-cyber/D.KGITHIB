@@ -81,7 +81,7 @@ Object.assign(STR.he, {
 
   // ---- Zeelich's council quarter (chapter 9)
   n_zc_guard: 'שומר המועצה', n_zc_clerk: 'הפקיד פלו', n_zc_courier: 'השליחה איסה', n_zc_petit: 'גברת ארדו',
-  n_up_clerk: 'הפקיד הזוטר טיב', n_up_courier: 'השליח ון', n_up_wait: 'גברת קוויל', n_up_esmer: 'אוסה הזקן', n_up_guard: 'שומר המועצה',
+  n_up_clerk: 'הפקיד הזוטר טיב', n_up_courier: 'השליח ון', n_up_wait: 'גברת קוויל', n_up_esmer: 'מורב הזקן', n_up_guard: 'שומר המועצה',
 
   rs_zc_guard_0: 'המועצה מתכנסת. או עומדת להתכנס. או סיימה עכשיו. תשאל את הפקיד.',
   rs_zc_clerk_0: 'לכל טופס יש טופס שבא לפניו. ככה יודעים שזה טופס אמיתי.',

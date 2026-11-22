@@ -84,7 +84,7 @@ Object.assign(STR.en, {
 
   // ---- Zeelich's council quarter (chapter 9)
   n_zc_guard: 'Council guard', n_zc_clerk: 'Clerk Pelu', n_zc_courier: 'Courier Isse', n_zc_petit: 'Mrs Ardo',
-  n_up_clerk: 'Junior clerk Tib', n_up_courier: 'Courier Venn', n_up_wait: 'Mrs Quill', n_up_esmer: 'Old Ossa', n_up_guard: 'Council guard',
+  n_up_clerk: 'Junior clerk Tib', n_up_courier: 'Courier Venn', n_up_wait: 'Mrs Quill', n_up_esmer: 'Old Morv', n_up_guard: 'Council guard',
 
   rs_zc_guard_0: "The council is in session. Or about to be. Or just was. Ask the clerk.",
   rs_zc_clerk_0: "Every form has a form that comes before it. That's how you know it's a real form.",

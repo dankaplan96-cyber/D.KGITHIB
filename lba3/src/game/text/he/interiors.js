@@ -7,7 +7,7 @@ Object.assign(STR.he, {
   n_mrbazoo: 'מר באזו', n_pell: 'גברת פל', n_ines: 'אינס', n_rollo: 'רולו', n_pharmacist: 'הרוקח',
   n_hedda: 'הדה', n_wim: 'וים', n_osk: 'אוסק',
   n_ama: 'אמה', n_gurt: 'גורט', n_bern: 'שומר הנמל', n_lomba: 'גברת לומבה', n_dov: 'דוב',
-  n_rhun: 'רון', n_pema: 'פמה', n_kesa: 'קסה', n_brin: 'ברין',
+  n_rhun: 'רון', n_pema: 'אמבו', n_kesa: 'קסה', n_brin: 'ברין',
   n_ressa: 'רסה הזקנה', n_ollo: 'אולו', n_esren: 'אסרן', n_gunda: 'גונדה', n_bibi: 'ביבי',
   n_velo: 'ולו', n_ennu: 'אנו', n_oshra: 'אושרה', n_tavi: 'טאבי', n_pask: 'פאסק',
   n_zt_guard: 'שומר המועצה', n_zt_guard2: 'שומר המועצה', n_rollo_q: 'רולו', n_pell_q: 'גברת פל',

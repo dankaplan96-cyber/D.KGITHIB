@@ -17,7 +17,7 @@ Object.assign(STR.en, {
   n_mrbazoo: 'Mr Bazoo', n_pell: 'Mrs Pell', n_ines: 'Ines', n_rollo: 'Rollo', n_pharmacist: 'The Pharmacist',
   n_hedda: 'Hedda', n_wim: 'Wim', n_osk: 'Osk',
   n_ama: 'Ama', n_gurt: 'Gurt', n_bern: 'Port Guard', n_lomba: 'Mrs Lomba', n_dov: 'Dov',
-  n_rhun: 'Rhun', n_pema: 'Pema', n_kesa: 'Kesa', n_brin: 'Brin',   // (SPACEPORT-3: the apron's crew and two travellers)
+  n_rhun: 'Rhun', n_pema: 'Ambo', n_kesa: 'Kesa', n_brin: 'Brin',   // (SPACEPORT-3: the apron's crew and two travellers)
   n_ressa: 'Old Ressa', n_ollo: 'Ollo', n_esren: 'Esren', n_gunda: 'Gunda', n_bibi: 'Bibi',
   n_velo: 'Velo', n_ennu: 'Ennu', n_oshra: 'Oshra', n_tavi: 'Tavi', n_pask: 'Pask',
   n_zt_guard: 'Council Guard', n_zt_guard2: 'Council Guard', n_rollo_q: 'Rollo', n_pell_q: 'Mrs Pell',   // (WC-4: the same two, in the evacuation's queue)
@@ -145,7 +145,7 @@ Object.assign(STR.en, {
   rs_dov_e0: "Not on the list. I've waited on this bench so long, I'll wait here for the next one too.",
   rs_dov_e1: "I help with the bags. If I can't go, my arms can at least be useful.",
 
-  // (SPACEPORT-3: the apron's crew — Rhun the technician, Pema the fueller — and two travellers at the boarding rope)
+  // (SPACEPORT-3: the apron's crew — Rhun the technician, Ambo the fueller — and two travellers at the boarding rope)
   rs_rhun_work: 'Seal, checked. Leg, checked. Me, needs a coffee.',
   rs_rhun_g0: "Grounded ships get their checks too. The list doesn't read notices.",
   rs_rhun_g1: "Forty-two points on the checklist. I'm on twelve. I've been on twelve since the notice went up.",

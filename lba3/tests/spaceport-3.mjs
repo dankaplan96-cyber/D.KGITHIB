@@ -157,8 +157,8 @@ const a8 = await apron('evacuation', {});
 const ok = (a) => Object.values(a.who).every((w) => w.deck && !w.walls);
 check('P64: grounded (chapter 1): the nozzle hung on the fuel cart; Gurt and Rhun at work, Dov on his bench; no fueller, no travellers at the rope', a1.work === 'idle' && a1.who.gurt && a1.who.rhun && a1.who.dov && !a1.who.pema && !a1.who.kesa && ok(a1), a1);
 check('P64: chapter 2 with Doran\'s ship: the hose run out to it, Gurt and Rhun at work', a2.work === 'run' && a2.who.gurt && a2.who.rhun && !a2.who.kesa && ok(a2), a2);
-check('P64: flights running (chapter 4): the hose run out, Pema the fueller, Rhun, Gurt, two travellers at the boarding rope, the others as before; everyone on the deck, none in the terminal\'s walls', a4.work === 'run' && ['gurt', 'rhun', 'pema', 'kesa', 'brin', 'esren', 'gunda', 'bibi'].every((id) => a4.who[id]) && ok(a4), a4);
-check('P64: the evacuation: the hose run out for the project\'s ships, Pema and the crew at work, no travellers at the rope', a8.work === 'run' && a8.who.pema && a8.who.gurt && !a8.who.kesa && ok(a8), a8);
+check('P64: flights running (chapter 4): the hose run out, Ambo the fueller, Rhun, Gurt, two travellers at the boarding rope, the others as before; everyone on the deck, none in the terminal\'s walls', a4.work === 'run' && ['gurt', 'rhun', 'pema', 'kesa', 'brin', 'esren', 'gunda', 'bibi'].every((id) => a4.who[id]) && ok(a4), a4);
+check('P64: the evacuation: the hose run out for the project\'s ships, Ambo and the crew at work, no travellers at the rope', a8.work === 'run' && a8.who.pema && a8.who.gurt && !a8.who.kesa && ok(a8), a8);
 check('P64: the deck\'s view (from the gate toward the pad) within the street\'s draw-call budget at the default quality (≤ 300) in every chapter tried', [a1, a2, a4, a8].every((a) => a.calls > 0 && a.calls <= 300), [a1, a2, a4, a8].map((a) => a.calls));
 
 }

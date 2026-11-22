@@ -101,7 +101,7 @@ await setChapter('evacuation', { c8_started: true, c8_home: true, c8_relay: true
 await near('citadel_ferry');
 const p8a = await ev(() => { const Q = game.world.pierStart; P.go(Q.x - 6, Q.z, { tol: 1.0, run: true }); P.face(Q.x - 7, Q.z); return { kind: P.target()?.kind ?? null }; });
 await said();
-const p8b = await ev(() => { const sp = game.world.spaceport; let r; const sides = [[4.2, 0], [0, 4.2], [-4.2, 0]];   // (SPACEPORT-3's Pema works the fuel port on the west side: at her elbow her Talk rightly wins)
+const p8b = await ev(() => { const sp = game.world.spaceport; let r; const sides = [[4.2, 0], [0, 4.2], [-4.2, 0]];   // (SPACEPORT-3's Ambo works the fuel port on the west side: at her elbow her Talk rightly wins)
   for (let k = 0; k < 3 && game.flags.chapterKey === 'evacuation'; k++) { r = P.use(sp.pad.x + sides[k][0], sp.pad.z + sides[k][1], { run: true, kind: 'c8ship' }); P.settle(60); } const L = game.rooms.zeelich.spaceport.landing, h = game.hero;
   return { r: r.r, kind: r.target?.kind, ch: game.flags.chapterKey, room: game.room?.id, onPortDeck: Math.hypot(h.pos.x - L.x, h.pos.z - L.z) < 4 }; });
 p8b.said = await said();

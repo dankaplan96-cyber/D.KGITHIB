@@ -60,6 +60,16 @@ gets no heat until the epilogue).
    Kesh's dormitory, a pupil at Citadel's School of Magic: the last two may be meant as one person), Pema (the spaceport's
    fueller and a child of Lhar), Ossa (Otringal's market and the upper district's Old Ossa). Recommendation: rename the
    spaceport's fueller and one Ossa, and say whether the two pupils named Joss are one boy.
+   **Resolved (NAMES-1, the coordinator's follow-up):** speaker labels only (keys, ids, voices, saves unchanged), EN and
+   HE. The two pupils are two boys: both stand on the island at once (the yard's `sc_pupb`, model tim; the dormitory's
+   `ih_joss`, model desertkid_b), and the yard's boy is the Joss of every mention (Nisa's spell partner, Oni's, Tali's).
+   So the dormitory's keeper is now **Lio** (ליאו), and his "I'm learning the wind spell. Properly, this time" (which
+   was Joss's) became "Joss practises the wind spell in here now. Mind your hat." (`ih_joss_dry`/`_wet`; `desert-bar.mjs`'s
+   /read again/ still holds). Farmer Joss (ch8) → **Farmer Harro** (האיכר הארו; `n_farmer1`, `c8_zoe_5`, voice-lab
+   labels); the spaceport's fueller Pema → **Ambo** (אמבו; `n_pema`); the upper district's Old Ossa → **Old Morv**
+   (מורב הזקן; `n_up_esmer`). Lhar's Pema and Otringal's market Ossa keep their names. Test comments and descriptions
+   naming the fueller or the dormitory boy updated. Left (quest-engine comments, not shown to players): "Pema" in
+   `story/chapter1.js`, `story/evacuation.js`, `roomlife.js`; "Old Ossa" in `characters.js`.
 4. [>ch2] **The carving's second tick in chapter 5** (`dl_carving`, STORY-FIX's open item): read after the vent but before
    Zoé's radio names the northern vent; a few minutes' window. Recommendation: leave.
 5. Not changed, on purpose: the opening's worker says "Vesk promised" before Zoé names Vesk in chapter 2 (`op_wk_1`):
@@ -72,6 +82,9 @@ Text (EN and HE): `src/game/text/{ballastra,ch2,ch10,cnline,desertlife,isleslife
 and the same names under `src/game/text/he/`; `src/game/he-text.js` (bundle). Gates: `src/game/story/zeelife.js`,
 `src/game/story/hamlife.js`, `src/game/storylife.js`, `src/game/story/islandpeople.js`, `src/game/story/network.js`,
 `src/game/story/chapter2.js`. Tests reading the changed words: `tests/exp-throttle.mjs`, `tests/exp-balances.mjs`.
+NAMES-1 (open question 3): `src/game/text/{ch8,desertlife,interiors,storylife}.js` and their `he/`; the bundle;
+`src/engine/voicelab.js`, `src/engine/voice.js` (a label and a comment), `tools/voice-render.mjs` (a label); comments
+in `tests/{travel,chapter8,interior-life,spaceport-3,desert-bar}.mjs`.
 
 ## Resume point
 

@@ -5,7 +5,7 @@
 //     Kesh's state; S28's board beside its door, the door into the crew's bunkhouse with Brann; the dormitory knocked on
 //     while dark; the post's bunk cabin shut while a sandstorm blows (the guard inside) and open after it;
 //   - the pump running: a drink at the oasis gives back life; the dormitory leads in once the pupils' crystal is awake
-//     (Joss), the School's signpost thanks him;
+//     (Lio), the School's signpost thanks him;
 //   - chapter 5 with the ferry taken: Hesk's stop and the post's gate say so; Brann gone with the crew;
 //   - chapter 6: Tarra, Ilka, Dallan and Doran have their own lines (not "Hello, Twinsen."); the Temple of Bù and the
 //     condenser hall stay open after their chapters (in, the carving and the diagram read, the hangar's glider gone,
@@ -108,7 +108,7 @@ const dormL = await said();
 await shot('desert-bar-02-dormitory');
 const dormO = await ev(() => walkOut());
 const sign = await ev(() => readIt('school')); const signL = await said();
-check('the crystal awake: the dormitory leads in (INPUT), Joss reads again; out on the rim walk; the School\'s signpost thanks him', dorm.room === 'ih_hall' && dorm.t === 'talked' && has(dormL, /read again/) && dormO.to === 'desert' && dormO.ground && sign.r === 'used' && has(signL, /Thank you, Twinsen/), { dorm, dormL, dormO, signL });
+check('the crystal awake: the dormitory leads in (INPUT), Lio reads again; out on the rim walk; the School\'s signpost thanks him', dorm.room === 'ih_hall' && dorm.t === 'talked' && has(dormL, /read again/) && dormO.to === 'desert' && dormO.ground && sign.r === 'used' && has(signL, /Thank you, Twinsen/), { dorm, dormL, dormO, signL });
 
 // ---------------------------------------------------------------- chapter 5, the ferry requisitioned
 await ev(() => setChapter('steam', { c4_pump: true, c4_trust: true, c4_digOpen: true, c4_seals3: true, c5_planned: true, c5_ferryTaken: true }));
@@ -142,7 +142,7 @@ await browser.close();
 ({ browser, context, page } = await launch({ storageState: file }));
 await open(page, '?nocine'); await menu(page, 'continue'); await helpers(); await said();
 const back = await ev(() => { const G = game, h = G.hero.pos; P.settle(); const r = { room: G.room?.id, floor: Math.abs(h.y - G.physics.groundAt(h.x, h.z, h.y + 0.5)) < 0.15, joss: !!P.npc('ih_joss')?.present }; const o = walkOut(); return { ...r, out: o.to, state: G.state }; });
-check('Save in the dormitory → Continue: back in it, on its floor, Joss there; its door leads out onto the island', sv.room === 'ih_hall' && back.room === 'ih_hall' && back.floor && back.joss && back.out === 'desert' && back.state === 'play', { sv, back });
+check('Save in the dormitory → Continue: back in it, on its floor, Lio there; its door leads out onto the island', sv.room === 'ih_hall' && back.room === 'ih_hall' && back.floor && back.joss && back.out === 'desert' && back.state === 'play', { sv, back });
 // a death on the island: Retry → the last save, full health
 const dead = await ev(() => { const G = game, h = G.hero; G.save(false); h.clovers = 0; h.invuln = 0; h.hp = 1; h.damage(5, null); for (let i = 0; i < 200 && G.state !== 'gameover'; i++) G.step(1 / 30); return { state: G.state, at: [h.pos.x, h.pos.z] }; });
 const reloaded = page.waitForEvent('load', { timeout: 300000 });

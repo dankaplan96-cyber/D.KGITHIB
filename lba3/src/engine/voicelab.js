@@ -7,7 +7,7 @@ import * as V from './voice.js';
 import { expandMeta } from '../game/text/voicemeta.js';
 
 const CAST = [['hero', 'Twinsen'], ['zoe', 'Zoé'], ['arthur', 'Arthur'], ['vesk', 'Vesk'], ['baldino', 'Baldino'], ['sendell', 'Sendell'],
-  ['gilbert', 'Gilbert'], ['mira', 'Mira'], ['doran', 'Doran'], ['farmer1', 'Joss (Quetch man)'], ['councilB', 'Sela (Quetch woman)'], ['tim', 'Tim (Quetch child)'],
+  ['gilbert', 'Gilbert'], ['mira', 'Mira'], ['doran', 'Doran'], ['farmer1', 'Harro (Quetch man)'], ['councilB', 'Sela (Quetch woman)'], ['tim', 'Tim (Quetch child)'],
   ['dtrader', 'Brosk (Grobo man)'], ['yorna', 'Yorna (Grobo woman)'], ['tilde', 'Tilde (Rabbibunny)'], ['nara', 'Nara (Esmer)'], ['aven', 'Aven (Esmer man)']];
 // a few lines for each intention (the game's own lines where one fits); the variant picks among them
 const LINES = {
