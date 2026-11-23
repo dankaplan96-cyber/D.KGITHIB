@@ -116,7 +116,19 @@ Status: **edited**, **kept** (read in play order with its repeat / failure / suc
 
 ## 6. Tests
 
-TESTS_PLACEHOLDER
+All on the committed text (`5980f1c6`). Reduced on the user's word (23.11, via the coordinator: "why so many tests?
+reduce the tests"): dialogue-check, hebrew, and one suite for the one chapter whose checked wording changed, each once.
+
+| Suite | Kind | Result |
+|---|---|---|
+| `node tools/he-bundle.mjs`, `node tests/dialogue-check.mjs` | static | **PASS**, 5587 keys, Hebrew 5592/5592; warnings 227 → 222 (the five orphan voice cues gone) |
+| `tests/hebrew.mjs` | automated (RTL, Hebrew layout, prompts) | **PASS 24/24**, no errors, 919 s on a shared machine |
+| `tests/chapter4.mjs` | automated (Tarra's early branch by input; its expectation updated for the intended wording) | **PASS 59/59**, no errors (Tarra after the pump already runs: her new line, then trust and Ilka, by input), 2444 s |
+
+Not run (by the instruction above): `dialogue-scenes`, `opening-tutorial`, `chapter1`. What they would have covered:
+`t2_ask_barrels` is checked by key in `opening-tutorial` A13 and `tutor-targets` R1.10 (said, not its words); no suite
+checks the wording of the opening's captions, `c8_zoe_2`, `cn_vesk_1` or `c3_core_tw1` (grep of `tests/`). A first
+`opening-tutorial` run was begun before the edits and stopped at A6 (all PASS to there) so that no run mixed two texts.
 
 ## 7. Decisions for the user
 
@@ -152,7 +164,8 @@ TESTS_PLACEHOLDER
 - Nobody played or listened. Whether "Snow later, Arthur." lands as warmth or as a brush-off needs a person; the
   alternative is a one-word reply from Twinsen in the chain (a story-file change).
 - The shortened captions were measured, not watched; the opening suites were not rerun (they check keys and timing,
-  not wording).
+  not wording). `opening-tutorial`, `chapter1` and `dialogue-scenes` were not run (reduced testing): the yard line is
+  untested in play.
 - Chapters 10–13 were covered line by line only where listed in the ledger; elsewhere by the game-wide scripts.
 
 ## 10. Resume point
