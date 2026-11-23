@@ -1,0 +1,92 @@
+[
+ {
+  "name": "p112-user-spot",
+  "gy": 2.3,
+  "calls": 424,
+  "tris": 1360094,
+  "cam": [
+   -62.5,
+   8.9,
+   11.6
+  ],
+  "set": [
+   "follow",
+   "far"
+  ]
+ },
+ {
+  "name": "museum-yard",
+  "gy": 2.3,
+  "calls": 381,
+  "tris": 1142033,
+  "cam": [
+   -64,
+   8.9,
+   26.6
+  ],
+  "set": [
+   "follow",
+   "far"
+  ]
+ },
+ {
+  "name": "east-yards",
+  "gy": 2.3,
+  "calls": 407,
+  "tris": 1300678,
+  "cam": [
+   -21.6,
+   8.9,
+   14
+  ],
+  "set": [
+   "follow",
+   "far"
+  ]
+ },
+ {
+  "name": "middle-block",
+  "gy": 2.3,
+  "calls": 419,
+  "tris": 1226313,
+  "cam": [
+   -40,
+   8.9,
+   15.6
+  ],
+  "set": [
+   "follow",
+   "far"
+  ]
+ },
+ {
+  "name": "raised-lawns",
+  "gy": 2.3,
+  "calls": 317,
+  "tris": 1064150,
+  "cam": [
+   -66.1,
+   8.2,
+   42
+  ],
+  "set": [
+   "follow",
+   "far"
+  ]
+ },
+ {
+  "name": "top-town",
+  "gy": 2.3,
+  "calls": 431,
+  "tris": 1652879,
+  "cam": [
+   -48,
+   72,
+   29.5
+  ],
+  "set": [
+   "follow",
+   "far"
+  ]
+ }
+]
