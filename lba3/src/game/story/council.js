@@ -55,6 +55,9 @@ export class Council extends ChapterBase {
     { const tp = this.thread.place(id); if (tp !== undefined) return tp; }
     if (!['clerk', 'chair', 'councilB', 'councilC', 'archivist', 'baldino', 'dallan', 'nara', 'oku', 'guard', 'vesk', 'doran', 'hesk', 'worker'].includes(id)) return undefined;
     if (['vesk', 'doran', 'hesk', 'worker'].includes(id)) return null;
+    // THE SECOND SHIFT (story/zeelift.js KellThread): once he has run Mill Lane's lift, Brum keeps its handle on later
+    // visits (his council coat on its peg, clear of the rope); his council's scenes were all before it
+    if (id === 'councilC' && f.cn_brum === true && !this.isCur()) { const L = this.Z?.lift; return L ? { ...L.spots.kell, anim: 'use' } : undefined; }
     // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
     //  yet waits for it, Story.refreshCast)
     const Z = this.Z, C = this.C;

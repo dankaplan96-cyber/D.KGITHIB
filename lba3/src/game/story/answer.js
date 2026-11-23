@@ -120,7 +120,7 @@ export class ShellThread {
       if (f.sh_shut === true && f.c3_sendell) out.push({ key: 'sh_j_shut', part: 1, done: true });
     }
     if (f.co_v) {
-      if (f.co_irsa) out.push({ key: 'co_j_lane', part: 2, done: true });
+      if (f.co_irsa) out.push({ key: f.cn_brum === true ? 'co_j_lane_brum' : 'co_j_lane', part: 2, done: true });
       if (f.co_vesk) out.push({ key: f.c3_veskHelped ? 'co_j_vesk_helped' : 'co_j_vesk', part: 2, done: true });
       if (f.co_signal) out.push({ key: 'co_j_signal', part: 2, done: true });
     }
@@ -258,7 +258,13 @@ export class ShellThread {
     const g = this.game, f = this.f;
     g.audio.play('radio');
     // (P81: one report, concrete: Kell's cart going up, her hand off the switch. The lane works without Vesk's line)
-    this.ch.chain([['zl_irsaradio', 'co_irsa_1']], () => { f.co_irsa = true; g.save(false); this.veskChooses(); });
+    // THE SECOND SHIFT: in a game where Brum ran Mill Lane's lift in chapter 9 (cn_brum, story/zeelift.js), the radio first
+    // carries the lane at work: Kell starts to tell Brum the stop, Brum knows it, Kell goes to his cart, the wheel goes over
+    // the joint (chapter 3's sound, captioned); then Irsa. A game without that scene hears Irsa alone, as before
+    const shift = f.cn_brum === true;
+    const lines = shift ? [['zl_kellradio', 'co_kell_cloth'], ['councilCradio', 'co_brum_cloth'], ['zl_kellradio', 'co_kell_cart'], ['narrator', 'co_wheel']] : [];
+    this.ch.chain([...lines, ['zl_irsaradio', 'co_irsa_1']], () => { f.co_irsa = true; g.save(false); this.veskChooses(); },
+      (i, id) => { if (shift && id === 'narrator') g.audio.play('wheelJoint'); });
   }
   // Vesk heard it: he gets up, walks to his lock and turns his own key (in view); his lines as himself, as the player left
   // him (VESK: pulled clear, he owns the cut log before he goes to the lock; left, he says only what he heard). Either way
