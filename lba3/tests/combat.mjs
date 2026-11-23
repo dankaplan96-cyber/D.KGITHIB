@@ -587,6 +587,37 @@ check('sword: drawn in free play', r.drawn === true, r);
 check('sword: sheathed through a talk begun mid-swing (the weapon stays equipped), back the frame it ends', r.fight && r.talkState === 'dialog' && r.talkVisible === false && r.talkWeapon === 'sword' && r.line2 && r.endedCb === 1 && r.after === 'play' && r.back === true && r.weaponAfter === 'sword', r);
 check('sword: sheathed while a reveal camera beat holds, drawn again from its hand-back', r.beat && r.beatHidden && r.releasedVisible === true && r.final === true, r);
 
+// 25. the ball's aim between near and far (lba3-controls, 23.11; src/game/combat.js AIM-KEEP / AIM-AHEAD): a mite 3 m off
+// at 12° and a crawler 8 m straight ahead — his aim swept −20…+20°: one hand-over, not back and forth; held round the
+// hand-over with a stick's 1° of noise, the marked one stays (before: 32 changes in 60 frames). A switch-like target
+// 3 m dead ahead and a mite 7 m off at 20°: the ball takes what he aims at (before: the mite); the mite inside ~10° of
+// the target's line still comes first (LBA2's rule)
+r = await ev(() => {
+  const { G } = C; const h = G.hero, T = G.targeting, out = {};
+  C.only(['a_mite', 'a_crawler'], [6194, 4], 0); h.combat.equip?.('ball', true); C.step(0.1);
+  const A = C.E('a_mite'), B = C.E('a_crawler');
+  const at = (e, d, deg) => { const a = (deg * Math.PI) / 180, x = h.pos.x + Math.sin(a) * d, z = h.pos.z + Math.cos(a) * d; e.pos.set(x, G.physics.groundAt(x, z), z); e.state = 'idle'; e.coolT = 99; e.hp = e.maxHp; e.sync?.(); };
+  const dir = (deg) => ({ x: Math.sin((deg * Math.PI) / 180), z: Math.cos((deg * Math.PI) / 180) });
+  at(A, 3, 12); at(B, 8, 0);
+  // the marker follows the aim frame by frame (T.update), as in play
+  const seq = []; T.soft = null;
+  for (let deg = -20; deg <= 20; deg++) { T.update(1 / 60, dir(deg), true); seq.push(T.soft === A ? 'N' : T.soft === B ? 'F' : '-'); }
+  out.sweep = seq.join(''); out.changes = seq.filter((c, i) => i && c !== seq[i - 1]).length;
+  let flips = 0, last = null; T.soft = B;
+  for (let i = 0; i < 60; i++) { T.update(1 / 60, dir(0.5 + Math.sin(i * 1.7)), true); if (last && T.soft !== last) flips++; last = T.soft; }
+  out.flipsIn60 = flips; out.throwAt = T.throwTarget(dir(0.5)) === T.soft;
+  const st = G.story.ballTargets, tgt = { x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z + 3 };
+  G.story.ballTargets = () => [tgt];
+  at(A, 7, 20); B.setPresent(false); T.soft = null;
+  out.aside20 = T.throwTarget(dir(0)) === tgt ? 'target' : T.throwTarget(dir(0)) === A ? 'mite' : '?';
+  at(A, 7, 6); T.soft = null;
+  out.aside6 = T.throwTarget(dir(0)) === tgt ? 'target' : T.throwTarget(dir(0)) === A ? 'mite' : '?';
+  G.story.ballTargets = st; T.soft = null;
+  return out;
+});
+check('ball aim: near and far — one hand-over in a sweep, the marked one held through a stick\'s 1° of noise (before 32 flips in 60 frames), the throw at the marked one', r.changes === 1 && r.flipsIn60 === 0 && r.throwAt, r);
+check('ball aim: a target squarely ahead before a mite 20° off it; a mite within ~10° of the line still first', r.aside20 === 'target' && r.aside6 === 'mite', r);
+
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

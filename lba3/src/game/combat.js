@@ -14,6 +14,9 @@
 import * as THREE from 'three';
 import { angleDiff, clamp } from '../engine/math.js';
 
+// AIM-KEEP: the score margin (3 × rad + distance share) the marked target keeps over a new one (~2.3° of aim);
+// AIM-AHEAD: how much more squarely (rad, ~10°) a switch or target must be aimed at than an enemy in the cone to take the ball
+const KEEP_AIM = 0.12, AIM_AHEAD = 0.17;
 export const COMBAT = {
   buffer: 0.22,              // s an attack/dodge press is remembered
   comboWindow: 0.38,         // s after a move's recovery in which the next press continues the combo
@@ -158,8 +161,11 @@ export class Targeting {
     return this.game.physics.lineOfSight(h.pos.x, h.pos.y + 1.2, h.pos.z, e.pos.x, ey, e.pos.z);
   }
   // best enemy along a direction: angle matters most, then distance (ok: an extra test an enemy must pass)
+  // (AIM-KEEP, lba3-controls 23.11: the one already marked keeps it until another is clearly better — KEEP_AIM in score,
+  //  ~2.3° of aim. A mite 3 m off at 12° and another 8 m straight ahead traded the marker at 0.5° off the far one, and a
+  //  stick's 1° of noise there flipped it 32 times in 60 frames: the throw went to whichever the release frame held)
   pick(dir, range, cone, ok = null) {
-    const h = this.game.hero;
+    const h = this.game.hero, keep = this.soft;
     let best = null, bs = 1e9;
     const da = Math.atan2(dir.x, dir.z);
     for (const e of this.game.enemies) {
@@ -169,7 +175,7 @@ export class Targeting {
       // close enemies get a slightly wider cone (they cover more of the view)
       const c = cone + Math.atan2(e.radius || 0.5, Math.max(d, 0.5)) * 0.8;
       if (a > c) continue;
-      const s = a * 3 + d / range;
+      const s = a * 3 + d / range - (e === keep ? KEEP_AIM : 0);
       if (s < bs && (!ok || ok(e))) { bs = s; best = e; }
     }
     return best;
@@ -227,9 +233,8 @@ export class Targeting {
     if (cone <= 0) return null;
     // (an enemy the ball can't get to, behind a chain-link fence, is not offered: the throw would only hit the fence)
     const e = this.pick(aim, COMBAT.softRange, cone, (x) => this.ballReaches(x));
-    if (e) return e;
-    const g = this.game, h = g.hero, P = g.physics, da = Math.atan2(aim.x, aim.z);
-    let best = null, bs = 1e9;
+    const g = this.game, h = g.hero, P = g.physics, da = Math.atan2(aim.x, aim.z), keep = this.soft;
+    let best = null, bs = 1e9, ba = 9;
     for (const t of g.ballAimTargets()) {
       if (t.enemy) continue;
       const d = Math.hypot(t.x - h.pos.x, t.z - h.pos.z);
@@ -237,10 +242,15 @@ export class Targeting {
       const a = Math.abs(angleDiff(da, Math.atan2(t.x - h.pos.x, t.z - h.pos.z)));
       if (a > Math.max(cone, 0.3)) continue;
       if (!P.clearTo(h.pos.x, h.pos.y + 1.4, h.pos.z, t.x, t.y, t.z, 0.8)) continue;
-      const sc = a * 3 + d / 14;
-      if (sc < bs) { bs = sc; best = t; }
+      // (AIM-KEEP: the target already marked — the same spot — keeps it until another is clearly better)
+      const sc = a * 3 + d / 14 - (keep && !keep.pos && keep.x === t.x && keep.z === t.z ? KEEP_AIM : 0);
+      if (sc < bs) { bs = sc; best = t; ba = a; }
     }
-    return best;
+    // an enemy in the cone first, as LBA2 — unless he aims squarely at a switch or target and the enemy stands well to
+    // the side of it (AIM-AHEAD, lba3-controls 23.11: a target 3 m dead ahead lost to an enemy 7 m off at 20°: the ball
+    // curved away from what he aimed at). "Well to the side": the target at least AIM_AHEAD more squarely ahead
+    if (e && best && ba + AIM_AHEAD < Math.abs(angleDiff(da, h.angleTo(e)))) return best;
+    return e || best;
   }
   toggleLock(dir) {
     if (this.lock) { this.release(); return; }
