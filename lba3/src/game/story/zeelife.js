@@ -299,6 +299,10 @@ export class ZeelichLife extends ChapterBase {
     const pick = (key) => { const a = t(key); return Array.isArray(a) ? a[(f['zl_n_' + key] = ((f['zl_n_' + key] ?? -1) + 1) % a.length)] : a; };
     const one = (spk, key) => { g.say('n_' + spk, [pick(key)], null, this.speaker(spk)); return true; };
     const pk = (base) => base + '_' + (ph === 'late' ? 'network' : ph === 'post' ? 'pre' : ph);   // (shared line sets)
+    // (THE SECOND SHIFT, part 2: Mill Lane's Kell and Brel after the ending have their own word from the lift's thread —
+    //  Kell's at his bread in this bakehouse, story/zeelift.js; their epilogue lines there were never reached: a later
+    //  chapter's talk does not go through chapter 3's, and they said their generic idle lines)
+    if ((id === 'zl_kell' || id === 'zl_brel') && this.story.cur?.key === 'home') return !!this.story.chapters[this.idx('zeelich')]?.lift?.talk(npc);
     switch (id) {
       case 'zmole2':   // Mother Snuff
         if (f.zl_done && !f.zl_paid) {

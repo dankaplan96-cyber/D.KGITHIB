@@ -211,7 +211,9 @@ const CH = [
   { n: '6', key: 'pass', flags: { c6_started: true },
     MIN: { hamalayi: 8 },
     MOVE: [['hamalayi', ['yorna', 'pim'], 5, 3]] },
-  { n: '7', key: 'observatory', flags: { ...DONE6, c7_started: true },
+  // (THE SECOND SHIFT, part 2: the dome measured with Sefa back inside it — the wrong-roof scene at his shutter on the peak
+  //  done, rf_roof; that scene, Sefa outside until it is, is tests/second-shift.mjs I)
+  { n: '7', key: 'observatory', flags: { ...DONE6, c7_started: true, rf_roof: true },
     MIN: { hamalayi: 8 },
     MOVE: [['hamalayi', ['yorna', 'pim', 'lhar1'], 5, 3], ['obsv', ['keeper'], 1, 1]] },
   { n: '8', key: 'evacuation', flags: { c8_started: true },

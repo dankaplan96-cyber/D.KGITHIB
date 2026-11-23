@@ -27,7 +27,17 @@
 //   G  older saves already past chapter 9: base-13 (chapter 10, Mill Lane as before: Kell at his lever, no Brum, no coat);
 //      STAGED new-12-stop with the lane already running and no Brum flags (a save made just before chapter 9's end on a
 //      build before this): the chapter ends as it did, no lesson
-// ONLY=A|B|C|D|V|E|F|G (several: ONLY=AB), SHOTS=<dir> writes the play camera's pictures (Follow, Far; 1280×720).
+// PART 2 (docs/lba-maturity/SECOND-SHIFT-PART2.md):
+//   H  free play after the ending (STAGED: a 'home' save, new-15-last with the epilogue's flags): Brum at the handle, the
+//      deck standing, Kell not on the lane; into Snuff's bakehouse by its door: Kell with his loaf, his one line, no banner;
+//      Save & quit → Continue there; a free play without Brum's lesson: Kell at his lever as before
+//   I  chapter 7 "The wrong roof" (base-10, by input): Sefa at his shutter, the old roof, Pim and the goats; Save & quit →
+//      Continue at the shutter; taken, let go, taken again; swung until Tashi answers from the lift's top landing; into
+//      the dome (no second greeting); Save & quit → Continue after; new-10-lit (Sefa met before): no scene
+//   J  chapter 13 "A chair by the cradle" (STAGED: the families' decision made, by flags): Wenna brings the soup; Save &
+//      quit → Continue; the chair carried to the cradle (by input), the two seated, the lid shut, no reward; out and back
+//      in; Save & quit → Continue; Tessa ends the chapter; a base-campaign save holds nothing of Ballastra
+// ONLY=A|B|C|D|V|E|F|G|H|I|J (several: ONLY=AB), SHOTS=<dir> writes the play camera's pictures (Follow, Far; 1280×720).
 import { launch, open, menu, quitAndKeep, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -36,7 +46,7 @@ import { fileURLToPath } from 'node:url';
 const { check, done } = checker({ info: 'always' });
 const FIX = fileURLToPath(new URL('./fixtures/campaign/', import.meta.url));
 const ORIGIN = new URL(process.env.GAME_URL || 'http://localhost:8123/').origin;
-const ONLY = process.env.ONLY || 'ABCDVEFG', SHOTS = process.env.SHOTS;
+const ONLY = process.env.ONLY || 'ABCDVEFGHIJ', SHOTS = process.env.SHOTS;
 const want = (k) => ONLY.includes(k);
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const TMP = fs.mkdtempSync(path.join(process.env.TMPDIR || os.tmpdir(), 'shift-'));
@@ -390,6 +400,209 @@ if (want('G')) {
     const said = SS.said.slice(n0).map((s) => s[1]);
     return { chapter: f.chapterKey, brum: f.cn_brum ?? null, show: f.cn_brumShow ?? null, net: said.some((s) => /A network!/.test(s)), lesson: said.some((s) => /I take the handle/.test(s)) };
   }), (v) => v.chapter !== 'council' && v.brum === null && v.show === null && v.net && !v.lesson);
+  await browser.close();
+}
+
+// ------------------------------------------------------------------ PART 2 (docs/SECOND-SHIFT.md "Free play", "Hamalayi",
+// "Ballastra"; lba3/docs/lba-maturity/SECOND-SHIFT-PART2.md)
+const EPI = { __exp: 1, chapterKey: 'home', c3_done: true, c3_turned: true, co_vesk: true, co_lock: true, co_signal: true, ep_dinner: true, ep_free: true, cn_bv: 1, cn_brumShow: true, cn_brum: true, zl_crate: 'shoved', zl_done: true, zl_ask: true, zl_paid: true };
+// (STAGED: the area is entered by the game's own enterRoom — the free play's travel from the core is not the subject)
+const toLane = () => ev(() => {
+  const G = game; P.settle(); G.enterRoom('zeelich', null, true); G.step(0.5); G.story.refreshCast(); for (let i = 0; i < 10; i++) G.step(0.1); P.settle();
+  const L = SS.lift(), S = L.spots, h = G.hero; h.pos.set(L.lane.x, G.physics.groundAt(L.lane.x, L.lane.z), L.lane.z); h.angle = Math.atan2(S.kell.x - h.pos.x, S.kell.z - h.pos.z); G.step(1.5);
+});
+if (want('H')) {
+  await start('new-15-last', EPI);
+  await toLane();
+  const n0 = await ev(() => ({ toasts: (game.hud.toastLog || []).length, obj: game.story.objective().replace(/<[^>]+>/g, ''), journal: (game.story.journal() || []).flatMap((c) => c.lines || []).length }));
+  is('H1 STAGED free play after the ending (Brum\'s lesson made, Snuff\'s oven hot), Mill Lane: Brum at the handle, the deck standing at the landing; Kell not on the lane (not at the handle, not by the cart)', await ev(() => {
+    const G = game, L = SS.lift(), S = L.spots, k = P.npc('zl_kell'), b = P.npc('councilC');
+    const kellOnLane = k.present && G.regions.sceneOf?.(k.pos.x, k.pos.z) === 'zeelich';
+    return { brum: [b.present, +Math.hypot(b.pos.x - S.kell.x, b.pos.z - S.kell.z).toFixed(2)], kellOnLane, kellAtHandle: k.present && Math.hypot(k.pos.x - S.kell.x, k.pos.z - S.kell.z) < 3, deck: +(L.deckY - L.top).toFixed(2), moving: !!L.moving };
+  }), (v) => v.brum[0] && v.brum[1] < 0.4 && !v.kellOnLane && !v.kellAtHandle && v.deck === 0 && !v.moving);
+  await shot('H1-free-play-lane');
+  is('H2 into Mother Snuff\'s bakehouse by its door (E, by input): Kell there at his spot with his loaf; asked, "Still warm. Go and get your own."; no banner, no new objective, no journal line', await ev((n0) => {
+    const G = game, d = G.story.zlife.doors().find((q) => q.room === 'zh_bakery');
+    const u = P.use(d.x, d.z, { near: 1.0, kind: 'zhenter' }); for (let i = 0; i < 20 && G.room?.id !== 'zh_bakery'; i++) G.step(0.1); P.settle(); G.step(1);
+    const k = P.npc('zl_kell'), sp = G.story.chapters[2].lift.place('zl_kell'), hand = k.rig.j?.armR?.hand;
+    const r = P.talk('zl_kell'); const said = SS.said.map((s) => s[1]).slice(-1);
+    return { u: u.r, room: G.room?.id, kell: [k.present, +Math.hypot(k.pos.x - sp.x, k.pos.z - sp.z).toFixed(2)], loaf: !!hand?.children.some((c) => c.isMesh && c.visible), said, toasts: (G.hud.toastLog || []).length - n0.toasts, obj: G.story.objective().replace(/<[^>]+>/g, '') === n0.obj, journal: (G.story.journal() || []).flatMap((c) => c.lines || []).length - n0.journal };
+  }, n0), (v) => v.room === 'zh_bakery' && v.kell[0] && v.kell[1] < 0.4 && v.loaf && v.said.some((s) => /^Still warm\. Go and get your own\.$/.test(s)) && v.toasts === 0 && v.obj && v.journal === 0);
+  await shot('H2-kell-in-the-bakery');
+  await handover();
+  is('H3 Save & quit in the bakehouse → Continue: Kell still there with his loaf; Brum still the only one at the handle', await ev(() => {
+    const G = game; G.step(1); for (let i = 0; i < 100 && !P.npc('zl_kell').present; i++) G.step(0.1);   // (the bakehouse built under the load: he is placed once it is)
+    const k = P.npc('zl_kell'), sp = G.story.chapters[2].lift.place('zl_kell'), hand = k.rig.j?.armR?.hand;
+    const L = G.regions.built('zeelich')?.lift, b = P.npc('councilC');
+    return { room: G.room?.id, kell: [k.present, sp ? +Math.hypot(k.pos.x - sp.x, k.pos.z - sp.z).toFixed(2) : null], loaf: !!hand?.children.some((c) => c.isMesh && c.visible), brum: L ? +Math.hypot(b.pos.x - L.spots.kell.x, b.pos.z - L.spots.kell.z).toFixed(2) : null };
+  }), (v) => v.room === 'zh_bakery' && v.kell[0] && v.kell[1] < 0.4 && v.loaf && (v.brum === null || v.brum < 0.4));
+  await browser.close();
+  await start('new-15-last', { ...EPI, cn_bv: undefined, cn_brumShow: undefined, cn_brum: undefined });
+  await toLane();
+  is('H4 STAGED a free play without Brum\'s lesson (a game from before it, or one that never played it): Kell at his lever as before, nobody in his place, not in the bakehouse', await ev(() => {
+    const L = SS.lift(), k = P.npc('zl_kell'); return [k.present, +Math.hypot(k.pos.x - L.spots.kell.x, k.pos.z - L.spots.kell.z).toFixed(2), game.story.chapters[2].lift.breadTime()];
+  }), (v) => v[0] && v[1] < 0.4 && v[2] === false);
+  await browser.close();
+}
+
+// the chapter-7 page helpers: the shutter, what was flashed and heard
+const ham = () => ev(() => {
+  window.HM = {
+    M: () => game.regions.built('hamalayi'), T: () => game.story.cur.roof,
+    near: (id, p) => { const n = P.npc(id); return n?.present ? +Math.hypot(n.pos.x - p.x, n.pos.z - p.z).toFixed(2) : null; },
+    // up the ridge by input to the peak (a remark on the way read as a player would)
+    climb() { const G = game, S = HM.M().shutter, h = G.hero; for (let k = 0; k < 5 && Math.hypot(h.pos.x - S.x, h.pos.z - S.z) > 9 && !HM.T().busy; k++) { P.go(S.x + 3, S.z - 7, { tol: 1.0, maxT: 200, stopWhen: () => G.state === 'dialog' }); P.settle(); } },
+    flashes: 0,
+  };
+});
+if (want('I')) {
+  await start('base-10');
+  await ham();
+  is('I0 chapter 7 from its start (base-10, Sefa not met): the scene ahead (rf_v); Tashi at the lift\'s top landing by its crank; Pim and Sefa up at the shutter on the peak; a line of sight from the shutter to the goats\' house ridge and to Tashi, none to Lhar\'s square (the rock shelf)', await ev(() => {
+    const G = game, f = G.flags, M = HM.M(), S = M.shutter, P2 = G.physics, gh = M.goatHouse, st = S.station, sq = M.lhar;
+    // (from 0.6 m ahead of the mirror, toward each: the shutter's own post is round its middle)
+    const los = (x, y, z) => { const e = S.eye, d = Math.hypot(x - e.x, z - e.z); return P2.lineOfSight(e.x + (x - e.x) / d * 0.6, e.y, e.z + (z - e.z) / d * 0.6, x, y, z); };
+    return { v: f.rf_v, key: f.chapterKey, tashi: HM.near('lhar1', st), pim: HM.near('pim', S.pim), sefa: HM.near('keeper', S.sefa),
+      losRoof: los(gh.x, gh.ridgeY + 0.3, gh.z), losTashi: los(st.x, P2.groundAt(st.x, st.z) + 1.3, st.z), losSquare: los(sq.x, P2.groundAt(sq.x, sq.z) + 1.6, sq.z) };
+  }), (v) => v.v === 1 && v.key === 'observatory' && v.tashi < 0.4 && v.pim < 0.4 && v.sefa < 0.4 && v.losRoof && v.losTashi && !v.losSquare);
+  is('I1 by input up the ridge: Sefa greets him once, signals three long and one short at the roof he remembers (the light on the goats\' house, the slats\' clack, nothing answers); Pim: Grandma\'s old house, the goats; "I\'d know if anyone ever came up."; Twinsen will try Tashi', await ev(() => {
+    const G = game, f = G.flags, T = HM.T(), M = HM.M(), gh = M.goatHouse; let lit = null;
+    HM.climb();
+    for (let i = 0; i < 900 && !f.rf_shut; i++) { if (G.state === 'dialog') P.settle(); else { G.step(0.1); if (T._spot?.visible && !lit) lit = +Math.hypot(T._spot.position.x + M.group.position.x - gh.x, T._spot.position.z + M.group.position.z - gh.z).toFixed(1); } }
+    P.settle();
+    const said = SS.said.map((s) => s[1]), i = (re) => said.findIndex((s) => re.test(s));
+    return { shut: f.rf_shut, roof: f.rf_roof ?? null, lit, clacks: SS.snd.filter((s) => s === 'gearClack').length, blips: SS.snd.filter((s) => s === 'blip').length,
+      order: [i(/^A visitor\./), i(/Three long, one short/), i(/^Nothing\. She always answered/), i(/where we keep the goats now/), i(/^Goats\.$/), i(/You'd know if you ever came down/), i(/I'd know if anyone ever came up/), i(/Let me try him/)],
+      greet: said.filter((s) => /^A visitor\./.test(s)).length, obj: G.story.objective().replace(/<[^>]+>/g, '') };
+  }), (v) => v.shut === true && v.roof === null && v.lit !== null && v.lit < 3.5 && v.clacks === 8 && v.blips === 0 && v.order.every((o, k) => o >= 0 && (k === 0 || o > v.order[k - 1])) && v.greet === 1 && /Signal Tashi/.test(v.obj));
+  await shot('I1-the-shutter-his-turn');
+  await handover(); await ham();
+  is('I2 Save & quit → Continue at that point: Sefa stepped aside, Pim by the shutter, its prompt from behind it, the objective; the shutter aimed at the old roof', await ev(() => {
+    const G = game, f = G.flags, S = HM.M().shutter; G.step(0.5);
+    const go = P.go(S.sefa.x, S.sefa.z, { tol: 0.3, maxT: 60 }); P.face(S.x, S.z);
+    return { shut: f.rf_shut, sefa: HM.near('keeper', S.aside), pim: HM.near('pim', S.pim), prompt: P.target()?.kind, aim: +Math.abs(S.az - S.az0).toFixed(3), obj: G.story.objective().replace(/<[^>]+>/g, '') };
+  }), (v) => v.shut === true && v.sefa < 0.5 && v.pim < 0.5 && v.prompt === 'rf_shutter' && v.aim < 0.01 && /Signal Tashi/.test(v.obj));
+  is('I3 the shutter taken (E, by input): in his hands, the slats open, the toast says the keys; swung a little and let go (E): nothing in hand, the prompt again; taken again', await ev(() => {
+    const G = game, T = HM.T(), S = HM.M().shutter;
+    const u = P.use(S.sefa.x, S.sefa.z, { near: 0.5, kind: 'rf_shutter' }); for (let i = 0; i < 40 && !T.hold; i++) G.step(0.1);
+    const held = !!T.hold && G.heroHold === T._holdFn, toast = (G.hud.toastLog || []).slice(-1);
+    SS.hold('ArrowLeft', () => false, 12); G.step(0.5); P.tap('KeyE', 0.1); G.step(0.3);
+    const let0 = !T.hold && !G.heroHold, again = P.target()?.kind;
+    P.tap('KeyE', 0.1); for (let i = 0; i < 40 && !T.hold; i++) G.step(0.1);
+    return { u: u.r, held, toast, let0, again, held2: !!T.hold };
+  }), (v) => v.held && v.toast.some((s) => /Shutter/.test(s)) && v.let0 && v.again === 'rf_shutter' && v.held2);
+  is('I4 swung left across the snow (and tipped nearer if he must) until the light reaches the landing: Tashi answers at once from his belt buckle — two quick, one long (seen: the flash; heard: three blips; the caption) — Pim, Sefa "Somebody answered.", Sefa goes in; no waiting', await ev(() => {
+    const G = game, f = G.flags, T = HM.T(); let flashSeen = 0, frames = 0;
+    // (a player watching the light: left until it is level with the landing, then nearer (or farther) until it is on it)
+    const S = T.S, want = Math.atan2(S.station.x - S.eye.x, S.station.z - S.eye.z);
+    frames += SS.hold('ArrowLeft', () => f.rf_roof || S.az >= want - 0.02, 300);
+    if (!f.rf_roof) frames += SS.hold('ArrowDown', () => f.rf_roof || T.hold?.R <= 15, 250);
+    if (!f.rf_roof) frames += SS.hold('ArrowUp', () => f.rf_roof, 300);
+    for (let i = 0; i < 60; i++) { G.step(1 / 30); if (T._flash?.visible) flashSeen++; }
+    const t0 = G.time; for (let i = 0; i < 300 && (G.state === 'dialog' || T.walk || T.later.length); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    const said = SS.said.map((s) => s[1]);
+    return { roof: f.rf_roof, frames, flashSeen, blips: SS.snd.filter((s) => s === 'blip').length, caption: said.some((s) => /A flash answers/.test(s)), buckle: said.some((s) => /belt buckle/.test(s)), answered: said.some((s) => /^Somebody answered\.$/.test(s)),
+      sefaIn: !!G.rooms.obsv && HM.near('keeper', G.rooms.obsv.npcSpots.keeper) !== null && HM.near('keeper', G.rooms.obsv.npcSpots.keeper) < 0.5, free: !G.heroHold && !T.hold, obj: G.story.objective().replace(/<[^>]+>/g, '') };
+  }), (v) => v.roof === true && v.frames < 600 && v.flashSeen > 0 && v.blips >= 3 && v.caption && v.buckle && v.answered && v.free && /Follow Sefa/.test(v.obj));
+  await shot('I4-after-the-answer');
+  is('I5 into the dome by input: Sefa\'s talk starts at Twinsen\'s question (no second greeting); the mirrors\' part as before (c7_keeper); the journal has the roof', await ev(() => {
+    const G = game, f = G.flags, d = HM.M().observatory.door; let r = P.through(d.x, d.z, { run: true }); for (let k = 0; k < 2 && G.room?.id !== 'obsv'; k++) { P.settle(); r = P.through(d.x, d.z, { run: true }); }
+    const n0 = SS.said.length; P.talk('keeper'); P.settle(); const said = SS.said.slice(n0).map((s) => s[1]);
+    return { room: G.room?.id, keeper: f.c7_keeper, greet: said.some((s) => /^A visitor\./.test(s)), first: said[0], journal: (G.story.journal() || []).flatMap((c) => c.lines || []).some((l) => l.key === 'rf_j_roof') };
+  }), (v) => v.room === 'obsv' && v.keeper === true && !v.greet && /vent under the glacier/.test(v.first || '') && v.journal);
+  await handover(); await ham();
+  is('I6 Save & quit → Continue after: the shutter turned toward the landing; Pim still up by it, Tashi\'s word about his buckle; Sefa in his dome', await ev(() => {
+    const G = game, f = G.flags; if (G.room?.id !== 'hamalayi') { const ex = G.room?.exits?.[0]; if (ex) { P.through(ex.x, ex.z); P.settle(); } }
+    const M = HM.M(), S = M.shutter, T = HM.T(), aim = T.aimAt(S.station, 1.0);
+    return { roof: f.rf_roof, aimed: +Math.abs(S.az - aim.az).toFixed(3), pim: HM.near('pim', S.pim), room: G.room?.id };
+  }), (v) => v.roof === true && v.aimed < 0.01 && v.pim < 0.5);
+  await browser.close();
+  await start('new-10-lit');
+  await ham();
+  is('I7 an older chapter-7 save with Sefa met and the crystal lit (new-10-lit): no scene (no rf_v); Pim not on the peak, Sefa not outside; the shutter only looked at', await ev(() => {
+    const G = game, f = G.flags, S = HM.M()?.shutter; return { v: f.rf_v ?? null, pim: S ? HM.near('pim', S.pim) : null, sefa: S ? HM.near('keeper', S.sefa) : null, outside: G.story.cur.roof.outside() };
+  }), (v) => v.v === null && (v.pim === null || v.pim > 3) && (v.sefa === null || v.sefa > 3) && !v.outside);
+  await browser.close();
+}
+
+const WK = { __exp: 1, chapterKey: 'survey',
+  c9_started: true, c9_form: true, c9_nara: true, c9_oku: true, c9_clerk: true, c9_heard: true, c9_plans: true, c9_vote: true,
+  cn_v: 1, cn_closed: true, cn_kell: true, cn_log: true, cn_stop: true, cn_isoGot: true, cn_isoA: true, cn_isoB: true, cn_iso: true, cn_lane: true,
+  og_started: true, og_home: true, og_arrived: true, og_room: true, og_bleed: 3, og_steady: true, og_thanks: true, th_zoeGo: true, th_met: true, th_reg: true, th_cA: true, th_cC: true, th_cB: 2, th_b7: true,
+  th_zoeDone: true, th_fitted: true, th_band: 3, th_set: true, th_push: true, th_lever: true, th_vesk: true, th_done: true, bl_cw: 1, bl_g1: 2, bl_g2: 1, bl_g3: 0, bl_silt: 3, bl_endTalk: true, bl_done: true,
+  bh_started: true, bh_go: true, bh_fen1: true, bh_book: true, bh_bench: true, bh_def: true, bh_fig: true, bh_rig1: true, bh_test: true, bh_crates: true, bh_oren: true, bh_done: true,
+  wk_started: true, wk_in: true, wk_door: true, wk_card: true, wk_ledger: true, wk_bay2: true, wk_ask: true, wk_ring: true, wk_solo: true, wk_bell: true, wk_rung: true, wk_awake: true };
+for (const k of 'started arrived quHail quWeighed sign tessa1 crank hobb released n1 tessa2 seenArches maHail wenna1 gaugeU gaugeL gauges tapSeen tapShut bypassSeen bypass n2 n2seen float rafts2 plan compare chain chainSeen pawlSeen pawl spill dunn n3'.split(' ')) WK['bl_' + k] = true;
+const hall = () => ev(() => {
+  window.HL = {
+    H: () => game.story.chapters.find((c) => c.key === 'survey').hall(), C: () => game.story.chapters.find((c) => c.key === 'survey'),
+    rel: (id) => { const n = P.npc(id), R = game.rooms.bl_cradles; return n?.present ? [+(n.pos.x - R.center.x).toFixed(2), +(n.pos.z - R.center.z).toFixed(2), +n.pos.y.toFixed(2), n.rig.anim] : null; },
+    seatOK: (id, s) => { const n = P.npc(id); return !!n?.present && n.rig.anim === 'sit' && Math.hypot(n.pos.x - s.x, n.pos.z - s.z) < 0.25 && n.pos.y > 0.2; },
+  };
+});
+// (STAGED: chapter 13 after the families' decision, set by flags on a fixture save as exp-balances.mjs stages its chapters; the hall entered
+//  by enterRoom; everything after it by input)
+const intoHall = () => ev(() => { const G = game; G.story.refreshCast(); G.step(0.2); P.settle(); G.enterRoom('bl_cradles', null, true); G.step(0.5); G.story.refreshCast(); for (let i = 0; i < 10; i++) G.step(0.1); P.settle(); const R = G.rooms.bl_cradles, h = G.hero; P.go(R.center.x - 2.0, R.center.z + 2.6, { tol: 0.5, maxT: 30 }); });
+if (want('J')) {
+  await start('new-12-stop', WK);
+  await page.waitForFunction(() => game.npcs.some((n) => n.def.id === 'bl_odra'), null, { timeout: 120000 }).catch(() => {});
+  await intoHall(); await hall();
+  is('J1 STAGED the Cradle Hall after the families\' decision: Tessa waits at the door ("Talk to Tessa"); a moment later Wenna crosses with the row\'s soup to Nan Odra by her mother\'s cradle; Nan Odra won\'t leave her; the chair still against the wall; no word from Oren', await ev(() => {
+    const G = game, f = G.flags, H = HL.H(), C = HL.C(), n0 = SS.said.length;
+    const obj0 = G.story.objective().replace(/<[^>]+>/g, '');
+    for (let i = 0; i < 300 && !f.wk_food; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    for (let i = 0; i < 100 && (G.state === 'dialog' || C.chairBusy); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    const said = SS.said.slice(n0), ch = C.C.chair.group.position, R = G.rooms.bl_cradles;
+    return { obj0, food: f.wk_food, wenna: +Math.hypot(P.npc('bl_wenna').pos.x - H.odraSide.x, P.npc('bl_wenna').pos.z - H.odraSide.z).toFixed(2), odra: +Math.hypot(P.npc('bl_odra').pos.x - H.odra.x, P.npc('bl_odra').pos.z - H.odra.z).toFixed(2),
+      lines: said.map((s) => s[1]), oren: said.filter((s) => s[0] === 'n_oren').length, chair: [+(ch.x + R.center.x - H.chairWall.x).toFixed(2), +(ch.z + R.center.z - H.chairWall.z).toFixed(2)] };
+  }), (v) => /Talk to Tessa/.test(v.obj0) && v.food === true && v.wenna < 0.3 && v.odra < 0.3 && v.lines.some((s) => /Mags sent soup/.test(s)) && v.lines.some((s) => /If there were anything to sit on/.test(s)) && v.oren === 0 && v.chair[0] === 0 && v.chair[1] === 0);
+  await shot('J1-wenna-brings-the-soup');
+  await handover();
+  await hall();
+  is('J2 Save & quit → Continue: Wenna still by Nan Odra with the bowl, the chair by the wall with its prompt ("Move"); Tessa\'s objective', await ev(() => {
+    const G = game, f = G.flags, H = HL.H(); G.step(1);
+    const go = P.go(H.chairWall.x + 0.8, H.chairWall.z, { tol: 0.4, maxT: 60 }); P.face(H.chairWall.x, H.chairWall.z);
+    return { food: f.wk_food, chairFlag: f.wk_chair ?? null, wenna: +Math.hypot(P.npc('bl_wenna').pos.x - H.odraSide.x, P.npc('bl_wenna').pos.z - H.odraSide.z).toFixed(2), prompt: P.target()?.kind, obj: G.story.objective().replace(/<[^>]+>/g, '') };
+  }), (v) => v.food === true && v.chairFlag === null && v.wenna < 0.3 && v.prompt === 'wk_chair' && /Talk to Tessa/.test(v.obj));
+  is('J3 the chair carried by input to the cradle: Wenna sits in it ("Go on, Nan. I\'ve got her."), Nan Odra: "Don\'t let anyone lift her lid. Not yet." and goes to eat at the keepers\' desk, on their stool, the bowl before her; the lid stays shut; no reward', await ev(() => {
+    const G = game, f = G.flags, H = HL.H(), C = HL.C(), n0 = SS.said.length, coins = G.hero.coins;
+    const u = P.use(H.chairWall.x + 0.6, H.chairWall.z, { near: 0.6, kind: 'wk_chair' });
+    for (let i = 0; i < 200 && !f.wk_chair; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    for (let i = 0; i < 300 && (C.chairBusy || C.walks?.length || G.state === 'dialog'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    G.step(1);
+    const ch = C.C.chair.group.position, R = G.rooms.bl_cradles, said = SS.said.slice(n0).map((s) => s[1]);
+    const lid = C.C ? R.group : null; void lid;
+    return { u: u.r, chair: f.wk_chair, at: +Math.hypot(ch.x + R.center.x - H.chairCradle.x, ch.z + R.center.z - H.chairCradle.z).toFixed(2), wenna: HL.seatOK('bl_wenna', H.chairCradle), odra: HL.seatOK('bl_odra', H.stool), said, coins2: G.hero.coins, coins, oren: SS.said.slice(n0).filter((s) => s[0] === 'n_oren').length, obj: G.story.objective().replace(/<[^>]+>/g, '') };
+  }), (v) => v.chair === true && v.at < 0.05 && v.wenna && v.odra && v.said.some((s) => /I've got her/.test(s)) && v.said.some((s) => /lift her lid\. Not yet\./.test(s)) && v.coins2 === v.coins && v.oren === 0 && /Talk to Tessa/.test(v.obj));
+  await shot('J3-wenna-in-the-chair');
+  is('J4 out of the hall and back in by input: Wenna still in the chair by the cradle, Nan Odra at the desk; her word from the chair', await ev(() => {
+    const G = game, H = HL.H(), ex = G.rooms.bl_cradles.exits[0];
+    P.through(ex.x, ex.z); P.settle(); const out = G.room?.id; G.step(2);
+    const back = G.rooms.bl_arches?.arches?.exits?.toCradles; let r = back ? P.through(back.x, back.z) : null; P.settle(); G.step(1);
+    const n0 = SS.said.length; P.talk('bl_wenna'); const said = SS.said.slice(n0).map((s) => s[1]);
+    return { out, back: G.room?.id, wenna: HL.seatOK('bl_wenna', H.chairCradle), odra: HL.seatOK('bl_odra', H.stool), said };
+  }), (v) => v.out !== 'bl_cradles' && v.back === 'bl_cradles' && v.wenna && v.odra && v.said.some((s) => /Still asleep\. Still not yet\./.test(s)));
+  await handover();
+  await hall();
+  is('J5 Save & quit → Continue: still so (Wenna in the chair at the cradle, Nan Odra at the desk, the chair where he set it)', await ev(() => {
+    const G = game, H = HL.H(), C = HL.C(); G.step(1); const ch = C.C.chair.group.position, R = G.rooms.bl_cradles;
+    return { wenna: HL.seatOK('bl_wenna', H.chairCradle), odra: HL.seatOK('bl_odra', H.stool), at: +Math.hypot(ch.x + R.center.x - H.chairCradle.x, ch.z + R.center.z - H.chairCradle.z).toFixed(2) };
+  }), (v) => v.wenna && v.odra && v.at < 0.05);
+  is('J6 Tessa, talked to at the door (by input): her five B-8s, the freighter: chapter 14 begins; a later look at the hall\'s cast (the network on): Wenna still seated by the cradle', await ev(() => {
+    const G = game, f = G.flags; P.talk('tessa'); for (let i = 0; i < 600 && f.chapterKey === 'survey'; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle(60);
+    const p = HL.C().place('bl_wenna');
+    return { done: f.wk_done, key: f.chapterKey, later: p?.anim ?? null };
+  }), (v) => v.done === true && v.key === 'network' && v.later === 'sit');
+  await browser.close();
+  // a base-campaign game (a save from before the expansion, exp_base) never meets Ballastra: not in its campaign, nothing of it saved
+  await start('base-13');
+  is('J7 a base-campaign save (base-13: the network, exp_base): chapter 13 not in its campaign; no wk_ or bl_ flag, nothing naming Ballastra or the chair in the saved game outside its chapter table, nobody placed by the hall', await ev(() => {
+    const G = game; G.save(false); const raw = localStorage.getItem('lba3_save_v1') || ''; const s = JSON.parse(raw);
+    // (the save's chapter table, s.order, names every chapter of the build in every save, the base campaign's too, as it
+    //  did before this work: reported, not this scene's. Outside it nothing names Ballastra or the chair)
+    const { order, ...rest } = s;
+    return { base: !G.story.inCampaign('survey'), keys: Object.keys(s.flags).filter((k) => /^(wk_|bl_|ep_bl)/.test(k)), ballastra: /ballastra|bl_cradles|wk_food|wk_chair/i.test(JSON.stringify(rest)), orderNames: (order || []).filter((k) => /ballastra|balances|survey/.test(k)), wenna: G.story.chapters.find((c) => c.key === 'survey').place('bl_wenna') ?? null };
+  }), (v) => v.base && v.keys.length === 0 && !v.ballastra && v.wenna === null);
   await browser.close();
 }
 

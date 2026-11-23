@@ -705,7 +705,7 @@ export class Cradles extends BlChapter {
       case 'bl_garrow': return c([['bl_garrow', f.wk_awake ? 'wk_ga_after' : f.wk_bay2 ? 'wk_ga_bay2' : 'wk_ga_2']]);
       case 'bl_odra': if (this.chairBusy) return false; return c([['bl_odra', f.wk_chair ? 'wk_od_soup' : f.wk_food ? 'wk_od_bowl' : f.wk_awake ? 'wk_od_mine' : 'wk_od_1']]);
       case 'bl_jory': return c([['bl_jory', 'wk_jo_after']]);
-      case 'tessa': if (f.wk_awake && !f.wk_done && !this.chairBusy && !this.carry) return this.tessaEnd(); return c([['tessa', f.wk_awake ? 'wk_te_3' : 'wk_te_wait']]);
+      case 'tessa': if (f.wk_awake && !f.wk_done && !this.carry) return this.tessaEnd(); return c([['tessa', f.wk_awake ? 'wk_te_3' : 'wk_te_wait']]);
       case 'bl_fennick': return c([['bl_fennick', 'bh_fe_after']]);
       case 'doran': return c([['doran', 'bh_do_wait']]);
     }

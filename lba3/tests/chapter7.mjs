@@ -47,7 +47,11 @@ const boot = async (mode) => {
 
 await boot('new');
 is('chapter 7 (observatory) starts on the Hamalayi, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 5, chapterKey: 'pass', c6_started: true, c6_bridge: true, c6_heat: true, c6_thawed: true, c6_trip1: true, c6_trip2: true, c6_up: true, c6_done: true });
-  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'observatory' && v[1] === 'hamalayi' && v[2] === 'play' && v[3].length > 0);
+  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll();
+  // (THE SECOND SHIFT, part 2: the scene at Sefa's signalling shutter on the peak is tests/second-shift.mjs I; here it is
+  //  taken as done, so Sefa is in his dome as this test has him)
+  G.flags.rf_roof = true; G.story.refreshCast();
+  return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'observatory' && v[1] === 'hamalayi' && v[2] === 'play' && v[3].length > 0);
 is('out of the yard toward the ridge: the snow beside him jumps in threes down the mountain (the line kicks), said once', await ev(() => { const G = game, Y = G.rooms.hamalayi.monastery.yard, said = []; const s0 = G.say.bind(G); G.say = (n, l, ...r) => { said.push([].concat(l).join(' ')); return s0(n, l, ...r); };
   let bursts = 0; const b0 = G.particles.burst.bind(G.particles); G.particles.burst = (...a) => { bursts++; return b0(...a); };
   T.tp(Y.x - 16, Y.z, -Math.PI / 2, 25); for (let i = 0; i < 300 && !G.flags.ob_snow; i++) G.step(0.05); T.talkAll(); G.say = s0; G.particles.burst = b0;
