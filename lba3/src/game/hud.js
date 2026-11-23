@@ -490,7 +490,7 @@ export class HUD {
         `<div class="shop-look${sel ? '' : ' none'}"><div class="shop-big lba-frame"><canvas width="320" height="320"></canvas></div>` +
         (sel ? `<div class="shop-info"><div class="shop-name">${t(sel.key)}</div><div class="shop-price">${coin()}${sel.price}</div>` +
           (what ? `<div class="shop-what">${t(what)}</div>` : '') +
-          `<div class="shop-why${sel.disabled || h.coins < sel.price ? ' no' : ''}">${why}</div></div>` : '') + '</div></div>';
+          `<div class="shop-why${sel.disabled || h.coins < sel.price ? ' no' : ''}">${why}</div></div>` : '<div class="shop-info"></div>') + '</div></div>';   // (P110: the Leave row keeps the info block's room: the panel never changes size)
       el.querySelectorAll('.item').forEach((b) => {
         b.addEventListener('click', () => { this.shopSel = +b.dataset.i; onBuy(items()[+b.dataset.i]); if (this.shopOpen) render(); });
         b.addEventListener('mousemove', (e) => hover(e, +b.dataset.i));

@@ -453,6 +453,10 @@ body.big-text .inv-hint { font-size: 15px; }
 .shop-name { font-weight: 700; font-size: 16px; }
 .shop-price { display: flex; align-items: center; gap: 5px; color: #ffe35a; font-weight: 800; font-size: 18px; }
 .shop-info { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+/* P110 (the user, 23.11: "moving the mouse between the options the panel jumps"): the info block keeps one height for
+   every good (name, price, up to five lines of what it does, why) and the Leave row, so the panel never resizes */
+#shop.goods .shop-info { min-height: 196px; justify-content: flex-start; }
+body.big-text #shop.goods .shop-info { min-height: 240px; }
 /* SHOP-UI: what the selected good does and how it is used, under its name and price */
 .shop-what { font-size: 14px; line-height: 1.4; color: var(--ink); }
 .shop-why { font-size: 14px; color: var(--ink-dim); }
@@ -460,7 +464,7 @@ body.big-text .inv-hint { font-size: 15px; }
 body.big-text #shop button { font-size: 18px; }
 body.big-text .shop-name { font-size: 19px; }
 body.big-text .shop-why, body.big-text .shop-what { font-size: 17px; }
-@media (max-width: 640px), (max-height: 520px) { #shop.goods .shop-body { grid-template-columns: 1fr; } #shop.goods .shop-look { order: -1; flex-direction: row; justify-content: center; gap: 12px; } #shop.goods .shop-info { align-items: flex-start; text-align: start; gap: 4px; } .shop-big { width: 96px; flex: none; } }
+@media (max-width: 640px), (max-height: 520px) { #shop.goods .shop-info, body.big-text #shop.goods .shop-info { min-height: 0; } #shop.goods .shop-body { grid-template-columns: 1fr; } #shop.goods .shop-look { order: -1; flex-direction: row; justify-content: center; gap: 12px; } #shop.goods .shop-info { align-items: flex-start; text-align: start; gap: 4px; } .shop-big { width: 96px; flex: none; } }
 
 /* I-24: the found-object box (found.js): LBA2's place and size (centred, top at 10 % of the height, 27 % tall), the
    inside shaded, the name under it in Twinsen's colour; it grows from its centre in 0.4 s and shrinks in 0.3 s */
