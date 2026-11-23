@@ -7,6 +7,8 @@
 (22.11, CAM-FIXTOP: the Fixed view's spots by the station's bridge mostly fixed (below); FACE-3's waist line for props (the intermittent `face-3` sign, 2/2 after).)
 (22.11, FIX-PASS 3: the FULL-TEST-22-11 intermittents — `prologue` (the test: spots 1.5 m off the rope's foot, back down if shoved out), `exp-ballastra` (the game: a popped bonus no longer drifts over water or a drop; Ferro's kashes fell into the lift chamber 1 time in 8), `autoquality-game` section 7 (the harness: `open`'s navigation follows `BOOT_TIMEOUT`), `arrival-steps` (the long units it found cut into steps; still load-bound).)
 (22.11, CAM-FIX, the camera fix pass: `camsteady` and `controls` fixed and moved to "Fixed by the camera fix pass"; P58's SE tower corner fixed.)
+(22.11, camera night: CAM-SIGNPOST — the talk shot counts the merged signposts' boards (the yard's LIGHTHOUSE arrow; FACE-2.md) —; CAM-EASE-ROUND — the keep-rule entries, under "Keep-rule entries" below. Open, not the camera's: `camfollow`'s "Medium for a new player" check is stale since P100 (Far by default); `camsteady`'s default order fails follow · harbour pier's heading reversals (12/min > 8.6) on the build before the camera night too.)
+(23.11, FULL-TEST-23-11 on v147, Automated runtime only (SwiftShader): none of the rows below recurred (controls 92/92, camsteady 110/110 in both orders, jumpreach 4/4, prologue 29/29, arrival-steps 12/12, face-3 6/6 twice, exp-ballastra 33/33, autoquality-game 29/29 with sections 7–8). Fixed (`b62399d7`): `worldfit`'s z-fighting at the promenade's south-west corner (FLAT-TOWN) and `camclear`'s camera at the water main's slant (C66), under "Fixed by FULL-TEST 23.11" below. Test updates (b): `campaign-thread` C8 and O4 follow PUZZLES phase 2. New open row: `worldfit`'s shop sill (FLAT-TOWN), below. `camsteady`'s default order: on v147 itself single checks vary run to run (FULL-TEST-23-11 §2.3).)
 
 Updated 17.11.2026 by AUDIT-FIX (RELEASE-AUDIT-v96 A-13) from the audit's suite table (section 7, run on v96 =
 `39d1a538`) and AUDIT-FIX's own reruns on its branch (base `20b5da55`, the coordinator's `ccr-c1c2c4b9-dep6ed` with
@@ -26,7 +28,19 @@ Logs: the audit's `/dev/shm/t986-audit/suite/log-<suite>.txt`; AUDIT-FIX's `/dev
 | ~~`prologue`~~ **fixed 22.11 (FIX-PASS)** | PASS now | the well's mites [4, 4, null] | The test, as listed: its spots round each mite could fall on the rope's foot (the well's exit, r 0.7) and take him up and out. Spots keep 0.6 m clear of the room's exits; a departure is recorded in the result. Automated runtime only | — |
 | ~~`interior-life`~~ **fixed 22.11 (FIX-PASS)** | 144/144 now | Velo at his till (and, on the first rerun here, Tavi at the café shelf in the evacuation, 24 s facing away) | The game, mostly. (1) A hop under 1.5 m along the same work (Velo till ↔ printer, 0.8 m) turns back to the work at once, and the last step onto the slot is a sidestep facing it: side-on 1.4 s after each hop → one 0.25 s sample. (2) `arrivedElsewhere` (a stop given up) kept the last stop's heading: it faces the stop's way now (`walkers.js`). The test: a step up to the thing or back to the slot counts as walking for facing. Automated runtime only | — |
 | ~~`travel`~~ **fixed 22.11 (FIX-PASS)** | 27/27 now | chapter 2 → 3: the sky-ferry at Zeelich's dock | The game. The check already wanted U-1's laid-up ferry (`p2b.ferry === true`); `chapter2.js` hid it on the arrival and in its applyFlags (a load showed it again: `ferry.js` runs last). Both now follow U-1's rule (`story.ferry.open`). Automated runtime only | — |
+| `worldfit` | 7/8 visual | (1) "door sill under the ground": `house shop` (Pippa's) by 0.24 m at (−33.75, −1.5) | The game, FLAT-TOWN (v142; v141 passes): the square's platform at +0.42 and its two 0.21 m steps now begin at the shop's doorstep, the shop rose 0.10 m (floor 2.43, the ground 0.5–1 m out 2.55–2.67, the platform 2.72). Any fix is a visible world change (the shop onto the platform's level, a landing in the steps, or the ring kept off its front): for the user. Pictures `tests/out/ft4/pics/{v141,fixed}-shop-door-front.png` (not kept). Automated runtime only | the user / the next world task |
+| `camsteady` (default order) | 110/110 – 110/112 run to run on v147 itself | follow (medium) · street and square "still behind him once he has stood" (6.96° > 3); follow · street, Modern "turns only as he turns" (100.9 > 99.2/min); follow · harbour pier heading reversals (12.2 > 8.7/min, the camera night's note at the top) | The order's spread: Modern controls follow the camera and the bot's route changes with it; v147 unchanged gave 110/110, 110/110 and 110/112 (FULL-TEST-23-11 §2.3). `MODES=follow,lba,free` passed every time | — |
 | ~~`slidetraps`~~ **fixed 22.11 (v126)** | 5/5 now | the harbour strip (−91.67, 44.22) | OVERLAP-3 moved the south bollard runs to the brink (z 43.0); HARBOUR-BRINK levelled the ground under the paving in `world.js` (no grid point inside a built wall face lowered, the bank sunk to meet the sea 0.1 m past it) and gave the five platform wall runs a walkable top in `island.js`; the scan spot is sea now. Automated runtime only | — |
+
+## Fixed by FULL-TEST 23.11 (`b62399d7`)
+
+Automated runtime only (headless Chromium, SwiftShader, one suite at a time; base v147 `64c5a6cf`). A/B with HEAD's tests
+against `git archive` copies of older builds (FULL-TEST-23-11 §2).
+
+| Suite | Before | After | Cause, and the fix |
+|---|---|---|---|
+| `worldfit` | 6/8 visual: (3) z-fighting, 10 judged clusters (0.18–2.72 m²) at (−76, 19.7) | (3) PASS (Citadel's listed z-fights back to v141's 25, none judged); (1) the shop sill stays (above) | The game, FLAT-TOWN (v142; v141 passes): `PROM_WALLS`' south wall began at the sea wall's foot row, so the two boxes overlapped in the corner with their west and south faces and copings in one plane. The south wall starts at the sea wall's back and its coping at the sea coping's edge (`citadel-layout.js` `joinW`, `island.js` buildFlatTown); the colliders' union and `flatClear` unchanged |
+| `camclear` | 15/15 + 31/32 visual: "cliffs: placements, no surface within 0.15 m of the camera" (−62, −18) facing east, 0.118 m from the main | **15/15 + 32/32** (twice) | The game, C66 (v147; v146 passes): the meter cabinet 0.8 m east made the main's last run a slant 0.4 m nearer the plateau's edge, and that run was never one of the camera's own volumes. The slant now is (`island.js` buildPipeline, `pipeVolumes`). The riser into the cabinet as a volume too was tried and dropped (camsteady's Modern street: a 4.12 m keep entry) |
 
 ## Fixed by the camera fix pass (22.11: CAM-LURCH, CAM-GRAZE, CAM-JOLT, CAM-FOLD, CAM-RIDE, CAM-BOB, CAM-TOP, CAM-EASE-IN)
 
@@ -48,6 +62,21 @@ largest keep step 1.25 → 1.20 m, out of the house door 0.74 → 0.74, through 
 rules); judged by the camera's own sight (before the strict lines) it reached 0.50 m but hid him for a frame at camfollow's
 wall (2 checks failed): the guard keeps most entries outright, so the staged corners' 1–2.6 m entries mostly remain.
 camfollow 31/31, camclear 47/47 after.
+
+(22.11, camera night, CAM-EASE-ROUND, `camera.js` only.) Those entries again, with the strict lines kept: where the
+straight way's next spot fails, the way round his pivot (heading, arm and tilt eased together) and the same tilt first;
+and an entry over 1 m none of them eases is split over two frames at a spot 0.4–0.6 of the way that is clear, off a roof
+and sees him wherever the goal does. Measured with a scratch probe (24 staged spots 0.75–0.9 m off tall boxes' corners
+and faces on Citadel, back to the wall, stand / full turn / back / back up / turn, 1/60 s, by input): unsmoothed "high" or
+"oversee" entries over 0.5 m, Medium 4 → 2 (over 1 m: 2 → 1; the 1.87 m one in two steps ≤ 0.94 m, a 0.9 m one eased),
+Far 7 → 4 (over 1 m: 3 → 2; 2.08 m → two of ≤ 1.03 m); frames unseen by the strict lines unchanged (80 / 85, of which
+newly unseen 10 / 11). **Left:** the 2.4–2.8 m entries at the face (−75.8, 25.4): the camera on its way stood where the
+strict lines did not see him and the goal is the only pocket that does — of 27 spots tried along the three ways (0.1–0.9)
+only the tilt-first way's 0.9 sees him, so any ease or split adds unseen frames; they stay a jump. camfollow 30/31 (the
+one: its "Medium for a new player" settings check, stale since P100 made Far the default — not the camera), camsteady
+110/110 (`MODES=follow,lba,free`) and 109/110 in the default order (follow · harbour pier heading reversals 12.2/min > 8.7;
+the build before this change, same order: 108/111, the pier 12/min and two Modern-street checks; the pier alone passes on
+both, 8.5 ≤ 8.5: order-dependent, not this change), controls 92/92. Automated runtime only (SwiftShader).
 
 ## Fixed by the camera pass (22.11: CAM-HANDBACK, CAM-OVERSIGHT, CAM-EASE)
 

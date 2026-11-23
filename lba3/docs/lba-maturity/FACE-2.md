@@ -248,3 +248,44 @@ Saves: nothing saved or loaded changed (no save field; the camera's talk state i
 - Free's heads are 99–103 px, just at the 100-px target (the camera's wider lens and the side of the line).
 - In the D2 spot the board can still show at his knees (the shot keeps faces, chests and waists clear).
 - Partner review: none needed for rig or animation (no `rig.js` change). Camera hooks only.
+
+# CAM-SIGNPOST: the yard's LIGHTHOUSE signpost in the talk shot (22.11, camera night)
+
+Automated runtime only (headless Chromium, SwiftShader, a shared machine at load 12-13 on 4 cores). Only
+`src/engine/camera.js` changed. Base `5675e480`.
+
+**Issue.** `captures/twinsen-zoe-look/sheets/game-talk.jpg` (both looks): on Twinsen's line ("Tiny crystals. Still
+warm.") the favoured shot stood behind the LIGHTHOUSE · SQUARE signpost (citydress.js, at −43.3, 73.0) and its arrow
+covered his head: he showed only as the see-through silhouette. Reproduced by input (the yard talk walked up to, E): shot
+`[0.62, 1, 0.2, +1]`, rays from the lens hit the merged dressing mesh 1.08 m off over his head and 0.64 m off over Zoé's
+chest, waist and knees. In face-3's D2 spot the committed `captures/face-3/after/sign-line2-hero.jpg` has Zoé's head
+behind the same arrow.
+
+**Cause.** The signpost's boards are merged with the street dressing into one mesh a 40-64 m cell (Kit + mergeStatic;
+island.js's own signposts a 24 m cell), far over FV_PROP_R, so FACE-3's prop walk skips them; the collider is the post
+alone (0.2 m round). Nothing in the shot search knew the arrows.
+
+**Change.** Round each thin post near the talk (a cyl collider ≤ 0.3 m round, 1.5-4.5 m over the terrain, no tree) the
+merged meshes' triangles within 1.3 m of its axis and near its top are sampled into 0.1 m cells, dilated by one cell; a
+triangle whose middle is in something solid (a wall, a house's stones, a pot) or with an edge over 1.8 m is left to the
+colliders. Read once a post (`_postVox`: the dressing is static). The cells are props like FACE-3's: the foreground
+lines (FV_WAIST's included) and the line to the speaker's face (a hit there rules the shot out). New: a listener in the
+frame whose face is behind a prop's own unpadded box or cells costs CH_TALK_K_PART (padded, the Bug St. board's top edge a
+few cm under his head on the usual shot over his shoulder would have cost it; that stays the foreground lines' 0.6).
+
+**Measured.** The yard talk by input (scratch probe; base 1 run, final code 2 runs): base, Twinsen's line behind the
+arrow; final, his line on the same side of the line as Zoé's, both heads clear (`[1.05, 1.12, 0.12, +1]` 2.03 and
+`[0.38, 1, 0.2, +1]` 1.64), Zoé's lines as the base's. Intermediate builds showed that from this spot every on-side view
+can be blocked for a moment: then the search crosses the line (CH_TALK_K_LINE, as before) rather than hide a face. Cost:
+the first talk by the yard reads its posts once, ≈ 7 ms of CPU (min of 20 on the loaded machine; single reads 10-60 ms);
+later talks the old walk (≈ 1 ms).
+
+| Suite | Result |
+|---|---|
+| `face-2` | 9/9 (Zoé 131-132 px, Twinsen 134 px, 2 cuts, never in a solid) |
+| `face-3` (SEC=scenes), twice | 6/6, 6/6; Twinsen's line with both heads clear in both (before: Zoé's head behind the arrow) |
+| `dialogue-scenes` | 10/10 |
+| `camclear` | 47/47 (15 + 32) |
+
+Open: in one face-3 run the signpost stands large at the frame's side on Twinsen's line (both faces clear); lamps and
+other thin posts' heads now count as props too (real drawn geometry), not looked at one by one.

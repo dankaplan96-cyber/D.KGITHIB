@@ -479,7 +479,7 @@ Object.assign(STR.en, {
   // ---- chapter 14 in the expanded campaign: the valve room's relay and Tessa's B-8 (story/balances.js NetB8)
   // Essential clues: nwb_mi_2 / nwb_mi_0 (which way the band is off), nwb_sub_band.
   nwb_bal: "And Tessa's boxes went out with the relays. The valve room's is yours to fit. That one sits on the project's pipes, right by Oren's governor.",
-  nwb_trim: "(A thump runs through the pipes on the drill's stroke. The governor's hum drops a note, and the relay's lamp sinks to a glimmer.)",
+  nwb_trim: "(A thump runs through the pipes with the ground's knock. The governor's hum drops a note, and the relay's lamp sinks to a glimmer.)",
   nwb_or_trim: 'Your box drinks. The shelters drink first.',
   nwb_mi_trim: "He's cut the relay's share. Nobody asked me. When the code goes out, that relay goes dark.",
   nwb_tw_b8: "Then it gets one of Tessa's boxes.",
@@ -488,7 +488,7 @@ Object.assign(STR.en, {
   nwb_mi_0: "Now the relay's starving. Too low.",
   nwb_mid: "(Both needles settle on green. The relay's lamp comes back up.)",
   nwb_mi_1: 'Green, both. Leave it.',
-  nwb_push: "(On the next stroke the governor rings. The B-8's lever doesn't move.)",
+  nwb_push: "(On the next knock the governor rings. The B-8's lever doesn't move.)",
   nwb_or_brass: 'That one has no clay in it.',
   nwb_mi_mine: "So I set it, and nobody else can. That's my job now.",
   nwb_sub_fit: "Fit Tessa's B-8 on the relay", nwb_sub_band: "Set the B-8's band (Mira reads the needles)",

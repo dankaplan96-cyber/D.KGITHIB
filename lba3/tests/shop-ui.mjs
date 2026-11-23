@@ -102,6 +102,30 @@ for (const [w, h] of [[1000, 700], [1366, 768]]) {
 checkVisual('a long title (English and Hebrew, large text, 1000×700 and 1366×768) wraps beside the purse and never under it; openMenu keeps it inside the panel', !badLong.length, badLong.slice(0, 3));
 await ev(() => { game.settings.textSize = 'normal'; SU.lang('en'); game.step(0.1); });
 
+// ---- P110 (the user, 23.11: "moving the mouse between the options the panel jumps … these panels should keep one size"):
+// the panel's box is the same for every row, the Leave row included, in both languages and both text sizes
+const jumps = [];
+for (const [w, h] of [[1366, 768], [1000, 700]]) {
+  await page.setViewportSize({ width: w, height: h });
+  for (const lang of ['en', 'he']) for (const size of ['normal', 'large']) {
+    const r = await ev(([l, sz]) => {
+      game.settings.textSize = sz; SU.lang(l); document.body.classList.toggle('big-text', sz === 'large');
+      const items = () => [{ id: 'potion', key: 'shop_potion', price: 6, shop: true }, { id: 'honey', key: 'sh_honey', price: 8, shop: true },
+        { id: 'ticket', key: 'sh_ticket', price: 9, shop: true }, { id: 'blowgun', key: 'a_sh_blowgun', price: 30, arsenal: true }, { id: 'darts', key: 'a_sh_darts', price: 5, arsenal: true }];
+      game.hud.shopClose(); game.setState('shop');
+      game.hud.openShop(items, () => {}, () => game.setState('play'), 'shop_title');
+      const boxes = [];
+      for (let i = 0; i <= 5; i++) { game.hud.shopSel = i; game.hud.shopRender(); const b = document.querySelector('#shop').getBoundingClientRect(); boxes.push([Math.round(b.width), Math.round(b.height)]); }
+      game.hud.shopClose();
+      return boxes;
+    }, [lang, size]);
+    const ws = new Set(r.map((b) => b[0])), hs = new Set(r.map((b) => b[1]));
+    if (ws.size > 1 || hs.size > 1) jumps.push({ w, h, lang, size, boxes: r });
+  }
+}
+check('the shop panel keeps one size whichever row is selected (5 goods of different line lengths and Leave; English and Hebrew, normal and large text, 1366×768 and 1000×700)', !jumps.length, jumps.slice(0, 3));
+await ev(() => { game.settings.textSize = 'normal'; document.body.classList.remove('big-text'); SU.lang('en'); game.step(0.1); });
+
 // ---- every good any shop sells says what it does, in English and in Hebrew
 const cover = await ev(async () => {
   const G = game, h = G.hero, f = G.flags, A = h.arms, I = await import('./src/game/i18n.js');

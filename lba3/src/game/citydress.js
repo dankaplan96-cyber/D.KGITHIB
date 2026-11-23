@@ -179,7 +179,7 @@ export function buildCityDressing(root, physics, W) {
   // (BENCHES-1: it stood west of the lane wedged between the original's tulip bed, a tree's trunk 0.7 m behind it and its
   //  bin; the planter that went with it stays where it was, by the blue bed)
   rest(-43.3, 43.4, -Math.PI / 2, { color: '#c8452f', bin: -1, tub: 1, seed: 22 });
-  planter(-48.3, 47.9, Math.PI / 2, 9);
+  planter(-49.0, 47.9, Math.PI / 2, 9);   // (FLAT-TOWN-2: on the raised bed, 0.5 m inside its east wall's coping; it was on the block's earth band at x −48.3)
   // the lighthouse junction (BENCHES-1: no street bin by Twinsen's own bench: it stood in his front garden, at the bench's end,
   // between it and his door)
   { const x = -43.3, z = 73.0;

@@ -7,7 +7,7 @@
 // textures with world-scaled UVs, sculpted geometry for organic shapes,
 // instancing/merging for repeated parts, a collider for every solid thing.
 import * as THREE from 'three';
-import { textures, keyJSON } from '../engine/textures.js';
+import { textures, keyJSON, wallTexture } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
@@ -22,7 +22,7 @@ import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA } from './citadel-layout.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA, LAWN, PIPE_METER, PROM_EDGE } from './citadel-layout.js';
 
 // ================================================================== layout
 // Everything that the vegetation scatter must keep clear of (world.js asks
@@ -91,7 +91,7 @@ export const PIPE = [
   [-79.0, -62.4], [-79.6, -58.0], [-80.4, -53.9], [-76.5, -48.0], [-74.2, -38.0], [-73.4, -28.0], [-72.6, -21.0], [-72.4, -18.6],
 ];
 const SHELTER_CLEAR = [[-93.3, -73.2, 3.6], [-88.2, -72.8, 3.6], [-50, -71, 3.6], [-49.0, -67.6, 3.6]];
-const METER = { x: -72.0, z: -17.0, ry: Math.PI / 2 };
+const METER = { x: -72.0, z: -17.0, ry: Math.PI / 2 };   // (its first place: keepClear's, the scatter's view; it stands at PIPE_METER: C66)
 // to the reservoir under the Whispering Cliffs (the rock stack on the plateau's rim)
 export const BRANCH = [[-33.0, -50.0], [-35.5, -44.5], [-43.5, -37.0], [-51.0, -32.5], [-55.2, -31.9]];
 const CLIFF_VALVE = { z: -36.6 };
@@ -142,6 +142,43 @@ function pm(color, rough = 0.8, extra = {}) {
   return m;
 }
 const VC = () => pm('#ffffff', 0.85, { vertexColors: true });
+// WALL-LOOK (22.11): candidate faces for the town's built walls, for the user to choose from (?wall=a|b|c; none: the
+// quay's rubble as before, the default until the user picks). The walls that take it: the promenade's (sea, south,
+// inland behind the stair), the lawns' kerbs and bed walls, the east shore's, and the harbour's pier and platform walls
+// (the same material as the sea wall's), and the quay's embankment in the same rubble, its own tint (merged with the
+// pier's walls into one draw per cell: a candidate on the pier alone split them, a draw more). Each candidate is one
+// material for the sunlit walls and one for those in shade (as the rubble's two: the same draws), its tile per metre
+// baked in the walls' UVs. a: pale dressed blocks in courses; b: the houses' pale rubble, larger, in mortar; c: the
+// fort's stone (`fortStone`, its scale and tint). `shade`: the emissive lift of the walls facing east (FLAT-TOWN-2's),
+// smaller on the pale faces.
+// (the user, 23.11: c — the fort's stone — is the default; ?wall=old shows the previous rubble, ?wall=a|b the other two)
+const WALL_LOOK = (() => { const m = typeof location !== 'undefined' && /[?&]wall=(a|b|c|old)\b/.exec(location.search); return !m ? 'c' : m[1] === 'old' ? null : m[1]; })();
+const WALLS = {
+  a: { tex: () => wallTexture('a'), tile: 1.7, color: '#eee6d8', shade: '#4a453e' },
+  b: { tex: () => wallTexture('b'), tile: 1.7, color: '#eee6d8', shade: '#4a453e' },
+  c: { tex: () => textures().fortStone, tile: TILE.fortStone, color: '#e6eaf2', shade: '#6c7078' },
+};
+const WALL_TILE = WALL_LOOK ? WALLS[WALL_LOOK].tile : TILE.rubble;
+// a wall's box: the rubble's (isotropic: its side faces' UVs run up the height, as ExtrudeGeometry makes them); a
+// candidate in courses gets its UVs projected on each face (boxUV: along the face, up the height), a copy of the box
+function wallBox(w, h, d, r) {
+  if (!WALL_LOOK) return bbox(w, h, d, r, TILE.rubble);
+  return cached(`wb${w.toFixed(3)},${h.toFixed(3)},${d.toFixed(3)},${r}`, () => boxUV(bbox(w, h, d, r, 1).clone(), WALL_TILE));
+}
+// (a candidate: one material per tint, made where the rubble's was: the draw batches keep pieces in the order of their
+//  materials' ids, drawbatch.js `ord`, so a candidate's pieces batch as the rubble's did)
+function wallMat(shade = false, tint = '#cfcac8') {
+  if (!WALL_LOOK && !shade) return tm('rubble', { color: tint });
+  const key = 'wall-' + (WALL_LOOK || '') + (shade ? '-shade' : tint);
+  if (MC.has(key)) return MC.get(key);
+  const L = WALL_LOOK && WALLS[WALL_LOOK];
+  // (FLAT-TOWN-2's shade lift: the walls facing east read near black beside the sunlit sea wall; an emissive map)
+  const map = L ? L.tex() : textures().rubble;
+  const m = shade ? new THREE.MeshStandardMaterial({ map, color: L ? L.color : '#d6d2d0', roughness: 0.88, emissive: L ? L.shade : '#8c8884', emissiveMap: map })
+    : new THREE.MeshStandardMaterial({ map, color: L.color, roughness: 0.88 });
+  MC.set(key, m);
+  return m;
+}
 
 // ================================================================== geometry helpers
 const GC = new Map();
@@ -518,7 +555,7 @@ function quayCornerWall(sign, R, QH) {
     if (cr[0] * n[0] + cr[1] * n[1] + cr[2] * n[2] >= 0) idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
     else idx.push(base, base + 2, base + 1, base, base + 3, base + 2);
   };
-  const T = TILE.rubble, phiAt = (i) => -Math.PI / 2 + sign * (i / N) * (Math.PI / 2);
+  const T = WALL_TILE, phiAt = (i) => -Math.PI / 2 + sign * (i / N) * (Math.PI / 2);
   const vtx = (j, i, nrm) => { const phi = phiAt(i), [r, y] = P[j]; return { p: at(r, y, phi), n: nrm(phi), uv: [(r * (Math.PI / 2) * (i / N)) / T, y / T] }; };
   const ey = QH + 3.42, el = Math.hypot(ey, 0.38);
   const outer = (phi) => [(Math.sin(phi) * ey) / el, 0.38 / el, (Math.cos(phi) * ey) / el];   // the battered face leans back: its normal tips up a little
@@ -562,10 +599,10 @@ function buildHarbour(W0, root, r) {
   {
     const s = new THREE.Shape();
     s.moveTo(-0.2, -3.6); s.lineTo(1.6, -3.6); s.lineTo(1.6, QH - 0.18); s.lineTo(0.18, QH - 0.18); s.lineTo(-0.2, -3.6);
-    const wallGeo = extrude(s, zB - zA, TILE.rubble);
+    const wallGeo = WALL_LOOK ? boxUV(extrude(s, zB - zA, 1), WALL_TILE) : extrude(s, zB - zA, TILE.rubble);
     // shape is in XY (x outward→inward, y up), extruded along z
-    B.add(wallGeo, tm('rubble', { color: '#d8d4dc' }), QX, 0, zA);
-    for (const c of corners) B.add(quayCornerWall(c.sign, QR, QH), tm('rubble', { color: '#d8d4dc' }), QX + QR, 0, c.cz);
+    B.add(wallGeo, wallMat(false, '#d8d4dc'), QX, 0, zA);
+    for (const c of corners) B.add(quayCornerWall(c.sign, QR, QH), wallMat(false, '#d8d4dc'), QX + QR, 0, c.cz);
     // (no side returns: the quay's ends meet the rock shore; the old returns stood 1.2 m out in the water, OPEN-3 #02)
     // coping stones: individual bevelled blocks with slight jitter
     const cope = [];
@@ -623,7 +660,7 @@ function buildHarbour(W0, root, r) {
     const x0 = QX + 0.3, x1 = QX - plen;
     for (let x = x0; x > x1; x -= 0.3) { r(); r(); r(); r(); }
     for (let x = x0 - 0.4; x > x1 - 0.2; x -= 2.75) for (let s = 0; s < 2; s++) { r(); r(); r(); }
-    const rub = tm('rubble', { color: '#cfcac8' }), pave = tm('stone', { color: '#c8c2b8' }), cope = tm('stone', { color: '#e8e4dc' });
+    const rub = wallMat(), pave = tm('stone', { color: '#c8c2b8' }), cope = tm('stone', { color: '#e8e4dc' });
     const teal = pm('#2a9a8a', 0.4, { metalness: 0.5 }), post = tm('concrete', { color: '#f4f2ee', rough: 0.75 });
     const ax1 = E.x - pw / 2;   // (the arm's west end: the far side of the leg)
     // a straight run of the quay's wall section in the frame of B2 (land on the run's right), its coping, its posts and
@@ -639,7 +676,7 @@ function buildHarbour(W0, root, r) {
       const len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az);
       const sh = new THREE.Shape(), wt = top - 0.18 - (j & 1 ? 0.006 : 0), c0 = j & 1 ? 0.62 : 0;
       sh.moveTo(-0.2, -3.6); sh.lineTo(1.0, -3.6); sh.lineTo(1.0, wt); sh.lineTo(0.18, wt); sh.lineTo(-0.2, -3.6);
-      B2.add(extrude(sh, len, TILE.rubble), rub, ax, 0, az, 0, ry, 0);
+      B2.add(WALL_LOOK ? boxUV(extrude(sh, len, 1), WALL_TILE) : extrude(sh, len, TILE.rubble), rub, ax, 0, az, 0, ry, 0);
       B2.add(bbox(0.62, 0.22, len - c0, 0.03, TILE.stone), cope, (ax + bx) / 2 + Math.cos(ry) * 0.3 + Math.sin(ry) * c0 / 2, top - 0.09, (az + bz) / 2 - Math.sin(ry) * 0.3 + Math.cos(ry) * c0 / 2, 0, ry, 0);   // (bbox is cached: placed by its middle, never translated)
       const ix = Math.cos(ry) * 0.45, iz = -Math.sin(ry) * 0.45, uA = j & 1 ? 0.45 : 0, uB = j & 2 ? len - 0.45 : len, n = Math.max(1, Math.round((uB - uA) / 3));
       const us = []; for (let i = 0; i <= n; i++) us.push(uA + ((uB - uA) * i) / n);
@@ -2152,7 +2189,11 @@ function buildStation(W0, root, r) {
   //  the leg is closed too (pushing into it, he stood hidden behind the leg 3.2 s when only the nook was filled). Instances:
   //  no draw added. The fourth takes its turn from a stream of its own: the island's shared one, r, goes on unchanged
   //  to the depot, the pipeline and the dressing)
-  { let k = 0; const r4 = () => (k++ < 6 ? r() : 0.31); barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.6, 39.7, false], [38.75, 40.8]], r4); }
+  // (C66, ORDER 66.4: the third stood with its hoops (0.44 m) 14–17 cm into the fort wall's corner (its collider's face,
+  //  x −38.7 in the world): 0.16 m east and 0.55 m north, 2 cm off the wall and clear of the bridge leg's brass foot (the
+  //  gap between the wall and that foot, 0.75 m, is narrower than a barrel). Its collider leaves no way past it between
+  //  the wall and the leg: the strip behind the leg stays closed)
+  { let k = 0; const r4 = () => (k++ < 6 ? r() : 0.31); barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.76, 40.25, false], [38.75, 40.8]], r4); }
   // walkway plates from the gate passage to the pad
   // (WORLD-FIX: every other plate 5 mm higher: where the walk turns, two plates overlap and their tops z-fought)
   for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025 + (i % 2) * 0.005, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
@@ -2478,7 +2519,7 @@ function supportGeo() {
   return cached('psupport', () => ({ pad: boxUV(bbox(0.5, 0.18, 0.5, 0.04, 1), TILE.concrete) }));
 }
 // draw a profile as a pipe: tube, flanges, trestles; returns sampled points
-function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = () => false, from = 0, to = null, cover = () => true, vents = true } = {}) {
+function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = () => false, from = 0, to = null, cover = () => true, vents = true, camFrames = () => false } = {}) {
   const { xs, zs, y, gr, ds } = prof;
   const i1 = to ?? prof.n - 1;
   const pts = [];
@@ -2520,6 +2561,21 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x + nx * 0.95, ga - 0.02, z + nz * 0.95);
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x - nx * 0.95, gb - 0.02, z - nz * 0.95);
     for (const sgn of [-1, 1]) W.physics.add({ type: 'cyl', x: x + sgn * nx * 0.9, z: z + sgn * nz * 0.9, r: 0.24, top: py, seeThrough: true });
+    // (C66, ORDER 66.2: an A-frame where people walk under the main — camFrames, the promenade's walk — as the camera's own
+    //  volumes, as CAM-FIXTOP made the station bridge's: occlude.js camOnly, so LBA2's rule passes through the open frame
+    //  but the Fixed view's last resort does not stand behind a leg or the cap. Each leaning leg as three steps of its
+    //  lean, the cap whole. The tube is the camera's already (pipeVolumes): under it he shows as his outline, by design)
+    if (camFrames(x, z)) {
+      const occ = occOf(W), rot = Math.atan2(-nz, nx);
+      for (const sgn of [-1, 1]) {
+        const g0 = (sgn > 0 ? ga : gb) - 0.1;
+        for (let k = 0; k < 3; k++) {
+          const da = 0.95 - (0.73 * k) / 3, db = 0.95 - (0.73 * (k + 1)) / 3, d = sgn * (da + db) / 2;
+          occ.add({ kind: 'box', camOnly: true, x: x + nx * d, z: z + nz * d, rot, hw: (da - db) / 2 + 0.1, hd: 0.1, y0: g0 + ((py - g0) * k) / 3, y1: g0 + ((py - g0) * (k + 1)) / 3, name: 'water main, a trestle leg' });
+        }
+      }
+      occ.add({ kind: 'box', camOnly: true, x, z, rot, hw: 0.55, hd: 0.1, y0: py - 0.15, y1: py + 0.04, name: 'water main, a trestle cap' });
+    }
   }
   // (the user, 5.11, a photo: "the pipe is hollow": the tube has no ends, and where it dives into the ground or comes up
   //  out of it the ground cut it at a slant and the camera saw into it.) A concrete collar where the line crosses the
@@ -2686,7 +2742,11 @@ function buildMeter(W, root, B, x, z, ry, yIn) {
   const [lx, lz] = f(-0.78, 1.03);
   mesh(root, cached('mlamp', () => new THREE.SphereGeometry(0.12, 12, 8)), lampM, lx, g + 1.2, lz, 0, { cast: false });
   B.add(cyl(0.09, 0.11, 0.12, 12).rotateX(Math.PI / 2), darkSteel(), lx, g + 1.2, lz - 0.0, 0, ry, 0);
-  W.physics.add({ type: 'box', x, z, hw: 1.15, hd: 1.05, rot: ry, top: g + 1.7 });
+  // (C66, ORDER 66.2: the collider is the drawn cabinet's outline — the brass coping, 2.4 × 2.2 m, and on its front
+  //  (local +z) the dial's ring, the lamp and the sight tube's brass rings out to 1.21 m. It was 2.3 × 2.1 round the
+  //  middle: the coping and the front fittings stood 5–16 cm past it)
+  const fz = (1.21 - 1.1) / 2;
+  W.physics.add({ type: 'box', x: x + Math.sin(ry) * fz, z: z + Math.cos(ry) * fz, hw: 1.2, hd: 1.1 + fz, rot: ry, top: g + 1.7 });
   let k = 0, goal = 0, off = 0;
   W.updaters.push((dt) => {
     k += (goal - k) * (1 - Math.exp(-dt * 1.5));
@@ -2721,7 +2781,9 @@ function buildPipeline(W, root, r) {
   // (over the orchard the main runs high: the ball's lob to the caged valve must pass under it)
   const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, bury: [{ a: [-48.5, -62.5], b: [-54.0, -67.4], ramp: 6, depth: 0.85 }], fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 },
     { x: ORCHARD.dx, z: ORCHARD.dz + 1, y: W.H(ORCHARD.x, ORCHARD.z) + 5.6, span: 9 }] });
-  pipeVolumes(W, drawPipe(W, B, prof, { avoid }).pts, 0.3);
+  // (C66: its A-frames on the promenade's walk as the camera's own volumes, CAM-FIXTOP's way for the station's bridge)
+  const onProm = (x, z) => x > PROM.xo - 0.5 && x < PROM.xi + 0.5 && z > PROM.z0 - 2.5 && z < PROM.z1;
+  pipeVolumes(W, drawPipe(W, B, prof, { avoid, camFrames: onProm }).pts, 0.3);
   const valves = [];
   // depot: a bypass loop hanging under the main, valve in the middle
   {
@@ -2779,12 +2841,16 @@ function buildPipeline(W, root, r) {
     W.physics.add({ type: 'cyl', x: O.dx, z: O.dz, r: 0.4, top: vy + 0.6, seeThrough: true });
     cage(W, grp, B, O.x, O.z, O.half, 'E');
   }
-  // the dive into the meter portal at the edge of town
+  // the dive into the meter portal at the edge of town (C66: PIPE_METER, on the promenade's inland edge)
   {
-    const last = prof.n - 1, ex = prof.xs[last], ez = prof.zs[last], ey = prof.y[last];
-    const g = W.H(METER.x, METER.z);
-    pipeRun(B, [[ex, ey, ez], [METER.x, ey, METER.z], [METER.x, g + 1.62, METER.z]], 0.3);
-    W.setWaterFlow = buildMeter(W, grp, B, METER.x, METER.z, METER.ry, ey);
+    const last = prof.n - 1, ex = prof.xs[last], ez = prof.zs[last], ey = prof.y[last], M = PIPE_METER;
+    const g = W.H(M.x, M.z);
+    pipeRun(B, [[ex, ey, ez], [M.x, ey, M.z], [M.x, g + 1.62, M.z]], 0.3);
+    // (FULL-TEST 23.11: its slant to the cabinet as the camera's own volume too, as the rest of the tube: since C66 moved
+    //  the cabinet 0.8 m east the slant runs 0.4 m nearer the plateau's edge, and the Follow camera behind him there
+    //  stood 0.12 m from it — camclear)
+    pipeVolumes(W, [[ex, ey, ez], [M.x, ey, M.z]], 0.3);
+    W.setWaterFlow = buildMeter(W, grp, B, M.x, M.z, M.ry, ey);
   }
   // --- the branch to the reservoir on the Whispering Cliffs
   {
@@ -3133,12 +3199,36 @@ function buildFlatTown(W, root) {
   const { physics } = W;
   const grp = new THREE.Group(); grp.name = 'flat-town'; root.add(grp);
   const B = new Batch(grp);
-  const rub = tm('rubble', { color: '#cfcac8' }), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
+  const rub = wallMat(), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
+  // FLAT-TOWN-2: the walls that face east, away from the sun (the inland wall behind the water office, the lawns'),
+  // read near black in their shade beside the sunlit sea wall: the same rubble, lifted by its own texture as light
+  // (colour only: an emissive map, ~a third of the stones' own tone)
+  const rubS = wallMat(true);   // (WALL-LOOK: wallMat)
   for (const w of PROM_WALLS) {
     const wx = w.x1 - w.x0, wz = w.z1 - w.z0, top = PROM_H - 0.18, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2;
-    B.add(bbox(wx, top - w.foot, wz, 0.04, TILE.rubble), rub, cx, (top + w.foot) / 2, cz);
-    B.add(bbox(wx + 0.06, 0.22, wz + 0.06, 0.03, TILE.stone), cope, cx, PROM_H + 0.02 - 0.11, cz);
+    B.add(wallBox(wx, top - w.foot, wz, 0.04), w.id === 'inland' ? rubS : rub, cx, (top + w.foot) / 2, cz);
+    const kx0 = w.joinW ? w.x0 + 0.03 : w.x0 - 0.03, kx1 = w.x1 + 0.03;   // (joinW: flush with the sea coping's edge, no overlap)
+    B.add(bbox(kx1 - kx0, 0.22, wz + 0.06, 0.03, TILE.stone), cope, (kx0 + kx1) / 2, PROM_H + 0.02 - 0.11, cz);
     physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.03, hd: wz / 2 + 0.03, rot: 0, top: PROM_H + 0.02, seeThrough: true });
+  }
+  // FLAT-TOWN-2: the south block's lawns (LAWN): the kerbs and the bed's walls, rubble under the coping (on a kerb, 0.23 m,
+  // nearly all coping), each top a walkable collider; the coping overhangs 3 cm on the sides toward lower ground and the
+  // free ends only (two tops at one height never overlap); the two steps up from the north kerb into the bed, the flight's
+  // paler stone, each its own collider (the ground under them the bank, 3–5 cm below their treads)
+  {
+    const foot = TOWN_FLAT - 0.4, o = 0.03;
+    for (const w of LAWN.walls) {
+      const has = (c) => w.out.includes(c), x0 = w.x0 - (has('w') ? o : 0), x1 = w.x1 + (has('e') ? o : 0), z0 = w.z0 - (has('n') ? o : 0), z1 = w.z1 + (has('s') ? o : 0);
+      const wx = w.x1 - w.x0, wz = w.z1 - w.z0, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2, rt = w.top - 0.2;
+      B.add(wallBox(wx, rt - foot, wz, 0.03), rubS, cx, (rt + foot) / 2, cz);
+      B.add(bbox(x1 - x0, 0.22, z1 - z0, 0.03, TILE.stone), cope, (x0 + x1) / 2, w.top - 0.11, (z0 + z1) / 2);
+      physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.02, hd: wz / 2 + 0.02, rot: 0, top: w.top, seeThrough: true });
+    }
+    const S = LAWN.steps, sx = (S.x0 + S.x1) / 2, sw = S.x1 - S.x0;
+    for (const [z0, z1, top] of [[S.z0, S.zm, LAWN.ring + 0.21 + 0.015], [S.zm, S.z1, LAWN.bed + 0.02]]) {
+      B.add(bbox(sw, top - foot, z1 - z0, 0.02, TILE.stone), step, sx, (top + foot) / 2, (z0 + z1) / 2);
+      physics.add({ type: 'box', x: sx, z: (z0 + z1) / 2, hw: sw / 2, hd: (z1 - z0) / 2, rot: 0, top, seeThrough: true, stair: true });   // (a stair: the residents' planner walks up it, walknav.js lowBrick)
+    }
   }
   {
     const S = PROM_STAIR, L = S.xa - S.xb, tr = L / S.n, rise = (PROM_H - TOWN_FLAT) / S.n, base = 0.3, depth = S.zS - S.zN;
@@ -3276,7 +3366,11 @@ function buildOriginalProps(W, root, r) {
       P.add({ type: 'box', x, z, hw: len / 2, hd: 0.12, rot: ry, top: y + 1.0, seeThrough: true, noStand: true });
       n++;
     };
-    for (const [x, z, f, y0] of PROPS.rails) { const ry = f * Q, at = fit(x, z, ry, 6, 0.2, y0); if (at) put(rails, at[0], at[1], ry, 6); }
+    for (const [x, z, f, y0] of PROPS.rails) {
+      const ry = f * Q, at = fit(x, z, ry, 6, 0.2, y0); if (!at) continue;
+      put(rails, at[0], at[1], ry, 6);
+      if (at[0] > PROM.xo && at[0] < PROM.x1 && at[1] > PROM.z0 && at[1] < PROM.z1) (W.promRails ||= []).push({ x: at[0], z: at[1], ry, len: 6 });   // (C66: promEdge)
+    }
     for (const [x, z, f] of PROPS.pickets) { const ry = f * Q, at = fit(x, z, ry, 1.7, 0.15, -9); if (at) put(pickets, at[0], at[1], ry, 1.7); }
     instances(grp, rail, pm('#2a9a8a', 0.4, { metalness: 0.5 }), rails);
     instances(grp, picket, pm('#f2eadc', 0.8), pickets);
@@ -3294,6 +3388,36 @@ function buildOriginalProps(W, root, r) {
   mergeStatic(grp, { recolor: true, retex: true, cell: 24 });   // (all static. PERF-IGPU; retex PERF-2; HEADING-LOAD: the lanterns, bollards, rails and pickets too)
 }
 
+// C66 (ORDER 66.2, the desktop: Twinsen walked the sea wall's coping outside the promenade's rail, x −75.2, z −10 to +5):
+// the rail and the lanterns are the walk's edge. The rails stand 3.4 m apart where the lantern pairs are, and the coping
+// outside them (to the water's face, x −76.05) is 1.2 m wide: he stepped out through a gap. One see-through collider on
+// the rails' own line, along the rails and across each gap, from the bollards' run over the harbour (z 18.7) north past
+// the walk's end up the shelf's face (PROM_EDGE.zN: the slope west of the walk's north end runs down to the coping, a
+// step under it there, and over the cliff into the sea), and at the south end a piece across the coping (past the
+// bollards' west end the south wall's top joins it). No piece across the coping at the north end: the sea wall's face
+// stands over that slope already, and a piece there turned a slide down the slope into the sea (slidetraps). 1.9 m over
+// the walk: a jump (1.19 m, actors.js JUMP) cleared the rails' own colliders (1 m) and landed him on the coping all the
+// same; up the shelf's face, over its ground there (8.5 m). The ball passes it (noBall); the camera does (seeThrough).
+// Added after the street furniture is fitted, so no piece's fit (or random draw) moves. Nothing drawn; the rails keep
+// their own colliders.
+function promEdge(W) {
+  const R = (W.promRails || []).slice().sort((a, b) => a.z - b.z);
+  if (!R.length) return;
+  const P = W.physics, E = PROM_EDGE;
+  const box = (ax, az, bx, bz) => {
+    const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz), top = Math.min(az, bz) < E.z0 - 0.01 ? PROM_H + 4.4 : PROM_H + 1.9;
+    if (L < 0.05) return;
+    P.add({ type: 'box', x: (ax + bx) / 2, z: (az + bz) / 2, hw: L / 2 + 0.12, hd: 0.12, rot: Math.atan2(-dz, dx), top, seeThrough: true, noStand: true, noBall: true, promEdge: true });
+  };
+  // the line: each rail's two ends along its length (ry: its length runs across its facing, as fit() lays it), north
+  // to south, from up the shelf's face to the bollards
+  const line = [];
+  for (const r of R) { const ax = Math.cos(r.ry) * r.len / 2, az = -Math.sin(r.ry) * r.len / 2, s = az < 0 ? -1 : 1; line.push([r.x - ax * s, r.z - az * s], [r.x + ax * s, r.z + az * s]); }
+  line.unshift([line[0][0], E.zN], [line[0][0], E.z0]); line.push([line[line.length - 1][0], E.z1]);   // (up the shelf's face a box of its own)
+  for (let i = 0; i < line.length - 1; i++) box(line[i][0], line[i][1], line[i + 1][0], line[i + 1][1]);
+  box(PROM.xo - 0.15, E.z1, line[line.length - 1][0], E.z1);
+}
+
 // ================================================================== entry
 export function buildIsland(scene, W) {
   const r = rng(4242);
@@ -3309,6 +3433,7 @@ export function buildIsland(scene, W) {
   buildOldPlaces(W, scene);
   buildFlatTown(W, scene);
   buildOriginalProps(W, scene, r);
+  promEdge(W);   // (C66: after the street furniture's fits)
   console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms, depot+pipe ${(performance.now() - T2) | 0} ms`);
   W.island = { keepClear };
 }

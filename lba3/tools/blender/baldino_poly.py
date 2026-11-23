@@ -232,7 +232,16 @@ for s_, sx in (('L', 1), ('R', -1)):
         w = {'hips': 1 - top, 'hip' + s_: top * (1 - knee), 'knee' + s_: top * knee * (1 - foot), 'foot' + s_: top * knee * foot}
         return {k: v for k, v in w.items() if v > 1e-4}
     leg = b.P('leg' + s_, COL['brown'], w_leg, 40)
-    loft(leg, [ring(y * BH, hw * BH, zf * BH, zb * BH, 12, 0.35, cx=sx * LEG_X * BH) for y, hw, zf, zb in reversed(LEG)], cap_bottom=True)
+    # (JOINTS-BLENDER 8, order 66: "no tube look at the knee in motion". The stump had one ring at the knee inside a
+    # weight blend 10 cm tall, so a bent knee folded at that ring as two square posts on a hinge. Now five rings through the
+    # blend (kn ± 0.025 H), the front a little fuller over the knee cap so the outside of the bend keeps its corner round
+    # while the back folds in; the square section and the stump's size are the original's. JOINTS8_OLD=1: as before.)
+    LEG_ = LEG
+    if not os.environ.get('JOINTS8_OLD'):
+        k_ = kn[1] / BH
+        LEG_ = [LEG[0], LEG[1], (k_ + 0.026, 0.06, 0.062, -0.06), (k_ + 0.013, 0.057, 0.06, -0.056), (k_, 0.056, 0.06, -0.054),
+                (k_ - 0.013, 0.055, 0.057, -0.054), (k_ - 0.026, 0.054, 0.054, -0.054), LEG[3]]
+    loft(leg, [ring(y * BH, hw * BH, zf * BH, zb * BH, 12, 0.35, cx=sx * LEG_X * BH) for y, hw, zf, zb in reversed(LEG_)], cap_bottom=True)
 
 JOINTS = not os.environ.get('JOINTS_OLD')
 # (u: 0 the shoulder, 1 the elbow; radius × the sleeve's own taper there: a dome up into the shoulder, the elbow rounded)

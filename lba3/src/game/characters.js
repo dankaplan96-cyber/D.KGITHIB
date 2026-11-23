@@ -1637,4 +1637,385 @@ export async function preloadCharacters() {
   await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
+  if (LOOK.size) for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
 }
+// TWINSEN-ZOE-LOOK (the user, 22.11: Twinsen and Zoé "more like the original … keep the current one and we'll compare";
+// then the focus: Twinsen from behind under the Follow camera, "the hair is a bit too pixelated, but I'm not sure"; then
+// "the problem is the hair"; then "maybe not 3 balls: try to turn the 3 balls more into hair";
+// docs/lba-maturity/TWINSEN-ZOE-LOOK.md). Options in small steps, each its own switch, for the user to take or leave
+// one by one. The shipped look is the default: nothing changes without a switch. ?look=hairtone,haircap (a comma list)
+// turns those on; ?look=v2 is the first candidate (hairtone); ?look=v2,-hairtone all of it but those. The same text in
+// the settings' `charLook` (no menu entry; read once at start) does the same where a URL cannot be given. A step changes
+// only the model it names, as loaded; the skeleton, the other weights, the eyes, the mouth and the brows are untouched.
+//   hairtone  Twinsen's three hair balls in three flat tones, darkest at the crown and lighter toward the tip (LBA2's
+//             order, palette 17 → 19), each lighter than now: from behind at play distance the hair reads as a brown bun
+//             of three balls instead of one near-black keyhole, and its edge on the skull has less contrast to
+//             stair-step. Still one flat shade a ball from every side (the normals still point down); the shapes as approved.
+//   haircap   HAIR-EDGE (P106): the scalp right round the hair (all of it within 2 cm, fading out by 6.5 cm; behind the
+//             crown only: the forehead and the face are not touched) painted in the hair's own flat shade: the hair meets
+//             the skin in a soft painted hairline on the skull, not only in the balls' hard outline over the pale scalp,
+//             the edge that stair-stepped and flickered. Vertex colours and normals only (the hair's flat shade is its
+//             normal pointing down); no triangle added.
+//   hairline  HAIR-EDGE: a softer step than the cap: the skin round the hair (fading out by 11 cm, as far forward as the
+//             top of the crown) shaded toward a darker skin, like the hair's shadow on the scalp, so the edge goes mid skin
+//             → hair instead of near-white → hair. Colours and normals only.
+//   hairform  HAIR-EDGE (the user, 22.11: "maybe not 3 balls … turn the 3 balls more into hair"): the three balls made
+//             one lock of hair in their place and outline: rooted on the crown, it sweeps back and down through the
+//             balls' centres and tapers to a point (no waists, no beads), a few broad strands along it that twist a
+//             little toward the tip, brown tones from the root to the tip with a soft painted sheen; still flat shaded
+//             (normals down, so the same from every heading under the fixed light). Its weights pass from the head to
+//             tail0–tail2 along it, as the balls' did, so the follow-through sways it. With the cap's painted hairline.
+//             720 triangles where the balls had 672.
+//   hairspline  HAIR-SPLINE (the user, 22.11: "make the hair with splines"): the lock built from splines: a smooth
+//             Catmull-Rom spine rising from a root under the scalp in front of the crown ball, back and down through the
+//             balls' centres to a soft point with a slight outward flick (the crown ball's dome from the front, as
+//             before); a section swept along it whose width follows a spline profile (wider at the root, tapering to
+//             the tip), round at the root and flattening toward the tip, with five soft strand ridges that twist a
+//             little; smooth normals, levelled for LBA's ramp (no grey top); browns from the root to the tip with a
+//             painted sheen; the cap's painted hairline round it; and the band (below). 1,536 triangles for the lock.
+//   hairsmooth  the same lock without the strand ridges.
+//   hairband  HAIR-BAND (the user, 22.11: "the hair tie is missing at the edge of the scalp, where it joins the hair"): a
+//             slim brass cuff round the line where the lock comes out of the scalp, on the head bone. 240 triangles.
+//             On with hairspline and hairsmooth (`hairspline,-hairband` takes it off); it needs a lock rooted under the
+//             scalp, so it does nothing for the balls or hairform (whose root sits on the skull).
+export const LOOK_STEPS = { hairspline: ['twinsen'], hairsmooth: ['twinsen'], hairform: ['twinsen'], hairband: ['twinsen'], hairtone: ['twinsen'], haircap: ['twinsen'], hairline: ['twinsen'] };
+const LOOK_V2 = ['hairtone'];   // (?look=v2: the first candidate as proposed; the hair-edge options are named one by one)
+export const LOOK = (() => {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('look')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.charLook || ''; } catch { /* no storage */ }
+  // (the user, 23.11: the spline lock with its tie is Twinsen's hair; ?look=old (or the setting) shows the three balls)
+  if (!String(s).trim()) s = 'hairspline';
+  const on = new Set();
+  for (const w of String(s).toLowerCase().split(',').map((x) => x.trim()).filter(Boolean)) {
+    if (w === 'old') on.clear();
+    else if (w === 'v2') LOOK_V2.forEach((k) => on.add(k));
+    else if (w[0] === '-') on.delete(w.slice(1));
+    else if (LOOK_STEPS[w]) { on.add(w); if (w === 'hairspline' || w === 'hairsmooth') on.add('hairband'); }   // (the band comes with the spline lock: -hairband after it takes it off)
+  }
+  return on;
+})();
+function lookModel(name, P) {
+  const steps = Object.keys(LOOK_STEPS).filter((s) => LOOK.has(s) && LOOK_STEPS[s].includes(name));
+  if (!steps.length) return P;
+  const Q = { ...P, pos: P.pos.slice(), nrm: P.nrm.slice(), col: P.col.slice(), si: P.si.slice(), sw: P.sw.slice() };
+  const ctx = { balls: hairBalls(P) };
+  for (const s of steps) LOOK_MODEL[s](Q, ctx);
+  if (ctx.cap || ctx.line) paintScalp(Q, ctx);
+  return Q;
+}
+// the vertices of a colour [r, g, b] that a bone carries at least `min` of
+function lookVerts(P, rgb, bone, min = 0.99) {
+  const bi = P.bones.indexOf(bone), out = [];
+  for (let v = 0, n = P.pos.length / 3; v < n; v++) {
+    if (P.col[v * 3] !== rgb[0] || P.col[v * 3 + 1] !== rgb[1] || P.col[v * 3 + 2] !== rgb[2]) continue;
+    let w = 0;
+    for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === bi) w += P.sw[v * 4 + k];
+    if (w >= min) out.push(v);
+  }
+  return out;
+}
+// (baked colour, the ball's bone, its least weight there, new colour): the crown ball on the head, the tuft's two on
+// tail0 (0.74, with tail1) and tail2 (tools/blender/twinsen_poly.py w_hair; COL hair #553916, hairTuft #6a4722)
+const HAIRTONE = [[[0x55, 0x39, 0x16], 'head', 0.99, [0x7a, 0x52, 0x26]], [[0x6a, 0x47, 0x22], 'tail0', 0.7, [0x8a, 0x5e, 0x2e]], [[0x6a, 0x47, 0x22], 'tail2', 0.99, [0x98, 0x6a, 0x36]]];
+const SKIN_RGB = [0xe2, 0xbc, 0x90];
+const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const mixc = (a, b, t) => a.map((v, k) => Math.round(v + (b[k] - v) * t));
+// the three balls as built, from their own vertices: centre, radius, vertex list (crown, tuft 1, tuft 2)
+function hairBalls(P) {
+  return HAIRTONE.map(([c, b, m]) => {
+    const vs = lookVerts(P, c, b, m), lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+    for (const v of vs) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], P.pos[v * 3 + k]); hi[k] = Math.max(hi[k], P.pos[v * 3 + k]); }
+    return { c: lo.map((l, k) => (l + hi[k]) / 2), r: (hi[1] - lo[1]) / 2, vs };
+  });
+}
+// how far p lies outside the hair (the lock's stations once hairform has built it, else the balls); and the hair's own
+// flat colour nearest p
+const hairDist = (ctx, p) => {
+  let d = 1e9, col = null;
+  for (const s of ctx.sdf || ctx.balls) { const e = Math.hypot(p[0] - s.c[0], p[1] - s.c[1], p[2] - s.c[2]) - s.r; if (e < d) { d = e; col = s.col; } }
+  return [d, col];
+};
+// a normal turned toward straight down by t (0 … 1) along the great circle (the hair's normal is down: its flat shade)
+function towardDown(n, t) {
+  const c = Math.max(-1, Math.min(1, -n[1])), th = Math.acos(c), s = Math.sin(th);
+  if (s < 0.05) return t > 0.5 || c > 0 ? [0, -1, 0] : n;
+  const a = Math.sin((1 - t) * th) / s, b = Math.sin(t * th) / s;
+  const r = [n[0] * a, n[1] * a - b, n[2] * a], l = Math.hypot(...r);
+  return r.map((x) => x / l);
+}
+// the scalp round the hair (skin on the head bone): haircap paints the hair's own shade on it near the hair, hairline a
+// warm shadow further out; both only behind the crown (the front of the skull, the forehead and the face keep theirs)
+function paintScalp(P, ctx) {
+  const hb = P.bones.indexOf('head'), c0 = ctx.balls[0].c, hair = ctx.cap ? ctx.sdf || ctx.balls.map((b, i) => ({ ...b, col: P.col.slice(b.vs[0] * 3, b.vs[0] * 3 + 3) })) : null;
+  for (let v = 0, n = P.pos.length / 3; v < n; v++) {
+    if (P.col[v * 3] !== SKIN_RGB[0] || P.col[v * 3 + 1] !== SKIN_RGB[1] || P.col[v * 3 + 2] !== SKIN_RGB[2]) continue;
+    let w = 0;
+    for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k];
+    if (w < 0.99) continue;
+    const p = [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]];
+    const back = 1 - sstep(c0[2] + ctx.front[0], c0[2] + ctx.front[1], p[2]), backL = ctx.line ? 1 - sstep(c0[2] + ctx.line.front[0], c0[2] + ctx.line.front[1], p[2]) : 0;
+    if (back <= 0 && backL <= 0) continue;
+    const [d, hc] = hairDist(hair ? { sdf: hair } : ctx, p);
+    const wc = ctx.cap ? (1 - sstep(ctx.cap[0], ctx.cap[1], d)) * back : 0;
+    const wl = ctx.line ? (1 - sstep(0, ctx.line.w, d)) * backL : 0;
+    if (wc <= 0 && wl <= 0) continue;
+    let col = mixc(SKIN_RGB, ctx.line?.col || SKIN_RGB, wl * (ctx.line?.k || 0));
+    if (wc > 0) col = mixc(col, hc, wc);
+    const n0 = [P.nrm[v * 3], P.nrm[v * 3 + 1], P.nrm[v * 3 + 2]], nv = ctx.capLevel && new THREE.Vector3(...n0);
+    const nrm = nv ? nv.clone().lerp(hsLevel(nv, nv), wc).normalize().toArray() : towardDown(n0, Math.max(wc, wl * (ctx.line?.tilt || 0)));
+    P.col.splice(v * 3, 3, ...col);
+    P.nrm.splice(v * 3, 3, ...nrm);
+  }
+}
+// hairform's lock: stations along the balls' centre line (y, z; x 0), each a ring of HF_M points
+const HF_M = 24, HF_RIDGES = 6, HF_TONE = [[-1, [0x6c, 0x46, 0x20]], [0.3, [0x7a, 0x52, 0x26]], [1, [0x8a, 0x5e, 0x2e]], [2.4, [0x9c, 0x6e, 0x3a]]];
+const HF_SHEEN = [0xc4, 0x92, 0x58];
+const hfTone = (u) => {
+  for (let i = 1; i < HF_TONE.length; i++) if (u <= HF_TONE[i][0]) return mixc(HF_TONE[i - 1][1], HF_TONE[i][1], Math.max(0, (u - HF_TONE[i - 1][0]) / (HF_TONE[i][0] - HF_TONE[i - 1][0])));
+  return HF_TONE[HF_TONE.length - 1][1];
+};
+// the balls' weights along the lock (tools/blender/twinsen_poly.py w_hair): u 0 the crown ball's centre, 1 tuft 1, 2 tuft 2
+const hfWeights = (u) => { const a = sstep(0.2, 0.8, u), b = sstep(0.8, 1.4, u), c = sstep(1.4, 2.0, u); return [['head', 1 - a], ['tail0', a - b], ['tail1', b - c], ['tail2', c]].filter((e) => e[1] > 1e-4); };
+function hairLock(ctx) {
+  const C = ctx.balls.map((b) => [b.c[1], b.c[2]]), R = ctx.balls.map((b) => b.r);
+  const unit = (a) => { const l = Math.hypot(a[0], a[1]); return [a[0] / l, a[1] / l]; };
+  const d0 = unit([C[1][0] - C[0][0], C[1][1] - C[0][1]]);
+  const st = [];   // [centre (y, z), tangent, radius, u]
+  // the root: the front of the crown, as the crown ball's (a dome over the top of the skull, as seen from the front)
+  for (let k = 1; k <= 4; k++) { const ph = (Math.PI / 2) * k / 4; st.push([[C[0][0] - d0[0] * R[0] * Math.cos(ph), C[0][1] - d0[1] * R[0] * Math.cos(ph)], d0, R[0] * Math.sin(ph), -Math.cos(ph)]); }
+  // through the centres: a Catmull-Rom curve; the radius the hull of the balls there (no waists), tapering
+  const Pp = [[2 * C[0][0] - C[1][0], 2 * C[0][1] - C[1][1]], ...C, [2 * C[2][0] - C[1][0], 2 * C[2][1] - C[1][1]]];
+  const cr = (i, t) => [0, 1].map((k) => { const [a, b, c, d] = [Pp[i][k], Pp[i + 1][k], Pp[i + 2][k], Pp[i + 3][k]]; return 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t ** 3); });
+  for (let seg = 0; seg < 2; seg++) for (let k = 1; k <= 4; k++) { const t = k / 4; st.push([cr(seg, t), null, R[seg] + (R[seg + 1] - R[seg]) * t, seg + t]); }
+  // the tip: on along the end of the curve, curling a little under, to a point
+  const e = unit([C[2][0] - C[1][0], C[2][1] - C[1][1]]);
+  for (let k = 1; k <= 3; k++) { const s = k / 4, curl = -0.25 * s * s; const dir = unit([e[0] + curl * -e[1] * -1, e[1] + curl * e[0] * -1]); st.push([[C[2][0] + dir[0] * R[2] * 1.9 * s, C[2][1] + dir[1] * R[2] * 1.3 * s], null, R[2] * Math.pow(1 - s, 0.55), 2 + 0.6 * s]); }
+  const tipC = (() => { const dir = unit([e[0] - 0.25 * e[1], e[1] + 0.25 * e[0]]); return [C[2][0] + dir[0] * R[2] * 1.3, C[2][1] + dir[1] * R[2] * 1.3]; })();
+  // ring planes turned gradually (smoothed tangents, as hair_sweep: square to a sharp bend they would cross)
+  let tg = st.map((s, j) => s[1] || unit([(st[j + 1] ? st[j + 1][0][0] : tipC[0]) - st[j - 1][0][0], (st[j + 1] ? st[j + 1][0][1] : tipC[1]) - st[j - 1][0][1]]));
+  for (let i = 0; i < 3; i++) tg = tg.map((t, j) => (j < 4 ? t : unit([tg[j - 1][0] + 2 * t[0] + (tg[j + 1] || t)[0], tg[j - 1][1] + 2 * t[1] + (tg[j + 1] || t)[1]])));
+  const verts = [], ring = [];   // verts: [pos, col, u]
+  st.forEach(([c, , r, u], j) => {
+    const [ty, tz] = tg[j], ny = -tz, nz = ty;
+    const g = (0.06 + 0.04 * sstep(1.6, 2.6, u)) * sstep(-0.6, 0.4, u), twist = 0.45 * Math.max(0, u);
+    const row = [];
+    for (let i = 0; i < HF_M; i++) {
+      const a = (2 * Math.PI * i) / HF_M, rid = Math.cos(HF_RIDGES * a + twist), rr = r * (1 + g * rid);
+      const p = [rr * Math.sin(a), c[0] + ny * rr * 0.94 * Math.cos(a), c[1] + nz * rr * 0.94 * Math.cos(a)];
+      // strands: crests lighter, grooves darker; a soft sheen where the lock faces up and back
+      const o = [Math.sin(a), ny * Math.cos(a), nz * Math.cos(a)], sh = sstep(0.4, 0.95, o[1] * 0.8 - o[2] * 0.6);
+      let col = hfTone(u).map((x) => x * (1 + 0.16 * rid * sstep(-0.6, 0.4, u)));
+      col = mixc(col, HF_SHEEN, 0.26 * sh * (0.75 + 0.25 * rid));
+      row.push(verts.push([p, col.map((x) => Math.max(0, Math.min(255, Math.round(x)))), u]) - 1);
+    }
+    ring.push(row);
+  });
+  const front = [[0, C[0][0] - d0[0] * R[0], C[0][1] - d0[1] * R[0]], hfTone(-1), -1];
+  const tip = [[0, tipC[0], tipC[1]], hfTone(2.6), 2.6];
+  const fi = verts.push(front) - 1, ti = verts.push(tip) - 1;
+  const tris = [];
+  for (let j = 0; j + 1 < ring.length; j++) for (let i = 0; i < HF_M; i++) { const a = ring[j][i], b = ring[j][(i + 1) % HF_M], c = ring[j + 1][(i + 1) % HF_M], d = ring[j + 1][i]; tris.push([a, b, c], [a, c, d]); }
+  for (let i = 0; i < HF_M; i++) { tris.push([fi, ring[0][(i + 1) % HF_M], ring[0][i]]); const L = ring[ring.length - 1]; tris.push([ti, L[i], L[(i + 1) % HF_M]]); }
+  ctx.sdf = st.map(([c, , r, u]) => ({ c: [0, c[0], c[1]], r, col: hfTone(u) }));
+  return { verts, tris };
+}
+// HAIR-SPLINE (hairspline, hairsmooth, hairband): a lock swept along a spline in the balls' place. A 1-D spline through
+// knots [x, v, slope?] (cubic Hermite with Catmull-Rom slopes; an end's slope 0 unless given): the lock's profile
+function hsProfile(K, x) {
+  if (x <= K[0][0]) return K[0][1];
+  let i = 0;
+  while (i < K.length - 2 && x > K[i + 1][0]) i++;
+  const sl = (j) => K[j][2] ?? (j <= 0 || j >= K.length - 1 ? 0 : (K[j + 1][1] - K[j - 1][1]) / (K[j + 1][0] - K[j - 1][0]));
+  const h = K[i + 1][0] - K[i][0], t = Math.min(1, (x - K[i][0]) / h), t2 = t * t, t3 = t2 * t;
+  return (2 * t3 - 3 * t2 + 1) * K[i][1] + (t3 - 2 * t2 + t) * sl(i) * h + (-2 * t3 + 3 * t2) * K[i + 1][1] + (t3 - t2) * sl(i + 1) * h;
+}
+// the main lock: HS_M points round; HS_ROOT rings from its root (under the scalp, in front of the crown ball) to the crown
+// ball's centre, HS_NB along the body after it. q along it: -1 the root … 0 the crown ball's centre … 1 the tip
+const HS_M = 32, HS_ROOT = 5, HS_NB = 18, HS_RIDGES = 5, HS_FLAT = 0.35, HS_UP = 0.15;
+const HS_ROOT_AT = [-0.055, 0.11], HS_ROOT_W = 0.6, HS_WIN = 90;   // the root: (y, z) from the crown ball's centre; its width × R0
+const HS_TONE = [[-1, [0x6a, 0x44, 0x1e]], [0.3, [0x78, 0x50, 0x25]], [1.2, [0x88, 0x5c, 0x2d]], [2.7, [0x9c, 0x6e, 0x3a]]];
+const HS_SHEEN = [0xc8, 0x96, 0x5a];
+const hsTone = (u) => {
+  for (let i = 1; i < HS_TONE.length; i++) if (u <= HS_TONE[i][0]) return mixc(HS_TONE[i - 1][1], HS_TONE[i][1], Math.max(0, (u - HS_TONE[i - 1][0]) / (HS_TONE[i][0] - HS_TONE[i - 1][0])));
+  return HS_TONE[HS_TONE.length - 1][1];
+};
+// the spine (x 0): from the root under the scalp, out and back through the balls' centres to a soft point with a slight
+// outward flick; sampled densely by arc length: point and tangent at s, and the balls' weight coordinate u at s
+// (hfWeights: 0 the crown ball's centre, 1 tuft 1, 2 tuft 2)
+function hsSpine(ctx) {
+  const V = (y, z) => new THREE.Vector3(0, y, z);
+  const C = ctx.balls.map((b) => V(b.c[1], b.c[2])), R = ctx.balls.map((b) => b.r);
+  const e = C[2].clone().sub(C[1]).normalize(), eo = V(-e.z, e.y);   // (eo: square to e, up and back)
+  const A = C[0].clone().add(V(...HS_ROOT_AT));
+  const E1 = C[2].clone().addScaledVector(e, R[2] * 1.25);
+  const T = E1.clone().addScaledVector(e.clone().multiplyScalar(0.75).addScaledVector(eo, 0.6).normalize(), R[2] * 0.95);   // the flick
+  const curve = new THREE.CatmullRomCurve3([A, C[0], C[1], C[2], E1, T], false, 'centripetal');
+  const NS = 500, pts = [], L = [0];   // (points 1–3, the centres, at samples 100, 200, 300)
+  for (let i = 0; i <= NS; i++) { pts.push(curve.getPoint(i / NS)); if (i) L.push(L[i - 1] + pts[i].distanceTo(pts[i - 1])); }
+  const sB = L[100], sC = L[200], sD = L[300], sE = L[NS];
+  const at = (s) => {
+    let i = 0;
+    while (i < NS - 1 && L[i + 1] < s) i++;
+    const f = Math.min(1, Math.max(0, (s - L[i]) / (L[i + 1] - L[i] || 1)));
+    // (the section's plane square to the tangent taken over ±HS_WIN of the curve: square to the curve itself, the rings
+    //  would cross on the inside of the bend over the crown, where it turns tighter than the lock is thick)
+    const ia = Math.max(0, i - HS_WIN), ib = Math.min(NS, i + 1 + HS_WIN), tan = pts[ib].clone().sub(pts[ia]).normalize();
+    return { p: pts[i].clone().lerp(pts[i + 1], f), t: tan, n: V(-tan.z, tan.y) };   // n: the section's up-and-back axis
+  };
+  const u = (s) => (s < sB ? (s - sB) / R[0] : s < sC ? (s - sB) / (sC - sB) : s < sD ? 1 + (s - sC) / (sD - sC) : 2 + (s - sD) / (sD - sC));
+  const sOf = (q) => (q < 0 ? sB * (1 + q) : sB + q * (sE - sB));
+  return { at, u, sOf, qC: (sC - sB) / (sE - sB), qD: (sD - sB) / (sE - sB), R0: R[0], A, T };
+}
+// a normal levelled for LBA's ramp: it turns a dark colour grey where a surface faces the fixed light (mostly from above:
+// N·L past 0.6 mixes in white), so the normal keeps its sideways part and loses most of its upward one (`up`); one
+// turned up leans toward its own outward side o (or back). Lit from a side the hair is shaded round, from 0.27× its
+// colour (the flat shade's, the darkest it gets) to its colour, never grey
+function hsLevel(n, o, up = HS_UP) {
+  n = n.clone().normalize();
+  const h = Math.hypot(n.x, n.z);
+  if (h < HS_FLAT) {
+    const ol = Math.hypot(o.x, o.z), [ox, oz] = ol > 0.2 ? [o.x / ol, o.z / ol] : [0, -1];
+    n.x += ox * (HS_FLAT - h) * 2; n.z += oz * (HS_FLAT - h) * 2;
+  }
+  if (n.y > 0) n.y *= up;
+  return n.normalize();
+}
+// smooth normals of an indexed mesh (area-weighted), levelled; each triangle first wound to face outward (the material
+// is double-sided: a triangle seen from its back would be shaded with its normal turned over)
+function hsNormals(V, tris) {
+  const N = V.map(() => new THREE.Vector3()), a = new THREE.Vector3(), b = new THREE.Vector3();
+  for (const t of tris) {
+    const [i, j, k] = t;
+    a.subVectors(V[j].p, V[i].p); b.subVectors(V[k].p, V[i].p); a.cross(b);
+    if (a.dot(V[i].out) + a.dot(V[j].out) + a.dot(V[k].out) < 0) { a.negate(); t[1] = k; t[2] = j; }
+    N[i].add(a); N[j].add(a); N[k].add(a);
+  }
+  return N.map((n, i) => hsLevel(n, V[i].out));
+}
+// one swept tube: rings[] of points round a centre, closed by a point at each end given (null: left open, hidden)
+function hsTube(V, tris, rings, poles) {
+  const M = rings[0].length, base = V.length;
+  rings.forEach((r) => V.push(...r));
+  const id = (j, i) => base + j * M + (i % M);
+  for (let j = 0; j + 1 < rings.length; j++) for (let i = 0; i < M; i++) tris.push([id(j, i), id(j + 1, i), id(j + 1, i + 1)], [id(j, i), id(j + 1, i + 1), id(j, i + 1)]);
+  if (poles[0]) { const f = V.push(poles[0]) - 1; for (let i = 0; i < M; i++) tris.push([f, id(0, i + 1), id(0, i)]); }
+  if (poles[1]) { const t = V.push(poles[1]) - 1, j = rings.length - 1; for (let i = 0; i < M; i++) tris.push([t, id(j, i), id(j, i + 1)]); }
+}
+function splineLock(ctx, strands) {
+  const S = hsSpine(ctx), X = new THREE.Vector3(1, 0, 0), V = [], tris = [];
+  const W = [[-1, HS_ROOT_W, 0.5], [0, 1, 0], [S.qC, 0.8], [S.qD, 0.56], [0.82, 0.32], [1, 0, -1.1]];   // the width (× R0)
+  const width = (q) => S.R0 * hsProfile(W, q), flat = (q) => 0.95 - 0.33 * sstep(0, 0.7, q), G = strands ? 0.09 : 0;
+  const ring = (q) => {
+    const s = S.sOf(q), w = width(q), k = flat(q), { p: c, n } = S.at(s), u = S.u(s), row = [];
+    const g = G * sstep(0.02, 0.3, q) * (1 + 0.4 * q) * (1 - 0.5 * sstep(0.8, 1, q)), tw = 0.9 * Math.max(0, q);
+    const band = Math.exp(-(((q - 0.3) / 0.22) ** 2));
+    for (let i = 0; i < HS_M; i++) {
+      const a = (2 * Math.PI * i) / HS_M, rid = Math.cos(HS_RIDGES * a + tw), rr = 1 + g * rid;
+      const out = X.clone().multiplyScalar(Math.sin(a)).addScaledVector(n, Math.cos(a) * k);
+      const p = c.clone().addScaledVector(X, w * rr * Math.sin(a)).addScaledVector(n, w * k * rr * Math.cos(a));
+      // the strands: crests a little lighter, grooves darker; the painted sheen up and back, a band along the lock
+      let col = hsTone(u).map((x) => x * (1 + (G ? 2.2 * g * rid : 0)));
+      col = mixc(col, HS_SHEEN, 0.24 * sstep(0.3, 0.95, Math.cos(a)) * band * (0.75 + 0.25 * rid));
+      row.push({ p, out, u, q, col: col.map((x) => Math.max(0, Math.min(255, Math.round(x)))) });
+    }
+    return row;
+  };
+  const rings = [];
+  for (let j = 0; j < HS_ROOT; j++) rings.push(ring(-1 + j / HS_ROOT));
+  for (let j = 0; j <= HS_NB; j++) rings.push(ring(1 - (1 - j / (HS_NB + 1)) ** 1.2));
+  const t0 = S.at(0).t, t1 = S.at(S.sOf(1)).t, uE = S.u(S.sOf(1));
+  hsTube(V, tris, rings, [{ p: S.A.clone().addScaledVector(t0, -0.01), out: t0.clone().negate(), u: -2, q: -1, col: hsTone(-2) }, { p: S.T.clone(), out: t1, u: uE, q: 1, col: hsTone(uE) }]);
+  const cen = rings.map((r) => r.reduce((a, v) => a.add(v.p), new THREE.Vector3()).multiplyScalar(1 / HS_M));
+  ctx.sdf = rings.map((r, j) => ({ c: cen[j].toArray(), r: r[0].p.distanceTo(cen[j]), col: hsTone(r[0].u) }));
+  ctx.lockRings = { rings: rings.map((r) => r.map((v) => v.p)), cen };
+  const N = hsNormals(V, tris);
+  return { verts: V.map((v, i) => [[v.p.x, v.p.y, v.p.z], v.col, v.u, [N[i].x, N[i].y, N[i].z]]), tris };
+}
+// HAIR-BAND (the user, 22.11: "the hair tie is missing at the edge of the scalp, where it joins the hair"; the box art's
+// gold ring round the root): a slim brass cuff swept round the line where the lock comes out of the scalp, found on the
+// model itself (the lock's surface against the skull's triangles), so it sits on the scalp and round the hair with no
+// gap. On the head bone (it does not sway). HB_N round it × HB_S round its section.
+const HB_N = 20, HB_S = 6, HB_RO = 0.0075, HB_RL = 0.012, HB_OFF = 0.0035, HB_LIFT = 0.0095;
+const HB_COL = [0xb8, 0x8a, 0x34], HB_HI = [0xe8, 0xc4, 0x6c], HB_LO = [0x7a, 0x58, 0x1c];
+function hairBand(P, ctx) {
+  const L = ctx.lockRings;
+  if (!L) return;
+  // the skull: the head's skin triangles near the crown (centroid, outward normal); a point's signed distance is taken
+  // from the plane of the nearest
+  const hb = P.bones.indexOf('head'), sk = [], v3 = (i) => new THREE.Vector3(P.pos[i * 3], P.pos[i * 3 + 1], P.pos[i * 3 + 2]);
+  const skin = (v) => { if (P.col[v * 3] !== SKIN_RGB[0] || P.col[v * 3 + 1] !== SKIN_RGB[1] || P.col[v * 3 + 2] !== SKIN_RGB[2]) return false; let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k]; return w >= 0.99; };
+  for (let t = 0, n = P.pos.length / 9; t < n; t++) {
+    const i = t * 3;
+    if (!skin(i) || !skin(i + 1) || !skin(i + 2)) continue;
+    const a = v3(i), c = a.clone().add(v3(i + 1)).add(v3(i + 2)).multiplyScalar(1 / 3);
+    if (c.y < 1.8 || c.distanceTo(L.cen[0]) > 0.25) continue;
+    const nf = v3(i + 1).sub(a).cross(v3(i + 2).sub(a)).normalize(), nv = new THREE.Vector3(P.nrm[i * 3], P.nrm[i * 3 + 1], P.nrm[i * 3 + 2]);
+    sk.push([c, nf.dot(nv) < 0 ? nf.negate() : nf]);
+  }
+  const sdf = (p) => { let best = 1e9, d = 1; for (const [c, nf] of sk) { const e = p.distanceToSquared(c); if (e < best) { best = e; d = p.clone().sub(c).dot(nf); } } return d; };
+  // where each line along the lock's surface comes out of the skull (every other one round it)
+  const R = L.rings, M = R[0].length, E = [], O = [], T = [];
+  for (let i = 0; i < M; i += 2) {
+    if (sdf(R[0][i]) >= 0) return;   // (the lock's root is not under the scalp all round: no band)
+    let j = 1;
+    while (j < R.length && sdf(R[j][i]) < 0) j++;
+    if (j >= R.length) return;
+    const a = R[j - 1][i], b = R[j][i], da = sdf(a), db = sdf(b), f = da / (da - db);
+    const e = a.clone().lerp(b, f), tl = b.clone().sub(a).normalize(), c = L.cen[j - 1].clone().lerp(L.cen[j], f);
+    const o = e.clone().sub(c); o.addScaledVector(tl, -o.dot(tl)).normalize();
+    E.push(e); O.push(o); T.push(tl);
+  }
+  for (let k = 0; k < 2; k++) { const e0 = E.map((p) => p.clone()); E.forEach((p, i) => p.copy(e0[i]).multiplyScalar(0.5).addScaledVector(e0[(i + 1) % E.length], 0.25).addScaledVector(e0[(i + E.length - 1) % E.length], 0.25)); }
+  const cE = new THREE.CatmullRomCurve3(E, true), cO = new THREE.CatmullRomCurve3(E.map((p, i) => p.clone().add(O[i])), true), cT = new THREE.CatmullRomCurve3(E.map((p, i) => p.clone().add(T[i])), true);
+  const grid = [];
+  for (let k = 0; k < HB_N; k++) {
+    const e = cE.getPoint(k / HB_N), tl = cT.getPoint(k / HB_N).sub(e).normalize(), o = cO.getPoint(k / HB_N).sub(e);
+    o.addScaledVector(tl, -o.dot(tl)).normalize();
+    const row = [];
+    for (let m = 0; m < HB_S; m++) {
+      const b = (2 * Math.PI * m) / HB_S, cb = Math.cos(b), sb = Math.sin(b);
+      const p = e.clone().addScaledVector(o, HB_OFF + HB_RO * cb).addScaledVector(tl, HB_LIFT + HB_RL * sb);
+      const n = hsLevel(o.clone().multiplyScalar(cb / HB_RO).addScaledVector(tl, sb / HB_RL), o, 0.5);
+      // brass: lighter on its outer face, darker where it turns under toward the scalp
+      const col = cb > 0 ? mixc(HB_COL, HB_HI, 0.55 * cb * (0.6 + 0.4 * Math.max(0, sb))) : mixc(HB_COL, HB_LO, -cb * 0.6);
+      row.push([p, n, col]);
+    }
+    grid.push(row);
+  }
+  const put = ([p, n, col]) => { P.pos.push(p.x, p.y, p.z); P.nrm.push(n.x, n.y, n.z); P.col.push(...col); P.si.push(hb, 0, 0, 0); P.sw.push(1, 0, 0, 0); };
+  for (let k = 0; k < HB_N; k++) for (let m = 0; m < HB_S; m++) {
+    const a = grid[k][m], b = grid[(k + 1) % HB_N][m], c = grid[(k + 1) % HB_N][(m + 1) % HB_S], d = grid[k][(m + 1) % HB_S];
+    const f = b[0].clone().sub(a[0]).cross(c[0].clone().sub(a[0]));   // (wound to face outward: the material is double-sided)
+    (f.dot(a[1]) + f.dot(c[1]) >= 0 ? [a, b, c, a, c, d] : [a, c, b, a, d, c]).forEach(put);
+  }
+  ctx.bandTris = HB_N * HB_S * 2;
+}
+// the balls' vertices dropped and a lock's triangles added in their place (verts: [position, colour, u, normal?]; no
+// normal: the flat shade's, down), with the balls' weights along it; the cap's painted hairline round it
+function swapHair(P, ctx, { verts, tris }) {
+  const drop = new Set(ctx.balls.flatMap((b) => b.vs));
+  const out = { pos: [], nrm: [], col: [], si: [], sw: [] };
+  for (let v = 0, n = P.pos.length / 3; v < n; v++) {
+    if (drop.has(v)) continue;
+    out.pos.push(P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]); out.nrm.push(P.nrm[v * 3], P.nrm[v * 3 + 1], P.nrm[v * 3 + 2]);
+    out.col.push(P.col[v * 3], P.col[v * 3 + 1], P.col[v * 3 + 2]);
+    for (let k = 0; k < 4; k++) { out.si.push(P.si[v * 4 + k]); out.sw.push(P.sw[v * 4 + k]); }
+  }
+  for (const t of tris) for (const i of t) {
+    const [p, col, u, nr] = verts[i], w = hfWeights(u), tot = w.reduce((a, e) => a + e[1], 0);
+    out.pos.push(...p); out.nrm.push(...(nr || [0, -1, 0])); out.col.push(...col);
+    for (let k = 0; k < 4; k++) { out.si.push(w[k] ? P.bones.indexOf(w[k][0]) : 0); out.sw.push(w[k] ? w[k][1] / tot : 0); }
+  }
+  Object.assign(P, out);
+  ctx.cap = [0.02, 0.065]; ctx.front ??= [0.06, 0.12];
+}
+const LOOK_MODEL = {
+  hairtone(P) { for (const [from, bone, min, to] of HAIRTONE) for (const v of lookVerts(P, from, bone, min)) P.col.splice(v * 3, 3, ...to); },
+  haircap(P, ctx) { ctx.cap = [0.02, 0.065]; ctx.front = [0.06, 0.12]; },
+  hairline(P, ctx) { ctx.line = { w: 0.11, col: [0xb0, 0x93, 0x70], k: 0.7, tilt: 0.3, front: [0.1, 0.17] }; ctx.front ??= [0.06, 0.12]; },
+  hairform(P, ctx) { if (!ctx.sdf) swapHair(P, ctx, hairLock(ctx)); },
+  // (the scalp painted round a spline lock gets the lock's levelled normals, not the flat shade's)
+  hairspline(P, ctx) { if (!ctx.sdf) { swapHair(P, ctx, splineLock(ctx, true)); ctx.capLevel = true; } },
+  hairsmooth(P, ctx) { if (!ctx.sdf) { swapHair(P, ctx, splineLock(ctx, false)); ctx.capLevel = true; } },
+  hairband: hairBand,
+};

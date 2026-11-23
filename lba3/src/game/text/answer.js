@@ -37,7 +37,7 @@ Object.assign(STR.en, {
   sh_toast_checkpoint: "Checkpoint. Sendell's light renews you",
   sh_j_answer: "Something under the machinery answers the shell's knocking: a damper knocks back two. I knocked two on the fitters' knocker, it counted four back, and the steam over the catwalk stopped.",
   sh_j_held: 'The heat shutter started down on me, and crystal grew up under it and held it open.',
-  sh_j_shut: 'Crystal grew across the arch behind me. Sendell says it was her: she keeps what she cares for where she thinks it is safe.',
+  sh_j_shut: 'Crystal grew across the arch behind me. Sendell says the child did it: she keeps what she cares for where she thinks it is safe.',
 
   // chapter 12: the last act
   co_obj_branch: "Turn Mill Lane's branch over to the mills",

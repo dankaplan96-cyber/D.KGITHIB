@@ -98,6 +98,7 @@ Object.assign(STR.en, {
   c10_bal_p2: "Sending now. Five voices, one signal...",
   c10_shaft: 'Under the derrick, something enormous groans. The blast doors over the collar draw back, and below them the rest grind open, one after another, all the way down.',
   c10_bal_p3: "It worked. It actually worked! Every one of them held. Twinsen, Vesk is at the bottom of that shaft, with the only console that can turn the bore around. Go and change his mind.",
+  c10_bal_needle: "And Twinsen, my bore needle just moved. He's started the drill again, down where the council's stop can't reach.",
   c10_tw_p2: "I'll turn it around. And I'll bring Vesk up, if he lets me.",
 
   c10_obj_bal: 'Hear Baldino out',

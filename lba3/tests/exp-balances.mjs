@@ -236,7 +236,7 @@ const v = await timed(() => {
   return { u: u.kind, trim, fit: fit.said, bands, nwb: T.flags('nwb_'), valves: !!G.flags.c10_valves, said: window.__said.slice(-8) };
 });
 console.log('the valve room:', JSON.stringify(v).slice(0, 2000));
-check('the gauges green: Oren trims the relay\'s share on a stroke ("The shelters drink first")', v.trim.nwb_trim && v.trim.said.some((l) => /shelters drink first/.test(l)), v.trim);
+check('the gauges green: Oren trims the relay\'s share on a knock ("The shelters drink first")', v.trim.nwb_trim && v.trim.said.some((l) => /shelters drink first/.test(l)), v.trim);
 check("Tessa's B-8 fitted, its band set from Mira's needles as on the rig; its brass lever doesn't move for Oren; the station done", v.nwb.nwb_fit && v.nwb.nwb_set && v.valves && v.said.concat(v.bands).some((l) => /no clay in it/.test(l)), { fit: v.fit, bands: v.bands, said: v.said });
 
 // ---------------------------------------------------------------- the other four B-8s, seen on their relays (CAMPAIGN-CLARITY §7.1)

@@ -25,7 +25,7 @@ import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
 import { ASYLUM_DOOR, climbPaveDist, climbClear, climbDropRock, climbShelfRows, climbRampFill, CLIMB_RAMP, CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT, CLIMB_FOOT_Y } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear } from './citadel-layout.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear, LAWN, lawnClear, V143_EAST, PROM_EDGE, PIPE_METER } from './citadel-layout.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -478,7 +478,13 @@ const FLAT_BOXES = [
   ...HOUSE_FLATS.map((f) => { const R = f.hw + f.hd + f.flat + f.ease; return [f.x - R, f.z - R, f.x + R, f.z + R]; }),
 ];
 function promenade(x, z, h) {
-  if (FLAT_OFF || PRE80 || x < PROM.xo - 1.4 || x > PROM.x1 + 1.6 || z < PROM.z0 - 2.3 || z > PROM.z1 + 2.3) return h;
+  if (FLAT_OFF || PRE80) return h;
+  // (C66, ORDER 66.2: before the inland wall the town's level three grid columns out from its face: the guard below stopped
+  //  the rule a column short of the "two rows out" it meant, and one point of the old ridge kept by flatTown's 2.8 m rule
+  //  stood as a spike, 2.2 m over the street at (−70.43, 4.86) beside the wall's foot; north of z 0.08 the flight's)
+  const IW = PROM_WALLS[2];
+  if (z > IW.z0 && z < IW.z1 && z > PROM_STAIR.zS + 2.6 && x > PROM.x1 + 1.6 && x < PROM.xi + 3.4) return TOWN_FLAT;
+  if (x < PROM.xo - 1.4 || x > PROM.x1 + 1.6 || z < PROM.z0 - 2.3 || z > PROM.z1 + 2.3) return h;
   const ez = Math.max(PROM.z0 - z, z - PROM.z1, 0);
   // (the foot row and the row out from it: where it is water, under the water's floor — the shallow ledges the old
   //  cliff stood on are cut off from the land by the wall, and the trap filler would build them up into a bank before
@@ -488,7 +494,6 @@ function promenade(x, z, h) {
   const de = Math.hypot(Math.max(x - PROM.x1, 0), ez);
   if (de <= 0) return PROM_H;
   if (z > PROM_STAIR.zN - 2.0 && z < PROM_STAIR.zS + 2.6) return h;   // (the flight and the low ground south of it: promStair's)
-  const IW = PROM_WALLS[2];
   if (z > IW.z0 && z < IW.z1 && x < PROM.xi + 1.2) return TOWN_FLAT;   // (before the inland wall: the town's level, two rows out)
   return lerp(h, PROM_H, (1 - smoothstep(0, 1.5, de)) * smoothstep(1.5, 1.0, Math.abs(h - PROM_H)));
 }
@@ -530,10 +535,20 @@ function houseFlats(x, z, h) {
   }
   return h;
 }
+// FLAT-TOWN-2 (citadel-layout.js LAWN): the south block's lawns at LBA2's levels, on the grid's points: the bed's (+0.63)
+// and the ring's rows (+0.21) at their level, the low rows round them the street's (they are already); the banks between
+// are inside the masonry (island.js buildFlatTown)
+function lawns(x, z, h) {
+  if (FLAT_OFF || PRE80) return h;
+  const e = 0.01, [bx0, bz0, bx1, bz1] = LAWN.bedBox, [rx0, rz0, rx1, rz1] = LAWN.ringBox;
+  if (x < rx0 - e || x > rx1 + e || z < rz0 - e || z > rz1 + e) return h;
+  return x >= bx0 - e && x <= bx1 + e && z >= bz0 - e && z <= bz1 + e ? LAWN.bed : LAWN.ring;
+}
 export function islandHeight(x, z) {
   // (the climb's ramp level across to its wall, lba1places.js: after the house pads, whose ease ran under its east edge)
   // (FLAT-TOWN: then the promenade's flight and the promenade itself, over the house floors' eases)
-  return promenade(x, z, promStair(x, z, plaza(x, z, waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight))))));
+  // (FLAT-TOWN-2: then the south block's lawns)
+  return lawns(x, z, promenade(x, z, promStair(x, z, plaza(x, z, waterKnoll(x, z, climbGround(x, z, climbRampFill(x, z, houseFlats(x, z, islandHeight0(x, z)), rampAxisHeight)))))));
 }
 
 // REVIEW-CITADEL-ART (c): the knoll north of the water office (the first shelf's outline, its wobble, citadel-layout.js)
@@ -548,6 +563,32 @@ let KNOLL_OFF = false;
 // and every rock drawn after it moved)
 const BRINK_BOX = [-119.5, 42.5, -78, 60.5];
 let BRINK_OFF = false;
+// FLAT-TOWN-2's east shore wall reverted (22.11): a v143 save's spot on the ground that wall had made (its top, the
+// filled coves, the sunk ledge: V143_EAST) that is now in a cove, on the drop or below the shore: the nearest spot to
+// its west on the town's level, terrain or a walkable top such as the footbridge's (the loader grounds him there:
+// main.js applySave); any other spot as it is
+export function shoreSpot(at, physics) {
+  const E = V143_EAST;
+  if (!at || !physics || !(at.z > E.z0 && at.z < E.z1 && at.x > E.x0 && at.x < E.x1)) return at;
+  // (standable: the ground at the town's level there and 0.6 m round, nothing standing higher over it: a house, a prop)
+  const g = (x, z) => { const h = physics.groundAt(x, z); return h < TOWN_FLAT + 0.8 ? h : -99; }, lo = TOWN_FLAT - 0.5;
+  const ok = (x) => g(x, at.z) > TOWN_FLAT - 0.35 && g(x + 0.6, at.z) > lo && g(x - 0.6, at.z) > lo && g(x, at.z + 0.6) > lo && g(x, at.z - 0.6) > lo;
+  if (ok(at.x)) return at;
+  for (let x = at.x - 0.25; x > E.x0 - 6; x -= 0.25) if (ok(x)) return { ...at, x: x - 0.4 };
+  return at;
+}
+// C66 (ORDER 66.2): an older save's spot that C66's colliders now shut out: on the sea wall's coping outside the
+// promenade's rail or the slope west of the walk's north end (PROM_EDGE: island.js promEdge closed the gaps there) loads
+// on the walk inside it; in or against the water main's meter cabinet where it stands now (PIPE_METER, 0.8 m east of
+// where it stood) on the walk west of it (the loader grounds him and unwedge clears any post: main.js applySave); any
+// other spot as it is
+export function promSpot(at) {
+  if (!at) return at;
+  const E = PROM_EDGE, M = PIPE_METER, r = 0.4;
+  if (at.z > E.zN && at.z < E.z1 && at.x > PROM.xo - 1.2 && at.x < E.out) return { ...at, x: E.back, z: Math.max(at.z, E.z0 + 0.5) };
+  if (at.x > M.x - M.west - r && at.x < M.x + M.east + r && Math.abs(at.z - M.z) < M.half + r) return { ...at, x: M.x - M.west - r - 0.05 };
+  return at;
+}
 function waterKnoll(x, z, h) {
   if (KNOLL_OFF || x < KNOLL_BOX[0] || x > KNOLL_BOX[2] || z < KNOLL_BOX[1] || z > KNOLL_BOX[3]) return h;
   return Math.min(h, KNOLL_Y + Math.max(0, KNOLL_FOOT - x) * 2.2);
@@ -986,6 +1027,7 @@ export function* buildWorldSteps(parentScene) {
 
   yield 'terrain';
   // ---------- Lupin-Burg: houses, square, streets, props (see town.js) ----------
+  W.gridPaveDist = gridPaveDist;   // (C66: the town's kerbs keep off where the grid's paving lies on both sides, town.js curbs)
   { const n0 = scene.children.length; buildTown(scene, W); tagSrc(scene, n0, 'town'); }
   yield 'town';
   // the statue of Twinsen and Zoé (STATUE; src/game/statue.js): the original's stands in the middle of the square,
@@ -1276,6 +1318,11 @@ export function* buildWorldSteps(parentScene) {
   clearLife(trees); clearLife(bushes);
   const fenceDist = (x, z) => distToSegment(x, z, LAWN_FENCE[0][0], LAWN_FENCE[0][1], LAWN_FENCE[1][0], LAWN_FENCE[1][1]);   // (CITADEL-ORIG-2: the lawn strip's lattice fence)
   for (const t of [...trees, ...bushes]) if (!t.gone && (gridPaveDist(t.x, t.z) < 1.2 || flatClear(t.x, t.z, 1.0) || fenceDist(t.x, t.z) < 1.4)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving; filtered after the scatter, so no random draw moves)
+  // (FLAT-TOWN-2: none in the lawns' masonry, by their size: a tree's trunk and a bush's crown keep off it)
+  for (const t of trees) if (!t.gone && lawnClear(t.x, t.z, 0.6 + 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && lawnClear(b.x, b.z, 0.3 + 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  { const L = LAWN.box, beds = PROPS.tulips.filter(([x0, x1, z]) => x0 > L[0] && x1 < L[2] && z > L[1] && z < L[3]);   // (and off its tulip beds, island.js fits them after)
+    for (const b of bushes) if (!b.gone && beds.some(([x0, x1, z]) => boxDist(b.x, b.z, x0 - 0.5, z - 0.7, x1 + 0.5, z + 0.7) < 0.6 * b.s + 0.6)) { b.s = 1e-4; b.gone = true; } }
   // (WORLD-FIX / R6: the way out of every house door stays open — no tree or bush in a 4 m lane straight out of it for
   //  11 m, so the first steps out of a door are never into a bush. Filtered after the scatter: no random draw moves.)
   const doorLane = (x, z, pad) => W.houses.some((h) => {
@@ -1406,7 +1453,7 @@ export function* buildWorldSteps(parentScene) {
   for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
   for (const t of [...grass, ...flowers]) if (!t.gone && blockDist(t.x, t.z) < 0) { t.s = 1e-4; t.gone = true; }   // (TREES-1: none in a floor; at a wall's foot they stay)
   for (const t of [...grass, ...flowers]) if (!t.gone && climbClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (CLIMB-1)
-  for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || flatClear(t.x, t.z, 0.3) || townBlockEarth(t.x, t.z) > 0.3 || fenceDist(t.x, t.z) < 0.35)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving or the block's earth)
+  for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || flatClear(t.x, t.z, 0.3) || lawnClear(t.x, t.z, 0.3) || townBlockEarth(t.x, t.z) > 0.3 || fenceDist(t.x, t.z) < 0.35)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving or the block's earth)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   // (OVERLAP-SWEEP: none where the ground is drawn as paving — the terrain's own cobble weight at the tuft's foot, the
   //  nearest vertex of the grid as drawn; 289 tufts and flowers stood on painted cobbles. Filtered after the scatter)
@@ -1462,7 +1509,7 @@ export function* buildWorldSteps(parentScene) {
   }
   // (hidden beyond FAR_SMALL like the grass: a bed far off is a few pixels of colour, and thousands of tulips)
   // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
-  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7 || gridPaveDist(t.x, t.z) < 0.8 || flatClear(t.x, t.z, 0.6) || fenceDist(t.x, t.z) < 0.6 || streetDist(t.x, t.z) < 0.7) lifeBeds.add(t.bed);   // (the user, 16.11, a picture: yellow tulips growing out of MAP-ORIG's new paving — a bed touching any paving is left out whole)
+  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7 || gridPaveDist(t.x, t.z) < 0.8 || flatClear(t.x, t.z, 0.6) || lawnClear(t.x, t.z, 0.3) || fenceDist(t.x, t.z) < 0.6 || streetDist(t.x, t.z) < 0.7) lifeBeds.add(t.bed);   // (the user, 16.11, a picture: yellow tulips growing out of MAP-ORIG's new paving — a bed touching any paving is left out whole; FLAT-TOWN-2: or the lawns' masonry)
   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
   for (const list of beds) for (const t of list) if (blockDist(t.x, t.z) < 0) t.s = 1e-4;   // (TREES-1: a bed's tulips that stood in a house's floor)
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
@@ -1494,6 +1541,7 @@ export function* buildWorldSteps(parentScene) {
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
   W.signs = [];
   W.pathDist = pathDist;
+  W.shoreSpot = (at) => shoreSpot(promSpot(at), physics);   // (an older save's spot on FLAT-TOWN-2's reverted east shore wall, main.js applySave; C66: outside the promenade's rail or in the meter cabinet)
   { const n0 = scene.children.length; buildIsland(scene, W); tagSrc(scene, n0, 'island'); }
   { const n0 = scene.children.length; buildHarbourZeelich(scene, physics, H); tagSrc(scene, n0, 'harbourzeelich'); }   // (WA-15)
 

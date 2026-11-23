@@ -628,6 +628,75 @@ function islandTextures(T) {
 let cache = null;
 export const textures = () => (cache ??= makeTextures());
 
+// WALL-LOOK (the user, 22.11, of the promenade's inland wall behind the new stair: "The wall's texture isn't good, it
+// needs replacing"): candidate faces for the town's built walls (island.js WALL_LOOK, ?wall=a|b|c; none: `rubble` as
+// before). Made only when a candidate is asked for: 256 px tiles at 1.7 m, as `rubble` (one layer more in the same
+// texture array, no draw more). Low-frequency patterns in a pale bed, so nothing goes near black in shade or shimmers
+// at the play camera's distance. (c is the fort's own `fortStone`: no texture of its own.)
+//   a: dressed blocks in courses (LBA2's light cut-stone terrace walls): five courses (~34 cm), blocks 46–85 cm,
+//      broken joints, thin warm-grey joints, each block a little lighter at its top arris;
+//   b: the houses' pale rubble (`rubbleHouse`) at about twice its scale, bedded in a pale lime mortar.
+const WALL_TEX = {};
+export function wallTexture(kind) {
+  if (WALL_TEX[kind]) return WALL_TEX[kind];
+  const N = 256, [c, x] = canvas(N), r = rng(kind === 'a' ? 131 : 132);
+  const rgb = (a, b, d) => `rgb(${a | 0},${b | 0},${d | 0})`;
+  if (kind === 'a') {
+    x.fillStyle = '#857d71'; x.fillRect(0, 0, N, N);
+    let y = 0;
+    for (const h of [54, 49, 52, 49, 52]) {
+      const ws = [];
+      for (let s = 0; s < N;) { let w = 70 + Math.floor(r() * 58); if (N - s - w < 48) w = N - s; ws.push(w); s += w; }
+      let xx = Math.floor(r() * N);
+      for (const w of ws) {
+        const tone = 184 + r() * 36, warm = r() * 8;
+        for (const ox of [-N, 0]) {
+          const px = xx + ox;
+          const g = x.createLinearGradient(0, y, 0, y + h);
+          g.addColorStop(0, rgb(tone + 16, tone + 13, tone + 6 + warm));
+          g.addColorStop(0.18, rgb(tone + 2, tone, tone - 6 + warm));
+          g.addColorStop(1, rgb(tone - 18, tone - 21, tone - 27 + warm));
+          x.fillStyle = g; x.beginPath(); x.roundRect(px + 2, y + 2, w - 4, h - 4, 3); x.fill();
+          x.fillStyle = 'rgba(255,250,240,0.22)'; x.fillRect(px + 3, y + 2, w - 6, 2);         // (the lit top arris)
+          x.fillStyle = 'rgba(90,80,70,0.16)'; x.fillRect(px + 3, y + h - 4, w - 6, 2);       // (the shaded foot)
+        }
+        xx = (xx + w) % N;
+      }
+      y += h;
+    }
+    blotches(x, N, r, 22, ['#b6ae9e', '#efe9dc', '#c6bdac'], 14, 44, 0.18);
+    speckle(x, N, r, 220, ['#f2ece2', '#8e8578'], 0.22, 0.3);
+  } else {
+    x.fillStyle = '#a69e90'; x.fillRect(0, 0, N, N);
+    const stones = [];
+    for (let i = 0; i < 3000 && stones.length < 70; i++) {
+      const px = r() * N, py = r() * N, rx = 17 + r() * 15, ry = 12 + r() * 9;
+      let ok = true;
+      for (const s of stones) {
+        let dx = Math.abs(s[0] - px), dy = Math.abs(s[1] - py);
+        dx = Math.min(dx, N - dx); dy = Math.min(dy, N - dy);
+        if ((dx / (s[2] + rx)) ** 2 + (dy / (s[3] + ry)) ** 2 < 0.5) { ok = false; break; }
+      }
+      if (ok) stones.push([px, py, rx * 1.06, ry * 1.06, r() * 0.5 - 0.25, r()]);
+    }
+    for (const [px, py, rx, ry, rot, tone] of stones) {
+      const base = 192 + tone * 34;
+      wrap(N, (ox, oy) => {
+        x.save(); x.translate(px + ox, py + oy); x.rotate(rot);
+        x.fillStyle = 'rgba(70,62,54,0.28)'; x.beginPath(); x.ellipse(1.2, 1.8, rx, ry, 0, 0, 7); x.fill();
+        const g = x.createRadialGradient(-rx * 0.35, -ry * 0.45, 0, 0, 0, Math.max(rx, ry) * 1.1);
+        g.addColorStop(0, rgb(base + 26, base + 23, base + 18));
+        g.addColorStop(0.55, rgb(base, base - 4, base - 9));
+        g.addColorStop(1, rgb(base - 32, base - 36, base - 40));
+        x.fillStyle = g; x.beginPath(); x.ellipse(0, 0, rx, ry, 0, 0, 7); x.fill();
+        x.restore();
+      });
+    }
+    speckle(x, N, r, 200, ['#eee8de', '#7c7468'], 0.25, 0.3);
+  }
+  return (WALL_TEX[kind] = toTex(c));
+}
+
 // P87b: a copy of a shared texture (its own wrap, repeat, offset) on the same pixels. three's clone() (its copy() sets
 // needsUpdate) and the builders' own needsUpdate each move the shared source's version, as if its canvas had been
 // repainted: three sent the canvas again, and every batched piece with that texture in an area already built left its

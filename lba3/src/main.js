@@ -1626,7 +1626,7 @@ class Game {
     // (P83: on Zeelich, a spot inside the spaceport terminal's walls, the old deck by the bridge's end: before its door or gate)
     if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => { const p = R.spaceport?.saneSpot?.(at) ?? at; return !s.respawn && this.onRoomFloor(R, p) ? p : { ...(R.spawn || p) }; }, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
-    else this.exitRoom(this.world.spaceport?.saneSpot?.(at) ?? at, true);   // (SPACEPORT-2: not inside the terminal's walls)
+    else { const sp = this.world.spaceport?.saneSpot?.(at) ?? at; this.exitRoom(this.world.shoreSpot?.(sp) ?? sp, true); }   // (SPACEPORT-2: not inside the terminal's walls; a v143 spot on FLAT-TOWN-2's reverted east shore wall: on the town's ground)
     this.unwedge();
     this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)
   }
