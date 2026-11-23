@@ -20,6 +20,7 @@ const VOL_GLIDE = 0.03; // s: the time constant of a volume change (MUSIC-CRACKL
 // PAUSE-FADE (wave 5): a story scene's pause fades the whole output out over this long before the context is suspended,
 // and back in once it runs again (MUSIC-CRACKLE: an immediate ctx.suspend() cut the output mid-wave)
 const PAUSE_RAMP = 0.02;
+const PAUSE_LEAD = 0.02;   // s: a fade asked while the context runs starts this far ahead (see suspendSoftly)
 
 // ACTION-SOUND (wave 6): how each effect is played (play()). pri: 3 is never skipped (an outcome or a danger: hurt,
 // something gained, a door, a refusal, a telegraph), 2 actions and combat, 1 small and repeated (feet, ticks). gap:
@@ -215,27 +216,43 @@ export class AudioEngine {
   // speakers (the output's latency, at most 0.1 s more), so what is still in the device's buffer when it stops is
   // silence. Resuming fades back in from silence. A resume before the suspend has happened calls the suspend off.
   // Returns true when a suspend is on its way.
+  // LBA3-SOUND (23.11): the resume's fade-in was a step: the output jumped from silence to 86–88 % of its level in one
+  // sample at every resume of a story scene (measured in the game's output bus; _ramp says why). The fade-in is now set
+  // on the stopped clock, from silence, before the resume, so the first frames rendered after it are the fade's first;
+  // a fade asked while the context runs starts PAUSE_LEAD ahead, past what may already be rendered (a fade that lands
+  // in the past starts part-way: a smaller step, ~4 % of asks made at currentTime in a bare context).
   suspendSoftly() {
     const c = this.ctx;
     if (!c || c.state !== 'running') return false;
     const tok = (this._pauseTok = (this._pauseTok || 0) + 1);
-    this._ramp(0);
-    const wait = PAUSE_RAMP + Math.min(0.1, (c.outputLatency || 0) + (c.baseLatency || 0));
-    setTimeout(() => { if (this._pauseTok === tok && c.state === 'running') c.suspend(); }, Math.ceil(wait * 1000) + 5);
+    this._ramp(0, PAUSE_LEAD);
+    const wait = PAUSE_LEAD + PAUSE_RAMP + Math.min(0.1, (c.outputLatency || 0) + (c.baseLatency || 0));
+    setTimeout(() => {
+      if (this._pauseTok !== tok || c.state !== 'running') return;
+      // (a resume asked while the suspend was on its way: resumed as soon as it has happened)
+      c.suspend().then(() => { if (this._pauseTok !== tok) this.resumeSoftly(); }, () => {});
+    }, Math.ceil(wait * 1000) + 5);
     return true;
   }
   resumeSoftly() {
     const c = this.ctx;
     if (!c) return;
     this._pauseTok = (this._pauseTok || 0) + 1;
-    const up = () => this._ramp(1);
-    if (c.state === 'running') up(); else c.resume().then(up, up);
+    if (c.state === 'running') { this._ramp(1, PAUSE_LEAD); return; }   // (the suspend called off before it happened)
+    this._ramp(1);   // (on the stopped clock: the first frames rendered after the resume are the fade's)
+    c.resume().catch(() => {});
   }
-  _ramp(to) {
-    const g = this.out?.gain, t = this.ctx.currentTime;
+  // (a linear ramp runs from the event before it: after a finished fade-out that is the fade's end, so without a value
+  //  set at t the fade-in ran from there — across the frames rendered silent before the suspend — and was 86–88 % up
+  //  at its first audible frame. The value at t is set first: the last fade's own value there, worked out from it)
+  _ramp(to, lead = 0) {
+    const g = this.out?.gain, t = this.ctx.currentTime + lead;
     if (!g) return;
-    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else { g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); }
+    const F = this._fade, v = !F ? g.value : t >= F.t1 ? F.v1 : t <= F.t0 ? F.v0 : F.v0 + ((F.v1 - F.v0) * (t - F.t0)) / (F.t1 - F.t0);
+    if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t); else g.cancelScheduledValues(t);
+    g.setValueAtTime(v, t);
     g.linearRampToValueAtTime(to, t + PAUSE_RAMP);
+    this._fade = { t0: t, v0: v, t1: t + PAUSE_RAMP, v1: to };
   }
   stats() {
     const c = this.ctx;
@@ -379,6 +396,9 @@ export class AudioEngine {
   cue(name) { if (this.ctx) this.music.cue(name); }
   endCue() { if (this.ctx) this.music.endCue(); }
   setCombat(c) { this.combat = c; if (this.ctx) this.music.setCombat(c); }
+  // the game is held over a fight that will go on (the pause menu, the holomap, the inventory: main.js setState): the
+  // combat music is not handed back as it is when setCombat stops for a dialogue or a scene (music.js hold)
+  hold(on) { this.music.hold(on); }
   // the music steps back to MUSIC_DUCK while a character speaks, and comes back after (music.js: 0.25 s down; up over
   // 0.9 s, 0.45 s after the last line, so consecutive lines do not pump). (MUSIC-2: this was defined twice; the later
   // definition, ducking to 0.55, was the one in force and VOICE-MIX's 0.5 never applied.)
