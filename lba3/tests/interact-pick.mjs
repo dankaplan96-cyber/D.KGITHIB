@@ -122,6 +122,8 @@ r = await ev(() => {
   IP.put(Y.x + 1.0, Y.z - 0.2, Y.x, Y.z); G.step(1 / 60);
   I.keys.add('KeyW'); I.taps.add('KeyW'); G.step(1 / 60); I.keys.delete('KeyW');
   const again = !!h.steer || G.state !== 'play';
+  // (let that try finish — his walk to the tap and its line — before the next part moves him)
+  for (let t = 0; t < 4 && G.state === 'play' && (h.steer || h.actT > 0); t += 0.05) G.step(0.05);
   P.settle();
   return { talked, actTAfterTalk: actT, walked025: walked, keyActsAtOnce: again };
 });
