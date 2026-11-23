@@ -1656,6 +1656,10 @@ export class Rig {
       BL.hip.rotation.set(L.hip.rotation.x, L.hip.rotation.y, L.hip.rotation.z); BL.knee.rotation.set(L.knee.rotation.x, L.knee.rotation.y, L.knee.rotation.z); BL.foot.rotation.set(L.foot.rotation.x, L.foot.rotation.y, L.foot.rotation.z);
       BR.hip.rotation.set(R2.hip.rotation.x, R2.hip.rotation.y, R2.hip.rotation.z); BR.knee.rotation.set(R2.knee.rotation.x, R2.knee.rotation.y, R2.knee.rotation.z); BR.foot.rotation.set(R2.foot.rotation.x, R2.foot.rotation.y, R2.foot.rotation.z);
     }
+    // (ARM-CLEAR: last frame's forward turn off the arms is taken off first, so the joints ease from their own pose; not where
+    //  something after the update has set the arm itself)
+    const AW = this._ac?.wx;
+    if (AW) { if (AW[0] !== null && j.armL.sh.rotation.x === AW[0]) j.armL.sh.rotation.x += this._ac.L[1]; if (AW[1] !== null && j.armR.sh.rotation.x === AW[1]) j.armR.sh.rotation.x += this._ac.R[1]; }
     set(j.armL.sh, T.armL, 'x', Ru); set(j.armR.sh, T.armR, 'x', Ru);
     set(j.armL.el, T.elL, 'x', Ru); set(j.armR.el, T.elR, 'x', Ru);
     set(j.armR.sh, T.twR, 'y', Ru); set(j.armL.sh, -(T.twL ?? 0), 'y', Ru);
@@ -1672,6 +1676,7 @@ export class Rig {
     this._outL = damp(this._outL || 0, T.outL || 0, Ru, dt); this._outR = damp(this._outR || 0, T.outR || 0, Ru, dt);
     if (ko) { set(j.armL.sh, this.armSpread + this._koOut[0], 'z'); set(j.armR.sh, -this.armSpread - this._koOut[1], 'z'); this._armOut = j.armL.sh.rotation.z - this.armSpread; }
     else { j.armL.sh.rotation.z = this.armSpread + this._armOut + this._outL; j.armR.sh.rotation.z = -this.armSpread - this._armOut - this._outR; }
+    this._armClear(dt, a);   // (ARM-CLEAR, P111: no forearm or hand inside the body)
     // pelvis counter-rotates against the shoulders while walking (a throw's turn on top of the walk turns it with them)
     // (the chest turning to a locked target leaves the pelvis and the legs on the way he walks)
     if (walkLike) j.hips.rotation.y = damp(j.hips.rotation.y, -(torsoY - layerTwist - lookTwist) * 0.8 + layerTwist * 0.35, R, dt);
@@ -2142,3 +2147,200 @@ function key(k, t) {
   const p0 = k[(i + n - 1) % n], p1 = k[i], p2 = k[(i + 1) % n], p3 = k[(i + 2) % n];
   return 0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u);
 }
+
+// ------------------------------------------------------------------ ARM-CLEAR (P111)
+// (the user, 23.11, a Grobo by the tulips in Citadel: "his hand is inside the body, swallowed"; the standing rule of the same
+//  day: every fix holds across the whole game.) The arms are posed by angles alone, the same angles for every body, and the
+// body's own width was never asked: a Grobo's round body is ±0.5 m wide with its shoulders at ±0.33, so his forearms and
+// hands hung inside it in every pose (17-19 cm deep: from the outside, no arms at all); smaller bodies put a hand 1-12 cm
+// into a flared tunic's hem, a round abdomen or a belly in some poses (tests/arm-clear.mjs measures every look × pose).
+// Now, after the arms are posed: each body's surface (from its own mesh, cached on its geometry) as a radius round its
+// middle per height and bearing, twice — the part that moves with the chest and the part with the pelvis — and ~80 points
+// over each forearm and hand. Where a point is inside that surface or closer than AC_GAP, the shoulder turns the arm out
+// (its spread) and/or forward, in whichever mix clears it with the least turn, and by the least that clears it, eased in
+// and out. An arm already clear is not touched; strikes, throws, the knock-out and lying poses keep their own arms.
+const AC_GAP = 0.014, AC_DY = 0.02, AC_NS = 32, AC_PTS = 72, AC_MAX = 1.1;
+const AC_SKIP = new Set([...FAST, 'ko', 'dead', 'sleep', 'jet']);
+const AC_T = new Set(['torso']), AC_H = new Set(['hips', 'body', 'skirtF', 'skirtB', 'skirtL', 'skirtR']);
+const _acE = new THREE.Euler(0, 0, 0, 'XZY'), _acQ = new THREE.Quaternion(), _acS = new THREE.Matrix4(), _acA = new THREE.Matrix4(), _acB = new THREE.Matrix4(), _acC = new THREE.Matrix4(), _acD = new THREE.Matrix4();
+function acDominant(geo, v) {
+  const si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight;
+  let b = -1, w = -1;
+  for (let k = 0; k < 4; k++) { const x = sw.getComponent(v, k); if (x > w) { w = x; b = si.getComponent(v, k); } }
+  return b;
+}
+const AC_ARM = /^(sh|el|hand)[LR]$/;
+function acArmShare(geo, v, names) {
+  const si = geo.attributes.skinIndex, sw = geo.attributes.skinWeight;
+  let w = 0;
+  for (let k = 0; k < 4; k++) if (AC_ARM.test(names[si.getComponent(v, k)] || '')) w += sw.getComponent(v, k);
+  return w;
+}
+// a body's surface round its middle (bind space, the y axis): the greatest radius per 2 cm of height and 1/32 of a turn
+function acProfiles(mesh) {
+  const geo = mesh.geometry, names = mesh.skeleton.bones.map((b) => b.name), key = 'armClear:' + names.join(',');
+  if (geo.userData[key] !== undefined) return geo.userData[key];
+  const P = geo.attributes.position;
+  if (!geo.attributes.skinIndex) return (geo.userData[key] = null);
+  const n = P.count, grp = new Int8Array(n), bm = mesh.bindMatrix, v = new THREE.Vector3();
+  const X = new Float32Array(n * 3);
+  let y0 = Infinity, y1 = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const nm = names[acDominant(geo, i)];
+    grp[i] = acArmShare(geo, i, names) > 0.08 ? 0 : AC_T.has(nm) ? 1 : AC_H.has(nm) ? 2 : 0;   // (cloth tied to an arm, Twinsen's cape: not the body)
+    v.fromBufferAttribute(P, i).applyMatrix4(bm); X[i * 3] = v.x; X[i * 3 + 1] = v.y; X[i * 3 + 2] = v.z;
+    if (grp[i]) { y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); }
+  }
+  if (!(y1 > y0)) return (geo.userData[key] = null);
+  const ny = Math.ceil((y1 - y0) / AC_DY) + 2, T = new Float32Array(ny * AC_NS), H = new Float32Array(ny * AC_NS);
+  const put = (R, x, y, z) => {
+    const yb = Math.round((y - y0) / AC_DY), s = Math.floor((Math.atan2(x, z) / (2 * Math.PI) + 0.5) * AC_NS) % AC_NS, r = Math.hypot(x, z), k = yb * AC_NS + s;
+    if (r > R[k]) R[k] = r;
+  };
+  const idx = geo.index ? geo.index.array : null, nt = idx ? idx.length / 3 : n / 3;
+  for (let t = 0; t < nt; t++) {
+    const a = idx ? idx[t * 3] : t * 3, b = idx ? idx[t * 3 + 1] : t * 3 + 1, c = idx ? idx[t * 3 + 2] : t * 3 + 2;
+    if (!grp[a] || !grp[b] || !grp[c]) continue;
+    const R = (grp[a] === 1) + (grp[b] === 1) + (grp[c] === 1) >= 2 ? T : H;
+    const ax = X[a * 3], ay = X[a * 3 + 1], az = X[a * 3 + 2], bx = X[b * 3] - ax, by = X[b * 3 + 1] - ay, bz = X[b * 3 + 2] - az, cx = X[c * 3] - ax, cy = X[c * 3 + 1] - ay, cz = X[c * 3 + 2] - az;
+    const m = Math.max(1, Math.ceil(Math.max(Math.hypot(bx, by, bz), Math.hypot(cx, cy, cz), Math.hypot(bx - cx, by - cy, bz - cz)) / 0.012));
+    for (let i = 0; i <= m; i++) for (let j = 0; i + j <= m; j++) { const u = i / m, w = j / m; put(R, ax + bx * u + cx * w, ay + by * u + cy * w, az + bz * u + cz * w); }
+  }
+  return (geo.userData[key] = { y0, ny, T, H });
+}
+// the forearms' and hands' points (each in its bone's own space at rest): the skinned ones whose main bone is the elbow or
+// the hand (every skinned surface on the skeleton: a sculpted body's arms are a mesh of their own) and the rigid hands
+function acArmPoints(rig) {
+  const mesh = rig.mesh, sk = mesh.skeleton, j = rig.j, out = { L: { el: [], hand: [] }, R: { el: [], hand: [] } };
+  const side = new Map([[j.armL.el, ['L', 'el']], [j.armL.hand, ['L', 'hand']], [j.armR.el, ['R', 'el']], [j.armR.hand, ['R', 'hand']]]);
+  const meshes = [mesh]; mesh.traverse((o) => { if (o !== mesh && o.isSkinnedMesh && o.skeleton === sk && o.geometry.attributes.skinIndex) meshes.push(o); });
+  const v = new THREE.Vector3(), raw = { L: { el: [], hand: [] }, R: { el: [], hand: [] } };
+  for (const m of meshes) {
+    const P = m.geometry.attributes.position, seen = new Set();
+    for (let i = 0; i < P.count; i++) {
+      const bi = acDominant(m.geometry, i), q = side.get(sk.bones[bi]);
+      if (!q) continue;
+      const k = Math.round(P.getX(i) * 500) + ',' + Math.round(P.getY(i) * 500) + ',' + Math.round(P.getZ(i) * 500);
+      if (seen.has(k)) continue; seen.add(k);
+      v.fromBufferAttribute(P, i).applyMatrix4(m.bindMatrix).applyMatrix4(sk.boneInverses[bi]);
+      raw[q[0]][q[1]].push(v.x, v.y, v.z);
+    }
+  }
+  for (const [s, hb] of [['L', j.armL.hand], ['R', j.armR.hand]]) for (const c of hb.children) {
+    if (c.isBone) continue;
+    c.updateMatrix();
+    c.traverse((o) => {
+      if (!o.isMesh || o.isSkinnedMesh || !o.geometry?.attributes?.position) return;
+      o.updateMatrix();
+      const P = o.geometry.attributes.position, M = o === c ? c.matrix : new THREE.Matrix4().multiplyMatrices(c.matrix, o.matrix);
+      for (let i = 0; i < P.count; i += 3) { v.fromBufferAttribute(P, i).applyMatrix4(M); raw[s].hand.push(v.x, v.y, v.z); }
+    });
+  }
+  // (an even share of each, at most AC_PTS a side)
+  for (const s of ['L', 'R']) {
+    const tot = (raw[s].el.length + raw[s].hand.length) / 3;
+    if (!tot) continue;
+    for (const k of ['el', 'hand']) {
+      const a = raw[s][k], cnt = a.length / 3, want = Math.max(1, Math.round(AC_PTS * cnt / tot)), step = Math.max(1, cnt / want), o = [];
+      for (let f = 0; f < cnt; f += step) { const i = Math.floor(f) * 3; o.push(a[i], a[i + 1], a[i + 2]); }
+      out[s][k] = new Float32Array(o);
+    }
+  }
+  return out;
+}
+function armClearInit(rig) {
+  const j = rig.j, mesh = rig.mesh;
+  if (!mesh?.isSkinnedMesh || !j?.armL?.el || !j.armL.hand || !j.armR?.hand || !j.torso || !j.hips) return null;
+  const sk = mesh.skeleton, ti = sk.bones.indexOf(j.torso), hi = sk.bones.indexOf(j.hips);
+  if (ti < 0 || hi < 0 || j.armL.sh.parent !== j.torso || j.armR.sh.parent !== j.torso || j.torso.parent !== j.hips) return null;
+  const prof0 = acProfiles(mesh);
+  if (!prof0) return null;
+  // (only below the shoulders: round them the body is no longer one surface round its middle — the shoulder's cap stood out
+  //  over a forearm passing in front of it, Twinsen's run, as if the arm were inside it)
+  const si = sk.bones.indexOf(j.armL.sh), shY = -sk.boneInverses[si].elements[13], top = Math.max(0, Math.min(prof0.ny, Math.floor((shY - 0.08 - prof0.y0) / AC_DY)));
+  const prof = { ...prof0, ny: top };
+  const pts = acArmPoints(rig);
+  if (!pts.L.el.length && !pts.L.hand.length) return null;
+  return { prof, pts, TB: sk.boneInverses[ti].clone().invert(), HB: sk.boneInverses[hi].clone().invert(), L: [0, 0], R: [0, 0], wx: [null, null], dir: [1, 0], k: { L: [0, 1, 0], R: [0, 1, 0] }, t: { L: [0, 0, 0], R: [0, 0, 0] }, n: rig.root.id % 3 };
+}
+// how far (bind units) the deepest of a side's points is inside the body, the gap included (≤ 0: clear)
+function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
+  _acE.set(sh.rotation.x - dx, sh.rotation.y, sh.rotation.z + sgn * dz, 'XZY');
+  _acS.compose(sh.position, _acQ.setFromEuler(_acE), sh.scale);
+  const pr = D.prof, y0 = pr.y0, ny = pr.ny;
+  let worst = -Infinity;
+  for (let pass = 0; pass < 2; pass++) {
+    const R = pass ? pr.H : pr.T;
+    // (to the body's rest space: the chest's part through the torso's rest frame, the pelvis's part through the hips', the
+    //  torso's own turn on the hips between)
+    if (pass) _acA.multiplyMatrices(D.HB, Mtorso).multiply(_acS); else _acA.multiplyMatrices(D.TB, _acS);
+    for (let k = 0; k < 2; k++) {
+      const pts = k ? D.pts[s].hand : D.pts[s].el;
+      if (!pts.length) continue;
+      _acB.multiplyMatrices(_acA, k ? Mhand : Mel);
+      const e = _acB.elements;
+      for (let i = 0; i < pts.length; i += 3) {
+        const px = pts[i], py = pts[i + 1], pz = pts[i + 2];
+        const x = e[0] * px + e[4] * py + e[8] * pz + e[12], y = e[1] * px + e[5] * py + e[9] * pz + e[13], z = e[2] * px + e[6] * py + e[10] * pz + e[14];
+        const yb = Math.round((y - y0) / AC_DY);
+        if (yb < 0 || yb >= ny) continue;
+        const u = (Math.atan2(x, z) / (2 * Math.PI) + 0.5) * AC_NS - 0.5, s0 = Math.floor(u), a0 = (s0 + AC_NS) % AC_NS, a1 = (s0 + 1) % AC_NS;
+        const r0 = R[yb * AC_NS + a0], r1 = R[yb * AC_NS + a1];
+        if (!r0 && !r1) continue;
+        const d = Math.max(r0, r1) - Math.hypot(x, z) + AC_GAP;   // (the larger of the two bearings: a round belly between them is not cut short)
+        if (d > worst) worst = d;
+      }
+    }
+  }
+  return worst;
+}
+// the least turn out (spread) and forward that clears a side: the mix from how each turn changes the depth, then halved in
+// on the least amount that clears (at most AC_MAX)
+function acSolve(D, s, sh, sgn, Mel, Mhand, Mtorso) {
+  const pen = (dz, dx) => acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso), K = D.k[s];
+  // (last frame's answer, while it still just clears — within 1 cm past the gap —: one look a frame; the poses change slowly)
+  if (K[0] > 0) { const p = pen(K[0] * K[1], K[0] * K[2]); if (p <= 0 && p > -0.015) { D.dir[0] = K[1]; D.dir[1] = K[2]; return K[0]; } }
+  const p0 = pen(0, 0);
+  if (!(p0 > 0)) { K[0] = 0; return 0; }
+  const e = 0.06, gz = (pen(e, 0) - p0) / e, gx = (pen(0, e) - p0) / e;
+  let wz = Math.max(0, -gz), wx = Math.max(0, -gx);
+  if (wz + wx < 1e-6) { wz = 1; wx = 0; }
+  const n = Math.hypot(wz, wx); wz /= n; wx /= n;
+  let lo = 0, hi = Math.min(AC_MAX, Math.max(0.02, 1.15 * p0 / Math.max(0.05, -(wz * gz + wx * gx))));
+  for (let i = 0; i < 6 && hi < AC_MAX && pen(hi * wz, hi * wx) > 0; i++) { lo = hi; hi = Math.min(AC_MAX, hi * 1.6 + 0.02); }
+  for (let i = 0; i < 4; i++) { const m = (lo + hi) / 2; if (pen(m * wz, m * wx) > 0) lo = m; else hi = m; }
+  D.dir[0] = wz; D.dir[1] = wx; K[0] = hi; K[1] = wz; K[2] = wx;
+  return hi;
+}
+Rig.prototype._armClear = function (dt, a) {
+  let D = this._ac;
+  if (D === undefined) D = this._ac = armClearInit(this);
+  if (!D) return;
+  // (knocked out, the shoulders' spread is eased from where it is, not set: the turn out is dropped, not added again)
+  if (a === 'ko') { D.L[0] = D.L[1] = D.R[0] = D.R[1] = 0; D.wx[0] = D.wx[1] = null; return; }
+  const j = this.j, off = AC_SKIP.has(a) || !!this.over;
+  let Mtorso = null;
+  D.n++;
+  for (let w = 0; w < 2; w++) {
+    const s = w ? 'R' : 'L', arm = w ? j.armR : j.armL, sgn = w ? -1 : 1, st = D[s];
+    let tz = 0, tx = 0;
+    if (!off) {
+      // (looked at every third frame, a rig's own turn of them, the answer held between and eased the same)
+      const T = D.t[s];
+      if (D.n % 3 === 0 || T[2] !== 1) {
+        if (!Mtorso) { j.torso.updateMatrix(); Mtorso = j.torso.matrix; }
+        arm.el.updateMatrix(); arm.hand.updateMatrix();
+        _acC.copy(arm.el.matrix); _acD.multiplyMatrices(arm.el.matrix, arm.hand.matrix);
+        const k = acSolve(D, s, arm.sh, sgn, _acC, _acD, Mtorso);
+        T[0] = k * D.dir[0]; T[1] = k * D.dir[1]; T[2] = 1;
+      }
+      tz = T[0]; tx = T[1];
+    } else D.t[s][2] = 0;
+    const rd = off ? 30 : 6;   // (into a strike or a throw: its own arm within a few frames)
+    st[0] = damp(st[0], tz, tz > st[0] ? 20 : rd, dt); st[1] = damp(st[1], tx, tx > st[1] ? 20 : rd, dt);
+    if (st[0] < 1e-4 && st[1] < 1e-4) { st[0] = st[1] = 0; D.wx[w] = null; continue; }
+    arm.sh.rotation.z += sgn * st[0];
+    arm.sh.rotation.x -= st[1];
+    D.wx[w] = arm.sh.rotation.x;   // (taken off again before the next frame eases the joint: Rig.update)
+  }
+};
