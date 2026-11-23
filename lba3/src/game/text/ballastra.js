@@ -507,4 +507,15 @@ Object.assign(STR.en, {
   ep_bl_oren: 'They ask. I warm. I listen for the next one.',
   // the end card when the Ballastra chapters were played (story/epilogue.js showEnd; CAMPAIGN-CLARITY §7.2)
   ep_end_text_bl: 'The bore still turns under the island, now as a shield run by both worlds. The heat posts glow again at half heat, for every house, on the list or not. Kesh has its oasis and Lhar its village. On Ballastra the lower row is home, and a sleeper wakes when the family asks. {vesk} The well runs cool.<br><br>Thanks for playing LBA3: The Awakening.',
+  // THE SECOND SHIFT (P109 part 2, "A chair by the cradle": story/balances.js Cradles) — after the families' decision
+  wk_we_food: "Mags sent soup up. You've been on your feet since the bell, Nan.",
+  wk_od_food: "If I sit at that table, she's down here on her own.",
+  wk_we_sit: "Then I'll sit with her. If there were anything to sit on.",
+  wk_we_bowl: "It's going cold in my hands, and she won't take it standing.",
+  wk_od_bowl: "I'll eat when somebody's sitting with her.",
+  wk_we_go: "Go on, Nan. I've got her.",
+  wk_od_lid: "Don't let anyone lift her lid. Not yet.",
+  wk_we_notyet: 'Not yet.',
+  wk_we_chair: "Still asleep. Still not yet. It's a good chair for it.",
+  wk_od_soup: "Good soup. Don't tell Mags, she'll be unbearable.",
 });
