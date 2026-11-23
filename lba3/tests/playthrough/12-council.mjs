@@ -87,9 +87,17 @@ export const steps = [
     const e = P.enter('workshop', { run: true }); P.settle(); const T = G.rooms.workshop.life.terminals; const out = { e: e.r, got: f.cn_isoGot };
     for (const k of ['A', 'B']) { const r = P.use(T[k].x, T[k].z, { kind: 'cn_iso', near: 0.6 }); for (let i = 0; i < 60 && !f['cn_iso' + k]; i++) { G.step(0.1); P.settle(); } out[k] = [r.r, !!f['cn_iso' + k], G.rooms.workshop.life.state.iso]; }
     return { ...out, iso: f.cn_iso, fail: f.cn_iso ? null : 'isolator' }; }],
-  ['Mill Lane: the isolator on Kell\'s feed → chapter 10', () => { const G = game, f = G.flags; if (!f.cn_v) return { skip: 'no thread' };
+  ['Mill Lane: the isolator on Kell\'s feed', () => { const G = game, f = G.flags; if (!f.cn_v) return { skip: 'no thread' };
     P.enter('zeelich'); const L = G.rooms.zeelich.lift; const r = P.use(L.isoAt.x, L.isoAt.z, { kind: 'cn_clip', near: 0.6, run: true });
-    for (let i = 0; i < 300 && f.chapterKey === 'council'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    const K = G.story._cn?.kell;
+    for (let i = 0; i < 300 && f.chapterKey === 'council' && !(f.cn_bv && !f.cn_brumShow && K && !K.busy && !K.walks.length && G.state === 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    return { r: r.r, lane: f.cn_lane, lesson: !!f.cn_bv && !f.cn_brumShow, fail: f.cn_lane ? null : 'clip' }; }],
+  // THE SECOND SHIFT (story/zeelift.js KellThread): the mills' line has no stop at the landing; Brum takes the handle once
+  // Twinsen has shown him where to stand and what to watch (the cloth on the cable to the nail); his trip → chapter 10
+  ['Mill Lane: show Brum the handle → chapter 10', () => { const G = game, f = G.flags; if (!f.cn_v) return { skip: 'no thread' };
+    const L = G.rooms.zeelich.lift; let r = { r: 'no lesson' };
+    if (f.cn_bv && !f.cn_brumShow && f.chapterKey === 'council') r = P.use(L.handle.x, L.handle.z, { kind: 'cn_show', near: 1.0 });
+    for (let i = 0; i < 400 && f.chapterKey === 'council'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
     P.settle(60); P.settle(30);
-    return { r: r.r, lane: f.cn_lane, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === (game.story.inCampaign('throttle') ? 'throttle' : 'network') ? null : 'no chapter 10' }; }],
+    return { r: r.r, brum: f.cn_brum ?? null, chapter: f.chapterKey, room: G.room?.id, fail: f.chapterKey === (game.story.inCampaign('throttle') ? 'throttle' : 'network') ? null : 'no chapter 10' }; }],
 ];

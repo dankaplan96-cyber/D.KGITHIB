@@ -12,7 +12,7 @@ Object.assign(STR.en, {
 
   c8_zoe_1: 'You came back! Arthur, he came back!',
   c8_ar_1: 'Dad! I told you he would! Did you see the snow? Did you bring me snow?',
-  c8_zoe_2: 'The ships take only the list. Vesk switched the heat posts off yesterday: every bit of power goes to his bore. Everyone on the list is queuing at the spaceport. The rest were told to wait.',
+  c8_zoe_2: 'Snow later, Arthur. The ships take only the list, Twinsen. Vesk switched the heat posts off yesterday to feed his bore. The list is queuing at the spaceport, and the rest of us were told to wait.',
   c8_tw_z1: "Then we take everyone else. Where's safe?",
   c8_zoe_3: "The lighthouse cliffs are high and solid, and Doran's old boats are moored under them. I'll get the hill families there. You find somewhere for the town.",
   c8_ar_2: 'Grandpa Gilbert says FunFrock dug tunnels under everything! He says it all the time. Nobody listens.',

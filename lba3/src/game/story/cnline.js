@@ -84,6 +84,7 @@ export class CouncilThread {
   objective() {
     const f = this.f, ch = this.ch;
     if (!this.cur() || !this.on) return null;
+    if (f.cn_lane && f.cn_bv && !f.cn_brum) return ch.goal(f.cn_brumShow ? 'cn_obj_trip' : 'cn_obj_brum');   // (THE SECOND SHIFT: Brum at the handle, zeelift.js KellThread)
     if (f.cn_iso && !f.cn_lane) return ch.goal('cn_obj_lane');
     if (f.cn_stop && !f.cn_iso) return ch.goal('cn_obj_bench') + (f.cn_isoGot ? ch.sub(!!f.cn_isoA, 'cn_sub_a') + ch.sub(!!f.cn_isoB, 'cn_sub_b') : '');
     if (f.c9_vote && !f.cn_stop) return ch.goal('cn_obj_stop');
@@ -100,6 +101,7 @@ export class CouncilThread {
     const f = this.f, ch = this.ch, Z = this.Z;
     if (!this.cur() || !this.on || !Z) return null;
     const L = Z.lift;
+    if (f.cn_lane && f.cn_bv && !f.cn_brumShow) return ch.stars(L.handle);
     if (f.cn_iso && !f.cn_lane) return ch.stars(L.isoAt);
     if (f.cn_stop && !f.cn_iso) return ch.stars(Z.workshopDoor);
     if (f.c9_vote && !f.cn_stop) return ch.stars(Z.platform.console);
@@ -111,7 +113,7 @@ export class CouncilThread {
     const f = this.f;
     if (!this.on) return [];
     return [{ key: 'cn_j_order', done: f.cn_closed === true }, { key: 'cn_j_kell', done: f.cn_kell === true }, { key: 'cn_j_log', done: f.cn_log === true },
-      { key: 'cn_j_stop', done: !!f.cn_stop }, { key: 'cn_j_iso', done: !!f.cn_iso }, { key: 'cn_j_lane', done: !!f.cn_lane }].filter((l) => l.done);
+      { key: 'cn_j_stop', done: !!f.cn_stop }, { key: 'cn_j_iso', done: !!f.cn_iso }, { key: 'cn_j_lane', done: !!f.cn_lane }, { key: 'cn_j_brum', done: !!f.cn_brumShow }].filter((l) => l.done);
   }
   items() { const f = this.f; return this.on && f.cn_iso && !f.cn_lane ? [{ id: 'iso', icon: 'part' }] : []; }
 
