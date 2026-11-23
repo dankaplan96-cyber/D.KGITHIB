@@ -112,6 +112,7 @@ const takeHandle = () => ev(() => {
   const LT = game.story.cur.lift, L = LT.L, h = game.hero;
   const r = P.use(L.handle.x, L.handle.z, { near: 1.0, kind: 'zt_handle' });
   const t = SS.until(() => !!LT.hold && game.heroHold, 20);
+  game.step(0.8);   // (the prompt shows after its dwell; until then the box keeps its last words, hidden)
   return { r: r.r, hold: !!LT.hold, t, at: +Math.hypot(h.pos.x - L.handle.front.x, h.pos.z - L.handle.front.z).toFixed(2), facing: +h.angle.toFixed(2),
     toast: (game.hud.toastLog || []).slice(-2), prompt: document.querySelector('#prompt')?.textContent };
 });
@@ -238,11 +239,11 @@ if (want('D') && fs.existsSync(READY)) {
   is('D1 sound off: a stop short of the nail shows itself (the barrow runs at the lip and comes back; Brel\'s word in the box); then the cloth brought to the nail by sight: over the joint; every decision read from the cloth and the nail', await ev(() => {
     const L = SS.lift(), LT = game.story.cur.lift, G = game;
     SS.hold('ArrowUp', () => SS.err() <= 0.2); const x0 = L.barrowAt().x; let jolt = 0, box = '';
-    for (let i = 0; i < 40; i++) { G.step(1 / 30); jolt = Math.max(jolt, x0 - L.barrowAt().x); if (G.state === 'dialog') { box = document.querySelector('#dialog .text')?.textContent || ''; break; } }
+    for (let i = 0; i < 40; i++) { G.step(1 / 30); jolt = Math.max(jolt, x0 - L.barrowAt().x); if (G.state === 'dialog') { G.step(0.6); box = (G.state === 'dialog' && getComputedStyle(document.querySelector('#dialog')).display !== 'none' ? 'shown: ' : 'hidden: ') + ([...SS.said].pop()?.[1] || ''); break; } }
     P.settle();
     SS.hold('ArrowUp', () => SS.err() <= 0.012); SS.until(() => G.flags.zt_lunch && !LT.walks.length, 60);
     return { muted: [G.audio.vol?.master, G.settings.sfx], jolt: +jolt.toFixed(2), box, lunch: G.flags.zt_lunch, barrowOff: +Math.hypot(L.barrowAt().x - L.shift.barrowOff.x, L.barrowAt().z - L.shift.barrowOff.z).toFixed(2) };
-  }), (v) => v.muted[0] === 0 && v.jolt > 0.15 && /Up a touch/.test(v.box) && v.lunch === true && v.barrowOff < 0.05);
+  }), (v) => v.muted[0] === 0 && v.jolt > 0.15 && /^shown: Up a touch/.test(v.box) && v.lunch === true && v.barrowOff < 0.05);
   await browser.close();
 }
 
@@ -250,7 +251,7 @@ if (want('D') && fs.existsSync(READY)) {
 //    where the nail and the knot fall in the frame (pictures for a person; the numbers only say they are in the frame)
 if (want('V') && fs.existsSync(READY)) {
   await start(null, null, READY);
-  await takeHandle();
+  is('V0 (A4 again) the handle in his hands: the toast says the keys, the prompt shown says how to let go', await takeHandle(), (v) => v.hold && v.toast.some((s) => /Lift handle/.test(s)) && /Let Go/.test(v.prompt || ''));
   const proj = () => ev(() => {
     const G = game, L = SS.lift(), c = G.camera, V = G.hero.pos.constructor;
     const p = (x, y, z) => { const v = new V(x, y, z).project(c); return [+((v.x + 1) / 2 * innerWidth).toFixed(0), +((1 - v.y) / 2 * innerHeight).toFixed(0)]; };
