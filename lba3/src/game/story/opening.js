@@ -1,19 +1,25 @@
-// The opening (new game), about 88 s. What a player who never played LBA should take from it:
-//   where   Citadel Island on the planet Twinsun, twelve years after Twinsen's last adventure (a caption)
+// The opening (new game), 88 s (the notebook cut, LBA3-RUN, switchable: 88.8 s). What a player who never played LBA should
+// take from it:
+//   (notebook cut) the history first, over Twinsen's own sketchbook: FunFrock ruled Twinsun with clones and teleporters;
+//           Twinsen stood up to him; later lightning struck the Dino-Fly, and on Zeelich he brought the stolen children
+//           home. Then his face over the book: where and when (a caption); the last page's drawing becomes the island
+//   where   Citadel Island on the planet Twinsun, twelve years after Twinsen's last adventure (a caption; the classic
+//           cut adds Sendell, FunFrock and his clones in a second)
 //   what changed   the Joint Project (Twinsun + Zeelich) is unloading at the harbour and promises its heat to
 //           every home ("Vesk promised"); its drill turns in FunFrock's old fortress and the ground hums
 //   who     Twinsen (mending the lamp), his son Arthur ("Dad!"), his wife Zoé (the tap)
 //   hook    the tap stops, then runs warm; the camera goes down the well: something under the island glows
 //           in time with the hum
-//   first   "I'll check the well." / Zoé: "Take your magic ball." → she goes next door (the game's door
-//           transition: a dip to black, then outside), the title, control in the house, the objective
-//           "Check the well" with the step "Take the magic ball from the cupboard"
+//   first   "I'll check the well." / Zoé: "Take your magic ball." → she goes next door (the game's door transition: a
+//           dip to black, then outside, the title; the notebook cut hears the door from inside), control in the house,
+//           the objective "Check the well" with the step "Take the magic ball from the cupboard"
 //
 // Built on src/engine/cinematic.js. Every action is an event or a track on one clock; finish() puts the world in
 // its end state (the same whether the scene played out or was skipped) and hands control over.
 // Times are in seconds. The music cue `opening` (tools/music/tracks/opening.py) is written to these sections:
 // harbour 2.5–13, the lift 13–29, home 29–41, the tap 41–59, "That's warm." 59–66.5, the decision 66.5–76,
-// the title 76–83.
+// the title 76–83. The notebook cut's cue `opening_nb` (tools/music/tracks/opening_nb.py), on its scene clock: the notebook
+// 0.6–17.6, the title over the island 17.6–22.6, then the same sections 9.6 s later to the decision's end (85.6), the tail.
 import * as THREE from 'three';
 import { Cinematic, voiceSeconds } from '../../engine/cinematic.js';
 import { angleDiff, damp, dampAngle } from '../../engine/math.js';
@@ -25,8 +31,30 @@ import { t } from '../i18n.js';
 import '../text/opening.js';
 import { SHIFT, pierW, pierAng } from '../island.js';
 
-export const OPENING_LENGTH = 88.0;
-export const MUSIC_AT = 2.5;          // the cue starts after a moment of sea sound
+// LBA3-RUN: two cuts of the film. `classic` (the default, the film as it was, 88 s) and `notebook` (for the user to choose,
+// ?opening=notebook or localStorage lba3_opening = 'notebook'): it opens on Twinsen's sketchbook, 0–NB_END s of the
+// scene's clock: the history in four captions over its pages (LBA1: FunFrock's clones and teleporters, Twinsen stands up to
+// him; LBA2: the storm and the Dino-Fly, the stolen children brought home from Zeelich), his face over the book twelve years
+// on (where and when), and the island's drawing turning into the real island: the aerial picks up at its old 8 s, with the
+// title over it. Its outside shot (old 75.2–81.6: Zoé next door, the title) is cut: the door is heard from inside; 88.8 s.
+// Everything after the notebook is written below on the classic film's own clock ("old" seconds); newOf / oldOf convert
+// (in the classic cut they change nothing).
+export const openingCut = () => {
+  try { return (new URLSearchParams(location.search).get('opening') || localStorage.getItem('lba3_opening')) === 'notebook' ? 'notebook' : 'classic'; } catch { return 'classic'; }
+};
+export function cutClock(cut) {
+  if (cut !== 'notebook') {
+    const id = (o) => o;
+    return { cut: 'classic', NB: 0, D2: 0, NB_END: 0, OLD_END: 88.0, LENGTH: 88.0, MUSIC_AT: 2.5, MUSIC: 'opening', newOf: id, oldOf: id, newEnd: id };
+  }
+  const NB = 9.6, CUT0 = 75.2, CUT1 = 81.6, D2 = NB - (CUT1 - CUT0), OLD_END = 85.6;   // (scene time = old + NB up to the cut)
+  return {
+    cut: 'notebook', NB, D2, NB_END: 8.0 + NB, OLD_END, LENGTH: OLD_END + D2, MUSIC_AT: 0.6, MUSIC: 'opening_nb',   // (NB_END: the drawing turns into the island)
+    newOf: (o) => (o < CUT0 ? o + NB : o >= CUT1 ? o + D2 : null),
+    oldOf: (n) => (n < CUT0 + NB ? n - NB : n - D2),
+    newEnd: (o) => (o <= CUT0 ? o + NB : o < CUT1 ? CUT0 + NB : o + D2),
+  };
+}
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 // the harbour's shots and walks are written in its design frame (island.js buildHarbour); HV/HP put them where it stands
@@ -39,7 +67,9 @@ const PV = (x, y, z) => { const q = pierW(x, z); return V(q.x, y, q.z); };
 const PP = (x, z) => pierW(x, z);
 const sm = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 
-export function playOpening(story) {
+export function playOpening(story, cut = openingCut()) {
+  const CK = cutClock(cut), NBCUT = CK.cut === 'notebook';
+  const { NB, NB_END, OLD_END, MUSIC_AT, newOf, oldOf, newEnd } = CK, OPENING_LENGTH = CK.LENGTH;
   const g = story.game, W = g.world, R = g.rooms.house, H = g.hero, WR = g.rooms.well;
   const zoe = story.cur.npc('zoe'), arthur = story.cur.npc('arthur');
   const xil = g.npcs.find((n) => n.def.id === 'xil');   // (on the pier behind the lift: he listens in)
@@ -173,7 +203,9 @@ export function playOpening(story) {
   };
 
   // ---------------------------------------------------------------- shots (world positions)
-  const shot = (t0, t1, from, to, extra2 = {}) => ({ t0, t1, from, to, ...extra2 });
+  // (written on the old clock: a shot that starts in the cut is gone)
+  const shot = (t0, t1, from, to, extra2 = {}) => (newOf(t0) == null ? null : { t0: newOf(t0), t1: newEnd(t1), from, to, ...extra2 });
+  const ot = () => oldOf(cine.t);
   const P = (pos, lk, fov = 40) => ({ pos, look: lk, fov });
   const twSpot = hx(-0.45, -0.25), zoTray = hx(-1.78, -2.6), zoSink = hx(-2.42, -2.55);   // (sink: 0.12 m west of the spout's line, her right hand's side; clear of the stove)
   const cupboard = hv(-4.1, 1.25, -1.6);
@@ -186,7 +218,7 @@ export function playOpening(story) {
     // dead stop over the water at 9.0 (the frames 6.5-9.5 s are all but identical) and set off again into a 4 s dive.
     // Now it drifts over the island under the caption, gathers speed and dives over the quay's roofs to the lift
     // without stopping: position and aim on one smooth curve, the speed continuous through 9 s.)
-    shot(0, 13.0, () => aerial(cine.t), null),
+    shot(0, 13.0, () => aerial(ot()), null),
     // 2 — the project's lift: the crate comes up off the barge; a resident asks the worker about the heat
     shot(13.0, 19.6, P(PV(-79.7, 3.3, -1.75), PV(-85.1, 2.25, -3.05), 44), P(PV(-79.9, 3.2, -1.85), PV(-85.1, 2.4, -3.1), 44)),
     // 3 — the hum: the drill turning in FunFrock's old fortress, up on the plateau, the town beyond
@@ -213,7 +245,7 @@ export function playOpening(story) {
     // through the whole business with the tap (41-45 s). As she reaches, the camera now comes down to her shoulder's height
     // and a little nearer (1.62 m, aimed at 1.44): her face in profile over her arm, the hand on the handle, the spout, and
     // Twinsen at his table behind her — the same side, the same lens family, one move with her reach instead of a cut)
-    shot(35.0, 45.3, () => tapCam(cine.t), null),
+    shot(35.0, 45.3, () => tapCam(ot()), null),
     // (...and as she turns from the tap to call him, her face from his side of the room: the cut on her turn)
     shot(45.3, 48.0, P(hv(-0.9, 1.75, -1.0), hv(-2.4, 1.45, -2.5), 42), P(hv(-0.95, 1.74, -1.05), hv(-2.4, 1.46, -2.52), 41)),
     // 7 — the exchange: Twinsen answers from the table; over his shoulder for hers
@@ -240,12 +272,13 @@ export function playOpening(story) {
     // (then from the east wall: she comes toward us past him saying "Take your magic ball." — from the first camera
     // she passed behind him as she said it)
     shot(72.2, 75.2, () => goingOut(), null),
-    // 12 — outside (the game's door transition): Zoé goes next door, past the house's new heat post; the title
-    shot(75.2, 81.6, () => street(), null),
     // 13 — inside again: Twinsen turns to the cupboard (the ball); then into the game's own camera
     shot(81.6, 83.6, P(hv(3.3, 2.3, 0.3), V(twEnd.x - 1.6, 1.1, twEnd.z + 0.1), 46), P(hv(3.5, 2.6, 0.6), V(twEnd.x - 2.0, 1.05, twEnd.z + 0.1), 46)),
-    shot(83.6, OPENING_LENGTH, null, 'game'),
-  ];
+    // 12 — outside (the game's door transition): Zoé goes next door, past the house's new heat post; the title
+    // (LBA3-RUN: not in the notebook cut)
+    shot(75.2, 81.6, () => street(), null),
+    shot(83.6, OLD_END, null, 'game'),
+  ].filter(Boolean);
   // the opening's aerial move (0-13 s): a Catmull-Rom curve through the three framings it used to stop at (high over
   // the island; high over the water by the pier, at 9 s; low over the quay at the lift, at 13 s), the camera's position
   // and aim alike; the time warp starts from rest, passes 9 s at speed and settles at 13 s (one curve, C1 throughout)
@@ -281,7 +314,7 @@ export function playOpening(story) {
   // ...and as she turns for the hall the camera eases back along the wall and pans with her, so she leaves the room
   // in frame, whole, instead of walking past the lens with her head cut
   function goingOut() {
-    const k = sm((cine.t - 73.3) / 1.4);
+    const k = sm((ot() - 73.3) / 1.4);
     const pos = hv(3.6 + 0.3 * k, 1.95 + 0.1 * k, 0.4 + 0.55 * k);
     const lk = hv(-1.0, 1.1, -1.6).lerp(V(zo.pos.x, zo.pos.y + 1.1, zo.pos.z), 0.85 * k);
     return P(pos, lk, 46);
@@ -291,19 +324,25 @@ export function playOpening(story) {
   // her, rising a little for the title, their red roof and green shutters ahead of her
   const stY = g.physics.groundAt(-44.4, 81.2);
   function street() {
-    const k = sm((cine.t - 75.2) / 6.4);
+    const k = sm((ot() - 75.2) / 6.4);
     const pos = V(-44.6 + 0.7 * k, stY + 1.75 + 0.45 * k, 81.15 + 0.2 * k);
     const her = V(zo.pos.x, zo.pos.y + 1.15, zo.pos.z), door = V(home.door.x, stY + 1.3, home.door.z), ahead = V(nbr.door.x - 4.5, stY + 1.4, nbr.door.z + 2.6);
-    const lk = door.lerp(her, sm((cine.t - 75.5) / 1.4)).lerp(ahead, 0.3 * sm((cine.t - 77.5) / 4.0));
+    const lk = door.lerp(her, sm((ot() - 75.5) / 1.4)).lerp(ahead, 0.3 * sm((ot() - 77.5) / 4.0));
     // (from the title on, she is kept right of centre and low: the title sits over the middle of the sky)
     // (OPEN-FILM: higher, and from 75.8: at 77-78 s her head was under the title's second line)
-    lk.add(V(-0.8, 1.0, -1.05).multiplyScalar(sm((cine.t - 75.8) / 1.3)));
+    lk.add(V(-0.8, 1.0, -1.05).multiplyScalar(sm((ot() - 75.8) / 1.3)));
     return P(pos, lk, 46);
   }
 
   // ---------------------------------------------------------------- tracks
   const tracks = [];
-  const track = (t0, t1, fn) => tracks.push({ t0, t1, fn });
+  // (a track on the old clock: its function is given old seconds and its k on them; one that starts in the cut is gone, one
+  // that runs into it ends where the cut starts. trackN: on the scene's own clock)
+  const track = (t0, t1, fn) => {
+    if (newOf(t0) == null) return;
+    tracks.push({ t0: newOf(t0), t1: newEnd(t1), fn: (k, n, dt) => fn(k >= 1 ? 1 : Math.min(1, Math.max(0, (oldOf(n) - t0) / ((t1 - t0) || 1))), oldOf(n), dt) });
+  };
+  const trackN = (t0, t1, fn) => tracks.push({ t0, t1, fn });
   // walk along points at a steady pace; the rig is told the real speed so the feet don't slide
   // (R5: `acc` / `dec`: seconds to get up to speed and to slow to a stop, so a walk starts from a standing weight
   // shift and settles instead of starting and stopping at full pace; each adds half its time to the walk)
@@ -553,7 +592,10 @@ export function playOpening(story) {
     hd.rotation.z += 0.04 * a._spS * (SIDE.get(a) || 1);
   };
   // everyone's rig, every frame (after the moves above)
-  track(0, OPENING_LENGTH, (k, tt, dt) => {
+  // (on the scene's clock from its first frame, the notebook's too; bends and grips are on the old clock: negative in the
+  // notebook)
+  trackN(0, OPENING_LENGTH, (k, n, dt) => {
+    const tt = oldOf(n);
     for (const a of cast) {
       restore(a);
       applyBend(a, -1); a._bend = null;
@@ -577,13 +619,21 @@ export function playOpening(story) {
 
   // ---------------------------------------------------------------- events
   const ev = [];
-  const at = (tt, fn) => ev.push({ t: tt, fn });
-  // sound of the place first, the music after a moment
-  at(0, () => loop('lap'));
-  at(2.2, () => sfx('ropeCreak'));
-  at(3.4, () => sfx('ropeCreak'));
-  at(MUSIC_AT, () => g.audio.cue('opening'));
-  at(6.2, () => loop('winch', { quiet: true }));
+  const at = (tt, fn) => { const n = newOf(tt); if (n != null) ev.push({ t: n, fn }); };   // (old clock; in the cut: gone)
+  const atN = (n, fn) => ev.push({ t: n, fn });                                              // (the scene's clock)
+  atN(MUSIC_AT, () => g.audio.cue(CK.MUSIC));
+  if (NBCUT) {
+    // the harbour's sounds come in with the drawing turning into the island (old 8 s)
+    at(8.0, () => { loop('lap'); loop('winch', { quiet: true }); });
+    at(8.5, () => sfx('ropeCreak'));
+    at(9.6, () => sfx('ropeCreak'));
+  } else {
+    // sound of the place first, the music after a moment
+    at(0, () => loop('lap'));
+    at(2.2, () => sfx('ropeCreak'));
+    at(3.4, () => sfx('ropeCreak'));
+    at(6.2, () => loop('winch', { quiet: true }));
+  }
   at(13.6, () => sfx('clunk'));
   // (NO-AIR: his left hand goes to the control's lever after the hook clunks on, and throws it as the motor starts:
   //  the grips and the arm's bend below; the rig's `reach` is a right arm held out, and the lever is on his left, the
@@ -785,16 +835,16 @@ export function playOpening(story) {
     return { palm: palmSeat.clone().addScaledVector(UP, lift).addScaledVector(hullAxis, side).lerp(nat, show), fingers: aF, normal: aLeft };
   };
   const onDeck = (lx, rub = 0) => (tt) => ({ palm: hullPt(lx + rub * Math.sin(tt * 5.2), 0, 0.004), fingers: aF.clone().add(V(0, -0.25, 0)), normal: V(0, -1, 0) });
-  grip(ar, 'R', 28.5, 36.95, mastHand, { ein: 0.35, eout: 0.4 });
+  grip(ar, 'R', -NB - 0.5, 36.95, mastHand, { ein: 0.35, eout: 0.4 });   // (LBA3-RUN: from the notebook on: he is at it all along)
   grip(ar, 'R', 36.85, 53.85, onDeck(0.105, 0.028), { ein: 0.5, eout: 0.35 });
   grip(ar, 'R', 58.2, OPENING_LENGTH, onDeck(0.105, 0.028), { ein: 0.45, eout: 0.01 });
-  grip(ar, 'L', 28.5, 31.3, onDeck(-0.115), { ein: 0.35, eout: 0.4 });
+  grip(ar, 'L', -NB - 0.5, 31.3, onDeck(-0.115), { ein: 0.35, eout: 0.4 });
   grip(ar, 'L', 34.9, 53.85, onDeck(-0.115), { ein: 0.5, eout: 0.35 });
   grip(ar, 'L', 58.2, OPENING_LENGTH, onDeck(-0.115), { ein: 0.45, eout: 0.01 });
   // Zoé's tray: her palms on the soil of the two pots she is filling, pressing in turn
   const onPot = (i, ph) => (tt) => { const p = K.pots[i]; return { palm: V(p.x, p.y + 0.006 - 0.006 * Math.max(0, Math.sin(tt * 4.2 + ph)), p.z), fingers: V(0, -0.45, -1), normal: V(0, -1, 0) }; };
-  grip(zo, 'L', 28.5, 39.65, onPot(0, 0), { ein: 0.35, eout: 0.4 });
-  grip(zo, 'R', 28.5, 39.65, onPot(1, Math.PI), { ein: 0.35, eout: 0.4 });
+  grip(zo, 'L', -NB - 0.5, 39.65, onPot(0, 0), { ein: 0.35, eout: 0.4 });
+  grip(zo, 'R', -NB - 0.5, 39.65, onPot(1, Math.PI), { ein: 0.35, eout: 0.4 });
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
@@ -844,6 +894,8 @@ export function playOpening(story) {
   at(72.4, () => look(zo, head(tw)));     // (over her shoulder, walking: "Take your magic ball.")
   at(74.3, () => { look(zo, null); look(tw, head(zo)); });
   // the front door: the game's door transition (a dip to black, the door, and she is outside)
+  // (the notebook cut: the picture comes back on Twinsen as the door shuts behind her; the shot of her outside, under the
+  //  title, is cut, and the title is over the island. The clock drops the events from 75.2 to 81.6 s)
   at(74.85, () => fade(true));
   at(75.2, () => {
     sfx('door');
@@ -857,7 +909,12 @@ export function playOpening(story) {
   at(76.4, () => document.querySelector('#cine-title').classList.add('show'));
   at(81.0, () => document.querySelector('#cine-title').classList.remove('show'));
   at(81.25, () => fade(true));
-  at(81.6, () => {
+  at(81.6, NBCUT ? () => {
+    sfx('door');
+    zoe.setPresent(false);            // (she is at the neighbours' door; finish() places her there)
+    cine.focus = null;
+    put(tw, twEnd.x, twEnd.z, twEndA + 0.6, 'idle'); look(tw, null);
+  } : () => {
     stopLoop('lap');
     g.enterRoom('house', twEnd, true, true);
     zoe.setPresent(false);            // (she is at the neighbours' door; finish() places her there)
@@ -899,6 +956,213 @@ export function playOpening(story) {
   function reveal() { for (const [e, v, sv] of unseen.splice(0)) { e.rig.root.visible = v; if (e.shadow && sv != null) e.shadow.visible = sv; } }
   function stopLoop(name) { for (const h of loops) if (h.name === name) h.stop(); }
 
+  // ---------------------------------------------------------------- the notebook (LBA3-RUN), on the scene's clock
+  // Twinsen at the table where he will mend the lamp, his old sketchbook open in his hands: the camera over his right
+  // shoulder; his right hand turns the pages by their corner, his left holds the book. Two spreads of the history, a cut to
+  // his face (twelve years on: where and when), the last page (the island, in pencil); the camera comes down onto it and
+  // the drawing turns into the real island (a picture of the page laid over the screen, faded out over the aerial).
+  const NBX = !NBCUT ? null : (() => {
+  const NBK = drawNotebook();
+  const PW = 0.17, PH = 0.238, H0 = 0.0103, SEG = 18;
+  const nbTex = [], nbMats = [], nbGeos = [];
+  const ntex = (c) => { const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 8; nbTex.push(tx); return tx; };
+  const nmat = (o) => { const m = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0, ...o }); nbMats.push(m); return m; };
+  const book = new THREE.Group(); book.name = 'openingNotebook'; book.userData.keep = true;   // (its leaves move: never batched)
+  {
+    const cover = nmat({ map: ntex(NBK.cover), roughness: 0.75 }), edge = nmat({ color: '#e6d8b8' });
+    const box = (w, h, d, m, x, y) => { const g2 = new THREE.BoxGeometry(w, h, d); nbGeos.push(g2); const me = new THREE.Mesh(g2, m); me.position.set(x, y, 0); book.add(me); };
+    for (const sd of [-1, 1]) { box(PW + 0.008, 0.003, PH + 0.012, cover, sd * (PW + 0.008) / 2, 0.0015); box(PW, 0.007, PH, edge, sd * PW / 2, 0.0065); }
+    box(0.014, 0.005, PH + 0.012, cover, 0, 0.0015);
+  }
+  const PAPER = '#e2d9ca';   // (the paper's own white under the room's lamp: the canvases are already light)
+  const flatPage = (c, x0) => { const g2 = new THREE.PlaneGeometry(PW, PH); g2.rotateX(-Math.PI / 2); nbGeos.push(g2); const me = new THREE.Mesh(g2, nmat({ map: ntex(c), color: PAPER })); me.position.set(x0, H0, 0); book.add(me); return me; };
+  flatPage(NBK.L1, -PW / 2); flatPage(NBK.R3, PW / 2);
+  // a leaf: front and back, bent across its width as it goes over (the free edge leads as it lifts, lags as it lands);
+  // layR / layL: how far over the page under it it lies on the right / on the left
+  const bendAt = (th, u) => th + 0.45 * Math.sin(2 * th) * u;
+  const leaf = (front, back, layR, layL) => {
+    const pos = new THREE.BufferAttribute(new Float32Array((SEG + 1) * 2 * 3), 3), uvF = [], uvB = [], idx = [];
+    for (let i = 0; i <= SEG; i++) { const u = i / SEG; uvF.push(u, 1, u, 0); uvB.push(1 - u, 1, 1 - u, 0); }
+    for (let i = 0; i < SEG; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 2, a + 1, a + 3); }
+    const side = (uv, c, s) => { const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', pos); g2.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g2.setIndex(idx); nbGeos.push(g2); const tx = ntex(c); const me = new THREE.Mesh(g2, nmat({ map: tx, side: s, color: PAPER })); me.frustumCulled = false; book.add(me); return { me, tx }; };
+    const F = side(uvF, front, THREE.FrontSide), B = side(uvB, back, THREE.BackSide);
+    const L = { F, B, th: null, layR, layL };
+    L.set = (th) => {
+      if (th === L.th) return; L.th = th;
+      const lay = H0 + (th < Math.PI / 2 ? layR : layL), ds = PW / SEG;
+      let x = 0, y = 0;
+      for (let i = 0; i <= SEG; i++) {
+        pos.setXYZ(i * 2, x, lay + y, -PH / 2); pos.setXYZ(i * 2 + 1, x, lay + y, PH / 2);
+        const ph = bendAt(th, (i + 0.5) / SEG); x += Math.cos(ph) * ds; y += Math.sin(ph) * ds;
+      }
+      pos.needsUpdate = true;
+      F.me.geometry.computeVertexNormals();
+      if (!B.me.geometry.getAttribute('normal')) B.me.geometry.setAttribute('normal', F.me.geometry.getAttribute('normal'));
+      F.me.geometry.computeBoundingSphere();
+    };
+    // a point on the leaf, s along it from the spine and z across (book-local), with the leaf's normal there
+    L.at = (s, z, th = L.th ?? 0) => {
+      const n = Math.max(1, Math.round(s / (PW / SEG))), ds = s / n;
+      let x = 0, y = 0, ph = th;
+      for (let i = 0; i < n; i++) { ph = bendAt(th, ((i + 0.5) * ds) / PW); x += Math.cos(ph) * ds; y += Math.sin(ph) * ds; }
+      return { p: V(x, H0 + (th < Math.PI / 2 ? layR : layL) + y, z), n: V(-Math.sin(ph), Math.cos(ph), 0), along: V(Math.cos(ph), Math.sin(ph), 0) };
+    };
+    return L;
+  };
+  const leafA = leaf(NBK.R1, NBK.L2, 0.0016, 0.0008), leafB = leaf(NBK.R2, NBK.L3, 0.0008, 0.0016);
+  leafA.set(0); leafB.set(0);
+  // the trail of dashes from the teleporter's stamp: on the left page, then on the first leaf
+  const trail = (pts, x0, y0) => {
+    const out = [], P = pts.map(([a, b]) => [x0 + (a / NB_PX) * PW, -PH / 2 + (b / NB_PY) * PH]);
+    let carry = 0;
+    for (let i = 1; i < P.length; i++) {
+      const [ax, az] = P[i - 1], [bx, bz] = P[i], L = Math.hypot(bx - ax, bz - az), dx = (bx - ax) / L, dz = (bz - az) / L;
+      for (let s = carry; s < L; s += 0.0052) {
+        const cx = ax + dx * s, cz = az + dz * s, hl = 0.0014, hw = 0.00055;
+        const q = [[cx - dx * hl - dz * hw, cz - dz * hl + dx * hw], [cx + dx * hl - dz * hw, cz + dz * hl + dx * hw], [cx + dx * hl + dz * hw, cz + dz * hl - dx * hw], [cx - dx * hl + dz * hw, cz - dz * hl - dx * hw]];
+        for (const k of [0, 1, 2, 0, 2, 3]) out.push(q[k][0], y0, q[k][1]);
+        carry = s + 0.0052 - L;
+      }
+    }
+    const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', new THREE.Float32BufferAttribute(out, 3)); g2.computeVertexNormals(); nbGeos.push(g2);
+    const me = new THREE.Mesh(g2, nmat({ color: '#2b2118', polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    me.geometry.setDrawRange(0, 0); book.add(me);
+    return { me, n: out.length / 18 };
+  };
+  const trailL = trail(NB_TRAIL.L, -PW, H0 + 0.0003), trailR = trail(NB_TRAIL.R, 0, H0 + 0.0016 + 0.0003);
+  // (the dashes reach the clones with the first caption, Twinsen with the second; at the first turn the leaf's own dashes
+  // are drawn into its page, which carries them over)
+  const CLONES = 0.52;   // (the share of the left page's dashes up to the clones)
+  const showDashes = (n) => {
+    const a = n < 1.0 ? 0 : n < 3.6 ? CLONES * sm((n - 1.0) / 2.6) : n < 4.1 ? CLONES : CLONES + (1 - CLONES) * Math.min(1, (n - 4.1) / 1.6);
+    trailL.me.geometry.setDrawRange(0, Math.round(a * trailL.n) * 6);
+    trailR.me.geometry.setDrawRange(0, Math.round(Math.max(0, Math.min(1, (n - 5.7) / 0.9)) * trailR.n) * 6);
+  };
+  const bakeTrail = () => {
+    const x = NBK.r1, P = NB_TRAIL.R;
+    x.save(); x.strokeStyle = '#2b2118'; x.lineWidth = 3.4; x.lineCap = 'butt'; x.setLineDash([9.8, 8.6]);
+    x.beginPath(); x.moveTo(P[0][0], P[0][1]); for (const [a, b] of P.slice(1)) x.lineTo(a, b); x.stroke(); x.restore();
+    leafA.F.tx.needsUpdate = true; trailR.me.visible = false;
+  };
+  // where the book is: open on the table's free west end, square to him (he stands at the table's north side, west of where
+  // he mends the lamp; the harbour's cut moves him there). Pages face up, so the camera can look straight down on them
+  const nbSpot = hx(-0.95, -0.2), NB_A = -0.06;
+  const placeBook = () => {
+    const a = NB_A, f = V(Math.sin(a), 0, Math.cos(a)), X = V(-Math.cos(a), 0, Math.sin(a)), Y = V(0, 1, 0), Z = f.clone().negate();
+    const c = hv(-0.95, TB.top + 0.0005, 0.31);
+    BM.makeBasis(X, Y, Z).setPosition(c);
+    book.quaternion.setFromRotationMatrix(BM);
+    book.position.set(c.x - R.center.x, c.y, c.z - R.center.z);   // (the room's group stands at its centre, unturned)
+    R.group.add(book); temps.push(book);
+  };
+  // (the book's own world frame, kept here: the shots and grips ask for it on frames the scene graph's matrices haven't
+  // been brought up to date yet — the test's unrendered steps)
+  const BM = new THREE.Matrix4();
+  const bw = (x, y, z) => V(x, y, z).applyMatrix4(BM);
+  const bd = (v) => v.clone().transformDirection(BM);
+  // the turns: [start, leaf]; each 0.85 s: the corner lifts (0.25 s), the leaf goes over, lands
+  const TURNS = [[7.05, leafA], [15.3, leafB]], TT = 0.85;
+  const thetaAt = (n, t0) => { const u = (n - t0) / TT; return u <= 0 ? 0 : u >= 1 ? Math.PI : u < 0.3 ? 0.3 * sm(u / 0.3) : 0.3 + (Math.PI - 0.3) * sm((u - 0.3) / 0.7); };
+  trackN(0, NB_END, (k, n) => {
+    if (k < 1 && TOPDOWN(n)) g.camera.up.copy(bd(V(0, 0, -1))); else g.camera.up.set(0, 1, 0);   // (the engine's lookAt follows it)
+    for (const [t0, L] of TURNS) L.set(thetaAt(n, t0));
+    showDashes(n);
+    if (n > TURNS[0][0] + TT) trailL.me.visible = false;   // (under the first leaf now)
+  });
+  // his hands (grips on the old clock: o = n - NB). The left holds the left board's edge, the palm against it, the
+  // fingers over the margin; the right the same on its side, and turns the pages by the corner nearest him
+  const gripN = (side, n0, n1, target, o) => grip(tw, side, n0 - NB, n1 - NB, (tt) => target(tt + NB), o);
+  // (his hands rest on the table either side of the book, near its edge — at the frame's foot, the pages clear; the right
+  //  one goes to a page's corner to turn it)
+  const edgeHold = (sd) => () => ({ palm: bw(sd * (PW + 0.05), 0.012, 0.118), fingers: bd(V(-sd * 0.3, -0.05, -1)).normalize(), normal: bd(V(0, -1, 0)) });
+  // (the corner where the leaf is at this very moment: the leaf itself is bent by a track that runs after the hands')
+  const corner = (L, t0) => (n) => {
+    const c = L.at(0.88 * PW, 0.3 * PH, thetaAt(n, t0));
+    return { palm: c.p.clone().addScaledVector(c.n, 0.009).applyMatrix4(BM), fingers: bd(c.along.clone().multiplyScalar(-0.45).add(V(0, 0, -1))).normalize(), normal: bd(c.n.clone().negate()) };
+  };
+  gripN('L', -0.5, 16.35, edgeHold(-1), { ein: 0.3, eout: 0.5 });
+  gripN('R', -0.5, 6.75, edgeHold(1), { ein: 0.3, eout: 0.35 });
+  gripN('R', 6.45, 7.75, corner(leafA, TURNS[0][0]), { ein: 0.35, eout: 0.3 });
+  gripN('R', 7.6, 14.95, edgeHold(1), { ein: 0.45, eout: 0.35 });
+  gripN('R', 14.65, 15.95, corner(leafB, TURNS[1][0]), { ein: 0.35, eout: 0.3 });
+  // (the last page turned, he straightens and lets go, his eyes still on the drawing)
+  atN(15.95, () => { play(tw, 'idle'); tw.rig.blendT = 0.6; });
+  const bookMid = () => bw(0, 0.01, 0.01);
+  // (bent over the book a little more than the tinkering pose, so his hands reach the table top beside it and its pages'
+  //  corners: from the tinkering pose they stopped 5-8 cm short; straightening as he lets go, 15.95)
+  bend(tw, -NB - 0.5, 15.95 - NB, { torso: [0.2], hips: -0.02, kneeL: [0.08], kneeR: [0.08] });
+  atN(0, () => look(tw, bookMid()));
+  for (const [t0] of TURNS) { atN(t0, () => sfx('paper')); atN(t0 + TT - 0.08, () => sfx('paper')); }
+  atN(TURNS[0][0], bakeTrail);
+  // the cut to his face: a smile at the children; a look over at his own son at his boat; back to the book
+  atN(13.55, () => tw.rig.setFace('pleased', 0.6, 2.4));
+  atN(14.15, () => look(tw, eyesOf(ar)));
+  atN(14.9, () => look(tw, bookMid()));
+  // the camera: over his right shoulder (book-local), easing in a little over the two spreads; his face from across the
+  // table; back over the book and down onto the last page until its drawing fills the frame
+  // (from above his right shoulder, not in his way: the book's pages face him, so this is the one side they read from)
+  // (straight down on the pages, turned so their top is the frame's top — the camera's `up` is the page's — his hands coming
+  //  in from below. Over his shoulder his head hid the book: he stands over it; from his side the pages lay across the frame)
+  const overBook = (u) => P(bw(0, 0.62 - 0.04 * u, 0.03), bw(0, 0, 0.004), 34 - 1.5 * u);
+  const nearBook = () => P(bw(0, 0.5, 0.015), bw(0, 0, 0.002), 33);
+  const TOPDOWN = (n) => n < 13.4 || (n >= 16.2 && n < NB_END);
+  const lerpP = (A, B2, k) => P(A.pos.clone().lerp(B2.pos, k), A.look.clone().lerp(B2.look, k), A.fov + (B2.fov - A.fov) * k);
+  shots.unshift(
+    { t0: 0, t1: 13.4, from: () => overBook(sm(cine.t / 13.4)), to: null },
+    // (his face from the front and to his left: Arthur's side, so his look over at his son turns his face to us)
+    { t0: 13.4, t1: 16.2, from: P(hv(-0.42, 1.46, 1.62), hv(-0.97, 1.5, -0.2), 36), to: P(hv(-0.45, 1.47, 1.54), hv(-0.97, 1.52, -0.2), 35) },
+    { t0: 16.2, t1: NB_END, from: () => lerpP(overBook(1), nearBook(), sm((cine.t - 16.2) / 0.7)), to: null },
+  );
+  // the drawing turns into the island: a picture of the last spread laid over the screen exactly where the page is (a
+  // projective transform of its four corners), faded in over the lit page; it opens out to fill the screen; the scene
+  // changes under it (the aerial, old 8 s); it fades away over the island
+  let overlay = null;
+  const dropOverlay = () => { overlay?.remove(); overlay = null; };
+  const quadCss = (w, h, q) => {   // (the CSS matrix3d taking a w × h box onto the quad q: TL, TR, BR, BL, in px)
+    const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q, dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3, dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+    const det = dx1 * dy2 - dx2 * dy1, G = det ? (dx3 * dy2 - dx2 * dy3) / det : 0, Hh = det ? (dx1 * dy3 - dx3 * dy1) / det : 0;
+    const a = x1 - x0 + G * x1, b = x3 - x0 + Hh * x3, d = y1 - y0 + G * y1, e = y3 - y0 + Hh * y3;
+    return `matrix3d(${a / w},${d / w},0,${G / w},${b / h},${e / h},0,${Hh / h},0,0,1,0,${x0},${y0},0,1)`;
+  };
+  const OV0 = 16.9, OV1 = 17.0, OV2 = 17.55;
+  trackN(OV0, NB_END + 1.45, (k, n) => {
+    if (k >= 1) { dropOverlay(); return; }
+    const c = NBK.S3, W0 = innerWidth, H1 = innerHeight;
+    if (!overlay) {
+      overlay = document.createElement('div'); overlay.id = 'opening-page';
+      overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:0';
+      c.style.cssText = 'position:absolute;left:0;top:0;transform-origin:0 0;filter:sepia(0.3) saturate(1.15) brightness(0.93)';   // (about the lit page's tone)
+      overlay.appendChild(c); document.querySelector('#cine').prepend(overlay);
+    }
+    const cam = g.camera; cam.updateMatrixWorld();
+    const scr = (v) => { v.project(cam); return [(v.x + 1) / 2 * W0, (1 - v.y) / 2 * H1]; };
+    const q0 = [scr(bw(-PW, H0, -PH / 2)), scr(bw(PW, H0, -PH / 2)), scr(bw(PW, H0, PH / 2)), scr(bw(-PW, H0, PH / 2))];
+    const sc = Math.max(W0 / 1120, H1 / 630), cx = W0 / 2, cy = H1 / 2;   // (the drawing's 16:9 frame over the screen)
+    const q1 = [[cx - 600 * sc, cy - 420 * sc], [cx + 600 * sc, cy - 420 * sc], [cx + 600 * sc, cy + 420 * sc], [cx - 600 * sc, cy + 420 * sc]];
+    const e = sm((n - OV1) / (OV2 - OV1)), q = q0.map((p, i) => [p[0] + (q1[i][0] - p[0]) * e, p[1] + (q1[i][1] - p[1]) * e]);
+    c.style.transform = quadCss(c.width, c.height, q);
+    overlay.style.opacity = String(n < NB_END ? Math.min(1, (n - OV0) / 0.2) : Math.max(0, 1 - sm((n - NB_END) / 1.3)));
+  });
+  // the title over the island
+  atN(18.2, () => document.querySelector('#cine-title').classList.add('show'));
+  atN(21.2, () => document.querySelector('#cine-title').classList.remove('show'));
+  // ...and at the island (old 8 s): the house hidden, the book put away; Twinsen to the lamp, the screwdriver in his hand
+  at(8.0, () => {
+    stopLoop('room');
+    g.exitRoom({ ...HP(-80, -4), a: 0 }, true, true);
+    cine.focus = harbourFocus;
+    book.visible = false;
+    play(tw, 'tinker'); look(tw, null);   // (he goes to the lamp under the dip at old 29 s, where the film puts him)
+    hold(TB.screwdriver, tw, [0, -0.05, 0.02], [-0.3, 0, Math.PI / 2]);
+    tipLocal.set(-0.23, 0.016, 0).applyEuler(sdv.rotation).add(sdv.position); axisLocal.set(-1, 0, 0).applyEuler(sdv.rotation).normalize();
+  });
+  return {
+    start: () => { put(tw, nbSpot.x, nbSpot.z, NB_A, 'tinker'); placeBook(); leafA.set(0); leafB.set(0); showDashes(0); },
+    dispose: () => { dropOverlay(); for (const x of [...nbGeos, ...nbMats, ...nbTex]) x.dispose(); },
+    test: { book, leaves: [leafA.F.me, leafB.F.me], turns: TURNS.map(([t0]) => t0), turnLen: TT, end: NB_END },
+  };
+  })();
+
   // ---------------------------------------------------------------- lines (each speaker babbles in their own voice)
   const C = { zoe: '#ffb0d0', hero: '#8fc2ff', arthur: '#ffe070', worker: '#9fe0d8', resident: '#e8d8a0' };
   const subs = [];
@@ -908,7 +1172,7 @@ export function playOpening(story) {
   // seconds, joint offsets): a small wind-up the other way, the move, a hold while the words that carry it are said, and a
   // settle — and the head moves with the voice itself (speech, in the rig track below); the body stays in its idle.)
   const say = (tt, id, key, d, a = null, beat = null) => {
-    subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
+    subs.push({ t: newOf(tt), d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
     if (a && beat) gest(a, tt + (beat.at ?? 0.15), beat.d ?? Math.min(d - 0.5, voiceSeconds(t(key), d, 'n_' + id)), beat.o);
   };
   say(14.6, 'resident', 'op_res_1', 2.3, resident, { at: 0.35, d: 1.2, o: { shR: [-0.55, 0, -0.3], elR: [-2.0], head: [0.03, 0, 0.07] } });   // (NO-AIR: a thumb back over his shoulder at the harbour row; it was both forearms held up in front of him, as if he carried something)
@@ -932,24 +1196,39 @@ export function playOpening(story) {
   // where and when: two captions over the island
   // (P83 / S-7: then who, for a newcomer: Sendell, FunFrock and his clones. The first caption was up 7.0 s for 70
   //  characters; 5.0 leaves the second about 17 characters a second, ending 0.8 s before the resident's first line)
-  const caps = [{ t: 1.6, d: 5.0, text: t('op_cap_place'), sub: t('op_cap_time') }, { t: 7.0, d: 6.8, text: t('op_cap_lore'), sub: t('op_cap_lore_sub') }];
+  // (LBA3-RUN: the history over the notebook's pages, a line at a time (about 15 characters a second, a short gap between
+  //  them so each one reads as new); then where and when over his face, twelve years on)
+  const caps = NBCUT ? [
+    { t: 0.5, d: 3.2, text: t('op_nb_1'), cls: 'recap' }, { t: 3.9, d: 3.1, text: t('op_nb_2'), cls: 'recap' },
+    { t: 7.95, d: 2.6, text: t('op_nb_3'), cls: 'recap' }, { t: 10.75, d: 2.65, text: t('op_nb_4'), cls: 'recap' },
+    { t: 13.65, d: 3.2, text: t('op_cap_place'), sub: t('op_cap_time') },
+  ] : [{ t: 1.6, d: 5.0, text: t('op_cap_place'), sub: t('op_cap_time') }, { t: 7.0, d: 6.8, text: t('op_cap_lore'), sub: t('op_cap_lore_sub') }];
 
   // ---------------------------------------------------------------- prepare / finish
   let stationWas = false;
   const cine = new Cinematic(g, {
     length: OPENING_LENGTH,
     events: ev, tracks, shots, subs, caps,
-    music: { name: 'opening', at: MUSIC_AT },
+    music: { name: CK.MUSIC, at: MUSIC_AT },
     async prepare(c) {
       g.audio.setMood(null);                   // the title music fades out under the black
-      g.exitRoom({ ...HP(-80, -4), a: 0 }, true, true);
-      c.focus = harbourFocus;
       stationWas = !!W.station.active;
       for (const a of [zoe, arthur]) a.controlled = true;
-      // the hero is at home (out of sight while the camera is at the harbour)
-      put(tw, twSpot.x, twSpot.z, 0, 'tinker');
-      hold(TB.screwdriver, tw, [0, -0.05, 0.02], [-0.3, 0, Math.PI / 2]);
-      tipLocal.set(-0.23, 0.016, 0).applyEuler(sdv.rotation).add(sdv.position); axisLocal.set(-1, 0, 0).applyEuler(sdv.rotation).normalize();
+      if (NBCUT) {
+        // (the notebook cut: the notebook first, at home; the harbour from the aerial on, old 8 s. The hero at the table
+        //  with his notebook; the screwdriver lies there until the cut to the island)
+        g.enterRoom('house', twSpot, true, true);
+        c.focus = null;
+        NBX.start();
+        loop('room');
+      } else {
+        g.exitRoom({ ...HP(-80, -4), a: 0 }, true, true);
+        c.focus = harbourFocus;
+        // the hero is at home (out of sight while the camera is at the harbour)
+        put(tw, twSpot.x, twSpot.z, 0, 'tinker');
+        hold(TB.screwdriver, tw, [0, -0.05, 0.02], [-0.3, 0, Math.PI / 2]);
+        tipLocal.set(-0.23, 0.016, 0).applyEuler(sdv.rotation).add(sdv.position); axisLocal.set(-1, 0, 0).applyEuler(sdv.rotation).normalize();
+      }
       setScrew(0);
       put(zo, zoTray.x, zoTray.z, Math.PI, 'potting');
       put(ar, R.npcSpots.arthur.x, R.npcSpots.arthur.z, R.npcSpots.arthur.a, 'kneelWork');
@@ -965,18 +1244,21 @@ export function playOpening(story) {
       handle.rotation.y = 0; water(0);
       // compile every material the scene will show while the screen is still black
       const r = g.renderer.renderer;
-      R.group.visible = true; WR.group.visible = true;
+      R.group.visible = true; WR.group.visible = true; W.root.visible = true;
       try { await (r.compileAsync ? r.compileAsync(g.scene, g.camera) : r.compile(g.scene, g.camera)); } catch { /* the first frames compile instead */ }
-      R.group.visible = false; WR.group.visible = false;
+      WR.group.visible = false;
+      if (NBCUT) W.root.visible = false; else R.group.visible = false;   // (as the game's room leaves them: in the house, or outside)
       // the cue decoded before the picture starts, so it can enter on time
-      if (g.audio.ctx) await Promise.race([Promise.resolve(g.audio.music.ready).then(() => g.audio.music.load('opening')), new Promise((res) => setTimeout(res, 5000))]);
+      if (g.audio.ctx) await Promise.race([Promise.resolve(g.audio.music.ready).then(() => g.audio.music.load(CK.MUSIC)), new Promise((res) => setTimeout(res, 5000))]);
     },
     finish(skipped) {
       // (the scene's pose layers off every joint: the gameplay rig never turns a hand bone, so a grip's hand turn would stay)
       for (const a of cast) { restore(a); applyBend(a, -1); a._bend = null; a._feet = null; a.rig.turn = 0; a._spF = a._spS = 0; }
+      g.camera.up.set(0, 1, 0);   // (the notebook's straight-down view turns the camera's up to the page's top)
       for (const h of loops) h.stop(skipped ? 0.2 : 0.8);
       for (const o of temps) o.parent?.remove(o);
       for (const g2 of [flats, caveFlat]) g2.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();
+      NBX?.dispose();   // (the notebook)
       for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; if (a._plantLite != null) a.rig.plantLite = a._plantLite; if (a._contact) a.rig.contact = a._contact; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
@@ -998,5 +1280,221 @@ export function playOpening(story) {
   });
   cine.extras = { worker, resident };   // (the scene-only cast, for the tests' per-frame checks)
   cine.speakers = { n_worker: worker, n_resident: resident };   // (OPEN-FILM: their mouths move with their voices: voice.js driveMouth)
+  cine.notebook = NBX?.test ?? null;   // (LBA3-RUN: for the tests)
+  cine.clock = { cut: CK.cut, nb: NB, d2: CK.D2 };
   return cine;
+}
+
+// ---------------------------------------------------------------- the notebook's pages (LBA3-RUN)
+// Twinsen's own sketchbook, drawn here on canvases (ink, pencil, a little wash on cream paper): no picture or sound from
+// LBA1/LBA2, only what their stories say. A page is NB_PX × NB_PY; `S3` is the last spread, both pages in one picture (the
+// island seen from the sea, as the film's aerial sees it when the drawing turns into the real view). No words on the
+// pages: the captions carry the words, in every language.
+export const NB_PX = 600, NB_PY = 840;
+// the trail's dashes (page pixels): from the teleporter's stamp past the clones (first caption), on over the gutter to
+// Twinsen (the second)
+export const NB_TRAIL = {
+  L: [[176, 300], [128, 372], [110, 446], [150, 520], [220, 566], [262, 612], [236, 690], [262, 770], [380, 806], [520, 800], [600, 786]],
+  R: [[0, 786], [96, 770], [178, 734], [250, 690], [318, 660], [356, 652]],
+};
+export function drawNotebook() {
+  let seed = 7;
+  const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
+  const INK = '#2b2118', PEN = '#4a4650';
+  const paper = (x, W, H, gutter) => {
+    x.fillStyle = '#f0e4c6'; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < W * H / 260; i++) { x.fillStyle = rnd() < 0.5 ? 'rgba(120,90,40,0.045)' : 'rgba(255,255,255,0.06)'; x.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2, 1 + rnd() * 2); }
+    for (let i = 0; i < 5; i++) { const gx = rnd() * W, gy = rnd() * H, g = x.createRadialGradient(gx, gy, 4, gx, gy, 60 + rnd() * 120); g.addColorStop(0, 'rgba(170,130,70,0.05)'); g.addColorStop(1, 'rgba(170,130,70,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+    const e = x.createLinearGradient(0, 0, 0, H); e.addColorStop(0, 'rgba(120,80,30,0.10)'); e.addColorStop(0.06, 'rgba(120,80,30,0)'); e.addColorStop(0.94, 'rgba(120,80,30,0)'); e.addColorStop(1, 'rgba(120,80,30,0.12)'); x.fillStyle = e; x.fillRect(0, 0, W, H);
+    for (const gx of gutter) {   // (the fold: shade toward the spine)
+      const g = x.createLinearGradient(gx, 0, gx + (gx === 0 ? 70 : -70), 0); g.addColorStop(0, 'rgba(80,55,25,0.30)'); g.addColorStop(1, 'rgba(80,55,25,0)'); x.fillStyle = g; x.fillRect(gx === 0 ? 0 : gx - 70, 0, 70, H);
+    }
+  };
+  // a hand-drawn line through points: two light passes, a little off each other
+  const line = (x, pts, { w = 2.2, col = INK, jit = 1.4, passes = 2, close = false, alpha = 0.9, sharp = false } = {}) => {
+    x.save(); x.strokeStyle = col; x.lineCap = 'round'; x.lineJoin = 'round'; x.globalAlpha = alpha;
+    for (let p = 0; p < passes; p++) {
+      const J = () => (rnd() - 0.5) * jit * 2, q = pts.map(([a, b]) => [a + J(), b + J()]);
+      if (close) q.push(q[0]);
+      x.lineWidth = w * 1.5 * (p ? 0.6 : 1);   // (read on a page a third of the screen wide)
+      x.beginPath(); x.moveTo(q[0][0], q[0][1]);
+      for (let i = 1; i < q.length - 1; i++) if (sharp) x.lineTo(q[i][0], q[i][1]); else x.quadraticCurveTo(q[i][0], q[i][1], (q[i][0] + q[i + 1][0]) / 2, (q[i][1] + q[i + 1][1]) / 2);
+      x.lineTo(q[q.length - 1][0], q[q.length - 1][1]); x.stroke();
+    }
+    x.restore();
+  };
+  const wash = (x, pts, col, alpha = 0.32) => {
+    x.save(); x.globalAlpha = Math.min(1, alpha * 1.25); x.fillStyle = col; x.beginPath(); x.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) x.lineTo(pts[i][0] + (rnd() - 0.5) * 2, pts[i][1] + (rnd() - 0.5) * 2);
+    x.closePath(); x.fill(); x.restore();
+  };
+  const ell = (cx, cy, rx, ry, n = 22, a0 = 0, a1 = Math.PI * 2) => Array.from({ length: n + 1 }, (_, i) => { const a = a0 + (a1 - a0) * i / n; return [cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]; });
+  const blob = (x, cx, cy, rx, ry, col, alpha = 0.32) => wash(x, ell(cx, cy, rx, ry), col, alpha);
+  const hatch = (x, x0, y0, x1, y1, gap, col = PEN, w = 1.1, alpha = 0.45, slope = 0.8) => {
+    x.save(); x.beginPath(); x.rect(x0, y0, x1 - x0, y1 - y0); x.clip();
+    for (let k = x0 - (y1 - y0); k < x1; k += gap) line(x, [[k, y1], [k + (y1 - y0) * slope, y0]], { w, col, jit: 1.2, passes: 1, alpha });
+    x.restore();
+  };
+  // little people: a clone soldier (round tin helmet, greatcoat, rifle), Twinsen (tunic, a tail of hair), a child
+  const clone = (x, cx, by, s) => {
+    blob(x, cx, by - 46 * s, 13 * s, 9 * s, '#7a8a6a', 0.5);
+    line(x, ell(cx, by - 44 * s, 14 * s, 11 * s, 10, Math.PI, Math.PI * 2), { w: 1.8 * s });
+    line(x, [[cx - 15 * s, by - 44 * s], [cx + 15 * s, by - 44 * s]], { w: 1.6 * s });
+    line(x, ell(cx, by - 38 * s, 7 * s, 7 * s, 12), { w: 1.3 * s });
+    const coat = [[cx - 9 * s, by - 31 * s], [cx + 9 * s, by - 31 * s], [cx + 13 * s, by - 6 * s], [cx - 13 * s, by - 6 * s]];
+    wash(x, coat, '#5f6a7a', 0.42); line(x, coat, { w: 1.6 * s, close: true });
+    line(x, [[cx - 5 * s, by - 6 * s], [cx - 5 * s, by]], { w: 1.6 * s }); line(x, [[cx + 5 * s, by - 6 * s], [cx + 5 * s, by]], { w: 1.6 * s });
+    line(x, [[cx + 10 * s, by - 8 * s], [cx + 17 * s, by - 50 * s]], { w: 1.8 * s });
+  };
+  const hero = (x, cx, by, s, { arm = 'up', face = -1, ball = true } = {}) => {
+    const f = face;   // (-1: looks left)
+    line(x, ell(cx, by - 92 * s, 11 * s, 13 * s, 14), { w: 2 * s }); blob(x, cx, by - 92 * s, 11 * s, 13 * s, '#f0c49b', 0.45);
+    line(x, [[cx - 8 * f * s, by - 102 * s], [cx - 20 * f * s, by - 100 * s], [cx - 26 * f * s, by - 86 * s]], { w: 3 * s, col: '#3b2414' });   // (the tail of hair)
+    const t = [[cx - 12 * s, by - 78 * s], [cx + 12 * s, by - 78 * s], [cx + 15 * s, by - 34 * s], [cx - 15 * s, by - 34 * s]];
+    wash(x, t, '#3a6fc4', 0.45); line(x, t, { w: 2 * s, close: true });
+    line(x, [[cx - 6 * s, by - 34 * s], [cx - 9 * s, by]], { w: 2.2 * s }); line(x, [[cx + 6 * s, by - 34 * s], [cx + 9 * s, by]], { w: 2.2 * s });
+    if (arm === 'up') {
+      line(x, [[cx + 10 * f * s, by - 74 * s], [cx + 24 * f * s, by - 96 * s], [cx + 30 * f * s, by - 118 * s]], { w: 2.2 * s });
+      if (ball) {
+        blob(x, cx + 32 * f * s, by - 126 * s, 8 * s, 8 * s, '#e8b830', 0.6); line(x, ell(cx + 32 * f * s, by - 126 * s, 8 * s, 8 * s, 12), { w: 1.6 * s });
+        for (const r of [14, 20]) line(x, ell(cx + 32 * f * s, by - 126 * s, r * s, r * s, 8, -2.2, -1.0), { w: 1 * s, alpha: 0.6 });
+      }
+      line(x, [[cx - 10 * f * s, by - 74 * s], [cx - 18 * f * s, by - 52 * s]], { w: 2.2 * s });
+    } else {   // (arms open: welcoming)
+      line(x, [[cx - 11 * s, by - 72 * s], [cx - 34 * s, by - 60 * s]], { w: 2.2 * s }); line(x, [[cx + 11 * s, by - 72 * s], [cx + 34 * s, by - 60 * s]], { w: 2.2 * s });
+    }
+  };
+  const child = (x, cx, by, s, col) => {
+    line(x, ell(cx, by - 40 * s, 7 * s, 8 * s, 12), { w: 1.6 * s }); blob(x, cx, by - 40 * s, 7 * s, 8 * s, '#f0c49b', 0.4);
+    const t = [[cx - 7 * s, by - 32 * s], [cx + 7 * s, by - 32 * s], [cx + 9 * s, by - 12 * s], [cx - 9 * s, by - 12 * s]];
+    wash(x, t, col, 0.5); line(x, t, { w: 1.5 * s, close: true });
+    line(x, [[cx - 4 * s, by - 12 * s], [cx - 6 * s, by]], { w: 1.6 * s }); line(x, [[cx + 4 * s, by - 12 * s], [cx + 6 * s, by]], { w: 1.6 * s });
+    line(x, [[cx + 7 * s, by - 28 * s], [cx + 15 * s, by - 22 * s]], { w: 1.5 * s });
+  };
+
+  // L1 — FunFrock's Twinsun: the teleporter's stamp; the dashes (3D, on the page: NB_TRAIL) run from it to his clones
+  const [L1, l1] = mk(NB_PX, NB_PY); paper(l1, NB_PX, NB_PY, [NB_PX]);
+  {
+    const x = l1, cx = 176, cy = 196;
+    // (the stamp on its own canvas, worn like a rubber stamp's print, then laid on the page)
+    const [st, sx] = mk(240, 240), c0 = 120;
+    sx.globalAlpha = 0.85;
+    line(sx, ell(c0, c0, 96, 96, 40), { w: 9, col: '#a8322a', jit: 0.8, passes: 1 }); line(sx, ell(c0, c0, 78, 78, 36), { w: 3, col: '#a8322a', jit: 0.6, passes: 1 });
+    // the teleporter: a booth with a domed top and a door, a beam on each side
+    const b = [[c0 - 26, c0 + 52], [c0 - 26, c0 - 22], [c0 + 26, c0 - 22], [c0 + 26, c0 + 52]];
+    wash(sx, b, '#a8322a', 0.22); line(sx, b, { w: 4, col: '#a8322a', jit: 0.6, passes: 1, sharp: true });
+    line(sx, ell(c0, c0 - 22, 26, 22, 14, Math.PI, Math.PI * 2), { w: 4, col: '#a8322a', jit: 0.5, passes: 1 });
+    line(sx, [[c0, c0 - 8], [c0, c0 + 52]], { w: 2.4, col: '#a8322a', passes: 1 });
+    for (const s of [-1, 1]) for (const r of [38, 50]) line(sx, ell(c0, c0 + 14, r, r * 0.9, 6, s > 0 ? -0.6 : Math.PI - 0.6, s > 0 ? 0.6 : Math.PI + 0.6), { w: 2.2, col: '#a8322a', passes: 1, alpha: 0.8 });
+    sx.globalCompositeOperation = 'destination-out';
+    for (let i = 0; i < 130; i++) { const a = rnd() * 7, r = rnd() * 100; sx.globalAlpha = 0.25 + rnd() * 0.4; sx.beginPath(); sx.arc(c0 + Math.cos(a) * r, c0 + Math.sin(a) * r, 1 + rnd() * 3.5, 0, 7); sx.fill(); }
+    x.save(); x.translate(cx, cy); x.rotate(-0.12); x.drawImage(st, -c0, -c0); x.restore();
+    // FunFrock's fortress, a blocky keep and a tower with his flag, low on the page; the clones in rows before it
+    const f = [[300, 600], [300, 500], [330, 500], [330, 486], [356, 486], [356, 500], [404, 500], [404, 430], [428, 412], [452, 430], [452, 500], [500, 500], [500, 486], [526, 486], [526, 500], [560, 500], [560, 600]];
+    wash(x, f, '#6a6a78', 0.3); line(x, f, { w: 2.4 });
+    hatch(x, 304, 504, 556, 598, 9, PEN, 1, 0.35);
+    line(x, [[428, 412], [428, 352]], { w: 2 }); wash(x, [[428, 352], [474, 362], [428, 376]], '#a8322a', 0.55); line(x, [[428, 352], [474, 362], [428, 376]], { w: 1.6 });
+    for (const [wx, wy] of [[420, 448], [436, 448], [340, 540], [380, 540], [480, 540], [520, 540]]) line(x, [[wx, wy], [wx, wy + 14]], { w: 3 });
+    for (let r = 0; r < 3; r++) for (let i = 0; i < 5; i++) clone(x, 312 + i * 54 + (r % 2) * 20 - r * 4, 650 + r * 62, 0.85 + r * 0.17);
+  }
+  // R1 — Twinsun with its two suns; Twinsen stands up to them, the magic ball raised
+  const [R1, r1] = mk(NB_PX, NB_PY); paper(r1, NB_PX, NB_PY, [0]);
+  {
+    const x = r1, px = 320, py = 230;
+    blob(x, px, py, 112, 112, '#7ab4d8', 0.3); line(x, ell(px, py, 112, 112, 40), { w: 2.6 });
+    const belt = []; for (let i = 0; i <= 16; i++) belt.push([px - 108 + i * 13.5, py + (i % 2 ? -14 : 8) + (rnd() - 0.5) * 6]);
+    wash(x, [[px - 110, py + 12], ...belt, [px + 110, py + 12]], '#8a7a6a', 0.45); line(x, belt, { w: 2 });
+    blob(x, px - 20, py - 60, 44, 22, '#6aa860', 0.35); blob(x, px + 30, py + 64, 50, 24, '#6aa860', 0.35);
+    for (const sy of [py - 152, py + 152]) {
+      blob(x, px, sy, 24, 24, '#f0c030', 0.65); line(x, ell(px, sy, 24, 24, 16), { w: 2 });
+      for (let i = 0; i < 10; i++) { const a = i * 0.628; line(x, [[px + Math.cos(a) * 32, sy + Math.sin(a) * 32], [px + Math.cos(a) * 44, sy + Math.sin(a) * 44]], { w: 1.8, passes: 1 }); }
+    }
+    const rock = [[300, 720], [330, 662], [372, 646], [430, 650], [470, 676], [500, 720]];
+    wash(x, rock, '#9a8a70', 0.35); line(x, rock, { w: 2.2 }); hatch(x, 320, 680, 490, 720, 10, PEN, 1, 0.3);
+    hero(x, 392, 648, 1.25, { arm: 'up', face: -1 });
+  }
+  // L2 — the storm; lightning strikes the Dino-Fly
+  const [L2, l2] = mk(NB_PX, NB_PY); paper(l2, NB_PX, NB_PY, [NB_PX]);
+  {
+    const x = l2;
+    for (let i = 0; i < 14; i++) { const cx = 40 + rnd() * 520, cy = 70 + rnd() * 190, r = 50 + rnd() * 60; blob(x, cx, cy, r, r * 0.6, '#4a4a5a', 0.16); line(x, ell(cx, cy, r, r * 0.6, 18, Math.PI * 0.95, Math.PI * 2.05), { w: 2, alpha: 0.7 }); }
+    hatch(x, 0, 120, NB_PX, 280, 7, PEN, 1.1, 0.4, 0.5);
+    const bolt = [[330, 250], [292, 360], [330, 362], [268, 500], [306, 498], [246, 600], [358, 452], [318, 454], [372, 352], [338, 350], [370, 250]];
+    wash(x, bolt, '#f2d040', 0.7); line(x, bolt, { w: 2.4, close: true });
+    for (let i = 0; i < 70; i++) { const rx = rnd() * NB_PX, ry = 280 + rnd() * 470; line(x, [[rx, ry], [rx - 10, ry + 26]], { w: 1, alpha: 0.35, passes: 1, col: PEN }); }
+    // the Dino-Fly, wings out, knocked sideways (hurt, not lost: the eye open)
+    x.save(); x.translate(300, 660); x.rotate(0.32);
+    const wingL = [[-20, -10], [-150, -110], [-170, -40], [-110, -6], [-40, 8]], wingR = [[20, -10], [130, -120], [168, -60], [110, -8], [40, 8]];
+    for (const w of [wingL, wingR]) { wash(x, w, '#d8c060', 0.5); line(x, w, { w: 2.2, close: true }); }
+    blob(x, 0, 0, 74, 28, '#4f9a50', 0.55); line(x, ell(0, 0, 74, 28, 24), { w: 2.4 });
+    blob(x, 0, 12, 50, 10, '#e8d070', 0.5);
+    blob(x, 88, -18, 28, 20, '#4f9a50', 0.55); line(x, ell(88, -18, 28, 20, 16), { w: 2.2 });
+    line(x, ell(98, -24, 6, 6, 10), { w: 1.6 }); blob(x, 99, -24, 2.5, 2.5, INK, 0.9);
+    line(x, [[-70, 6], [-120, 30], [-150, 14]], { w: 4 });
+    for (const [a, b] of [[-30, -60], [40, -58], [-60, 40]]) line(x, [[a, b], [a + 10, b - 14], [a + 4, b - 16], [a + 14, b - 30]], { w: 1.6, col: '#c89020', passes: 1 });
+    x.restore();
+    for (let i = 0; i < 8; i++) line(x, [[i * 80, 800], [i * 80 + 30, 790], [i * 80 + 60, 800]], { w: 1.6, alpha: 0.6 });
+  }
+  // R2 — Zeelich; an Esmer shuttle; the children come home to Twinsen's open arms
+  const [R2, r2] = mk(NB_PX, NB_PY); paper(r2, NB_PX, NB_PY, [0]);
+  {
+    const x = r2;
+    blob(x, 330, -260, 560, 520, '#b48ac8', 0.22); line(x, ell(330, -260, 560, 520, 50, 0.15, Math.PI - 0.15), { w: 2.6 });
+    for (let i = 0; i < 5; i++) line(x, ell(330, -260, 560 - 40 - i * 46, 520 - 40 - i * 46, 40, 0.5, Math.PI - 0.5), { w: 1.2, alpha: 0.45, passes: 1 });
+    // the shuttle: red base ring, a gold hull, a blue canopy; three legs
+    const sx = 400, sy = 360;
+    blob(x, sx, sy - 34, 40, 30, '#6ab0e8', 0.5); line(x, ell(sx, sy - 34, 40, 30, 18, Math.PI, Math.PI * 2), { w: 2.2 });
+    blob(x, sx, sy, 92, 30, '#d8a838', 0.55); line(x, ell(sx, sy, 92, 30, 28), { w: 2.4 });
+    blob(x, sx, sy + 22, 70, 13, '#c8402e', 0.6); line(x, ell(sx, sy + 22, 70, 13, 20, 0, Math.PI), { w: 2 });
+    for (const lx of [-50, 0, 50]) line(x, [[sx + lx, sy + 30], [sx + lx * 1.3, sy + 70]], { w: 2 });
+    for (let i = 0; i < 3; i++) line(x, [[sx - 120 - i * 30, sy - 20 + i * 14], [sx - 170 - i * 30, sy - 10 + i * 14]], { w: 1.2, alpha: 0.5, passes: 1 });
+    line(x, [[0, 724], [140, 716], [300, 728], [600, 718]], { w: 2 }); hatch(x, 0, 728, NB_PX, 790, 12, PEN, 1, 0.25);
+    const cols = ['#e05a3a', '#e8b830', '#5fa858', '#4a7ad8', '#d06aa8'];
+    for (let i = 0; i < 5; i++) child(x, 70 + i * 62, 720 + (i % 2) * 4, 1.05 + (i % 3) * 0.12, cols[i]);
+    hero(x, 470, 722, 1.15, { arm: 'open' });
+  }
+  // S3 — the island now, in pencil: the sea, the town, the plateau with the old fort, as the aerial first sees it
+  const [S3, s3] = mk(NB_PX * 2, NB_PY); paper(s3, NB_PX * 2, NB_PY, []);
+  {
+    const x = s3, X0 = 40, Y0 = 105, RW = 1120, RH = 630, P = (u, v) => [X0 + u * RW, Y0 + v * RH];
+    const g = x.createLinearGradient(NB_PX - 70, 0, NB_PX + 70, 0); g.addColorStop(0, 'rgba(80,55,25,0)'); g.addColorStop(0.5, 'rgba(80,55,25,0.26)'); g.addColorStop(1, 'rgba(80,55,25,0)'); x.fillStyle = g; x.fillRect(NB_PX - 70, 0, 140, NB_PY);
+    const W2 = (pts, c, a) => wash(x, pts.map(([u, v]) => P(u, v)), c, a), L2_ = (pts, o) => line(x, pts.map(([u, v]) => P(u, v)), { col: PEN, ...o });
+    for (let i = 0; i < 5; i++) { const u = 0.08 + i * 0.2 + rnd() * 0.06, v = 0.08 + rnd() * 0.12; L2_(ell(u, v, 0.08, 0.035, 14, Math.PI, Math.PI * 2), { w: 1.6, alpha: 0.5 }); }
+    W2([[0, 0.44], [1, 0.44], [1, 1], [0, 1]], '#7ab8d8', 0.22);
+    // the plateau: its cliff, the old fort's towers on top
+    const cliff = [[0.16, 0.5], [0.165, 0.37], [0.19, 0.345], [0.45, 0.335], [0.63, 0.34], [0.68, 0.37], [0.7, 0.5]];
+    W2(cliff, '#9a9aa8', 0.35); L2_(cliff, { w: 2 });
+    { const cr = []; for (let i = 0; i <= 22; i++) { const u = 0.47 + i * 0.0095; cr.push([u, 0.336 - (i % 2 ? 0.012 : 0)], [u + 0.0095, 0.336 - (i % 2 ? 0.012 : 0)]); } L2_(cr, { w: 1.4, sharp: true, passes: 1 }); }   // (the fort's battlements)
+    for (let i = 0; i < 18; i++) { const u = 0.18 + i * 0.028; L2_([[u, 0.36 + (i % 3) * 0.01], [u - 0.01, 0.48]], { w: 1, alpha: 0.35, passes: 1 }); }
+    for (const [u, v] of [[0.545, 0.215], [0.645, 0.225]]) { const t = [[u - 0.018, v + 0.09], [u - 0.018, v + 0.03], [u, v], [u + 0.018, v + 0.03], [u + 0.018, v + 0.09]]; W2(t, '#8a8a98', 0.35); L2_(t, { w: 1.8 }); }
+    L2_([[0.5, 0.31], [0.5, 0.27], [0.6, 0.27], [0.6, 0.3]], { w: 1.6 });
+    L2_([[0.395, 0.3], [0.41, 0.2], [0.425, 0.3]], { w: 1.4 }); L2_([[0.4, 0.26], [0.42, 0.26]], { w: 1.2 });   // (the drill's derrick)
+    // the town: its ground, roofs and walls
+    W2([[0.16, 0.5], [0.7, 0.5], [0.86, 0.48], [1, 0.47], [1, 0.58], [0.72, 0.62], [0.56, 0.66], [0.5, 0.72], [0.46, 0.73], [0.2, 0.75], [0.16, 0.62]], '#d8c8a0', 0.45);
+    const house = (u0, v0, u1, v1, roof) => {
+      W2([[u0, v0], [u1, v0], [u1, v1], [u0, v1]], '#e8dcc0', 0.6); L2_([[u0, v0], [u1, v0], [u1, v1], [u0, v1]], { w: 1.6, close: true, sharp: true });
+      const r = [[u0 - 0.008, v0], [(u0 + u1) / 2, v0 - (v1 - v0) * 0.55], [u1 + 0.008, v0]]; W2(r, roof, 0.5); L2_(r, { w: 1.8, sharp: true });
+      for (let k = 1; k < 3; k++) L2_([[u0 + (u1 - u0) * k / 3, v0 + (v1 - v0) * 0.35], [u0 + (u1 - u0) * k / 3, v0 + (v1 - v0) * 0.6]], { w: 2.2, passes: 1 });   // (windows)
+    };
+    house(0.2, 0.57, 0.28, 0.63, '#9a6a4a'); house(0.335, 0.54, 0.48, 0.61, '#5a5a66'); house(0.52, 0.58, 0.64, 0.66, '#c8503a');
+    house(0.63, 0.51, 0.71, 0.56, '#c8503a'); house(0.77, 0.51, 0.84, 0.56, '#c8503a'); house(0.67, 0.46, 0.72, 0.5, '#9a6a4a');
+    W2(ell(0.44, 0.62, 0.032, 0.04, 14, Math.PI, Math.PI * 2), '#5aa8a0', 0.5); L2_([[0.405, 0.62], [0.405, 0.71], [0.475, 0.71], [0.475, 0.62]], { w: 1.6, sharp: true }); L2_(ell(0.44, 0.62, 0.035, 0.04, 14, Math.PI, Math.PI * 2), { w: 1.6 });
+    // the shore, the grass and its trees, the quay below
+    const grass = [[0.5, 0.72], [0.56, 0.66], [0.72, 0.62], [1, 0.58], [1, 1], [0.6, 1], [0.55, 0.85]];
+    W2(grass, '#6aa858', 0.32); L2_([[0.5, 0.72], [0.53, 0.8], [0.55, 0.88], [0.6, 1]], { w: 2 });
+    for (const [u, v, r] of [[0.6, 0.72, 0.025], [0.77, 0.85, 0.03], [0.88, 0.66, 0.02], [0.95, 0.62, 0.02], [0.8, 0.6, 0.018]]) { W2(ell(u, v, r, r * 1.4, 12), '#3f8a3a', 0.45); L2_(ell(u, v, r, r * 1.4, 12), { w: 1.4 }); L2_([[u, v + r * 1.4], [u, v + r * 2.6]], { w: 1.4 }); }
+    L2_([[0, 0.76], [0.2, 0.75], [0.36, 0.74], [0.46, 0.73]], { w: 2 }); L2_([[0, 0.83], [0.1, 0.86], [0.14, 0.95]], { w: 1.6 });
+    for (let i = 0; i < 26; i++) { const u = rnd() * 0.5, v = 0.78 + rnd() * 0.2; L2_([[u, v], [u + 0.025, v]], { w: 1, alpha: 0.4, passes: 1 }); }
+    for (let i = 0; i < 10; i++) { const u = rnd() * 0.16, v = 0.5 + rnd() * 0.1; L2_([[u, v], [u + 0.02, v]], { w: 1, alpha: 0.35, passes: 1 }); }
+  }
+  const half = (side) => { const [c, x] = mk(NB_PX, NB_PY); x.drawImage(S3, side === 'L' ? 0 : -NB_PX, 0); return c; };
+  // the cover: worn brown leather, a pressed ring
+  const [CV, cv] = mk(256, 256);
+  {
+    cv.fillStyle = '#5a3d28'; cv.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 900; i++) { cv.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.08)' : 'rgba(255,220,170,0.06)'; cv.fillRect(rnd() * 256, rnd() * 256, 2 + rnd() * 3, 2 + rnd() * 3); }
+    cv.strokeStyle = 'rgba(30,18,10,0.5)'; cv.lineWidth = 3; cv.beginPath(); cv.arc(128, 128, 54, 0, 7); cv.stroke();
+  }
+  return { L1, R1, L2, R2, L3: half('L'), R3: half('R'), S3, cover: CV, r1 };
 }

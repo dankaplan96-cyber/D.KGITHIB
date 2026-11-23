@@ -10,7 +10,7 @@
 //                          gameplay camera (the handoff); a shot may also be a function (t) => {pos, look, fov}
 //   subs    [{t, d, who, text, color, voice}]  subtitles; `voice` (a speaker's name key, 'n_zoe') babbles the line in
 //                          that character's gibberish voice (voice.js), paced over the line like dialogue typing out
-//   caps    [{t, d, text, sub}]  captions (place and time), lower left, no speaker
+//   caps    [{t, d, text, sub, cls}]  captions (place and time), lower left, no speaker; cls: another look (CSS)
 //   finish(skipped)        puts the world in its end state — the same state whether the scene played out or
 //                          was skipped (so every flag, position and objective is set exactly once, here)
 //   music  {name, at}      optional: a music cue started at `at`; the clock follows the cue while it plays
@@ -206,6 +206,7 @@ export class Cinematic {
     }
     if (i < 0) { el.style.opacity = '0'; return; }
     const c = caps[i];
+    el.className = c.cls || '';   // (a scene's own caption look: the opening's notebook lines, 'recap', css/style.css)
     el.innerHTML = `<div style="font-size:clamp(1.25rem,3vw,2rem);font-weight:800;letter-spacing:0.04em">${c.text}</div>`
       + (c.sub ? `<div style="font-size:clamp(0.95rem,1.9vw,1.2rem);font-weight:500;margin-top:0.2em;opacity:0.92">${c.sub}</div>` : '');
     el.style.opacity = '1';

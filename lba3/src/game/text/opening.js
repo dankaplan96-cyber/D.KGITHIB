@@ -6,9 +6,15 @@ Object.assign(STR.en, {
   // where and when (a caption over the island)
   op_cap_place: 'Citadel Island, Twinsun',
   op_cap_time: "Twelve years after Twinsen's last adventure",
-  // (P83 / S-7: the originals in two lines, for a newcomer)
+  // (P83 / S-7: the originals in two lines, for a newcomer; the classic cut)
   op_cap_lore: "Sendell, Twinsun's goddess, chose Twinsen to stop the tyrant FunFrock.",
   op_cap_lore_sub: 'FunFrock is dead. His clones never got the message.',
+  // (LBA3-RUN: the originals over Twinsen's notebook, a line a page, for a newcomer; LBA1, then LBA2. The notebook cut's;
+  //  the classic cut keeps P83 / S-7's two lines above)
+  op_nb_1: 'FunFrock once ruled Twinsun with his clones and teleporters.',
+  op_nb_2: 'Twinsen stood up to him and set Twinsun free.',
+  op_nb_3: 'Later, lightning struck his friend the Dino-Fly.',
+  op_nb_4: "On Zeelich, he brought Twinsun's stolen children home.",
   // the harbour: the Joint Project's lift
   n_resident: 'Resident',
   op_res_1: 'When does the harbour row get the heat?',

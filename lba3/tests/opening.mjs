@@ -23,6 +23,11 @@
 //      shade; Arthur's left hand on his hull, the mast seated by his right hand (home in its step before he lets go, and
 //      not moving as he does), then that hand on the deck; Zoé's palms on the tray's soil; the screwdriver not moving as
 //      it is laid down; everybody's standing feet on the ground
+//  12. LBA3-RUN, the notebook: the history's four captions in order, then where and when; Twinsen's right hand on the
+//      page's corner as it lifts (within 3 cm); the page's picture laid over the screen gone after the island, the camera's
+//      up back to the world's (the straight-down view turns it), every skip leaves neither behind
+//   (times below are the film's own "old" seconds where they name its beats, put on the scene's clock by N(): the notebook
+//   came first and the outside shot was cut, src/game/story/opening.js newOf)
 //   (R5: the scene's dips now come back up on its own clock, so 7 and 8 cover the whole scene: with wall-clock timers the
 //   stepped frames read as black from 28.6 s on and these checks only ever saw the harbour; a cut to another shot is
 //   not a vanishing)
@@ -34,9 +39,11 @@ const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 const errs = watchPage(page);
 const ev = (f, a) => page.evaluate(f, a);
 const { check, done } = checker({ info: 'always' });
+const CUT = process.env.OPENING === 'notebook' ? 'notebook' : 'classic';
 
 const boot = async (mode, clear = true) => {
-  await page.goto((process.env.GAME_URL || 'http://localhost:8123/'), { waitUntil: 'load', timeout: 180000 });
+  // (OPENING=notebook: the notebook cut, LBA3-RUN, ?opening=notebook; the classic film is the default)
+  await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + (CUT === 'notebook' ? '?opening=notebook' : ''), { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: +(process.env.BOOT_MS || 240000) });
   if (clear) await ev(() => localStorage.clear());
   await ev(() => { game.testFreeze = true; });
@@ -75,17 +82,36 @@ const endState = () => ev(() => {
     arthur: [ar.forceAnim, !!ar.controlled], hero: [+(G.hero.pos.x - G.rooms.house.center.x).toFixed(2), +G.hero.pos.z.toFixed(2)],
     lift: +G.world.cargoLift.u.toFixed(2), stream: G.rooms.house.kitchen.stream.visible, sd: G.rooms.house.table.screwdriver.parent === G.rooms.house.group,
     saved: !!save?.flags?.opening, savedRoom: save?.room,
-    sceneKids: G.scene.children.length,
+    sceneKids: G.scene.children.length, overlay: !!document.querySelector('#opening-page'), upY: G.camera.up.y,
     // (R5: the scene's grips turn hand bones, which the gameplay rig never touches: they must be back at rest)
     // (NO-AIR: but for someone whose hands the game itself now holds on what they work at — Arthur at his boat: workhands.js)
     handsTurned: [G.hero, zoe, ar].filter((a) => !a.rig._ov?.length).reduce((n, a) => n + ['armL', 'armR'].reduce((m, s) => m + Math.abs(a.rig.j[s].hand.rotation.x) + Math.abs(a.rig.j[s].hand.rotation.y) + Math.abs(a.rig.j[s].hand.rotation.z), 0), 0) < 1e-6,
   };
 });
-const good = (s) => s.state === 'play' && s.room === 'house' && !s.cine && !s.camCine && s.hud && !s.cineUI && !s.fade && s.intro && s.opening && !s.ball
+const good = (s) => !s.overlay && s.upY === 1 && s.state === 'play' && s.room === 'house' && !s.cine && !s.camCine && s.hud && !s.cineUI && !s.fade && s.intro && s.opening && !s.ball
   && s.objective.startsWith('Check the well') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.tapOpen && s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house' && s.handsTurned;
 
+// ---------------------------------------------------------------- 0. SKIPS=t1,t2,...: only skips, at these scene times
+if (process.env.SKIPS) {
+  let ref = null;
+  for (const at of process.env.SKIPS.split(',').map(Number)) {
+    await boot('new');
+    await runTo(at);
+    await holdSkip();
+    const s = await endState();
+    ref ??= s.sceneKids;
+    check(`skip at ${at}s ends in the same state`, good(s) && s.sceneKids === ref, s);
+  }
+  const fails = done();
+  await browser.close();
+  process.exit(fails ? 1 : 0);
+}
 // ---------------------------------------------------------------- 1. full playback
 await boot('new');
+// (the film's old seconds on the scene's clock: opening.js newOf)
+const { nb: NBK, d2: D2K, cut: CUT_RUN } = await ev(() => game.cine.clock);
+check(`the cut asked for plays (${CUT})`, CUT_RUN === CUT, CUT_RUN);
+const N = (o) => +(o < 75.2 ? o + NBK : o + D2K).toFixed(3);
 const during = await ev(() => ({ state: game.state, hud: !document.querySelector('#hud').classList.contains('hidden'), prompt: document.querySelector('#prompt')?.classList.contains('show') ?? false, saved: !!localStorage.getItem('lba3_save_v1') }));
 check('opening starts as a cinematic with the HUD hidden and nothing saved', during.state === 'cinematic' && !during.hud && !during.prompt && !during.saved, during);
 // the whole scene, frame by frame (30 fps): who is on screen, from which model, and whether anyone vanishes or
@@ -93,15 +119,19 @@ check('opening starts as a cinematic with the HUD hidden and nothing saved', dur
 const polySizes = await ev(async () => {
   const names = await (await fetch('assets/poly/index.json')).json(), o = {};
   for (const n of names) { const j = await (await fetch(`assets/poly/${n}.json`)).json(); o[j.pos.length / 3] = (o[j.pos.length / 3] || []).concat(n); }
+  // (P106: Twinsen is drawn from twinsen.json with the spline lock of hair and its tie added, 23.11 the default: his drawn
+  //  mesh is not the file's size. LBA3-RUN found it failing here on the base revision; it is the poly cast's model)
+  game.hero.rig.root.traverse((m) => { if (m.isSkinnedMesh && !o[m.geometry.attributes.position.count]) o[m.geometry.attributes.position.count] = ['twinsen']; });
   return o;
 });
 await page.addScriptTag({ path: fileURLToPath(new URL('./lib/contact.js', import.meta.url)) });
-const watch = await ev((polySizes) => {
+const watch = await ev(([polySizes, NBK, D2K]) => {
+  const N = (o) => (o < 75.2 ? o + NBK : o + D2K), NW = (W) => W.map(([a, b]) => [N(a), N(b)]);
   const G = game, c = G.cine, cam = G.camera, v = new G.camera.position.constructor();
   // NO-AIR: the hands' gaps (m) in the beats' own windows; lim: 3 cm
   const NA = { lim: 0.03, lever: { n: 0, max: 0, off: [] }, crate: { n: 0, max: 0, off: [] }, tool: { n: 0, max: 0, off: [] }, shade: { n: 0, max: 0, off: [] }, hull: { n: 0, max: 0, off: [] }, deck: { n: 0, max: 0, off: [] }, pots: { n: 0, max: 0, off: [] },
     through: 0, leverAt: {}, crateY: {}, screw: {}, mastSeat: null, mastJump: null, toolJump: null, feet: [] };
-  const within = (t, W) => W.some(([a, b]) => t >= a && t <= b);
+  const within = (t, W) => NW(W).some(([a, b]) => t >= a && t <= b);
   const rec = (o, d, t) => { o.n++; if (d == null) d = 9; if (d > o.max) o.max = +d.toFixed(4); if (d > NA.lim && o.off.length < 5) o.off.push([+t.toFixed(2), +d.toFixed(3)]); };
   const LIFT = G.world.cargoLift, HOUSE = G.rooms.house, TBL = HOUSE.table, BOAT = HOUSE.boat, HR = [HOUSE.group];
   const P3 = () => new v.constructor();
@@ -116,7 +146,10 @@ const watch = await ev((polySizes) => {
   { const bi = zMesh.skeleton.bones.indexOf(zj.armR.hand), si = zMesh.geometry.attributes.skinIndex, sw = zMesh.geometry.attributes.skinWeight;
     for (let i = 0; i < si.count; i++) for (let k = 0; k < 4; k++) if (si.getComponent(i, k) === bi && sw.getComponent(i, k) > 0.5) { hIdx.push(i); break; } }
   const handPts = () => { cast.zoe.rig.root.updateMatrixWorld(true); return hIdx.map((i) => zMesh.getVertexPosition(i, new v.constructor()).applyMatrix4(zMesh.matrixWorld)); };
-  const TURNS = [[41.5, 42.2], [44.05, 44.5], [58.6, 59.1], [69.45, 69.85]], WET = [60.3, 62.0];
+  const TURNS = NW([[41.5, 42.2], [44.05, 44.5], [58.6, 59.1], [69.45, 69.85]]), WET = [N(60.3), N(62.0)];
+  // LBA3-RUN: the notebook's page turns (his right hand on the corner as it lifts), its captions, the page's picture
+  const NBC = c.notebook, page = { n: 0, max: 0, off: [] }, capsAt = [];
+  let lastCap = '', overlaySeen = false;
   const feetPrev = {}, footJumps = [];
   // OPEN-FILM: each line's speaker moves their mouth (the harbour's two included); no line plays the rig's looping talk
   // gesture; the aerial move (0-13 s) never stops; each footstep heard is a foot coming down (Zoé's walks)
@@ -143,7 +176,7 @@ const watch = await ev((polySizes) => {
     G.frame(1 / 30, false);
     if (!G.cine) break;
     cam.updateMatrixWorld();   // (an unrendered step leaves the camera's matrices a frame behind its placement: a cut read late)
-    if (!mid && c.t > 31) mid = { room: G.room?.id, saved: !!localStorage.getItem('lba3_save_v1') };
+    if (!mid && c.t > N(31)) mid = { room: G.room?.id, saved: !!localStorage.getItem('lba3_save_v1') };
     const dark = document.querySelector('#fade').classList.contains('on');
     const shotNow = c.def.shots.findIndex((sh) => c.t >= sh.t0 && c.t < sh.t1);
     // every visible skinned character in view: its mesh must be one of the poly cast's
@@ -175,9 +208,9 @@ const watch = await ev((polySizes) => {
     // NO-AIR
     if (!dark) {
       const t = c.t, wk = c.extras.worker, tw = cast.twinsen, ar = cast.arthur, zo = cast.zoe;
-      if (!G.room && t > 13 && t < 29) {
+      if (!G.room && t > N(13) && t < N(29)) {
         if (within(t, [[14.3, 16.5], [20.5, 23.0]])) { G.scene.updateMatrixWorld(); rec(NA.lever, CT.handTo(wk, 'L', LIFT.lever, { tool: false }), t); }
-        for (const k of [13.6, 15.2, 22.0]) if (Math.abs(t - k) < 0.02) NA.leverAt[k] = +LIFT.lever.rotation.z.toFixed(3);
+        for (const k of [13.6, 15.2, 22.0]) if (Math.abs(t - N(k)) < 0.02) NA.leverAt[k] = +LIFT.lever.rotation.z.toFixed(3);
         if (within(t, [[26.1, 27.15]])) {
           G.scene.updateMatrixWorld();
           for (const sd of ['R', 'L']) rec(NA.crate, CT.handTo(wk, sd, LIFT.crate, { tool: false }), t);
@@ -192,7 +225,7 @@ const watch = await ev((polySizes) => {
           rec(NA.tool, CT.near(CT.tool(tw.rig, 'R', 9999), [TBL.lamp.screw], { max: 0.5 }).d, t);
           if (heavy) rec(NA.shade, CT.handGap(tw, 'L', HR, 0.5).d, t);
         }
-        for (const k of [29.1, 45.9]) if (Math.abs(t - k) < 0.02) NA.screw[k] = [+TBL.lamp.screw.rotation.z.toFixed(2), +(TBL.lamp.screw.position.distanceTo(TBL.lamp.at) * 1000).toFixed(1)];
+        for (const k of [29.1, 45.9]) if (Math.abs(t - N(k)) < 0.02) NA.screw[k] = [+TBL.lamp.screw.rotation.z.toFixed(2), +(TBL.lamp.screw.position.distanceTo(TBL.lamp.at) * 1000).toFixed(1)];
         if (heavy && within(t, [[29.2, 31.0], [35.6, 53.6]])) rec(NA.hull, CT.handGap(ar, 'L', HR, 0.5).d, t);
         if (heavy && within(t, [[37.6, 53.6]])) rec(NA.deck, CT.handGap(ar, 'R', HR, 0.5).d, t);
         // (her right hand comes a few cm off the soil while she turns to look over at Arthur, 36.4-37.6: not counted)
@@ -200,7 +233,7 @@ const watch = await ev((polySizes) => {
         // the mast: where its foot is against its fitted place while he still holds it; how far it moves as he lets go
         const mast = BOAT.mast, sdv = TBL.screwdriver, mp = mast.getWorldPosition(P3()), sp = sdv.getWorldPosition(P3());
         const held = { mast: mast.parent !== HOUSE.group, sd: sdv.parent !== HOUSE.group, mp, sp };
-        if (held.mast && t >= 36.2 && t <= 36.5) NA.mastSeat = Math.max(NA.mastSeat ?? 0, +(1000 * mp.distanceTo(P3().set(HOUSE.center.x + BOAT.mastRest.x, BOAT.mastRest.y + 0.005, HOUSE.center.z + BOAT.mastRest.z))).toFixed(1));
+        if (held.mast && t >= N(36.2) && t <= N(36.5)) NA.mastSeat = Math.max(NA.mastSeat ?? 0, +(1000 * mp.distanceTo(P3().set(HOUSE.center.x + BOAT.mastRest.x, BOAT.mastRest.y + 0.005, HOUSE.center.z + BOAT.mastRest.z))).toFixed(1));
         if (heldPrev?.mast && !held.mast) NA.mastJump = +(1000 * mp.distanceTo(heldPrev.mp)).toFixed(1);
         if (heldPrev?.sd && !held.sd) NA.toolJump = +(1000 * sp.distanceTo(heldPrev.sp)).toFixed(1);
         heldPrev = held;
@@ -233,7 +266,8 @@ const watch = await ev((polySizes) => {
     }
     if (c.subI >= 0) { const sp = speakerOf[c.def.subs[c.subI].voice]; if (sp && (sp.rig.mOpen || 0) > 0.05) mouthBy[c.subI] = (mouthBy[c.subI] || 0) + 1; }
     for (const [id, a] of Object.entries(everyone)) if (a.rig.anim === 'talk' && talking.length < 6) talking.push({ id, t: +c.t.toFixed(2) });
-    if (camPrev && c.t > 3.0 && c.t < 12.5) { const sp = cam.position.distanceTo(camPrev) * 30; if (sp < aerial.min) aerial.min = +sp.toFixed(2), aerial.at = +c.t.toFixed(2); }
+    // (the aerial is the old 8-13 s now, after the notebook: its least speed from old 8.5 s)
+    if (camPrev && c.t > N(NBK ? 8.5 : 3.0) && c.t < N(12.5)) { const sp = cam.position.distanceTo(camPrev) * 30; if (sp < aerial.min) aerial.min = +sp.toFixed(2), aerial.at = +c.t.toFixed(2); }
     camPrev = cam.position.clone();
     if (cast.zoe.present && cast.zoe.rig.root.visible) {
       const fl = G.physics.groundAt(cast.zoe.pos.x, cast.zoe.pos.z), walking = cast.zoe.rig.anim === 'walk';
@@ -243,6 +277,13 @@ const watch = await ev((polySizes) => {
         f.h = h; f.t = +c.t.toFixed(3);
       }
     }
+    if (NBC && G.room === HOUSE && c.t < NBC.end) {
+      for (const [i, t0] of NBC.turns.entries()) if (c.t >= t0 + 0.05 && c.t <= t0 + 0.4) { G.scene.updateMatrixWorld(); rec(page, CT.handTo(cast.twinsen, 'R', NBC.leaves[i], { tool: false }), c.t); }
+    }
+    const capEl = document.querySelector('#cine-cap'), cap = capEl && capEl.style.opacity === '1' ? capEl.textContent : '';
+    if (cap && cap !== lastCap) capsAt.push(cap);
+    lastCap = cap;
+    if (document.querySelector('#opening-page')) overlaySeen = true;
     const sub = document.querySelector('#cine-sub').classList.contains('show') ? document.querySelector('#cine-sub').textContent : '';
     if (sub && sub !== lastSub) subsAt.push(sub);
     lastSub = sub;
@@ -250,8 +291,8 @@ const watch = await ev((polySizes) => {
   const subs = window.__cine.def.subs;
   G.audio.play = play0;
   const offbeat = stepsHeard.filter((s) => !footDown.some((d) => Math.abs(s - d) <= 0.1));
-  return { NA, mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
-}, polySizes);
+  return { page, capsAt, overlaySeen, NA, mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
+}, [polySizes, NBK, D2K]);
 check('the scene moves to the house; still nothing saved mid-scene', watch.mid?.room === 'house' && !watch.mid.saved, watch.mid);
 check('every character on screen is from the poly cast (assets/poly)', watch.notPoly.length === 0 && ['twinsen', 'zoe', 'arthur', 'worker'].every((n) => watch.seen.includes(n)), { notPoly: watch.notPoly, seen: watch.seen });
 check('nobody vanishes or jumps on screen (only under a dip to black)', watch.pops.length === 0, watch.pops.slice(0, 6));
@@ -264,8 +305,14 @@ check('subtitles with the speaker, in order', watch.subsAt.length === watch.line
 check("every spoken line babbles in its speaker's voice", watch.ctx === 'running' && watch.voiced.every(([vk, n]) => vk && n >= 2), watch.voiced);
 check("OPEN-FILM: every line's speaker moves their mouth with it (the worker and the resident too)", watch.mouthBy.every(([vk, n]) => n >= 4), watch.mouthBy);
 check('OPEN-FILM: no line plays the looping talk gesture (one gesture per line, or none)', watch.talking.length === 0, watch.talking);
-check('OPEN-FILM: the aerial move does not stop between 3 and 12.5 s (it stopped dead at 9 s)', watch.aerial.min > 1.5, watch.aerial);
-check("OPEN-FILM: every footstep heard is one of Zoé's feet coming down (within 0.1 s)", watch.steps.heard >= 10 && watch.steps.offbeat.length === 0, watch.steps);
+check('OPEN-FILM: the aerial move does not stop (old 8.5-12.5 s; it stopped dead at 9 s)', watch.aerial.min > 1.5, watch.aerial);
+if (CUT === 'notebook') {
+  check('LBA3-RUN: the history over the notebook, a caption at a time, then where and when', watch.capsAt.length === 5 && watch.capsAt[0].startsWith('FunFrock') && watch.capsAt[3].startsWith('On Zeelich') && watch.capsAt[4].startsWith('Citadel Island'), watch.capsAt);
+  check("LBA3-RUN: Twinsen's right hand is on the page's corner as it lifts, at both turns (within 3 cm)", watch.page.n >= 18 && watch.page.off.length === 0, watch.page);
+  check("LBA3-RUN: the page's drawing is laid over the screen as it turns into the island", watch.overlaySeen);
+} else check('the classic cut: where and when, then the originals in two lines; no notebook', watch.capsAt.length === 2 && watch.capsAt[0].startsWith('Citadel Island') && !watch.overlaySeen, watch.capsAt);
+// (the notebook cut: her walk outside is cut: her steps to the sink and down the hall are left, 6 or 7)
+check("OPEN-FILM: every footstep heard is one of Zoé's feet coming down (within 0.1 s)", watch.steps.heard >= (CUT === 'notebook' ? 5 : 10) && watch.steps.offbeat.length === 0, watch.steps);
 { const N = watch.NA, ok = (o, n) => o.n >= n && o.off.length === 0;
   check("NO-AIR: the worker's hand is on the lift's lever (within 3 cm) through both holds, and the lever is thrown under it", ok(N.lever, 120) && Math.abs(N.leverAt[15.2] - N.leverAt[13.6]) > 0.3 && Math.abs(N.leverAt[22] - N.leverAt[15.2]) > 0.3, { lever: N.lever, leverAt: N.leverAt });
   check('NO-AIR: both his hands are on the crate as it comes down to the deck (within 3 cm, never through it), and it comes down with them', ok(N.crate, 50) && N.through <= 0.02 && N.crateY.from - N.crateY.to > 0.2, { crate: N.crate, throughM: N.through, crateY: N.crateY });
@@ -283,7 +330,9 @@ check('played through: control in the house, objective, save, cast placed', good
 const kids0 = full.sceneKids;
 
 // ---------------------------------------------------------------- 2. skipping
-for (const at of [3, 21, 50, 64, 77, 85]) {
+// (the notebook's first page, its middle, the page's picture over the island; the lift, the tap, the well; inside the
+//  door's dip, the last shot, the handoff)
+for (const at of CUT === 'notebook' ? [3, 12, 17.4, N(21), N(50), N(64), N(74.95), N(82.6), N(84.6)] : [3, 21, 50, 64, 77, 85]) {
   await boot('new');
   await runTo(at);
   await holdSkip();
@@ -297,7 +346,7 @@ await page.keyboard.down('KeyE'); await run(0.3); await page.keyboard.up('KeyE')
 check('a short press does not skip', await ev(() => game.state === 'cinematic' && game.cine?.state === 'run'));
 
 // ---------------------------------------------------------------- 3. pause / resume
-await runTo(20);
+await runTo(N(20));
 await page.keyboard.press('Escape');
 await run(0.1);
 const p0 = await ev(() => ({ state: game.state, paused: game.cine?.paused, t: game.cine?.t, screen: !document.querySelector('#pause').classList.contains('hidden') }));
