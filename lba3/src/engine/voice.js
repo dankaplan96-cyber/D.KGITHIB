@@ -400,6 +400,16 @@ export const VOICES = {
   bl_brin: { race: 'quetch', seed: 1911, f0: 142, k: 0.96, rate: 1.05, contour: 'arc', sex: 'm' },
   bl_ottie: { race: 'quetch', seed: 1912, f0: 238, k: 1.18, rate: 1.1, contour: 'zigzag', range: 8, sex: 'f' },
   bl_nuna: { race: 'grobo', seed: 1913, f0: 190, k: 0.92, rate: 1.3, contour: 'bounce', range: 4, legato: 0.87, sex: 'f' },
+  // LBA3-SOUND: the speakers added after the last voice pass (EXP-3's chapters 12-13, SPACEPORT-3's apron) had none of
+  // their own: a voice made from the name's hash, its sex a coin toss (Nan Odra could come out a man's)
+  bl_fennick: { race: 'quetch', seed: 1914, f0: 104, k: 0.9, rate: 0.85, contour: 'flat', range: 3, legato: 0.78, sex: 'm' },   // the House's seller: measured, guarded
+  bl_garrow: { race: 'grobo', seed: 1915, f0: 100, k: 0.8, rate: 0.92, contour: 'fall', range: 5, sex: 'm' },   // a hall hand: gruff, plain
+  bl_odra: { race: 'quetch', seed: 1916, f0: 196, k: 1.06, rate: 0.8, contour: 'arc', range: 6, vib: [5.2, 30], breath: 0.11, legato: 0.72, sex: 'f' },   // Nan Odra: old, a little tremor
+  bl_jory: { race: 'quetch', seed: 1917, f0: 158, k: 1.02, rate: 1.12, contour: 'bounce', range: 7, legato: 0.55, sex: 'm' },   // young, quick
+  rhun: { race: 'quetch', seed: 1918, f0: 128, k: 0.96, rate: 1.0, contour: 'fall', range: 3, legato: 0.65, sex: 'm' },   // the apron crew's checker: level
+  pema: { race: 'quetch', seed: 1919, f0: 112, k: 0.92, rate: 0.9, contour: 'arc', range: 5, legato: 0.72, sex: 'm' },   // Ambo, the fuel hand: heavier, easy
+  kesa: { race: 'quetch', seed: 1920, f0: 218, k: 1.13, rate: 1.02, contour: 'sing', range: 6, legato: 0.62, sex: 'f' },   // a traveller in the queue
+  brin: { race: 'quetch', seed: 1921, f0: 134, k: 0.97, rate: 0.94, contour: 'bounce', range: 4, swing: 0.2, sex: 'm' },   // a traveller behind her
 };
 // other spellings of the same speaker (n_balradio is Baldino on the radio)
 const ALIAS = { veskhorn: 'vesk', veskwire: 'vesk', bal: 'baldino', rollo_q: 'rollo', pell_q: 'pell', ev_hedda: 'hedda', qc_pipe: 'qc_matto' };   // (CAMPAIGN-6: Hedda in the lane is Hedda indoors)   // (U-5: the voice in the pipe is Matto's)   // (WC-4: Rollo and Mrs Pell in the evacuation's queue, roomlife.js)
