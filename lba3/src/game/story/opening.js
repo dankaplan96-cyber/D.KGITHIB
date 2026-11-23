@@ -1064,7 +1064,6 @@ export function playOpening(story, cut = openingCut()) {
   const TURNS = [[7.05, leafA], [15.3, leafB]], TT = 0.85;
   const thetaAt = (n, t0) => { const u = (n - t0) / TT; return u <= 0 ? 0 : u >= 1 ? Math.PI : u < 0.3 ? 0.3 * sm(u / 0.3) : 0.3 + (Math.PI - 0.3) * sm((u - 0.3) / 0.7); };
   trackN(0, NB_END, (k, n) => {
-    if (k < 1 && TOPDOWN(n)) g.camera.up.copy(bd(V(0, 0, -1))); else g.camera.up.set(0, 1, 0);   // (the engine's lookAt follows it)
     for (const [t0, L] of TURNS) L.set(thetaAt(n, t0));
     showDashes(n);
     if (n > TURNS[0][0] + TT) trailL.me.visible = false;   // (under the first leaf now)
@@ -1103,10 +1102,10 @@ export function playOpening(story, cut = openingCut()) {
   // (from above his right shoulder, not in his way: the book's pages face him, so this is the one side they read from)
   // (straight down on the pages, turned so their top is the frame's top — the camera's `up` is the page's — his hands coming
   //  in from below. Over his shoulder his head hid the book: he stands over it; from his side the pages lay across the frame)
-  const overBook = (u) => P(bw(0, 0.62 - 0.04 * u, 0.03), bw(0, 0, 0.004), 34 - 1.5 * u);
-  const nearBook = () => P(bw(0, 0.5, 0.015), bw(0, 0, 0.002), 33);
-  const TOPDOWN = (n) => n < 13.4 || (n >= 16.2 && n < NB_END);
-  const lerpP = (A, B2, k) => P(A.pos.clone().lerp(B2.pos, k), A.look.clone().lerp(B2.look, k), A.fov + (B2.fov - A.fov) * k);
+  const pageUp = () => bd(V(0, 0, -1));   // (a shot's `up`: cinematic.js rolls the frame by it and puts the world's back)
+  const overBook = (u) => ({ ...P(bw(0, 0.62 - 0.04 * u, 0.03), bw(0, 0, 0.004), 34 - 1.5 * u), up: pageUp() });
+  const nearBook = () => ({ ...P(bw(0, 0.5, 0.015), bw(0, 0, 0.002), 33), up: pageUp() });
+  const lerpP = (A, B2, k) => ({ ...P(A.pos.clone().lerp(B2.pos, k), A.look.clone().lerp(B2.look, k), A.fov + (B2.fov - A.fov) * k), up: A.up });
   shots.unshift(
     { t0: 0, t1: 13.4, from: () => overBook(sm(cine.t / 13.4)), to: null },
     // (his face from the front and to his left: Arthur's side, so his look over at his son turns his face to us)
@@ -1254,7 +1253,6 @@ export function playOpening(story, cut = openingCut()) {
     finish(skipped) {
       // (the scene's pose layers off every joint: the gameplay rig never turns a hand bone, so a grip's hand turn would stay)
       for (const a of cast) { restore(a); applyBend(a, -1); a._bend = null; a._feet = null; a.rig.turn = 0; a._spF = a._spS = 0; }
-      g.camera.up.set(0, 1, 0);   // (the notebook's straight-down view turns the camera's up to the page's top)
       for (const h of loops) h.stop(skipped ? 0.2 : 0.8);
       for (const o of temps) o.parent?.remove(o);
       for (const g2 of [flats, caveFlat]) g2.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();

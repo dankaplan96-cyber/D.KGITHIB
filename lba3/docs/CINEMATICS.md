@@ -104,6 +104,21 @@ What a player who never played LBA should know by the end, shown rather than tol
 The sections of the music cue (tools/music/tracks/opening.py) are unchanged: harbour 2.5–13, the lift 13–29,
 home 29–41, the tap 41–59, "That's warm." 59–66.5, the decision 66.5–76, the title 76–83.
 
+### The notebook cut (LBA3-RUN, 23.11; not the default: `?opening=notebook`, or localStorage `lba3_opening` = `notebook`)
+For the user to compare with the film above (docs/lba3-audit/opening.md, "Decisions for the user"). 88.8 s:
+
+| Time | Shot | What happens |
+|---|---|---|
+| 0–13.4 | the notebook, straight down on the table | Twinsen's sketchbook open at the table's west end, his hands either side of it. Captions over the pages: "FunFrock once ruled Twinsun with his clones and teleporters." (a teleporter's stamp; its dashes run to the clones' rows) · "Twinsen stood up to him and set Twinsun free." (the dashes on to him, the magic ball raised; Twinsun and its two suns) · his right hand turns the page by its corner (7.05) · "Later, lightning struck his friend the Dino-Fly." · "On Zeelich, he brought Twinsun's stolen children home." |
+| 13.4–16.2 | his face from across the table | where and when (the classic caption's words); a smile, a look over at Arthur at his boat, back to the book; he turns the last page and straightens |
+| 16.2–17.6 | the last page | the island in pencil; the page's own picture lifts off it and opens out to fill the screen |
+| 17.6–22.6 | the aerial (the classic's 8–13 s) | the drawing fades off the real island; the title over it |
+| 22.6–84.8 | as the classic 13–75.2 s | |
+| 84.8–88.8 | inside | the door shuts behind Zoé (heard); Twinsen turns to the cupboard; a 2.0 s handoff (the classic's outside shot, 75.2–81.6, is cut) |
+
+Its cue is `opening_nb` (tools/music/tracks/opening_nb.py): the notebook 0.6–17.6, the title 17.6–22.6, then the
+classic cue's sections B–F unchanged, 9.6 s later, and the tail. `OPENING=notebook node tests/opening.mjs` tests it.
+
 After it: Zoé stands at the neighbours' door (talk to her: their tap ran warm too); Arthur kneels at his boat. The
 door still won't let Twinsen out without the ball ("I'd better take the magic ball along. It's in the cupboard.").
 
