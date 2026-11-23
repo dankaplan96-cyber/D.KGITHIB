@@ -337,7 +337,7 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
     shift: {
       kellAside: { ...W(MH.x + MH.hw + 1.05, MH.z - 0.75), a: -0.48 }, kellAway: [W(-7.3, 19.4), W(-4.6, 17.2)],
       brelTug: { ...W(MH.x + MH.hw + 0.42, MH.z - 0.35), a: -Math.PI / 2 }, brumDry: { ...W(TAP.x + 1.4, TAP.z - 1.3), a: -0.82 },
-      brumWait: { ...W(MH.x + MH.hw + 1.55, MH.z - 0.75), a: -1.22 }, aside: { ...W(MH.x + MH.hw + 1.6, MH.z + 1.25), a: -1.9 },
+      brumWait: { ...W(MH.x + MH.hw + 1.55, MH.z - 0.75), a: -1.22 }, aside: { ...W(MH.x + MH.hw + 2.1, MH.z + 0.1), a: -1.45 },   // (off the bay, the handle and the cloth ahead)
       kellCart: { ...W(CART0.x - PUSH + 1.1, CART0.z - 0.85), a: -0.94 },
       barrowLane: { ...W(-7.75, DECK.z), a: 0 }, barrowDeck: { ...W(DECK.x - 0.15, DECK.z), a: 0 }, barrowLand: { ...W(T.x1 - 0.75, DECK.z), a: 0 },
       barrowOff: { ...W(T.x1 - 1.45, DECK.z - 1.0), a: -0.75 }, behind: 0.92,

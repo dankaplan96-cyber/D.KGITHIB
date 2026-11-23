@@ -45,10 +45,16 @@ const save = (name, add = null) => {
   const j = JSON.parse(fs.readFileSync(path.join(FIX, name + '.save.json'), 'utf8'));
   for (const o of j.origins || []) {
     o.origin = ORIGIN;
-    if (add) for (const it of o.localStorage || []) if (it.name === 'lba3_save_v1') { const s = JSON.parse(it.value); Object.assign(s.flags, add); for (const k of Object.keys(add)) if (add[k] === undefined) delete s.flags[k]; it.value = JSON.stringify(s); }
+    if (add) for (const it of o.localStorage || []) if (it.name === 'lba3_save_v1') {
+      const s = JSON.parse(it.value), { __exp, ...fl } = add; Object.assign(s.flags, fl); for (const k of Object.keys(fl)) if (fl[k] === undefined) delete s.flags[k];
+      // (__exp: written as a format-6 save of the expanded campaign, the order of this build: a game that played the new chapters)
+      if (__exp) { s.v = 6; s.order = ORDER6; s.flags.exp = 1; delete s.flags.exp_base; s.flags.chapter = ORDER6.indexOf(s.flags.chapterKey); }
+      it.value = JSON.stringify(s);
+    }
   }
   return j;
 };
+const ORDER6 = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'evacuation', 'council', 'throttle', 'ballastra', 'balances', 'survey', 'network', 'shell', 'core', 'home'];   // (src/game/story/index.js ORDER)
 const kept = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 let page, context, browser;
 const ev = (f, a) => page.evaluate(f, a);
@@ -322,15 +328,16 @@ if (want('E')) {
   const r = await ch9('', null);
   is('E7 the expanded campaign goes on to chapter 10, Borrowed Time', r, (v) => v.chapter === 'throttle');
   await browser.close();
-  const r2 = await ch9('b', { exp_base: 1 });
-  is('Eb7 the base campaign goes on to chapter 10, the network', r2, (v) => v.chapter === 'network');
-  is('Eb8 Mill Lane revisited (from Baldino\'s workshop, by input): Brum at the handle, his council coat on its peg clear of the cable, Kell up by the cart at the cistern; their words', await ev(() => {
+  // (a base-campaign game is only ever a save from before the expansion that had reached the network (main.js migrateSave):
+  //  it can never play the new chapter 9, so the revisit is checked on the expanded campaign's network chapter)
+  await start('base-13', { __exp: 1, cn_bv: 1, cn_brumShow: true, cn_brum: true });
+  is('E8 STAGED a later visit (the expanded campaign\'s network chapter, from Baldino\'s workshop, by input): Mill Lane: Brum at the handle, his council coat on its peg clear of the cable, Kell up by the cart at the cistern; Brum\'s word', await ev(() => {
     const G = game; P.settle(); const e = P.enter('zeelich', { run: true }); P.settle(); const L = SS.lift(), b = P.npc('councilC'), k = P.npc('zl_kell');
-    const S = L.spots; P.go(S.kell.x + 3.2, S.kell.z + 1.2, { tol: 0.8, maxT: 90 }); P.face(S.kell.x, S.kell.z); G.step(1);
+    const S = L.spots; P.go(S.kell.x + 2.6, S.kell.z + 0.9, { tol: 0.6, maxT: 90 }); P.face(b.pos.x, b.pos.z); G.step(1);
     const r = P.talk('councilC'); const said = SS.said.map((s) => s[1]).slice(-2);
-    return { e: e.r, coat: L.coatShown(), brum: [b.present, +Math.hypot(b.pos.x - S.kell.x, b.pos.z - S.kell.z).toFixed(2)], kell: [k.present, +Math.hypot(k.pos.x - L.shift.kellCart.x, k.pos.z - L.shift.kellCart.z).toFixed(2), +(k.pos.y - L.top).toFixed(1)], r: r.r, said };
-  }), (v) => v.coat && v.brum[0] && v.brum[1] < 0.4 && v.kell[0] && v.kell[1] < 0.5 && v.kell[2] === 0 && v.said.some((s) => /Cloth to the nail|coat stays/.test(s)));
-  await shot('Eb8-revisit-brum-coat');
+    return { exp: G.story.inCampaign('throttle'), e: e.r, coat: L.coatShown(), brum: [b.present, +Math.hypot(b.pos.x - S.kell.x, b.pos.z - S.kell.z).toFixed(2)], kell: [k.present, +Math.hypot(k.pos.x - L.shift.kellCart.x, k.pos.z - L.shift.kellCart.z).toFixed(2), +(k.pos.y - L.top).toFixed(1)], r: r.r, said };
+  }), (v) => v.exp && v.coat && v.brum[0] && v.brum[1] < 0.4 && v.kell[0] && v.kell[1] < 0.5 && v.kell[2] === 0 && v.said.some((s) => /Cloth to the nail|coat stays/.test(s)));
+  await shot('E8-revisit-brum-coat');
   await browser.close();
 }
 
@@ -379,7 +386,7 @@ if (want('G')) {
   await browser.close();
   await start('new-12-stop', { cn_isoGot: true, cn_isoA: true, cn_isoB: true, cn_iso: true, cn_lane: true });
   is('G2 STAGED a chapter-9 save with the lane already running and no Brum flags (made on a build before this, just before the end): the chapter ends as it did (Baldino\'s call), no lesson, Brum not at the handle', await ev(() => {
-    const G = game, f = G.flags; const n0 = SS.said.length; for (let i = 0; i < 400 && f.chapterKey === 'council'; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle(60);
+    const G = game, f = G.flags; const n0 = 0; for (let i = 0; i < 400 && f.chapterKey === 'council'; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } P.settle(60);
     const said = SS.said.slice(n0).map((s) => s[1]);
     return { chapter: f.chapterKey, brum: f.cn_brum ?? null, show: f.cn_brumShow ?? null, net: said.some((s) => /A network!/.test(s)), lesson: said.some((s) => /I take the handle/.test(s)) };
   }), (v) => v.chapter !== 'council' && v.brum === null && v.show === null && v.net && !v.lesson);
