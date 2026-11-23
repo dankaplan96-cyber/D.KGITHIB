@@ -255,7 +255,7 @@ decision"). So nothing was added; see §9 D4.
 - (c) Revert. The sill stays 0.24 m under the platform (worldfit fails).
 
 **D2 · P112, the grass plot with the blue lamp: what is it, compared with the original?** (analysis only; nothing was
-changed)
+changed) — **the user picked (b), 23.11; done on the branch: `docs/lba-maturity/LAWN-EDGES.md`.**
 
 *The spot.* Citadel, the plot between the west street (x −58.9), the cross street (z 31.3), the long hall (the barrel
 vault) and the water office's knoll: about x −74…−60, z 18…30. The blue lamp at (−63.6, 26.2) stands exactly at LBA2's

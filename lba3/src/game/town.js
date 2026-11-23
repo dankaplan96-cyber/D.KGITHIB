@@ -532,13 +532,14 @@ function curbs(parent, H, paved = () => 1) {
 }
 // the kerb stones, one instanced mesh: the streets' (curbs) and LAWN-EDGES' along the grid's straight edges (world.js
 // gridKerbs; [x, y, z, ang, len]: a stone stretched along its run to fill it to the corner). Built once the town's
-// dressing stands (citydress.js), so the grid's kerbs keep off everything placed on the ground.
+// dressing stands (citydress.js), so the grid's kerbs keep off everything placed on the ground. (A grid stone is 0.14 m
+// tall, 4 cm in the ground, its top 0.10 m over it as the streets': a short run was a small piece 6 cm sunk, OVERLAP-SWEEP c.)
 function kerbMesh(parent, pos) {
   const geo = new THREE.BoxGeometry(0.2, 0.16, 0.56, 1, 1, 1);
   const im = new THREE.InstancedMesh(geo, mat('#b9b3a8', 0.9), pos.length);
   const o = new THREE.Object3D(), c = new THREE.Color();
   pos.forEach(([x, y, z, a, len], i) => {
-    o.position.set(x, y + 0.02, z); o.rotation.set(0, a + Math.sin(i * 1.7) * 0.03 * (len ? 0.4 : 1), Math.sin(i * 2.3) * 0.02); o.scale.set(1, 1, len ? len / 0.56 : 1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+    o.position.set(x, y + (len ? 0.03 : 0.02), z); o.rotation.set(0, a + Math.sin(i * 1.7) * 0.03 * (len ? 0.4 : 1), Math.sin(i * 2.3) * 0.02); o.scale.set(1, len ? 0.875 : 1, len ? len / 0.56 : 1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
     im.setColorAt(i, c.setRGB(1, 1, 1).multiplyScalar(0.86 + ((i * 7919) % 13) / 13 * 0.18));
   });
   im.receiveShadow = true; im.name = 'kerbs'; im.userData.src = 'town';
