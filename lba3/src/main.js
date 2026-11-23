@@ -16,7 +16,7 @@ import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
 import { RefreshMeter, limitRefreshes, EvenPace, paceBudgetMs } from './engine/pace.js';
 import { FarCull, BlobBatch, BoxCull, MW, FOGCULL, setFogCull, CASTER_ONLY } from './engine/drawcull.js';
-import { BLOBS, PLANT_VIEW } from './engine/rig.js';
+import { BLOBS, PLANT_VIEW, armClearWarm, armClearWarmed } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
 import { DrawBatch, warmLayers, runFor } from './engine/drawbatch.js';
@@ -849,6 +849,7 @@ class Game {
   }
   // the cast of an area just built: NPCs that waited for its spots go there, its enemies are made
   addActors() {
+    this._acWarm = true;   // (ARM-COST: their body profiles, ahead of their first poses)
     for (const d of this.story.npcDefs()) {
       const n = this.npcs.find((x) => x.def.id === d.id);
       if (!n) { const m = d.ambient ? new Resident(this, d) : new NPC(this, d); if (d.pending) m.setPresent(false); this.npcs.push(m); continue; }
@@ -1086,6 +1087,9 @@ class Game {
       });
     }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)
+    // (ARM-COST: the body profiles ARM-CLEAR needs of the people here, made now in slices, not at each one's first pose in view)
+    this._acWarm = true;
+    S.push(() => { const t0 = performance.now(), p0 = P0(), more = this.warmArms(PREP_SLICE_MS); put('arm profiles', t0, p0); return more; });
     stepT('batch meshes', () => this.uploadBatches(root));
     stepT('textures', () => { this.uploadTextures(root); this.uploadExtras(root); });   // (ROTATE-STALL: what the area's first frame still made)
     stepT('shadow programs', () => { if (this._shadowWarm) { this._shadowWarm = false; this.warmShadows(); } });   // (LAZY-REGIONS: an area built since the last warm-up)
@@ -3236,6 +3240,25 @@ class Game {
     const frame = Math.max(this.frameCapMs || 0, this._vsync || 1000 / 60);
     return Math.max(0.5, Math.min(max, 0.75 * frame - (this._workMs ?? 0)));
   }
+  // ARM-COST (LBA3-RUN performance): ARM-CLEAR's body profiles (rig.js) of the people and enemies of the scene on screen —
+  // indoors within the room's reach, outdoors within the far cull's (offscene.js's bounds), nearest to Twinsen first —
+  // made for at most `ms`; true while any is left. A profile made at a character's first pose took 4-54 ms of that frame
+  // (SwiftShader's machine, Zeelich's first minute: ten of them); one per look, kept for the session.
+  warmArms(ms) {
+    const h = this.hero?.pos, R = this.room;
+    if (!h) return false;
+    const inside = R && !R.outdoor, c = inside ? (R.center || R.group?.position) : h, far = inside ? 60 : Math.max(this.scene?.fog?.far ?? 0, 250) + 10;
+    if (!c) return false;
+    let L = null;
+    for (const list of [this.npcs, this.enemies]) for (const a of list || []) {
+      const r = a?.rig, p = a?.pos;
+      if (!r || armClearWarmed(r) || !p || (p.x - c.x) ** 2 + (p.z - c.z) ** 2 > far * far) continue;
+      (L ||= []).push([(p.x - h.x) ** 2 + (p.z - h.z) ** 2, r]);
+    }
+    if (!L) return false;
+    L.sort((a, b) => a[0] - b[0]);
+    return armClearWarm(L.map((x) => x[1]), ms);
+  }
 
   // Deterministic stepping for automated tests: game.step(seconds).
   // CONTROLS-BY-DEVICE: when the device in use changes between a pad and the keyboard/mouse, the movement scheme and
@@ -3498,6 +3521,8 @@ class Game {
     // (where he is and the doors he used, for the maps; the region's map drawn a slice further; the minimap when shown.
     //  RENDER-INV: once per displayed frame: a slow frame's catch-up steps each drew another slice of the map)
     if (!this._inner) this.hud.mapTick();
+    // (ARM-COST: the body profiles still to make for the people here, in what this frame's own work leaves, as the map)
+    if (!this._inner && this._acWarm !== false) { const t0 = performance.now(); this._acWarm = this.warmArms(this.spareMs(2)); this._bgMs = (this._bgMs || 0) + performance.now() - t0; }
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
     this.occluders(dt);
   }

@@ -5,7 +5,8 @@
 //   A. the staged build gives the same batches as the one-step build (an area not on show: Desert Island's shadow and
 //      draw batches built in slices, then again in one step: cells, pieces, vertices, triangles alike)
 //   B. cold arrivals (Zeelich, Desert Island, a Citadel interior), played frame by frame as a player gets them (the
-//      game's own transition, 1/30 s steps): every slice of the shadow batches, draw batches, their settle and return,
+//      game's own transition, 1/30 s steps): every slice of the shadow batches, draw batches, their settle and return, the
+//      people's arm profiles (ARM-COST),
 //      and the shader warm-ups within SLICE_LIMIT ms (12 ms asked + one piece or cell; a slice that compiled a shader program
 //      is reported apart: one program is the driver's unit), the big builds cut into several slices, the screen
 //      revealed, and no batch build, cell rebuild or piece leaving a batch on the first frames in view.
@@ -79,7 +80,7 @@ for (const id of (process.env.AREAS ? process.env.AREAS.replace('room', room).sp
     const L = (G.prepLog || []).filter((e) => (e.i ?? 0) > i1);
     // (texture layers: printed, not judged — its first canvas read-back waits for the browser's raster of the area's
     //  canvases, 11–19 s on SwiftShader whatever the slice; the game's own work there is one read per piece)
-    const kinds = new Set(['shadow batches', 'draw batches', 'draw batches settle', 'draw batches back', 'shader warm-up', 'shader warm-up (early)']);
+    const kinds = new Set(['shadow batches', 'draw batches', 'draw batches settle', 'draw batches back', 'shader warm-up', 'shader warm-up (early)', 'arm profiles']);   // (arm profiles: ARM-COST, ARM-CLEAR's body profiles of the people there)
     const by = {}; for (const e of L) { const v = (by[e.k] ??= { n: 0, max: 0, total: 0, prog: 0 }); v.n++; v.total += e.ms; if (e.p) v.prog++; else if (e.ms >= v.max) { v.max = e.ms; if (e.u) v.u = `${e.u.label} ${e.u.ms}`; } }
     const over = L.filter((e) => kinds.has(e.k) && !e.p && e.ms > window.LIMIT);
     const progSteps = L.filter((e) => e.p).map((e) => `${e.k} ${e.ms} ms (+${e.p} program${e.p > 1 ? 's' : ''})`);

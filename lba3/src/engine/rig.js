@@ -2177,28 +2177,52 @@ function acArmShare(geo, v, names) {
   return w;
 }
 // a body's surface round its middle (bind space, the y axis): the greatest radius per 2 cm of height and 1/32 of a turn
-function acProfiles(mesh) {
-  const geo = mesh.geometry, names = mesh.skeleton.bones.map((b) => b.name), key = 'armClear:' + names.join(',');
-  if (geo.userData[key] !== undefined) return geo.userData[key];
-  const P = geo.attributes.position;
-  if (!geo.attributes.skinIndex) return (geo.userData[key] = null);
-  const n = P.count, grp = new Int8Array(n), bm = mesh.bindMatrix, v = new THREE.Vector3();
-  const X = new Float32Array(n * 3);
-  let y0 = Infinity, y1 = -Infinity;
-  for (let i = 0; i < n; i++) {
-    const nm = names[acDominant(geo, i)];
-    grp[i] = acArmShare(geo, i, names) > 0.08 ? 0 : AC_T.has(nm) ? 1 : AC_H.has(nm) ? 2 : 0;   // (cloth tied to an arm, Twinsen's cape: not the body)
-    v.fromBufferAttribute(P, i).applyMatrix4(bm); X[i * 3] = v.x; X[i * 3 + 1] = v.y; X[i * 3 + 2] = v.z;
-    if (grp[i]) { y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); }
+// (ARM-COST, LBA3-RUN performance: made by a job that can stop at a time and go on later — armClearWarm makes them ahead
+//  of the characters' first poses, behind an arrival's black and in a frame's spare time in play: made at a character's
+//  first pose it took 4-54 ms of that one frame (SwiftShader's machine), ten times in Zeelich's first minute. The same
+//  profile either way; a first pose that comes before its job is done finishes it there)
+const AC_JOBS = new WeakMap();
+const acKey = (mesh) => 'armClear:' + mesh.skeleton.bones.map((b) => b.name).join(',');
+function acJob(mesh, key = acKey(mesh)) {
+  const geo = mesh.geometry;
+  if (geo.userData[key] !== undefined) return null;
+  let J = AC_JOBS.get(geo);
+  if (!J || J.key !== key) AC_JOBS.set(geo, (J = { key, mesh, ph: 0, i: 0 }));
+  return J;
+}
+// on until done (true: the profile is in geo.userData[key]) or until performance.now() passes `until`
+function acRun(J, until = Infinity) {
+  const mesh = J.mesh, geo = mesh.geometry, key = J.key;
+  const fin = (v) => { geo.userData[key] = v; AC_JOBS.delete(geo); return true; };
+  if (J.ph === 0) {
+    if (!geo.attributes.skinIndex) return fin(null);
+    const n = geo.attributes.position.count;
+    Object.assign(J, { ph: 1, i: 0, n, grp: new Int8Array(n), X: new Float32Array(n * 3), y0: Infinity, y1: -Infinity, names: mesh.skeleton.bones.map((b) => b.name) });
   }
-  if (!(y1 > y0)) return (geo.userData[key] = null);
-  const ny = Math.ceil((y1 - y0) / AC_DY) + 2, T = new Float32Array(ny * AC_NS), H = new Float32Array(ny * AC_NS);
+  if (J.ph === 1) {
+    const P = geo.attributes.position, bm = mesh.bindMatrix, v = _acV, { grp, X, names, n } = J;
+    let i = J.i, y0 = J.y0, y1 = J.y1;
+    for (; i < n; i++) {
+      if ((i & 255) === 0 && i > J.i && performance.now() > until) break;
+      const nm = names[acDominant(geo, i)];
+      grp[i] = acArmShare(geo, i, names) > 0.08 ? 0 : AC_T.has(nm) ? 1 : AC_H.has(nm) ? 2 : 0;   // (cloth tied to an arm, Twinsen's cape: not the body)
+      v.fromBufferAttribute(P, i).applyMatrix4(bm); X[i * 3] = v.x; X[i * 3 + 1] = v.y; X[i * 3 + 2] = v.z;
+      if (grp[i]) { y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); }
+    }
+    J.i = i; J.y0 = y0; J.y1 = y1;
+    if (i < n) return false;
+    if (!(y1 > y0)) return fin(null);
+    const ny = Math.ceil((y1 - y0) / AC_DY) + 2, idx = geo.index ? geo.index.array : null;
+    Object.assign(J, { ph: 2, i: 0, ny, T: new Float32Array(ny * AC_NS), H: new Float32Array(ny * AC_NS), idx, nt: idx ? idx.length / 3 : n / 3 });
+  }
+  const { grp, X, y0, T, H, idx, nt } = J;
   const put = (R, x, y, z) => {
     const yb = Math.round((y - y0) / AC_DY), s = Math.floor((Math.atan2(x, z) / (2 * Math.PI) + 0.5) * AC_NS) % AC_NS, r = Math.hypot(x, z), k = yb * AC_NS + s;
     if (r > R[k]) R[k] = r;
   };
-  const idx = geo.index ? geo.index.array : null, nt = idx ? idx.length / 3 : n / 3;
-  for (let t = 0; t < nt; t++) {
+  let t = J.i;
+  for (; t < nt; t++) {
+    if ((t & 31) === 0 && t > J.i && performance.now() > until) break;
     const a = idx ? idx[t * 3] : t * 3, b = idx ? idx[t * 3 + 1] : t * 3 + 1, c = idx ? idx[t * 3 + 2] : t * 3 + 2;
     if (!grp[a] || !grp[b] || !grp[c]) continue;
     const R = (grp[a] === 1) + (grp[b] === 1) + (grp[c] === 1) >= 2 ? T : H;
@@ -2206,7 +2230,39 @@ function acProfiles(mesh) {
     const m = Math.max(1, Math.ceil(Math.max(Math.hypot(bx, by, bz), Math.hypot(cx, cy, cz), Math.hypot(bx - cx, by - cy, bz - cz)) / 0.012));
     for (let i = 0; i <= m; i++) for (let j = 0; i + j <= m; j++) { const u = i / m, w = j / m; put(R, ax + bx * u + cx * w, ay + by * u + cy * w, az + bz * u + cz * w); }
   }
-  return (geo.userData[key] = { y0, ny, T, H });
+  J.i = t;
+  if (t < nt) return false;
+  return fin({ y0, ny: J.ny, T, H });
+}
+const _acV = new THREE.Vector3();
+function acProfiles(mesh) {
+  const key = acKey(mesh), J = acJob(mesh, key);
+  if (J) acRun(J);
+  return mesh.geometry.userData[key];
+}
+// (a rig a profile is made for: armClearInit's own conditions)
+function acRigOk(rig) {
+  const j = rig.j, mesh = rig.mesh;
+  if (!mesh?.isSkinnedMesh || !j?.armL?.el || !j.armL.hand || !j.armR?.hand || !j.torso || !j.hips) return false;
+  const sk = mesh.skeleton;
+  return sk.bones.indexOf(j.torso) >= 0 && sk.bones.indexOf(j.hips) >= 0 && j.armL.sh.parent === j.torso && j.armR.sh.parent === j.torso && j.torso.parent === j.hips;
+}
+// ARM-COST: the body profiles of these rigs (in the caller's order: nearest first) made ahead of their first poses, for at
+// most about `ms`; true while one is left (call again). A rig whose profile is made, or cannot be, is noted and passed
+// (in a set of its own: no new field on the rigs, whose shape the per-frame code is compiled for).
+const AC_WARMED = new WeakSet();
+export const armClearWarmed = (r) => !r || AC_WARMED.has(r) || r._ac !== undefined;
+export function armClearWarm(rigs, ms) {
+  const until = performance.now() + ms;
+  for (const r of rigs) {
+    if (armClearWarmed(r)) continue;
+    if (!acRigOk(r)) { AC_WARMED.add(r); continue; }
+    const J = acJob(r.mesh);
+    if (J && !acRun(J, until)) return true;
+    AC_WARMED.add(r);
+    if (performance.now() > until) return true;
+  }
+  return false;
 }
 // the forearms' and hands' points (each in its bone's own space at rest): the skinned ones whose main bone is the elbow or
 // the hand (every skinned surface on the skeleton: a sculpted body's arms are a mesh of their own) and the rigid hands
@@ -2249,10 +2305,8 @@ function acArmPoints(rig) {
   return out;
 }
 function armClearInit(rig) {
-  const j = rig.j, mesh = rig.mesh;
-  if (!mesh?.isSkinnedMesh || !j?.armL?.el || !j.armL.hand || !j.armR?.hand || !j.torso || !j.hips) return null;
-  const sk = mesh.skeleton, ti = sk.bones.indexOf(j.torso), hi = sk.bones.indexOf(j.hips);
-  if (ti < 0 || hi < 0 || j.armL.sh.parent !== j.torso || j.armR.sh.parent !== j.torso || j.torso.parent !== j.hips) return null;
+  if (!acRigOk(rig)) return null;
+  const j = rig.j, mesh = rig.mesh, sk = mesh.skeleton, ti = sk.bones.indexOf(j.torso), hi = sk.bones.indexOf(j.hips);
   const prof0 = acProfiles(mesh);
   if (!prof0) return null;
   // (only below the shoulders: round them the body is no longer one surface round its middle — the shoulder's cap stood out
