@@ -29,7 +29,7 @@ Object.assign(STR.en, {
   c4_tarra_2b: 'Brosk says the ground broke it. Sani says the pump talks. Children hear everything.',
   c4_tarra_wait: 'The pump, stranger. Ask Brosk at his stall, or Sani. Or listen to it yourself.',
   c4_tarra_leak: 'It turns, and it spills our water on the sand. Finish it, stranger.',
-  c4_tarra_early: 'You are the one who started our pump? Before anyone asked you?',
+  c4_tarra_early: 'You started our pump before anyone asked you. So you are not from the project?',
   c4_tarra_3: 'Water. Real water, in the oasis. All right. You are not with the project.',
   c4_tarra_4: 'The one you want is Ilka. She dug up the glowing stones, told the project they were dangerous, and they threw her out. She lives in a tent under the north mesa.',
   c4_tarra_5: 'Hesk can take you on his sand-yacht. He owes me a favour. Several.',

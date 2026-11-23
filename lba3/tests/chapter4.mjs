@@ -9,7 +9,7 @@
 // shaken joint; Brosk's "the shaking knocked that pipe loose"; Save & quit → Continue in that state; the joint
 // pushed home; the oasis fills; Tarra's trust. At the dig gate the keypad's menu: a wrong order buzzes (line, gate
 // shut), the notebook's order opens it. At the end, old saves (format 3, from REV-TY-4): the chapter's start (the
-// pump fixed before Tarra asks: her "before anyone asked you?"), an older mid-pump state (old gears 0 and 2 freed),
+// pump fixed before Tarra asks: her "before anyone asked you. So you are not from the project?"), an older mid-pump state (old gears 0 and 2 freed),
 // the notebook taken but the gate shut (the keypad, no auto-entry), the worn keys without the notebook (no menu).
 // ADV-1 (the dig's five discs, docs/lba3-team/ADVENTURE_DESIGN.md): from the open gate on, by INPUT: Ilka at the rim,
 // the warm crack on the way down, the five discs, the carving over the door, a warm disc, a cold disc shutting it
@@ -318,7 +318,7 @@ check('old save: the jammed gear frees before Tarra has asked (INPUT)', o1.r ===
 const o2 = await ev(() => { const J = game.rooms.desert.pump.joint; return P.use(J.x, J.z, { kind: 'c4joint', run: true }); }); ps = await pumpState();
 check('old save: the joint pushed home (INPUT)', o2.r === 'used' && ps.pump && ps.state === 'running', { o2, ps });
 const o3 = await ev(() => P.talk('tarra', { run: true })); s = await said();
-check('Tarra, asked after the pump already runs: "before anyone asked you?", then her trust and Ilka (INPUT)', o3.r === 'talked' && has(s, /Before anyone asked you/) && has(s, /The one you want is Ilka/) && (await ev(() => !!(game.flags.c4_trust && game.flags.c4_pumpTask))), { o3, s });
+check('Tarra, asked after the pump already runs: "before anyone asked you?", then her trust and Ilka (INPUT)', o3.r === 'talked' && has(s, /before anyone asked you/i) && has(s, /The one you want is Ilka/) && (await ev(() => !!(game.flags.c4_trust && game.flags.c4_pumpTask))), { o3, s });
 check('the objective moves on to Ilka', /Ilka/.test(await obj()), await obj());
 // (2) an older build's mid-pump state: the sound gears' old flags (0 and 2) set, the jammed one not
 const k1 = saveOf('save-k1.json'); Object.assign(k1.flags, { c4_pumpTask: true, c4_gear0: true, c4_gear2: true });
