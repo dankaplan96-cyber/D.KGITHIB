@@ -113,7 +113,10 @@ export class Music {
     this.out.connect(this.a.musicBus);
     // combat watchdog: setCombat() is only called while the player has control; if it stops being called
     // (dialogue, cutscene, game over) the threat is treated as gone
+    // (LBA3-SOUND: not while the game is held — the pause menu, the holomap, the inventory: the fight waits there and
+    //  goes on after; the watchdog dropped the combat music 2.5 s into a pause and it came back a second after it)
     setInterval(() => {
+      if (this.held) return;
       if (this.combat && this.ctx && this.ctx.currentTime - (this._lastCombatCall || 0) > 2.5) { this.combat = false; this.threatT = 0; this._update('combatOut'); }
     }, 1000);
     this.ready = fetch(this.url + 'manifest.json').then((r) => r.json()).then((m) => { this.manifest = m; this._update(); })
@@ -155,6 +158,14 @@ export class Music {
     if (!this.cueSpec) return;
     this.cueSpec = null;
     this._update();
+  }
+  // the game is held (paused, a map or menu over a fight that will go on): the music stays as it is, combat included;
+  // let go, the watchdog's 2.5 s count from then
+  hold(on) {
+    on = !!on;
+    if (this.held === on) return;
+    this.held = on;
+    if (!on && this.ctx) this._lastCombatCall = this.ctx.currentTime;
   }
   setCombat(level) {
     const now = this.ctx ? this.ctx.currentTime : performance.now() / 1000;
