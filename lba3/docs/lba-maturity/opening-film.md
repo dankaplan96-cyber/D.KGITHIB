@@ -1,5 +1,9 @@
 # The opening film — OPEN-FILM pass (WORKPLAN-2026-11-09, Wave A item 1)
 
+> **23.11 (LBA3-RUN, lba3-opening):** a second cut was built beside this film, the **notebook cut** (`?opening=notebook`;
+> not the default — the user decides: docs/lba3-audit/opening.md, "Decisions for the user"). This film, its cue and its
+> tests are unchanged and remain the default; everything below describes it. The notebook cut's shots: docs/CINEMATICS.md.
+
 **Status: Automated runtime only.** Every picture and number here comes from headless Chromium on SwiftShader, the
 scene stepped on its own clock at 1/30 s (the picture a player sees at normal speed, with no frames dropped by the
 software renderer). No frame-rate claim is made. **Nobody listened**: sound timings are the times the scene asked for

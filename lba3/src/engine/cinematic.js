@@ -7,10 +7,13 @@
 //   tracks  [{t0, t1, fn(k, t, dt)}]  called every frame inside [t0, t1] with k = 0..1; once more with k = 1
 //                          when the clock passes t1 (so a frame skip never leaves a move half done)
 //   shots   [{t0, t1, from, to, ease}]  camera: from/to = {pos, look, fov}; to = 'game' blends into the
-//                          gameplay camera (the handoff); a shot may also be a function (t) => {pos, look, fov}
+//                          gameplay camera (the handoff); a shot may also be a function (t) => {pos, look, fov}; `up`
+//                          (optional) rolls the frame (the camera's up for that shot: a page read straight down); the
+//                          runner sets the camera's up for every shot and puts the world's back after, so no film can
+//                          leave the game's camera rolled
 //   subs    [{t, d, who, text, color, voice}]  subtitles; `voice` (a speaker's name key, 'n_zoe') babbles the line in
 //                          that character's gibberish voice (voice.js), paced over the line like dialogue typing out
-//   caps    [{t, d, text, sub}]  captions (place and time), lower left, no speaker
+//   caps    [{t, d, text, sub, cls}]  captions (place and time), lower left, no speaker; cls: another look (CSS)
 //   finish(skipped)        puts the world in its end state — the same state whether the scene played out or
 //                          was skipped (so every flag, position and objective is set exactly once, here)
 //   music  {name, at}      optional: a music cue started at `at`; the clock follows the cue while it plays
@@ -33,7 +36,7 @@ function fitFov(fov, aspect) {
   const h = 2 * Math.atan(Math.tan((fov * Math.PI) / 360) * WIDE);
   return Math.min(100, (2 * Math.atan(Math.tan(h / 2) / aspect) * 180) / Math.PI);
 }
-const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion();
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion(), UP = new THREE.Vector3(0, 1, 0);
 // how fast a line types out for its voice (characters a second: about 8 syllables a second, finishing a little before
 // the subtitle goes), and so how long the voice is heard — a scene ends a speaker's talk gesture with it (R5)
 export const lineCps = (text, d) => Math.min(50, Math.max(28, text.length / (d * 0.8)));
@@ -128,6 +131,7 @@ export class Cinematic {
     _a.copy(A.pos).lerp(B.pos, k);
     _b.copy(A.look).lerp(B.look, k);
     cam.position.copy(_a);
+    cam.up.copy(A.up || UP);
     cam.lookAt(_b);
     const fov = fitFov((A.fov ?? 40) + ((B.fov ?? A.fov ?? 40) - (A.fov ?? 40)) * k, cam.aspect);
     if (cam.fov !== fov) { cam.fov = fov; cam.updateProjectionMatrix(); }
@@ -158,6 +162,7 @@ export class Cinematic {
     const w0 = 2 * d0 * Math.tan((A.fov * Math.PI) / 360), w1 = 2 * d1 * Math.tan((F1 * Math.PI) / 360);
     const w = w0 + (w1 - w0) * k;
     cam.position.copy(L).addScaledVector(dir, d);
+    cam.up.copy(UP);
     cam.lookAt(L);
     cam.fov = (2 * Math.atan(w / (2 * d)) * 180) / Math.PI;
     cam.updateProjectionMatrix();
@@ -206,6 +211,7 @@ export class Cinematic {
     }
     if (i < 0) { el.style.opacity = '0'; return; }
     const c = caps[i];
+    el.className = c.cls || '';   // (a scene's own caption look: the opening's notebook lines, 'recap', css/style.css)
     el.innerHTML = `<div style="font-size:clamp(1.25rem,3vw,2rem);font-weight:800;letter-spacing:0.04em">${c.text}</div>`
       + (c.sub ? `<div style="font-size:clamp(0.95rem,1.9vw,1.2rem);font-weight:500;margin-top:0.2em;opacity:0.92">${c.sub}</div>` : '');
     el.style.opacity = '1';
@@ -270,6 +276,7 @@ export class Cinematic {
     this.game.audio.babble?.stop();
     if (this._suspended) { g.audio.resumeSoftly(); this._suspended = false; }
     this.ui(false);
+    g.camera.up.copy(UP);   // (however it ended: the game's cameras all look with the world's up)
     const end = () => {
       try { this.def.finish?.(skipped, this); } catch (e) { console.error('cinematic finish failed', e); }
       g.camRig.cine = false;
