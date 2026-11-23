@@ -343,7 +343,11 @@ export function buildOldPlaces(C) {
   // the crew's bunkhouse: a grey tower. (SCHOOL-S28: it stood in S28's hollow, where LBA2's School is; now on the
   // valley's east side south of it, its door to the west onto the valley's floor, the way to the School)
   {
-    const T = { x: 4.7, z: -16.0, w: 2.47, d: 7.19, h: 8.36 }, gy = H(T.x - T.w / 2 - 0.5, T.z - 1.5), low = gy - 0.6;
+    // (P113's door sweep, tests/door-levels.mjs: its level was the ground 0.5 m before the door, and the sand rises to the
+    //  wall: 0.25 m over the sill at the wall's foot, through the step. The highest ground under the step, 0.1–0.9 m out)
+    const T = { x: 4.7, z: -16.0, w: 2.47, d: 7.19, h: 8.36 };
+    let gy = -Infinity; for (const o of [0.1, 0.3, 0.5, 0.7, 0.9]) for (const dz of [-0.8, 0, 0.8]) gy = Math.max(gy, H(T.x - T.w / 2 - o, T.z - 1.5 + dz));
+    let low = gy - 0.6; for (const sx of [-1, 0, 1]) for (const sz of [-1, -0.5, 0, 0.5, 1]) low = Math.min(low, H(T.x + sx * (T.w / 2 + 0.3), T.z + sz * (T.d / 2 + 0.3)) - 0.15);   // (its foot under the lowest ground round it, now it stands on the door's)
     // (DESERT-ART 2: the tower is the island's grey stone; it was stone under adobe. Its face is gone: FACE-OFF below)
     B.add(bbox(T.w, gy + T.h * 0.55 - low, T.d, 0.1, TILE.stone), M.grey, T.x, (gy + T.h * 0.55 + low) / 2, T.z);
     B.add(bbox(T.w - 0.2, T.h * 0.45, T.d - 0.2, 0.1, TILE.stone), M.grey, T.x, gy + T.h * 0.55 + T.h * 0.225, T.z);
@@ -360,7 +364,8 @@ export function buildOldPlaces(C) {
     B.add(bbox(0.08, 2.0, 1.1, 0, TILE.planks), M.darkWood, T.x - T.w / 2 - 0.02, gy + 1.0, T.z - 1.5);
     B.add(bbox(0.3, 0.26, 1.6, 0, 1), M.grey, T.x - T.w / 2 - 0.05, gy + 2.22, T.z - 1.5);
     for (const s of [-1, 1]) B.add(bbox(0.3, 2.3, 0.26, 0, 1), M.grey, T.x - T.w / 2 - 0.05, gy + 1.1, T.z - 1.5 + s * 0.72);
-    B.add(bbox(0.9, 0.16, 1.9, 0, 1), M.stone, T.x - T.w / 2 - 0.4, gy + 0.03, T.z - 1.5);
+    B.add(bbox(0.9, 0.5, 1.9, 0, 1), M.stone, T.x - T.w / 2 - 0.4, gy - 0.23, T.z - 1.5);   // (P113 sweep: its top at the door's foot, 2 cm up — it stood 11 cm over the leaf's foot — and its own foot 0.48 m down, the sand falls away before it)
+    col({ type: 'box', x: T.x - T.w / 2 - 0.4, z: T.z - 1.5, hw: 0.45, hd: 0.95, top: gy + 0.02, seeThrough: true });   // (and walked on: the sand under it up to 0.3 m lower)
     col({ type: 'box', x: T.x, z: T.z, hw: T.w / 2, hd: T.d / 2, top: gy + T.h + 0.5 });
     shut('s28', T.x - T.w / 2, gy, T.z - 1.5, -Math.PI / 2, 1.0);
     // (DESERT-BAR: the crew's board on the wall north of the door, now that the door leads in: Anko's sketch is read there,
@@ -404,7 +409,9 @@ export function buildOldPlaces(C) {
     for (const s2 of [-1, 1]) { const [jx, jz] = f(s2 * 0.92, 1.4); B.add(bbox(0.26, 2.4, 0.46, 0, 1), M.stone, jx, g + 1.2, jz, 0, S.ry, 0); }
     { const [lx, lz] = f(0, 1.5); B.add(bbox(1.5, 2.2, 0.08, 0, TILE.planks), M.darkWood, lx, g + 1.1, lz, 0, S.ry, 0); }
     { const [sx, sz] = f(0, 1.56); B.add(cached('w80d-star', () => new THREE.CircleGeometry(0.22, 5)), pm('#bff4ff', 0.4, { emissive: '#40a0d0', emissiveIntensity: 1.0 }), sx, g + 1.75, sz, 0, S.ry, 0); }
-    { const [px, pz] = f(0, 2.1); B.add(bbox(2.6, 0.3, 1.4, 0.06, 1.5), M.stone, px, g + 0.02, pz, 0, S.ry, 0); col({ type: 'box', x: px, z: pz, hw: 1.3, hd: 0.7, rot: S.ry, top: g + 0.17 }); }
+    // (P113's door sweep, tests/door-levels.mjs: the step's top stood 0.17 m over the door's foot, the leaf's lowest 17 cm
+    //  inside it; its top now 2 cm over the door's foot and the ground before it)
+    { const [px, pz] = f(0, 2.1); B.add(bbox(2.6, 0.3, 1.4, 0.06, 1.5), M.stone, px, g - 0.13, pz, 0, S.ry, 0); col({ type: 'box', x: px, z: pz, hw: 1.3, hd: 0.7, rot: S.ry, top: g + 0.02 }); }
     // LBA2's white blocks either side of the door, worn: twelve years of pupils sitting on them
     for (const u of [-2.3, 2.3]) { const [bx, bz] = f(u, 2.4), bg = g;   // (on the hollow's floor, at the door's level)
       B.add(bbox(1.0, 0.95, 1.9, 0.1, 1.5), M.white, bx, bg + 0.47, bz, 0, S.ry, 0); B.add(bbox(1.1, 0.12, 2.0, 0.04, 1), M.stone, bx, bg + 1.0, bz, 0, S.ry, 0); col({ type: 'box', x: bx, z: bz, hw: 0.5, hd: 0.95, rot: S.ry, top: bg + 1.05 }); }

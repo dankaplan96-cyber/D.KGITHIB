@@ -31,7 +31,8 @@ const TO = { square: [-42, -4], lane: [-44.6, 12], harbour: [-60, 33], spaceport
 
 export function buildCityDressing(root, physics, W) {
   const g = new THREE.Group(); g.name = 'citydress'; root.add(g);
-  const T = W.terrain, H = (x, z) => T.heightAt(x, z);
+  // (P113: on a raised house's terrace, its top: town.js W.terraceTop)
+  const T = W.terrain, H = (x, z) => Math.max(T.heightAt(x, z), W.terraceTop?.(x, z) ?? -Infinity);
   const kits = new Map();
   const kitAt = (x, z) => { const key = Math.floor(x / CELL) + ',' + Math.floor(z / CELL); let k = kits.get(key); if (!k) { const ag = new THREE.Group(); g.add(ag); k = new Kit(ag); kits.set(key, k); } return k; };
 
