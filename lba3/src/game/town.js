@@ -89,7 +89,10 @@ const HOUSES = [
     windows: [{ side: 'front', x: -1.3 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
   { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'stone', tint: '#f4f0ea', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
     windows: [{ side: 'front', x: 0.9, y: 0.9, w: 1.6, h: 1.2, noShutters: true }, { side: 'right', x: 0.4 }, { side: 'left', x: 0.8 }] },
-  { id: 'water', x: -68.7, z: 11.0, ry: Math.PI / 2, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.0 }, wall: 'stone', tint: '#eef0f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
+  // (C66, ORDER 66.2: its back gable faces the promenade's inland wall 0.2 m off (the wall's face x −71.31): the roof's
+  //  0.48 m overhang there ran 0.3 m into the wall's rubble under the walk's level and over its coping above it. 0.36 m
+  //  off that end only (architecture.js roofBack): the rake 0.18 m past the back wall, 3–6 cm short of the coping)
+  { id: 'water', x: -68.7, z: 11.0, ry: Math.PI / 2, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.0 }, wall: 'stone', tint: '#eef0f2', roof: 'roofBlue', roofBack: 0.36, shutters: '#3b5bb8', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'right', x: 0 }] },
   // (DOORS-LBA2 #1: 3 m north of where it stood, z 24.6: LBA2's street hatch and its rails are in the street before it
   // now, sewers.js HATCHES.street; its tubs clear of the rails. Fosse's Sewer Works office, shut while he is below)
@@ -452,8 +455,11 @@ function well(parent, H, physics, x, z) {
   mergeStatic(g, { recolor: true });   // (static: PERF-IGPU)
   return setWater;
 }
-function curbs(parent, H) {
+function curbs(parent, H, paved = () => 1) {
   // granite curb stones along both edges of each street, instanced
+  // (C66, ORDER 66.2: and not where the grid's paving (world.js GRID_STREETS, P42's ring round the square's block) lies
+  //  outside the kerb too: Bug Street's south-west kerb ran diagonally across the block's west street at x −52, paving on
+  //  both sides of it; `paved`, world.js gridPaveDist, < 0 on that paving)
   const pos = [];
   for (const s of STREETS) for (let i = 0; i < s.pts.length - 1; i++) {
     const a = s.pts[i], b = s.pts[i + 1];
@@ -467,6 +473,7 @@ function curbs(parent, H) {
         if (Math.hypot(x - V.x, z - V.z) < 9.9) continue; // inside the square
         if (streetDist(x, z) < -0.05) continue;          // inside another street
         if (bugFootDist(x, z) < 0) continue;             // inside Bug Street's foot (REVIEW-CITADEL-ART b)
+        if (paved(x + nx * side * 0.35, z + nz * side * 0.35) < 0) continue;   // (C66: the grid's paving beyond it: it divides nothing)
         pos.push([x, H(x, z), z, ang]);
       }
     }
@@ -474,8 +481,9 @@ function curbs(parent, H) {
   // (FLAT-TOWN: the ring of curb stones round the square is gone: the square is LBA2's raised plaza now, two stone
   //  steps all round it, island.js buildFlatTown)
   // Bug Street's foot: its north kerb on to the north house's front
-  { const [[ax, az], [bx, bz]] = BUG_FOOT_KERB, len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az);
-    for (let d = 0.28; d < len - 0.2; d += 0.55) { const x = ax + (bx - ax) * d / len, z = az + (bz - az) * d / len; pos.push([x, H(x, z), z, ang]); } }
+  // (C66: not where the grid's west street, x −52, lies north of it too)
+  { const [[ax, az], [bx, bz]] = BUG_FOOT_KERB, len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az), ox = -(bz - az) / len * 0.35, oz = (bx - ax) / len * 0.35;
+    for (let d = 0.28; d < len - 0.2; d += 0.55) { const x = ax + (bx - ax) * d / len, z = az + (bz - az) * d / len; if (paved(x + ox, z + oz) < 0) continue; pos.push([x, H(x, z), z, ang]); } }
   const geo = new THREE.BoxGeometry(0.2, 0.16, 0.56, 1, 1, 1);
   const im = new THREE.InstancedMesh(geo, mat('#b9b3a8', 0.9), pos.length);
   const o = new THREE.Object3D(), c = new THREE.Color();
@@ -621,7 +629,7 @@ export function buildTown(scene, W) {
   stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
   stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
   for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.2, top: gy(p) + 0.7 }); pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }   // (pots r 0.2: the south house's stands by its door)
-  curbs(dress, H);
+  curbs(dress, H, W.gridPaveDist);
   // all of the above is static: one mesh per material (lights stay as they are)
   mergeStatic(dress);
 
@@ -642,7 +650,10 @@ export function buildTown(scene, W) {
         const { cx, cz } = B.chim;
         occ.add({ kind: 'box', x: hd.x + Math.cos(rot) * cx + Math.sin(rot) * cz, z: hd.z - Math.sin(rot) * cx + Math.cos(rot) * cz, rot, hw: 0.4, hd: 0.4, y0: y + B.chim.y0, y1: y + B.chim.y1, name: hd.id + ' chimney' });
       }
-    } else occ.add({ kind: 'box', x: hd.x, z: hd.z, rot, hw: half, hd: hd.d / 2 + oh + 0.1, y0: ridge - half * pitch - 0.35, y1: ridge + 0.15, slope: pitch, name: hd.id + ' roof' });
+    } else {   // (C66: roofBack, the roof shorter at its back end only)
+      const bk = (hd.roofBack || 0) / 2;
+      occ.add({ kind: 'box', x: hd.x + Math.sin(rot) * bk, z: hd.z + Math.cos(rot) * bk, rot, hw: half, hd: hd.d / 2 + oh + 0.1 - bk, y0: ridge - half * pitch - 0.35, y1: ridge + 0.15, slope: pitch, name: hd.id + ' roof' });
+    }
     if (hd.chimney !== false && !B) {
       const cx = (hd.chimneyX ?? 0.28) * hd.w, cz = -hd.d * 0.18, ch = 1.4 + b.gableH * 0.5;
       const yb = y + hd.h + b.gableH * (1 - Math.abs(cx) / (hd.w / 2)) - 0.3;

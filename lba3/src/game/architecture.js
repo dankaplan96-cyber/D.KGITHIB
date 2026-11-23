@@ -265,10 +265,12 @@ export function buildHouse(opts) {
   const half = o.w / 2 + o.overhang;
   const slope = Math.hypot(half, half * o.pitch);
   const ang = Math.atan(o.pitch);
-  const len = o.d + o.overhang * 2 + 0.2;
+  // (C66: roofBack, metres off the roof's back end (local −z) only, where a house's back gable stands against a wall: the
+  //  roof shorter there, the front end where it was)
+  const back = o.roofBack || 0, len = o.d + o.overhang * 2 + 0.2 - back, zc = back / 2;
   for (const sx of [-1, 1]) {
     const slab = new THREE.Group();
-    slab.position.set(0, o.h + gableH, 0);
+    slab.position.set(0, o.h + gableH, zc);
     slab.rotation.z = sx * -ang;
     g.add(slab);
     // body (fascia coloured edge) and tiled top
@@ -283,12 +285,12 @@ export function buildHouse(opts) {
   for (const sx of [-1, 1]) {
     const ex = sx * (half - 0.02), ey = o.h + gableH - half * o.pitch - 0.3;
     const gut = new THREE.LatheGeometry([new THREE.Vector2(0.075, -len / 2), new THREE.Vector2(0.075, len / 2)], 10, -Math.PI / 2, Math.PI);
-    const gm = mesh(gut, plain('#8a8f96', 0.45, { metalness: 0.4, side: THREE.DoubleSide }), g, ex, ey, 0);
+    const gm = mesh(gut, plain('#8a8f96', 0.45, { metalness: 0.4, side: THREE.DoubleSide }), g, ex, ey, zc);
     gm.rotation.x = Math.PI / 2;
     gm.rotation.y = 0;
     gm.castShadow = false;
   }
-  const ridge = mesh(new THREE.CylinderGeometry(0.13, 0.13, len + 0.06, 10), ridgeMat, g, 0, o.h + gableH + 0.02, 0);
+  const ridge = mesh(new THREE.CylinderGeometry(0.13, 0.13, len + 0.06, 10), ridgeMat, g, 0, o.h + gableH + 0.02, zc);
   ridge.rotation.x = Math.PI / 2;
   // downpipe at the front corner
   // downpipe: from the right gutter, a swan-neck back to the wall, then down the corner
