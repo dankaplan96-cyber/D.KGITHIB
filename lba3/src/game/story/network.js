@@ -484,8 +484,9 @@ export class Network extends ChapterBase {
     this.chain(call, () => {
       g.camRig.shake(0.8); g.audio.play('horn');
       this.game.world.station?.setSealed?.(false);   // (the blast doors over the collar draw back)
+      this.game.world.station?.setActive?.(true);   // (LBA3-RUN story #2: lit and running as a load of the next chapter shows it)
       // MAGIC-LEVELS (story/magic.js): the five stations' heat comes up the open shaft: level 4, the fire ball
-      const rest = () => this.chain([['baldino', 'c10_bal_p3'], ['hero', 'c10_tw_p2']], () => {
+      const rest = () => this.chain([['baldino', 'c10_bal_p3'], ...(f.cn_stop ? [['baldino', 'c10_bal_needle']] : []), ['hero', 'c10_tw_p2']], () => {   // (LBA3-RUN story #1: the drill's restart is told)
         g.audio.endCue?.(); this.sending = false;
         f.c10_done = true; g.save(false);
         g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
