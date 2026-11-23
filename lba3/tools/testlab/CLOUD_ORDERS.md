@@ -1,9 +1,8 @@
 # Orders from the cloud to the laptop (3.11.2026, night mode)
 
-> **22.11.2026 (later): ORDER 66 ONLY — no performance work (the user: "give the local agent tasks that aren't
-> related to performance").** Performance and measurement orders stay paused: 61, 62's battery half, 63, 64, 65, the P96
-> confirmation, and any frame-time, GPU-timer, power or benchmark work. Do order 66 below, step by step, and nothing else.
-> Report each step in `WORLD_ART_REQUESTS.md` and push to your branch as usual. Pictures and judgements, not timings.
+> **23.11.2026: ORDERS 66 and 67 — still no performance or measurement work (the user).** Finish 66.5 (chapter 1 played
+> with real input), then do 67 below (the user, 23.11: "let the local agent work the walls and make normal maps").
+> Other performance orders (61, 63, 64, 65, P96) stay paused. Report each step in `WORLD_ART_REQUESTS.md`, push your branch.
 
 > **4.11.2026: the cloud moves to a new session** (the user's decision). Talk to the cloud through the repository only
 > (`WORLD_ART_REQUESTS.md` for requests and questions, pushed); direct messages to the old cloud session will not be read.
@@ -956,4 +955,33 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     5. **Play chapter 1 from a new game to the end with real input (keyboard and mouse), in English and once in Hebrew.**
        Note anything confusing, broken or odd: prompts, goals, camera, the flat town, the shop. Report as play notes
        with a picture each. Do not report frame rates or timings.
+
+
+
+67. **WALL-NORMALS (the user, 23.11: "תיתן לסוכן המקומי לעבד את קירות ולעשות normal map").** With the local Blender,
+    give the game's stone walls real surface relief: a matching **normal map** for each wall texture, so mortar joints
+    and stone faces catch the (fixed) sun. Build: the cloud's `ccr-c1c2c4b9-dep6ed` head.
+    1. **Which walls:** the textures in `src/engine/textures.js` used on walls: `fortStone` (now the default for Citadel's
+       retaining/sea/lawn walls — the user's pick, island.js WALLS 'c'), `rubbleHouse` (the houses), `rubble` (quays,
+       embankments), the fort's own walls, `stone`/coping; then Zeelich's and the islands' wall stones. Start with
+       `fortStone` and `rubbleHouse` (Citadel, chapter 1). Each texture is GENERATED in code (canvas): the normal map must
+       match it texel for texel — bake from the same stone layout (port the generator's layout to Blender, or render a
+       height map from the generator itself: e.g. add a `heightOf(name)` variant beside it that draws stones as heights,
+       then derive the normal map in Blender or in code). Tangent-space, OpenGL (+Y) convention, the same size and tiling
+       as the colour texture.
+    2. **Hooking it in:** materials are `MeshStandardMaterial`. IMPORTANT: `src/engine/drawbatch.js` and `merge.js` do
+       NOT batch materials with a `normalMap` (they'd draw one by one) — so either add normal-map support to the batcher
+       (one shared normal map per batch, like `map`, the texture array) or keep the count of affected walls small and
+       say what it costs in draw calls (count them in the existing `?perf`/F9 overlay — a count, not a benchmark).
+       The artifact is at its 512-file limit: prefer generating the normal map in code at load (from the height variant)
+       over new image files; if you must ship images, say how many files.
+    3. **The look:** subtle, LBA2-like — the walls stay flat-shaded and clean at the play camera (Follow, Far), with relief
+       readable up close and at grazing light; no noisy sparkle or shimmer when walking (look at it in motion), no
+       darkening in shade. Before/after pictures at the play camera and up close, in the morning and evening light, for
+       each wall type: `captures/wall-normals/`.
+    4. **Tests:** worldfit, overlap-sweep, occluders, citadel-structures, and the draw-call count before/after in three
+       Citadel views. No frame-time measurements.
+    5. Each wall type is a **visible change for the user's pick** (the user picks one by one): put each behind a switch
+       (e.g. `?wallnormals=1` or per texture) with the default unchanged, and list them in your report. Send the diff as
+       usual (`WORLD_ART_REQUESTS.md`, your branch).
 

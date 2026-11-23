@@ -192,6 +192,7 @@ v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOO
 | P111 | 23.11 | A Grobo's (elephant's) hand sinks into his own body | the user, 23.11, a close picture by the tulips: "היד שלו בתוך הגוף נבלע" | worker GROBO-ARM started |
 | P112 | 23.11 | A grass plot with a lamp, bench and barrel cut into the paving (Citadel): "what is this compared to the original?" | the user, 23.11, a picture | worker LAWN-REF: compare the spot with LBA2 and propose (the user picks) |
 | P113 | 23.11 | Pippa's shop: the raised square's steps start at its door, the sill and plinth 0.24 m under the ground (FULL-TEST-23-11's one open item, from FLAT-TOWN v142) | FULL-TEST-23-11, the user's pick 23.11: "להרים את החנות" | queued: raise the shop to the plaza's level; sweep every building whose door meets FLAT-TOWN's plaza, lawns, promenade or stair (game-wide rule) |
+| P114 | 23.11 | Walls with real relief: normal maps for the wall textures, by the local agent | the user, 23.11: "תיתן לסוכן המקומי לעבד את קירות ולעשות normal map" | CLOUD_ORDERS 67 WALL-NORMALS written (after 66.5): normal maps matching the generated textures (fortStone, rubbleHouse first), the batcher's normalMap limit noted, behind a switch for the user's picks |
 
 ## Waves (cloud)
 
