@@ -4458,7 +4458,7 @@ Object.assign(STR.he, {
   t2_goal_pipe: 'לקפוץ מעל צינור הנחושת בדרך החוצה, או להקיף אותו',
   t2_k_search: '{k} לחפש בארון',
   t2_k_talk: '{k} לדבר',
-  t2_k_try: '{k} לפתוח את הברז',
+  t2_k_try: '{k} לנסות את הברז',
   t2_k_jump: '{k} לקפוץ · עם תנופה',
   t2_zoe_call: 'טווינסן! כאן.',
   t2_ask_inv: 'תסתכל עליהם טוב.',
@@ -5052,7 +5052,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.he, {
   n_zl_kell: 'קל', n_zl_brel: 'ברל', n_zl_irsa: 'אירסה', n_veskhorn: 'וסק (צינור דיבור)',
-  p_tap: 'לפתוח את הברז', p_feel: 'לגעת', p_listen: 'להקשיב', p_cock: 'לפתוח', p_strip: 'לתלוש', p_plate: 'לקרוא',
+  p_tap: 'לנסות את הברז', p_feel: 'לגעת', p_listen: 'להקשיב', p_cock: 'לפתוח', p_strip: 'לתלוש', p_plate: 'לקרוא',
   p_cock_sq: 'לפתוח את הקו של הכיכר', p_cock_ho: 'לפתוח את הקו של הבתים',
   p_feel_up: 'לגעת בצינור העליון', p_feel_lo: 'לגעת בצינור התחתון', p_feel_cu: 'לגעת בצינור הנחושת',
   p_hook: 'לחבר שרשרת', p_bell: 'לצלצל', p_zt_bell: 'לצלצל בפעמון', p_feed: 'להפעיל מנוע', p_ride: 'לעלות', p_cart: 'לדחוף', p_dial: 'לסובב', p_crank: 'לסובב את הידית', p_enter: 'להיכנס', p_draw: 'למלא',
