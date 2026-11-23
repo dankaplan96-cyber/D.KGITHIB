@@ -346,6 +346,7 @@ export class ZeelichLife extends ChapterBase {
   // ---------------------------------------------------------------- per frame
   update(dt) {
     this.applyHomes();
+    this.story.chapters[this.idx('zeelich')]?.lift?.kellBread?.();   // (THE SECOND SHIFT, free play: Kell's loaf at the bakehouse: story/zeelift.js)
     if (!this.L) return;
     this.push();
     const g = this.game, L = this.L;
