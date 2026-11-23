@@ -2846,6 +2846,10 @@ function buildPipeline(W, root, r) {
     const last = prof.n - 1, ex = prof.xs[last], ez = prof.zs[last], ey = prof.y[last], M = PIPE_METER;
     const g = W.H(M.x, M.z);
     pipeRun(B, [[ex, ey, ez], [M.x, ey, M.z], [M.x, g + 1.62, M.z]], 0.3);
+    // (FULL-TEST 23.11: its slant to the cabinet as the camera's own volume too, as the rest of the tube: since C66 moved
+    //  the cabinet 0.8 m east the slant runs 0.4 m nearer the plateau's edge, and the Follow camera behind him there
+    //  stood 0.12 m from it — camclear)
+    pipeVolumes(W, [[ex, ey, ez], [M.x, ey, M.z]], 0.3);
     W.setWaterFlow = buildMeter(W, grp, B, M.x, M.z, M.ry, ey);
   }
   // --- the branch to the reservoir on the Whispering Cliffs
@@ -3203,7 +3207,8 @@ function buildFlatTown(W, root) {
   for (const w of PROM_WALLS) {
     const wx = w.x1 - w.x0, wz = w.z1 - w.z0, top = PROM_H - 0.18, cx = (w.x0 + w.x1) / 2, cz = (w.z0 + w.z1) / 2;
     B.add(wallBox(wx, top - w.foot, wz, 0.04), w.id === 'inland' ? rubS : rub, cx, (top + w.foot) / 2, cz);
-    B.add(bbox(wx + 0.06, 0.22, wz + 0.06, 0.03, TILE.stone), cope, cx, PROM_H + 0.02 - 0.11, cz);
+    const kx0 = w.joinW ? w.x0 + 0.03 : w.x0 - 0.03, kx1 = w.x1 + 0.03;   // (joinW: flush with the sea coping's edge, no overlap)
+    B.add(bbox(kx1 - kx0, 0.22, wz + 0.06, 0.03, TILE.stone), cope, (kx0 + kx1) / 2, PROM_H + 0.02 - 0.11, cz);
     physics.add({ type: 'box', x: cx, z: cz, hw: wx / 2 + 0.03, hd: wz / 2 + 0.03, rot: 0, top: PROM_H + 0.02, seeThrough: true });
   }
   // FLAT-TOWN-2: the south block's lawns (LAWN): the kerbs and the bed's walls, rubble under the coping (on a kerb, 0.23 m,

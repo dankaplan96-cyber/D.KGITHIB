@@ -296,7 +296,12 @@ if (!ONLY || ONLY === 'C') {
     const f = game.flags, T = game.story._ps, L = game.regions.built('hamalayi').line; let k = 0; const k0 = L.onKick; L.onKick = (i) => { k++; k0?.(i); };
     for (let i = 0; i < 260; i++) game.step(0.05); L.onKick = k0;
     const st = [f.chapterKey, f.ps_v, T.on6, L.active, k];
-    const tg = game.room.ballTargets.find((t) => t.tree); for (let j = 0; j < 6 && !tg.done; j++) { const a = j * 1.05; P.go(tg.x - Math.sin(a) * 4, tg.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.throwAt(tg.x, tg.z); P.settle(); }
+    // (PUZZLES phase 2, 21.11: the ball on the tree rocks it back on its old prop (c6_rocked); the ball on the prop knocks it
+    //  out and the tree falls across — FULL-TEST 23.11: the tree, then the prop, as camclear and puzzles do)
+    for (const [kind, done] of [['tree', () => f.c6_rocked || f.c6_bridge], ['prop', () => f.c6_bridge]]) {
+      const tg = game.room.ballTargets.find((t) => t[kind]); if (!tg) continue;
+      for (let j = 0; j < 6 && !done(); j++) { const a = j * 1.05; P.go(tg.x - Math.sin(a) * 4, tg.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.throwAt(tg.x, tg.z); P.settle(); }
+    }
     return [...st, !!f.c6_bridge];
   }), (v) => v[0] === 'pass' && v[1] === 1 && v[2] && v[3] && v[4] >= 3 && v[5]);
   await browser.close();
@@ -893,6 +898,9 @@ if (!ONLY || ONLY === 'O') {
     const G = game, f = G.flags, D = G.room, h = G.hero;
     const C = D.valves.find((x) => x.id === 'C'); P.use(C.x, C.z, { near: 1.0 }); P.settle(); const hp = h.hp;
     const A = D.valves.find((x) => x.id === 'A'); if (!A.open) { P.go(D.ladder.x, D.ladder.z + 0.4, { tol: 0.5 }); P.use(A.x, A.z); P.settle(); }
+    // (PUZZLES phase 2, 21.11: the drain (B) is found open and both feeds starve the drive; shut, the loop closes and it
+    //  cools — FULL-TEST 23.11, as puzzles.mjs c15 and playthrough 14 do)
+    const B = D.valves.find((x) => x.id === 'B'); if (B?.open) { P.use(B.x, B.z, { near: 1.0 }); P.wait(1); P.settle(); }
     SWAIT(60); const S = D.coolDoor; P.go(S.x, S.z + 2.2, { tol: 0.5, fight: false }); SWAIT(100, () => !!f.sh_held);
     return [f.c3_cooled, f.sh_held, S.held, hp];
   }), (v) => v[0] === true && v[1] === true && v[2] === true);
