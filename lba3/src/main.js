@@ -1735,6 +1735,7 @@ class Game {
     if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); }
     if (s !== 'play') { this.targeting?.hide(); this._swapT = -1; }   // (a swap key held into a dialogue never acts after it)
     this.hud?.busy(s !== 'play');
+    this.audio?.hold?.(s === 'pause' || s === 'map' || s === 'inventory');   // (LBA3-SOUND: a fight's music waits under a menu)
   }
   // INVENTORY-CALM: the inventory window shuts back to play, or to the pause menu it was opened from (its Journal
   // button selected again)
