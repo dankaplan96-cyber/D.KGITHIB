@@ -1683,9 +1683,12 @@ const LOOK_V2 = ['hairtone'];   // (?look=v2: the first candidate as proposed; t
 export const LOOK = (() => {
   let s = '';
   try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('look')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.charLook || ''; } catch { /* no storage */ }
+  // (the user, 23.11: the spline lock with its tie is Twinsen's hair; ?look=old (or the setting) shows the three balls)
+  if (!String(s).trim()) s = 'hairspline';
   const on = new Set();
   for (const w of String(s).toLowerCase().split(',').map((x) => x.trim()).filter(Boolean)) {
-    if (w === 'v2') LOOK_V2.forEach((k) => on.add(k));
+    if (w === 'old') on.clear();
+    else if (w === 'v2') LOOK_V2.forEach((k) => on.add(k));
     else if (w[0] === '-') on.delete(w.slice(1));
     else if (LOOK_STEPS[w]) { on.add(w); if (w === 'hairspline' || w === 'hairsmooth') on.add('hairband'); }   // (the band comes with the spline lock: -hairband after it takes it off)
   }

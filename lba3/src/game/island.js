@@ -151,7 +151,8 @@ const VC = () => pm('#ffffff', 0.85, { vertexColors: true });
 // baked in the walls' UVs. a: pale dressed blocks in courses; b: the houses' pale rubble, larger, in mortar; c: the
 // fort's stone (`fortStone`, its scale and tint). `shade`: the emissive lift of the walls facing east (FLAT-TOWN-2's),
 // smaller on the pale faces.
-const WALL_LOOK = (() => { const m = typeof location !== 'undefined' && /[?&]wall=([abc])\b/.exec(location.search); return m ? m[1] : null; })();
+// (the user, 23.11: c — the fort's stone — is the default; ?wall=old shows the previous rubble, ?wall=a|b the other two)
+const WALL_LOOK = (() => { const m = typeof location !== 'undefined' && /[?&]wall=(a|b|c|old)\b/.exec(location.search); return !m ? 'c' : m[1] === 'old' ? null : m[1]; })();
 const WALLS = {
   a: { tex: () => wallTexture('a'), tile: 1.7, color: '#eee6d8', shade: '#4a453e' },
   b: { tex: () => wallTexture('b'), tile: 1.7, color: '#eee6d8', shade: '#4a453e' },
