@@ -48,7 +48,7 @@ Object.assign(STR.en, {
 
   // the core
   c3_core_vesk1: "You came all this way. Then look, Twinsen: under that shell is more heat than both worlds have ever burned, and I found it. I'm finishing the bore.",
-  c3_core_tw1: "She's alive, Vesk. Waking her this early cracks the whole shell. Baldino's network turns the bore into a shield. Stop.",
+  c3_core_tw1: "She's alive, Vesk. Wake her this early and the shell cracks under everyone, list or no list. Baldino's network turns the bore into a shield. Stop.",
   c3_core_vesk2: "Thirty percent was never a mistake. It was everyone I could carry. You chose everyone, Twinsen, and you'll lose them all.",
   c3_core_vesk3: 'Guardian. Keep him away from the pylons.',
   c3_toast_fight: 'Stand on a glowing plate and bounce the ball off the brass panels',

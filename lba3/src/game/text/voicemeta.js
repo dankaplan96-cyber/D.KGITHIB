@@ -20,15 +20,14 @@ export const VOICE_META = {
   // ---------------------------------------------------------------- the opening film (op_)
   op_res_1: 'curious', op_wk_1: 'neutral', op_res_2: { i: 'curious', e: 'hum' }, op_wk_2: { i: 'neutral', h: 1 },
   op_ar_1: 'pleased', op_tw_0: ['pleased', 'neutral'], op_zoe_1: { i: ['neutral', 'concerned'], e: [null, 'stopped'] },
-  op_tw_1: { i: 'neutral', e: 'yesterday' }, op_zoe_2: { i: 'annoyed', e: 'worked' }, op_ar_2: ['neutral', 'curious'],
+  op_tw_1: { i: 'neutral', e: 'yesterday' }, op_zoe_2: { i: 'annoyed', e: 'worked' }, op_ar_2: 'curious',
   op_zoe_3: { i: ['concerned', 'concerned'], e: ['warm', 'never'] }, op_tw_2: 'neutral', op_zoe_4: 'neutral', op_zoe_5: ['neutral', 'concerned'],
   // ---------------------------------------------------------------- at home and the town (pr_, prh_)
   pr_zoe_1: { i: ['urgent', 'concerned'], e: [null, 'dry'] }, pr_zoe_2: ['curious', 'neutral'], pr_tw_1: ['curious', 'pleased'],
   pr_zoe_3: ['neutral', 'concerned'], pr_ar_1: ['pleased', 'curious'], pr_zoe_4: 'annoyed', pr_ar_2: 'annoyed',
   pr_zoe_ball: ['neutral', 'annoyed', 'neutral'], pr_zoe_go: ['neutral', 'pleased'], pr_tw_ballfirst: ['neutral', 'neutral'],
   pr_zoe_after: { i: ['curious', 'neutral', 'pleased'], b: 0 }, pr_ar_hint: 'neutral', pr_ar_early: ['neutral', 'neutral', 'pleased'], pr_ar_told: ['curious', 'neutral'], pr_ar_after: ['curious', 'pleased'],
-  prh_zoe_1: { i: ['concerned', 'neutral', 'concerned'], e: [null, 'listen', 'knocking'] }, prh_zoe_2: ['uncertain', 'neutral', 'neutral'],
-  prh_zoe_3: ['neutral', 'neutral', 'neutral'], prh_ar_1: 'pleased', prh_ar_2: ['uncertain', 'annoyed'], prh_ar_boat: ['pleased', 'neutral', 'pleased'],
+  prh_ar_boat: ['pleased', 'neutral', 'pleased'],
   prh_cave_in: ['curious', 'concerned'],
   // (TUT-MYSTERY: the yard's knock and the joint; Zoé's report from next door, P81)
   prh_yard_b: { i: ['neutral', 'curious'], e: [null, 'barrels'] }, prh_barrel_try: ['neutral', 'annoyed', 'curious'],
@@ -143,7 +142,7 @@ export const VOICE_META = {
   c7_tw_v1: 'pleased', c7_arthur_1: { i: ['curious', 'urgent', 'urgent', 'urgent', 'urgent'] }, c7_tw_ar1: ['neutral', 'curious'],
   c7_arthur_2: ['concerned', 'concerned', 'concerned', 'concerned', 'urgent'], c7_tw_ar2: { i: ['urgent', 'neutral', 'urgent', 'urgent'], e: [null, null, null, 'nobody'] },
   c8_tw_1: ['concerned', 'concerned', 'neutral'], c8_zoe_1: { i: ['relieved', 'pleased'], b: 1 }, c8_ar_1: ['pleased', 'pleased', 'curious', 'curious'],
-  c8_zoe_2: ['concerned', 'annoyed', 'neutral', 'concerned'], c8_tw_z1: ['neutral', 'curious'], c8_ar_2: ['urgent', 'neutral', 'annoyed'], c8_zoe_4: ['neutral', 'neutral', 'pleased'],
+  c8_zoe_2: ['neutral', 'concerned', 'annoyed', 'concerned'], c8_tw_z1: ['neutral', 'curious'], c8_ar_2: ['urgent', 'neutral', 'annoyed'], c8_zoe_4: ['neutral', 'neutral', 'pleased'],
   c8_gil_1: { i: ['urgent', 'annoyed', 'annoyed', 'annoyed'], e: [null, 'MY', null, null] }, c8_tw_g1: ['urgent', 'neutral', 'neutral'],
   c8_gil_2: ['pleased', 'pleased', 'uncertain', 'neutral'], c8_gil_after: ['urgent', 'pleased', 'pleased'], c8_mira_1: ['neutral', 'annoyed', 'annoyed'],
   c8_tw_m1: ['urgent', 'neutral'], c8_mira_2: ['pleased', 'neutral', 'neutral', 'neutral'], c8_mira_after: ['pleased', 'pleased', 'pleased'], c8_zoe_5: ['neutral', 'neutral', 'neutral'],
