@@ -10,6 +10,7 @@
 //   { d, do(dt, R) }       a function on every step of it (a scripted world change: the lift's deck)
 //   { at(R) }              once, then on (no time)
 //   { rec: true | false }  start / stop recording drawn frames
+//   { again: k }           jump back to command k until SM.secs of game time has been recorded (SM.secs 0: no repeat)
 // R.each(dt) (the route's own, optional) runs on every step of the whole route.
 // While recording, every DRAWN frame (Game.renderer.render) samples, before it draws: its rAF timestamp (Game.last),
 // Twinsen (simulation position and his rig's drawn root), the camera (position, view direction, the rig's look point), the
@@ -17,7 +18,7 @@
 // frame's own record from Game.perf (interval, simulation steps, CPU work = simulation + render submission, draw calls).
 (() => {
   const G = window.game, I = G.input, cam = G.camera, V = G.hero.pos.constructor;
-  const SM = (window.SM = { route: null, on: false, F: [], P: [], stub: false, steps: 0 });
+  const SM = (window.SM = { route: null, on: false, F: [], P: [], stub: false, steps: 0, secs: 0 });
   const _v = new V(), _d = new V();
   const r4 = (x) => Math.round(x * 1e4) / 1e4, r6 = (x) => Math.round(x * 1e6) / 1e6;
   const held = new Set();
@@ -43,7 +44,12 @@
     for (let guard = 0; guard < 50; guard++) {
       const c = R.cmds[R.i];
       if (!c) { R.done = true; setKeys([]); SM.on = false; return; }
-      if (!c._s) { c._s = true; c._t = 0; if (c.rec != null) SM.on = !!c.rec; c.at?.(R); }
+      // { again: k } (LBA3-RUN performance): back to command k while less than SM.secs of game time has been recorded
+      if (c.again != null) {
+        if (SM.secs && R.t - (R.t0 ?? 0) < SM.secs) { for (let q = c.again; q <= R.i; q++) R.cmds[q]._s = false; R.i = c.again; continue; }
+        R.i++; continue;
+      }
+      if (!c._s) { c._s = true; c._t = 0; if (c.rec != null) { SM.on = !!c.rec; if (c.rec) R.t0 = R.t; } c.at?.(R); }
       if (c.rec != null || (c.at && c.d == null && !c.go)) { R.i++; continue; }
       const over = c.go ? (Math.hypot(c.go[0] - G.hero.pos.x, c.go[1] - G.hero.pos.z) < (c.tol ?? 0.8) || c._t >= (c.maxT ?? 20)) : c._t >= c.d;
       if (over) { if (c.go) c.reached = c._t < (c.maxT ?? 20); R.i++; continue; }

@@ -33,7 +33,11 @@
 //   automatic resolution) · AA=msaa|fxaa|off (Edges: Smooth / Fast / Fast with the output pass's edge smoothing off) ·
 //   OUT=dir (every pass's frames and the summary as JSON) · HEADED=1 (a visible window: required for a real GPU and the
 //   display's own vsync) · CHANNEL=chrome (the installed Chrome) · PLAYWRIGHT=<path to playwright's index.mjs> (default
-//   /opt/node-tools/node_modules/playwright/index.mjs) · LABEL=<text for the tables> · VIEW=1366x768
+//   /opt/node-tools/node_modules/playwright/index.mjs) · LABEL=<text for the tables> · VIEW=1366x768 ·
+//   SECS=60 (LBA3-RUN performance: each route repeated — street there and back, combat's cycle, Mill Lane both ways —
+//   until SECS of game time are recorded; unset: the routes as SMOOTH-1 timed them) · PROF=1 (the main thread's ms per
+//   frame in the per-frame code changed since the last measured build: the rigs' update and ARM-CLEAR, findInteractable
+//   and its goalPick, the ball's throwTarget; and each rig's first ARM-CLEAR set-up, a one-off per character)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -53,6 +57,11 @@ const FPS = env.FPS || 'auto', QUALITY = env.QUALITY || 'medium', RES = env.RES 
 const [VW, VH] = (env.VIEW || '1366x768').split('x').map(Number);
 const OUT = env.OUT || '';
 const LABEL = env.LABEL || '';
+const SECS = +(env.SECS || 0), PROF = env.PROF === '1';
+// SHOTS=dir (LBA3-RUN performance): after a route's passes, the route again on fixed steps with a real draw at a few game
+// times while he moves (SHOT_T=3,8,13,18 s), saved as <dir>/<LABEL>-<route>-<t>s.png — silhouettes, shadows, clues in motion
+const SHOTS = env.SHOTS || '', SHOT_T = (env.SHOT_T || '3,8,13,18').split(',').map(Number);
+if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 if (OUT) fs.mkdirSync(OUT, { recursive: true });
 
 // the regression harness's error policy where it can be loaded (tests/lib/boot.mjs imports the cloud's playwright path;
@@ -97,7 +106,10 @@ function defineRoutes() {
         ...S.legs.map((p) => ({ go: p, tol: 1.0, maxT: 8 })),
         { d: 1.0, keys: [] },                    // stop
         { d: S.sweep, keys: ['ArrowRight'] },    // the turn on the spot: the Follow camera sweeps round with him
-        { d: 1.0, keys: [] }, { rec: false } ], objs: {} };
+        { d: 1.0, keys: [] },
+        // (SECS: back along the legs to the start, the sweep the other way, and round again until SECS are recorded)
+        ...(window.LOOP ? [...S.legs.slice(0, -1).reverse().map((p) => ({ go: p, tol: 1.0, maxT: 8 })), { go: S.start, tol: 1.0, maxT: 8 }, { d: 1.0, keys: [] }, { d: S.sweep, keys: ['ArrowLeft'] }, { d: 0.5, keys: [] }, { again: 3 }] : []),
+        { rec: false } ], objs: {} };
       return R;
     },
     combat() {
@@ -121,18 +133,23 @@ function defineRoutes() {
         { d: 0.7, keys: ['ArrowDown'] }, { d: 0.6, keys: ['ArrowUp'] }, { d: 0.3, keys: [] },             // turn round and back
         { d: 0.05, keys: ['KeyL'] }, { d: 0.3, keys: [] },                   // lock on again
         { d: 0.9, keys: ['KeyF'] }, { d: 1.6, keys: [] },                    // throw
+        ...(window.LOOP ? [{ d: 0.05, keys: ['KeyL'] }, { d: 0.3, keys: [] }, { again: 3 }] : []),   // (SECS: lock off, round again)
         { rec: false }, { at() { if (G.targeting?.lock) G.targeting.release(); modern(false); } } ],
-        each() { h.hp = h.maxHp; }, objs: {} };
+        each() { h.hp = h.maxHp; if (mite) mite.hp = mite.maxHp; }, objs: {} };
       return R;
     },
     mill() {
-      const L = G.rooms.zeelich.lift, h = G.hero;
+      const L = G.rooms.zeelich.lift, h = G.hero, A0 = { x: L.lane.x, z: L.lane.z - 9.5 };
       const R = { cmds: [
-        { at() { modern(false); SM.seed(31); L.setState({ deck: 'low', cart: 'deck' }); SM.place(L.lane.x, L.lane.z - 9.5, -0.3);
+        { at() { modern(false); SM.seed(31); L.setState({ deck: 'low', cart: 'deck' }); SM.place(A0.x, A0.z, -0.3);
           R.objs = { cart: () => new V(L.deck.x - 0.35, L.deckY + 0.6, L.deck.z), ...npcObjs(near(2)) }; } },
         { d: 1.0, keys: [] }, { rec: true },
         { d: 1.0, keys: ['ArrowUp'] }, { d: 0.5, keys: ['ArrowUp', 'ArrowRight'] }, { d: 1.0, keys: ['ArrowUp', 'ArrowLeft'] }, { d: 0.4, keys: ['ArrowUp'] }, { d: 0.5, keys: [] },
-        { d: 1.0, keys: ['ArrowRight'] }, { d: 1.3, keys: ['ArrowLeft'] }, { d: 0.6, keys: ['ArrowRight'] }, { d: 1.0, keys: [] }, { rec: false } ],
+        { d: 1.0, keys: ['ArrowRight'] }, { d: 1.3, keys: ['ArrowLeft'] }, { d: 0.6, keys: ['ArrowRight'] }, { d: 1.0, keys: [] },
+        // (SECS: back to the start, turned round to its heading by walking a metre on, and round again — the lane walked
+        //  both ways, the Follow camera turning across the lift each time)
+        ...(window.LOOP ? [{ go: [A0.x, A0.z], tol: 0.5, maxT: 10 }, { go: [A0.x + Math.sin(-0.3), A0.z + Math.cos(-0.3)], tol: 0.5, maxT: 6 }, { d: 0.3, keys: [] }, { again: 3 }] : []),
+        { rec: false } ],
         // the deck (and the cart on it) up and down the shaft the whole time, as the story's moveDeck does it
         each() { if (!L.moving) L.moveDeck(L.deckY > (L.low + L.top) / 2 ? L.low : L.top, 4.6); },
         objs: {} };
@@ -152,7 +169,7 @@ async function realPass(page, name, stub = false) {
     const G = game;
     G.renderer.timer = stub ? null : G.perf.gpuTimer; if (G.perf.gpuTimer) { G.perf.gpuTimer.stride = 1; G.perf.gpuTimer.reset(); }
     window.__lt = [];
-    G.perf.reset(); SM.stub = stub; SM.run(ROUTES[name]());
+    G.perf.reset(); window.PF?.reset(); SM.stub = stub; SM.run(ROUTES[name]());
     window.__t0 = performance.now();
   }, { name, stub });
   await page.waitForFunction(() => SM.route.done, null, { polling: 250, timeout: 30 * 60000 });
@@ -161,7 +178,8 @@ async function realPass(page, name, stub = false) {
     const out = { F: SM.F, P: SM.P, gpu: T ? { ms: T.ms.slice(), disjoint: T.disjoint || 0, invalid: T.invalid || 0, passes: T.stats()?.passes || null } : null,
       longTasks: window.__lt.filter((e) => e.start >= window.__t0), wall: performance.now() - window.__t0, refresh: G.refreshMs?.() || null,
       pr: G.renderer.pixelRatio?.(), msaa: G.renderer.composer?.renderTarget1?.samples ?? null, gpuName: G.perf.gpu, quality: G.settings.quality, fps: G.settings.fps, cap: G.frameCapMs || 0,
-      programs: gl.info.programs?.length ?? null, bg: !!G.background };
+      programs: gl.info.programs?.length ?? null, bg: !!G.background,
+      prof: window.PF ? { fr: window.PF.fr, calls: window.PF.calls, inits: window.PF.inits } : null };
     G.renderer.timer = null; SM.stub = false;
     return out;
   });
@@ -178,10 +196,10 @@ async function synthPass(page, name, rate) {
     const tick = (n) => { const per = 1000 / hz; for (let i = 0; i < n; i++) { S.t += per; S.tick(S.t); } };
     G.settings.fps = 'auto'; G.applySettings(); tick(Math.round(hz));                 // the refresh measured at this rate
     G.settings.fps = fpsSet; G.applySettings(); tick(4);
-    SM.stub = true; G.perf.reset(); SM.run(ROUTES[name]());
+    SM.stub = true; G.perf.reset(); window.PF?.reset(); SM.run(ROUTES[name]());
     for (let i = 0; i < hz * 60 && !SM.route.done; i++) tick(1);
     SM.stub = false;
-    const out = { F: SM.F, P: SM.P, refresh: G.refreshMs?.() || null, cap: G.frameCapMs || 0, hz, fpsSet };
+    const out = { F: SM.F, P: SM.P, refresh: G.refreshMs?.() || null, cap: G.frameCapMs || 0, hz, fpsSet, prof: window.PF ? { fr: window.PF.fr, calls: window.PF.calls, inits: window.PF.inits } : null };
     G.settings.fps = window.__fps0; G.applySettings();
     // (back to the browser's own clock)
     S.on = false; const q = S.Q.splice(0); for (const cb of q) S.raf0(cb);
@@ -258,12 +276,20 @@ function timing(F, P, gpu) {
     steps: r2(P.reduce((a, p) => a + p.steps, 0) / Math.max(1, P.length)), lostS: r2(P.reduce((a, p) => a + p.lost, 0)), bgFrames: 0 };
 }
 
+// PROF: the per-frame ms of each wrapped function → mean / p95 / max
+function profile(pr) {
+  const per = {};
+  for (const [k, a] of Object.entries(pr.fr || {})) { if (k === 'armSum' || !a.length || !a.some((x) => x > 0)) continue; per[k] = { mean: Math.round(a.reduce((s, x) => s + x, 0) / a.length * 1000) / 1000, p95: Math.round(pc(a, 0.95) * 1000) / 1000, max: r2(Math.max(...a)) }; }
+  return { per, calls: pr.calls, inits: pr.inits || [], initMax: pr.inits?.length ? Math.max(...pr.inits.map((x) => x.ms ?? x)) : 0 };
+}
+
 // ------------------------------------------------------------------ run
 const results = [];
 let SETUP = null;
 const t00 = Date.now();
-// (headed, as docs/lba3-performance/local/chrome-bench.mjs: the window's frames not throttled when another window covers it)
-const launchB = () => chromium.launch({ headless: !env.HEADED, ...(env.CHANNEL ? { channel: env.CHANNEL } : {}), args: env.HEADED ? ['--window-position=0,0', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+// (headed, as docs/lba3-performance/local/chrome-bench.mjs: the window's frames not throttled when another window covers it;
+//  on Windows ANGLE's D3D11 and the GPU blocklist ignored, as the desktop's local copy had them: smooth-hw/smooth-routes-local.diff)
+const launchB = () => chromium.launch({ headless: !env.HEADED, ...(env.CHANNEL ? { channel: env.CHANNEL } : {}), args: env.HEADED ? ['--window-position=0,0', '--window-size=1400,920', ...(process.platform === 'win32' ? ['--use-angle=d3d11', '--ignore-gpu-blocklist'] : []), '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 // the power source as Windows reports it (the laptop's runs: on battery or plugged in); elsewhere as the game reads it
 let WINPOWER = null;
 if (process.platform === 'win32') {
@@ -289,6 +315,25 @@ for (const [gid, grp] of Object.entries(GROUPS)) {
   await page.addScriptTag({ path: path.join(HERE, 'lib/smoothrec.js') });
   await page.evaluate(defineRoutes);
   await page.evaluate((p) => { window.ROUTE_POS = p; }, ROUTE_POS);
+  await page.evaluate(({ SECS, PROF }) => {
+    window.LOOP = SECS > 0; SM.secs = SECS;
+    if (!PROF) return;
+    // (PROF: ms per drawn frame in the code under suspicion, folded at each frame's perf record)
+    const G = game, PF = (window.PF = { cur: {}, fr: {}, calls: {}, inits: [] });
+    const add = (k, d) => { PF.cur[k] = (PF.cur[k] || 0) + d; PF.calls[k] = (PF.calls[k] || 0) + 1; };
+    const wrap = (o, k, lab = k) => { const f = o?.[k]; if (typeof f !== 'function') return; o[k] = function (...a) { const t = performance.now(); try { return f.apply(this, a); } finally { add(lab, performance.now() - t); } }; };
+    const RP = Object.getPrototypeOf(G.hero.rig), V3 = G.hero.pos.constructor, _pv = new V3(), _pq = new V3();
+    // (on the screen, a 10 % margin: the point projected with the camera as it stands — the split of ARM-CLEAR's time)
+    const _fr = { containsPoint: (p) => { _pq.copy(p).project(G.camera); return _pq.z < 1 && Math.abs(_pq.x) < 1.1 && Math.abs(_pq.y) < 1.1; } };
+    wrap(RP, 'update', 'rig');
+    PF.rigs = new Set();
+    if (RP._armClear) { const f = (PF.ac0 = RP._armClear); RP._armClear = function (...a) { PF.rigs.add(this); const init = this._ac === undefined, t = performance.now(); try { return f.apply(this, a); } finally { const d = performance.now() - t; { const j = this.j; if (j?.armL?.sh) PF.cur.armSum = (PF.cur.armSum || 0) + j.armL.sh.rotation.x * 1.1 + j.armL.sh.rotation.z * 1.3 + j.armR.sh.rotation.x * 1.7 + j.armR.sh.rotation.z * 1.9; } if (!init) { const v = this.root.getWorldPosition(_pv), on = G.camera && _fr.containsPoint(v.setY(v.y + 0.9)), far = v.distanceTo(G.hero.pos) > 20; add(on ? (far ? 'armClear:onFar' : 'armClear:onNear') : 'armClear:off', d); }
+        if (init) PF.inits.push({ ms: Math.round(d * 100) / 100, verts: this.mesh?.geometry?.attributes?.position?.count ?? 0, away: Math.round(this.root.getWorldPosition(new G.hero.pos.constructor()).distanceTo(G.hero.pos)), t: Math.round(G.time * 10) / 10 }); else add('armClear', d); } }; }
+    wrap(G, 'findInteractable'); wrap(G, 'goalPick'); wrap(G.targeting, 'throwTarget'); wrap(G.targeting, 'ballReaches');
+    const P = G.perf, rec0 = P.onRecord;
+    P.onRecord = (f) => { rec0?.(f); if (SM.on) for (const k of ['armSum', 'rig', 'armClear', 'armClear:onNear', 'armClear:onFar', 'armClear:off', 'findInteractable', 'goalPick', 'throwTarget', 'ballReaches']) (PF.fr[k] ||= []).push(PF.cur[k] || 0); PF.cur = {}; };
+    PF.reset = () => { PF.fr = {}; PF.calls = {}; PF.inits = []; PF.cur = {}; };
+  }, { SECS, PROF });
   // world resolution and edges as asked (RES 90: the scene drawn at 90 % with the automatic resolution's own path, held)
   const setup = await page.evaluate(({ RES, AA }) => {
     const G = game, R = G.renderer;
@@ -313,11 +358,24 @@ for (const [gid, grp] of Object.entries(GROUPS)) {
         const raw = await realPass(page, name, mode === 'cpu');
         if (k < 0) { console.log(`  ${name} ${mode} warm-up pass: ${raw.F.length} frames in ${(raw.wall / 1000).toFixed(0)} s`); continue; }
         const row = { mode, route: name, run: k + 1, setup, timing: timing(raw.F, raw.P, raw.gpu), motion: motion(raw.F), longTasks: raw.longTasks.length, longTaskMax: r1(Math.max(0, ...raw.longTasks.map((e) => e.ms))),
-          wall: r1(raw.wall / 1000), refresh: r2(raw.refresh), cap: r2(raw.cap), bg: raw.bg, gpuPasses: raw.gpu?.passes || null, disjoint: raw.gpu?.disjoint ?? null, programs: raw.programs };
+          wall: r1(raw.wall / 1000), refresh: r2(raw.refresh), cap: r2(raw.cap), bg: raw.bg, gpuPasses: raw.gpu?.passes || null, disjoint: raw.gpu?.disjoint ?? null, programs: raw.programs,
+          prof: raw.prof ? profile(raw.prof) : null };
         results.push(row);
-        console.log(`  ${name} ${mode} #${k + 1}: ${row.timing.frames} frames, ${row.timing.fps} fps, p95 ${row.timing.p95} ms, >50 ms ${row.timing.over50}, CPU ${row.timing.cpuP50} ms, GPU ${row.timing.gpuP50 ?? 'n/a'} (${row.wall} s)`);
+        console.log(`  ${name} ${mode} #${k + 1}: ${row.timing.frames} frames, ${row.timing.fps} fps, p50/p95/p99 ${row.timing.p50}/${row.timing.p95}/${row.timing.p99} ms, >50 ms ${row.timing.over50}, CPU p50/p95 ${row.timing.cpuP50}/${row.timing.cpuP95} ms, sim p50 ${row.timing.simP50}, GPU ${row.timing.gpuP50 ?? 'n/a'} (${row.wall} s)`);
+        if (row.prof) console.log(`    prof ms/frame mean/p95/max: ${Object.entries(row.prof.per).map(([k, v]) => `${k} ${v.mean}/${v.p95}/${v.max}`).join(' · ')} · first ARM-CLEAR set-ups ${row.prof.inits.length} (max ${row.prof.initMax} ms)`);
         if (OUT) fs.writeFileSync(path.join(OUT, `${mode}-${name}-${k + 1}.json`), JSON.stringify({ ...row, raw }));
       }
+    }
+    if (SHOTS) {
+      await page.evaluate((name) => { game.testFreeze = true; SM.stub = false; SM.run(ROUTES[name]()); }, name);
+      for (const ts of SHOT_T) {
+        const t = await page.evaluate((ts) => { const G = game; for (let k = 0; k < 6000 && !SM.route.done && SM.route.t < ts; k++) G.frame(1 / 60, false); if (!SM.route.done) G.frame(1 / 60, true); return SM.route.done ? -1 : SM.route.t; }, ts);
+        if (t < 0) break;
+        const f = path.join(SHOTS, `${(LABEL || 'run').replace(/[^\w.-]+/g, '_')}-${name}-${ts}s.png`);
+        await page.screenshot({ path: f });
+        console.log(`  shot ${f} (game ${t.toFixed(2)} s)`);
+      }
+      await page.evaluate(() => { SM.route.done = true; SM.release(); SM.on = false; game.testFreeze = false; });
     }
     if (MODES.includes('synth')) {
       for (const rate of RATES) {
@@ -328,6 +386,43 @@ for (const [gid, grp] of Object.entries(GROUPS)) {
         if (OUT) fs.writeFileSync(path.join(OUT, `synth-${name}-${rate}.json`), JSON.stringify({ ...row, raw }));
       }
     }
+  }
+  // PROF: ARM-CLEAR's set-up per character, apart: with the body's profile built afresh (a look's first character) and
+  // with it cached (every other character of that look) — each rig seen in the routes, timed again at the end
+  if (PROF) {
+    const A = await page.evaluate(() => {
+      const out = [], seen = new Set();
+      for (const r of window.PF.rigs) {
+        if (!r._ac || !r.mesh?.skeleton) continue;
+        const g = r.mesh.geometry, key = 'armClear:' + r.mesh.skeleton.bones.map((b) => b.name).join(','), saved = g.userData[key], ac = r._ac;
+        const T = (fresh) => { if (fresh) delete g.userData[key]; r._ac = undefined; const t = performance.now(); window.PF.ac0.call(r, 1 / 60, 'idle'); return performance.now() - t; };
+        const best = (fresh) => Math.min(T(fresh), T(fresh), T(fresh));   // (the least of three: this machine's other load out)
+        const full = best(true), cached = best(false);
+        r._ac = ac; g.userData[key] = saved;
+        out.push({ full: Math.round(full * 100) / 100, cached: Math.round(cached * 100) / 100, verts: g.attributes.position.count, shared: seen.has(g) });
+        seen.add(g);
+      }
+      return out;
+    });
+    // and ARM-CLEAR's per-frame look itself on the same rigs in their poses as the routes left them: each rig's two arms
+    // solved afresh (no answer kept from the last look) 200 times, the arms put back before each; best of 5 (ms in all)
+    const S = await page.evaluate(() => {
+      const rigs = [...window.PF.rigs].filter((r) => r._ac && r.j?.armL?.sh), ac0 = window.PF.ac0;
+      const keep = rigs.map((r) => { const D = r._ac, a = r.j.armL.sh.rotation, b = r.j.armR.sh.rotation; return [a.x, a.z, b.x, b.z, D.L.slice(), D.R.slice(), D.wx.slice(), D.n, JSON.stringify(D.k), JSON.stringify(D.t)]; });
+      const put = (r, k) => { const D = r._ac, a = r.j.armL.sh.rotation, b = r.j.armR.sh.rotation; a.x = k[0]; a.z = k[1]; b.x = k[2]; b.z = k[3]; D.L = k[4].slice(); D.R = k[5].slice(); D.wx = k[6].slice(); D.n = k[7]; D.k = JSON.parse(k[8]); D.t = JSON.parse(k[9]); D.k.L[0] = D.k.R[0] = 0; D.t.L[2] = D.t.R[2] = 0; };
+      let best = Infinity;
+      for (let round = 0; round < 5; round++) {
+        let ms = 0;
+        for (let i = 0; i < rigs.length; i++) for (let q = 0; q < 200; q++) { put(rigs[i], keep[i]); const t = performance.now(); ac0.call(rigs[i], 1 / 60, rigs[i].anim || 'idle'); ms += performance.now() - t; }
+        best = Math.min(best, ms);
+      }
+      rigs.forEach((r, i) => put(r, keep[i]));
+      return { rigs: rigs.length, ms: Math.round(best * 10) / 10 };
+    });
+    console.log(`  [${gid}] ARM-CLEAR look, ${S.rigs} rigs × 200 forced solves: ${S.ms} ms (best of 5)`);
+    const sum = (k) => Math.round(A.reduce((s, x) => s + x[k], 0) * 10) / 10, mx = (k) => Math.max(0, ...A.map((x) => x[k]));
+    console.log(`  [${gid}] ARM-CLEAR set-up, ${A.length} characters (${A.filter((x) => !x.shared).length} looks): profile+points ms sum ${sum('full')} max ${mx('full')} · points only (profile cached) sum ${sum('cached')} max ${mx('cached')}`);
+    if (OUT) fs.writeFileSync(path.join(OUT, `armclear-setup-${gid}.json`), JSON.stringify(A));
   }
   const e = errs();
   if (e.length) console.log(`[${gid}] page errors: ${e.slice(0, 5).join(' | ')}`);
