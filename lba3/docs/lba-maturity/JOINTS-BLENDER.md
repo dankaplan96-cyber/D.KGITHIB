@@ -131,3 +131,65 @@ The battery half of the measurements (the user unplugs).
   gone: the dress's own green edge along the strap is the armhole's trim. Triangles 8,346 → 8,410; bones, eyes and
   mouths unchanged. `ZOE_SHOULDER_OLD=1` rebuilds the previous model byte for byte.
 - Rows of the picture: before / after at rest, before / after with the arm raised forward (front 3/4, close, side).
+
+## The cast after Twinsen and Zoé, in motion (JOINTS-BLENDER 8, CLOUD_ORDERS 66.1, 22.11)
+Each one is made with the game's own `createCharacter` and stood on Citadel's open quay (x 0, z 30), its rig driven
+through a walk (1.3 m/s), a run (3.8 m/s), the idle shrug, talk and (Arthur) the kneel at his boat; pictures from the
+play camera's distance (8 m, 4.6 m up) and at dialogue distance (2.1 m, front 3/4 and side). The script:
+`docs/lba3-performance/HARDWARE/2026-11-20-joints-motion/castmotion.mjs`. Before and after are the same frames.
+
+### Arthur (`cast_poly.py`, ARTHUR-LOOK)
+- **Seen:** the shoulder (the sleeve from a round shoulder) and the elbow (the rolled sleeve over the shaped forearm)
+  hold in every motion. Two faults at the legs: **a ball at the knee** — his knee ball (ARTHUR-12, for the kneel) is
+  r2 × 1.1 inside a one-shell leg whose knee is r2 × 1.08, so a bump stood out at the front of every bent knee, walking
+  and running; and **the thigh through the tunic** — the skirt's front follows the forward leg on a spring and only by
+  its share over each thigh, so in the run and in the kneel the top of the thigh came through the cloth just above the
+  hem as a pale patch.
+- **Fixed:** the knee ball is r2 × 1.0, just inside the shell (unseen in motion, still filling the knee in the kneel);
+  toward the hem half of his tunic rides the thigh on its side (`coatLegs` 0.5, as the guards' coats, CHAR-OPEN; 0.35
+  still showed the patch in the kneel). A speck of the thigh's top is still visible in the kneel from the side.
+- Triangles 4,274 → 4,274; bones, eyes, mouths and materials unchanged. `JOINTS8_OLD=1` rebuilds the shipped model
+  byte for byte (checked).
+- `captures/joints-blender/arthur-motion-before-after.jpg` (pairs, before left: walk ×2, run ×2, the shrug, talk, the
+  run and the kneel from the side), `arthur-play-before-after.jpg` (the play camera: walk, run, shrug, talk).
+
+### A Grobo: Baldino (`baldino_poly.py`)
+- **Seen:** the arms (one sleeve over a rounded elbow, JOINTS-BLENDER 3) and the trunk hold in every motion. The legs —
+  LBA2's short square stumps, measured from the original — had one ring at the knee inside a 10 cm weight blend, so a
+  walking or running knee folded at that ring: two square posts on a hinge, a sharp corner at the front and the back.
+- **Fixed:** five rings through the blend (the knee ± 0.025 H), the front a little fuller over the knee cap; the bend now
+  rounds at the outside and folds in behind. The square section, the stump's size and its place are as before.
+- Triangles 6,277 → 6,469 (+192); bones, eyes, mouths, the trunk and materials unchanged. `JOINTS8_OLD=1` rebuilds the
+  shipped model byte for byte (checked).
+- `captures/joints-blender/baldino-knee-motion-before-after.jpg` (pairs, before left: the walk and the run from the side,
+  then 3/4 front), `baldino-motion-before-after.jpg` (dialogue distance: walk, run, talk, the walk and run from the side).
+
+### A Rabbibunny (Pippa) — and the cast's shoulders (`cast_poly.py arm_sleeve`)
+- **Seen:** Pippa's elbows (one sleeve, JOINTS-BLENDER 2) and her legs (thin trouser legs under the coat) hold in motion;
+  **her shoulder is a ball**: the sleeve's dome began 3 cm over the shoulder joint and rose a further 16 % of the upper
+  arm, past the coat's own shoulder line, so a round knob stood at the top of each arm, plainest walking and talking.
+  A sample of the cast showed the same knob on most of them: the Rabbibunnies (Mira, Magus, the weaver), Quetch men
+  and women (Bersimon, Gilbert, the worker, the farmer, Tarra, Nell). Not on Arthur (his own shoulder, ARTHUR-LOOK) or the
+  Grobos (their big round shoulders are the race's).
+- **Fixed for all of them (a shared defect):** the dome starts 5 cm lower, inside the body (`SH8_DROP`, 3 cm still left a
+  smaller knob); the coat runs over a round shoulder into the sleeve. With the arm raised overhead (`reachHigh`) the
+  shoulder stays closed.
+- 31 of the cast's 70 models changed; triangles 215,787 → 215,787 (vertices moved only); bones, eyes, mouths and materials
+  unchanged. `JOINTS8_OLD=1` rebuilds all 70 byte for byte as shipped (checked).
+- `captures/joints-blender/pippa-motion-before-after.jpg` (pairs, before left: shoulders walking, running, the shrug and
+  talking; then walk, run and both from the side), `cast-shoulder-before-after.jpg` (nine of the cast walking),
+  `cast-shoulder-raised-after.jpg` (Pippa, Mira and Gilbert with an arm raised, after).
+
+### A Sphero (`cast_poly.py build_sphero`)
+- **Seen:** LBA1's Sphero has thin stick arms from the star's points with a small ball at each tip, big ball hands, and
+  stick legs with ball knees; those balls are the original's design and are kept (the knee ball covers the joint in every
+  motion; the flat shoe's heel is closed — checked drawn double-sided, it only reads as an opening in its shading). The
+  fault in motion was the **elbow**: two straight tubes meeting there, so a bent arm walking, running or talking showed
+  a corner, two sticks on a hinge.
+- **Fixed:** the arm is one thin shell along the bones (the cast's `arm_sleeve`, 8 sides) through rings round the elbow,
+  as thin as before (13.5 units, the forearm tapering to 0.84 of it); the bend now curves. Both Spheros.
+- Triangles 4,920 → 5,160 each; bones, eyes, mouths and materials unchanged. `JOINTS8_OLD=1` rebuilds them byte for byte.
+- `captures/joints-blender/sphero-arm-before-after.jpg` (pairs, before left: walk, run, talk from the front 3/4; the walk
+  and an arm raised from behind).
+- **A question for the cloud and the user:** the Sphero's balls (shoulder tips, knees) are LBA1's look; if "no ball look
+  at the knee" is meant for it too, that is a design change (the knee as one shell like the cast's), not a joint fix.

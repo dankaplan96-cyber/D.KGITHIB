@@ -372,6 +372,7 @@ def grobo_trunk(headY, hipsY, shY, neckY, kneeY, belly, slim=1.0):
 # three rings through the elbow with the weight passing from the upper arm's bone to the forearm's over them, so the bend
 # rounds instead of creasing. JOINTS_OLD=1 builds the two tubes as before.
 JOINTS_OLD = bool(os.environ.get('JOINTS_OLD'))
+JOINTS8_OLD = bool(os.environ.get('JOINTS8_OLD'))   # (JOINTS-BLENDER 8, order 66: the cast after Twinsen and Zoé)
 ARM_RINGS = [   # (u: 0 the shoulder, 1 the elbow, 2 the wrist; radius × the arm's ra (× the forearm's own factor past the elbow))
     # (the shoulder: the sleeve starts in a dome up into the body instead of a separate ball over its end)
     (-0.16, 0.45), (-0.11, 0.8), (-0.05, 0.98),
@@ -655,6 +656,12 @@ def build(name):
 
         # ---------------------------------------------------------------- skirt / robe / tunic bottom
         coat_legs = L.get('coatLegs') or 0   # (CHAR-OPEN: a coat whose skirt partly rides the thighs, see below)
+        # (JOINTS-BLENDER 8, order 66: Arthur's tunic over his one-shell legs. The skirt's front follows the forward leg on a
+        # spring and only by its share over each thigh (the front bone's cos² there), so in a run and in his kneel the top
+        # of the thigh came through the cloth just above the hem, a pale patch. As the guards' coats (CHAR-OPEN), toward the
+        # hem half of it now rides the thigh on its side (0.35 still showed the patch in the kneel). JOINTS8_OLD=1: as before.)
+        if aT and not coat_legs and not JOINTS8_OLD:
+            coat_legs = float(os.environ.get('ARTHUR_COATLEGS', '0.5'))
 
         def w_skirt(p):
             x, y, z = p
@@ -860,7 +867,11 @@ def build(name):
             if teen and hemY > kn[1] - 0.12:
                 # (ARTHUR-12) the knee as a ball on its own bone: kneeling at his boat (kneelWork, 2.3 rad) opened the
                 # thigh's and the shin's tube ends into a gap; the ball fills the joint at any bend
-                sphere(b.P('knee' + s, pants, 'knee' + s, 50), kn, r2 * 1.1, 8, 6)
+                # (JOINTS-BLENDER 8, the user 22.11 via order 66: no ball at the knee in motion. Inside the one-shell leg
+                # (JOINTS-BLENDER 4, its knee r2 * 1.08) the ball of r2 * 1.1 stood out a few millimetres at the front of
+                # every bent knee, a bump that read as a ball joint. Now it is just inside the shell (r2 * 1.0): unseen
+                # walking and running, still there to fill the knee in his kneel at the boat. JOINTS8_OLD=1: as before.)
+                sphere(b.P('knee' + s, pants, 'knee' + s, 50), kn, r2 * (1.1 if (JOINTS8_OLD or not LEG1) else 1.0), 8, 6)
         if cp.get('boots') and not grobo:   # (CAST-POLISH: boots to the calf over the trousers)
             tube(b.P('boot' + s, shoes, 'knee' + s, 40), (kn[0], ft[1] + cp['boots'], kn[2] + (ft[2] - kn[2]) * (1 - cp['boots'] / max(0.05, kn[1] - ft[1]))), (ft[0], ft[1] + 0.02, ft[2]), r2 * 1.25, r2 * 1.12, 8)
         fx, fl, fh = (0.07 if grobo else 0.05) * slim, (0.2 if bunny else 0.15 if grobo else 0.13), (0.09 if grobo else 0.07)
@@ -899,7 +910,12 @@ def build(name):
         SB_ = (sh[0] - sx * 0.025, sh[1] - 0.02, sh[2]) if aT else None
         wrist = lerp(el, hd, 0.82)
         if ONE:
-            AW.update(arm_sleeve(up, SB_ if aT else (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7, sh[2]), el, wrist, ra,
+            # (JOINTS-BLENDER 8, order 66: the sleeve's dome began 3 cm over the shoulder joint and rose 16 % of the upper arm
+            # above that, past the coat's own shoulder line on most of the cast: a round knob at the top of the arm, a ball
+            # joint stuck on, plainest walking and talking (Rabbibunnies, Quetch men and women). Now it starts lower by
+            # SH8_DROP (into the body; the Grobos' big round shoulders are theirs and stay). JOINTS8_OLD=1: as before.)
+            sh8 = 0.0 if (JOINTS8_OLD or grobo) else float(os.environ.get('SH8_DROP', '0.05'))
+            AW.update(arm_sleeve(up, SB_ if aT else (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7 - sh8, sh[2]), el, wrist, ra,
                                  fore_k=(0.85, 0.8) if gown else (1.0, 1.0), u_max=1.12 if ROLL_ else 2.0))
         elif aT:
             tube(up, SB_, el, ra * 1.04, ra, 10)
@@ -3070,8 +3086,17 @@ def build_sphero(name):
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         sphere(b.P('shBall' + s, coatD, 'sh' + s, 50), sh, 21 * u, 7, 5)
-        tube(b.P('upper' + s, coat, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), sh, el, 14 * u, 13 * u, 6)
-        tube(b.P('fore' + s, coat, 'el' + s, 50), el, hd, 13 * u, 12 * u, 6)
+        if JOINTS8_OLD:
+            tube(b.P('upper' + s, coat, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), sh, el, 14 * u, 13 * u, 6)
+            tube(b.P('fore' + s, coat, 'el' + s, 50), el, hd, 13 * u, 12 * u, 6)
+        else:
+            # (JOINTS-BLENDER 8, order 66: the thin arm was two straight tubes meeting at the elbow, so a bent arm walking
+            # or running showed a corner, two sticks on a hinge. Now one thin shell along the bones through rings round the
+            # elbow (arm_sleeve, as the cast's sleeves), as thin as before; the ball at the star's tip and the ball hand are
+            # LBA1's and stay. JOINTS8_OLD=1: as before.)
+            SW = {}
+            arm_ = b.P('upper' + s, coat, lambda p, s=s, SW=SW: {k + s: v for k, v in SW.get(tuple(round(x, 6) for x in p), {'sh': 1.0}).items()}, 50)
+            SW.update(arm_sleeve(arm_, sh, el, hd, 13.5 * u, fore_k=(0.92, 0.84), n=8))
         hp_ = b.P('hand' + s, '#c3936f', 'hand' + s, 60)
         sphere(hp_, hd, 57 * u, 9, 6)
         hand_detail(hp_, hd, 57 * u, sx, grobo=True)   # (CAST-POLISH: a thumb and knuckles on the big ball)
