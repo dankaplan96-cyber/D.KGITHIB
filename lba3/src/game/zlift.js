@@ -34,6 +34,9 @@ import { touch } from './story/reach.js';
 const T = { x0: -18.2, x1: -11.0, z0: 19.6, z1: 26.4, h: 3.6 };
 const BAY = { z0: 21.6, z1: 24.0 }, DECK = { x: -9.85, z: 22.8, hw: 1.1, hd: 1.15 };
 const HALF = 2.1, LOW = 0.14;
+// THE SECOND SHIFT (P109): where Kell's cloth stands when the deck is level with the landing (the nail, above the
+// lane), and how far past the landing the deck can be run by hand before the head frame's stop
+const NAIL_H = 3.0, OVER = 0.4;   // (the stop mark a metre over the motor house: against the terrace's stone from the handle and the Follow camera)
 const CIS = { x: -15.6, z: 22.35, r: 1.55, h: 1.9 };
 const CART0 = { x: -10.2, z: 22.8 }, PUSH = 3.0;
 const STAIR = { n: 12, x0: -11.4, tread: 0.55, z0: 26.4, w: 1.8 };
@@ -56,7 +59,8 @@ const dialTex = () => {
 };
 
 export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
-  const TOP = Y0 + T.h;
+  const TOP = Y0 + T.h, NAIL_Y = Y0 + NAIL_H;
+  const toLocal = (p) => ({ x: p.x - group.position.x, z: p.z - group.position.z });   // (W's inverse: the region's group sits at its offset)
   const S = new THREE.Group(); group.add(S);   // everything that never moves: merged per material at the end
   const add = (geo, m, x, y, z, ry = 0, rx = 0, rz = 0, to = S) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.castShadow = o.receiveShadow = true; to.add(o); return o; };
   const box = (w, h, d) => new THREE.BoxGeometry(w, h, d), cyl = (a, b, h, n = 12) => new THREE.CylinderGeometry(a, b, h, n);
@@ -186,6 +190,10 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   { const g2 = new THREE.Group(); const a2 = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g2.add(o); };
     a2(box(2 * DECK.hw, 0.1, 2 * DECK.hd), wood, 0, -0.05, 0); a2(box(2 * DECK.hw + 0.1, 0.14, 0.1), steel, 0, -0.17, -DECK.hd + 0.05); a2(box(2 * DECK.hw + 0.1, 0.14, 0.1), steel, 0, -0.17, DECK.hd - 0.05);
     a2(box(0.06, 0.1, 2 * DECK.hd), red, DECK.hw - 0.03, 0.05, 0); a2(box(2 * DECK.hw, 0.1, 0.06), red, 0, 0.05, DECK.hd - 0.03); a2(box(2 * DECK.hw, 0.1, 0.06), red, 0, 0.05, -DECK.hd + 0.03);
+    // THE SECOND SHIFT: the bail the hoist rope hangs it by (two legs at its side rails, a bar 2 m over the boards: the
+    // cart, a barrow and whoever rides pass under it)
+    for (const s of [-1, 1]) a2(box(0.05, 2.0, 0.05), steel, 0, 1.0, s * (DECK.hd - 0.06));
+    a2(box(0.06, 0.06, 2 * DECK.hd - 0.06), steel, 0, 2.0, 0);
     mergeStatic(g2, { recolor: true, retex: true }); deck.add(g2); }
   // (its brick reaches 0.2 m into the terrace's: no seam to fall into between the deck and the upper landing)
   const deckCol = col({ type: 'box', x: DECK.x - 0.1, z: DECK.z, hw: DECK.hw + 0.1, hd: DECK.hd, rot: 0, top: Y0 + HALF, bottom: Y0 + HALF - 0.25 });
@@ -246,7 +254,55 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   { const w2 = dyn(new THREE.TorusGeometry(0.2, 0.025, 5, 14), red, 0, 0, 0, crank); w2.rotation.y = Math.PI / 2; dyn(new THREE.CylinderGeometry(0.02, 0.02, 0.16, 6), dark, -0.08, 0.2, 0, crank).rotation.z = Math.PI / 2; }
   mergeStatic(crank, { recolor: true, retex: true });
   add(cyl(0.03, 0.03, 0.3, 6), steel, CRANK.x + 0.02, Y0 + 1.03, CRANK.z, 0, 0, 0);   // the crank's stand on the bench
+  // THE SECOND SHIFT (P109, docs/SECOND-SHIFT.md): the lift's haul rope and its stop mark. The drum on the motor house
+  // winds a rope that runs straight up beside a teal batten (the frame that never moves) to a sheave on an arm off the
+  // head frame, along to the jib's pulley and down to a bail over the deck. Kell's strip of red cloth is tied on the
+  // rope; a nail in the batten (a chalk tick on its face) is where the cloth stands when the deck is level with the
+  // landing. From the handle the deck's lip against the landing cannot be seen: the operator watches the cloth.
+  const RP = { x: MH.x + 0.3, z: MH.z - 0.1 }, BAT = { x: RP.x + 0.18, z: RP.z - 0.32 };   // (the rope off the drum's east side; the batten north-east of it)
+  const SHV = Y0 + 6.75, ROOF = Y0 + MH.h + 0.08;
+  const beam = (ax, ay, az, bx, by, bz, w, m, to = S) => {   // a bar from a to b (local), its square section w
+    const v = new THREE.Vector3(bx - ax, by - ay, bz - az), len = v.length(), o = new THREE.Mesh(new THREE.BoxGeometry(w, len, w), m);
+    o.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2); o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.normalize()); o.castShadow = o.receiveShadow = true; to.add(o); return o;
+  };
+  add(box(0.07, SHV + 0.08 - ROOF, 0.07), teal, BAT.x, (SHV + 0.08 + ROOF) / 2, BAT.z);
+  beam(BAT.x, SHV + 0.06, BAT.z, T.x1 + 0.1, TOP + 2.75, BAY.z0 - 0.25, 0.07, teal);   // (its arm to the head frame's beam)
+  add(cyl(0.13, 0.13, 0.05, 12), brass, RP.x, SHV, RP.z + 0.13, 0, 0, Math.PI / 2);     // the sheave (in the rope's plane)
+  add(cyl(0.016, 0.016, SHV - (Y0 + MH.h + 0.38), 5), steel, RP.x, (SHV + Y0 + MH.h + 0.38) / 2, RP.z);   // the haul rope, up from the drum
+  beam(RP.x, SHV + 0.13, RP.z + 0.13, DECK.x, TOP + 2.82, DECK.z, 0.03, steel);        // over the sheave to the jib's pulley
+  // the nail, driven into the batten's south face and pointing at the rope; a chalk tick beside it on the face to the handle
+  add(cyl(0.016, 0.016, 0.14, 5), steel, BAT.x, NAIL_Y, BAT.z + 0.035 + 0.07, 0, Math.PI / 2);
+  add(cyl(0.05, 0.05, 0.02, 10), brass, BAT.x, NAIL_Y, BAT.z + 0.035 + 0.14, 0, Math.PI / 2);
+  add(box(0.09, 0.08, 0.09), cream, BAT.x, NAIL_Y, BAT.z);   // (a chalk band round the batten at the nail, seen from any side)
+  // (a peg on the motor house's east face, north of the lever, for a coat: the rope runs over the roof, clear of it)
+  add(cyl(0.018, 0.018, 0.16, 6), brass, MH.x + MH.hw + 0.08, Y0 + 1.22, MH.z - 0.55, 0, 0, Math.PI / 2);
   mergeStatic(S, { recolor: true, retex: true });
+  // THE SECOND SHIFT: what moves with the rope. The cloth rides the haul run (down as the deck goes up: at the nail when
+  // the deck is at the landing); the hoist rope from the jib's pulley to the deck's bail; Brel's barrow (chapter 3's
+  // lunch trip: a tray of sacks on one wheel, the wheel leading); Councillor Brum's coat on its peg (after chapter 9)
+  const cloth = new THREE.Group(); cloth.position.set(RP.x, NAIL_Y, RP.z); cloth.userData.keep = true; D.add(cloth);
+  const rag = paint('#f2b81e', 0.8);   // (Kell's cloth: a yellow rag, not the red of the flywheel and lever beside it)
+  dyn(new THREE.CylinderGeometry(0.036, 0.036, 0.08, 8), rag, 0, 0, 0, cloth);
+  const tails = [];
+  for (const [dz, len, lean] of [[-0.035, 0.4, 1.15], [0.04, 0.32, 0.8]]) {   // (blown out to the east, toward the handle: the rag reads at the knot's height)
+    const tl = new THREE.Group(); tl.position.set(0.02, 0, dz); tl.rotation.z = lean; cloth.add(tl); tails.push(tl);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.016, len, 0.13), rag); m.position.y = -len / 2; tl.add(m);
+  }
+  const hoist = dyn(new THREE.CylinderGeometry(0.018, 0.018, 1, 5), steel, DECK.x, TOP + 2.0, DECK.z); hoist.userData.keep = true;
+  const barrow = new THREE.Group(); barrow.visible = false; barrow.userData.keep = true; D.add(barrow);
+  const bwheel = new THREE.Group(); bwheel.position.set(-0.58, 0.17, 0); barrow.add(bwheel);
+  { const g2 = new THREE.Group(); const a2 = (geo, m, x, y, z, rx = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, 0, rz); o.castShadow = true; g2.add(o); };
+    a2(box(0.86, 0.06, 0.58), wood, 0, 0.36, 0); a2(box(0.86, 0.24, 0.05), wood, 0, 0.5, 0.27); a2(box(0.86, 0.24, 0.05), wood, 0, 0.5, -0.27); a2(box(0.05, 0.24, 0.58), wood, -0.42, 0.5, 0);
+    for (const s of [-1, 1]) { a2(box(1.05, 0.04, 0.04), steel, 0.05, 0.4, s * 0.22, 0, 0.12); a2(box(0.04, 0.34, 0.04), steel, 0.3, 0.17, s * 0.22); }
+    a2(new THREE.SphereGeometry(0.2, 8, 6), wood, -0.12, 0.62, 0.08); a2(new THREE.SphereGeometry(0.18, 8, 6), cream, 0.18, 0.6, -0.06);
+    mergeStatic(g2, { recolor: true, retex: true }); barrow.add(g2); }
+  { const w2 = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.07, 12), dark); w2.rotation.x = Math.PI / 2; w2.castShadow = true; bwheel.add(w2);
+    const hb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 0.075), steel); bwheel.add(hb); }
+  const coat = new THREE.Group(); coat.position.set(MH.x + MH.hw + 0.07, Y0 + 1.24, MH.z - 0.55); coat.visible = false; coat.userData.keep = true; D.add(coat);
+  { const violet = paint('#5a2a7a', 0.8);   // (the council's violet, as Amaru's robe and Brum's hat; the gold of its collar is the brass)
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.27, 0.86, 8), violet); body.scale.set(0.38, 1, 1); body.position.y = -0.47; body.castShadow = true; coat.add(body);
+    const coll = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 5, 10), brass); coll.rotation.y = Math.PI / 2; coll.scale.set(1, 0.6, 1); coll.position.y = -0.06; coat.add(coll);
+    const hem = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.05, 0.5), brass); hem.position.y = -0.88; coat.add(hem); }
 
   // ---- state and motion
   const TP = (x, z, a, clip) => { const p = W(x, z); return touch(p.x, p.z, a, clip); };
@@ -272,6 +328,30 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
     // the feed box, Kell's spot on the deck beside him and at the door
     service: TP(hcx + 0.3, HUT.z1 + 0.06, Math.PI, 'tinker'), hutFront: { ...W(hcx, HUT.z1 + 0.9), a: Math.PI }, isoAt: TP(MH.x + 0.2, MH.z - MH.hd - 0.21, 0, 'tinker'),
     kellDeck: { ...W(DECK.x + 0.55, DECK.z - 0.65), a: -Math.PI / 2 }, kellDoor: { ...W(hcx - 0.6, HUT.z1 + 0.5), a: Math.PI * 0.75 },
+    // THE SECOND SHIFT (story/zeelift.js): the handle (Kell's brake lever: he works it facing west, the cloth and the nail
+    // up ahead of him over the motor house), the nail's height, the run past the landing; where people stand for the lunch
+    // trip (chapter 3), Brum's lesson (chapter 9) and after; the barrow's way: at the lane, on the deck (its wheel to the
+    // landing), over the joint onto the terrace, and on toward the service door
+    handle: TP(MH.x + MH.hw + 0.06, MH.z + 0.3, -Math.PI / 2, 'tinker'), nailY: NAIL_Y, over: OVER, joint: W(T.x1, DECK.z),
+    rope: { ...W(RP.x, RP.z), y0: Y0 + MH.h + 0.5 },
+    shift: {
+      kellAside: { ...W(MH.x + MH.hw + 1.05, MH.z - 0.75), a: -0.48 }, kellAway: [W(-7.3, 19.4), W(-4.6, 17.2)],
+      brelTug: { ...W(MH.x + MH.hw + 0.42, MH.z - 0.35), a: -Math.PI / 2 }, brumDry: { ...W(TAP.x + 1.4, TAP.z - 1.3), a: -0.82 },
+      brumWait: { ...W(MH.x + MH.hw + 1.55, MH.z - 0.75), a: -1.22 }, aside: { ...W(MH.x + MH.hw + 2.1, MH.z + 0.1), a: -1.45 },   // (off the bay, the handle and the cloth ahead)
+      kellCart: { ...W(CART0.x - PUSH + 1.1, CART0.z - 0.85), a: -0.94 },
+      barrowLane: { ...W(-7.75, DECK.z), a: 0 }, barrowDeck: { ...W(DECK.x - 0.15, DECK.z), a: 0 }, barrowLand: { ...W(T.x1 - 0.75, DECK.z), a: 0 },
+      barrowOff: { ...W(T.x1 - 1.45, DECK.z - 1.0), a: -0.75 }, behind: 0.92,
+    },
+    setCoat(on) { coat.visible = !!on; },
+    coatShown() { return coat.visible; },
+    // the barrow at a place, heading `a` (0: the wheel west, toward the landing), shown or hidden; its wheel turned by a distance rolled
+    setBarrow(p, y) { if (!p) { barrow.visible = false; return; } barrow.visible = true; const l = toLocal(p); barrow.position.set(l.x, y - group.position.y, l.z); barrow.rotation.y = p.a || 0; },
+    rollBarrow(d) { bwheel.rotation.z += d / 0.17; },
+    barrowAt() { return { x: barrow.position.x + group.position.x, y: barrow.position.y + group.position.y, z: barrow.position.z + group.position.z, a: barrow.rotation.y, shown: barrow.visible }; },
+    // the cloth's height for a deck height (its stop: the nail's height when the deck is at the landing)
+    clothY(deckY = this.deckY) { return NAIL_Y + (TOP - deckY); },
+    setLever(v) { lever.rotation.z = -0.35 * v; },
+    tug() { this.tugT = 0; },
     setService(open) { leaf.rotation.y = open ? 1.4 : 0; },
     setIso(on) { isoClip.visible = !!on; },
     isoShown() { return isoClip.visible; },
@@ -280,6 +360,9 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
     setDeck(y) {
       this.deckY = y; deck.position.y = y; deckCol.top = y; deckCol.bottom = y - 0.25;
       if (this.cartK <= 0) { cart.position.y = y; cartCol.top = y + 1.2; cartCol.bottom = y; }
+      // (the hoist rope from the jib's pulley to the bail; the cloth on the haul run, which pays in as the deck rises)
+      { const y1 = TOP + 2.38, y2 = y + 2.03, len = Math.max(0.05, y1 - y2); hoist.scale.y = len; hoist.position.y = (y1 + y2) / 2; }
+      cloth.position.y = this.clothY(y);
     },
     setCart(k, tip = 0) {
       this.cartK = k;
@@ -308,6 +391,11 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   };
   updaters.push((dt, t) => {
     wheel.userData.spin.rotation.x = t * 0.5;
+    // the cloth's tails in the breeze; a tug on the rope (Brel's reminder) shakes them and the knot
+    { let k = 0.12; if (A.tugT != null) { A.tugT += dt; k = 0.12 + 0.6 * Math.exp(-A.tugT * 2.2); if (A.tugT > 2.5) A.tugT = null; }
+      tails[0].rotation.x = k * Math.sin(t * 5.1); tails[1].rotation.x = k * Math.sin(t * 4.3 + 1.3);
+      cloth.position.x = RP.x + (A.tugT != null ? 0.025 * Math.sin(A.tugT * 30) * Math.exp(-A.tugT * 3) : 0); }
+    if (A.shiftHook) A.shiftHook(dt);   // (the story's look for the lane: story/zeelift.js keeps the coat and the barrow)
     if (A.running) fly.rotation.z += dt * 7;
     const M = A.moving;
     if (M) {

@@ -256,7 +256,8 @@ function spotOf(W, c) {
 
 export function buildCitadelContainers(root, physics, W) {
   const g = new THREE.Group(); g.name = 'containers'; root.add(g);
-  const T = W.terrain, H = (x, z) => T.heightAt(x, z), kit = new Kit(g);
+  // (P113: on a raised house's terrace, its top: town.js W.terraceTop)
+  const T = W.terrain, H = (x, z) => Math.max(T.heightAt(x, z), W.terraceTop?.(x, z) ?? -Infinity), kit = new Kit(g);
   const placed = [], skipped = [];
   const fit = citadelFit(W, physics);
   for (const c0 of CITADEL) {

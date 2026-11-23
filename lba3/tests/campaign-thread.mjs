@@ -734,7 +734,11 @@ if (!ONLY || ONLY === 'K') {
   }), (v) => v[0] === 'workshop' && v[1] && v[2] === 'A' && v[3] === 'cn_iso' && v[4] && v[5] && /feed/i.test(v[6]));
   is('K9 Mill Lane: the isolator on Kell\'s feed box: the deck rises, the standpipe runs; Baldino on the radio: a network → chapter 10', await ev(() => {
     const G = game, f = G.flags; P.enter('zeelich'); const L = G.rooms.zeelich.lift; const r = P.use(L.isoAt.x, L.isoAt.z, { kind: 'cn_clip', near: 0.6, run: true });
-    let water = false; for (let i = 0; i < 300 && f.chapterKey === 'council'; i++) { G.step(0.1); water ||= !!L.state.water; if (G.state === 'dialog') P.settle(); }
+    // (THE SECOND SHIFT: the mills' line has no stop at the landing: Twinsen shows Brum the handle, Brum's trip ends the chapter; tests/second-shift.mjs E)
+    const K = G.story._cn?.kell; let water = false;
+    for (let i = 0; i < 300 && f.chapterKey === 'council' && !(f.cn_bv && !f.cn_brumShow && K && !K.busy && !K.walks.length && G.state === 'play'); i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
+    if (f.cn_bv && !f.cn_brumShow) P.use(L.handle.x, L.handle.z, { kind: 'cn_show', near: 1.0 });
+    for (let i = 0; i < 400 && f.chapterKey === 'council'; i++) { G.step(0.1); water ||= !!L.state.water; if (G.state === 'dialog') P.settle(); }
     P.settle(60); P.settle(30); return [r.target?.kind, !!f.cn_lane, water, f.chapterKey];
   }), (v) => v[0] === 'cn_clip' && v[1] && v[2] && v[3] === 'network');
   await handover();

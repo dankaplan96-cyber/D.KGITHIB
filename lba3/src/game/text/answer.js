@@ -50,6 +50,13 @@ Object.assign(STR.en, {
   //  erases nothing: the guard names the log and the list. Essential clue: the bar goes up after her two, in the quiet)
   co_tw_cock: "Irsa, the lane's on the mills down here. What's Kell's cart doing?",
   co_irsa_1: "I've let go. Kell's cart is still climbing.",
+  // THE SECOND SHIFT: the lane on the radio first, when Brum ran its lift in chapter 9 (story/answer.js irsaHolding)
+  n_zl_kellradio: 'Kell (radio)', n_councilCradio: 'Brum (radio)',
+  co_kell_cloth: "Brum, she's coming up. Watch the cloth, and when it gets to the...",
+  co_brum_cloth: 'Cloth to the nail. I know.',
+  co_kell_cart: "Right. I'll see to the cart.",
+  co_wheel: "(On the radio: a wheel rolls over the lift's joint without a bump.)",
+  co_j_lane_brum: "I turned Mill Lane's branch over to the mills at its cock, in the rest. Brum had Kell's handle, cloth to the nail, and Irsa radioed that Kell's cart was climbing, with her hand off the switch.",
   co_vesk_up_helped: "You pulled me out of that. And now Kell's cart goes up without my line.",
   co_vesk_why: "I cut that log so the lane wouldn't go dry. It doesn't need me.",
   co_vesk_up_left: "Don't look at me like that. I heard Irsa. Kell's cart, going up without my line.",

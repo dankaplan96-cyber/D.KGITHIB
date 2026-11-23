@@ -123,6 +123,50 @@ const HOUSES = [
   // (DOORS-LBA2 #3: the stone house's porch on the terrace, 'stoneup', is gone: LBA2's second way down there is a lift
   // hatch flush with the terrace, sewers.js HATCHES.terrace)
 ];
+// P113 (the user, 23.11: "raise the shop"): a house whose door opens onto a raised level (FLAT-TOWN's plaza, a lawn's
+// kerb, the promenade, a flight's top) stands on that level: on a stone terrace whose top is the raised level, its foot
+// on the street, the house's own plinth and door step on the terrace as on any street. The terrace runs TERRACE_LEDGE
+// round the walls and TERRACE_FRONT (or as far as the raised ground before the door) out in front, so the door opens
+// onto a level landing joined to the raised ground, not onto the steps down from it. Found by the ground before the
+// door (0.3–1.5 m out, the door's middle ±0.5 m) standing over the ground under the house by more than 0.15 m — every
+// house's floor is otherwise the level before its door (world.js houseFlats), so only a level laid over the floors
+// (world.js plaza, lawns, promenade, promStair) can do it. Today: Pippa's shop on the square (FULL-TEST-23-11's worldfit
+// row, door sill 0.24 m under the platform). tests/door-levels.mjs sweeps every registered door in the game.
+const TERRACE_LEDGE = 0.3, TERRACE_FRONT = 1.0, TERRACE_FOOT = 0.06, TERRACE_PROUD = 0.025;
+function doorLift(H, hd) {
+  const c = Math.cos(hd.ry), s = Math.sin(hd.ry), dx = hd.door?.x ?? 0, g0 = H(hd.x, hd.z);
+  let hi = -Infinity;
+  for (const u of [-0.5, 0, 0.5]) for (const v of [0.3, 0.6, 0.9, 1.2, 1.5]) { const lx = dx + u, lz = hd.d / 2 + v; hi = Math.max(hi, H(hd.x + c * lx + s * lz, hd.z - s * lx + c * lz)); }
+  return hi - g0 > 0.15 ? hi - g0 + TERRACE_PROUD : 0;
+}
+// the terrace (local x across the front, local z out of it): a box from its foot to the raised level + TERRACE_PROUD
+// (2.5 cm proud of the raised ground it overlaps, as the plaza's steps stand 1.5 cm proud: no shared plane)
+function terraceOf(H, hd, g0, g) {
+  const c = Math.cos(hd.ry), s = Math.sin(hd.ry), dx = hd.door?.x ?? 0, D2 = hd.d / 2 + TERRACE_LEDGE, lvl = g - TERRACE_PROUD;
+  let front = TERRACE_FRONT;   // (out to the raised ground before the door, 12 cm onto it, when that lies further out)
+  for (let v = 0; v <= 2.5; v += 0.1) { const lz = D2 + v; if (H(hd.x + c * dx + s * lz, hd.z - s * dx + c * lz) >= lvl - 0.01) { front = Math.max(front, v + 0.12); break; } }
+  return { x: hd.x, z: hd.z, ry: hd.ry, c, s, x0: -hd.w / 2 - TERRACE_LEDGE, x1: hd.w / 2 + TERRACE_LEDGE, z0: -D2, z1: D2 + front, top: g, foot: g0 - TERRACE_FOOT };
+}
+// the terrace's top where (x, z) is on one, else −∞
+function terraceTop(list, x, z) {
+  for (const t of list) { const dx = x - t.x, dz = z - t.z, lx = t.c * dx - t.s * dz, lz = t.s * dx + t.c * dz; if (lx >= t.x0 && lx <= t.x1 && lz >= t.z0 && lz <= t.z1) return t.top; }
+  return -Infinity;
+}
+function buildTerrace(parent, physics, t) {
+  const wx = t.x1 - t.x0, wz = t.z1 - t.z0, hy = t.top - t.foot, TILE = 2.2;
+  const geo = new THREE.BoxGeometry(wx, hy, wz);
+  // world-scaled UVs: each face takes the two axes it spans, so the stone keeps the plaza steps' size on every face
+  const pos = geo.attributes.position, nor = geo.attributes.normal, uv = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) {
+    const X = pos.getX(i), Y = pos.getY(i), Z = pos.getZ(i), ax = Math.abs(nor.getX(i)), ay = Math.abs(nor.getY(i));
+    uv.setXY(i, (ay > 0.5 ? X : ax > 0.5 ? Z : X) / TILE, (ay > 0.5 ? Z : Y) / TILE);
+  }
+  const m = put(parent, geo, texMat('stone', 1, 1, '#d4cec4'), 0, 0, 0, t.ry);
+  const cx = (t.x0 + t.x1) / 2, cz = (t.z0 + t.z1) / 2;
+  m.position.set(t.x + t.c * cx + t.s * cz, (t.top + t.foot) / 2, t.z - t.s * cx + t.c * cz);
+  physics.add({ type: 'box', x: m.position.x, z: m.position.z, hw: wx / 2, hd: wz / 2, rot: t.ry, top: t.top, seeThrough: true });
+  return m;
+}
 // the houses beyond the square stand on level pads; those round it keep the town's own ground (world.js)
 for (const h of HOUSES) if (!h.pad && !h.noPad && Math.hypot(h.x - V.x, h.z - V.z) > 18) h.pad = Math.max(h.w, h.d) * 0.75 + 2;
 export const HOUSE_KEEP = HOUSES.filter((h) => !h.pad && !h.noPad).map((h) => [h.x, h.z, Math.max(h.w, h.d) * 0.72]);
@@ -503,9 +547,10 @@ export function buildTown(scene, W) {
   W.seats = [];   // WORLD-LIFE: every bench a resident may sit on {x, z, ry}: the sitter faces (sin ry, cos ry)
   const houseInfo = {};
   const built = [];
+  const raised = [];   // (P113: the houses on a terrace at a raised level before their door, below)
   for (const [i, hd] of HOUSES.entries()) {
     built[i] = buildHouse({ ...hd, seed: i + 3 });
-    const g = H(hd.x, hd.z);
+    const g0 = H(hd.x, hd.z), lift = doorLift(H, hd), g = g0 + lift;
     built[i].group.position.set(hd.x, g - 0.05, hd.z);
     built[i].group.rotation.y = hd.ry;
     scene.add(built[i].group);
@@ -513,7 +558,9 @@ export function buildTown(scene, W) {
     const dz = built[i].door.z, dx = built[i].door.x;
     const door = { x: hd.x + Math.sin(hd.ry) * dz + Math.cos(hd.ry) * dx, z: hd.z + Math.cos(hd.ry) * dz - Math.sin(hd.ry) * dx };
     const info = { x: hd.x, z: hd.z, ry: hd.ry, w: hd.w, d: hd.d, g, door, id: hd.id };
-    fitAdd({ region: 'citadel', name: 'house ' + hd.id, x: hd.x, z: hd.z, ry: hd.ry, oy: g - 0.05, ...built[i].fit });
+    if (lift > 0) raised.push(info.terrace = terraceOf(H, hd, g0, g));
+    const fit = lift > 0 ? { ...built[i].fit, base: g0 - TERRACE_FOOT - (g - 0.05) } : built[i].fit;   // (its terrace's foot under the street)
+    fitAdd({ region: 'citadel', name: 'house ' + hd.id, x: hd.x, z: hd.z, ry: hd.ry, oy: g - 0.05, ...fit });
     W.houses.push(info);
     houseInfo[hd.id] = info;
   }
@@ -568,6 +615,9 @@ export function buildTown(scene, W) {
 
   // static street dressing goes into one group that is merged per material at the end
   const dress = new THREE.Group(); scene.add(dress);
+  // P113: the raised houses' terraces (with the dressing: one draw with its stone); W.terraceTop for the other placers
+  for (const t of raised) buildTerrace(dress, physics, t);
+  W.terraceTop = (x, z) => terraceTop(raised, x, z);
   // lamps around the square, at the original's four corners (the other street lamps: island.js); their globes gold as
   // the original's (CITADEL-85), and the two lights in them warm to match (the same two lights, the same strength)
   const SQUARE_LAMPS = PROPS.lamps.slice(0, 4);
@@ -585,7 +635,8 @@ export function buildTown(scene, W) {
   }
   // Twinsen's front garden: picket fence, a bench under the window, laundry, tools, a radio on the sill, pots
   const tw = houseInfo.twinsen;
-  const gy = (p) => H(p[0], p[1]);
+  // (P113: on a raised house's terrace, its top)
+  const gy = (p) => Math.max(H(p[0], p[1]), terraceTop(raised, p[0], p[1]));
   fence(scene, H, at('twinsen', -7.0, -1.8), at('twinsen', -7.0, 5.6), r);
   fence(scene, H, at('twinsen', -7.0, 5.6), at('twinsen', 0.6, 5.6), r);
   // SOLID-NPC: the small things of the garden and the town are solid (they had no collider, Twinsen walked through them):
@@ -620,11 +671,13 @@ export function buildTown(scene, W) {
   sign(dress, sg[0], gy(sg), sg[1], tw.ry + 0.3, 'Bug St.');
   solid({ type: 'cyl', x: sg[0], z: sg[1], r: 0.12, top: gy(sg) + 2.1 });
   // shop: globe sign and barrels; low stone walls by the water office and the stone house
-  const sh = at('shop', 3.9, 3.3);
+  const sh = at('shop', 4.1, 3.3);   // (P113: 0.2 m further out than it stood, clear of the shop's terrace)
   globeSign(dress, sh[0], gy(sh), sh[1]);
   physics.add({ type: 'cyl', x: sh[0], z: sh[1], r: 0.15, top: gy(sh) + 3, seeThrough: true });
   // (PLACE-2: the second stood half inside the shop's front wall at its corner: out by the corner, beside the first)
-  for (const [lx, lz] of [[-3.0, 3.4], [-3.85, 3.25]]) { const p = at('shop', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
+  // (P113: the shop on its terrace: the second barrel would straddle the terrace's edge by the corner; it stands on the
+  //  square's platform just before the terrace)
+  for (const [lx, lz] of [[-3.0, 3.4], [-3.2, 4.8]]) { const p = at('shop', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
   { const p = at('shop', -3.2, 3.0); W.givers.push({ id: 'shop-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money'], n: 3 }); }
   stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
   stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));

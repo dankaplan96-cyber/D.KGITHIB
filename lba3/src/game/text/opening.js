@@ -7,18 +7,18 @@ Object.assign(STR.en, {
   op_cap_place: 'Citadel Island, Twinsun',
   op_cap_time: "Twelve years after Twinsen's last adventure",
   // (P83 / S-7: the originals in two lines, for a newcomer; the classic cut)
-  op_cap_lore: "Sendell, Twinsun's goddess, chose Twinsen to stop the tyrant FunFrock.",
+  op_cap_lore: "Sendell, Twinsun's goddess, chose Twinsen to stop FunFrock.",
   op_cap_lore_sub: 'FunFrock is dead. His clones never got the message.',
   // (LBA3-RUN: the originals over Twinsen's notebook, a line a page, for a newcomer; LBA1, then LBA2. The notebook cut's;
   //  the classic cut keeps P83 / S-7's two lines above)
-  op_nb_1: 'FunFrock once ruled Twinsun with his clones and teleporters.',
+  op_nb_1: 'FunFrock ruled Twinsun with clones and teleporters.',
   op_nb_2: 'Twinsen stood up to him and set Twinsun free.',
-  op_nb_3: 'Later, lightning struck his friend the Dino-Fly.',
-  op_nb_4: "On Zeelich, he brought Twinsun's stolen children home.",
+  op_nb_3: 'Later, lightning struck his Dino-Fly.',
+  op_nb_4: "He rescued Twinsun's children from Zeelich.",
   // the harbour: the Joint Project's lift
   n_resident: 'Resident',
   op_res_1: 'When does the harbour row get the heat?',
-  op_wk_1: 'Next quarter. Every home gets it. Vesk promised.',
+  op_wk_1: 'Next quarter. Every home. Vesk promised.',
   op_res_2: "What's that hum?",
   op_wk_2: "Just the drill. It's a long way down.",
   // home
@@ -27,7 +27,7 @@ Object.assign(STR.en, {
   op_zoe_1: "Twinsen. The tap's stopped again.",
   op_tw_1: 'I fixed that yesterday.',
   op_zoe_2: 'It worked yesterday.',
-  op_ar_2: "The drill again. Lulu says they're digging to the middle of the world.",
+  op_ar_2: "Lulu says they're drilling to the middle of the world.",
   op_zoe_3: "That's warm. It's never warm.",
   op_tw_2: "I'll check the square's well.",
   op_zoe_4: "I'll ask next door.",
@@ -83,7 +83,7 @@ Object.assign(STR.en, {
   t2_zoe_call: 'Twinsen! Over here.',
   t2_ask_inv: 'Have a good look at those.',
   t2_ask_tap: "Try the garden tap. If that's dry too, it isn't just our kitchen.",
-  t2_ask_barrels: "Behind the barrels? That's the joint you fixed yesterday. Knock one aside with your ball.",
+  t2_ask_barrels: "That barrel jumped. Your joint from yesterday is behind it. Knock it aside with your ball.",
   t2_ask_pipe: "Over the project's pipe is quicker. You used to clear fences twice that high.",
   t2_zoe_done: "Not bad for an old hero. And be back for dinner.",
   t2_zoe_close: "Close enough. And be back for dinner.",
