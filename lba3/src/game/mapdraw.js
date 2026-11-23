@@ -87,6 +87,7 @@ function texMean(tex, fallback) {
 function* terrainAlbedo(T, pal) {
   if (T._mapAlb) return T._mapAlb;
   const n = T.segs + 1, geo = T.mesh.userData.full, col = geo?.attributes.color?.array, spl = geo?.attributes.splat?.array, spl2 = geo?.attributes.splat2?.array;
+  const edg = geo?.attributes.edge?.array;   // (LAWN-EDGES: the plots' earth band, the terrain shader's: [distance, width], int16)
   const tx = T.tex || {};
   const M = [texMean(tx.grass, [0.42, 0.55, 0.3]), texMean(tx.sand, [0.8, 0.72, 0.55]), texMean(tx.rock, [0.5, 0.48, 0.46]), texMean(tx.dirt, [0.55, 0.42, 0.3]), texMean(tx.cobble, [0.6, 0.58, 0.55])];
   const A = new Float32Array(n * n * 3), W = new Float32Array(n * n * 2);
@@ -94,7 +95,8 @@ function* terrainAlbedo(T, pal) {
   for (let k = 0; k < n * n; k++) {   // (no allocation per vertex: ~80 000 of them on Citadel)
     let r = 1, gg = 1, b = 1;
     if (spl) {
-      const w0 = spl[k * 4], w1 = spl[k * 4 + 1], w2 = spl[k * 4 + 2], w3 = spl[k * 4 + 3], w4 = spl2 ? spl2[k] : 0;
+      let w0 = spl[k * 4], w1 = spl[k * 4 + 1], w2 = spl[k * 4 + 2], w3 = spl[k * 4 + 3], w4 = spl2 ? spl2[k] : 0;
+      if (edg && edg[k * 2 + 1] > 400 && edg[k * 2] >= 0 && edg[k * 2] < edg[k * 2 + 1]) { w3 += w0; w0 = 0; }
       r = w0 * M[0][0] + w1 * M[1][0] + w2 * M[2][0] + w3 * M[3][0] + w4 * M[4][0];
       gg = w0 * M[0][1] + w1 * M[1][1] + w2 * M[2][1] + w3 * M[3][1] + w4 * M[4][1];
       b = w0 * M[0][2] + w1 * M[1][2] + w2 * M[2][2] + w3 * M[3][2] + w4 * M[4][2];

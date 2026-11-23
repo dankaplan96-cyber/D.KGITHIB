@@ -209,5 +209,7 @@ export function buildCityDressing(root, physics, W) {
   // recolor/retex; every piece here is static and no material of the dressing changes at runtime)
   mergeStatic(g, { recolor: true, retex: true, cell: 64 });
   W.cityDress = { placed: count, kinds, skipped, items };
+  // LAWN-EDGES: the town's kerb stones, now that everything on the ground stands (world.js gridKerbs, town.js kerbMesh)
+  W.buildKerbs?.(W.gridKerbs?.() || []);
   return W.cityDress;
 }

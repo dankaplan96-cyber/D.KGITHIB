@@ -528,15 +528,22 @@ function curbs(parent, H, paved = () => 1) {
   // (C66: not where the grid's west street, x −52, lies north of it too)
   { const [[ax, az], [bx, bz]] = BUG_FOOT_KERB, len = Math.hypot(bx - ax, bz - az), ang = Math.atan2(bx - ax, bz - az), ox = -(bz - az) / len * 0.35, oz = (bx - ax) / len * 0.35;
     for (let d = 0.28; d < len - 0.2; d += 0.55) { const x = ax + (bx - ax) * d / len, z = az + (bz - az) * d / len; if (paved(x + ox, z + oz) < 0) continue; pos.push([x, H(x, z), z, ang]); } }
+  return pos;
+}
+// the kerb stones, one instanced mesh: the streets' (curbs) and LAWN-EDGES' along the grid's straight edges (world.js
+// gridKerbs; [x, y, z, ang, len]: a stone stretched along its run to fill it to the corner). Built once the town's
+// dressing stands (citydress.js), so the grid's kerbs keep off everything placed on the ground.
+function kerbMesh(parent, pos) {
   const geo = new THREE.BoxGeometry(0.2, 0.16, 0.56, 1, 1, 1);
   const im = new THREE.InstancedMesh(geo, mat('#b9b3a8', 0.9), pos.length);
   const o = new THREE.Object3D(), c = new THREE.Color();
-  pos.forEach(([x, y, z, a], i) => {
-    o.position.set(x, y + 0.02, z); o.rotation.set(0, a + Math.sin(i * 1.7) * 0.03, Math.sin(i * 2.3) * 0.02); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
+  pos.forEach(([x, y, z, a, len], i) => {
+    o.position.set(x, y + 0.02, z); o.rotation.set(0, a + Math.sin(i * 1.7) * 0.03 * (len ? 0.4 : 1), Math.sin(i * 2.3) * 0.02); o.scale.set(1, 1, len ? len / 0.56 : 1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
     im.setColorAt(i, c.setRGB(1, 1, 1).multiplyScalar(0.86 + ((i * 7919) % 13) / 13 * 0.18));
   });
-  im.receiveShadow = true;
+  im.receiveShadow = true; im.name = 'kerbs'; im.userData.src = 'town';
   parent.add(im);
+  return im;
 }
 
 // ------------------------------------------------------------------ build
@@ -682,7 +689,7 @@ export function buildTown(scene, W) {
   stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
   stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
   for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.2, top: gy(p) + 0.7 }); pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }   // (pots r 0.2: the south house's stands by its door)
-  curbs(dress, H, W.gridPaveDist);
+  { const kp = curbs(dress, H, W.gridPaveDist); W.kerbStones = kp; W.buildKerbs = (more = []) => { W.buildKerbs = null; W.kerbs = kerbMesh(dress, [...kp, ...more]); return W.kerbs; }; }   // (LAWN-EDGES: built after the dressing)
   // all of the above is static: one mesh per material (lights stay as they are)
   mergeStatic(dress);
 

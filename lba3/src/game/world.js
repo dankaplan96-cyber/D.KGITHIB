@@ -174,19 +174,80 @@ const TOWN_BLOCK = { x0: -57.4, z0: 32.8, x1: -47.1, z1: 51.6, band: 2.0 };
 // lattice fence along the street (LBA2: the one fenced lawn of the town's south; the fence: town.js latticeFence)
 const TOWN_BLOCKS = [TOWN_BLOCK, { x0: -57.4, z0: 4.4, x1: -36.5, z1: 29.8, band: 2.0 }, { x0: -60.4, z0: 54.6, x1: -46.6, z1: 60.4, band: 1.6 }];
 const inTownGrid = (x, z) => x > -75 && x < -22 && z > 1 && z < 56;   // (the town south of the square, shore to shore)
-// 0..1: the blocks' earth band (1 on it, 0 on the lawn inside and outside a block)
-function townBlockEarth(x, z, n = 0) {
-  let e = 0;
-  for (const B of TOWN_BLOCKS) {
-    const d = boxDist(x, z, B.x0, B.z0, B.x1, B.z1);
-    if (d < 0.2) e = Math.max(e, smoothstep(-B.band - 0.25, -B.band + 0.25, d + n * 0.15));
-  }
-  return e;
-}
 export function gridPaveDist(x, z) {
   let d = Math.min(boxDist(x, z, HARBOUR_YARD.x0, HARBOUR_YARD.z0, HARBOUR_YARD.x1, HARBOUR_YARD.z1), boxDist(x, z, HARBOUR_SE.x0, HARBOUR_SE.z0, HARBOUR_SE.x1, HARBOUR_SE.z1));
   for (const [x0, z0, x1, z1, w] of GRID_STREETS) d = Math.min(d, distToSegment(x, z, x0, z0, x1, z1) - w / 2);
   return d;   // (< 0 on the paving)
+}
+// LAWN-EDGES (P112, the user's pick b, 23.11): LBA2's town paving ends in straight, kerbed edges, a ~2 m band of brown
+// earth inside them, the lawn inside that. Ours was a splat weight per grid point (0.93 m) with noise, so its edge
+// stepped across the triangles (a zig-zag). Now: one noise-free signed distance to all of Citadel's paving (townPaveDist),
+// stored per grid point (Terrain edgeFn) and cut by the terrain shader per pixel at 0: linear across a triangle, so a
+// straight line stays straight. The band is cut on the same distance (townBandW). The splat keeps a step copy of both
+// for the map, the probes and the scatter filters. (gridPaveDist above stays as it was: the scatter's filters use it.)
+// The grid streets as rectangles: an end that stops on another street's edge or inside it is cut flush there, one near
+// other paving keeps its round cap (it meets the square's ring or a lane), a free end is square (LBA2's dead ends).
+const PLOT_ZONE = { x0: -76, x1: -20, z0: -17, z1: 62 };   // (the town's plots: the grid south of the square, the square's block)
+const GRID_RECTS = GRID_STREETS.map(([x0, z0, x1, z1, w], i) => {
+  const len = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / len, uz = (z1 - z0) / len, hw = w / 2;
+  const other = (x, z) => {
+    let d = Math.min(boxDist(x, z, HARBOUR_YARD.x0, HARBOUR_YARD.z0, HARBOUR_YARD.x1, HARBOUR_YARD.z1), boxDist(x, z, HARBOUR_SE.x0, HARBOUR_SE.z0, HARBOUR_SE.x1, HARBOUR_SE.z1));
+    GRID_STREETS.forEach(([a, b, c, e, ww], j) => { if (j !== i) d = Math.min(d, distToSegment(x, z, a, b, c, e) - ww / 2); });
+    return Math.min(d, streetDist(x, z), bugFootDist(x, z), Math.hypot(x - POI.village.x, z - POI.village.z) - 9.45);
+  };
+  const end = (x, z) => { const o = other(x, z); return o <= 0.01 ? 'flush' : o < hw + 0.3 ? 'round' : 'square'; };
+  return { x0, z0, ux, uz, len, hw, ea: end(x0, z0), eb: end(x1, z1), prom: i === 5 };
+});
+function rectDist(x, z, R) {
+  const dx = x - R.x0, dz = z - R.z0, t = dx * R.ux + dz * R.uz, p = Math.abs(dz * R.ux - dx * R.uz) - R.hw;
+  if ((t < 0 && R.ea === 'round') || (t > R.len && R.eb === 'round')) return distToSegment(x, z, R.x0, R.z0, R.x0 + R.ux * R.len, R.z0 + R.uz * R.len) - R.hw;
+  const a = t < R.len / 2 ? -t - (R.ea === 'square' ? R.hw : 0) : t - R.len - (R.eb === 'square' ? R.hw : 0);
+  return a > 0 && p > 0 ? Math.hypot(a, p) : Math.max(a, p);
+}
+// signed distance to the town's paving (< 0 on it), noise-free; h: the ground's height there (the grid's paving, the
+// harbour yard and the quay only above the shore, h > 1.2, as before). prom: the promenade's own distance apart.
+const TP_LAST = { x: NaN, z: NaN, h: NaN, r: null };   // (the terrain asks twice per grid point: the splat, the edge)
+function townPaveParts(x, z, h) {
+  if (x < -112 || x > -8 || z < -82 || z > 66) return [9, 9];
+  if (x === TP_LAST.x && z === TP_LAST.z && h === TP_LAST.h) return TP_LAST.r;
+  TP_LAST.x = x; TP_LAST.z = z; TP_LAST.h = h; TP_LAST.r = townPaveCalc(x, z, h);
+  return TP_LAST.r;
+}
+function townPaveCalc(x, z, h) {
+  let d = 9, pr = 9;
+  if (h > 1.2) {
+    d = Math.min(boxDist(x, z, HARBOUR_YARD.x0, HARBOUR_YARD.z0, HARBOUR_YARD.x1, HARBOUR_YARD.z1), boxDist(x, z, HARBOUR_SE.x0, HARBOUR_SE.z0, HARBOUR_SE.x1, HARBOUR_SE.z1));
+    for (const R of GRID_RECTS) { const r = rectDist(x, z, R); if (R.prom) pr = r; else if (r < d) d = r; }
+    d = Math.min(d, Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - QUAY.x1) - 0.2);   // (the quay, to its east face)
+  }
+  const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
+  d = Math.min(d, vd - 9.45);   // (the square, under the plaza's steps)
+  if (vd < 30) d = Math.min(d, streetDist(x, z), bugFootDist(x, z));
+  d = Math.min(d, climbPaveDist(x, z));
+  const F = POI.fort;
+  d = Math.min(d, boxDist(x, z, F.x - F.half, F.z - F.half, F.x + F.half, F.z + F.half), boxDist(x, z, F.x - F.half - 5, F.z - 4.5, F.x - F.half + 1, F.z + 4.5));   // (the fort and its forecourt)
+  return [d, pr];
+}
+function townPaveDist(x, z, h) { const [d, pr] = townPaveParts(x, z, h); return Math.min(d, pr); }
+// the earth band's width at x, z (0: none): in the town's plots at the street's level, along every street but the
+// promenade (its inland edge is its wall's coping); LBA2's lawn strip south of the south cross street has a narrower one
+const STRIP = TOWN_BLOCKS[2];
+function townBandW(x, z, h, parts) {
+  if (x < PLOT_ZONE.x0 || x > PLOT_ZONE.x1 || z < PLOT_ZONE.z0 || z > PLOT_ZONE.z1 || Math.abs(h - TOWN_FLAT) > 0.35) return 0;
+  const [d, pr] = parts || townPaveParts(x, z, h);
+  if (pr < d) return 0;
+  return x > STRIP.x0 && x < STRIP.x1 && z > STRIP.z0 - 0.5 && z < STRIP.z1 ? STRIP.band : 2.0;
+}
+// on the band (for the scatter's filters: no tufts, wild flowers or bushes on it)
+function onTownBand(x, z, h, pad = 0) {
+  const parts = townPaveParts(x, z, h), bw = townBandW(x, z, h, parts);
+  const d = Math.min(parts[0], parts[1]);
+  return bw > 0 && d > -0.1 && d < bw + pad;
+}
+// the terrain's edge attribute at a grid point: [distance to the paving, the band's width]
+function islandEdge(x, z, h, e) {
+  const parts = townPaveParts(x, z, h);
+  e[0] = Math.min(parts[0], parts[1]); e[1] = townBandW(x, z, h, parts);
 }
 // signed distance (first-order) to an ellipse with semi-axes a (x) and b (z), negative inside
 function ellipseDist(x, z, cx, cz, a, b) {
@@ -748,10 +809,11 @@ function islandSplat(x, z, h, slope, w) {
     w[3] = Math.max(w[3], smoothstep(1.5, -1.5, cd + n * 2) * 2);
   }
   const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
-  w[4] = smoothstep(9.9, 9.0, vd) * 3; // the square, edged by a curb ring (town.js)
-  if (vd < 30) w[4] = Math.max(w[4], smoothstep(0.35, -0.25, Math.min(streetDist(x, z), bugFootDist(x, z)) + n * 0.25) * 3);   // (REVIEW-CITADEL-ART b: and Bug Street's foot)
-  // CLIMB-1: the way up to the fort's terrace, paved as the streets (lba1places.js climbPaveDist)
-  w[4] = Math.max(w[4], smoothstep(0.3, -0.25, climbPaveDist(x, z) + n * 0.2) * 3);
+  // the town's paving: the square, its streets and Bug Street's foot (REVIEW-CITADEL-ART b), the way up to the fort's
+  // terrace (CLIMB-1), the quay (AUDIT-FIX, P49: to its east face), LBA2's grid streets, the promenade and the harbour's
+  // yard (MAP-ORIG), the fort and its forecourt. LAWN-EDGES: a step at the noise-free edge (townPaveDist): the shader
+  // cuts it straight per pixel (the edge attribute); this copy is for the map, the probes and the scatter's filters
+  if (townPaveDist(x, z, h) < 0) w[4] = 3;
   // in town the ground between the streets is brown soil with lawns (Citadel Island)
   if (vd < 36 && h > 0.8) {
     const soil = townSoil(x, z, n) * (1 - Math.min(1, w[4] / 1.5)); // never on the paving
@@ -763,15 +825,7 @@ function islandSplat(x, z, h, slope, w) {
     w[3] = Math.max(w[3], soil * 2.5); w[0] *= 1 - soil * 0.95;
     w[2] = Math.max(w[2], rock * 1.2);
   }
-  // the quay is paved
-  // (AUDIT-FIX, P49: to its east face, QUAY.x1, where the harbour yard's paving takes over; it stopped a metre short)
-  if (Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - QUAY.x1) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
-  // MAP-ORIG: LBA2's straight town streets, the sea wall's promenade and the harbour wing's yard (GRID_STREETS)
-  if (h > 1.2) w[4] = Math.max(w[4], smoothstep(0.3, -0.25, gridPaveDist(x, z) + n * 0.2) * 3);
-  { const be = h > 1.2 ? townBlockEarth(x, z, n) : 0; if (be > 0) { w[3] = Math.max(w[3], be * 2.5); w[0] *= 1 - be * 0.95; } }
-  const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
-  if (fd < POI.fort.half) w[4] = 3;
-  if (boxDist(x, z, POI.fort.x - POI.fort.half - 5, POI.fort.z - 4.5, POI.fort.x - POI.fort.half + 1, POI.fort.z + 4.5) < n * 1.2) w[4] = 3; // the forecourt
+  // (LAWN-EDGES: the plots' earth band along the paving, TOWN_BLOCKS' before, is the shader's: townBandW)
   if (flatClear(x, z, 0.6)) w[2] = 0;   // (FLAT-TOWN: no cliff rock at a wall's or the flight's foot: the steep bank is inside the masonry)
   { const pave = 1 - Math.min(1, w[4] / 1.5); w[3] *= pave; w[0] *= pave; w[1] *= pave; w[2] *= pave; } // paving covers paths, soil and grass
   if (w[2] > 0) { w[0] *= 1 - Math.min(1, w[2]); w[3] *= 1 - Math.min(1, w[2]); w[1] *= 1 - Math.min(1, w[2]); }
@@ -978,7 +1032,7 @@ export function* buildWorldSteps(parentScene) {
   yield 'textures';
   const grid = buildHeightGrid(TERRAIN_SIZE, TERRAIN_SEGS);
   yield 'heights';
-  const terrain = new Terrain({ size: TERRAIN_SIZE, segs: TERRAIN_SEGS, cx: ISLAND.cx, cz: ISLAND.cz, heightFn: grid.at, colorFn: islandColor, splatFn: islandSplat, textures: { ...TX, rock: TX.cliff } });
+  const terrain = new Terrain({ size: TERRAIN_SIZE, segs: TERRAIN_SEGS, cx: ISLAND.cx, cz: ISLAND.cz, heightFn: grid.at, colorFn: islandColor, splatFn: islandSplat, edgeFn: islandEdge, textures: { ...TX, rock: TX.cliff } });   // (LAWN-EDGES: edgeFn)
   tintGrid = null;
   scene.add(terrain.mesh);
   const physics = new Physics(terrain);
@@ -1321,6 +1375,9 @@ export function* buildWorldSteps(parentScene) {
   // (FLAT-TOWN-2: none in the lawns' masonry, by their size: a tree's trunk and a bush's crown keep off it)
   for (const t of trees) if (!t.gone && lawnClear(t.x, t.z, 0.6 + 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && lawnClear(b.x, b.z, 0.3 + 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  // (LAWN-EDGES: none on the plots' earth band: the bushes stand in the lawn inside it, as LBA2's plants in its blocks)
+  W.lawnEdges = { bushes: 0 };
+  for (const b of bushes) if (!b.gone && onTownBand(b.x, b.z, H(b.x, b.z), 0.3 * b.s)) { b.s = 1e-4; b.gone = true; W.lawnEdges.bushes++; }
   { const L = LAWN.box, beds = PROPS.tulips.filter(([x0, x1, z]) => x0 > L[0] && x1 < L[2] && z > L[1] && z < L[3]);   // (and off its tulip beds, island.js fits them after)
     for (const b of bushes) if (!b.gone && beds.some(([x0, x1, z]) => boxDist(b.x, b.z, x0 - 0.5, z - 0.7, x1 + 0.5, z + 0.7) < 0.6 * b.s + 0.6)) { b.s = 1e-4; b.gone = true; } }
   // (WORLD-FIX / R6: the way out of every house door stays open — no tree or bush in a 4 m lane straight out of it for
@@ -1453,7 +1510,7 @@ export function* buildWorldSteps(parentScene) {
   for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
   for (const t of [...grass, ...flowers]) if (!t.gone && blockDist(t.x, t.z) < 0) { t.s = 1e-4; t.gone = true; }   // (TREES-1: none in a floor; at a wall's foot they stay)
   for (const t of [...grass, ...flowers]) if (!t.gone && climbClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (CLIMB-1)
-  for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || flatClear(t.x, t.z, 0.3) || lawnClear(t.x, t.z, 0.3) || townBlockEarth(t.x, t.z) > 0.3 || fenceDist(t.x, t.z) < 0.35)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving or the block's earth)
+  for (const t of [...grass, ...flowers]) if (!t.gone && (gridPaveDist(t.x, t.z) < 0.5 || flatClear(t.x, t.z, 0.3) || lawnClear(t.x, t.z, 0.3) || onTownBand(t.x, t.z, H(t.x, t.z), 0.15) || townPaveDist(t.x, t.z, H(t.x, t.z)) < 0.3 || fenceDist(t.x, t.z) < 0.35)) { t.s = 1e-4; t.gone = true; }   // (MAP-ORIG: none on the new paving; LAWN-EDGES: nor on the plots' earth band)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   // (OVERLAP-SWEEP: none where the ground is drawn as paving — the terrain's own cobble weight at the tuft's foot, the
   //  nearest vertex of the grid as drawn; 289 tufts and flowers stood on painted cobbles. Filtered after the scatter)
@@ -1746,5 +1803,76 @@ export function* buildWorldSteps(parentScene) {
   shuttleTraffic(W.root, W.updaters, { cx: -40, cz: 10, y: 46, r: 120, n: 2, speed: 0.03 });
   // a poodle (LBA2's, src/game/dogs.js) noses about the square by the well
   W.dogs = addDogs([new Dog({ parent: W.root, physics, coat: 'poodle', x: POI.village.x + 4, z: POI.village.z - 3, area: { x0: POI.village.x + 1.5, z0: POI.village.z - 6.5, x1: POI.village.x + 7, z1: POI.village.z - 1 } })], W.updaters);
+  W.gridKerbs = () => gridKerbs(W);
   return W;
+}
+
+// LAWN-EDGES: the kerb stones along every straight edge of the grid's paving (GRID_RECTS but the promenade, the harbour's
+// two yards) where a plot lies beyond it (townBandW), the town's stones (town.js curbs: 0.2 × 0.16 m, 0.12 m off the
+// paving's edge); called once the town's dressing stands (citydress.js), so they keep off everything on the ground:
+// a collider over the ground (a house, a wall, the lawns' masonry, a bench, a lamp, a bush), the sewer's hatches, a
+// change of level, paving beyond the kerb (it divides nothing: C66), a kerb already laid (the streets', an earlier
+// line's: at a corner the first line runs on to the other street's paving, the second stops against it). Each valid run
+// is filled with stones stretched to fit it. Returns [x, y, z, ang, len] for town.js kerbMesh.
+function gridKerbs(W) {
+  const { physics: P, H } = W, out = [], CELL = 0.5, laid = new Map();
+  const key = (x, z) => Math.floor(x / CELL) * 100003 + Math.floor(z / CELL);
+  const lay = (x, z) => { const k = key(x, z); let l = laid.get(k); if (!l) laid.set(k, l = []); l.push(x, z); };
+  const near = (x, z, r) => { for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const l = laid.get(key(x + i * CELL, z + j * CELL)); if (l) for (let q = 0; q < l.length; q += 2) if (Math.hypot(l[q] - x, l[q + 1] - z) < r) return true; } return false; };
+  for (const [x, , z, a] of W.kerbStones || []) for (let s = -0.28; s <= 0.28; s += 0.07) lay(x + Math.sin(a) * s, z + Math.cos(a) * s);
+  const hatch = (x, z) => Object.values(HATCHES).some((h) => { const r = h.S + (h.rails ? 0.7 : 0.3) + 0.2; return Math.abs(x - h.x) < r && Math.abs(z - h.z) < r; });
+  const ok = (x, z, nx, nz) => {
+    const h = H(x, z), parts = townPaveParts(x, z, h);
+    if (Math.min(parts[0], parts[1]) < 0.015) return false;   // (on paving: another street's)
+    const qx = x + nx * 0.5, qz = z + nz * 0.5, hq = H(qx, qz);
+    if (!(townBandW(qx, qz, hq) > 0) || Math.abs(hq - h) > 0.12) return false;   // (a plot beyond it, at its level)
+    if (townPaveDist(x + nx * 0.35, z + nz * 0.35, h) < 0) return false;
+    if (Math.abs(H(x - nx * 0.3, z - nz * 0.3) - h) > 0.06) return false;   // (the paving level with it)
+    if (flatClear(x, z, 0.1) || lawnClear(x, z, 0.1) || hatch(x, z) || near(x, z, 0.11)) return false;
+    for (const c of P.near(x, z)) if (c.enabled && c.top > h + 0.04 && P._inside(c, x, z, 0.1)) return false;
+    return true;
+  };
+  // a kerb's line: from (ax, az) along (ux, uz) for L m, the plot on the side (nx, nz)
+  const line = (ax, az, ux, uz, L, nx, nz) => {
+    const st = 0.05, n = Math.floor(L / st);
+    let s0 = -1;
+    const run = (a, b) => {   // samples a..b valid
+      const len = (b - a) * st; if (len < 0.3) return;
+      const k = Math.max(1, Math.round(len / 0.55)), sl = len / k;
+      for (let i = 0; i < k; i++) {
+        const t = a * st + (i + 0.5) * sl, x = ax + ux * t, z = az + uz * t;
+        out.push([x, H(x, z), z, Math.atan2(ux, uz), sl - 0.01]);
+      }
+      for (let i = a; i <= b; i++) lay(ax + ux * i * st, az + uz * i * st);
+    };
+    for (let i = 0; i <= n; i++) {
+      const good = ok(ax + ux * i * st, az + uz * i * st, nx, nz);
+      if (good && s0 < 0) s0 = i;
+      if (!good && s0 >= 0) { run(s0, i - 1); s0 = -1; }
+    }
+    if (s0 >= 0) run(s0, n);
+  };
+  const o = 0.12, e = 0.22;   // (the stone's centre off the paving; its outer face)
+  for (const R of GRID_RECTS) {
+    if (R.prom) continue;
+    const px = -R.uz, pz = R.ux;   // (across the street)
+    const t0 = R.ea === 'square' ? -R.hw - e : 0, t1 = R.len + (R.eb === 'square' ? R.hw + e : 0);
+    for (const sd of [-1, 1]) {
+      const ax = R.x0 + R.ux * t0 + px * sd * (R.hw + o), az = R.z0 + R.uz * t0 + pz * sd * (R.hw + o);
+      line(ax, az, R.ux, R.uz, t1 - t0, px * sd, pz * sd);
+    }
+    // a free end: its kerb across the street
+    for (const [end, t, sg] of [[R.ea, 0, -1], [R.eb, R.len, 1]]) {
+      if (end !== 'square') continue;
+      const cx = R.x0 + R.ux * (t + sg * (R.hw + o)), cz = R.z0 + R.uz * (t + sg * (R.hw + o)), w = R.hw + e;
+      line(cx - px * w, cz - pz * w, px, pz, 2 * w, R.ux * sg, R.uz * sg);
+    }
+  }
+  for (const B of [HARBOUR_YARD, HARBOUR_SE]) {
+    const W2 = B.x1 - B.x0 + 2 * e, D2 = B.z1 - B.z0 + 2 * e;
+    line(B.x0 - e, B.z0 - o, 1, 0, W2, 0, -1); line(B.x0 - e, B.z1 + o, 1, 0, W2, 0, 1);
+    line(B.x0 - o, B.z0 - e, 0, 1, D2, -1, 0); line(B.x1 + o, B.z0 - e, 0, 1, D2, 1, 0);
+  }
+  W.lawnEdges = { ...(W.lawnEdges || {}), kerbs: out.length, streetKerbs: (W.kerbStones || []).length };
+  return out;
 }
