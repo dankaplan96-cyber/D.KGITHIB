@@ -40,7 +40,9 @@ await ev(() => {
     read() {
       const G = game; G.step(0.3);
       const it = G.findInteractable(), p = document.querySelector('#prompt'), tk = document.querySelector('#tip.show .tkeys');
-      return { it: IP.who(it), prompt: p.classList.contains('show') ? p.textContent.trim() : '', keys: tk?.textContent || '', tip: document.querySelector('#tip.show')?.textContent || '', on: IP.who(G.promptFor) };
+      // (base: what the ranking without the goal's rule gave, the "before")
+      const C = G._pick, base = C && (C.n >= 2 || (C.n === 1 && !C.base)) ? C.base : it;
+      return { it: IP.who(it), base: IP.who(base), prompt: p.classList.contains('show') ? p.textContent.trim() : '', keys: tk?.textContent || '', tip: document.querySelector('#tip.show')?.textContent || '', on: IP.who(G.promptFor) };
     },
     ring(T, rs, n = 12, off = 0) {
       const out = [];
@@ -66,7 +68,7 @@ let r = await ev(() => {
   return { step: G.story.cur.steps.panelStep(), zoe: [+z.pos.x.toFixed(2), +z.pos.z.toFixed(2)], tap: [+Y.x.toFixed(2), +Y.z.toFixed(2)], ring: IP.ring(T, [0.9, 1.3]), ring40: [...IP.ring(T, [1.2], 12, 0.6), ...IP.ring(T, [1.2], 12, -0.6)] };
 });
 const tapIn = r.ring.filter((o) => o.it !== '-');
-check('A1 the tap\'s step: round the tap (0.9 and 1.3 m, 12 directions), facing it, the tap answers at every spot (Zoé 1.6 m away took it from the side by her)', r.step === 'tap' && tapIn.length === 24 && tapIn.every((o) => o.it === 'h_yard'), { step: r.step, zoe: r.zoe, tap: r.tap, not: r.ring.filter((o) => o.it !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.it}`) });
+check('A1 the tap\'s step: round the tap (0.9 and 1.3 m, 12 directions), facing it, the tap answers at every spot (Zoé 1.6 m away took it from the side by her)', r.step === 'tap' && tapIn.length === 24 && tapIn.every((o) => o.it === 'h_yard'), { step: r.step, zoe: r.zoe, tap: r.tap, not: r.ring.filter((o) => o.it !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.it}`), before: [...r.ring, ...r.ring40].filter((o) => o.it === 'h_yard' && o.base !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.base}`) });
 check('A2 …turned 34° off the tap, still the tap where it is in reach (roughly faced)', r.ring40.filter((o) => o.it !== '-' && o.it !== 'h_yard').length === 0, r.ring40.filter((o) => o.it !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.it}`));
 const badA = agree([...r.ring, ...r.ring40], 'h_yard');
 check('A3 the panel\'s key line ("W Try the tap") only where the prompt offers the tap (no "Try" beside a "Talk")', badA.length === 0 && r.ring.some((o) => /Try the tap/.test(o.keys)), badA.slice(0, 6));
@@ -93,7 +95,7 @@ check('A5 2 m from the tap (out of its reach), facing it, Zoé in reach: the pan
 // Zoé's step: round her (0.6, 1.0, 1.6 m), facing her: Talk; the panel agrees
 r = await ev(() => { const G = game, z = G.story.chapters[0].npc('zoe'); G.flags.pr_kettle = false; G.step(0.1); return { step: G.story.cur.steps.panelStep(), ring: IP.ring({ x: z.pos.x, z: z.pos.z }, [0.7, 1.2, 1.8]) }; });
 const zoeIn = r.ring.filter((o) => o.it !== '-');
-check('A6 Zoé\'s step: round her (0.7–1.8 m, 12 directions), facing her, she answers wherever anything does (the tap beside her no longer first)', r.step === 'zoe' && zoeIn.length >= 30 && zoeIn.every((o) => o.it === 'npc:zoe'), { step: r.step, n: zoeIn.length, not: zoeIn.filter((o) => o.it !== 'npc:zoe').map((o) => `${o.r}/${o.deg}:${o.it}`) });
+check('A6 Zoé\'s step: round her (0.7–1.8 m, 12 directions), facing her, she answers wherever anything does (the tap beside her no longer first)', r.step === 'zoe' && zoeIn.length >= 30 && zoeIn.every((o) => o.it === 'npc:zoe'), { step: r.step, n: zoeIn.length, not: zoeIn.filter((o) => o.it !== 'npc:zoe').map((o) => `${o.r}/${o.deg}:${o.it}`), before: zoeIn.filter((o) => o.base !== 'npc:zoe').map((o) => `${o.r}/${o.deg}:${o.base}`) });
 const badZ = agree(r.ring, 'npc:zoe');
 check('A7 …the panel\'s "W Talk" only where the prompt is up for her (the desktop\'s note 2: "W Talk" at her back with no prompt and the key doing nothing)', badZ.length === 0 && r.ring.some((o) => /Talk/.test(o.keys)), badZ.slice(0, 6));
 // and by keys: from behind her, walked into her back, the key talks
@@ -114,7 +116,7 @@ r = await ev(() => {
   return { mira: [+m.pos.x.toFixed(1), +m.pos.z.toFixed(1)], gilbert: [+gi.pos.x.toFixed(1), +gi.pos.z.toFixed(1)], ring: [...IP.ring(T, [1.6, 2.2], 16), ...IP.ring(T, [1.9], 16, 0.7), ...IP.ring(T, [1.9], 16, -0.7)] };
 });
 const wellIn = r.ring.filter((o) => o.it !== '-');
-check('B1 the lid to open: round the well (1.6–2.2 m, 16 directions, facing it or 40° off), the well answers (Inspect) before Mira and Gilbert beside it', wellIn.length >= 40 && wellIn.every((o) => o.it === 'well'), { mira: r.mira, gilbert: r.gilbert, n: wellIn.length, not: wellIn.filter((o) => o.it !== 'well').map((o) => `${o.r}/${o.deg}:${o.it}`) });
+check('B1 the lid to open: round the well (1.6–2.2 m, 16 directions, facing it or 40° off), the well answers (Inspect) before Mira and Gilbert beside it', wellIn.length >= 40 && wellIn.every((o) => o.it === 'well'), { mira: r.mira, gilbert: r.gilbert, n: wellIn.length, not: wellIn.filter((o) => o.it !== 'well').map((o) => `${o.r}/${o.deg}:${o.it}`), before: wellIn.filter((o) => o.base !== 'well').map((o) => `${o.r}/${o.deg}:${o.base}`) });
 r = await ev(() => {
   const G = game, W = G.world.well, m = P.npc('mira');
   const ux = m.pos.x - W.x, uz = m.pos.z - W.z, L = Math.hypot(ux, uz);
@@ -159,7 +161,7 @@ r = await ev(() => {
   return { stars, ring: IP.ring({ x: W.x, z: W.z }, [1.6, 2.2], 16) };
 });
 const downIn = r.ring.filter((o) => o.it !== '-');
-check('B5 back out of the cave (its crystals still dark): a star on the well again, and round it, facing it, the well ("Inspect": down again) answers before Gilbert (the desktop\'s note 4)', r.stars.some(([x, z]) => Math.hypot(x + 42, z + 4) < 1.5) && downIn.length >= 24 && downIn.every((o) => o.it === 'well'), { stars: r.stars, not: downIn.filter((o) => o.it !== 'well').map((o) => `${o.r}/${o.deg}:${o.it}`) });
+check('B5 back out of the cave (its crystals still dark): a star on the well again, and round it, facing it, the well ("Inspect": down again) answers before Gilbert (the desktop\'s note 4)', r.stars.some(([x, z]) => Math.hypot(x + 42, z + 4) < 1.5) && downIn.length >= 24 && downIn.every((o) => o.it === 'well'), { stars: r.stars, not: downIn.filter((o) => o.it !== 'well').map((o) => `${o.r}/${o.deg}:${o.it}`), before: downIn.filter((o) => o.base !== 'well').map((o) => `${o.r}/${o.deg}:${o.base}`) });
 await ev(() => { Object.assign(game.flags, { inWell: false, rope: false, pr_lidOpen: false, pr_lidStuck: true }); game.story.chapters[0].setLid?.('stuck'); game.step(0.1); });
 
 // ---------------------------------------------------------------- C. Xil from the pier's approach
