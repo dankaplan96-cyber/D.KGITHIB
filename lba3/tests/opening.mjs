@@ -39,11 +39,11 @@ const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 const errs = watchPage(page);
 const ev = (f, a) => page.evaluate(f, a);
 const { check, done } = checker({ info: 'always' });
-const CUT = process.env.OPENING === 'notebook' ? 'notebook' : 'classic';
+const CUT = process.env.OPENING === 'classic' ? 'classic' : 'notebook';   // (the user's pick 23.11: the notebook cut is the default; OPENING=classic the old film)
 
 const boot = async (mode, clear = true) => {
-  // (OPENING=notebook: the notebook cut, LBA3-RUN, ?opening=notebook; the classic film is the default)
-  await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + (CUT === 'notebook' ? '?opening=notebook' : ''), { waitUntil: 'load', timeout: 180000 });
+  // (OPENING=classic: the old film, ?opening=classic; the notebook cut is the default)
+  await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + (CUT === 'classic' ? '?opening=classic' : ''), { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: +(process.env.BOOT_MS || 240000) });
   if (clear) await ev(() => localStorage.clear());
   await ev(() => { game.testFreeze = true; });

@@ -31,8 +31,8 @@ import { t } from '../i18n.js';
 import '../text/opening.js';
 import { SHIFT, pierW, pierAng } from '../island.js';
 
-// LBA3-RUN: two cuts of the film. `classic` (the default, the film as it was, 88 s) and `notebook` (for the user to choose,
-// ?opening=notebook or localStorage lba3_opening = 'notebook'): it opens on Twinsen's sketchbook, 0–NB_END s of the
+// LBA3-RUN: two cuts of the film. `notebook` (the default by the user's pick, 23.11) and `classic` (the film as it was, 88 s:
+// ?opening=classic or localStorage lba3_opening = 'classic'). The notebook opens on Twinsen's sketchbook, 0–NB_END s of the
 // scene's clock: the history in four captions over its pages (LBA1: FunFrock's clones and teleporters, Twinsen stands up to
 // him; LBA2: the storm and the Dino-Fly, the stolen children brought home from Zeelich), his face over the book twelve years
 // on (where and when), and the island's drawing turning into the real island: the aerial picks up at its old 8 s, with the
@@ -40,7 +40,8 @@ import { SHIFT, pierW, pierAng } from '../island.js';
 // Everything after the notebook is written below on the classic film's own clock ("old" seconds); newOf / oldOf convert
 // (in the classic cut they change nothing).
 export const openingCut = () => {
-  try { return (new URLSearchParams(location.search).get('opening') || localStorage.getItem('lba3_opening')) === 'notebook' ? 'notebook' : 'classic'; } catch { return 'classic'; }
+  // (the user's pick, 23.11: the notebook cut is the opening; ?opening=classic or lba3_opening = 'classic' plays the old film)
+  try { return (new URLSearchParams(location.search).get('opening') || localStorage.getItem('lba3_opening')) === 'classic' ? 'classic' : 'notebook'; } catch { return 'notebook'; }
 };
 export function cutClock(cut) {
   if (cut !== 'notebook') {
@@ -1198,7 +1199,7 @@ export function playOpening(story, cut = openingCut()) {
   // (LBA3-RUN: the history over the notebook's pages, a line at a time (about 15 characters a second, a short gap between
   //  them so each one reads as new); then where and when over his face, twelve years on)
   const caps = NBCUT ? [
-    { t: 0.5, d: 3.2, text: t('op_nb_1'), cls: 'recap' }, { t: 3.9, d: 3.1, text: t('op_nb_2'), cls: 'recap' },
+    { t: 0.5, d: 3.2, text: t('op_nb_1'), cls: 'recap' }, { t: 3.9, d: 3.9, text: t('op_nb_2'), sub: t('op_cap_lore_sub'), cls: 'recap' },   // (the user's pick 23.11: "FunFrock is dead…" under it)
     { t: 7.95, d: 2.6, text: t('op_nb_3'), cls: 'recap' }, { t: 10.75, d: 2.65, text: t('op_nb_4'), cls: 'recap' },
     { t: 13.65, d: 3.2, text: t('op_cap_place'), sub: t('op_cap_time') },
   ] : [{ t: 1.6, d: 5.0, text: t('op_cap_place'), sub: t('op_cap_time') }, { t: 7.0, d: 6.8, text: t('op_cap_lore'), sub: t('op_cap_lore_sub') }];
