@@ -372,7 +372,7 @@ for (const [gid, grp] of Object.entries(GROUPS)) {
         const t = await page.evaluate((ts) => { const G = game; for (let k = 0; k < 6000 && !SM.route.done && SM.route.t < ts; k++) G.frame(1 / 60, false); if (!SM.route.done) G.frame(1 / 60, true); return SM.route.done ? -1 : SM.route.t; }, ts);
         if (t < 0) break;
         const f = path.join(SHOTS, `${(LABEL || 'run').replace(/[^\w.-]+/g, '_')}-${name}-${ts}s.png`);
-        await page.screenshot({ path: f });
+        await page.screenshot({ path: f, timeout: 300000 });   // (SwiftShader: a 1366×768 frame can take tens of seconds)
         console.log(`  shot ${f} (game ${t.toFixed(2)} s)`);
       }
       await page.evaluate(() => { SM.route.done = true; SM.release(); SM.on = false; game.testFreeze = false; });
@@ -408,18 +408,24 @@ for (const [gid, grp] of Object.entries(GROUPS)) {
     // solved afresh (no answer kept from the last look) 200 times, the arms put back before each; best of 5 (ms in all)
     const S = await page.evaluate(() => {
       const rigs = [...window.PF.rigs].filter((r) => r._ac && r.j?.armL?.sh), ac0 = window.PF.ac0;
-      const keep = rigs.map((r) => { const D = r._ac, a = r.j.armL.sh.rotation, b = r.j.armR.sh.rotation; return [a.x, a.z, b.x, b.z, D.L.slice(), D.R.slice(), D.wx.slice(), D.n, JSON.stringify(D.k), JSON.stringify(D.t)]; });
-      const put = (r, k) => { const D = r._ac, a = r.j.armL.sh.rotation, b = r.j.armR.sh.rotation; a.x = k[0]; a.z = k[1]; b.x = k[2]; b.z = k[3]; D.L = k[4].slice(); D.R = k[5].slice(); D.wx = k[6].slice(); D.n = k[7]; D.k = JSON.parse(k[8]); D.t = JSON.parse(k[9]); D.k.L[0] = D.k.R[0] = 0; D.t.L[2] = D.t.R[2] = 0; };
-      let best = Infinity;
-      for (let round = 0; round < 5; round++) {
-        let ms = 0;
-        for (let i = 0; i < rigs.length; i++) for (let q = 0; q < 200; q++) { put(rigs[i], keep[i]); const t = performance.now(); ac0.call(rigs[i], 1 / 60, rigs[i].anim || 'idle'); ms += performance.now() - t; }
-        best = Math.min(best, ms);
-      }
+      const keep = rigs.map((r) => { const D = r._ac, a = r.j.armL.sh.rotation, b = r.j.armR.sh.rotation; return [a.x, a.z, b.x, b.z, D.L.slice(), D.R.slice(), D.wx.slice(), D.n, { L: D.k.L.slice(), R: D.k.R.slice() }, { L: D.t.L.slice(), R: D.t.R.slice() }]; });
+      const put = (r, k) => { const D = r._ac, a = r.j.armL.sh.rotation, b = r.j.armR.sh.rotation; a.x = k[0]; a.z = k[1]; b.x = k[2]; b.z = k[3]; D.L = k[4].slice(); D.R = k[5].slice(); D.wx = k[6].slice(); D.n = k[7]; D.k = { L: k[8].L.slice(), R: k[8].R.slice() }; D.t = { L: k[9].L.slice(), R: k[9].R.slice() }; D.k.L[0] = D.k.R[0] = 0; D.t.L[2] = D.t.R[2] = 0; };
+      // (and the look as the route's frames make it: the last answer kept — one test while it still clears)
+      const put2 = (r, k) => { put(r, k); const D = r._ac; D.k.L[0] = k[8].L[0]; D.k.R[0] = k[8].R[0]; D.t.L[2] = k[9].L[2]; D.t.R[2] = k[9].R[2]; D.n = 2; };
+      const bench = (P) => {
+        let best = Infinity;
+        for (let round = 0; round < 5; round++) {
+          let ms = 0;
+          for (let i = 0; i < rigs.length; i++) { const t = performance.now(); for (let q = 0; q < 200; q++) { P(rigs[i], keep[i]); ac0.call(rigs[i], 1 / 60, rigs[i].anim || 'idle'); } ms += performance.now() - t; }
+          best = Math.min(best, ms);
+        }
+        return Math.round(best * 10) / 10;
+      };
+      const ms = bench(put), kept = bench(put2);
       rigs.forEach((r, i) => put(r, keep[i]));
-      return { rigs: rigs.length, ms: Math.round(best * 10) / 10 };
+      return { rigs: rigs.length, ms, kept };
     });
-    console.log(`  [${gid}] ARM-CLEAR look, ${S.rigs} rigs × 200 forced solves: ${S.ms} ms (best of 5)`);
+    console.log(`  [${gid}] ARM-CLEAR look, ${S.rigs} rigs × 200: forced solves ${S.ms} ms · as in the route (last answer kept) ${S.kept} ms (best of 5, with the arms put back each time)`);
     const sum = (k) => Math.round(A.reduce((s, x) => s + x[k], 0) * 10) / 10, mx = (k) => Math.max(0, ...A.map((x) => x[k]));
     console.log(`  [${gid}] ARM-CLEAR set-up, ${A.length} characters (${A.filter((x) => !x.shared).length} looks): profile+points ms sum ${sum('full')} max ${mx('full')} · points only (profile cached) sum ${sum('cached')} max ${mx('cached')}`);
     if (OUT) fs.writeFileSync(path.join(OUT, `armclear-setup-${gid}.json`), JSON.stringify(A));
