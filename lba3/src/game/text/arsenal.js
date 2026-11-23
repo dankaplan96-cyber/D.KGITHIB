@@ -27,7 +27,7 @@ Object.assign(STR.en, {
   a_toast_got: 'New: {n}', a_toast_darts: '+{n} darts', a_toast_kashes: '+{n} kashes',
 
   // ---- stalls
-  a_shop_zeelich: "Nara's stall",
+  a_shop_zeelich: "Nara's Stall",   // (C66: title case, as "Pippa's Stall" and the other shops' titles)
   a_sh_blowgun: 'Blowgun, with six darts', a_sh_darts: 'Three darts', a_sh_penguin: 'Nitro-Meca-Penguin', a_sh_lantern: 'Brass lantern',
   a_sh_laser: 'Esmer laser pistol, with a crystal cell', a_sh_cell: 'Crystal cell: five laser shots', a_sh_blowtron: 'Blowtron (Mosquibee work)',
   p_trade: 'Trade', p_take: 'Take', p_look2: 'Look',

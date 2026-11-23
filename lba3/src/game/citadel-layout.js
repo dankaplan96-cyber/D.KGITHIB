@@ -190,3 +190,19 @@ export function lawnClear(x, z, pad = 0) {
 //  for an older save's spot only: world.js shoreSpot)
 export const V143_EAST = { x0: -29.0, x1: -18.75, z0: GZ(95) - 0.05, z1: GZ(203) + 0.05 };
 const GS = 260 / 280;
+
+// ---- C66 (ORDER 66.2/66.4, the desktop on the real GPU, 22.11): the promenade's edge and the water main's meter ----
+// PIPE_METER: the main's meter cabinet (island.js buildMeter) as it stands: 0.8 m east of its first place (x −72.0), its
+// west face (the brass coping's edge) on the walk's inland edge (x −72.3): the main's last trestle on the walk steers a
+// walker south along x −72.95, straight into the cabinet's north face where it stood 0.7 m into the walk. Its footprint
+// in world metres from (x, z): west/east (the coping; the dial, lamp and sight tube on its east face), half along z.
+// (island.js keepClear still clears round the first place: the scatter's draws are made against it)
+export const PIPE_METER = { x: -71.2, z: -17.0, ry: Math.PI / 2, west: 1.1, east: 1.21, half: 1.2 };
+// PROM_EDGE: the rail and the lanterns are the walk's edge. Between the rails (where the lantern pairs stand) and past
+// their ends the sea wall's coping outside them (x −76.05 to −74.82) was walkable to the water's edge: island.js
+// promEdge closes the gaps along the rails' own line with see-through colliders, from up the shelf's face past the walk's
+// north end (zN: the slope west of the walk's north end led down to the coping, and into the sea) to the bollards' run
+// at its south end (z1, and a piece across the coping there). `out`: a
+// spot west of this, on the coping or that slope between those ends, is outside the rail (world.js promSpot: an older
+// save's spot there loads on the walk, at `back`, z0 or south)
+export const PROM_EDGE = { zN: -31.6, z0: PROM.z0 - 0.05, z1: 18.7, out: -74.82, back: -73.5 };

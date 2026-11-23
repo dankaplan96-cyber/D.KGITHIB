@@ -25,7 +25,7 @@ import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
 import { ASYLUM_DOOR, climbPaveDist, climbClear, climbDropRock, climbShelfRows, climbRampFill, CLIMB_RAMP, CLIMB_JOG, CLIMB_STRAIGHT, CLIMB_FOOT, CLIMB_FOOT_Y } from './lba1places.js';
 import { BRIDGE } from './spaceport.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear, LAWN, lawnClear, V143_EAST } from './citadel-layout.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_STAIR, PROM_WALLS, PLAZA, flatClear, LAWN, lawnClear, V143_EAST, PROM_EDGE, PIPE_METER } from './citadel-layout.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -478,7 +478,13 @@ const FLAT_BOXES = [
   ...HOUSE_FLATS.map((f) => { const R = f.hw + f.hd + f.flat + f.ease; return [f.x - R, f.z - R, f.x + R, f.z + R]; }),
 ];
 function promenade(x, z, h) {
-  if (FLAT_OFF || PRE80 || x < PROM.xo - 1.4 || x > PROM.x1 + 1.6 || z < PROM.z0 - 2.3 || z > PROM.z1 + 2.3) return h;
+  if (FLAT_OFF || PRE80) return h;
+  // (C66, ORDER 66.2: before the inland wall the town's level three grid columns out from its face: the guard below stopped
+  //  the rule a column short of the "two rows out" it meant, and one point of the old ridge kept by flatTown's 2.8 m rule
+  //  stood as a spike, 2.2 m over the street at (−70.43, 4.86) beside the wall's foot; north of z 0.08 the flight's)
+  const IW = PROM_WALLS[2];
+  if (z > IW.z0 && z < IW.z1 && z > PROM_STAIR.zS + 2.6 && x > PROM.x1 + 1.6 && x < PROM.xi + 3.4) return TOWN_FLAT;
+  if (x < PROM.xo - 1.4 || x > PROM.x1 + 1.6 || z < PROM.z0 - 2.3 || z > PROM.z1 + 2.3) return h;
   const ez = Math.max(PROM.z0 - z, z - PROM.z1, 0);
   // (the foot row and the row out from it: where it is water, under the water's floor — the shallow ledges the old
   //  cliff stood on are cut off from the land by the wall, and the trap filler would build them up into a bank before
@@ -488,7 +494,6 @@ function promenade(x, z, h) {
   const de = Math.hypot(Math.max(x - PROM.x1, 0), ez);
   if (de <= 0) return PROM_H;
   if (z > PROM_STAIR.zN - 2.0 && z < PROM_STAIR.zS + 2.6) return h;   // (the flight and the low ground south of it: promStair's)
-  const IW = PROM_WALLS[2];
   if (z > IW.z0 && z < IW.z1 && x < PROM.xi + 1.2) return TOWN_FLAT;   // (before the inland wall: the town's level, two rows out)
   return lerp(h, PROM_H, (1 - smoothstep(0, 1.5, de)) * smoothstep(1.5, 1.0, Math.abs(h - PROM_H)));
 }
@@ -570,6 +575,18 @@ export function shoreSpot(at, physics) {
   const ok = (x) => g(x, at.z) > TOWN_FLAT - 0.35 && g(x + 0.6, at.z) > lo && g(x - 0.6, at.z) > lo && g(x, at.z + 0.6) > lo && g(x, at.z - 0.6) > lo;
   if (ok(at.x)) return at;
   for (let x = at.x - 0.25; x > E.x0 - 6; x -= 0.25) if (ok(x)) return { ...at, x: x - 0.4 };
+  return at;
+}
+// C66 (ORDER 66.2): an older save's spot that C66's colliders now shut out: on the sea wall's coping outside the
+// promenade's rail or the slope west of the walk's north end (PROM_EDGE: island.js promEdge closed the gaps there) loads
+// on the walk inside it; in or against the water main's meter cabinet where it stands now (PIPE_METER, 0.8 m east of
+// where it stood) on the walk west of it (the loader grounds him and unwedge clears any post: main.js applySave); any
+// other spot as it is
+export function promSpot(at) {
+  if (!at) return at;
+  const E = PROM_EDGE, M = PIPE_METER, r = 0.4;
+  if (at.z > E.zN && at.z < E.z1 && at.x > PROM.xo - 1.2 && at.x < E.out) return { ...at, x: E.back, z: Math.max(at.z, E.z0 + 0.5) };
+  if (at.x > M.x - M.west - r && at.x < M.x + M.east + r && Math.abs(at.z - M.z) < M.half + r) return { ...at, x: M.x - M.west - r - 0.05 };
   return at;
 }
 function waterKnoll(x, z, h) {
@@ -1010,6 +1027,7 @@ export function* buildWorldSteps(parentScene) {
 
   yield 'terrain';
   // ---------- Lupin-Burg: houses, square, streets, props (see town.js) ----------
+  W.gridPaveDist = gridPaveDist;   // (C66: the town's kerbs keep off where the grid's paving lies on both sides, town.js curbs)
   { const n0 = scene.children.length; buildTown(scene, W); tagSrc(scene, n0, 'town'); }
   yield 'town';
   // the statue of Twinsen and Zoé (STATUE; src/game/statue.js): the original's stands in the middle of the square,
@@ -1523,7 +1541,7 @@ export function* buildWorldSteps(parentScene) {
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
   W.signs = [];
   W.pathDist = pathDist;
-  W.shoreSpot = (at) => shoreSpot(at, physics);   // (an older save's spot on FLAT-TOWN-2's reverted east shore wall, main.js applySave)
+  W.shoreSpot = (at) => shoreSpot(promSpot(at), physics);   // (an older save's spot on FLAT-TOWN-2's reverted east shore wall, main.js applySave; C66: outside the promenade's rail or in the meter cabinet)
   { const n0 = scene.children.length; buildIsland(scene, W); tagSrc(scene, n0, 'island'); }
   { const n0 = scene.children.length; buildHarbourZeelich(scene, physics, H); tagSrc(scene, n0, 'harbourzeelich'); }   // (WA-15)
 

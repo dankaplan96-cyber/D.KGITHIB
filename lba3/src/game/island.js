@@ -22,7 +22,7 @@ import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
 import { HATCHES } from './sewers.js';
-import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA, LAWN } from './citadel-layout.js';
+import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA, LAWN, PIPE_METER, PROM_EDGE } from './citadel-layout.js';
 
 // ================================================================== layout
 // Everything that the vegetation scatter must keep clear of (world.js asks
@@ -91,7 +91,7 @@ export const PIPE = [
   [-79.0, -62.4], [-79.6, -58.0], [-80.4, -53.9], [-76.5, -48.0], [-74.2, -38.0], [-73.4, -28.0], [-72.6, -21.0], [-72.4, -18.6],
 ];
 const SHELTER_CLEAR = [[-93.3, -73.2, 3.6], [-88.2, -72.8, 3.6], [-50, -71, 3.6], [-49.0, -67.6, 3.6]];
-const METER = { x: -72.0, z: -17.0, ry: Math.PI / 2 };
+const METER = { x: -72.0, z: -17.0, ry: Math.PI / 2 };   // (its first place: keepClear's, the scatter's view; it stands at PIPE_METER: C66)
 // to the reservoir under the Whispering Cliffs (the rock stack on the plateau's rim)
 export const BRANCH = [[-33.0, -50.0], [-35.5, -44.5], [-43.5, -37.0], [-51.0, -32.5], [-55.2, -31.9]];
 const CLIFF_VALVE = { z: -36.6 };
@@ -2188,7 +2188,11 @@ function buildStation(W0, root, r) {
   //  the leg is closed too (pushing into it, he stood hidden behind the leg 3.2 s when only the nook was filled). Instances:
   //  no draw added. The fourth takes its turn from a stream of its own: the island's shared one, r, goes on unchanged
   //  to the depot, the pipeline and the dressing)
-  { let k = 0; const r4 = () => (k++ < 6 ? r() : 0.31); barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.6, 39.7, false], [38.75, 40.8]], r4); }
+  // (C66, ORDER 66.4: the third stood with its hoops (0.44 m) 14–17 cm into the fort wall's corner (its collider's face,
+  //  x −38.7 in the world): 0.16 m east and 0.55 m north, 2 cm off the wall and clear of the bridge leg's brass foot (the
+  //  gap between the wall and that foot, 0.75 m, is narrower than a barrel). Its collider leaves no way past it between
+  //  the wall and the leg: the strip behind the leg stays closed)
+  { let k = 0; const r4 = () => (k++ < 6 ? r() : 0.31); barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.76, 40.25, false], [38.75, 40.8]], r4); }
   // walkway plates from the gate passage to the pad
   // (WORLD-FIX: every other plate 5 mm higher: where the walk turns, two plates overlap and their tops z-fought)
   for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025 + (i % 2) * 0.005, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
@@ -2514,7 +2518,7 @@ function supportGeo() {
   return cached('psupport', () => ({ pad: boxUV(bbox(0.5, 0.18, 0.5, 0.04, 1), TILE.concrete) }));
 }
 // draw a profile as a pipe: tube, flanges, trestles; returns sampled points
-function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = () => false, from = 0, to = null, cover = () => true, vents = true } = {}) {
+function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = () => false, from = 0, to = null, cover = () => true, vents = true, camFrames = () => false } = {}) {
   const { xs, zs, y, gr, ds } = prof;
   const i1 = to ?? prof.n - 1;
   const pts = [];
@@ -2556,6 +2560,21 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x + nx * 0.95, ga - 0.02, z + nz * 0.95);
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x - nx * 0.95, gb - 0.02, z - nz * 0.95);
     for (const sgn of [-1, 1]) W.physics.add({ type: 'cyl', x: x + sgn * nx * 0.9, z: z + sgn * nz * 0.9, r: 0.24, top: py, seeThrough: true });
+    // (C66, ORDER 66.2: an A-frame where people walk under the main — camFrames, the promenade's walk — as the camera's own
+    //  volumes, as CAM-FIXTOP made the station bridge's: occlude.js camOnly, so LBA2's rule passes through the open frame
+    //  but the Fixed view's last resort does not stand behind a leg or the cap. Each leaning leg as three steps of its
+    //  lean, the cap whole. The tube is the camera's already (pipeVolumes): under it he shows as his outline, by design)
+    if (camFrames(x, z)) {
+      const occ = occOf(W), rot = Math.atan2(-nz, nx);
+      for (const sgn of [-1, 1]) {
+        const g0 = (sgn > 0 ? ga : gb) - 0.1;
+        for (let k = 0; k < 3; k++) {
+          const da = 0.95 - (0.73 * k) / 3, db = 0.95 - (0.73 * (k + 1)) / 3, d = sgn * (da + db) / 2;
+          occ.add({ kind: 'box', camOnly: true, x: x + nx * d, z: z + nz * d, rot, hw: (da - db) / 2 + 0.1, hd: 0.1, y0: g0 + ((py - g0) * k) / 3, y1: g0 + ((py - g0) * (k + 1)) / 3, name: 'water main, a trestle leg' });
+        }
+      }
+      occ.add({ kind: 'box', camOnly: true, x, z, rot, hw: 0.55, hd: 0.1, y0: py - 0.15, y1: py + 0.04, name: 'water main, a trestle cap' });
+    }
   }
   // (the user, 5.11, a photo: "the pipe is hollow": the tube has no ends, and where it dives into the ground or comes up
   //  out of it the ground cut it at a slant and the camera saw into it.) A concrete collar where the line crosses the
@@ -2722,7 +2741,11 @@ function buildMeter(W, root, B, x, z, ry, yIn) {
   const [lx, lz] = f(-0.78, 1.03);
   mesh(root, cached('mlamp', () => new THREE.SphereGeometry(0.12, 12, 8)), lampM, lx, g + 1.2, lz, 0, { cast: false });
   B.add(cyl(0.09, 0.11, 0.12, 12).rotateX(Math.PI / 2), darkSteel(), lx, g + 1.2, lz - 0.0, 0, ry, 0);
-  W.physics.add({ type: 'box', x, z, hw: 1.15, hd: 1.05, rot: ry, top: g + 1.7 });
+  // (C66, ORDER 66.2: the collider is the drawn cabinet's outline — the brass coping, 2.4 × 2.2 m, and on its front
+  //  (local +z) the dial's ring, the lamp and the sight tube's brass rings out to 1.21 m. It was 2.3 × 2.1 round the
+  //  middle: the coping and the front fittings stood 5–16 cm past it)
+  const fz = (1.21 - 1.1) / 2;
+  W.physics.add({ type: 'box', x: x + Math.sin(ry) * fz, z: z + Math.cos(ry) * fz, hw: 1.2, hd: 1.1 + fz, rot: ry, top: g + 1.7 });
   let k = 0, goal = 0, off = 0;
   W.updaters.push((dt) => {
     k += (goal - k) * (1 - Math.exp(-dt * 1.5));
@@ -2757,7 +2780,9 @@ function buildPipeline(W, root, r) {
   // (over the orchard the main runs high: the ball's lob to the caged valve must pass under it)
   const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, bury: [{ a: [-48.5, -62.5], b: [-54.0, -67.4], ramp: 6, depth: 0.85 }], fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 },
     { x: ORCHARD.dx, z: ORCHARD.dz + 1, y: W.H(ORCHARD.x, ORCHARD.z) + 5.6, span: 9 }] });
-  pipeVolumes(W, drawPipe(W, B, prof, { avoid }).pts, 0.3);
+  // (C66: its A-frames on the promenade's walk as the camera's own volumes, CAM-FIXTOP's way for the station's bridge)
+  const onProm = (x, z) => x > PROM.xo - 0.5 && x < PROM.xi + 0.5 && z > PROM.z0 - 2.5 && z < PROM.z1;
+  pipeVolumes(W, drawPipe(W, B, prof, { avoid, camFrames: onProm }).pts, 0.3);
   const valves = [];
   // depot: a bypass loop hanging under the main, valve in the middle
   {
@@ -2815,12 +2840,12 @@ function buildPipeline(W, root, r) {
     W.physics.add({ type: 'cyl', x: O.dx, z: O.dz, r: 0.4, top: vy + 0.6, seeThrough: true });
     cage(W, grp, B, O.x, O.z, O.half, 'E');
   }
-  // the dive into the meter portal at the edge of town
+  // the dive into the meter portal at the edge of town (C66: PIPE_METER, on the promenade's inland edge)
   {
-    const last = prof.n - 1, ex = prof.xs[last], ez = prof.zs[last], ey = prof.y[last];
-    const g = W.H(METER.x, METER.z);
-    pipeRun(B, [[ex, ey, ez], [METER.x, ey, METER.z], [METER.x, g + 1.62, METER.z]], 0.3);
-    W.setWaterFlow = buildMeter(W, grp, B, METER.x, METER.z, METER.ry, ey);
+    const last = prof.n - 1, ex = prof.xs[last], ez = prof.zs[last], ey = prof.y[last], M = PIPE_METER;
+    const g = W.H(M.x, M.z);
+    pipeRun(B, [[ex, ey, ez], [M.x, ey, M.z], [M.x, g + 1.62, M.z]], 0.3);
+    W.setWaterFlow = buildMeter(W, grp, B, M.x, M.z, M.ry, ey);
   }
   // --- the branch to the reservoir on the Whispering Cliffs
   {
@@ -3335,7 +3360,11 @@ function buildOriginalProps(W, root, r) {
       P.add({ type: 'box', x, z, hw: len / 2, hd: 0.12, rot: ry, top: y + 1.0, seeThrough: true, noStand: true });
       n++;
     };
-    for (const [x, z, f, y0] of PROPS.rails) { const ry = f * Q, at = fit(x, z, ry, 6, 0.2, y0); if (at) put(rails, at[0], at[1], ry, 6); }
+    for (const [x, z, f, y0] of PROPS.rails) {
+      const ry = f * Q, at = fit(x, z, ry, 6, 0.2, y0); if (!at) continue;
+      put(rails, at[0], at[1], ry, 6);
+      if (at[0] > PROM.xo && at[0] < PROM.x1 && at[1] > PROM.z0 && at[1] < PROM.z1) (W.promRails ||= []).push({ x: at[0], z: at[1], ry, len: 6 });   // (C66: promEdge)
+    }
     for (const [x, z, f] of PROPS.pickets) { const ry = f * Q, at = fit(x, z, ry, 1.7, 0.15, -9); if (at) put(pickets, at[0], at[1], ry, 1.7); }
     instances(grp, rail, pm('#2a9a8a', 0.4, { metalness: 0.5 }), rails);
     instances(grp, picket, pm('#f2eadc', 0.8), pickets);
@@ -3353,6 +3382,36 @@ function buildOriginalProps(W, root, r) {
   mergeStatic(grp, { recolor: true, retex: true, cell: 24 });   // (all static. PERF-IGPU; retex PERF-2; HEADING-LOAD: the lanterns, bollards, rails and pickets too)
 }
 
+// C66 (ORDER 66.2, the desktop: Twinsen walked the sea wall's coping outside the promenade's rail, x −75.2, z −10 to +5):
+// the rail and the lanterns are the walk's edge. The rails stand 3.4 m apart where the lantern pairs are, and the coping
+// outside them (to the water's face, x −76.05) is 1.2 m wide: he stepped out through a gap. One see-through collider on
+// the rails' own line, along the rails and across each gap, from the bollards' run over the harbour (z 18.7) north past
+// the walk's end up the shelf's face (PROM_EDGE.zN: the slope west of the walk's north end runs down to the coping, a
+// step under it there, and over the cliff into the sea), and at the south end a piece across the coping (past the
+// bollards' west end the south wall's top joins it). No piece across the coping at the north end: the sea wall's face
+// stands over that slope already, and a piece there turned a slide down the slope into the sea (slidetraps). 1.9 m over
+// the walk: a jump (1.19 m, actors.js JUMP) cleared the rails' own colliders (1 m) and landed him on the coping all the
+// same; up the shelf's face, over its ground there (8.5 m). The ball passes it (noBall); the camera does (seeThrough).
+// Added after the street furniture is fitted, so no piece's fit (or random draw) moves. Nothing drawn; the rails keep
+// their own colliders.
+function promEdge(W) {
+  const R = (W.promRails || []).slice().sort((a, b) => a.z - b.z);
+  if (!R.length) return;
+  const P = W.physics, E = PROM_EDGE;
+  const box = (ax, az, bx, bz) => {
+    const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz), top = Math.min(az, bz) < E.z0 - 0.01 ? PROM_H + 4.4 : PROM_H + 1.9;
+    if (L < 0.05) return;
+    P.add({ type: 'box', x: (ax + bx) / 2, z: (az + bz) / 2, hw: L / 2 + 0.12, hd: 0.12, rot: Math.atan2(-dz, dx), top, seeThrough: true, noStand: true, noBall: true, promEdge: true });
+  };
+  // the line: each rail's two ends along its length (ry: its length runs across its facing, as fit() lays it), north
+  // to south, from up the shelf's face to the bollards
+  const line = [];
+  for (const r of R) { const ax = Math.cos(r.ry) * r.len / 2, az = -Math.sin(r.ry) * r.len / 2, s = az < 0 ? -1 : 1; line.push([r.x - ax * s, r.z - az * s], [r.x + ax * s, r.z + az * s]); }
+  line.unshift([line[0][0], E.zN], [line[0][0], E.z0]); line.push([line[line.length - 1][0], E.z1]);   // (up the shelf's face a box of its own)
+  for (let i = 0; i < line.length - 1; i++) box(line[i][0], line[i][1], line[i + 1][0], line[i + 1][1]);
+  box(PROM.xo - 0.15, E.z1, line[line.length - 1][0], E.z1);
+}
+
 // ================================================================== entry
 export function buildIsland(scene, W) {
   const r = rng(4242);
@@ -3368,6 +3427,7 @@ export function buildIsland(scene, W) {
   buildOldPlaces(W, scene);
   buildFlatTown(W, scene);
   buildOriginalProps(W, scene, r);
+  promEdge(W);   // (C66: after the street furniture's fits)
   console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms, depot+pipe ${(performance.now() - T2) | 0} ms`);
   W.island = { keepClear };
 }

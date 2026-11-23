@@ -475,3 +475,44 @@ shade (the pier's north face nearly navy), and ties the town's walls to Funfrock
 **Tests** (port 8452, SwiftShader, one browser at a time): a boot with each flag and with none (the captures: no page
 or console error, no missing file); overlap-sweep (default) PASS (citadel a 0, b 0, c 0, d 0, e 0 open; the default
 look is the build's: its materials, geometry and UVs are made as before).
+
+## C66 (22.11): the desktop's placement and collision faults on the real GPU (ORDER 66.2 / 66.4), fixed
+
+Bug fixes only: the approved look and layout kept, the harbour untouched. **Automated runtime only (SwiftShader).**
+Build `3da0a43e` + this change. Report and pictures: `tools/testlab/WORLD_ART_REQUESTS.md` "66 NO-PERF",
+`captures/citadel-66/` (13–23).
+
+| # | fault (desktop) | cause | fix |
+|---|---|---|---|
+| 1 | Twinsen held 9 s at the water main's meter cabinet on the walk (−72.9, −18.5) | the cabinet stood 0.7 m into the walk (x −73.05…); the main's last trestle on the walk (legs x −73.59 / −71.8, z −21.7) steers a walker to x −72.95, straight into its north face. Its collider was 2.3 × 2.1 m round the middle; the drawn coping is 2.4 × 2.2 and the front fittings reach 1.21 m (5–16 cm outside it). The "inside" look (13) is his outline seen through it from the south | the collider is the drawn outline (`island.js buildMeter`); the cabinet 0.8 m east (`citadel-layout.js PIPE_METER`, x −71.2): its west face on the walk's inland edge (x −72.30), off the walk; `keepClear` still clears round its first place (the scatter's draws) |
+| 1b | the main hides him as he walks under it (14) | by design (BUG-WALL: the tube is the camera's own volume; the view never rises over a pipe, his outline shows) | its three A-frames on the walk as the camera's own volumes, CAM-FIXTOP's way (`drawPipe` camFrames): 21 camOnly boxes |
+| 2 | he walked the coping outside the rail to the water (x −75.2, z −10…+5) | the rails stand 3.4 m apart where the lantern pairs are; nothing between them; the coping outside is 1.2 m wide. A jump (1.19 m) also cleared the rails' own 1 m colliders | one see-through line on the rails' own line (`island.js promEdge`, after the street furniture's fits), 1.9 m over the walk, from up the shelf's face past the walk's north end (z −31.6: the slope west of the corner led down to the coping and over the cliff) to the bollards (z 18.7), a piece across the coping there; the ball passes it. 13 colliders, nothing drawn |
+| 3 | the blue-roof house's eave at the walk (−70, 13) | its back gable stands 0.2 m from the inland wall's face; the roof's 0.48 m overhang ran 0.3 m into the rubble below the walk and over the coping above it | `roofBack` 0.36 (`architecture.js`, the water office only, `town.js`): the rake 0.18 m past its back wall, 3–6 cm short of the coping; its roof volume for the camera the same |
+| 4 | a big grey rock at the walk's south corner (−72, 19) | not a placed rock: the knoll's own south face east of the south wall (FLAT-TOWN's approved knoll), painted rock where steep; the cliff rocks round it are 0.62 m or more from the masonry, none in it | left (a built face there would be a redesign) |
+| 5 | a pale grey wedge by the inland wall's foot (desktop ≈ −70.5, −2.3) | a terrain spike at (−70.43, 4.86), 4.50 m (the street 2.30): one point of the old ridge kept by flatTown's "over 2.8 m" rule; the inland wall's "town level, two rows out" rule never reached its second row (the guard before it stopped at x1 + 1.6) | `world.js promenade`: before the inland wall the town's level three columns out (to xi + 3.4), north of the flight's band; under FLAT_OFF as before (the scatter's view unchanged). Four grid points move, all to 2.30 |
+| 6 | a kerb line across the paving on the west street (−53, −11) | Bug Street's kerb (and its foot's north kerb, and the harbour street's at x −52 and the flight's foot) crossing P42's grid streets: paving both sides | `town.js curbs`: a stone whose outside is the grid's paving (`world.js gridPaveDist`) is left out: 10 stones |
+| 7 | `barrels#100713` 17 cm into the fort wall (−38.55, −61.3) | its hoops (0.44 m) past the wall's face (x −38.7) | 0.16 m east, 0.55 m north (`island.js` station barrels): 2 cm off the wall, clear of the bridge leg's brass foot; still closes the strip behind the leg |
+| 8 | "Nara's stall" beside "Pippa's Stall" | | "Nara's Stall" (title case, as the shops' titles); the Hebrew already matched |
+
+**Random streams:** every instanced mesh on Citadel compared with the build before (count and position sums): only the
+kerbs (−10) and the moved barrel differ; the street furniture's fits the same (55 placed, 16 skipped).
+**Old saves** (the save holds x/z): a spot on the coping outside the rail or on the slope west of the walk's north end
+loads on the walk at x −73.5; a spot where the cabinet stands now loads on the walk west of it (`world.js promSpot`,
+through `W.shoreSpot`, `main.js applySave`); 6 checked in `tests/prom-edge.mjs`: standing, no overlap, no life lost,
+free to walk.
+
+**Tests** (port 8766, SwiftShader, one browser at a time, the final build): `tests/prom-edge.mjs` (new, by held keys, 19)
+PASS; slidetraps PASS (Citadel 48 spots, 0 bad; a first try with a piece across the coping at the walk's north end
+turned a slide down the slope there into the sea: replaced by the line up the shelf's face); citadel-structures PASS
+(7); overlap-sweep (default) PASS (144 areas, 0 open); place-scan ONLY=citadel PASS (1150 pieces, 33 findings all on
+the LEFT list; the build before: the barrel FOUND, FAIL; a first move east touched the bridge leg's foot, 12 cm);
+dialogue-check PASS.
+
+**Pictures** (before | after, set cameras; the cabinet and the rail after a walk by held keys): `captures/citadel-66/fixed/`
+`1-cabinet-side.jpg`, `1-cabinet-top.jpg`, `2-rail-from-sea.jpg`, `2-rail-over.jpg`, `7-barrel-close.jpg`,
+`7-barrel-top.jpg`; also `3-bluehouse-roof.jpg`, `5-wedge.jpg`, `6-kerb.jpg`.
+
+**Left:** the slope west of the walk's north end still runs over the cliff into the sea from the shelf's top above it
+(as before; not reachable from the walk now). Walking north at the rail, a trestle leg and the first rail (fitted
+0.35 m west) leave 0.6 m: he stops there and steers round (as before). The desktop's GPU look at the new cabinet place
+and the rail's line is not done (no GPU here).
