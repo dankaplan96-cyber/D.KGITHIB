@@ -1,8 +1,10 @@
 # WALL-NORMALS (CLOUD_ORDERS 67, the user 23.11: "let the local agent work the walls and make normal maps") — the desktop
 
-**Off by default.** `?wallnormals=1` turns on the two looked at (the fort's stone `fortStone`, the houses' rubble
-`rubbleHouse`); by name: `?wallnormals=fortStone`, `?wallnormals=rubbleHouse`, `?wallnormals=rubble` (quays and
-embankments: built, not yet looked at). `?wnstr=` scales the relief (1 = the chosen look; 0.5 gentler, 2 heavier).
+**ON by default (the user's pick, 23.11: "everything")** for the fort's stone `fortStone` (the fort, the promenade's and
+the harbour's walls), the houses' rubble `rubbleHouse` and the rubble `rubble` (the harbour shed, the lighthouse's foot,
+Ballastra's piers: the same algorithm as the houses', looked at only briefly). `?wallnormals=0` shows the walls as before;
+by name, `?wallnormals=fortStone` etc., only those. `?wnstr=` scales the relief (1 = the chosen look; 0.5 gentler, 2
+heavier); `?wnao=0` drops the shade's ambient occlusion.
 
 ## How
 - `src/engine/textures.js`: the wall generators record the layout they draw (`LAYOUT`: the rubble's stones, the fort's
@@ -56,3 +58,8 @@ at the shop house (−33.75, −1.5) — geometry this change does not touch (wi
   off, normals, normals + AO; golden hour).
 - Blender: not used — the textures are drawn in code, so drawing the heights from the same code matches them exactly
   with no image files; a Blender bake would add files to keep in step with the generator.
+
+## On by default (the user, 23.11: "everything")
+The three stone textures get the normal map and the shade's ambient occlusion by default; `?wallnormals=0` is the old
+look. Tests with it on: overlap-sweep, occluders, citadel-structures PASS; worldfit the same one visual FAIL as with it
+off (the shop house's door sill, −33.75, −1.5, 0.24 m under the ground: geometry, not this change).
