@@ -27,7 +27,7 @@
 //   G  older saves already past chapter 9: base-13 (chapter 10, Mill Lane as before: Kell at his lever, no Brum, no coat);
 //      STAGED new-12-stop with the lane already running and no Brum flags (a save made just before chapter 9's end on a
 //      build before this): the chapter ends as it did, no lesson
-// ONLY=A|B|C|D|E|F|G (several: ONLY=AB), SHOTS=<dir> writes the play camera's pictures (Follow, Far; 1280×720).
+// ONLY=A|B|C|D|V|E|F|G (several: ONLY=AB), SHOTS=<dir> writes the play camera's pictures (Follow, Far; 1280×720).
 import { launch, open, menu, quitAndKeep, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -36,7 +36,7 @@ import { fileURLToPath } from 'node:url';
 const { check, done } = checker({ info: 'always' });
 const FIX = fileURLToPath(new URL('./fixtures/campaign/', import.meta.url));
 const ORIGIN = new URL(process.env.GAME_URL || 'http://localhost:8123/').origin;
-const ONLY = process.env.ONLY || 'ABCDEFG', SHOTS = process.env.SHOTS;
+const ONLY = process.env.ONLY || 'ABCDVEFG', SHOTS = process.env.SHOTS;
 const want = (k) => ONLY.includes(k);
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const TMP = fs.mkdtempSync(path.join(process.env.TMPDIR || os.tmpdir(), 'shift-'));
@@ -78,6 +78,8 @@ const handover = async (keep = null) => {
 const shot = async (n) => { if (!SHOTS) return; await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, n + '.png'), timeout: 240000 }).catch(() => {}); };
 const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const READY = path.join(TMP, 'lunch-ready.json');
+// READY_IN=<file>: a kept save from A's handle-ready step (A writes it; KEEP_READY=<file> keeps a copy) for B, C, D, V alone
+if (process.env.READY_IN) fs.copyFileSync(process.env.READY_IN, READY);
 
 // ------------------------------------------------------------------ the chapter-3 repair, by input (as campaign-thread B)
 const repairToWater = () => ev(() => {
@@ -128,6 +130,7 @@ if (want('A')) {
   void call;
   await shot('A2-barrow-aboard');
   await handover(READY);
+  if (process.env.KEEP_READY) fs.copyFileSync(READY, process.env.KEEP_READY);
   is('A3 Save & quit → Continue with the barrow aboard: the deck down, the barrow and Brel on it, Kell at his lever, the handle offered', await ev(() => {
     const LT = game.story.cur.lift, L = LT.L, f = game.flags, k = P.npc('zl_kell'), n = P.npc('zl_brel'); game.step(0.5);
     return [f.zt_lunchCall, LT.lunchPh, +(L.deckY - L.low).toFixed(2), L.barrowAt().shown, +(n.pos.y - L.low).toFixed(2), +Math.hypot(k.pos.x - L.spots.kell.x, k.pos.z - L.spots.kell.z).toFixed(2), k.present];
@@ -240,6 +243,27 @@ if (want('D') && fs.existsSync(READY)) {
     SS.hold('ArrowUp', () => SS.err() <= 0.012); SS.until(() => G.flags.zt_lunch && !LT.walks.length, 60);
     return { muted: [G.audio.vol?.master, G.settings.sfx], jolt: +jolt.toFixed(2), box, lunch: G.flags.zt_lunch, barrowOff: +Math.hypot(L.barrowAt().x - L.shift.barrowOff.x, L.barrowAt().z - L.shift.barrowOff.z).toFixed(2) };
   }), (v) => v.muted[0] === 0 && v.jolt > 0.15 && /Up a touch/.test(v.box) && v.lunch === true && v.barrowOff < 0.05);
+  await browser.close();
+}
+
+// V  the play camera at the handle (Follow, Far, 1280×720): the cloth high as he takes the handle, half way, at the nail;
+//    where the nail and the knot fall in the frame (pictures for a person; the numbers only say they are in the frame)
+if (want('V') && fs.existsSync(READY)) {
+  await start(null, null, READY);
+  await takeHandle();
+  const proj = () => ev(() => {
+    const G = game, L = SS.lift(), c = G.camera, V = G.hero.pos.constructor;
+    const p = (x, y, z) => { const v = new V(x, y, z).project(c); return [+((v.x + 1) / 2 * innerWidth).toFixed(0), +((1 - v.y) / 2 * innerHeight).toFixed(0)]; };
+    const r = L.rope; return { nail: p(r.x, L.nailY, r.z), knot: p(r.x, L.clothY(), r.z), head: p(G.hero.pos.x, G.hero.pos.y + 1.5, G.hero.pos.z), err: SS.err(), cam: G.settings.camera, dist: G.settings.camDist };
+  });
+  await ev(() => game.step(1.5));
+  const v1 = await proj(); await shot('V1-handle-taken-cloth-high');
+  await ev(() => SS.hold('ArrowUp', () => SS.err() <= 1.7)); await ev(() => game.step(0.1));
+  const v2 = await proj(); await shot('V2-half-way');
+  await ev(() => SS.hold('ArrowUp', () => SS.err() <= 0.012)); await ev(() => game.step(0.1));
+  const v3 = await proj(); await shot('V3-cloth-at-the-nail');
+  const inside = (q) => q[0] > 20 && q[0] < W - 20 && q[1] > 20 && q[1] < H - 20;
+  is('V1 Follow/Far at the handle: the nail and, at the stop, the knot are inside the frame, the nail above Twinsen\'s head (pictures V1–V3)', { v1, v2, v3 }, (v) => v.v3.cam === 'follow' && inside(v.v3.nail) && inside(v.v3.knot) && Math.hypot(v.v3.nail[0] - v.v3.knot[0], v.v3.nail[1] - v.v3.knot[1]) < 12 && v.v3.nail[1] < v.v3.head[1]);
   await browser.close();
 }
 

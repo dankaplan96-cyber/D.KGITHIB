@@ -141,7 +141,7 @@ export class LiftThread {
     if (down) { consider(dist(L.standpipe.x, L.standpipe.z), 1.5, { kind: 'zt_standpipe', label: 'p_look' }); consider(dist(L.sign.x, L.sign.z), 1.6, { kind: 'zt_sign', label: 'p_read' }); }
     // THE SECOND SHIFT: the handle for the lunch trip (in his hands: the prompt says how to let go)
     if (this.lunchOpen() && down) {
-      if (this.hold) consider(0, 3, { kind: 'zt_letgo', label: 'p_letgo' });
+      if (this.hold) consider(-1, 3, { kind: 'zt_letgo', label: 'p_letgo' });   // (ahead of anyone: the handle is in his hands)
       else if (this.lunchPh === 'ready' && !this.busy && !this.kellWalking()) consider(dist(L.handle.x, L.handle.z), 1.5, { kind: 'zt_handle', label: 'p_handle' });
     }
     if (!this.open || this.busy) return;

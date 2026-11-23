@@ -36,7 +36,7 @@ const BAY = { z0: 21.6, z1: 24.0 }, DECK = { x: -9.85, z: 22.8, hw: 1.1, hd: 1.1
 const HALF = 2.1, LOW = 0.14;
 // THE SECOND SHIFT (P109): where Kell's cloth stands when the deck is level with the landing (the nail, above the
 // lane), and how far past the landing the deck can be run by hand before the head frame's stop
-const NAIL_H = 2.5, OVER = 0.4;
+const NAIL_H = 3.0, OVER = 0.4;   // (the stop mark a metre over the motor house: against the terrace's stone from the handle and the Follow camera)
 const CIS = { x: -15.6, z: 22.35, r: 1.55, h: 1.9 };
 const CART0 = { x: -10.2, z: 22.8 }, PUSH = 3.0;
 const STAIR = { n: 12, x0: -11.4, tread: 0.55, z0: 26.4, w: 1.8 };
@@ -260,7 +260,7 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   // rope; a nail in the batten (a chalk tick on its face) is where the cloth stands when the deck is level with the
   // landing. From the handle the deck's lip against the landing cannot be seen: the operator watches the cloth.
   const RP = { x: MH.x + 0.3, z: MH.z - 0.1 }, BAT = { x: RP.x + 0.18, z: RP.z - 0.32 };   // (the rope off the drum's east side; the batten north-east of it)
-  const SHV = Y0 + 6.2, ROOF = Y0 + MH.h + 0.08;
+  const SHV = Y0 + 6.75, ROOF = Y0 + MH.h + 0.08;
   const beam = (ax, ay, az, bx, by, bz, w, m, to = S) => {   // a bar from a to b (local), its square section w
     const v = new THREE.Vector3(bx - ax, by - ay, bz - az), len = v.length(), o = new THREE.Mesh(new THREE.BoxGeometry(w, len, w), m);
     o.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2); o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.normalize()); o.castShadow = o.receiveShadow = true; to.add(o); return o;
@@ -271,9 +271,9 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   add(cyl(0.016, 0.016, SHV - (Y0 + MH.h + 0.38), 5), steel, RP.x, (SHV + Y0 + MH.h + 0.38) / 2, RP.z);   // the haul rope, up from the drum
   beam(RP.x, SHV + 0.13, RP.z + 0.13, DECK.x, TOP + 2.82, DECK.z, 0.03, steel);        // over the sheave to the jib's pulley
   // the nail, driven into the batten's south face and pointing at the rope; a chalk tick beside it on the face to the handle
-  add(cyl(0.013, 0.013, 0.12, 5), steel, BAT.x, NAIL_Y, BAT.z + 0.035 + 0.06, 0, Math.PI / 2);
-  add(cyl(0.032, 0.032, 0.016, 8), brass, BAT.x, NAIL_Y, BAT.z + 0.035 + 0.12, 0, Math.PI / 2);
-  add(box(0.008, 0.035, 0.09), cream, BAT.x + 0.037, NAIL_Y, BAT.z);
+  add(cyl(0.016, 0.016, 0.14, 5), steel, BAT.x, NAIL_Y, BAT.z + 0.035 + 0.07, 0, Math.PI / 2);
+  add(cyl(0.05, 0.05, 0.02, 10), brass, BAT.x, NAIL_Y, BAT.z + 0.035 + 0.14, 0, Math.PI / 2);
+  add(box(0.09, 0.08, 0.09), cream, BAT.x, NAIL_Y, BAT.z);   // (a chalk band round the batten at the nail, seen from any side)
   // (a peg on the motor house's east face, north of the lever, for a coat: the rope runs over the roof, clear of it)
   add(cyl(0.018, 0.018, 0.16, 6), brass, MH.x + MH.hw + 0.08, Y0 + 1.22, MH.z - 0.55, 0, 0, Math.PI / 2);
   mergeStatic(S, { recolor: true, retex: true });
@@ -281,11 +281,12 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
   // the deck is at the landing); the hoist rope from the jib's pulley to the deck's bail; Brel's barrow (chapter 3's
   // lunch trip: a tray of sacks on one wheel, the wheel leading); Councillor Brum's coat on its peg (after chapter 9)
   const cloth = new THREE.Group(); cloth.position.set(RP.x, NAIL_Y, RP.z); cloth.userData.keep = true; D.add(cloth);
-  dyn(new THREE.CylinderGeometry(0.03, 0.03, 0.06, 8), red, 0, 0, 0, cloth);
+  const rag = paint('#f2b81e', 0.8);   // (Kell's cloth: a yellow rag, not the red of the flywheel and lever beside it)
+  dyn(new THREE.CylinderGeometry(0.036, 0.036, 0.08, 8), rag, 0, 0, 0, cloth);
   const tails = [];
-  for (const [dz, len, lean] of [[-0.02, 0.24, 0.5], [0.025, 0.19, 0.25]]) {
-    const tl = new THREE.Group(); tl.position.set(0.02, 0, dz); tl.rotation.z = -lean; cloth.add(tl); tails.push(tl);
-    const m = new THREE.Mesh(new THREE.BoxGeometry(0.012, len, 0.07), red); m.position.y = -len / 2; tl.add(m);
+  for (const [dz, len, lean] of [[-0.035, 0.4, 1.15], [0.04, 0.32, 0.8]]) {   // (blown out to the east, toward the handle: the rag reads at the knot's height)
+    const tl = new THREE.Group(); tl.position.set(0.02, 0, dz); tl.rotation.z = lean; cloth.add(tl); tails.push(tl);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(0.016, len, 0.13), rag); m.position.y = -len / 2; tl.add(m);
   }
   const hoist = dyn(new THREE.CylinderGeometry(0.018, 0.018, 1, 5), steel, DECK.x, TOP + 2.0, DECK.z); hoist.userData.keep = true;
   const barrow = new THREE.Group(); barrow.visible = false; barrow.userData.keep = true; D.add(barrow);
