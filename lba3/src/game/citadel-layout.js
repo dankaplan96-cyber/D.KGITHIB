@@ -117,7 +117,9 @@ export const PROM = {
 // past its low row (so that row's ground meets the face), each back 0.08 m inside the last level row
 export const PROM_WALLS = [
   { id: 'sea', x0: PROM.xo - 0.05, x1: PROM.x0 + 0.08, z0: PROM.z0, z1: GZ(144) + 0.05, foot: -3.4 },
-  { id: 'south', x0: PROM.xo - 0.05, x1: PROM.x1 + 0.08, z0: GZ(143) - 0.08, z1: GZ(144) + 0.05, foot: TOWN_FLAT - 0.4 },
+  // (FULL-TEST 23.11: the south wall starts at the sea wall's back, its coping at the sea coping's edge (joinW): the two
+  //  boxes overlapped in the corner, their west and south faces and copings in one plane — worldfit's z-fighting)
+  { id: 'south', x0: PROM.x0 + 0.08, x1: PROM.x1 + 0.08, z0: GZ(143) - 0.08, z1: GZ(144) + 0.05, foot: TOWN_FLAT - 0.4, joinW: true },
   { id: 'inland', x0: PROM.x1 - 0.08, x1: PROM.xi + 0.05, z0: GZ(120) - 0.05, z1: 16.4, foot: TOWN_FLAT - 0.4 },
 ];
 // the flight: along x from its foot (xa, the town's level) to its top (xb, the strip's inland row), between zN and zS;
