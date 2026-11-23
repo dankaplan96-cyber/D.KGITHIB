@@ -314,7 +314,9 @@ export class Prologue extends ChapterBase {
     const npc = (id) => g.npcs.find((n) => n.def.id === id);
     if (!g.hero.hasBall) return m;
     if (this.steps.on) return this.steps.markers();   // (OPENING-TUT-2: the yard's step, not the well yet)
-    if (!f.inWell && !f.prologueDone) m.push({ x: g.world.well.x, z: g.world.well.z, kind: 'star', color: gold, r: 8, edge: true, label: t('pr_map_well') });
+    // (INTERACT-PICK, P115 (4): back up out of the cave before its crystals, the way down is the well again: its star,
+    //  so the map shows where the objective is and the well's "Go down" keeps the key from Gilbert beside it)
+    if ((!f.inWell || !g.room) && !f.prologueDone) m.push({ x: g.world.well.x, z: g.world.well.z, kind: 'star', color: gold, r: 8, edge: true, label: t('pr_map_well') });
     // (Mira wants proof first: Zoé has it, next door)
     if (f.wellSeen && !f.key) { const n = npc(f.pr_miraNo && !f.pr_kettle ? 'zoe' : 'mira'); if (n?.present) m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 6, edge: true, ...(n.def.id === 'zoe' ? { label: t('n_zoe') } : {}) }); }
     if (f.wellSeen && !f.rope) { const n = npc(f.metXil && !f.stamp ? 'doran' : 'xil'); m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 6, edge: true, label: t(f.metXil && !f.stamp ? 'n_doran' : 'n_xil') }); }
@@ -410,7 +412,9 @@ export class Prologue extends ChapterBase {
             f.pr_lidStuck = true; this.setLid('stuck'); g.audio.play('clunk');
             const near = (id) => { const n = this.speaker(id); return n?.present && n.distTo(h) < 9; };
             const lines = [['hero', 'pr_well_stuck'], ...(near('gilbert') ? [['gilbert', 'pr_gil_kick']] : []), ...(near('gilbert') && near('mira') ? [['mira', 'pr_mira_kick']] : [])];
-            this.chain(lines, () => { g.updateObjective(); g.save(false); });
+            // (INTERACT-PICK, P115 (6): the keys come with Gilbert's "Give it a good kick", not 10 s later after the talk)
+            const keys = (i, id, key) => { if (key === 'pr_gil_kick' && g.tutorial?.tips) g.hud.toast('pr_nudge_kick', { b: g.hud.key('b3'), k: g.hud.key('interact') }, 4200); };
+            this.chain(lines, () => { g.updateObjective(); g.save(false); }, keys);
             return true;
           }
           this.chain([['hero', 'pr_well_stuck2']]);

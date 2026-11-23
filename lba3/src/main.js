@@ -96,6 +96,10 @@ const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene'
 const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn', 'slidewind', 'slide', 'skid']);
 export const VERSION = '0.49.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
+// INTERACT-PICK (P115): the objective's own thing in reach and roughly faced (within ~75° of his facing, GOAL_FACE) takes
+// the interact key before people and other things; a thing counts as the goal's when it lies within GOAL_R m of one of
+// the objective's stars (a person: on the star, GOAL_R_NPC)
+const GOAL_FACE = 0.25, GOAL_R = 1.0, GOAL_R_NPC = 0.4;
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
 // carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none); v4 → v5: the final chapter is two
@@ -1732,10 +1736,19 @@ class Game {
     this.state = s;
     if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
-    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); }
+    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); this.endAct(); }
     if (s !== 'play') { this.targeting?.hide(); this._swapT = -1; }   // (a swap key held into a dialogue never acts after it)
     this.hud?.busy(s !== 'play');
     this.audio?.hold?.(s === 'pause' || s === 'map' || s === 'inventory');   // (LBA3-SOUND: a fight's music waits under a menu)
+  }
+  // ACT-RESUME (lba3-controls, 23.11): a one-shot action whose moment has passed (his hand on the tap, the valve, a kick,
+  // a pick-up: its callback ran and opened a talk, a found box or a film) ends when play comes back. It used to wait out
+  // the talk frozen and play its last 0.45 s after it: the gesture again, and the keys locked (actT > 0) — "W Try Tap" on
+  // screen and W doing nothing, walking doing nothing, for that long after every such talk. An action still to reach its
+  // moment (its callback pending) or with a follow-up (a knockdown's get-up) goes on as before
+  endAct() {
+    const h = this.hero;
+    if (h && h.actT > 0 && !h.actCb && !h.actNext) h.actT = 0;
   }
   // INVENTORY-CALM: the inventory window shuts back to play, or to the pause menu it was opened from (its Journal
   // button selected again)
@@ -2441,12 +2454,22 @@ class Game {
     // him: someone standing just behind him does not take the prompt from the pump he faces at arm's length
     // (FIX-PUMP-N: Bram 0.9 m behind beat the pump 1.4 m ahead)
     const fx = Math.sin(h.angle), fz = Math.cos(h.angle);
+    // (INTERACT-PICK: every candidate in reach is kept with its score and the point it was measured at — the last dist()
+    //  before its consider(), every story file measures its thing that way — for the goal's rule at the end)
+    const C = (this._pick ||= { o: [], s: [], x: [], z: [], n: 0 });
+    C.n = 0;
+    let px = NaN, pz = NaN;
     const consider = (d, max, o) => {
+      const x = px, z = pz;
+      px = pz = NaN;
       if (!(d < max)) return;
       const s = d + (o.kind === 'npc' && !o.behind ? -0.35 : 0);
+      const i = C.n++;
+      C.o[i] = o; C.s[i] = s; C.x[i] = x; C.z[i] = z;
       if (s < bd) { bd = s; best = o; }
     };
     const dist = (x, z) => {
+      px = x; pz = z;
       const dx = x - h.pos.x, dz = z - h.pos.z, d = Math.hypot(dx, dz);
       const facing = d > 1e-3 ? (dx * fx + dz * fz) / d : 1;
       return d + (1 - facing) * 0.45;
@@ -2482,23 +2505,67 @@ class Game {
     // (CONTAINERS-3: facing the house's dresser, Zoé at the sink 1.2 m to his side got "Talk" and the tap beside it
     //  "Tap" from every level place in front of it, so the dresser could not be searched while she stood there)
     // (a person he faces at least as squarely still wins)
-    const gv = best && h.onGround ? this.giverInReach() : null;
-    if (gv) {
-      const ga = aim(gv.x, gv.z);
-      if (ga > 0.7 && !(faced && fa >= ga) && dist(gv.x, gv.z) < bd) return null;
+    let gva = 0;   // (how squarely he faces the container that takes the key, when one does)
+    const pick = (() => {
+      const gv = best && h.onGround ? this.giverInReach() : null;
+      if (gv) {
+        const ga = aim(gv.x, gv.z);
+        if (ga > 0.7 && !(faced && fa >= ga) && dist(gv.x, gv.z) < bd) { gva = ga; return null; }
+      }
+      if (faced && best?.kind === 'roomsearch' && fa > aim(best.spot.x, best.spot.z)) return faced;
+      // (and a sign beside them: Esren reading the spaceport's departures board, Twinsen at her elbow and facing her,
+      //  got "Read" — E read the board — however close he came; the sign he faces more squarely still wins)
+      if (faced && best?.kind === 'sign' && fa > aim(best.sign.x, best.sign.z)) return faced;
+      // (the same for a terminal's departures board, story/islands.js: Twinsen turned squarely to Mr Rollo in the evacuation's
+      //  queue, walking past behind the board's reading spot 1.3 m off, got "Read" — the board 0.7 m ahead, a little aside)
+      if (faced && best?.kind === 'termBoard' && fa > aim(best.tm.H.board.x, best.tm.H.board.z)) return faced;
+      // (and another person off to his side: in chapter 8 Safi, walking her round past Brosk's stall, stood 1.3 m straight
+      //  ahead of him and Brosk 1.0 m off at 58°; her walker's tie-break and the side penalty gave Brosk "Talk" and E spoke
+      //  to him (WORKPLAN d5). Only a clear difference counts: two people about as squarely ahead keep the ranking above)
+      if (faced && best?.kind === 'npc' && best !== faced && fa > aim(best.npc.pos.x, best.npc.pos.z) + 0.25) return faced;
+      return best;
+    })();
+    // INTERACT-PICK (P115, the desktop's real-keys play of the opening): the thing the objective is about, in reach and
+    // roughly faced, takes the key before a person or another thing beside it — Zoé by the garden tap took "Talk" from
+    // the tap at the tap's step, Mira by the well took it from the well's Inspect/Kick from most sides, Gilbert from the
+    // well's way down. Only when there is a choice (two in reach, or a container taking the key). He can still turn
+    // squarely to the other one while the goal's thing stands well to his side (≥ 60°): then that one answers.
+    C.base = pick;   // (the ranking without the goal's rule, for tests/interact-pick.mjs's before/after)
+    if (C.n < 2 && !(C.n === 1 && !pick)) return pick;
+    const gi = this.goalPick(C, aim);
+    if (gi < 0 || C.o[gi] === pick) return pick;
+    let pa = gva;
+    if (pick) {
+      const j = C.o.indexOf(pick);
+      // (a thing with no measured point — "let go" of the lift's handle, a hatch under his feet — always keeps the key)
+      if (j < 0 || j >= C.n || !(C.x[j] === C.x[j])) return pick;
+      pa = aim(C.x[j], C.z[j]);
     }
-    if (faced && best?.kind === 'roomsearch' && fa > aim(best.spot.x, best.spot.z)) return faced;
-    // (and a sign beside them: Esren reading the spaceport's departures board, Twinsen at her elbow and facing her,
-    //  got "Read" — E read the board — however close he came; the sign he faces more squarely still wins)
-    if (faced && best?.kind === 'sign' && fa > aim(best.sign.x, best.sign.z)) return faced;
-    // (the same for a terminal's departures board, story/islands.js: Twinsen turned squarely to Mr Rollo in the evacuation's
-    //  queue, walking past behind the board's reading spot 1.3 m off, got "Read" — the board 0.7 m ahead, a little aside)
-    if (faced && best?.kind === 'termBoard' && fa > aim(best.tm.H.board.x, best.tm.H.board.z)) return faced;
-    // (and another person off to his side: in chapter 8 Safi, walking her round past Brosk's stall, stood 1.3 m straight
-    //  ahead of him and Brosk 1.0 m off at 58°; her walker's tie-break and the side penalty gave Brosk "Talk" and E spoke
-    //  to him (WORKPLAN d5). Only a clear difference counts: two people about as squarely ahead keep the ranking above)
-    if (faced && best?.kind === 'npc' && best !== faced && fa > aim(best.npc.pos.x, best.npc.pos.z) + 0.25) return faced;
-    return best;
+    return pa > 0.9 && aim(C.x[gi], C.z[gi]) < 0.5 ? pick : C.o[gi];
+  }
+  // INTERACT-PICK: the candidate (index in C) that is the objective's thing — within GOAL_R of a star of story.markers()
+  // (a person on it), roughly faced or right by him — or -1. The stars are read once a frame.
+  goalPick(C, aim) {
+    const h = this.hero;
+    if (this._goalT !== this.time || this._goalRoom !== this.room) {
+      this._goalT = this.time; this._goalRoom = this.room;
+      const ms = this.story?.markers?.() || [];
+      this._goals = ms.filter((m) => m.kind === 'star' && Number.isFinite(m.x) && Number.isFinite(m.z));
+    }
+    const S = this._goals;
+    let gi = -1, gs = 1e9;
+    if (!S.length) return gi;
+    for (let i = 0; i < C.n; i++) {
+      const x = C.x[i], z = C.z[i];
+      if (!(x === x) || !(C.s[i] < gs)) continue;
+      const r = C.o[i].kind === 'npc' ? GOAL_R_NPC : GOAL_R;
+      let on = false;
+      for (let k = 0; k < S.length && !on; k++) on = Math.hypot(S[k].x - x, S[k].z - z) < r;
+      if (!on) continue;
+      if (!(aim(x, z) > GOAL_FACE || Math.hypot(x - h.pos.x, z - h.pos.z) < 0.8)) continue;
+      gi = i; gs = C.s[i];
+    }
+    return gi;
   }
 
   // false when there is nothing in reach (in Normal mode Twinsen then hops: see Hero.hop)
@@ -3425,6 +3492,8 @@ class Game {
     const it = this.findInteractable();
     // (nothing else in reach and an unsearched container by him: the verb, no more — CONTAINERS)
     this.hud.prompt(it ? t(it.label) : h.onGround && this.giverInReach() ? t('p_rummage') : null);
+    // (INTERACT-PICK: what the prompt on screen offers, for the tip panel's key line: it names the key only for this)
+    this.promptFor = this.hud._prompt ? it : null;
     this.hud.stats(h);
     // (where he is and the doors he used, for the maps; the region's map drawn a slice further; the minimap when shown.
     //  RENDER-INV: once per displayed frame: a slow frame's catch-up steps each drew another slice of the map)
