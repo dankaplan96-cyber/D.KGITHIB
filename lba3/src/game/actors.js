@@ -223,6 +223,9 @@ export class Hero extends Actor {
     }
     // the Esmer line reeling him to a cord ring (EQUIP-2b, tools.js): it moves and draws him until he lands
     if (g.gadgets?.tools?.zip && g.gadgets.tools.zipStep(this, dt)) return;
+    // a machine's handle in his hands (THE SECOND SHIFT: Kell's lift, story/zeelift.js): the story reads the keys and
+    // poses him until he lets go (once an action under way, such as the reach to the handle, has played out)
+    if (g.heroHold && this.actT <= 0 && !this.steer && g.heroHold(dt, input)) return;
 
     // behaviour switching (1-4, Tab, gamepad bumpers, LBA-style Ctrl + left/right)
     const wheel = input.down('wheel');

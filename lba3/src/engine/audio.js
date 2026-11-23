@@ -58,6 +58,7 @@ const SND = {
   blip: { pri: 1, gap: 0.025, vary: FIXED }, select: { pri: 3, gap: 0.04, vary: FIXED }, mode: { gap: 0.05, vary: FIXED },
   deny: { pri: 3, gap: 0.15, vary: FIXED }, notReady: { gap: 0.12, vary: FIXED }, lockOn: { gap: 0.08, vary: FIXED }, equip: { gap: 0.08, vary: FIXED },
   tick: { pri: 1, gap: 0.02, vary: FIXED }, put: { vary: [0.03, 1] }, clunk: { gap: 0.04, vary: [0.03, 1] }, pipeKnock: { gap: 0.04, vary: [0.04, 1] },
+  wheelJoint: { pri: 3, gap: 0.4, vary: FIXED },   // (THE SECOND SHIFT: a wheel over the lift's joint, always the same: a sound to know by)
   // ACTION-SOUND-2: the ball by surface (the knock is the surface's, the rising chirp the ball's), into the sea, a throw
   // and a contact without magic (no chirp: it comes straight back), its way home; the sword drawn and put away, a blade
   // through flesh; a kick, the Wannie glove; what is taken in hand (the equip by kind); a tiptoe, hiding, a soft landing;
@@ -606,6 +607,16 @@ export class AudioEngine {
       case 'rattle': for (let i = 0; i < 8; i++) this._tone({ type: 'triangle', f0: 2200 + Math.random() * 600, dur: 0.02, vol: 0.012, at: i * 0.07 + Math.random() * 0.02 }); break;
       case 'tapSqueak': this._tone({ type: 'triangle', f0: 880, f1: 1240, dur: 0.22, vol: 0.035 }); this._tone({ type: 'triangle', f0: 1180, f1: 820, dur: 0.18, vol: 0.03, at: 0.12 }); break;
       case 'pipeKnock': this._tone({ f0: 115, f1: 70, dur: 0.14, vol: 0.18 }); this._burst({ dur: 0.1, vol: 0.14, f: 650, f1: 160 }); break;
+      // THE SECOND SHIFT: a loaded wheel rolls over the steel joint between the lift's deck and the landing, level: a short
+      // rumble of the rolling, then a crisp, bright "ta-tick" (the tyre over the joint's two edges) with a little ring of the
+      // plate; unlike the knocks (dull, low, single) and the clunk (one hit)
+      case 'wheelJoint':
+        this._burst({ dur: 0.34, vol: 0.07, f: 420, f1: 300, type: 'bandpass', q: 1.8 });
+        this._knock({ f: 300, drop: 0.75, dur: 0.05, vol: 0.06, click: 2600, cv: 0.7, at: 0.3 });
+        this._knock({ f: 340, drop: 0.75, dur: 0.05, vol: 0.07, click: 3000, cv: 0.8, at: 0.39 });
+        this._tone({ type: 'triangle', f0: 1480, f1: 1440, dur: 0.3, vol: 0.012, at: 0.39 });
+        this._burst({ dur: 0.22, vol: 0.05, f: 380, f1: 260, type: 'bandpass', q: 1.8, at: 0.42 });
+        break;
       case 'waterRun': this._burst({ dur: 0.7, vol: 0.16, f: 2300, f1: 1700, type: 'bandpass', q: 1.2 }); break;
       case 'gurgle': [320, 410, 360, 520, 450].forEach((f, i) => this._tone({ f0: f, f1: f * 1.3, dur: 0.05, vol: 0.04, at: i * 0.06 })); this._burst({ dur: 0.3, vol: 0.06, f: 500, f1: 200 }); break;
       case 'tick': this._tone({ type: 'triangle', f0: 1600, dur: 0.03, vol: 0.04 }); break;
