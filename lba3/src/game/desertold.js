@@ -347,7 +347,7 @@ export function buildOldPlaces(C) {
     //  wall: 0.25 m over the sill at the wall's foot, through the step. The highest ground under the step, 0.1–0.9 m out)
     const T = { x: 4.7, z: -16.0, w: 2.47, d: 7.19, h: 8.36 };
     let gy = -Infinity; for (const o of [0.1, 0.3, 0.5, 0.7, 0.9]) for (const dz of [-0.8, 0, 0.8]) gy = Math.max(gy, H(T.x - T.w / 2 - o, T.z - 1.5 + dz));
-    const low = gy - 0.6;
+    let low = gy - 0.6; for (const sx of [-1, 0, 1]) for (const sz of [-1, -0.5, 0, 0.5, 1]) low = Math.min(low, H(T.x + sx * (T.w / 2 + 0.3), T.z + sz * (T.d / 2 + 0.3)) - 0.15);   // (its foot under the lowest ground round it, now it stands on the door's)
     // (DESERT-ART 2: the tower is the island's grey stone; it was stone under adobe. Its face is gone: FACE-OFF below)
     B.add(bbox(T.w, gy + T.h * 0.55 - low, T.d, 0.1, TILE.stone), M.grey, T.x, (gy + T.h * 0.55 + low) / 2, T.z);
     B.add(bbox(T.w - 0.2, T.h * 0.45, T.d - 0.2, 0.1, TILE.stone), M.grey, T.x, gy + T.h * 0.55 + T.h * 0.225, T.z);
