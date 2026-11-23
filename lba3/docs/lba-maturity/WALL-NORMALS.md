@@ -43,3 +43,16 @@ merged per cell with their own material: a few draws more, not one per piece.
 ## Tests (the branch, switch off — the default)
 overlap-sweep PASS, occluders PASS, citadel-structures PASS. worldfit: 1 visual FAIL, a door sill 0.24 m under the ground
 at the shop house (−33.75, −1.5) — geometry this change does not touch (with the switch off no material changes).
+
+## Ambient occlusion for the shade (the user, 23.11: "not too flat, not far from the game's look, not much effort")
+- The faces away from the sun stayed flat with the normal map alone (it moves direct light only). From the same heights a
+  small **ambient occlusion map**: 0.58 in the mortar, 1 on a stone's or block's face, smooth between — three applies it
+  to the indirect light only (the sky's and the shade's), so joints and the gaps between stones darken a little in shade
+  and the sunlit side is as before. On by default with the normal map; `?wnao=0` off, `?wnao=0.5` half.
+- **No draw more** (the same material: 277/215/435/254 with or without it); one more 256 px texture per wall type, made
+  in code. Shaded faces' mean brightness off → normals → normals + AO: the inland wall 44.8 → 45.6 → 43.9, the station
+  22.8 → 23.6 → 21.9, the neighbours' front 46.9 → 46.7 → 45.2 (golden hour; morning alike): about 2–4 % below off.
+- `captures/wall-normals/shade-off-normals-ao.jpg` (rows: the inland wall, the station, the neighbours' front; columns:
+  off, normals, normals + AO; golden hour).
+- Blender: not used — the textures are drawn in code, so drawing the heights from the same code matches them exactly
+  with no image files; a Blender bake would add files to keep in step with the generator.

@@ -741,8 +741,10 @@ export const WALLNORM = {
   // (1/all: the two looked at so far, the fort's stone and the houses' rubble; `rubble` — quays, embankments — by name)
   names: !WN_ARG ? new Set() : WN_ARG[1] === '1' || WN_ARG[1] === 'all' ? new Set(['fortStone', 'rubbleHouse']) : new Set(WN_ARG[1].split(',')),
   str: (typeof location !== 'undefined' && +(/[?&]wnstr=([\d.]+)/.exec(location.search) || [])[1]) || 1,
+  // (the joints' ambient occlusion with it — the shade's relief —, `?wnao=0` off, `?wnao=0.5` half)
+  ao: typeof location !== 'undefined' && /[?&]wnao=([\d.]+)/.test(location.search) ? +/[?&]wnao=([\d.]+)/.exec(location.search)[1] : 1,
 };
-const NORM = {}, NORM_COPY = new Map();
+const NORM = {}, NORM_AO = {}, NORM_COPY = new Map();
 function heightCanvas(L) {
   const N = L.N, [c, x] = canvas(N);
   x.fillStyle = '#000'; x.fillRect(0, 0, N, N);
@@ -790,6 +792,21 @@ function normalTexture(name) {
   x.putImageData(img, 0, 0);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.name = name + '-normal';
+  // the ambient occlusion from the same heights (the user, 23.11: "not too flat" where the sun doesn't reach): three uses
+  // it on the indirect light only — the sky and the shade —, so the joints and the gaps between stones darken a little
+  // there and the sunlit side is as the normal map makes it. Low in the mortar, 1 on a stone's or block's face.
+  {
+    const [ca, xa] = canvas(N), ia = xa.createImageData(N, N), A = ia.data;
+    const lo = L.kind === 'rubble' ? 0.42 : 0.68, hi = L.kind === 'rubble' ? 0.78 : 0.86;   // (height: the mortar's, a face's)
+    for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+      const e = Math.min(1, Math.max(0, (h(xx, y) - lo) / (hi - lo))), v = 0.58 + 0.42 * e * e * (3 - 2 * e);
+      const i = (y * N + xx) * 4; A[i] = A[i + 1] = A[i + 2] = v * 255; A[i + 3] = 255;
+    }
+    xa.putImageData(ia, 0, 0);
+    const a = new THREE.CanvasTexture(ca);
+    a.colorSpace = THREE.NoColorSpace; a.wrapS = a.wrapT = THREE.RepeatWrapping; a.anisotropy = 4; a.name = name + '-ao';
+    NORM_AO[name] = a;
+  }
   return (NORM[name] = t);
 }
 // the normal map for a material's colour map, if its texture has one and it is switched on: the shared one for the
@@ -800,18 +817,23 @@ export function wallNormalFor(map) {
   for (const name of WALLNORM.names) {
     const base = T[name]; if (!base || base.source !== map.source) continue;
     const n = normalTexture(name); if (!n) return null;
-    if (map === base) return n;
+    if (map === base) return { n, ao: NORM_AO[name] };
     const key = map.uuid; if (NORM_COPY.has(key)) return NORM_COPY.get(key);
-    const cpy = cloneTex(n); cpy.repeat.copy(map.repeat); cpy.offset.copy(map.offset); cpy.rotation = map.rotation; cpy.center.copy(map.center); cpy.wrapS = map.wrapS; cpy.wrapT = map.wrapT;
+    const like = (src) => { const c = cloneTex(src); c.repeat.copy(map.repeat); c.offset.copy(map.offset); c.rotation = map.rotation; c.center.copy(map.center); c.wrapS = map.wrapS; c.wrapT = map.wrapT; return c; };
+    const cpy = { n: like(n), ao: like(NORM_AO[name]) };
     NORM_COPY.set(key, cpy); return cpy;
   }
   return null;
 }
 // a material with a wall texture gets its normal map (when switched on); used where the builders make their materials
 export function withWallNormal(m) {
-  const n = wallNormalFor(m?.map);
-  if (n) { m.normalMap = n; m.normalScale.set(1, 1); m.needsUpdate = true; }
+  const w = wallNormalFor(m?.map);
+  if (w) {
+    m.normalMap = w.n; m.normalScale.set(1, 1);
+    if (WALLNORM.ao > 0) { m.aoMap = w.ao; m.aoMapIntensity = WALLNORM.ao; }
+    m.needsUpdate = true;
+  }
   return m;
 }
 // (tests, pictures: the height and normal canvases of a wall texture)
-export function wallNormalCanvas(name) { const t = normalTexture(name); return t ? t.source.data : null; }
+export function wallNormalCanvas(name, ao = false) { const t = normalTexture(name); return t ? (ao ? NORM_AO[name] : t).source.data : null; }
