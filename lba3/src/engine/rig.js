@@ -2258,6 +2258,8 @@ function armClearInit(rig) {
   // (only below the shoulders: round them the body is no longer one surface round its middle — the shoulder's cap stood out
   //  over a forearm passing in front of it, Twinsen's run, as if the arm were inside it)
   const si = sk.bones.indexOf(j.armL.sh), shY = -sk.boneInverses[si].elements[13], top = Math.max(0, Math.min(prof0.ny, Math.floor((shY - 0.08 - prof0.y0) / AC_DY)));
+  // (ARM-COST, LBA3-RUN performance: each height's greatest radius over every bearing, once per body — acDepth's bound)
+  if (!prof0.TM) { const rm = (R) => { const M = new Float32Array(prof0.ny); for (let y = 0; y < prof0.ny; y++) for (let b = 0; b < AC_NS; b++) if (R[y * AC_NS + b] > M[y]) M[y] = R[y * AC_NS + b]; return M; }; prof0.TM = rm(prof0.T); prof0.HM = rm(prof0.H); }
   const prof = { ...prof0, ny: top };
   const pts = acArmPoints(rig);
   if (!pts.L.el.length && !pts.L.hand.length) return null;
@@ -2270,7 +2272,7 @@ function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
   const pr = D.prof, y0 = pr.y0, ny = pr.ny;
   let worst = -Infinity;
   for (let pass = 0; pass < 2; pass++) {
-    const R = pass ? pr.H : pr.T;
+    const R = pass ? pr.H : pr.T, RM = pass ? pr.HM : pr.TM;
     // (to the body's rest space: the chest's part through the torso's rest frame, the pelvis's part through the hips', the
     //  torso's own turn on the hips between)
     if (pass) _acA.multiplyMatrices(D.HB, Mtorso).multiply(_acS); else _acA.multiplyMatrices(D.TB, _acS);
@@ -2284,10 +2286,17 @@ function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
         const x = e[0] * px + e[4] * py + e[8] * pz + e[12], y = e[1] * px + e[5] * py + e[9] * pz + e[13], z = e[2] * px + e[6] * py + e[10] * pz + e[14];
         const yb = Math.round((y - y0) / AC_DY);
         if (yb < 0 || yb >= ny) continue;
+        // (ARM-COST: a point that could not be deeper than the deepest so far even at the height's greatest radius is
+        //  passed without its bearing — the same answer: the bearing's radius is never more than that, and the deepest is
+        //  all this returns: an arm well clear of the body costs a square root a point, not an atan2 and two look-ups)
+        const rm = RM[yb];
+        if (!rm) continue;
+        const r = Math.hypot(x, z);
+        if (rm - r + AC_GAP <= worst) continue;
         const u = (Math.atan2(x, z) / (2 * Math.PI) + 0.5) * AC_NS - 0.5, s0 = Math.floor(u), a0 = (s0 + AC_NS) % AC_NS, a1 = (s0 + 1) % AC_NS;
         const r0 = R[yb * AC_NS + a0], r1 = R[yb * AC_NS + a1];
         if (!r0 && !r1) continue;
-        const d = Math.max(r0, r1) - Math.hypot(x, z) + AC_GAP;   // (the larger of the two bearings: a round belly between them is not cut short)
+        const d = Math.max(r0, r1) - r + AC_GAP;   // (the larger of the two bearings: a round belly between them is not cut short)
         if (d > worst) worst = d;
       }
     }
