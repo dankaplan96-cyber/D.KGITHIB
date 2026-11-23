@@ -2,7 +2,8 @@
 // panel's key line agreeing with the prompt. src/main.js findInteractable / goalPick, tutorial.js stepKeys / kick.
 //   A  the yard (a new game, the cupboard and the door by input): the garden tap's step — round the tap, facing it, the
 //      tap answers (not Zoé beside it); turned squarely to Zoé with the tap well to his side, Zoé; the panel's key line
-//      only when the prompt offers the same thing, at every spot; Zoé's step — round Zoé, Talk, and the panel agrees
+//      only when the prompt offers the same thing, at every spot; Zoé's step — round Zoé, Talk, and the panel agrees;
+//      ACT-RESUME (main.js endAct): after the tap's line, control at once (no gesture replayed, no 0.45 s key lock)
 //   B  the well with Mira's key and the lid rusted: round the well, facing it, the well (Inspect/Kick) before Mira and
 //      Gilbert; Mira faced squarely with the well well aside, Mira. Back up out of the cave, the well's way down before
 //      Gilbert. Gilbert's "Give it a good kick" comes with the keys (a toast during his line)
@@ -105,6 +106,26 @@ r = await ev(() => {
   const o = IP.read(); P.tap('KeyW', 0.3); o.state = G.state; P.settle(); return o;
 });
 check('A8 walked into Zoé\'s back and the key pressed: the prompt said Talk and she talks', r.it === 'npc:zoe' && /Talk/.test(r.prompt) && r.state === 'dialog', r);
+// ACT-RESUME: the tap tried (his hand on it opens a line), the line closed: at once the key acts again and he walks
+r = await ev(() => {
+  const G = game, h = G.hero, I = G.input, Y = G.story.chapters[0].home.parts.yard;
+  G.flags.pr_kettle = true; G.step(0.1);
+  const at = () => { IP.put(Y.x + 1.0, Y.z - 0.2, Y.x, Y.z); h.resetMotion?.(); G.step(0.3); };
+  at(); P.tap('KeyW'); let t = 0; while (t < 3 && G.state === 'play') { G.step(0.05); t += 0.05; }
+  const talked = G.state === 'dialog';
+  for (let n = 0; G.state !== 'play' && n < 200; n++) { I.keys.add('KeyW'); I.taps.add('KeyW'); G.step(1 / 60); I.keys.delete('KeyW'); G.step(0.15); }
+  const actT = +h.actT.toFixed(2);
+  // walking: Up held 0.25 s straight after
+  const p0 = h.pos.clone(); I.keys.add('ArrowUp'); G.step(0.25); I.keys.delete('ArrowUp'); const walked = +Math.hypot(h.pos.x - p0.x, h.pos.z - p0.z).toFixed(2);
+  // the key, one frame after play is back (he stands by the tap again)
+  at(); P.tap('KeyW'); for (let n = 0; G.state !== 'play' && n < 200; n++) { I.keys.add('KeyW'); I.taps.add('KeyW'); G.step(1 / 60); I.keys.delete('KeyW'); G.step(0.15); }
+  IP.put(Y.x + 1.0, Y.z - 0.2, Y.x, Y.z); G.step(1 / 60);
+  I.keys.add('KeyW'); I.taps.add('KeyW'); G.step(1 / 60); I.keys.delete('KeyW');
+  const again = !!h.steer || G.state !== 'play';
+  P.settle();
+  return { talked, actTAfterTalk: actT, walked025: walked, keyActsAtOnce: again };
+});
+check('A9 after the tap\'s line (his hand on the tap opened it): control at once — no action time left (was 0.45 s), he walks on the first held step, the key acts on the next frame (it was ignored for 0.45 s with "W Try Tap" on screen)', r.talked && r.actTAfterTalk === 0 && r.walked025 > 0.2 && r.keyActsAtOnce, r);
 await ev(() => { game.flags.pr_kettle = true; Object.assign(game.flags, { pr_yard: true, pr_barrel: true, pr_pipe: 1, pr_yardOk: true }); game.step(0.2); });
 
 // ---------------------------------------------------------------- B. the well

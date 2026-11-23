@@ -1736,9 +1736,18 @@ class Game {
     this.state = s;
     if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
-    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); }
+    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); this.endAct(); }
     if (s !== 'play') { this.targeting?.hide(); this._swapT = -1; }   // (a swap key held into a dialogue never acts after it)
     this.hud?.busy(s !== 'play');
+  }
+  // ACT-RESUME (lba3-controls, 23.11): a one-shot action whose moment has passed (his hand on the tap, the valve, a kick,
+  // a pick-up: its callback ran and opened a talk, a found box or a film) ends when play comes back. It used to wait out
+  // the talk frozen and play its last 0.45 s after it: the gesture again, and the keys locked (actT > 0) — "W Try Tap" on
+  // screen and W doing nothing, walking doing nothing, for that long after every such talk. An action still to reach its
+  // moment (its callback pending) or with a follow-up (a knockdown's get-up) goes on as before
+  endAct() {
+    const h = this.hero;
+    if (h && h.actT > 0 && !h.actCb && !h.actNext) h.actT = 0;
   }
   // INVENTORY-CALM: the inventory window shuts back to play, or to the pause menu it was opened from (its Journal
   // button selected again)
