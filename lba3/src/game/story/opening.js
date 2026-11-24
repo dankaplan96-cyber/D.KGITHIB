@@ -517,12 +517,48 @@ export function playOpening(story, cut = openingCut()) {
   const grips = [];
   const grip = (a, side, t0, t1, target, { ein = 0.35, eout = 0.35, palm = V(0.008, -0.062, 0.012) } = {}) => grips.push({ a, side, t0, t1, target, ein, eout, palm });
   // (NO-AIR: the solve itself is src/engine/handik.js now, shared with the residents' work: src/game/workhands.js)
+  // (P119) one hand going from one thing straight to the next — the mast to the deck, the tap to the stream, the crate to
+  // the hook: the two holds overlapped and each was solved by its own weight, the second from where the first left the
+  // arm. Their weights crossed (one easing out as the other eased in), so between them the arm went most of the way back
+  // to the bare pose's — Arthur's hand dropped off the mast toward his knee for a third of a second before it came to the
+  // deck. A hold that the same hand's next one starts within now hands over to it: the hand's place (and its turn) moves
+  // from the one to the other over the first's own ease-out, held all the way; neither eases to the bare pose there
+  let linked = false;
+  const link = () => {
+    linked = true;
+    for (const g of grips) {
+      g.next = null;
+      for (const h of grips) if (h !== g && h.a === g.a && h.side === g.side && h.t0 > g.t0 && h.t0 <= g.t1 && (!g.next || h.t0 < g.next.t0)) g.next = h;
+    }
+    for (const g of grips) if (g.next) g.next.prev = g;
+  };
+  const gw = (g, tt) => (g.prev ? 1 : sm((tt - g.t0) / g.ein)) * (g.next ? 1 : sm((g.t1 - tt) / g.eout));
   const solveArm = (a, g, tt) => {
-    const w = sm((tt - g.t0) / g.ein) * sm((g.t1 - tt) / g.eout);
+    const w = gw(g, tt);
     if (w <= 0) return;
     const T = g.target(tt);
     if (!T) return;
     solveHand(a.rig.j['arm' + g.side], g.side, T, w, saved(a), g.palm);
+  };
+  const _bl = { palm: V(0, 0, 0), fingers: V(0, 0, 0), normal: V(0, 0, 0) }, _blP = V(0, 0, 0);
+  const _hx = V(0, 0, 0), _hy = V(0, 0, 0), _hz = V(0, 0, 0), _hm = new THREE.Matrix4(), _hqa = new THREE.Quaternion(), _hqb = new THREE.Quaternion();
+  const handQ = (T, q) => {   // (the hand's turn as solveHand reads it: the fingers along -y, the palm's normal along x)
+    _hy.copy(T.fingers).normalize().negate(); _hx.copy(T.normal).normalize(); _hx.addScaledVector(_hy, -_hx.dot(_hy)).normalize(); _hz.crossVectors(_hx, _hy);
+    return q.setFromRotationMatrix(_hm.makeBasis(_hx, _hy, _hz));
+  };
+  const handover = (g) => Math.min(g.t1 - g.eout, g.next.t0);   // (from when the hand starts over to the next)
+  const solveTwo = (a, g1, tt) => {
+    const g2 = g1.next, A = g1.target(tt), B = g2.target(tt);
+    if (!A || !B) { solveArm(a, g1, tt); return; }
+    const h0 = handover(g1), k = sm((tt - h0) / Math.max(0.05, g1.t1 - h0)), w = (g1.prev ? 1 : sm((tt - g1.t0) / g1.ein)) * (g2.next ? 1 : sm((g2.t1 - tt) / g2.eout));
+    if (w <= 0) return;
+    _bl.palm.copy(A.palm).lerp(B.palm, k);
+    const turn = A.fingers && A.normal && B.fingers && B.normal;
+    if (turn) {
+      handQ(A, _hqa).slerp(handQ(B, _hqb), k);   // (slerped: the tap's palm-down to the stream's palm-up is a half turn, which a mix of the two vectors passes through nothing)
+      _bl.fingers.set(0, -1, 0).applyQuaternion(_hqa); _bl.normal.set(1, 0, 0).applyQuaternion(_hqa);
+    }
+    solveHand(a.rig.j['arm' + g1.side], g1.side, turn ? _bl : { palm: _bl.palm }, w, saved(a), _blP.copy(g1.palm).lerp(g2.palm, k));
   };
   const STEP = 0.28, NOFEET = /^(walk|run|sneak|kneel)/;
   const plantFeet = (a, tt, dt) => {
@@ -613,7 +649,11 @@ export function playOpening(story, cut = openingCut()) {
       speech(a, dt);
       a.sync();
       a.rig.root.updateMatrixWorld(true);
-      for (const g of grips) if (g.a === a && tt >= g.t0 && tt <= g.t1) solveArm(a, g, tt);
+      if (!linked) link();
+      for (const g of grips) {
+        if (g.a !== a || tt < g.t0 || tt > g.t1 || (g.prev && tt <= g.prev.t1)) continue;   // (a hold being handed to: with the one before)
+        if (g.next && tt >= handover(g)) solveTwo(a, g, tt); else solveArm(a, g, tt);
+      }
       plantFeet(a, tt, dt);
     }
   });
@@ -1074,23 +1114,46 @@ export function playOpening(story, cut = openingCut()) {
   const gripN = (side, n0, n1, target, o) => grip(tw, side, n0 - NB, n1 - NB, (tt) => target(tt + NB), o);
   // (his hands rest on the table either side of the book, near its edge — at the frame's foot, the pages clear; the right
   //  one goes to a page's corner to turn it)
-  const edgeHold = (sd) => () => ({ palm: bw(sd * (PW + 0.05), 0.012, 0.118), fingers: bd(V(-sd * 0.3, -0.05, -1)).normalize(), normal: bd(V(0, -1, 0)) });
-  // (the corner where the leaf is at this very moment: the leaf itself is bent by a track that runs after the hands')
-  const corner = (L, t0) => (n) => {
-    const c = L.at(0.88 * PW, 0.3 * PH, thetaAt(n, t0));
-    return { palm: c.p.clone().addScaledVector(c.n, 0.009).applyMatrix4(BM), fingers: bd(c.along.clone().multiplyScalar(-0.45).add(V(0, 0, -1))).normalize(), normal: bd(c.n.clone().negate()) };
+  // (P119: the fingers turned in toward the book and their tips at its board, steadying it — they pointed straight away
+  //  from him, two paws set down beside it; a little nearer him, so less of the forearm crosses the frame's foot)
+  const edgeHold = (sd) => () => ({ palm: bw(sd * (PW + 0.055), 0.012, 0.132), fingers: bd(V(-sd * 0.75, -0.05, -0.65)).normalize(), normal: bd(V(0, -1, 0)) });
+  // (P119, the user 24.11: "the hands and the notebook — the whole scene doesn't look good". A page is turned the way people
+  //  turn one: the fingers take the corner and lift it, give it a push in toward the spine and let go of it at about 40
+  //  degrees; it goes on over by itself. The hand followed the corner all the way up to the leaf standing on end, 15 cm
+  //  over the book: under a camera 0.6 m above the page, a fist and a sleeve over a third of the frame; pushing it on to
+  //  the spine instead brought the forearm across the whole page. It leaves the leaf where it let go of it)
+  // (the leaf where it is at this very moment: the leaf itself is bent by a track that runs after the hands')
+  const LET = 0.5 * TT, GO = 0.42, BACK = 0.45;
+  const onLeaf = (L, t0, n) => {
+    const u = Math.min(LET, Math.max(0, n - t0)) / TT, s = PW * (0.88 - 0.2 * sm((u - 0.3) / 0.2));
+    const c = L.at(s, 0.3 * PH, thetaAt(t0 + u * TT, t0)), off = sm((n - t0 - LET) / (0.2 * TT));
+    return { palm: c.p.clone().addScaledVector(c.n, 0.009 + 0.025 * off).applyMatrix4(BM), fingers: bd(c.along.clone().multiplyScalar(-0.45).add(V(0, 0, -1))).normalize(), normal: bd(c.n.clone().negate()) };
   };
-  gripN('L', -0.5, 16.35, edgeHold(-1), { ein: 0.3, eout: 0.5 });
-  gripN('R', -0.5, 6.75, edgeHold(1), { ein: 0.3, eout: 0.35 });
-  gripN('R', 6.45, 7.75, corner(leafA, TURNS[0][0]), { ein: 0.35, eout: 0.3 });
-  gripN('R', 7.6, 14.95, edgeHold(1), { ein: 0.45, eout: 0.35 });
-  gripN('R', 14.65, 15.95, corner(leafB, TURNS[1][0]), { ein: 0.35, eout: 0.3 });
-  // (the last page turned, he straightens and lets go, his eyes still on the drawing)
-  atN(15.95, () => { play(tw, 'idle'); tw.rig.blendT = 0.6; });
+  // (P119: one hold for the right hand, from its rest by the book to the corner and back, with a small arc over the page
+  //  between: two holds handed over by their weights let the hand go back to the bare pose's arm on the way — held up in
+  //  front of the lens, 0.3 s of fist and sleeve over the page after each turn)
+  const restR = edgeHold(1);
+  const rightHand = (n) => {
+    const R0 = restR();
+    for (const [t0, L] of TURNS) {
+      if (n < t0 - GO || n > t0 + LET + BACK) continue;
+      const k = n < t0 ? sm((n - t0 + GO) / GO) : n <= t0 + LET ? 1 : 1 - sm((n - t0 - LET) / BACK), T = onLeaf(L, t0, n);
+      return { palm: R0.palm.clone().lerp(T.palm, k).add(V(0, 0.02 * Math.sin(Math.PI * k), 0)), fingers: R0.fingers.clone().lerp(T.fingers, k).normalize(), normal: R0.normal.clone().lerp(T.normal, k).normalize() };
+    }
+    return R0;
+  };
+  // (P119: he stays over his book to the end of it — the last page turned, his hands back by the book, his eyes on the
+  //  drawing as it becomes the island. He straightened and let go at 15.95, in his close-up: his head came up out of the
+  //  look at the book and he stared into the lens for the shot's last quarter second. The hands come off under the
+  //  page's picture, which covers the screen from 17.1)
+  const NB_LET = NB_END - 0.02;
+  gripN('L', -0.5, NB_LET, edgeHold(-1), { ein: 0.3, eout: 0.3 });
+  gripN('R', -0.5, NB_LET, rightHand, { ein: 0.3, eout: 0.3 });
   const bookMid = () => bw(0, 0.01, 0.01);
   // (bent over the book a little more than the tinkering pose, so his hands reach the table top beside it and its pages'
-  //  corners: from the tinkering pose they stopped 5-8 cm short; straightening as he lets go, 15.95)
-  bend(tw, -NB - 0.5, 15.95 - NB, { torso: [0.2], hips: -0.02, kneeL: [0.08], kneeR: [0.08] });
+  //  corners: from the tinkering pose they stopped 5-8 cm short)
+  // (P119: on the still 'lean' pose, rig.js, whose chest is bent 0.06 more than the tinkering one's was)
+  bend(tw, -NB - 0.5, NB_LET - NB, { torso: [0.14], hips: -0.02, kneeL: [0.08], kneeR: [0.08] });
   atN(0, () => look(tw, bookMid()));
   for (const [t0] of TURNS) { atN(t0, () => sfx('paper')); atN(t0 + TT - 0.08, () => sfx('paper')); }
   atN(TURNS[0][0], bakeTrail);
@@ -1157,7 +1220,7 @@ export function playOpening(story, cut = openingCut()) {
     tipLocal.set(-0.23, 0.016, 0).applyEuler(sdv.rotation).add(sdv.position); axisLocal.set(-1, 0, 0).applyEuler(sdv.rotation).normalize();
   });
   return {
-    start: () => { put(tw, nbSpot.x, nbSpot.z, NB_A, 'tinker'); placeBook(); leafA.set(0); leafB.set(0); showDashes(0); },
+    start: () => { put(tw, nbSpot.x, nbSpot.z, NB_A, 'lean'); placeBook(); leafA.set(0); leafB.set(0); showDashes(0); },
     dispose: () => { dropOverlay(); for (const x of [...nbGeos, ...nbMats, ...nbTex]) x.dispose(); },
     test: { book, leaves: [leafA.F.me, leafB.F.me], turns: TURNS.map(([t0]) => t0), turnLen: TT, end: NB_END },
   };

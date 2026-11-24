@@ -307,7 +307,7 @@ check("OPEN-FILM: every line's speaker moves their mouth with it (the worker and
 check('OPEN-FILM: no line plays the looping talk gesture (one gesture per line, or none)', watch.talking.length === 0, watch.talking);
 check('OPEN-FILM: the aerial move does not stop (old 8.5-12.5 s; it stopped dead at 9 s)', watch.aerial.min > 1.5, watch.aerial);
 if (CUT === 'notebook') {
-  check('LBA3-RUN: the history over the notebook, a caption at a time, then where and when', watch.capsAt.length === 5 && watch.capsAt[0].startsWith('FunFrock') && watch.capsAt[3].startsWith('On Zeelich') && watch.capsAt[4].startsWith('Citadel Island'), watch.capsAt);
+  check('LBA3-RUN: the history over the notebook, a caption at a time, then where and when', watch.capsAt.length === 5 && watch.capsAt[0].startsWith('FunFrock') && watch.capsAt[3].includes('Zeelich') && watch.capsAt[4].startsWith('Citadel Island'), watch.capsAt);
   check("LBA3-RUN: Twinsen's right hand is on the page's corner as it lifts, at both turns (within 3 cm)", watch.page.n >= 18 && watch.page.off.length === 0, watch.page);
   check("LBA3-RUN: the page's drawing is laid over the screen as it turns into the island", watch.overlaySeen);
 } else check('the classic cut: where and when, then the originals in two lines; no notebook', watch.capsAt.length === 2 && watch.capsAt[0].startsWith('Citadel Island') && !watch.overlaySeen, watch.capsAt);
