@@ -25,7 +25,7 @@ const STACK2 = 6, STACK3 = 10;   // rock heights (m) over which a rock is a stac
 // then shaped on the real ground.
 // (ROCKS-1: the placement draws from rng(77) are those of the box-shaped blocks, one for one; each rock's shape draws
 // from its own generator seeded by its grid cell, so a rock's shape never moves another rock)
-export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step = 1.9, minDrop = 1.75, decide = terrain } = {}) {
+export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step = 1.9, minDrop = 1.75, decide = terrain, cut = [] } = {}) {
   const H = (x, z) => terrain.heightAt(x, z), DH = (x, z) => decide.heightAt(x, z);
   const half = terrain.half - 2;
   const r = rng(77);
@@ -65,6 +65,7 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
     for (let k = 1; k < nB - 1; k++) tri(B[0], B[k], B[k + 1], ct);
   };
   let blocks = 0, chunks = 0;
+  const rocks = [];   // (P121: each rock's triangles [t0, t1) and its chunks' ranges, its fall line, its tone)
   for (let z = terrain.cz - half; z < terrain.cz + half; z += step) {
     for (let x = terrain.cx - half; x < terrain.cx + half; x += step) {
       const px = x + (r() - 0.5) * step * 0.7, pz = z + (r() - 0.5) * step * 0.7;
@@ -104,6 +105,7 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
       const skew = (r() - 0.5) * 0.3, lean = (r() - 0.5) * 0.2;
       const tone = 0.9 + r() * 0.1;
       base.setRGB(tone, tone * (0.98 + r() * 0.03), tone * (1.0 + r() * 0.04));
+      const R = { t0: pos.length / 9, chunks: [], gx, gz, tone: [base.r, base.g, base.b], seed: ((ix * 83492791) ^ (iz * 2971215073) ^ 0x27d4eb2d) >>> 0 };
       // this rock's own shape draws
       const hr = rng(((ix * 73856093) ^ (iz * 19349663) ^ 0x5bd1e995) >>> 0);
       // local frame: s along the cliff (tx, tz), n out of the hill (downhill, −g)
@@ -174,13 +176,40 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
           const [qx, qz] = L(sOff + sl + s * sc + (hr() - 0.5) * 0.24, nc1 + n * sc - hr() * 0.3);
           return [qx, yb - drop, qz, an];
         });
+        const c0 = pos.length / 9;
         chunk(Bm, Tm, hr);
+        R.chunks.push([c0, pos.length / 9]);
         chunks++;
         // the next chunk up: a little narrower, shifted along the cliff
         sOff += (hr() - 0.5) * 0.6; wid *= 0.9 + hr() * 0.08; dep *= 0.92;
       }
+      R.t1 = pos.length / 9; rocks.push(R);
       blocks++;
     }
+  }
+  // P121: the rocks that run into each other at a knoll or a corner (crossing fall lines), and those half or more inside
+  // another: each such group becomes one outcrop (the hull of its corners) where that adds little rock over the ground,
+  // else its most buried rocks go; what is left has no sliver or shard of one rock showing out of another's face
+  // (where masonry now stands: world.js's cut, each [inside(x, z, y), [x0, z0, x1, z1]]: a rock with a corner in it goes
+  //  whole, before the rest are settled, so no rock is merged with or dropped for one that is not there)
+  for (const R of rocks) for (let t = R.t0 * 9; t < R.t1 * 9 && !R.gone; t += 3) {
+    const x = pos[t], y = pos[t + 1], z = pos[t + 2];
+    for (const [inside, [x0, z0, x1, z1]] of cut) if (x >= x0 && x <= x1 && z >= z0 && z <= z1 && inside(x, z, y)) { R.gone = true; break; }
+  }
+  const st = settleRocks(rocks.filter((R) => !R.gone), pos, H);
+  const keep = new Uint8Array(pos.length / 9).fill(1);
+  for (const R of rocks) if (R.gone) keep.fill(0, R.t0, R.t1);
+  let o = 0;
+  for (let t = 0; t < keep.length; t++) if (keep[t]) {
+    for (let k = 0; k < 9; k++) { pos[o * 9 + k] = pos[t * 9 + k]; col[o * 9 + k] = col[t * 9 + k]; }
+    for (let k = 0; k < 6; k++) uv[o * 6 + k] = uv[t * 6 + k];
+    o++;
+  }
+  pos.length = o * 9; col.length = o * 9; uv.length = o * 6;
+  for (const O of st.outcrops) {
+    const hr = rng(O.seed);
+    base.setRGB(...O.tone);
+    for (const [a, b, c] of O.faces) tri(O.pts[a], O.pts[b], O.pts[c], 0.95 + hr() * 0.09);
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -192,9 +221,182 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
   m.castShadow = true;
   m.receiveShadow = true;
   m.name = 'cliffRocks';
-  m.userData.blocks = blocks; m.userData.chunks = chunks;
+  m.userData.blocks = blocks; m.userData.chunks = chunks; m.userData.settled = { merged: st.merged, outcrops: st.outcrops.length, dropped: st.dropped, ms: st.ms };
   parent.add(m);
   return { mesh: m, blocks, chunks };
+}
+
+// P121 (the user, 24.11, a photo of v150: "this still isn't fixed"): by the water office, at the promenade's south end,
+// the knoll's seven rocks stood on three faces of a 6 m mound, each along its own fall line, so they crossed one another:
+// the faces of one ran through the next, the pale corner of a rock behind stood out of a darker one as a shard, and one
+// was mostly inside another. Rocks along one straight cliff overlap by design (a continuous face: their faces nearly in
+// one plane); these crossed. settleRocks measures every pair of rocks as solids (vertical rays on a 0.2 m grid, each
+// chunk a closed solid, a rock the union of its chunks) and calls a pair bad when half or more of the smaller is inside
+// the other, or when their fall lines differ by over 50° and a sixth of the smaller is inside. Each group of rocks joined
+// by bad pairs becomes ONE outcrop, the convex hull of its corners (no slivers inside a hull), where that adds little rock
+// over the ground (≤ 15 % of the group's visible rock + 0.3 m³: the corner of a mound, not the open air of a terrace's
+// inside corner); else its most buried rocks go (the most inside others first) until no bad pair is left. Nothing else
+// moves (no random draw: placements and shapes as before). tests/overlap-sweep.mjs (f).
+const SCELL = 0.2;
+// (?rocks=old: the rocks as they stood before P121, for the user's comparison: no settling, no masonry pass in world.js)
+export const ROCKS_OLD = (() => { try { return new URLSearchParams(location.search).get('rocks') === 'old'; } catch { return false; } })();
+function settleRocks(rocks, pos, H) {
+  if (ROCKS_OLD) return { outcrops: [], merged: 0, dropped: 0, ms: 0 };
+  const t0 = typeof performance !== 'undefined' ? performance.now() : 0;
+  const ckey = (i, j) => (i + 32768) * 65536 + (j + 32768);
+  // the intervals [lo, hi] of a closed run of triangles [a, b) on the vertical line (x, z)
+  const hitsOn = (T, a, b, x, z) => {
+    const hs = [];
+    for (let t = a; t < b; t++) {
+      const o = t * 9, ax = T[o], az = T[o + 2], bx = T[o + 3], bz = T[o + 5], cx = T[o + 6], cz = T[o + 8];
+      if ((x < ax && x < bx && x < cx) || (x > ax && x > bx && x > cx) || (z < az && z < bz && z < cz) || (z > az && z > bz && z > cz)) continue;
+      const d = (bx - ax) * (cz - az) - (bz - az) * (cx - ax); if (Math.abs(d) < 1e-12) continue;
+      const u = ((x - ax) * (cz - az) - (z - az) * (cx - ax)) / d, v = ((bx - ax) * (z - az) - (bz - az) * (x - ax)) / d;
+      if (u < 0 || v < 0 || u + v > 1) continue;
+      hs.push(T[o + 1] + u * (T[o + 4] - T[o + 1]) + v * (T[o + 7] - T[o + 1]));
+    }
+    return hs.sort((p, q) => p - q);
+  };
+  const runIv = (a, b, x, z, out) => { const hs = hitsOn(pos, a, b, x, z); for (let k = 0; k + 1 < hs.length; k += 2) out.push([hs[k], hs[k + 1]]); };
+  const merge = (l) => { l.sort((p, q) => p[0] - q[0]); const m = []; for (const v of l) { if (m.length && v[0] <= m[m.length - 1][1]) m[m.length - 1][1] = Math.max(m[m.length - 1][1], v[1]); else m.push([v[0], v[1]]); } return m; };
+  const ovl = (A, B) => { let o = 0; for (const [a0, a1] of A) for (const [b0, b1] of B) o += Math.max(0, Math.min(a1, b1) - Math.max(a0, b0)); return o; };
+  const A2 = SCELL * SCELL;
+  // the chunks: each a closed solid; its volume exact (the divergence theorem), its intervals on the grid's lines on demand
+  const CH = [];
+  rocks.forEach((R, ri) => {
+    R.vol = 0;
+    for (const [a, b] of R.chunks) {
+      let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, v = 0;
+      for (let t = a; t < b; t++) {
+        const o = t * 9;
+        for (let k = 0; k < 9; k += 3) { x0 = Math.min(x0, pos[o + k]); x1 = Math.max(x1, pos[o + k]); z0 = Math.min(z0, pos[o + k + 2]); z1 = Math.max(z1, pos[o + k + 2]); }
+        v += (pos[o] * (pos[o + 4] * pos[o + 8] - pos[o + 5] * pos[o + 7]) - pos[o + 1] * (pos[o + 3] * pos[o + 8] - pos[o + 5] * pos[o + 6]) + pos[o + 2] * (pos[o + 3] * pos[o + 7] - pos[o + 4] * pos[o + 6])) / 6;
+      }
+      CH.push({ ri, a, b, box: [x0, z0, x1, z1], vol: Math.max(v, 1e-6), iv: new Map() });
+      R.vol += Math.max(v, 1e-6);
+    }
+  });
+  const civ = (C, i, j) => { const k = ckey(i, j); let l = C.iv.get(k); if (!l) { l = []; if ((i + 1) * SCELL >= C.box[0] && i * SCELL <= C.box[2] && (j + 1) * SCELL >= C.box[1] && j * SCELL <= C.box[3]) runIv(C.a, C.b, (i + 0.5) * SCELL, (j + 0.5) * SCELL, l); C.iv.set(k, l); } return l; };
+  const rockIv = (ri, i, j) => { const l = []; for (const C of rocks[ri].ch) l.push(...civ(C, i, j)); return merge(l); };
+  for (const R of rocks) R.ch = [];
+  for (const C of CH) rocks[C.ri].ch.push(C);
+  // the pairs of chunks of two rocks whose boxes meet (a 2 m hash), their overlap on the grid in the boxes' common part
+  const hash = new Map(), HC = 2;
+  CH.forEach((C, ci) => { for (let i = Math.floor(C.box[0] / HC); i <= Math.floor(C.box[2] / HC); i++) for (let j = Math.floor(C.box[1] / HC); j <= Math.floor(C.box[3] / HC); j++) { const k = ckey(i, j); let l = hash.get(k); if (!l) hash.set(k, l = []); l.push(ci); } });
+  const seenP = new Set(), pairs = new Map();
+  for (const l of hash.values()) for (let p = 0; p < l.length; p++) for (let q = p + 1; q < l.length; q++) {
+    const A = CH[l[p]], B = CH[l[q]]; if (A.ri === B.ri) continue;
+    const pk = l[p] * 65536 + l[q]; if (seenP.has(pk)) continue; seenP.add(pk);
+    const x0 = Math.max(A.box[0], B.box[0]), x1 = Math.min(A.box[2], B.box[2]), z0 = Math.max(A.box[1], B.box[1]), z1 = Math.min(A.box[3], B.box[3]);
+    if (x0 >= x1 || z0 >= z1) continue;
+    let o = 0;
+    for (let i = Math.floor(x0 / SCELL); i <= Math.floor(x1 / SCELL); i++) for (let j = Math.floor(z0 / SCELL); j <= Math.floor(z1 / SCELL); j++) o += ovl(civ(A, i, j), civ(B, i, j)) * A2;
+    if (o <= 0) continue;
+    const a = Math.min(A.ri, B.ri), b = Math.max(A.ri, B.ri), key = a * 65536 + b;
+    const P = pairs.get(key) || { o: 0, fc: 0 }; P.o += o; P.fc = Math.max(P.fc, o / Math.min(A.vol, B.vol)); pairs.set(key, P);
+  }
+  // bad: half (0.45) or more of the smaller rock, or of a smaller chunk, inside the other; or crossing fall lines (over 50°)
+  // with a sixth of the smaller inside
+  const bad = [], cos50 = Math.cos((50 * Math.PI) / 180);
+  for (const [key, P] of pairs) {
+    const a = Math.floor(key / 65536), b = key % 65536, Ra = rocks[a], Rb = rocks[b];
+    const f = P.o / Math.min(Ra.vol, Rb.vol), cosAng = Ra.gx * Rb.gx + Ra.gz * Rb.gz;
+    if (Math.max(f, P.fc) >= 0.45 || (cosAng < cos50 && f > 1 / 6)) bad.push({ a, b, f: Math.max(f, P.fc), small: Ra.vol <= Rb.vol ? a : b });
+  }
+  // the groups (in the order of their first rock: the same every build)
+  const par = rocks.map((_, i) => i), find = (i) => { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; };
+  for (const p of bad) { const x = find(p.a), y = find(p.b); if (x !== y) par[x] = y; }
+  const groups = new Map();
+  for (let i = 0; i < rocks.length; i++) if (bad.some((p) => p.a === i || p.b === i)) { const g = find(i); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(i); }
+  const outcrops = []; let merged = 0, dropped = 0;
+  for (const M of groups.values()) {
+    const set = new Set(M);
+    // the hull of the group's corners
+    const pts = [], seen = new Set();
+    for (const ri of M) for (let t = rocks[ri].t0 * 9; t < rocks[ri].t1 * 9; t += 3) { const k = Math.round(pos[t] * 1e3) + ',' + Math.round(pos[t + 1] * 1e3) + ',' + Math.round(pos[t + 2] * 1e3); if (!seen.has(k)) { seen.add(k); pts.push([pos[t], pos[t + 1], pos[t + 2]]); } }
+    const faces = M.length <= 8 ? hull3(pts) : null;
+    let ok = false, hullT = null, hullBox = null;
+    if (faces) {
+      // the rock it adds over the ground (outside every member) against the group's own rock over the ground
+      const HT = []; for (const [a, b, c] of faces) HT.push(...pts[a], ...pts[b], ...pts[c]);
+      let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const p of pts) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[2]); z1 = Math.max(z1, p[2]); }
+      let add = 0, vis = 0;
+      for (let i = Math.floor(x0 / SCELL); i <= Math.floor(x1 / SCELL); i++) for (let j = Math.floor(z0 / SCELL); j <= Math.floor(z1 / SCELL); j++) {
+        const x = (i + 0.5) * SCELL, z = (j + 0.5) * SCELL, g = H(x, z);
+        const U = []; for (const ri of M) U.push(...rockIv(ri, i, j));
+        const um = merge(U); for (const [lo, hi] of um) vis += Math.max(0, hi - Math.max(lo, g)) * A2;
+        const hs = hitsOn(HT, 0, HT.length / 9, x, z); if (hs.length < 2) continue;
+        const lo = Math.max(hs[0], g), hi = hs[hs.length - 1]; if (hi <= lo) continue;
+        add += (hi - lo - ovl(um, [[lo, hi]])) * A2;
+      }
+      ok = add <= 0.15 * vis + 0.3;
+      hullT = HT; hullBox = [x0, z0, x1, z1];
+    }
+    if (ok) {
+      const big = M.reduce((p, q) => (rocks[q].vol > rocks[p].vol ? q : p), M[0]);
+      for (const ri of M) rocks[ri].gone = true;
+      outcrops.push({ pts, faces, tone: rocks[big].tone, seed: rocks[big].seed, HT: hullT, box: hullBox });
+      merged += M.length;
+      continue;
+    }
+    // else the most buried go, one by one, until no bad pair is left in the group
+    for (;;) {
+      const live = bad.filter((p) => set.has(p.a) && !rocks[p.a].gone && !rocks[p.b].gone);
+      if (!live.length) break;
+      const score = new Map(); for (const p of live) score.set(p.small, (score.get(p.small) || 0) + p.f);
+      let worst = -1, ws = -1; for (const [ri, sc] of score) if (sc > ws || (sc === ws && rocks[ri].vol < rocks[worst].vol)) { ws = sc; worst = ri; }
+      rocks[worst].gone = true; dropped++;
+    }
+  }
+  // a rock that an outcrop now holds half or more of (it overlapped one of the group) goes too
+  for (const O of outcrops) {
+    let hv = 0; for (const [a, b, c] of O.faces) { const A = O.pts[a], B = O.pts[b], C = O.pts[c]; hv += (A[0] * (B[1] * C[2] - B[2] * C[1]) - A[1] * (B[0] * C[2] - B[2] * C[0]) + A[2] * (B[0] * C[1] - B[1] * C[0])) / 6; }
+    rocks.forEach((R, ri) => {
+      if (R.gone) return;
+      let o = 0;
+      for (const C of R.ch) {
+        const x0 = Math.max(C.box[0], O.box[0]), x1 = Math.min(C.box[2], O.box[2]), z0 = Math.max(C.box[1], O.box[1]), z1 = Math.min(C.box[3], O.box[3]);
+        if (x0 >= x1 || z0 >= z1) continue;
+        for (let i = Math.floor(x0 / SCELL); i <= Math.floor(x1 / SCELL); i++) for (let j = Math.floor(z0 / SCELL); j <= Math.floor(z1 / SCELL); j++) {
+          const hs = hitsOn(O.HT, 0, O.HT.length / 9, (i + 0.5) * SCELL, (j + 0.5) * SCELL); if (hs.length < 2) continue;
+          o += ovl(civ(C, i, j), [[hs[0], hs[hs.length - 1]]]) * A2;
+        }
+      }
+      if (o / Math.min(R.vol, hv) >= 0.45) { R.gone = true; dropped++; }
+    });
+    O.HT = O.box = null;
+  }
+  for (const R of rocks) R.ch = null;
+  return { outcrops, merged, dropped, ms: Math.round((typeof performance !== 'undefined' ? performance.now() : 0) - t0) };
+}
+
+// a convex hull (incremental) of points [[x, y, z], ...]: faces [[i, j, k], ...] wound outward, or null (flat)
+export function hull3(P, eps = 1e-6) {
+  const n = P.length; if (n < 4) return null;
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], cr = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  let i0 = 0, i1 = 0; for (let i = 1; i < n; i++) { if (P[i][0] < P[i0][0]) i0 = i; if (P[i][0] > P[i1][0]) i1 = i; }
+  if (i0 === i1) return null;
+  const d01 = sub(P[i1], P[i0]); let i2 = -1, best = eps;
+  for (let i = 0; i < n; i++) { const l = Math.hypot(...cr(d01, sub(P[i], P[i0]))); if (l > best) { best = l; i2 = i; } }
+  if (i2 < 0) return null;
+  const nrm = cr(d01, sub(P[i2], P[i0])); let i3 = -1; best = eps;
+  for (let i = 0; i < n; i++) { const d = Math.abs(dot(nrm, sub(P[i], P[i0]))); if (d > best) { best = d; i3 = i; } }
+  if (i3 < 0) return null;
+  const faces = [];
+  const mk = (a, b, c) => { const nn = cr(sub(P[b], P[a]), sub(P[c], P[a])); return { v: [a, b, c], n: nn, d: dot(nn, P[a]), l: Math.hypot(...nn), on: true }; };
+  const cen = [0, 1, 2].map((k) => (P[i0][k] + P[i1][k] + P[i2][k] + P[i3][k]) / 4);
+  for (const [a, b, c] of [[i0, i1, i2], [i0, i1, i3], [i0, i2, i3], [i1, i2, i3]]) { let f = mk(a, b, c); if (dot(f.n, cen) - f.d > 0) f = mk(a, c, b); faces.push(f); }
+  const used = new Set([i0, i1, i2, i3]);
+  for (let p = 0; p < n; p++) {
+    if (used.has(p)) continue;
+    const vis = faces.filter((f) => f.on && dot(f.n, P[p]) - f.d > 1e-5 * f.l);
+    if (!vis.length) continue;
+    const E = new Map();
+    for (const f of vis) { f.on = false; for (let k = 0; k < 3; k++) { const a = f.v[k], b = f.v[(k + 1) % 3], rk = b + ',' + a; if (E.has(rk)) E.delete(rk); else E.set(a + ',' + b, [a, b]); } }
+    for (const [a, b] of E.values()) faces.push(mk(a, b, p));
+  }
+  // (the dead faces out of the list as it grows: a hull of a few hundred corners stays quick)
+  return faces.filter((f) => f.on).map((f) => f.v);
 }
 
 // STONES-31 (the user, 7.11: "the cylinders look really weird"): the Whispering Cliffs' rising stepping stones were
@@ -287,6 +489,7 @@ export function stoneColumnGeometry(seed, depth, groundY = () => -1e9) {
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
   geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   geo.computeVertexNormals();
+  geo.userData.rock = true;   // (P121: the overlap sweep's rock parts)
   return geo;
 }
 
@@ -420,5 +623,6 @@ export function plateauStonesGeometry({ stones, pedestal, ground }) {
   geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
   geo.computeVertexNormals();
   geo.computeBoundingSphere();
+  geo.userData.rock = true;   // (P121: the overlap sweep's rock parts)
   return geo;
 }

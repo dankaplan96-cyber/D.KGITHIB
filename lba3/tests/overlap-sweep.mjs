@@ -14,6 +14,12 @@
 //   (e) ground patches on paving    sweep.js: foliage (grass, flowers, tulips) standing on a part's flat top that is not
 //                                   the ground, or on terrain painted as cobbles; a see-through decal lying on a part;
 //                                   (d) findings where the ground over a paving part is painted grass / dirt / sand
+//   (f) rock in rock (P121)        sweep.js: two rock parts (one mesh's too: Citadel's cliff rocks) where half or more of
+//                                   the smaller is inside the other but not all of it: what shows of it are slivers and
+//                                   shards out of the other's faces (the user's v150 photo of the knoll by the water office)
+//   (g) rock cut by masonry (P121) sweep.js: a rock part through a built part (a wall, a house, paving, steps) by more
+//                                   than 5 cm on 3 rays or more
+//   (c) also counts a rock floating over the ground (only a sunk rock is by design: its foot is buried)
 // Every finding that is not on KNOWN (below: by design, each with its reason) FAILS. The counts per area and category
 // are printed (COUNTS lines) and kept in REPORT=<file.json>.
 // Env: OUT=<dir> keeps each area's raw result (a rerun skips the areas already there: RESUME=1); ONLY=a,b the areas;
@@ -49,7 +55,7 @@ const OUTDOOR = /^(citadel|zeelich|isle_.*|desert|hamalayi|ballastra|bl_arches|b
 const ROCKS = /cliffRocks|plateauStones|smallPool|rimRock|rock|boulder|scree|pebble/i;
 const KNOWN = [
   // rocks: set into the ground by design (a rock's foot is buried, its top shows: scatter in vegetation.js / world.js)
-  ['*', 'c', ROCKS, null, 0, 'by design: rocks are set into the ground (their foot buried), not standing pieces'],
+  ['*', 'c', ROCKS, null, 0, 'by design: rocks are set into the ground (their foot buried), not standing pieces', 'sunk'],   // (P121: a floating rock is not)
   ['*', 'd', ROCKS, null, 0, 'by design: a rock\'s flat facet under the ground beside its top: set into the ground'],
   ['*', 'c', /gull|bird/i, null, 0, 'not a placed piece: birds perched or flying (they move between frames)'],
   ['*', 'c', /foam|ripple/i, null, 0, 'by design: foam and ripples lie on the water\'s surface'],
@@ -127,7 +133,7 @@ const KNOWN = [
   ['citadel', 'c', /harbour/, [-110, 44], 20, 'AUDIT-FIX: on the harbour\'s paving, which the AUDIT-FIX worker is fixing (world.js HARBOUR_*); not touched here'],
   ['citadel', 'd', /harbour/, [-105, 44], 22, 'AUDIT-FIX: the harbour\'s paving under the ground, which the AUDIT-FIX worker is fixing (world.js HARBOUR_*); not touched here'],
 ];
-const knownOf = (area, cat, f) => KNOWN.find(([a, c, re, near, r]) => (a === area || a === '*') && c === cat && (!re || re.test(f.text)) && (!near || Math.hypot(f.x - near[0], f.z - near[1]) < (r || 1)));
+const knownOf = (area, cat, f) => KNOWN.find(([a, c, re, near, r, , kind]) => (a === area || a === '*') && c === cat && (!kind || f.kind === kind) && (!re || re.test(f.text)) && (!near || Math.hypot(f.x - near[0], f.z - near[1]) < (r || 1)));
 
 // ------------------------------------------------------------------ the findings of one area's scan
 const nm = (D, oi) => { const d = D[oi]; if (!d) return '?'; if (d.terrain) return 'the ground (terrain)';
@@ -162,6 +168,15 @@ function findingsOf(r) {
   // (decals: outdoors only, where a ground patch can lie on paving; indoors they are rugs, mats and labels on purpose.
   //  A round one is a blob shadow under someone or a puddle, not a patch)
   if (OUTDOOR.test(a)) for (const s of r.decals) if (!/^Circle/.test(s.path)) F.push({ area: a, cat: 'e', kind: 'decal on a part', x: s.x, z: s.z, y: s.y, size: s.size.join('×') + ' m', text: `${s.path} [${s.tex}] on ${nm(D, s.on)}`, raw: s });
+  // (f) rock in rock: half or more of the smaller inside the other, not all of it (what shows is slivers and shards)
+  for (const s of r.rockIn || []) {
+    // (a small rock set into a rock mass five times its size or more, a boulder in a cave's rock wall, reads as set into
+    //  the ground, as a rock in the terrain does: by design)
+    if (s.n < 4 || s.frac < 0.5 || s.frac >= 0.97 || Math.max(s.va, s.vb) > 5 * Math.min(s.va, s.vb)) continue;
+    F.push({ area: a, cat: 'f', kind: 'rock in rock', x: s.x, z: s.z, y: s.y, size: `${Math.round(s.frac * 100)} % of the smaller in, ${s.v} m³`, text: `${nm(D, s.A)} | ${nm(D, s.B)} (vol ${s.va} / ${s.vb} m³, ${s.n} rays, box ${s.ba.join(',')} | ${s.bb.join(',')})`, raw: s });
+  }
+  // (g) a rock through a built part
+  for (const s of r.rockCut || []) F.push({ area: a, cat: 'g', kind: 'rock through masonry', x: s.x, z: s.z, y: s.y, size: `${s.d} m deep, ${s.m2} m²`, text: `${nm(D, s.A)} through ${nm(D, s.B)} (${s.n} rays, rock box ${s.ba.join(',')})`, raw: s });
   for (const f of F) { const k = knownOf(f.area, f.cat, f); f.known = k ? k[5] : null; }
   return F;
 }
@@ -265,10 +280,10 @@ if (WF) {
 for (const f of F) if (f.known === undefined) { const k = knownOf(f.area, f.cat, f) || (f.left ? [0, 0, 0, 0, 0, 'place-scan LEFT: ' + f.left] : null); f.known = k ? k[5] : null; }
 
 // counts per area and category
-const CATS = ['a', 'b', 'c', 'd', 'e'], counts = {};
-for (const f of F) { const c = (counts[f.area] ??= { a: [0, 0], b: [0, 0], c: [0, 0], d: [0, 0], e: [0, 0] }); c[f.cat][f.known ? 1 : 0]++; }
-console.log('COUNTS area: a through | b coplanar | c sunk/floating | d into ground | e paint/plants on paving   (open/known)');
-const tot = { a: [0, 0], b: [0, 0], c: [0, 0], d: [0, 0], e: [0, 0] };
+const CATS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'], counts = {};
+for (const f of F) { const c = (counts[f.area] ??= Object.fromEntries(CATS.map((k) => [k, [0, 0]]))); c[f.cat][f.known ? 1 : 0]++; }
+console.log('COUNTS area: a through | b coplanar | c sunk/floating | d into ground | e paint/plants on paving | f rock in rock | g rock through masonry   (open/known)');
+const tot = Object.fromEntries(CATS.map((k) => [k, [0, 0]]));
 for (const [a, c] of Object.entries(counts).sort()) { console.log(`COUNTS ${a.padEnd(16)} ` + CATS.map((k) => `${k} ${c[k][0]}/${c[k][1]}`).join('  ')); for (const k of CATS) { tot[k][0] += c[k][0]; tot[k][1] += c[k][1]; } }
 console.log('COUNTS TOTAL            ' + CATS.map((k) => `${k} ${tot[k][0]}/${tot[k][1]}`).join('  '));
 const open_ = F.filter((f) => !f.known);
@@ -277,5 +292,5 @@ for (const f of F.filter((f) => f.known)) console.log(`  known ${f.area} (${f.ca
 if (process.env.REPORT) fs.writeFileSync(process.env.REPORT, JSON.stringify({ counts, total: tot, findings: F.map(({ raw, ...f }) => ({ ...f, raw })) }, null, 1));
 const scanned = fs.readdirSync(OUT).filter((f) => f.endsWith('.json') && !f.includes('-report')).length;
 check(`every area scanned (${scanned})`, ONLY ? scanned >= ONLY.length : scanned >= 100);
-for (const k of CATS) checkVisual(`(${k}) ${{ a: 'no piece through another', b: 'no two surfaces fighting in one plane', c: 'nothing floating or sunk', d: 'no deck, step or path running into the ground', e: 'no ground paint, grass or flowers on paving' }[k]} but the known (${tot[k][0]} open)`, tot[k][0] === 0, open_.filter((f) => f.cat === k).slice(0, 8).map((f) => `${f.area} ${f.kind} ${f.x},${f.z} ${f.size}: ${f.text}`));
+for (const k of CATS) checkVisual(`(${k}) ${{ a: 'no piece through another', b: 'no two surfaces fighting in one plane', c: 'nothing floating or sunk', d: 'no deck, step or path running into the ground', e: 'no ground paint, grass or flowers on paving', f: 'no rock mostly inside another (slivers, shards)', g: 'no rock cut by a wall, a house, paving or steps' }[k]} but the known (${tot[k][0]} open)`, tot[k][0] === 0, open_.filter((f) => f.cat === k).slice(0, 8).map((f) => `${f.area} ${f.kind} ${f.x},${f.z} ${f.size}: ${f.text}`));
 done();

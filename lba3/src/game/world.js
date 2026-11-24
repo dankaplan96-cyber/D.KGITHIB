@@ -15,7 +15,7 @@ import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, HARB
 import { buildDinoFly } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
-import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry } from './cliffs.js';
+import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry, ROCKS_OLD } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
 import { mergeStatic } from '../engine/merge.js';
@@ -1042,15 +1042,19 @@ export function* buildWorldSteps(parentScene) {
   // faceted rock faces on the terrace cliffs (not on the path ramps or the paved quay)
   // (WORLD-80: the scatter's view of the ground, as it stood before step 2: see PATHS_SCATTER)
   const SG = scatterGround(terrain), HS = SG.heightAt;
+  climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
+  // (P121: the rocks where masonry now stands go inside buildCliffRocks, before the rest are settled — were dropRocks
+  //  after it: a rock settled against one that was then dropped)
   W_cliffs = buildCliffRocks(scene, terrain, TX.cliff, {
     decide: SG,
     skip: (x, z) => pathDistScatter(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
+    cut: [
+      [climbDropRock, [-45, -54, -20, -16]],   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
+      // (FLAT-TOWN: the rocks of the old sea cliff and ridge under the promenade, its walls and its flight; flatClear)
+      [(x, z) => (x > -77.4 && x < PROM.x1 + 0.3 && z > PROM.z0 - 0.4 && z < PROM_WALLS[1].z1 + 0.2) || flatClear(x, z, 0.4), [-78, PROM.z0 - 3, PROM_STAIR.xa + 1, 21]],
+      [(x, z, y) => plateauStairAt(x, z, 0, y), [-90, -88, -78, -78]],   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js; CAVE-STAIR: and a rock standing up through its landing)
+    ],
   });
-  climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
-  dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
-  // (FLAT-TOWN: the rocks of the old sea cliff and ridge under the promenade, its walls and its flight; flatClear)
-  dropRocks(W_cliffs.mesh, (x, z) => (x > -77.4 && x < PROM.x1 + 0.3 && z > PROM.z0 - 0.4 && z < PROM_WALLS[1].z1 + 0.2) || flatClear(x, z, 0.4), [-78, PROM.z0 - 3, PROM_STAIR.xa + 1, 21]);
-  dropRocks(W_cliffs.mesh, (x, z, y) => plateauStairAt(x, z, 0, y), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js; CAVE-STAIR: and a rock standing up through its landing)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,
@@ -1775,6 +1779,12 @@ export function* buildWorldSteps(parentScene) {
   }
 
   yield 'landmarks';
+  // P121: a cliff rock that built masonry now stands in (the fort's south wall over the hostel's yard, the climb's yard
+  // walls: tests/overlap-sweep.mjs (g)) goes whole, once everything is built: a corner of it 10 cm or more inside a box
+  // collider (a wall, a house, steps; not the camera's own volumes), under its top
+  const inBox = (c, x, z) => { const dx = x - c.x, dz = z - c.z, lx = dx * c.cos + dz * c.sin, lz = -dx * c.sin + dz * c.cos; return Math.min(c.hw - Math.abs(lx), c.hd - Math.abs(lz)); };
+  if (!ROCKS_OLD) W_cliffs.mesh.userData.masonryDropped = dropRocks(W_cliffs.mesh, (x, z, y) => physics.near(x, z).some((c) => c.type === 'box' && c.enabled && !c.camOnly && y > c.bottom && y < c.top - 0.1 && inBox(c, x, z) > 0.1), [-220, -130, 70, 160]);
+
   // ---------- zones (LBA-style) ----------
   zones.add({ type: 'checkpoint', id: 'cp_village', x: V.x, z: V.z, r: 8 });
   zones.add({ type: 'checkpoint', id: 'cp_lighthouse', x: POI.sage.x, z: POI.sage.z + 3, r: 6 });
