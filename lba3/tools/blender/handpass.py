@@ -360,6 +360,8 @@ if __name__ == '__main__':
     for n in names:
         p = os.path.join(d_, n + '.json')
         js = json.load(open(p))
+        if 'pos' not in js:   # (P123: a model variant's delta, e.g. twinsen-sleeveold.json, is not a model)
+            continue
         before = js['tris']
         apply(js, n, skel)
         if js['tris'] != before or spec(n, skel.get(n, {}).get('look', {})):

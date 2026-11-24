@@ -1631,12 +1631,34 @@ export async function loadPolys(names = ONDEMAND_POLYS) {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
 }
+// TUNIC-SLEEVE (P123, the user 24.11: Twinsen's tunic "looks like a sleeve inside the tunic"). The default model's sleeve
+// is the tunic's side to its end, the hand straight out of it (tools/blender/twinsen_poly.py TUNIC_SLEEVE). For the
+// user's comparison: ?sleeve=old (or the settings' `charSleeve`) loads v156's sleeve with the cuff band under it, and
+// ?sleeve=hem the new sleeve with a rolled hem of the tunic's blue round its edge. Each is a small delta of triangles
+// against twinsen.json (assets/poly/twinsen-sleeve<name>.json, tools/blender/polydelta.py), fetched only when asked.
+function sleeveVariant() {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('sleeve')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.charSleeve || ''; } catch { /* no storage */ }
+  return /^(old|hem)$/.test(s) ? s : '';
+}
+const DELTA_PER = { pos: 9, nrm: 9, col: 9, si: 12, sw: 12 };
+function applyPolyDelta(base, d) {
+  const out = { ...base };
+  for (const k in DELTA_PER) out[k] = base[k].slice();
+  for (const [at, n, ins] of [...d.ops].sort((a, b) => b[0] - a[0])) for (const k in DELTA_PER) out[k].splice(at * DELTA_PER[k], n * DELTA_PER[k], ...ins[k]);
+  out.tris = d.tris;
+  return out;
+}
 export async function preloadCharacters() {
   let names = ['twinsen'];
   try { const r = await fetch('assets/poly/index.json'); if (r.ok) names = await r.json(); } catch { /* twinsen only */ }
   await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
+  const sv = sleeveVariant();
+  if (sv && POLY.twinsen) {
+    try { const r = await fetch(`assets/poly/twinsen-sleeve${sv}.json`); if (r.ok) POLY.twinsen = applyPolyDelta(POLY.twinsen, await r.json()); } catch { /* the default sleeve */ }
+  }
   if (LOOK.size || ZOE_HAIR !== 'old') for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
 }
 // TWINSEN-ZOE-LOOK (the user, 22.11: Twinsen and Zoé "more like the original … keep the current one and we'll compare";
