@@ -747,6 +747,62 @@ def build(name):
         belt = b.P('belt', L.get('belt', '#5a3a1a'), w_waist, 50) if not gown else None
         if belt: loft(belt, [ring(waistY - 0.02, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY)),
                     ring(waistY + 0.035, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY))])
+        if L.get('vest') and not gown:
+            # P127 (the user 24.11: the Joint Project's crew read as Twinsen at the harbour): a hi-vis vest over the crew's
+            # orange-yellow overalls. A shell laid just over the torso from the belt's top to under the shoulders (the
+            # torso's own sections, a hair larger), two reflective bands round it, and a strap over each shoulder to the
+            # back. Its colours are the look's `vest` and `vestBand` (characters.js), not dress roles: every crew member
+            # keeps the same vest (DRESS-1 recolours only the cloth under it).
+            vcol, vband = L['vest'], L.get('vestBand') or '#e8e6de'
+            secs_ = [(waistY - 0.01, tw, 0.115 * wide + belly * 0.7, -0.095 * wide, 0.75),
+                     ((waistY + chestY) / 2, tw * 1.08 + belly * 0.3, 0.125 * wide + belly, -0.1 * wide, 0.72),
+                     (chestY, 0.2 * wide, 0.135 * wide + belly * 0.5, -0.11 * wide, 0.7),
+                     (shY + 0.015, shX + 0.035 * wide, 0.095 * wide, -0.09 * wide, 0.6)]
+
+            def vring(y, grow):   # the torso's section at y (straight between the given ones), `grow` out from it
+                for a_, c_ in zip(secs_, secs_[1:]):
+                    if a_[0] <= y <= c_[0]:
+                        t_ = (y - a_[0]) / (c_[0] - a_[0])
+                        hw_, zf_, zb_, p_ = (a_[k] + (c_[k] - a_[k]) * t_ for k in (1, 2, 3, 4))
+                        return ring(y, hw_ * (1 + grow) + 0.003, zf_ * (1 + grow) + 0.003, zb_ * (1 + grow) - 0.003, N, p_, cz=zc(y))
+                raise ValueError(y)
+            vb_, vt_ = waistY + 0.03, chestY + 0.045
+            vys_ = [vb_, (waistY + chestY) / 2, chestY, vt_]
+            loft(b.P('vest', vcol, w_torso, 50), [vring(y_, 0.035) for y_ in vys_])
+            for y0_, y1_ in ((chestY - 0.05, chestY - 0.015), (vb_ + 0.025, vb_ + 0.06)):
+                loft(b.P('vestBand', vband, w_torso, 50), [vring(y0_, 0.05), vring(y1_, 0.05)])
+            # the straps: a ribbon each side laid on the torso's surface (its sections up to the neck) from the vest's top
+            # in front, over the shoulder by the neck, down to the vest's top behind
+            ssecs_ = secs_ + [(neckY - 0.005, 0.075 * wide, 0.06 * wide, -0.055 * wide, 0.9)]
+
+            def tsec(y):
+                for a_, c_ in zip(ssecs_, ssecs_[1:]):
+                    if a_[0] <= y <= c_[0]:
+                        t_ = (y - a_[0]) / (c_[0] - a_[0])
+                        return [a_[k] + (c_[k] - a_[k]) * t_ for k in (1, 2, 3, 4)]
+                return list(ssecs_[-1][1:])
+
+            def tsurf(x, y, front):   # the torso's surface z at (x, y), in front or behind
+                hw_, zf_, zb_, p_ = tsec(y)
+                s_ = min(0.999, (abs(x) / hw_) ** (1 / p_))
+                return zc(y) + (zf_ if front else zb_) * (1 - s_ * s_) ** (p_ / 2)
+            xi_, xo_, lift_ = 0.07 * wide, 0.112 * wide, 0.007
+            ytop_ = vt_
+            while tsec(ytop_ + 0.005)[0] > xo_ * 1.04 and ytop_ < neckY - 0.01:
+                ytop_ += 0.005   # (the highest the strap's outer edge stays on the body)
+            sys_ = [vt_ - 0.012 + (ytop_ - vt_ + 0.012) * i / 6 for i in range(7)]
+            for sxx in (1, -1):
+                sv_, sf_ = [], []
+                for front in (True, False):
+                    rows_ = sys_ if front else sys_[::-1]
+                    for y_ in rows_:
+                        for x_ in (xi_, xo_):
+                            z_ = tsurf(x_, y_, front)
+                            sv_.append((sxx * x_, y_ + (lift_ if y_ == ytop_ else 0), z_ + (lift_ if front else -lift_)))
+                for r_ in range(len(sv_) // 2 - 1):
+                    q_ = 2 * r_
+                    sf_.append([q_, q_ + 2, q_ + 3, q_ + 1] if sxx > 0 else [q_, q_ + 1, q_ + 3, q_ + 2])
+                b.P('vestStrap', vcol, w_torso, 40).add(sv_, sf_)
         if cp.get('strap'):   # a cross-strap from the right shoulder to the left hip (the guards' bandolier)
             sp_ = [(-0.085 * wide, shY - 0.005, 0.1 * wide), (-0.03 * wide, chestY + 0.04, 0.135 * wide), (0.04 * wide, (chestY + waistY) / 2 + 0.03, 0.135 * wide), (0.12 * wide, waistY + 0.02, 0.12 * wide)]
             for i in range(len(sp_) - 1):

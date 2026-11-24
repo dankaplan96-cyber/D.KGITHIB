@@ -23,7 +23,8 @@
 //      shade; Arthur's left hand on his hull, the mast seated by his right hand (home in its step before he lets go, and
 //      not moving as he does), then that hand on the deck; Zoé's palms on the tray's soil; the screwdriver not moving as
 //      it is laid down; everybody's standing feet on the ground
-//  12. LBA3-RUN, the notebook: the history's four captions in order, then where and when; (P122, the user 24.11: "make the
+//  12. LBA3-RUN, the notebook: the history's four lines in order, read by Arthur (P127: subtitles with his name, in his
+//      voice; "FunFrock is dead…" a caption over the second), then where and when; (P122, the user 24.11: "make the
 //      notebook film without the hands") nothing of Twinsen (hands, sleeves, forearms) seen in any shot over the book, no
 //      hand in his close-up (the frame drawn without them is the same); each page turns by itself, its top outer corner
 //      up first, flat on the right before and on the left after, its two paper sounds at the lift and the landing; the page's
@@ -348,13 +349,18 @@ check("R5: Zoé's hand is on the tap's handle every frame it turns (within 2 cm)
 check('R5: her fingers are in the stream under the spout', watch.hand.wet >= 45 && watch.hand.dry.length === 0, watch.hand);
 check("R5: standing feet don't jump (more than 9 cm in a frame) while the picture is up", watch.footJumps.length === 0, watch.footJumps);
 check('the title is shown, and never while a subtitle is up (on the scene clock; maturity saw both at 25 s)', watch.title.top > 0.99 && watch.title.withSub < 0.01, watch.title);
-check('subtitles with the speaker, in order', watch.subsAt.length === watch.lines && watch.subsAt.some((x) => x.startsWith('Zoé') && x.includes("The tap's stopped again")) && watch.subsAt[0].startsWith('Resident'), watch.subsAt);
+// (P127: the notebook cut opens on Arthur reading the notebook's four lines; the classic cut on the harbour's resident)
+check('subtitles with the speaker, in order', watch.subsAt.length === watch.lines && watch.subsAt.some((x) => x.startsWith('Zoé') && x.includes("The tap's stopped again")) && (CUT === 'notebook' ? watch.subsAt[4] : watch.subsAt[0]).startsWith('Resident'), watch.subsAt);
 check("every spoken line babbles in its speaker's voice", watch.ctx === 'running' && watch.voiced.every(([vk, n]) => vk && n >= 2), watch.voiced);
 check("OPEN-FILM: every line's speaker moves their mouth with it (the worker and the resident too)", watch.mouthBy.every(([vk, n]) => n >= 4), watch.mouthBy);
 check('OPEN-FILM: no line plays the looping talk gesture (one gesture per line, or none)', watch.talking.length === 0, watch.talking);
 check('OPEN-FILM: the aerial move does not stop (old 8.5-12.5 s; it stopped dead at 9 s)', watch.aerial.min > 1.5, watch.aerial);
 if (CUT === 'notebook') {
-  check('LBA3-RUN: the history over the notebook, a caption at a time, then where and when', watch.capsAt.length === 5 && watch.capsAt[0].startsWith('FunFrock') && watch.capsAt[3].includes('Zeelich') && watch.capsAt[4].startsWith('Citadel Island'), watch.capsAt);
+  // (P127, the user 24.11: "a narrator who tells what happened, in Arthur's voice": the four lines are his, a subtitle at a
+  //  time with his name and voice; "FunFrock is dead…" stays a caption, over his second line)
+  const ar4 = watch.subsAt.slice(0, 4), arV = watch.voiced.slice(0, 4);
+  check("P127: Arthur reads the history over the notebook, a line at a time, in his voice; then where and when", ar4.length === 4 && ar4.every((x) => x.startsWith('Arthur')) && ar4[0].includes("Dad's notebook") && ar4[0].includes('FunFrock') && ar4[1].includes('Twinsen') && ar4[3].includes('Zeelich') && arV.every(([vk, n]) => vk === 'n_arthur' && n >= 2)
+    && watch.capsAt.length === 2 && watch.capsAt[0].startsWith('FunFrock is dead') && watch.capsAt[1].startsWith('Citadel Island'), { ar4, arV, capsAt: watch.capsAt });
   check("P122: no hands in the notebook's film: nothing of Twinsen (hand, sleeve, forearm) in any shot over the book, no hand in his close-up", watch.nohands.over > 50 && watch.nohands.close > 10 && watch.nohands.seen.length === 0, watch.nohands);
   check('P122: each page turns by itself: flat on the right before, its top outer corner up first, over on the left after; a paper sound at the lift and at the landing', watch.turn.bad.length === 0 && watch.turn.cornerFirst >= 10 && watch.turn.flatR > 200 && watch.turn.flatL > 100 && watch.paper.ok, { ...watch.turn, paper: watch.paper });
   check("LBA3-RUN: the page's drawing is laid over the screen as it turns into the island", watch.overlaySeen);

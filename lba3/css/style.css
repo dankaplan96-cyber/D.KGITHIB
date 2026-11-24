@@ -559,6 +559,8 @@ body.hud-lba #weapon.show { opacity: 1; }
 #cine-cap.recap { left: 50% !important; bottom: max(9vh, 56px) !important; transform: translateX(-50%); width: max-content; max-width: min(38em, calc(100vw - 32px));
   text-align: center; padding: 0.35em 0.95em; border-radius: 6px; background: rgba(22, 15, 8, 0.66); }
 #cine-cap.recap > div { font-size: clamp(1.05rem, 2.3vw, 1.45rem) !important; font-weight: 600 !important; letter-spacing: 0.01em !important; }
+/* P127: a notebook caption shown while Arthur reads a line (his subtitle below it): lifted clear of the subtitle, two lines of it included */
+#cine-cap.recap.recap-over { bottom: calc(max(7vh, 48px) + 6.6em) !important; }
 #cine-title { position: absolute; left: 0; right: 0; top: 14%; text-align: center; color: #fff6e4; opacity: 0;
   transition: opacity 1.4s ease; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
 #cine-title.show { opacity: 1; }

@@ -1,6 +1,7 @@
 // Bake every sculpted model (characters, hands, shoes, trees, rocks, props, enemies) into
 // assets/bake.bin so the game starts without sculpting. Run after changing designs:
 //   cd lba3 && python3 -m http.server 8123 &   node tools/bake.mjs [port]
+//   SERVE=1 node tools/bake.mjs   (no server: this checkout's files by the browser's request routing, tests/lib/serve.mjs)
 // Needs Playwright with a Chromium (PLAYWRIGHT_BROWSERS_PATH); models whose design changed after the
 // bake are detected by fingerprint and sculpted at load, so a stale bake is never wrong, only slower.
 import fs from 'fs';
@@ -11,6 +12,8 @@ let chromium;
 for (const p of ['playwright', '/opt/node-tools/node_modules/playwright/index.mjs']) { try { ({ chromium } = await import(p)); break; } catch { /* try next */ } }
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 320, height: 240 } });
+// (P127: SERVE=1 answers http://localhost:<port>/ from this checkout by request routing, tests/lib/serve.mjs: no server)
+if (process.env.SERVE) await (await import('../tests/lib/serve.mjs')).serveLocal(page, `http://localhost:${port}/`);
 page.on('pageerror', (e) => console.error('pageerror', e.message));
 // (LAZY-REGIONS: every area built at startup, so every area's sculpted models are in the bake)
 await page.goto(`http://localhost:${port}/?nobake&allregions`, { waitUntil: 'load', timeout: 300000 });
