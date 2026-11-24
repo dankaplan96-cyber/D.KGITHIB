@@ -43,7 +43,9 @@ await ev(() => {
       const it = G.findInteractable(), p = document.querySelector('#prompt'), tk = document.querySelector('#tip.show .tkeys');
       // (base: what the ranking without the goal's rule gave, the "before")
       const C = G._pick, base = C && (C.n >= 2 || (C.n === 1 && !C.base)) ? C.base : it;
-      return { it: IP.who(it), base: IP.who(base), prompt: p.classList.contains('show') ? p.textContent.trim() : '', keys: tk?.textContent || '', tip: document.querySelector('#tip.show')?.textContent || '', on: IP.who(G.promptFor) };
+      // (itAim: how squarely he faces the person who answered — FACE-PICK lets a person he faces take the key)
+      const h = G.hero, np = it?.npc, itAim = np ? +(((np.pos.x - h.pos.x) * Math.sin(h.angle) + (np.pos.z - h.pos.z) * Math.cos(h.angle)) / (Math.hypot(np.pos.x - h.pos.x, np.pos.z - h.pos.z) || 1)).toFixed(2) : null;
+      return { itAim, it: IP.who(it), base: IP.who(base), prompt: p.classList.contains('show') ? p.textContent.trim() : '', keys: tk?.textContent || '', tip: document.querySelector('#tip.show')?.textContent || '', on: IP.who(G.promptFor) };
     },
     ring(T, rs, n = 12, off = 0) {
       const out = [];
@@ -70,7 +72,7 @@ let r = await ev(() => {
 });
 const tapIn = r.ring.filter((o) => o.it !== '-');
 check('A1 the tap\'s step: round the tap (0.9 and 1.3 m, 12 directions), facing it, the tap answers at every spot (Zoé 1.6 m away took it from the side by her)', r.step === 'tap' && tapIn.length === 24 && tapIn.every((o) => o.it === 'h_yard'), { step: r.step, zoe: r.zoe, tap: r.tap, not: r.ring.filter((o) => o.it !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.it}`), before: [...r.ring, ...r.ring40].filter((o) => o.it === 'h_yard' && o.base !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.base}`) });
-check('A2 …turned 34° off the tap, still the tap where it is in reach (roughly faced)', r.ring40.filter((o) => o.it !== '-' && o.it !== 'h_yard').length === 0, r.ring40.filter((o) => o.it !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.it}`));
+check('A2 …turned 34° off the tap, still the tap where it is in reach (roughly faced) — or, since FACE-PICK, Zoé where he faces her (within ~39°) and she stands nearer his line', r.ring40.filter((o) => o.it !== '-' && o.it !== 'h_yard' && !(o.it === 'npc:zoe' && o.itAim >= 0.78)).length === 0, r.ring40.filter((o) => o.it !== 'h_yard').map((o) => `${o.r}/${o.deg}:${o.it}@${o.itAim}`));
 const badA = agree([...r.ring, ...r.ring40], 'h_yard');
 check('A3 the panel\'s key line ("W Try the tap") only where the prompt offers the tap (no "Try" beside a "Talk")', badA.length === 0 && r.ring.some((o) => /Try the tap/.test(o.keys)), badA.slice(0, 6));
 await ev(() => { const Y = game.story.chapters[0].home.parts.yard; IP.put(Y.x + 0.95, Y.z - 0.3, Y.x, Y.z); game.step(0.4); });
@@ -208,6 +210,88 @@ r = await ev(() => {
 check('C1 Xil from the pier\'s approach beside the crane\'s crates (2.6–3.8 m, four spots): turned to him, Up held, "Talk" comes within a short walk (the desktop\'s note 5 was its route planner, not the game)', r.every((o) => o.it === 'npc:xil' && /Talk/.test(o.prompt) && o.t <= 1.5), r);
 await ev(() => { const n = P.npc('xil'); P.go(-124.45, 46.25, { tol: 0.25, maxT: 20 }); P.face(n.pos.x, n.pos.z); game.input.keys.add('ArrowUp'); game.step(0.6); game.input.keys.delete('ArrowUp'); game.step(0.4); });
 await shot('p115-5-xil');
+
+// ---------------------------------------------------------------- F. FACE-PICK (TESTER-FIXES, INSTALL-69 P115)
+// The desktop's real-keys play of 0.50.0: walking up to Zoé, E tried the garden tap; at the well and its way down
+// (climbed out of the cave) Gilbert took every E; at the tap E "did nothing" for 40 s. The rule now: what he faces and is
+// nearest along his facing takes the key; a person only when he faces them. `was`: the pick before FACE-PICK (C.goal)
+await ev(() => {
+  window.IP.read2 = () => { const o = IP.read(), C = game._pick; o.was = IP.who(C && (C.n >= 2 || (C.n === 1 && !C.goal)) ? C.goal : game.findInteractable()); return o; };
+  window.IP.aimAt = (x, z) => { const h = game.hero, d = Math.hypot(x - h.pos.x, z - h.pos.z); return d < 1e-3 ? 1 : ((x - h.pos.x) * Math.sin(h.angle) + (z - h.pos.z) * Math.cos(h.angle)) / d; };
+});
+// F1/F2 the tap's step: round Zoé facing her (1.1-2.2 m, 24 directions); where the tap is in reach but 45° or more off
+// his line, Zoé answers; facing the tap with Zoé in reach beside it, the tap
+r = await ev(() => {
+  const G = game, ch = G.story.chapters[0], f = G.flags;
+  Object.assign(f, { pr_kettle: true, pr_yard: false, pr_barrel: false, pr_pipe: 0, pr_yardOk: false, key: false, wellSeen: false, pr_lidStuck: false, pr_lidOpen: false, rope: false, inWell: false });
+  ch.setLid?.('locked'); G.step(0.2);
+  const Y = ch.home.parts.yard, z = ch.npc('zoe'), side = [], faced = [];
+  for (const rr of [1.1, 1.6, 2.2]) for (let k = 0; k < 24; k++) {
+    const a = (k / 24) * Math.PI * 2, x = z.pos.x + Math.sin(a) * rr, zz = z.pos.z + Math.cos(a) * rr;
+    IP.put(x, zz, z.pos.x, z.pos.z); const o = IP.read2(), tapD = Math.hypot(Y.x - x, Y.z - zz), ta = IP.aimAt(Y.x, Y.z);
+    if (tapD < 1.5 && ta < Math.cos(Math.PI / 4)) side.push({ r: rr, deg: k * 15, tapD: +tapD.toFixed(2), tapAim: +ta.toFixed(2), it: o.it, was: o.was });
+  }
+  for (const rr of [0.8, 1.2]) for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * Math.PI * 2, x = Y.x + Math.sin(a) * rr, zz = Y.z + Math.cos(a) * rr;
+    IP.put(x, zz, Y.x, Y.z); const o = IP.read2(), zd = Math.hypot(z.pos.x - x, z.pos.z - zz);
+    // (where he really stands after the step: a spot in the fence or the bucket is pushed out, and the tap may then lie aside)
+    const ta = IP.aimAt(Y.x, Y.z), td = Math.hypot(Y.x - G.hero.pos.x, Y.z - G.hero.pos.z);
+    if (zd < 2.6 && o.it !== '-') faced.push({ r: rr, deg: k * 22.5, zoeD: +zd.toFixed(2), tapAim: +ta.toFixed(2), tapD: +td.toFixed(2), it: o.it, was: o.was });
+  }
+  return { side, faced };
+});
+check('F1 the tap\'s step, walking up to Zoé: facing her with the tap in reach but 45° or more off his line, Zoé answers at every such spot (before: the tap at some)', r.side.length > 0 && r.side.every((o) => o.it === 'npc:zoe'), { n: r.side.length, not: r.side.filter((o) => o.it !== 'npc:zoe'), before: r.side.filter((o) => o.was !== 'npc:zoe').map((o) => `${o.r}/${o.deg}:${o.was}`) });
+check('F2 …and facing the tap (within 25° where he stands, 0.8-1.2 m) with Zoé in reach beside it, the tap answers', r.faced.filter((o) => o.tapAim >= 0.9).length > 20 && r.faced.filter((o) => o.tapAim >= 0.9).every((o) => o.it === 'h_yard'), { n: r.faced.length, squarely: r.faced.filter((o) => o.tapAim >= 0.9).length, not: r.faced.filter((o) => o.it !== 'h_yard') });
+await ev(() => { const Y = game.story.chapters[0].home.parts.yard, z = game.story.chapters[0].npc('zoe'); IP.put(Y.x + 1.25, Y.z - 0.85, z.pos.x, z.pos.z); game.step(0.3); });
+await shot('f1-tap-step-facing-zoe');
+// F3 STEER-HOLD: E at the tap from 1.3 m, then a turn key tapped for 0.1 s while he steps up to it: his hand still goes to
+// the tap and its line comes (before: the tap was thrown away and nothing happened); a move held 0.4 s takes over
+r = await ev(() => {
+  const G = game, h = G.hero, I = G.input, Y = G.story.chapters[0].home.parts.yard;
+  const go = (k, hold) => {
+    IP.put(Y.x + 1.3, Y.z - 0.4, Y.x, Y.z); h.resetMotion?.(); G.step(0.3);
+    P.tap('KeyW', 0.05); const steering = !!h.steer;
+    I.keys.add(k); G.step(hold); I.keys.delete(k);
+    let t = 0; while (t < 4 && G.state === 'play' && (h.steer || h.actT > 0)) { G.step(0.05); t += 0.05; }
+    const out = { steering, state: G.state, line: (document.querySelector('#dialog .text')?.textContent || '').slice(0, 40) };
+    P.settle(); return out;
+  };
+  return { tap: go('ArrowLeft', 0.1), held: go('ArrowDown', 0.45) };
+});
+check('F3 at the tap, E then a turn key tapped 0.1 s during his step up: the tap\'s line still comes; a move held 0.45 s takes over (no line)', r.tap.steering && r.tap.state === 'dialog' && r.held.steering && r.held.state === 'play', r);
+// F4/F5 the well and its way down, climbed out of the cave (its crystals still dark): Gilbert and Mira stood right beside
+// him; facing the well (within 25°, 1.6-2.4 m) the well answers ("Inspect": the way down); turned squarely to Gilbert with
+// the well 60° or more aside, Gilbert
+r = await ev(() => {
+  const G = game, ch = G.story.chapters[0], f = G.flags, W = G.world.well;
+  Object.assign(f, { pr_kettle: true, pr_yard: true, pr_barrel: true, pr_pipe: 1, pr_yardOk: true, wellSeen: true, key: true, pr_lidOpen: true, rope: true, inWell: true });
+  ch.setLid?.('open'); G.step(0.2);
+  const gi = P.npc('gilbert'), mi = P.npc('mira'), keep = [gi.pos.clone(), mi.pos.clone()];
+  // (the passers-by on their rounds kept out of these spots: a resident walking across his line would rightly take it)
+  const away = G.npcs.filter((n) => n.present && n !== gi && n !== mi && Math.hypot(n.pos.x - W.x, n.pos.z - W.z) < 9); for (const n of away) n.present = false;
+  const well = [], person = [];
+  // (the way out of the well's room puts him here, facing away: main.js exitTo; then he turns to the well)
+  const ex = ch.exitTo('well');
+  for (const [rr, off] of [[1.6, 0], [2.0, 0], [2.4, 0], [2.0, 0.4], [2.0, -0.4], [Math.hypot(ex.x - W.x, ex.z - W.z), 0]]) for (let k = 0; k < 12; k++) {
+    const a = (k / 12) * Math.PI * 2, x = W.x + Math.sin(a) * rr, z = W.z + Math.cos(a) * rr;
+    // Gilbert 1.0 m to his right, Mira 1.3 m to his left (turned 75° off the well's line)
+    const fa = Math.atan2(W.x - x, W.z - z) + off;
+    for (const [n, s, dd] of [[gi, 1, 1.0], [mi, -1, 1.3]]) { const b = fa + s * 1.3; n.pos.set(x + Math.sin(b) * dd, n.pos.y, z + Math.cos(b) * dd); n.sync?.(); }
+    IP.put(x, z, x + Math.sin(fa) * 3, z + Math.cos(fa) * 3); const o = IP.read2();
+    const C = G._pick, wi = C.o.slice(0, C.n).findIndex((x) => x.kind === 'well');
+    well.push({ r: +rr.toFixed(2), deg: k * 30, off, it: o.it, was: o.was, itAim: o.itAim, wellIn: wi >= 0, wellAim: +IP.aimAt(W.x, W.z).toFixed(2), at: [+G.hero.pos.x.toFixed(2), +G.hero.pos.z.toFixed(2)], mira: [+mi.pos.x.toFixed(2), +mi.pos.z.toFixed(2)] });
+    // turned to Gilbert squarely
+    IP.put(x, z, gi.pos.x, gi.pos.z); const o2 = IP.read2();
+    if (IP.aimAt(W.x, W.z) < 0.5) person.push({ r: +rr.toFixed(2), deg: k * 30, it: o2.it, was: o2.was });
+  }
+  gi.pos.copy(keep[0]); mi.pos.copy(keep[1]); gi.sync?.(); mi.sync?.();
+  for (const n of away) n.present = true;
+  return { well, person };
+});
+const wellIn2 = r.well.filter((o) => o.it !== '-');
+check('F4 the well climbed out of (its way down), Gilbert 1 m and Mira 1.3 m beside him: facing the well (within 25°, 1.6-2.4 m and the exit\'s spot), the well answers at every spot (before: Gilbert or Mira at some)', wellIn2.length >= 60 && wellIn2.every((o) => o.it === 'well'), { n: wellIn2.length, not: wellIn2.filter((o) => o.it !== 'well').slice(0, 8), before: wellIn2.filter((o) => o.was !== 'well').map((o) => `${o.r}/${o.deg}/${o.off}:${o.was}`).slice(0, 12), beforeN: wellIn2.filter((o) => o.was !== 'well').length });
+check('F5 …turned squarely to Gilbert with the well 60° or more aside: Gilbert answers', r.person.length > 0 && r.person.every((o) => o.it === 'npc:gilbert'), { n: r.person.length, not: r.person.filter((o) => o.it !== 'npc:gilbert').slice(0, 6) });
+await ev(() => { Object.assign(game.flags, { inWell: false, rope: false, pr_lidOpen: false, pr_lidStuck: true }); game.story.chapters[0].setLid?.('stuck'); game.step(0.1); });
 
 // ---------------------------------------------------------------- D. Hebrew: the tap's step
 r = await ev(() => {

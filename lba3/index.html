@@ -75,7 +75,10 @@
   </div>
 
   <!-- ===== screens ===== -->
-  <div id="title" class="screen">
+  <!-- (TESTER-FIXES: the title is hidden until the game shows it — main.js showScreen('title') — so its buttons are never on
+       the page, under the loading screen, before they answer; the desktop app's Quit Game is there from the first frame) -->
+  <script>if (window.desktop) document.body.classList.add('desktop');</script>
+  <div id="title" class="screen hidden">
     <div class="logo">
       <div class="logo-top">LBA 3</div>
       <div class="logo-bottom" data-i18n="logo_sub"></div>
@@ -112,7 +115,7 @@
       <button data-act="settings" data-i18n="settings"></button>
       <button data-act="controls" data-i18n="controls"></button>
       <button data-act="quit" data-i18n="save_quit"></button>
-      <div class="tools"><button data-act="bench" data-i18n="bench"></button><button data-act="benchauto" data-i18n="bench_auto"></button><button data-act="benchfps" data-i18n="bench_fps"></button></div>
+      <div class="tools dev-only"><button data-act="bench" data-i18n="bench"></button><button data-act="benchauto" data-i18n="bench_auto"></button><button data-act="benchfps" data-i18n="bench_fps"></button></div>
     </div>
     <p id="pause-msg" class="menu-msg" role="status" aria-live="polite"></p>
   </div>

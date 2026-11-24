@@ -101,6 +101,12 @@ const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below
 // the interact key before people and other things; a thing counts as the goal's when it lies within GOAL_R m of one of
 // the objective's stars (a person: on the star, GOAL_R_NPC)
 const GOAL_FACE = 0.25, GOAL_R = 1.0, GOAL_R_NPC = 0.4;
+// FACE-PICK (findInteractable's facingPick): a thing he faces within 60°, a person within ~39°, counts as faced
+const FACE_THING = 0.5, FACE_NPC = 0.78, LINE_ALONG = 0.2, GOAL_KEEP = 0.85;
+// the states whose shot frames Twinsen on purpose: no see-through silhouette (setState)
+const SIL_OFF = new Set(['dialog', 'cutscene', 'shop']);
+// AIM-PLATE (aimPlate): on a throw plate = within PLATE_R m of its middle, facing its line within PLATE_A rad
+const PLATE_R = 0.6, PLATE_A = 0.03;
 // (GOAL-DRESS, LBA3-RUN progression: the rooms' and homes' own looks, signs, boards and pets describe a place and are
 //  never an objective's thing. A look measured at a piece the objective's star stands on — the research post's desk in
 //  chapter 4: the room's Look at the desk's middle, the desk's Search at the place before it, 1.25 m off the star — was
@@ -1752,6 +1758,12 @@ class Game {
     if (s !== 'play') { this.targeting?.hide(); this._swapT = -1; }   // (a swap key held into a dialogue never acts after it)
     this.hud?.busy(s !== 'play');
     this.audio?.hold?.(s === 'pause' || s === 'map' || s === 'inventory');   // (LBA3-SOUND: a fight's music waits under a menu)
+    // (TESTER-FIXES, the desktop's 68.1 picture 06: in the talk shot with Zoé the garden fence between the lens and him drew
+    //  his arm and sleeve see-through. The see-through silhouette shows him behind walls in play; a talk's, a shop's or a
+    //  scene's shot frames him on purpose: off there. Its one material, shared by all his bodies; the story's own per-mesh
+    //  switches (a ferry, a ride, a close-up) are left as they are)
+    const sm = this.hero?.rig?.silhouette?.material;
+    if (sm) sm.visible = !SIL_OFF.has(s);
   }
   // ACT-RESUME (lba3-controls, 23.11): a one-shot action whose moment has passed (his hand on the tap, the valve, a kick,
   // a pick-up: its callback ran and opened a talk, a found box or a film) ends when play comes back. It used to wait out
@@ -1805,7 +1817,8 @@ class Game {
     if (!this.screen) return [];
     if (this.screen === 'settings') return this.settingsItems();
     const keys = this.screen === 'controls' ? '#rebind .keybtn, ' : '';
-    return [...document.querySelectorAll(`#${this.screen} :is(${keys}.menu button):not(:disabled)`)];
+    // (a button not shown — the desktop's Quit Game in a browser, the developer tools without their flag — is not a stop)
+    return [...document.querySelectorAll(`#${this.screen} :is(${keys}.menu button):not(:disabled)`)].filter((b) => b.offsetParent !== null || !b.closest('.desktop-only, .dev-only'));
   }
   focusMenu(scroll = false) {
     const btns = this.menuButtons();
@@ -1895,6 +1908,9 @@ class Game {
 
   wireUI() {
     if (window.desktop) document.body.classList.add('desktop');
+    // (TESTER-FIXES: the Benchmark tools are for us, not the testers: shown with ?bench or ?dev in the address, or in the
+    //  desktop app run from source / with LBA3_DEVTOOLS — desktop/preload.js `dev`; the tools themselves are unchanged)
+    { const q = new URLSearchParams(location.search); if (q.has('bench') || q.has('dev') || window.desktop?.dev) document.body.classList.add('dev'); }
     document.addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -2543,17 +2559,64 @@ class Game {
     // well's way down. Only when there is a choice (two in reach, or a container taking the key). He can still turn
     // squarely to the other one while the goal's thing stands well to his side (≥ 60°): then that one answers.
     C.base = pick;   // (the ranking without the goal's rule, for tests/interact-pick.mjs's before/after)
+    C.goal = pick;
     if (C.n < 2 && !(C.n === 1 && !pick)) return pick;
+    let res = pick;
     const gi = this.goalPick(C, aim);
-    if (gi < 0 || C.o[gi] === pick) return pick;
-    let pa = gva;
-    if (pick) {
-      const j = C.o.indexOf(pick);
-      // (a thing with no measured point — "let go" of the lift's handle, a hatch under his feet — always keeps the key)
-      if (j < 0 || j >= C.n || !(C.x[j] === C.x[j])) return pick;
-      pa = aim(C.x[j], C.z[j]);
+    if (gi >= 0 && C.o[gi] !== pick) {
+      let pa = gva, keep = false;
+      if (pick) {
+        const j = C.o.indexOf(pick);
+        // (a thing with no measured point — "let go" of the lift's handle, a hatch under his feet — always keeps the key)
+        if (j < 0 || j >= C.n || !(C.x[j] === C.x[j])) keep = true;
+        else pa = aim(C.x[j], C.z[j]);
+      }
+      if (!keep) res = pa > 0.9 && aim(C.x[gi], C.z[gi]) < 0.5 ? pick : C.o[gi];
     }
-    return pa > 0.9 && aim(C.x[gi], C.z[gi]) < 0.5 ? pick : C.o[gi];
+    C.goal = res;   // (the pick before FACE-PICK: tests/interact-pick.mjs's before)
+    return this.facingPick(C, res, aim, gi);
+  }
+  // FACE-PICK (P115 again, INSTALL-69: the 0.50.0 build played with real keys): what he faces and is nearest to along his
+  // facing takes the key; a person takes it only when he faces them. The ranking above is distance first (a thing or a
+  // person 80° to his side, a little nearer, still won): walking up to Zoé, the garden tap 0.8 m off at his side took
+  // E; by the well Gilbert beside it answered while he faced the well. Each candidate in reach is read against his facing
+  // line: how far off it, plus a fifth of how far along it (LINE_ALONG) — the lower comes first (a ladder's top before the
+  // person behind it). A thing counts as faced within
+  // 60° (FACE_THING), a person within ~39° (FACE_NPC). Then: a person wins over the faced thing only if he faces that
+  // person and they stand nearer his line; a person he does not face gives the key to the faced thing; a thing he does
+  // not face gives it to the person he faces. Things among themselves (and people among themselves) keep the ranking
+  // and its rules above (containers, the objective's thing, signs). A pick with no measured point keeps the key.
+  facingPick(C, res, aim, gi = -1) {
+    if (!res) return res;
+    // (the objective's own thing — INTERACT-PICK's goal — faced squarely, within ~32°, keeps the key: the tap at his elbow
+    //  on the tap's step, Zoé ahead on hers, the well's way down, whoever else stands nearer his line)
+    if (gi >= 0 && C.o[gi] === res && aim(C.x[gi], C.z[gi]) >= GOAL_KEEP) return res;
+    const h = this.hero, L = this._line ||= { lat: [], al: [] };
+    // (i's place against his facing line: how far off it, how far along it)
+    // (a thing within arm's reach, under 0.5 m, where aim() reads 0 — "not looked at" —, counts as faced only squarely
+    //  ahead: the tap in his hands before Zoé behind it; a search spot at his feet or to his side still does not)
+    const fx = Math.sin(h.angle), fz = Math.cos(h.angle);
+    const at = (i) => {
+      const dx = C.x[i] - h.pos.x, dz = C.z[i] - h.pos.z, d = Math.hypot(dx, dz), raw = d > 1e-3 ? (dx * fx + dz * fz) / d : 1;
+      L.lat[i] = d * Math.sqrt(Math.max(0, 1 - raw * raw)); L.al[i] = d * raw;
+      return d < 0.5 ? (raw >= 0.9 ? 1 : 0) : aim(C.x[i], C.z[i]);
+    };
+    // (i before j: less far off his line, a fifth of the way along it counted too — so the tap at arm's length 20° aside
+    //  comes before Zoé 2.4 m ahead, and of two on the line the nearer)
+    const before = (i, j) => L.lat[i] + LINE_ALONG * L.al[i] < L.lat[j] + LINE_ALONG * L.al[j];
+    let ri = -1, ti = -1, pi = -1;
+    for (let i = 0; i < C.n; i++) {
+      if (!(C.x[i] === C.x[i])) continue;
+      if (C.o[i] === res) ri = i;
+      const a = at(i), npc = C.o[i].kind === 'npc';
+      if (npc ? a < FACE_NPC : a < FACE_THING) continue;
+      if (npc) { if (pi < 0 || before(i, pi)) pi = i; } else if (ti < 0 || before(i, ti)) ti = i;
+    }
+    if (ri < 0) return res;   // (no measured point: kept)
+    const isNpc = res.kind === 'npc';
+    if (pi >= 0 && (ti < 0 || before(pi, ti))) return isNpc && aim(C.x[ri], C.z[ri]) >= FACE_NPC ? res : C.o[pi];
+    if (ti >= 0 && isNpc) return C.o[ti];
+    return res;
   }
   // INTERACT-PICK: the candidate (index in C) that is the objective's thing — within GOAL_R of a star of story.markers()
   // (a person on it), roughly faced or right by him — or -1. The stars are read once a frame.
@@ -2885,6 +2948,22 @@ class Game {
   }
 
   // the cursor's point in the world, on the plane at Twinsen's chest height (null when the mouse isn't aiming)
+  // AIM-PLATE (TESTER-FIXES, the desktop's 68.3: in Modern the Core's bank shot never banked — the throw went where the
+  // mouse pointed, not where the plate had turned him). Every throw plate in the game (the core's three pylon plates,
+  // chapter3.js plates(); the shaft's teaching plate, underground.js c3shaft.teach.plate; the gallery's middle stone,
+  // c3gallery.stonePlate) lines Twinsen up while he stands still on it, by setting his facing to the plate's line. When
+  // he stands on one (within PLATE_R of its middle) facing along its line, that is the plate he is on: combat.js aimDir
+  // throws along it in Modern too, as Classic always did. (Facing the line by chance off a live plate means the same
+  // throw: it goes the way he faces.) Read here, not in the story: the plates' own code is the story's.
+  aimPlate() {
+    const h = this.hero, R = this.room;
+    if (!R || !h?.onGround) return null;
+    const near = (p) => p && Number.isFinite(p.x) && Math.hypot(h.pos.x - p.x, h.pos.z - p.z) < PLATE_R && Math.abs(angleDiff(h.angle, p.a)) < PLATE_A;
+    for (const p of [R.teach?.plate, R.stonePlate]) if (near(p)) return p;
+    this._plateCh ??= this.story?.chapters?.find((c) => typeof c.plates === 'function' && c.plates.length === 0) || false;
+    if (this._plateCh && R.id === 'c3core') for (const p of this._plateCh.plates()) if (near(p)) return p;
+    return null;
+  }
   mouseAim() {
     const I = this.input;
     if (!I.mouseAiming() || this.settings.mouseAim === 'off') return null;

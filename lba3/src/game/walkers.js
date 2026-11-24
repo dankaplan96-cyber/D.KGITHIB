@@ -1134,12 +1134,16 @@ export const BENCH_RED = { seatY: 0.485, back: -0.25, front: 0.225 };
 // cast or a side story, never a shopkeeper), not held by a chapter, not the objective's person (its star). What: the
 // talk's whole answer is ONE line by that person — no second line, no chain (base.js chain's `more`), no choice, no
 // scene, no flag, coin or life changed by it — and a short one: at most REMARK_MAX_CH characters of its English source
-// (so English and Hebrew decide alike) and at most two sentences ("..." ends none). Two: the residents' lines are mostly
+// (so English and Hebrew decide alike) and at most three sentences since TESTER-FIXES, two before ("..." ends none). Two: the residents' lines are mostly
 // two short ones ("The ferry's late. It's always late."); with one sentence only a few percent of them would ever be a
 // remark (docs/lba-maturity/P116.md). ?remarks=strict keeps one sentence (the brief's first wording, for the user's
 // pick). Anything else is the dialogue box, as before: the talk's say calls are replayed unchanged. ?remarks=box: the
 // old way (the before pictures).
-const REMARK_MAX_CH = 80, REMARK_AWAY = 6.5;   // (characters of the English line; m: walked this far off, it closes)
+// (TESTER-FIXES, the desktop's 68.1: of four residents by the square only Oda's line went overhead; Brix's "Shh. I'm
+//  resting my eyes. They've seen a lot.", Dot's "I'm carrying a message. It's a secret. It's for the baker." and Garrick's
+//  81-character line opened the box: idle one-liners of three short sentences. A remark now: up to REMARK_MAX_CH
+//  characters and REMARK_SENT sentences; a longer one, a fourth sentence, a chain or a choice keeps the box)
+const REMARK_MAX_CH = 95, REMARK_SENT = 3, REMARK_AWAY = 6.5;   // (characters of the English line; m: walked this far off, it closes)
 const REMARK_Q = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('remarks');
 const PICK_COUNTER = /^[a-z]+_n_/;           // (a line set's "which one next" counter: life.js, zeelife.js, kesh.js pick)
 export class Remarks {
@@ -1148,7 +1152,7 @@ export class Remarks {
     this.on = REMARK_Q !== 'box';
   }
   // a short line: the English source (spoken) so both languages decide alike; "..." (or "…") ends no sentence
-  static short(text, en, most = REMARK_Q === 'strict' ? 1 : 2) {
+  static short(text, en, most = REMARK_Q === 'strict' ? 1 : REMARK_SENT) {
     const s = String(en || text || '').trim();
     if (!s || s.length > REMARK_MAX_CH || /\n/.test(s)) return false;
     return s.replace(/\.{2,}|…/g, ',').split(/[.!?]+["'’”)\]]*\s+(?=\S)/).length <= most;

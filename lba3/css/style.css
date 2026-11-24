@@ -578,6 +578,9 @@ body.hud-lba #weapon.show { opacity: 1; }
 /* the desktop app (desktop/): things only it has */
 .desktop-only { display: none !important; }
 body.desktop .desktop-only { display: block !important; }
+/* (TESTER-FIXES: the pause menu's Benchmark tools only with a developer flag: ?bench / ?dev, or the desktop app run from source) */
+.dev-only { display: none !important; }
+body.dev #pause .menu .dev-only { display: flex !important; }
 
 /* ---- loading screen (#27): MEA Studio, then a picture of the game and a progress bar ---- */
 #loading { background: #07060c; padding: 0; gap: 0; justify-content: flex-end; overflow: hidden; }
