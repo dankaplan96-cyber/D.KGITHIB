@@ -1,8 +1,9 @@
 // The opening (new game), 88 s (the notebook cut, LBA3-RUN, switchable: 88.8 s). What a player who never played LBA should
 // take from it:
-//   (notebook cut) the history first, over Twinsen's own sketchbook: FunFrock ruled Twinsun with clones and teleporters;
-//           Twinsen stood up to him; later lightning struck the Dino-Fly, and on Zeelich he brought the stolen children
-//           home. Then his face over the book: where and when (a caption); the last page's drawing becomes the island
+//   (notebook cut) the history first, over Twinsen's own sketchbook, read by his son Arthur (P127, his voice and name):
+//           FunFrock ruled Twinsun with clones and teleporters; his dad, Twinsen, stood up to him; later lightning struck
+//           the Dino-Fly, and on Zeelich he brought the stolen children home. Then his face over the book: where and when
+//           (a caption); the last page's drawing becomes the island
 //   where   Citadel Island on the planet Twinsun, twelve years after Twinsen's last adventure (a caption; the classic
 //           cut adds Sendell, FunFrock and his clones in a second)
 //   what changed   the Joint Project (Twinsun + Zeelich) is unloading at the harbour and promises its heat to
@@ -1258,6 +1259,15 @@ export function playOpening(story, cut = openingCut()) {
     subs.push({ t: newOf(tt), d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
     if (a && beat) gest(a, tt + (beat.at ?? 0.15), beat.d ?? Math.min(d - 0.5, voiceSeconds(t(key), d, 'n_' + id)), beat.o);
   };
+  // P127 (the user 24.11: "maybe add a narrator who tells what happened? in Arthur's voice?"): the notebook's four lines of
+  // history are Arthur reading his dad's notebook: his name and his own voice, on the scene's clock (the notebook's). The
+  // pages' times are as they were; the first line starts 0.15 s sooner and runs 0.15 s longer for "Dad's notebook."
+  // (19 characters a second, as his line at the boat), the second 0.1 s later so the two read as two (the same speaker,
+  // the same place on the screen). The film's length is unchanged.
+  if (NBCUT) {
+    const nb = (tt, key, d) => subs.push({ t: tt, d, who: t('n_arthur'), color: C.arthur, text: t(key), voice: 'n_arthur' });
+    nb(0.35, 'op_nb_1', 3.5); nb(4.0, 'op_nb_2', 3.8); nb(7.95, 'op_nb_3', 2.6); nb(10.75, 'op_nb_4', 2.65);
+  }
   say(14.6, 'resident', 'op_res_1', 2.3, resident, { at: 0.35, d: 1.2, o: { shR: [-0.55, 0, -0.3], elR: [-2.0], head: [0.03, 0, 0.07] } });   // (NO-AIR: a thumb back over his shoulder at the harbour row; it was both forearms held up in front of him, as if he carried something)
   say(16.95, 'worker', 'op_wk_1', 2.6, worker);   // (his hand stays on the lift's control; ends with the cut to the drill at 19.6)
   say(24.0, 'resident', 'op_res_2', 1.7, resident, { at: 0.1, d: 1.1, o: { shL: [-0.62, 0, 0.22], elL: [-0.45], head: [-0.08, 0, 0.06] } });   // (an open hand up, toward the hum)
@@ -1281,9 +1291,10 @@ export function playOpening(story, cut = openingCut()) {
   //  characters; 5.0 leaves the second about 17 characters a second, ending 0.8 s before the resident's first line)
   // (LBA3-RUN: the history over the notebook's pages, a line at a time (about 15 characters a second, a short gap between
   //  them so each one reads as new); then where and when over his face, twelve years on)
+  // (P127: the four lines are Arthur's narration now, subtitles with his name (above); "FunFrock is dead…", the user's
+  //  pick 23.11 under the second line, stays a caption in the notebook's look, just over his line while he reads it)
   const caps = NBCUT ? [
-    { t: 0.5, d: 3.2, text: t('op_nb_1'), cls: 'recap' }, { t: 3.9, d: 3.9, text: t('op_nb_2'), sub: t('op_cap_lore_sub'), cls: 'recap' },   // (the user's pick 23.11: "FunFrock is dead…" under it)
-    { t: 7.95, d: 2.6, text: t('op_nb_3'), cls: 'recap' }, { t: 10.75, d: 2.65, text: t('op_nb_4'), cls: 'recap' },
+    { t: 4.0, d: 3.8, text: t('op_cap_lore_sub'), cls: 'recap recap-over' },
     { t: 13.65, d: 3.2, text: t('op_cap_place'), sub: t('op_cap_time') },
   ] : [{ t: 1.6, d: 5.0, text: t('op_cap_place'), sub: t('op_cap_time') }, { t: 7.0, d: 6.8, text: t('op_cap_lore'), sub: t('op_cap_lore_sub') }];
 

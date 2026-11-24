@@ -118,16 +118,24 @@ export const LOOKS = {
     hairStyle: 'bald', hair: '#5a4a8a', nose: 'long', eyes: '#e0a020', eyeScale: 0.75, mouth: 'smile', brow: 1.1, headS: 0.95, neck: 0.12, height: 1.12, longCoat: true,
   },
   worker: {
-    // project worker: stocky, teal overalls with a tool belt, yellow hard hat
-    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.05, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
+    // project worker: stocky, orange-yellow work overalls with a tool belt, a hi-vis vest, a yellow hard hat
+    // P127 (the user 24.11: "why is Twinsen at the harbour in the film?"): the crew wore teal overalls on Twinsen's build and
+    // read as him in the opening's harbour shots. Now the crew's own look, nothing blue on the body: orange-yellow
+    // overalls, a lime hi-vis vest with two reflective bands and shoulder straps (cast_poly.py `vest`), the hard hat.
+    // `crew`: DRESS-1's other dresses of this look stay in the overalls' orange (dressVariant), the hard hat's colour varies.
+    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.05, tunic: '#f2901c', tunicTrim: '#a85a16', belt: '#5a3a1a', pants: '#d97c18', shoes: '#3a2a1a',
+    vest: '#c4e23a', vestBand: '#ecebe4', crew: true,
     hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'bald', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', hardhat: '#e8c030', headS: 0.95, neck: 0.07, height: 0.97,
   },
   worker_b: {
     // CAST-POLISH-UNDERGROUND (order 24, worker's shape variant): the project's maintenance hand, a heavier man in the same
-    // teal crew overalls, bare-headed with short dark hair, a moustache, brass goggles pushed up on his brow and the sleeves
+    // crew overalls, bare-headed with short dark hair, a moustache, brass goggles pushed up on his brow and the sleeves
     // rolled (cast_poly.py CAST worker_b). Taken by Tolli (dp_tolli, the deep installation), Surveyor Anko (dg_surv, the dig)
     // and Fennick (zr_fennick, Zeelich); the yard's worker, Teo (dg_porter), Kasp (dg_dig) and Brann keep worker (the hard hat)
-    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.1, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
+    // P127: the crew's orange-yellow overalls and hi-vis vest, as worker's; still bare-headed (the goggles sit where a hat's
+    // brim would, and the bare head with the goggles is what tells the maintenance hand from the hatted crew)
+    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.1, tunic: '#f2901c', tunicTrim: '#a85a16', belt: '#5a3a1a', pants: '#d97c18', shoes: '#3a2a1a',
+    vest: '#c4e23a', vestBand: '#ecebe4', crew: true,
     hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'cap', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', moustache: true, goggles: true, headS: 0.95, neck: 0.07, height: 0.97,
   },
   guard: {
@@ -1335,6 +1343,7 @@ function dressColour(rec, c) {
 // shades stepped, grey cloth tinted; hair from natural colours. The same n gives the same dress on every load.
 const TRIMS = ['tunicTrim', 'belt', 'buckle', 'collarColor', 'emblem', 'cord'];
 const HAIRS = ['#2a1a12', '#5a3a1a', '#8a4a20', '#c89a50', '#9a9a98', '#e8e2d8', '#3a2a2a', '#6a4a2a'];
+const CREW_HATS = ['#e8c030', '#eeece4', '#c8402a', '#e8c030', '#eeece4'];   // (P127: the crew's hard hats, yellow, white or red)
 export function dressVariant(lookName, n) {
   const base = LOOKS[lookName];
   if (!base || !n) return {};
@@ -1344,7 +1353,16 @@ export function dressVariant(lookName, n) {
     const v = base[k];
     if (typeof v !== 'string' || !/^#[0-9a-f]{6}$/i.test(v)) continue;
     if (k === 'hair' || k === 'beard') { out[k] = HAIRS[(HAIRS.indexOf(v) + 1 + n * 3) % HAIRS.length]; continue; }
+    if (base.crew && k === 'hardhat') { out[k] = CREW_HATS[n % CREW_HATS.length]; continue; }
     c.set(v).getHSL(hsl, THREE.SRGBColorSpace);
+    if (base.crew) {
+      // P127: the Joint Project's crew stay in their orange-yellow overalls (a turn round the wheel made blue and teal ones:
+      // the colour that read as Twinsen); each dress a little warmer or more golden, a little lighter or darker (half the
+      // other looks' steps: a full step down turned the orange to khaki)
+      c.setHSL(hsl.h + (((n * 0.618) % 1) - 0.5) * 0.05, hsl.s, Math.max(0.06, Math.min(0.88, hsl.l * (1 + (light - 1) * 0.5))), THREE.SRGBColorSpace);
+      out[k] = '#' + c.getHexString();
+      continue;
+    }
     // gold and cream trim (braid, a belt, a buckle) stays: turned round the wheel it came out as neon cyan and pink
     if (TRIMS.includes(k) && hsl.h > 0.07 && hsl.h < 0.19 && hsl.l > 0.45) { out[k] = v; continue; }
     const s = hsl.s < 0.12 ? (hsl.l > 0.85 || hsl.l < 0.1 ? hsl.s : 0.28) : Math.min(0.7, hsl.s * 0.9);   // (white and black stay; greys take a tint; no brighter than the cast's own cloth)
