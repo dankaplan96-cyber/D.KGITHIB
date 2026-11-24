@@ -4,7 +4,9 @@
 //                   to the hair code: the same hash = the same look, byte for byte)
 //   PHASE=lookdev   for each ?zoehair= value in HAIRS (default old,a,b,c; ZOE-HAIR-2: a-cap = v153's gold over the skull, a-bigtie): Zoé's whole figure from the front, ¾, side and
 //                   back, her head from the same four sides, the talking pose (head, ¾) and the walk from behind; the
-//                   model's triangle count
+//                   model's triangle count. ZOE-HEAD: HEADS=current,twinsen,round also goes through ?zoehead= for each
+//                   (files ld-<hair>-<head>-…); TWIN=1 first takes Twinsen's head from the same four sides and talking, with
+//                   the same camera (ld-twinsen-head-…, ld-twinsen-talk), for the side-by-side
 //   PHASE=game      (one boot, ?zoehair=<ZH>, default the game's default) the opening film's two Zoé lines (her at the
 //                   tap), the yard under the play camera (Follow, Far) by her, a fixed camera behind her at about the Far
 //                   camera's distance and height, the talk with her (her line, his answer), and her standing in the house (a
@@ -44,8 +46,13 @@ if (PHASE === 'hash') {
 if (PHASE === 'lookdev') {
   const meta = {};
   const views = [['front', 0], ['34', 0.62], ['side', 1.57], ['back', 3.14]];
-  for (const zh of (process.env.HAIRS || 'old,a,b,c').split(',')) {
-    const Z = `zoehair=${zh}`;
+  if (process.env.TWIN) {
+    for (const [n, a] of views) { await ld(`c=twinsen&anim=idle&t=0.5&yaw=0&focus=head&fd=1.6&fy=0.24&cyaw=${a}&cpitch=0.12&fov=30`); await jpg(`ld-twinsen-head-${n}`); }
+    await ld('c=twinsen&anim=talk&t=1.3&mouth=0.6&yaw=0&focus=head&fd=1.6&fy=0.2&cyaw=0.62&cpitch=0.1&fov=30'); await jpg('ld-twinsen-talk');
+  }
+  const combos = (process.env.HAIRS || 'old,a,b,c').split(',').flatMap((h) => (process.env.HEADS ? process.env.HEADS.split(',').map((d) => [h, d]) : [[h, '']]));
+  for (const [hair, head] of combos) {
+    const zh = head ? `${hair}-${head}` : hair, Z = `zoehair=${hair}` + (head ? `&zoehead=${head}` : '');
     await ld(`c=zoe&anim=idle&t=0.5&views=${views.map((v) => v[1]).join(',')}&gap=0.95&dist=5.0&cy=1.35&ly=1.2&fov=30&${Z}`);
     await jpg(`ld-${zh}-turn`);
     for (const [n, a] of views) { await ld(`c=zoe&anim=idle&t=0.5&yaw=0&focus=head&fd=1.6&fy=0.24&cyaw=${a}&cpitch=0.12&fov=30&${Z}`); await jpg(`ld-${zh}-head-${n}`); }
@@ -79,7 +86,7 @@ if (PHASE === 'lookdev') {
     });
     meta[zh] = r;
     console.log(zh, JSON.stringify(r));
-    check(`zoehair=${zh}: the swinging hair (the part the tail bones carry) keeps clear of her head, neck, collar and back through idle, talk, walk, run and a turned/tipped head (≥ 3 cm)`, r.leastToBody >= 0.03, r);
+    check(`${Z}: the swinging hair (the part the tail bones carry) keeps clear of her head, neck, collar and back through idle, talk, walk, run and a turned/tipped head (≥ 3 cm)`, r.leastToBody >= 0.03, r);
   }
   writeFileSync(CAP + 'meta-lookdev.json', JSON.stringify(meta, null, 1));
 }
