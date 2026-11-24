@@ -197,6 +197,8 @@ const c3 = await timed(() => {
     if (U.grip < 3 && ph > 1.2 && ph < 3.2) { ch.handOver(); hands++; }
   }
   T.run(80);
+  // (THE SECOND SHIFT, part 2: Tessa's lines play when he talks to her at the hall's door, as her objective says)
+  T.talk('tessa');
   for (let i = 0; i < 400 && G.flags.chapterKey === 'survey'; i++) { G.step(0.1); if (G.state === 'dialog') P.settle(); }
   T.run(40);
   return { row, hands, slips, ...T.view(), wk: T.flags('wk_'), brief: window.__said.filter((l) => /Tessa's boxes went out/.test(l)), said: window.__said.filter((l) => /You got old|You got lazy|yours to answer for|The family asks|mine to say|Five B-8s/.test(l)) };

@@ -24,12 +24,15 @@
 //            plaque, the requests board by the door, and the Rings (Oren's presence, large) at the far end.
 //   cradles: { setLid(i, 0..1, instant) (i: 'j17' or a back-row index 0…6), setWarm(0..1) (J-17's glow), setLever(0..1),
 //     setRing(shut), setLamp(i, 'green'|'amber'|'off') (J-16, J-18: 0, 1), rings (the presence's API) }
-//   ROOMS.cradles { spawn, door, card, ledger, plaque, board, ring, lever, rings, garrow, odra, jory, wait, hands [] }
+//   ROOMS.cradles { spawn, door, card, ledger, plaque, board, ring, lever, rings, garrow, odra, jory, wait, hands [],
+//     chairWall, chairCradle, stool, odraSide (THE SECOND SHIFT: a real chair by the left wall, moved beside Nan Odra's
+//     mother's cradle (the back row's second, behind her) so Wenna can sit with her; the keepers' stool at their desk) }
+//   cradles.chair { group, col, at(spot), carry(x, y, z, a) } (world), cradles.setBowl(on) (a bowl on the desk before the stool)
 //   Each room's R.exits[0] is its door back to 'bl_arches' (the region's R.entries puts him outside it); the gate's
 //   collider is solid until the gate is open.
 import * as THREE from 'three';
 import { RoomBuilder } from '../interiors.js';
-import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, torus, canvasTex, crate, barrel, jar, kettle, table, chair } from '../props.js';
+import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, torus, canvasTex, crate, barrel, jar, kettle, table, chair, Kit } from '../props.js';
 import { BALLASTRA_AT } from './common.js';
 import { chainGeo } from './look.js';
 import { buildOrenPresence } from '../orenpresence.js';
@@ -393,6 +396,26 @@ function buildCradles(scene, physics) {
   for (const [x, z] of [[-4.5, BZ + 0.12], [0, BZ + 0.12], [4.5, BZ + 0.12]]) k.add(sphere(0.12, 10, 8), MAT.glow('#fff2dc', '#ffcf90', 1.1), x, 3.4, z);
   B.light('#ffe6c0', 4.5, 13, -3.0, 3.6, 0.5);
   B.light('#e6f2ea', 4.0, 12, 3.6, 3.6, -0.5);
+  // THE SECOND SHIFT (P109 part 2, chapter 13 "A chair by the cradle": story/balances.js Cradles): a real chair, a piece of
+  // its own (it moves: Twinsen carries it), standing against the left wall between the door and the back row; the keepers'
+  // stool at the north side of their desk; a bowl that is set down on the desk before it
+  const chairG = new THREE.Group(); R.group.add(chairG);
+  { const ck = new Kit(chairG); chair(ck, { pal: 'dark', cushion: '#3f6c8c' }); ck.flush(); chairG.traverse((o) => { if (o.isMesh) o.castShadow = true; }); }
+  const chairCol = B.col(0, 0, 0.25, 0.25, 0.55, { noStand: true });
+  const CH = { wall: { x: -7.95, z: -1.65, a: Math.PI / 2 }, cradle: { x: -5.85, z: -2.6, a: 2.1 } };
+  const toLocal = (x, z) => ({ x: x - B.cx, z: z - B.cz });
+  const chairCtl = {
+    group: chairG, col: chairCol,
+    // stood on the floor at a spot (world {x, z, a}), its collider with it
+    at(p) { const l = toLocal(p.x, p.z); chairG.position.set(l.x, 0, l.z); chairG.rotation.set(0, p.a, 0); chairCol.x = p.x; chairCol.z = p.z; chairCol.rot = p.a; chairCol.enabled = true; physics.update(chairCol); },
+    // in his hands: off the floor, no collider
+    carry(x, y, z, a) { const l = toLocal(x, z); chairG.position.set(l.x, y, l.z); chairG.rotation.set(0.12, a, 0); chairCol.enabled = false; },
+  };
+  B.put(-6.6, -0.62, 0, (kk) => { kk.add(cyl(0.19, 0.17, 0.06, 12), MAT.wood('dark'), 0, 0.69, 0); for (let i = 0; i < 3; i++) { const a = i * 2.094; kk.add(cyl(0.022, 0.03, 0.68, 6), MAT.wood('dark'), Math.sin(a) * 0.13, 0.34, Math.cos(a) * 0.13); } return { r: 0.2, top: 0.72 }; }, {}, { noStand: true });
+  const bowl = new THREE.Group(); bowl.visible = false; R.group.add(bowl);
+  { const b = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), MAT.paint('#e8dcc0', 0.6)); b.scale.set(1, 0.6, 1); b.position.y = 0.06; bowl.add(b);
+    const soup = new THREE.Mesh(new THREE.CircleGeometry(0.085, 12), MAT.paint('#c8843a', 0.7)); soup.rotation.x = -Math.PI / 2; soup.position.y = 0.055; bowl.add(soup); }
+  bowl.position.set(-6.55, 0.86, -0.12);
   // state
   const S = { lid: { j17: 0 }, lidTo: { j17: 0 }, lever: 0, leverTo: 0 };
   for (let i = 0; i < 7; i++) { S.lid[i] = 0; S.lidTo[i] = 0; }
@@ -413,14 +436,18 @@ function buildCradles(scene, physics) {
     setLever(v, instant) { S.leverTo = v; if (instant) S.lever = v; place(); },
     setRing(shut) { ringStop.position.x = shut ? -1.25 : -1.6; },
     setLamp(i, c) { const l = [j16, j18][i]?.lamp; if (l) l.material = lampM[c] || lampM.off; },
+    chair: chairCtl,
+    setBowl(on) { bowl.visible = !!on; },
   };
   place();
   const W = (x, z, a) => ({ ...B.world(x, z), ...(a != null ? { a } : {}) });
+  chairCtl.at(W(CH.wall.x, CH.wall.z, CH.wall.a));
   Object.assign(ROOMS.cradles, {
     door: B.world(-Wd / 2 + 0.3, DOOR_Z), spawn: R.spawn,
     card: { ...W(0.6, 1.5), r: 0.7 }, ledger: { ...W(-6.6, 1.05), r: 0.9 }, plaque: { ...W(-7.4, BZ + 0.95), r: 0.9 }, board: { ...W(-Wd / 2 + 0.8, DOOR_Z - 1.6), r: 0.9 },
     ring: { ...W(-1.45, 1.85), r: 0.7 }, lever: { ...W(1.45, 1.85), r: 0.7 }, rings: { ...W(6.0, 0.5), r: 1.4 },
     hold: W(1.45, 1.75, Math.PI), garrow: W(-5.6, 1.1, -Math.PI / 2), odra: W(-3.9, BZ + 2.4, 0.4), jory: W(0.2, 1.9, Math.PI * 0.85), wenna: W(-0.9, 2.1, Math.PI * 0.9), wait: W(2.6, 2.5, -Math.PI * 0.7),
+    chairWall: W(CH.wall.x, CH.wall.z, CH.wall.a), chairCradle: W(CH.cradle.x, CH.cradle.z, CH.cradle.a), stool: W(-6.6, -0.62, 0), odraSide: W(-4.75, -2.05, 0.9),
     hands: [W(3.4, 2.6, -Math.PI / 2), W(4.4, 2.9, -Math.PI / 2), W(5.4, 2.4, -Math.PI / 2), W(4.0, 3.6, -Math.PI * 0.8), W(5.2, 3.5, -Math.PI * 0.8), W(3.0, 3.6, -Math.PI * 0.8)],
   });
   R.npcSpots = { garrow: ROOMS.cradles.garrow };

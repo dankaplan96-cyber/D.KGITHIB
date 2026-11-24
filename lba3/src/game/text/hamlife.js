@@ -65,6 +65,9 @@ Object.assign(STR.en, {
   hl_notice_home: "WELCOME HOME. The monks' cheese is in Lhamo's kitchen. Take some. Please.",
   hl_pen: "An empty goat pen. The goats went up the monks' path ahead of everyone, the clever things.",
   hl_pen_home: "The pen is still empty. The goats like the monks' meadow better and won't come down.",
+  // (THE SECOND SHIFT: the goats' house on the south rim)
+  hl_goats: 'An old two-storey house, shut. Goats downstairs and hay upstairs, by the smell of it.',
+  hl_goats_roof: "Pim's grandmother's old house. Sefa flashed at that roof for years. The goats never answered.",
   hl_shrine: "Lhar's shrine, three stone steps and a pole. Every flag line in the village starts from it, and everyone meets here.",
   hl_heat: "The project's heat station hums now. It keeps the winch thawed beautifully. The village, not so much.",
   hl_pwheel: "The prayer wheels turn one after another: clack, clack, clack. Small hands have worn the handles smooth.",

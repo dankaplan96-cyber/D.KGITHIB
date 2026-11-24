@@ -199,6 +199,8 @@ export class HamalayiLife extends ChapterBase {
       W(27.4, -44.2, 1.1, { kind: 'hl_pwheel', label: 'p_turn' }),
       W(41.0, -44.2, 1.1, { kind: 'hl_pwheel', label: 'p_turn' }),
     ];
+    // (THE SECOND SHIFT: Pim's grandmother's old house, the goats' now: story/observatory.js RoofThread)
+    if (M.goatHouse) { const q = M.goatHouse.door; list.push({ x: q.x, z: q.z, y: gy(q.x, q.z), r: 1.8, it: { kind: 'hl_look', key: 'hl_goats', label: 'p_look' } }); }
     const d = M.observatory.door;
     list.push({ x: d.x, z: d.z - 0.4, y: gy(d.x, d.z + 0.6), r: 1.9, it: { kind: 'hl_obs', label: 'p_knock' }, obs: true });
     this._spots = { M, list };
@@ -207,7 +209,7 @@ export class HamalayiLife extends ChapterBase {
   interact(it) {
     const g = this.game, h = g.hero, say = (key) => { g.say('n_hero', [t(key)], null, h); return true; };
     switch (it.kind) {
-      case 'hl_look': return say(it.key === 'hl_pen' && this.phase() === 'home' ? 'hl_pen_home' : it.key);
+      case 'hl_look': return say(it.key === 'hl_pen' && this.phase() === 'home' ? 'hl_pen_home' : it.key === 'hl_goats' && this.f.rf_roof ? 'hl_goats_roof' : it.key);
       case 'hl_notice': g.audio.play('paper'); return say('hl_notice_' + this.phase());
       case 'hl_pwheel': g.audio.play('ropeCreak'); return say(this.phase() === 'pack' ? 'hl_pwheel_pack' : 'hl_pwheel');
       case 'hl_wheel': this.hall?.wheel.spin(); g.audio.play('ropeCreak'); return say('hh_wheel');

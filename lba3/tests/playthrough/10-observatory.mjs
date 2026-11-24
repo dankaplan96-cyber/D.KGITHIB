@@ -2,6 +2,19 @@
 // (CAMPAIGN-5: the telescope's fourth setting follows the snow fields' shaking; its ring read), the telescope, out, the heavy drone at the vent (ball), the seal's two iced discs (ball), the vent opened, back to the monastery gate.
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
+  // (THE SECOND SHIFT, part 2: on the peak Sefa is out at his signalling shutter; the old roof, Pim, the goats; the shutter
+  //  taken and swung (left, then nearer, then right) until Tashi answers from the lift's top landing; Sefa goes in)
+  ['the shutter', () => {
+    const G = game, f = G.flags, S = G.rooms.hamalayi?.shutter, T = G.story.cur.roof, h = G.hero;
+    if (!S || !f.rf_v || f.rf_roof) return { skip: true };
+    for (let k = 0; k < 5 && Math.hypot(h.pos.x - S.x, h.pos.z - S.z) > 9 && !T.busy; k++) { P.go(S.x + 3, S.z - 7, { tol: 1.0, maxT: 200, stopWhen: () => G.state === 'dialog' }); P.settle(); }
+    for (let i = 0; i < 900 && !f.rf_shut; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    P.settle(); P.use(S.sefa.x, S.sefa.z, { near: 0.5, kind: 'rf_shutter' }); for (let i = 0; i < 40 && !T.hold; i++) G.step(0.1);
+    const keys = G.input.keys;
+    for (const key of ['ArrowLeft', 'ArrowDown', 'ArrowRight']) { keys.add(key); for (let i = 0; i < 300 && !f.rf_roof; i++) G.step(1 / 30); keys.delete(key); if (f.rf_roof) break; }
+    for (let i = 0; i < 300 && (G.state === 'dialog' || T.walk || T.later.length); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    return { roof: !!f.rf_roof, fail: f.rf_roof ? null : 'shutter' };
+  }],
   // (CAMPAIGN-5: out of the yard the snow shakes beside him and he says so: read it, as a player would, and walk on)
   ['into the observatory', () => { const d = game.rooms.hamalayi.observatory.door; let r = P.through(d.x, d.z, { run: true }); for (let k = 0; k < 2 && game.room?.id !== 'obsv'; k++) { P.settle(); r = P.through(d.x, d.z, { run: true }); } return { ...r, snow: !!game.flags.ob_snow, fail: game.room?.id === 'obsv' ? null : 'observatory' }; }],
   ['the keeper', () => ({ ...P.talk('keeper'), keeper: game.flags.c7_keeper, fail: game.flags.c7_keeper ? null : 'keeper' })],

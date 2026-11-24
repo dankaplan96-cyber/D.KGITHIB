@@ -113,7 +113,8 @@ const CASES = [
   { label: 'chapter 5, Kesh (the plan made)', key: 'steam', flags: { c5_planned: true, c5_ferryTaken: true }, room: 'desert', ids: ['ilka', 'tarra', 'hesk'] },
   { label: 'chapter 5, Kesh (the steam through)', key: 'steam', flags: { c5_planned: true, c5_ferryTaken: true, c5_dug: true, c5_routed: true, c5_dallanOK: true, c5_hatch: true, c5_relief: true, c5_vent: true }, room: 'desert', ids: ['dallan'] },
   { label: 'chapter 6, Lhar', key: 'pass', flags: { c6_started: true, c6_bridge: true, c6_lhar: true }, room: 'hamalayi', ids: ['yorna', 'pim', 'lhar1', 'lhar2', 'lhar3'] },
-  { label: 'chapter 7, the monastery\'s yard', key: 'observatory', flags: { ...DONE6, c7_started: true }, room: 'hamalayi', ids: ['yorna', 'pim', 'lhar1', 'lhar2', 'lhar3'], keepOff: 'yard', ways: { from: 'gate', to: 'yard' } },
+  // (THE SECOND SHIFT, part 2: in chapter 7 Pim is up on the peak by Sefa's shutter and Tashi minds the lift's upper brake)
+  { label: 'chapter 7, the monastery\'s yard', key: 'observatory', flags: { ...DONE6, c7_started: true }, room: 'hamalayi', ids: ['yorna', 'lhar2', 'lhar3'], keepOff: 'yard', ways: { from: 'gate', to: 'yard' } },
   { label: 'chapter 7, the observatory', key: 'observatory', flags: { ...DONE6, c7_started: true, c7_keeper: true }, room: 'obsv', ids: ['keeper'], ways: { to: 'prompts' } },
   { label: 'chapter 8, the well', key: 'evacuation', flags: { c8_started: true, ev_v: 1, ev_cart: true }, room: 'citadel', ids: ['gilbert'] },
   { label: 'chapter 8, the hill farms', key: 'evacuation', flags: { c8_started: true, ev_v: 1, ev_cart: true }, room: 'citadel', ids: ['farmer1', 'farmer2', 'farmer3'] },
