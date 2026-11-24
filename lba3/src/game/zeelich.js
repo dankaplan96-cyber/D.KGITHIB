@@ -36,7 +36,7 @@ import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
 import { esmerBuilding, Place, setLook, glassM, tealGlassM, capParts, capSpike, capM, frondTree, goldPlant } from './props-esmer.js';
 const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
-import { textures, keyJSON, cloneTex } from '../engine/textures.js';
+import { textures, keyJSON, cloneTex, withWallNormal } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
@@ -98,6 +98,7 @@ function tm(name, opts = {}) {
   if (MC.has(key)) return MC.get(key);
   const map = typeof name === 'string' ? textures()[name] : name;
   const m = new THREE.MeshStandardMaterial({ map, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.88, metalness: opts.metal ?? 0, vertexColors: !!opts.vc, emissive: opts.emissive || '#000000', emissiveIntensity: opts.ei ?? 1, side: opts.side ?? THREE.FrontSide, transparent: !!opts.transparent, alphaTest: opts.alphaTest ?? 0 });
+  withWallNormal(m);   // (WALL-NORMALS: ?wallnormals)
   MC.set(key, m);
   return m;
 }

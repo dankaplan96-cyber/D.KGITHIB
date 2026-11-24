@@ -7,7 +7,7 @@
 // textures with world-scaled UVs, sculpted geometry for organic shapes,
 // instancing/merging for repeated parts, a collider for every solid thing.
 import * as THREE from 'three';
-import { textures, keyJSON, wallTexture } from '../engine/textures.js';
+import { textures, keyJSON, wallTexture, withWallNormal } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
@@ -131,6 +131,7 @@ function tm(name, opts = {}) {
   if (MC.has(key)) return MC.get(key);
   const map = textures()[name];
   const m = new THREE.MeshStandardMaterial({ map, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.88, metalness: opts.metal ?? 0, vertexColors: !!opts.vc, emissive: opts.emissive || '#000000', emissiveIntensity: opts.ei ?? 1, side: opts.side ?? THREE.FrontSide, flatShading: !!opts.flat });
+  withWallNormal(m);   // (WALL-NORMALS: ?wallnormals)
   MC.set(key, m);
   return m;
 }
@@ -176,6 +177,7 @@ function wallMat(shade = false, tint = '#cfcac8') {
   const map = L ? L.tex() : textures().rubble;
   const m = shade ? new THREE.MeshStandardMaterial({ map, color: L ? L.color : '#d6d2d0', roughness: 0.88, emissive: L ? L.shade : '#8c8884', emissiveMap: map })
     : new THREE.MeshStandardMaterial({ map, color: L.color, roughness: 0.88 });
+  withWallNormal(m);   // (WALL-NORMALS: ?wallnormals)
   MC.set(key, m);
   return m;
 }

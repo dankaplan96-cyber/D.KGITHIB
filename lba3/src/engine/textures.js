@@ -56,6 +56,8 @@ function blotches(x, size, r, n, colors, rmin, rmax, alpha) {
   x.globalAlpha = 1;
 }
 
+const LAYOUT = {};   // (WALL-NORMALS: the layouts the wall generators drew, by texture name)
+
 export function makeTextures() {
   const T = {};
   const S = 256;
@@ -447,6 +449,7 @@ function islandTextures(T) {
       }
       if (ok) stones.push([px, py, rx * o.grow, ry * o.grow, r() * 0.6 - 0.3, r()]);
     }
+    LAYOUT[key] = { kind: 'rubble', N, stones };   // (WALL-NORMALS: the same stones, for the height map)
     for (const [px, py, rx, ry, rot, tone] of stones) {
       const base = o.base + tone * o.span;   // (GFX-LOOK-2: was 120 + 70: with the darker mortar, a black heap from afar)
       wrap(N, (ox, oy) => {
@@ -566,11 +569,13 @@ function islandTextures(T) {
   {
     const [c, x] = canvas(S); const r = rng(109);
     x.fillStyle = '#4a4f58'; x.fillRect(0, 0, S, S);
-    const rows = 5, rh = S / rows;
+    const rows = 5, rh = S / rows, blocks = [], cracks = [];
+    LAYOUT.fortStone = { kind: 'blocks', N: S, rh, blocks, cracks };   // (WALL-NORMALS: the same blocks and cracks)
     for (let j = 0; j < rows; j++) {
       let xx = -r() * 60;
       while (xx < S) {
         const w = 60 + r() * 50, tone = 120 + r() * 36;
+        blocks.push([xx, j * rh, w]);
         wrap(S, (ox) => {
           const g = x.createLinearGradient(0, j * rh, 0, j * rh + rh);
           g.addColorStop(0, `rgb(${tone + 14},${tone + 20},${tone + 30})`); g.addColorStop(1, `rgb(${tone - 22},${tone - 18},${tone - 8})`);
@@ -580,7 +585,7 @@ function islandTextures(T) {
       }
     }
     blotches(x, S, r, 20, ['#3a4048', '#6a7480', '#55606a'], 15, 50, 0.3);
-    for (let i = 0; i < 18; i++) { const px = r() * S, py = r() * S; x.strokeStyle = 'rgba(30,30,36,0.5)'; x.lineWidth = 1; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 20, py + 6 + r() * 14); x.stroke(); }
+    for (let i = 0; i < 18; i++) { const px = r() * S, py = r() * S, ex = px + (r() - 0.5) * 20, ey = py + 6 + r() * 14; cracks.push([px, py, ex, ey]); x.strokeStyle = 'rgba(30,30,36,0.5)'; x.lineWidth = 1; x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke(); }
     speckle(x, S, r, 400, ['#2e3238', '#a8b0bc'], 0.4, 0.3);
     T.fortStone = toTex(c);
   }
@@ -722,3 +727,117 @@ export function keyJSON(o) {
   }
   return JSON.stringify(o);
 }
+
+// WALL-NORMALS (CLOUD_ORDERS 67, the user 23.11: "let the local agent work the walls and make normal maps"): a normal map
+// for a generated wall texture, matching it texel for texel. The generator records the layout it drew (LAYOUT: the
+// rubble's stones, the fort's blocks and cracks, from the same seeded draws); a height map is drawn from it — each stone
+// a low dome over the mortar bed, each block a plateau with a soft bevel into its joints, the fort's cracks shallow
+// grooves — softened a little across the tile's wrap, and the normals are its slopes (tangent space, OpenGL: +Y up the
+// texture; the canvas is uploaded flipped as the colour's is). Made at load, in code: no image files. On by default (the
+// user's pick, 23.11); `?wallnormals=0` off, or by name, `?wallnormals=fortStone,rubbleHouse`; `?wnstr=` the relief's
+// strength (default 1); `?wnao=` its ambient occlusion (default 1, 0 off).
+const WN_ARG = typeof location !== 'undefined' ? /[?&]wallnormals=([\w,]+)/.exec(location.search) : null;
+export const WALLNORM = {
+  // (the user, 23.11, shown the pairs: "everything" — ON by default for the three: the fort's stone, the houses' rubble
+  //  and the rubble (the harbour shed, the lighthouse's foot, Ballastra's piers). `?wallnormals=0`: off, as before;
+  //  by name, `?wallnormals=fortStone` etc., only those)
+  names: (() => { const ALL = ['fortStone', 'rubbleHouse', 'rubble'];
+    if (!WN_ARG || WN_ARG[1] === '1' || WN_ARG[1] === 'all') return new Set(ALL);
+    return WN_ARG[1] === '0' ? new Set() : new Set(WN_ARG[1].split(',')); })(),
+  str: (typeof location !== 'undefined' && +(/[?&]wnstr=([\d.]+)/.exec(location.search) || [])[1]) || 1,
+  // (the joints' ambient occlusion with it — the shade's relief —, `?wnao=0` off, `?wnao=0.5` half)
+  ao: typeof location !== 'undefined' && /[?&]wnao=([\d.]+)/.test(location.search) ? +/[?&]wnao=([\d.]+)/.exec(location.search)[1] : 1,
+};
+const NORM = {}, NORM_AO = {}, NORM_COPY = new Map();
+function heightCanvas(L) {
+  const N = L.N, [c, x] = canvas(N);
+  x.fillStyle = '#000'; x.fillRect(0, 0, N, N);
+  if (L.kind === 'rubble') {
+    // (each stone a dome: its middle high, falling to its rim, which stands proud of the mortar)
+    for (const [px, py, rx, ry, rot] of L.stones) wrap(N, (ox, oy) => {
+      x.save(); x.translate(px + ox, py + oy); x.rotate(rot); x.scale(rx, ry);
+      const g = x.createRadialGradient(0, 0, 0, 0, 0, 1);
+      g.addColorStop(0, '#fff'); g.addColorStop(0.6, '#e0e0e0'); g.addColorStop(0.88, '#a8a8a8'); g.addColorStop(1, '#6c6c6c');
+      x.fillStyle = g; x.beginPath(); x.arc(0, 0, 1, 0, 7); x.fill();
+      x.restore();
+    });
+  } else {
+    // (each block a flat face standing out of its joints; the cracks shallow grooves)
+    for (const [xx, y, w] of L.blocks) wrap(N, (ox) => {
+      x.fillStyle = '#bdbdbd'; x.beginPath(); x.roundRect(xx + ox + 2, y + 2, w - 4, L.rh - 4, 4); x.fill();
+      x.fillStyle = '#e6e6e6'; x.beginPath(); x.roundRect(xx + ox + 5, y + 5, w - 10, L.rh - 10, 3); x.fill();
+    });
+    x.strokeStyle = 'rgba(0,0,0,0.45)'; x.lineWidth = 1.2;
+    for (const [a, b, e, f] of L.cracks) wrap(N, (ox, oy) => { x.beginPath(); x.moveTo(a + ox, b + oy); x.lineTo(e + ox, f + oy); x.stroke(); });
+  }
+  // (softened across the wrap: blurred on a 3×3 tiling, the middle kept, so the tile stays seamless)
+  const [b3, x3] = canvas(N * 3);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) x3.drawImage(c, i * N, j * N);
+  const [o, xo] = canvas(N);
+  xo.filter = `blur(${L.kind === 'rubble' ? 1.2 : 1.6}px)`; xo.drawImage(b3, -N, -N); xo.filter = 'none';
+  return o;
+}
+function normalTexture(name) {
+  if (NORM[name]) return NORM[name];
+  textures();
+  const L = LAYOUT[name]; if (!L) return null;
+  const N = L.N, H = heightCanvas(L).getContext('2d').getImageData(0, 0, N, N).data;
+  const h = (x, y) => H[(((y + N) % N) * N + ((x + N) % N)) * 4] / 255;
+  const [c, x] = canvas(N), img = x.createImageData(N, N), D = img.data;
+  // (the user's look, 23.11 pictures: about 4× the first try — readable along a sunlit face up close, quiet from the
+  //  play camera, the wall's mean brightness within 2–4 % of before)
+  const k = (L.kind === 'rubble' ? 9.6 : 8.0) * WALLNORM.str;
+  for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+    const dx = (h(xx + 1, y) - h(xx - 1, y)) * 0.5 * k, dy = (h(xx, y + 1) - h(xx, y - 1)) * 0.5 * k;
+    // (u along the canvas's x; v up the texture, the canvas's y downward: the normal's y is +dh/dy of the canvas)
+    let nx = -dx, ny = dy, nz = 1; const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
+    const i = (y * N + xx) * 4; D[i] = (nx * 0.5 + 0.5) * 255; D[i + 1] = (ny * 0.5 + 0.5) * 255; D[i + 2] = (nz * 0.5 + 0.5) * 255; D[i + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.name = name + '-normal';
+  // the ambient occlusion from the same heights (the user, 23.11: "not too flat" where the sun doesn't reach): three uses
+  // it on the indirect light only — the sky and the shade —, so the joints and the gaps between stones darken a little
+  // there and the sunlit side is as the normal map makes it. Low in the mortar, 1 on a stone's or block's face.
+  {
+    const [ca, xa] = canvas(N), ia = xa.createImageData(N, N), A = ia.data;
+    const lo = L.kind === 'rubble' ? 0.42 : 0.68, hi = L.kind === 'rubble' ? 0.78 : 0.86;   // (height: the mortar's, a face's)
+    for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+      const e = Math.min(1, Math.max(0, (h(xx, y) - lo) / (hi - lo))), v = 0.58 + 0.42 * e * e * (3 - 2 * e);
+      const i = (y * N + xx) * 4; A[i] = A[i + 1] = A[i + 2] = v * 255; A[i + 3] = 255;
+    }
+    xa.putImageData(ia, 0, 0);
+    const a = new THREE.CanvasTexture(ca);
+    a.colorSpace = THREE.NoColorSpace; a.wrapS = a.wrapT = THREE.RepeatWrapping; a.anisotropy = 4; a.name = name + '-ao';
+    NORM_AO[name] = a;
+  }
+  return (NORM[name] = t);
+}
+// the normal map for a material's colour map, if its texture has one and it is switched on: the shared one for the
+// shared texture, a copy with the map's own repeat/offset for a copy (architecture.js's per-house repeat)
+export function wallNormalFor(map) {
+  if (!map || !WALLNORM.names.size) return null;
+  const T = textures();
+  for (const name of WALLNORM.names) {
+    const base = T[name]; if (!base || base.source !== map.source) continue;
+    const n = normalTexture(name); if (!n) return null;
+    if (map === base) return { n, ao: NORM_AO[name] };
+    const key = map.uuid; if (NORM_COPY.has(key)) return NORM_COPY.get(key);
+    const like = (src) => { const c = cloneTex(src); c.repeat.copy(map.repeat); c.offset.copy(map.offset); c.rotation = map.rotation; c.center.copy(map.center); c.wrapS = map.wrapS; c.wrapT = map.wrapT; return c; };
+    const cpy = { n: like(n), ao: like(NORM_AO[name]) };
+    NORM_COPY.set(key, cpy); return cpy;
+  }
+  return null;
+}
+// a material with a wall texture gets its normal map (when switched on); used where the builders make their materials
+export function withWallNormal(m) {
+  const w = wallNormalFor(m?.map);
+  if (w) {
+    m.normalMap = w.n; m.normalScale.set(1, 1);
+    if (WALLNORM.ao > 0) { m.aoMap = w.ao; m.aoMapIntensity = WALLNORM.ao; }
+    m.needsUpdate = true;
+  }
+  return m;
+}
+// (tests, pictures: the height and normal canvases of a wall texture)
+export function wallNormalCanvas(name, ao = false) { const t = normalTexture(name); return t ? (ao ? NORM_AO[name] : t).source.data : null; }

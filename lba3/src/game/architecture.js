@@ -5,7 +5,7 @@
 // sills/shutters/flower boxes and an arched stone door surround. Small
 // random offsets keep the houses from looking cloned.
 import * as THREE from 'three';
-import { textures, keyJSON } from '../engine/textures.js';
+import { textures, keyJSON, withWallNormal } from '../engine/textures.js';
 import { rng } from '../engine/math.js';
 
 const cache = new Map();
@@ -16,6 +16,7 @@ function texMat(name, opts = {}) {
   const map = T[name] ? T[name].clone() : null;
   if (map) { map.needsUpdate = true; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(opts.rx || 1, opts.ry || 1); }
   const m = new THREE.MeshStandardMaterial({ map, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.92, metalness: 0 });
+  withWallNormal(m);   // (WALL-NORMALS: ?wallnormals)
   cache.set(key, m);
   return m;
 }

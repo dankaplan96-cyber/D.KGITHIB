@@ -3,7 +3,7 @@
 // tubes, merged batches per material, wall panels with openings, polygon helpers.
 import * as THREE from 'three';
 import { settleRockRanges } from './rocksettle.js';
-import { textures, keyJSON } from '../engine/textures.js';
+import { textures, keyJSON, withWallNormal } from '../engine/textures.js';
 export const MC = new Map();
 export const TILE = { cliff: 4.5, stone: 1.8, plaster: 2.2, planks: 2.2, brass: 1.6, teal: 2.2, hazard: 0.9, deck: 2.0, cobble: 3.2, grass: 4.0, dirt: 3.0, rubble: 1.7, tiles: 1.0, concrete: 2.6, metal: 2.6, roof: 1.6 };
 export function tm(name, opts = {}) {
@@ -11,6 +11,7 @@ export function tm(name, opts = {}) {
   if (MC.has(key)) return MC.get(key);
   const map = typeof name === 'string' ? textures()[name] : name;
   const m = new THREE.MeshStandardMaterial({ map, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.88, metalness: opts.metal ?? 0, vertexColors: !!opts.vc, emissive: opts.emissive || '#000000', emissiveIntensity: opts.ei ?? 1, side: opts.side ?? THREE.FrontSide, transparent: !!opts.transparent, alphaTest: opts.alphaTest ?? 0 });
+  withWallNormal(m);   // (WALL-NORMALS: ?wallnormals)
   MC.set(key, m);
   return m;
 }
