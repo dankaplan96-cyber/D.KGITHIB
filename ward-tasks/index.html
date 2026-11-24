@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>משימות סידור חדרים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: clinical, calm, practical — a ward sheet, not a poster
+   IDEA: the clipboard checklist hanging at the nurses' station
+   PICTURE: the table itself, at the top, under a modest title
+   COLOUR and TYPE: white sheet, deep teal header band, coral only for "not done"; Heebo
+   LAYOUT: header strip with date/shift/name + progress, then the 15-room grid, prints on A4 */
+:root{color-scheme:light dark;
+ --bg:light-dark(#ffffff,#0f1a1c);--ink:light-dark(#13282b,#e4eeef);--mute:light-dark(#5d7174,#9db1b4);
+ --band:light-dark(#0b5c63,#0b3f44);--bandink:#ffffff;--line:light-dark(#d5e0e1,#28393c);
+ --zebra:light-dark(#f3f8f8,#142427);--ok:light-dark(#0b7f6e,#3fc8b0);--warn:#e8604c;--field:light-dark(#fff,#16282b)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Heebo,"Segoe UI",Arial,sans-serif;overflow-x:clip}
+header{background:var(--band);color:var(--bandink);padding:clamp(20px,3vw,36px) max(4vw,16px) 22px}
+h1{margin:0 0 4px;font-size:clamp(28px,4vw,40px);line-height:1.05;font-weight:800;text-wrap:balance}
+.sub{margin:0 0 18px;opacity:.85}
+.meta{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end}
+.meta label{display:flex;flex-direction:column;font-size:13px;gap:4px;opacity:.95}
+.meta input,.meta select{font:16px Heebo,sans-serif;height:44px;padding:0 10px;border-radius:8px;border:1px solid #ffffff55;background:#ffffff1a;color:#fff;min-width:150px}
+.meta select option{color:#13282b}
+.prog{margin-inline-start:auto;min-width:220px;flex:1 1 220px;max-width:340px}
+.prog b{font-size:28px;font-weight:800}
+.bar{height:10px;background:#ffffff33;border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:#bff5e9;transition:width .3s}
+main{padding:20px max(4vw,16px) 40px;max-width:1240px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+button{font:500 15px Heebo,sans-serif;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+button.danger{color:var(--warn);border-color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center;vertical-align:middle}
+thead th{position:sticky;top:0;background:var(--bg);font-weight:700;border-bottom:2px solid var(--ink);font-size:14px;line-height:1.25}
+td.room{font-weight:800;font-size:20px;border-inline-end:1px solid var(--line);width:72px}
+td.room button{min-height:30px;padding:0 8px;font-size:12px;margin-top:4px;display:block;margin-inline:auto}
+tr.r-odd td{background:var(--zebra)}
+tr.first td{border-top:2px solid var(--line)}
+.bed{white-space:nowrap;color:var(--mute);font-weight:500}
+.ck{appearance:none;width:30px;height:30px;border:2px solid var(--mute);border-radius:7px;cursor:pointer;display:inline-grid;place-content:center;background:var(--field);vertical-align:middle}
+.ck:checked{background:var(--ok);border-color:var(--ok)}
+.ck:checked::after{content:"";width:9px;height:16px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-2px)}
+td input[type=text]{font:16px Heebo,sans-serif;width:100%;height:38px;border:1px solid var(--line);border-radius:6px;padding:0 8px;background:var(--field);color:var(--ink)}
+td.ini{width:110px}
+tr.done td.bed{color:var(--ok);font-weight:700}
+.legend{margin:16px 0 0;color:var(--mute);font-size:14px}
+.note{font-size:13px;color:var(--mute);margin-top:6px}
+#dlg{position:fixed;inset:0;background:#0008;display:none;place-items:center;z-index:9}
+#dlg.on{display:grid}
+#dlg div{background:var(--bg);padding:24px;border-radius:12px;max-width:340px;margin:16px}
+#dlg p{margin:0 0 16px}
+@media(max-width:700px){
+ thead{display:none}
+ table,tbody,tr,td{display:block}
+ tr{display:grid!important;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+ td{border:0;padding:4px}
+ td.room{grid-column:1/-1;width:auto;border:0;text-align:start;display:flex;align-items:center;gap:10px;padding:8px 4px 2px}
+ td.room button{margin:0}
+ td.bed{grid-column:1/-1;text-align:start;padding-top:0}
+ td.task::before{content:attr(data-l);display:block;min-height:2.5em;font-size:13px;color:var(--mute);margin-bottom:4px;line-height:1.2}
+ td.ini,td.notes{grid-column:1/-1;width:auto}
+ td.ini::before,td.notes::before{content:attr(data-l);display:block;font-size:13px;color:var(--mute);text-align:start}
+ tr.r-odd td{background:none}
+ .prog{margin-inline-start:0;max-width:none}
+}
+@media print{
+ :root{color-scheme:light}
+ header{background:none;color:#000;padding:0 0 8px;border-bottom:2px solid #000}
+ .meta input,.meta select{border:0;border-bottom:1px solid #000;border-radius:0;background:none;color:#000;height:28px}
+ .tools,td.room button,.bar,#dlg,.note{display:none}
+ main{padding:8px 0}
+ table{font-size:11px}th,td{padding:2px 4px}
+ thead th{position:static}
+ .ck{width:16px;height:16px;border-radius:3px}
+ td input[type=text]{height:22px;border:0;border-bottom:1px solid #999;border-radius:0}
+ @page{size:A4;margin:10mm}
+}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<header>
+ <h1>משימות סידור חדרים – כח עזר</h1>
+ <p class="sub">חדרים 1–15 · 2 מטופלים בחדר · לסמן ✓ בכל משימה שבוצעה</p>
+ <div class="meta">
+  <label>תאריך<input type="date" id="date"></label>
+  <label>משמרת<select id="shift"><option>בוקר</option><option>ערב</option><option>לילה</option></select></label>
+  <label>שם איש/אשת כח העזר<input type="text" id="aide" placeholder="שם מלא"></label>
+  <div class="prog"><b id="pct">0%</b> <span id="cnt">0 מתוך 90 משימות</span><div class="bar"><i id="fill"></i></div></div>
+ </div>
+</header>
+<main>
+ <div class="tools">
+  <button id="todo" aria-pressed="false">הצג רק מה שנשאר</button>
+  <button id="reset" class="danger">איפוס לפתיחת משמרת</button>
+ </div>
+ <table>
+  <thead><tr>
+   <th>חדר</th><th>מטופל</th>
+   <th>סידור ציוד<br>בארונות</th><th>הורדת ציוד<br>מקו חמצנים</th><th>זריקת<br>אוכל</th>
+   <th>חתימה / ר"ת</th><th>הערות</th>
+  </tr></thead>
+  <tbody id="rows"></tbody>
+ </table>
+ <p class="legend">לחיצה על "כל החדר" מסמנת את כל המשימות של שני המטופלים בחדר.</p>
+ <p class="note">הסימונים נשמרים בדפדפן הזה בלבד. להדפסה: Ctrl+P (מודפס על דף A4 אחד, ללא כפתורים).</p>
+</main>
+<div id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgt"><div>
+ <p id="dlgt">לאפס את כל הסימונים, החתימות וההערות?</p>
+ <button id="yes" class="danger">כן, לאפס</button> <button id="no">ביטול</button>
+</div></div>
+<script>
+{
+const TASKS=[["closet","סידור ציוד בארונות"],["oxygen","הורדת ציוד מקו חמצנים"],["food","זריקת אוכל"]];
+const BEDS=["מיטה א׳","מיטה ב׳"];
+const KEY="ward-room-tasks-v1";
+let S={};
+try{S=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){S={}}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const rows=document.getElementById("rows");
+let html="";
+for(let r=1;r<=15;r++){
+ BEDS.forEach((b,i)=>{
+  const id=r+"-"+i;
+  html+=`<tr data-room="${r}" data-id="${id}" class="${r%2?"r-odd":""} ${i===0?"first":""}">`+
+   (i===0?`<td class="room" rowspan="2">${r}<button data-all="${r}">כל החדר</button></td>`:"")+
+   `<td class="bed">${b}</td>`+
+   TASKS.map(([k,l])=>`<td class="task" data-l="${l}"><input type="checkbox" class="ck" data-k="${id}:${k}" aria-label="חדר ${r} ${b} – ${l}"></td>`).join("")+
+   `<td class="ini" data-l="חתימה / ר״ת"><input type="text" data-k="${id}:ini" aria-label="חתימה חדר ${r} ${b}"></td>`+
+   `<td class="notes" data-l="הערות"><input type="text" data-k="${id}:note" aria-label="הערות חדר ${r} ${b}"></td></tr>`;
+ });
+}
+rows.innerHTML=html;
+const fields=[...document.querySelectorAll("[data-k]")];
+const checks=fields.filter(f=>f.type==="checkbox");
+const meta=["date","shift","aide"].map(id=>document.getElementById(id));
+function load(){
+ fields.forEach(f=>{const v=S[f.dataset.k];if(f.type==="checkbox")f.checked=!!v;else f.value=v||""});
+ meta.forEach(m=>{m.value=S["m:"+m.id]||(m.id==="date"?new Date().toISOString().slice(0,10):m.id==="shift"?"בוקר":"")});
+ update();
+}
+let onlyTodo=false;
+function update(){
+ const n=checks.filter(c=>c.checked).length,p=Math.round(n/checks.length*100);
+ document.getElementById("pct").textContent=p+"%";
+ document.getElementById("cnt").textContent=`${n} מתוך ${checks.length} משימות`;
+ document.getElementById("fill").style.width=p+"%";
+ rows.querySelectorAll("tr").forEach(tr=>{
+  const all=[...tr.querySelectorAll(".ck")].every(c=>c.checked);
+  tr.classList.toggle("done",all);
+ });
+ for(let r=1;r<=15;r++){
+  const trs=rows.querySelectorAll(`tr[data-room="${r}"]`);
+  const roomDone=[...trs].every(t=>t.classList.contains("done"));
+  trs.forEach(t=>t.style.display=onlyTodo&&roomDone?"none":"");
+ }
+}
+rows.addEventListener("input",e=>{
+ const f=e.target.closest("[data-k]");if(!f)return;
+ S[f.dataset.k]=f.type==="checkbox"?f.checked:f.value;save();update();
+});
+rows.addEventListener("click",e=>{
+ const b=e.target.closest("[data-all]");if(!b)return;
+ const cs=[...rows.querySelectorAll(`tr[data-room="${b.dataset.all}"] .ck`)];
+ const to=!cs.every(c=>c.checked);
+ cs.forEach(c=>{c.checked=to;S[c.dataset.k]=to});save();update();
+});
+meta.forEach(m=>m.addEventListener("input",()=>{S["m:"+m.id]=m.value;save()}));
+const todo=document.getElementById("todo");
+todo.addEventListener("click",()=>{onlyTodo=!onlyTodo;todo.setAttribute("aria-pressed",onlyTodo);todo.textContent=onlyTodo?"הצג את כל החדרים":"הצג רק מה שנשאר";update()});
+const dlg=document.getElementById("dlg");
+document.getElementById("reset").addEventListener("click",()=>{dlg.classList.add("on");document.getElementById("no").focus()});
+document.getElementById("no").addEventListener("click",()=>dlg.classList.remove("on"));
+document.getElementById("yes").addEventListener("click",()=>{S={};save();load();dlg.classList.remove("on")});
+load();
+}
+</script>
+</body>
+</html>
