@@ -2157,10 +2157,27 @@ const ZH_BAND_BIG = { ...ZH_BAND_BARE, ro: 0.014, rl: 0.019, off: 0.004, lift: 0
 // at the sides, down to the nape behind) and 1 a few centimetres above it, so the face, brows, lashes, earrings, neck
 // and body are not touched and the reshaped skull runs into the kept skin without a step. Behind and below, the target
 // keeps clear of the neck (a soft union with a cylinder round it), so the nape still covers the neck's top.
-// ?zoehead=twinsen (default) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison). The
+// ?zoehead=twinsen (default) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison) | ZOE-HEAD-2's
+// tall | tall-long | egg (below, ZOE_HEADS). The
 // lock and the tie move with the crown (zoeHair).
 const ZH_TW = { ax: 0.15192, a: [0.13867, 0.15100], ang: [-155.41, -65.41], off: [0.01433, -0.14902] };
-const ZOE_HEADS = { twinsen: { k: 0.71, kx: 0.69 }, round: { k: 0.77, kx: 0.69, dz: -0.008 } };
+const ZH_EGG = {
+  tall: { c: [0.015, -0.086], tip: 8, up: 0.15, down: 0.115, x: 0.1, z: 0.096, zb: 0.1, taper: 0.16, tp: 2 },
+  egg: { c: [0.02, -0.086], tip: 6, up: 0.17, down: 0.115, x: 0.096, z: 0.094, zb: 0.096, taper: 0.24, tp: 2 },
+};
+const ZH_CHIN = { L: 0.02, pt: 0.3, fw: 0.6 };
+const ZOE_HEADS = {
+  twinsen: { k: 0.71, kx: 0.69 }, round: { k: 0.77, kx: 0.69, dz: -0.008 },
+  // ZOE-HEAD-2 (P126, the user 24.11: "too round — not like the original, and not like Twinsen's head"; an LBA2 render of
+  // the two of them, looked at only): her head a tall narrow egg, the cranium rising and narrowing up into the tie, the
+  // tie on its top. egg: its centre [up, forward] of her eye pivot (m), the long axis tipped `tip`° back from straight up,
+  // semi-axes up / down that axis (m), across (x) and front-back square to it (z in front, zb behind), `taper` the
+  // narrowing toward the top (the cross-section × 1 − taper·(s/up)^tp); tie: the tie set on the egg `tie`° back from its top
+  // (the lock carried with it). chin: the face below the lips drawn down L m, forward fw·L and in to a point (× 1 − pt)
+  tall: { egg: ZH_EGG.tall, tie: 4 },
+  'tall-long': { egg: ZH_EGG.tall, tie: 4, chin: ZH_CHIN },
+  egg: { egg: ZH_EGG.egg, tie: 4, chin: ZH_CHIN },
+};
 export const ZOE_HEAD = (() => {
   let s = '';
   try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehead')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHead || ''; } catch { /* no storage */ }
@@ -2176,14 +2193,38 @@ const zhdLerp = (th, j) => {
   for (let i = 0; i + 1 < ZHD_BAND.length; i++) if (th <= ZHD_BAND[i + 1][0]) { const a = ZHD_BAND[i], b = ZHD_BAND[i + 1]; return a[j] + ((b[j] - a[j]) * (th - a[0])) / (b[0] - a[0]); }
   return ZHD_BAND[ZHD_BAND.length - 1][j];
 };
-function zoeHeadShape(eye, S) {
-  const k = S.k, c = [0, eye[1] + k * ZH_TW.off[0], eye[2] + k * ZH_TW.off[1] + (S.dz || 0)];
-  const e = ZH_TW.ang.map((g) => [Math.cos((g * Math.PI) / 180), Math.sin((g * Math.PI) / 180)]), a = ZH_TW.a.map((x) => x * k), ax = ZH_TW.ax * S.kx;
-  const f = (p) => {
-    const th = (Math.atan2(Math.abs(p[0]), p[2] + 0.025) * 180) / Math.PI, w = sstep(zhdLerp(th, 1), zhdLerp(th, 2), p[1]);
+// ZOE-HEAD-2's egg: the distance from its centre along a unit direction u to its surface (a march out, then halved)
+function zhEggR(E, u) {
+  const t = (E.tip * Math.PI) / 180, ay = [Math.cos(t), -Math.sin(t)], az = [Math.sin(t), Math.cos(t)];   // ([y, z]: the long axis, up and back; square to it, forward)
+  const F = (r) => {
+    const s = r * (u[1] * ay[0] + u[2] * ay[1]), b = r * (u[1] * az[0] + u[2] * az[1]), a = r * u[0];
+    const g = Math.max(0.05, 1 - E.taper * (Math.max(0, s) / E.up) ** (E.tp || 1));
+    return (s / (s > 0 ? E.up : E.down)) ** 2 + ((a / E.x) ** 2 + (b / (b > 0 ? E.z : E.zb ?? E.z)) ** 2) / (g * g);
+  };
+  let lo = 0, hi = 0.004;
+  while (F(hi) < 1 && hi < 0.4) { lo = hi; hi += 0.004; }
+  for (let i = 0; i < 20; i++) { const m = (lo + hi) / 2; if (F(m) < 1) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+// ZOE-HEAD-2 tall-long: the chin drawn down and in to a soft point — the skin below her lower lip (it ends 9.6 cm under the
+// eyes) in front of the neck, more the lower and the further forward; the lips, the mouth and everything above them kept
+function zhChin(eye, C) {
+  return (p) => {
+    const w = sstep(eye[1] - 0.1, eye[1] - 0.14, p[1]) * sstep(eye[2] - 0.066, eye[2] - 0.022, p[2]);
     if (w <= 0) return null;
+    return [p[0] * (1 - C.pt * w), p[1] - C.L * w, p[2] + C.fw * C.L * w];
+  };
+}
+function zoeHeadShape(eye, S) {
+  const k = S.k || 0.71, c = S.egg ? [0, eye[1] + S.egg.c[0], eye[2] + S.egg.c[1]] : [0, eye[1] + k * ZH_TW.off[0], eye[2] + k * ZH_TW.off[1] + (S.dz || 0)];
+  const e = ZH_TW.ang.map((g) => [Math.cos((g * Math.PI) / 180), Math.sin((g * Math.PI) / 180)]), a = ZH_TW.a.map((x) => x * k), ax = ZH_TW.ax * (S.kx || 0.69);
+  const chin = S.chin && zhChin(eye, S.chin);
+  const f = (p0) => {
+    const pc = chin && chin(p0), p = pc || p0;
+    const th = (Math.atan2(Math.abs(p[0]), p[2] + 0.025) * 180) / Math.PI, w = sstep(zhdLerp(th, 1), zhdLerp(th, 2), p[1]);
+    if (w <= 0) { if (pc) pc.chin = true; return pc; }   // (the chin alone: it keeps the face's own normals, zoeBare)
     const d = p.map((x, i) => x - c[i]), r = Math.hypot(...d), u = d.map((x) => x / r);
-    let rt = 1 / Math.sqrt((u[0] / ax) ** 2 + ((u[1] * e[0][0] + u[2] * e[0][1]) / a[0]) ** 2 + ((u[1] * e[1][0] + u[2] * e[1][1]) / a[1]) ** 2);
+    let rt = S.egg ? zhEggR(S.egg, u) : 1 / Math.sqrt((u[0] / ax) ** 2 + ((u[1] * e[0][0] + u[2] * e[0][1]) / a[0]) ** 2 + ((u[1] * e[1][0] + u[2] * e[1][1]) / a[1]) ** 2);
     if (u[1] < 0) {   // (below the centre: not inside the cylinder round the neck, joined softly; never pushed out past
       //  where it was or the ellipsoid: a line steeply down meets the cylinder far below)
       const A = u[0] * u[0] + u[2] * u[2], oz = ZHD_NECK.z - c[2], B = -2 * u[2] * oz, C = oz * oz - ZHD_NECK.r ** 2;
@@ -2195,20 +2236,30 @@ function zoeHeadShape(eye, S) {
     return c.map((x, i) => x + u[i] * rr);
   };
   f.c = c;
+  if (S.tie != null) { const t = ((S.egg.tip + S.tie) * Math.PI) / 180; f.tie = [0, Math.cos(t), -Math.sin(t)]; }
   return f;
 }
 // the lock (its spline's control points) moved as the skull right under its tie moved: the reshaped point nearest the line
 // from the new dome's centre through the tie gives the move, so the lock still rises from the tie on the crown, as far
 // out of the scalp as before, its shape above the tie as it was. Its root (under the scalp) is turned to point from the
 // tie toward the dome's centre, as far as before: on the rounder, shorter skull the old root would come out behind
-function zoeLockOnCrown(H, c, disp) {
+function zoeLockOnCrown(H, c, disp, tie = null) {
   const { pts } = H.points(), t = pts[1].toArray(), dt = t.map((x, i) => x - c[i]), lt = Math.hypot(...dt);
-  let best = null, bc = -2;
+  let best = null, bc = -2, at = null;
   for (const [p, q] of disp) {
     const d = p.map((x, i) => x - c[i]), cs = (d[0] * dt[0] + d[1] * dt[1] + d[2] * dt[2]) / (Math.hypot(...d) * lt);
-    if (cs > bc) { bc = cs; best = q.map((x, i) => x - p[i]); }
+    if (cs > bc) { bc = cs; best = q.map((x, i) => x - p[i]); at = p; }
   }
   if (!best) return H;
+  // (ZOE-HEAD-2: the tie set on the new skull at a chosen place — `tie`, a direction from the egg's centre — and the lock
+  //  carried there whole: the move from the old scalp under the tie to the new scalp point nearest that direction)
+  if (tie) {
+    let bt = -2;
+    for (const [, q] of disp) {
+      const d = q.map((x, i) => x - c[i]), cs = (d[0] * tie[0] + d[1] * tie[1] + d[2] * tie[2]) / Math.hypot(...d);
+      if (cs > bt) { bt = cs; best = q.map((x, i) => x - at[i]); }
+    }
+  }
   const mv = new THREE.Vector3(...best);
   const C = new THREE.Vector3(...c);
   return { ...H, moved: mv, points: () => {
@@ -2238,12 +2289,12 @@ function zoeBare(P, hb, shape = null) {
       p = ZH_HC.map((x, i) => x + u[i] * r); m = true;
     }
     const q = shape && shape(p);
-    if (q) { moved.disp.push([p, q]); p = q; m = true; }
+    if (q) { if (!q.chin) moved.disp.push([p, q]); p = q; m = true; }
     if (!m) continue;
     for (let i = 0; i < 3; i++) P.pos[v * 3 + i] = p[i];
     if (is(v, ZH_HAIR)) P.col.splice(v * 3, 3, ...ZH_SKIN);
     moved.add(v);
-    if (shape) keys.add(key(v));
+    if (shape && !q?.chin) keys.add(key(v));
   }
   // smooth normals where it moved: area-weighted over every skin triangle of the head at those points. (ZOE-HEAD: and over
   // the two rings of kept skin round them, so the kept skin's own normals meet the new ones without a line)
@@ -2313,7 +2364,7 @@ function zoeHair(P0, H) {
     const moved = zoeBare(P, hb, shape), keep = [];
     let k = 0;
     for (let v = 0; v < n; v++) if (!drop.has(v)) { if (moved.has(v)) keep.push(k); k++; }
-    if (shape) H = zoeLockOnCrown(H, shape.c, moved.disp);
+    if (shape) H = zoeLockOnCrown(H, shape.c, moved.disp, shape.tie);
     swapHair(P, ctx, splineLock(ctx, true, H));
     hairBand(P, ctx, ZOE_BIGTIE ? ZH_BAND_BIG : ZH_BAND_BARE);
     zoeSeat(P, ctx, keep);
