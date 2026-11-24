@@ -129,6 +129,7 @@ export class Kit2 extends ChapterBase {
     if (this.tube && this.f.e2_hide && !this.f.e2_tube) out.push({ id: 'tube', room: 'house', x: this.tube.x, y: this.tube.y, z: this.tube.z });
     if (this.tin && !this.f.e2_tin) out.push({ id: 'tin', room: 'cellar', x: this.tin.x, y: this.tin.y, z: this.tin.z });
     out.push(...(this.story.hostel?.hums() || []));   // (ASYLUM-2: the humming crate in Vesk's store, story/hostel.js)
+    out.push(...(this.story.depth?.hums() || []));    // (DES-1: the drift where the figures look, story/depth.js)
     return out;
   }
   journal() {

@@ -415,7 +415,7 @@ export class Story {
     if (dx.length) out.push({ title: this.depth.journalTitle(), lines: dx });
     return out;
   }
-  items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items(), ...this.hostel.items(), ...this.shops.items(), ...this.purposes.items(), ...this.ipeople.items(), ...this.tyl.items()]; }
+  items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items(), ...this.hostel.items(), ...this.shops.items(), ...this.purposes.items(), ...this.ipeople.items(), ...this.tyl.items(), ...this.depth.items()]; }
   // (the wizards' doors are open in every chapter: src/game/wizards.js)
   // WORLD-AUDIT: Twinsen's own front door opens in every chapter. The chapters set elsewhere (4–7, 9; 3, 11, 12) offer
   // no door of their own on Citadel, so on a visit home by ferry or ship it had no prompt at all while Zoé and Arthur
@@ -454,8 +454,10 @@ export class Story {
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   jetHit(o) { return this.cur.jetHit?.(o) || this.kit2.jetHit(o); }   // (EQUIP-2a: the pump lance's jet, tools.js)
   // EQUIP-2b (tools.js): the singing fork's note, the heat flask's blast, what the Esmer line can catch here
-  forkHit(o) { return this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o) || this.depth.forkHit(o); }
-  heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o); }
+  // (WAVE2: the fork's note answers everything warm in reach: depth.js is asked as well, not only when nothing else took it —
+  //  the galleries' crusted pocket stands within a strike of Ilka's wheel)
+  forkHit(o) { const a = this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o); return this.depth.forkHit(o) || a; }
+  heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o) || this.depth.heatHit(o); }
   lineTargets() { return this.kit2b.lineTargets(); }
   ballTargets() { return this.cur.ballTargets(); }
   // (REVIEW-DESERT, the same on Citadel: the plateau's parked glider stood in its field from chapter 1, though the glider
