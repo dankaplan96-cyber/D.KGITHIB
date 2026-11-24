@@ -14,6 +14,7 @@
 // and sets the exit code: non-zero on any FAIL. A FAIL captured after done() (or with no done() at all) still
 // makes the exit code non-zero and is printed as a late FAIL.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { serveLocal } from './serve.mjs';
 import { fileURLToPath } from 'node:url';
 const HARNESS = fileURLToPath(new URL('./player.js', import.meta.url));
 export const URL0 = process.env.GAME_URL || 'http://localhost:8123/';
@@ -78,6 +79,9 @@ export function watch(page) {
 export async function launch({ width = 960, height = 540, storageState, locale, scale } = {}) {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const context = await browser.newContext({ viewport: { width, height }, ...(storageState ? { storageState } : {}), ...(locale ? { locale } : {}), ...(scale ? { deviceScaleFactor: scale } : {}) });
+  // (SERVE=1: every suite that boots through here is answered from this checkout by the browser's request routing,
+  //  tests/lib/serve.mjs — no http.server needed; a suite that also routes itself serves the same files)
+  if (process.env.SERVE) await serveLocal(context);
   // (CPU-WALK: WALKCHECK=1 runs the game's own frozen-walk check, src/engine/drawcull.js walkCheck: a mismatch is a console error)
   if (process.env.WALKCHECK) await context.addInitScript(() => { window.__walkcheck = 1; });
   // (CPU-WALK: NOFREEZE=1 runs a suite on the walk and the draw-batch check as they were before CPU-WALK, the A/B)
