@@ -248,6 +248,7 @@ export function makeTextures() {
   {
     const [c, x] = canvas(S); const r = rng(27);
     x.fillStyle = '#7d756a'; x.fillRect(0, 0, S, S);
+    const sblocks = []; LAYOUT.stone = { kind: 'blocks2', N: S, blocks: sblocks };   // (WALL-NORMALS: the same blocks)
     let y = 0;
     while (y < S) {
       const h = 34 + Math.floor(r() * 26);
@@ -255,6 +256,7 @@ export function makeTextures() {
       while (xx < S) {
         const w = 46 + Math.floor(r() * 50);
         const tone = 150 + Math.floor(r() * 40);
+        sblocks.push([xx, y, w, Math.min(h, S - y)]);
         wrap(S, (ox, oy) => {
           const g = x.createLinearGradient(0, y + oy, 0, y + oy + h);
           g.addColorStop(0, `rgb(${tone + 22},${tone + 16},${tone + 6})`);
@@ -741,14 +743,17 @@ export const WALLNORM = {
   // (the user, 23.11, shown the pairs: "everything" — ON by default for the three: the fort's stone, the houses' rubble
   //  and the rubble (the harbour shed, the lighthouse's foot, Ballastra's piers). `?wallnormals=0`: off, as before;
   //  by name, `?wallnormals=fortStone` etc., only those)
-  names: (() => { const ALL = ['fortStone', 'rubbleHouse', 'rubble'];
+  names: (() => { const ALL = ['fortStone', 'rubbleHouse', 'rubble', 'stone', 'zrib'];
     if (!WN_ARG || WN_ARG[1] === '1' || WN_ARG[1] === 'all') return new Set(ALL);
     return WN_ARG[1] === '0' ? new Set() : new Set(WN_ARG[1].split(',')); })(),
   str: (typeof location !== 'undefined' && +(/[?&]wnstr=([\d.]+)/.exec(location.search) || [])[1]) || 1,
   // (the joints' ambient occlusion with it — the shade's relief —, `?wnao=0` off, `?wnao=0.5` half)
   ao: typeof location !== 'undefined' && /[?&]wnao=([\d.]+)/.test(location.search) ? +/[?&]wnao=([\d.]+)/.exec(location.search)[1] : 1,
 };
-const NORM = {}, NORM_AO = {}, NORM_COPY = new Map();
+const NORM = {}, NORM_AO = {}, NORM_COPY = new Map(), EXTRA = {};
+// a texture drawn outside makeTextures (Zeelich's painted ones, kit.js/zeelich.js ctex) with its layout: it gets its
+// normal map as the others do (idempotent: the painted textures are cached, called again and again)
+export function registerWallTexture(name, tex, layout) { if (!EXTRA[name]) { EXTRA[name] = tex; LAYOUT[name] = layout; } return tex; }
 function heightCanvas(L) {
   const N = L.N, [c, x] = canvas(N);
   x.fillStyle = '#000'; x.fillRect(0, 0, N, N);
@@ -761,6 +766,16 @@ function heightCanvas(L) {
       x.fillStyle = g; x.beginPath(); x.arc(0, 0, 1, 0, 7); x.fill();
       x.restore();
     });
+  } else if (L.kind === 'blocks2') {
+    // (the dressed stone: each block its own height of course, a flat face with a soft bevel into its joints)
+    for (const [xx, y, w, bh] of L.blocks) wrap(N, (ox, oy) => {
+      x.fillStyle = '#bdbdbd'; x.beginPath(); x.roundRect(xx + ox + 2, y + oy + 2, w - 4, bh - 4, 6); x.fill();
+      x.fillStyle = '#e6e6e6'; x.beginPath(); x.roundRect(xx + ox + 5, y + oy + 5, w - 10, bh - 10, 5); x.fill();
+    });
+  } else if (L.kind === 'ribs') {
+    // (corrugated sheet: n ribs across, each a rounded crest between two troughs)
+    const q = N / L.n;
+    for (let xx = 0; xx < N; xx++) { const v = Math.round(255 * (0.5 - 0.5 * Math.cos(2 * Math.PI * (xx % q) / q))); x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(xx, 0, 1, N); }
   } else {
     // (each block a flat face standing out of its joints; the cracks shallow grooves)
     for (const [xx, y, w] of L.blocks) wrap(N, (ox) => {
@@ -774,7 +789,7 @@ function heightCanvas(L) {
   const [b3, x3] = canvas(N * 3);
   for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) x3.drawImage(c, i * N, j * N);
   const [o, xo] = canvas(N);
-  xo.filter = `blur(${L.kind === 'rubble' ? 1.2 : 1.6}px)`; xo.drawImage(b3, -N, -N); xo.filter = 'none';
+  xo.filter = `blur(${L.kind === 'rubble' ? 1.2 : L.kind === 'ribs' ? 0.6 : 1.6}px)`; xo.drawImage(b3, -N, -N); xo.filter = 'none';
   return o;
 }
 function normalTexture(name) {
@@ -786,7 +801,7 @@ function normalTexture(name) {
   const [c, x] = canvas(N), img = x.createImageData(N, N), D = img.data;
   // (the user's look, 23.11 pictures: about 4× the first try — readable along a sunlit face up close, quiet from the
   //  play camera, the wall's mean brightness within 2–4 % of before)
-  const k = (L.kind === 'rubble' ? 9.6 : 8.0) * WALLNORM.str;
+  const k = (L.kind === 'rubble' ? 9.6 : L.kind === 'ribs' ? 3.2 : 8.0) * WALLNORM.str;   // (the ribs: 16 px a rib, already steep)
   for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
     const dx = (h(xx + 1, y) - h(xx - 1, y)) * 0.5 * k, dy = (h(xx, y + 1) - h(xx, y - 1)) * 0.5 * k;
     // (u along the canvas's x; v up the texture, the canvas's y downward: the normal's y is +dh/dy of the canvas)
@@ -801,7 +816,7 @@ function normalTexture(name) {
   // there and the sunlit side is as the normal map makes it. Low in the mortar, 1 on a stone's or block's face.
   {
     const [ca, xa] = canvas(N), ia = xa.createImageData(N, N), A = ia.data;
-    const lo = L.kind === 'rubble' ? 0.42 : 0.68, hi = L.kind === 'rubble' ? 0.78 : 0.86;   // (height: the mortar's, a face's)
+    const lo = L.kind === 'rubble' ? 0.42 : L.kind === 'ribs' ? -0.4 : 0.68, hi = L.kind === 'rubble' ? 0.78 : L.kind === 'ribs' ? 0.9 : 0.86;   // (height: the mortar's, a face's; ribs: the troughs only a shade darker)
     for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
       const e = Math.min(1, Math.max(0, (h(xx, y) - lo) / (hi - lo))), v = 0.58 + 0.42 * e * e * (3 - 2 * e);
       const i = (y * N + xx) * 4; A[i] = A[i + 1] = A[i + 2] = v * 255; A[i + 3] = 255;
@@ -819,7 +834,7 @@ export function wallNormalFor(map) {
   if (!map || !WALLNORM.names.size) return null;
   const T = textures();
   for (const name of WALLNORM.names) {
-    const base = T[name]; if (!base || base.source !== map.source) continue;
+    const base = T[name] || EXTRA[name]; if (!base || base.source !== map.source) continue;
     const n = normalTexture(name); if (!n) return null;
     if (map === base) return { n, ao: NORM_AO[name] };
     const key = map.uuid; if (NORM_COPY.has(key)) return NORM_COPY.get(key);

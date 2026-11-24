@@ -36,7 +36,7 @@ import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
 import { esmerBuilding, Place, setLook, glassM, tealGlassM, capParts, capSpike, capM, frondTree, goldPlant } from './props-esmer.js';
 const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
-import { textures, keyJSON, cloneTex, withWallNormal } from '../engine/textures.js';
+import { textures, keyJSON, cloneTex, withWallNormal, registerWallTexture } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
@@ -241,7 +241,7 @@ const graniteTex = () => ctex('zgranite', 512, 512, (x, S) => {
 });
 // ZSTYLE-2: ribbed (corrugated) metal sheet, as LBA2's Esmer sheds and the Grand Hall's flanks (Otringal's bodies 0, 69):
 // eight ribs to the tile, each lit on one side, a seam and some run-off streaks
-const ribTex = () => ctex('zrib', 128, 128, (x, S) => {
+const ribTex = () => registerWallTexture('zrib', ctex('zrib', 128, 128, (x, S) => {
   const r = rng(53), n = 8, q = S / n;
   for (let i = 0; i < n; i++) {
     const g = x.createLinearGradient(i * q, 0, (i + 1) * q, 0);
@@ -250,7 +250,7 @@ const ribTex = () => ctex('zrib', 128, 128, (x, S) => {
   }
   x.fillStyle = 'rgba(40,44,44,0.5)'; x.fillRect(0, S - 3, S, 3);
   for (let i = 0; i < 14; i++) { x.fillStyle = r() < 0.5 ? 'rgba(150,104,64,0.16)' : 'rgba(60,64,62,0.14)'; x.fillRect(r() * S, r() * S * 0.5, 2 + r() * 3, 20 + r() * 50); }
-});
+}), { kind: 'ribs', N: 128, n: 8 });
 // ZSTYLE-2: LBA2's Zeelich paving (LBA2_VISUAL_NOTES: lavender-grey paving with lighter borders; the original's Otringal
 // paving #d3ced9 / #afa5ad): pale lavender-grey flags in staggered rows, thin joints; it was the dark grey cobble
 const paveTex = () => ctex('zpave', 256, 256, (x, S) => {
