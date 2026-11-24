@@ -1133,21 +1133,25 @@ export const BENCH_RED = { seatY: 0.485, back: -0.25, front: 0.225 };
 // the streets', the rooms', the islands', Zeelich's, the Hamalayi's, the shield's, the hostel's — never from a chapter's
 // cast or a side story, never a shopkeeper), not held by a chapter, not the objective's person (its star). What: the
 // talk's whole answer is ONE line by that person — no second line, no chain (base.js chain's `more`), no choice, no
-// scene, no flag, coin or life changed by it — of one short sentence (REMARK_MAX_CH characters of its English source,
-// so English and Hebrew decide alike). Anything else is the dialogue box, as before: the talk's say calls are replayed
-// unchanged. ?remarks=box turns it off (the old way, for the user's before/after).
+// scene, no flag, coin or life changed by it — and a short one: at most REMARK_MAX_CH characters of its English source
+// (so English and Hebrew decide alike) and at most two sentences ("..." ends none). Two: the residents' lines are mostly
+// two short ones ("The ferry's late. It's always late."); with one sentence only a few percent of them would ever be a
+// remark (docs/lba-maturity/P116.md). ?remarks=strict keeps one sentence (the brief's first wording, for the user's
+// pick). Anything else is the dialogue box, as before: the talk's say calls are replayed unchanged. ?remarks=box: the
+// old way (the before pictures).
 const REMARK_MAX_CH = 80, REMARK_AWAY = 6.5;   // (characters of the English line; m: walked this far off, it closes)
+const REMARK_Q = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('remarks');
 const PICK_COUNTER = /^[a-z]+_n_/;           // (a line set's "which one next" counter: life.js, zeelife.js, kesh.js pick)
 export class Remarks {
   constructor(game) {
     this.game = game; this.cur = null; this.el = null; this.log = [];
-    this.on = typeof location === 'undefined' || new URLSearchParams(location.search).get('remarks') !== 'box';
+    this.on = REMARK_Q !== 'box';
   }
-  // one short sentence: the English source (spoken) so both languages decide alike; "..." does not end a sentence
-  static short(text, en) {
+  // a short line: the English source (spoken) so both languages decide alike; "..." (or "…") ends no sentence
+  static short(text, en, most = REMARK_Q === 'strict' ? 1 : 2) {
     const s = String(en || text || '').trim();
     if (!s || s.length > REMARK_MAX_CH || /\n/.test(s)) return false;
-    return s.split(/(?<![.…])[.!?]+["'’”)\]]*\s+(?=\S)/).length <= 1;
+    return s.replace(/\.{2,}|…/g, ',').split(/[.!?]+["'’”)\]]*\s+(?=\S)/).length <= most;
   }
   minor(n) {
     const g = this.game, d = n?.def;

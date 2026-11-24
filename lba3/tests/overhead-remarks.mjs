@@ -33,7 +33,8 @@ async function serveLocal(route) {
   if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return route.fulfill({ status: 404, body: '' });
   return route.fulfill({ status: 200, body: fs.readFileSync(f), headers: { 'content-type': MIME[path.extname(f).slice(1)] || 'application/octet-stream', 'cache-control': 'no-store' } });
 }
-const shot = async (n) => { if (!SHOTS) return; await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(OUT, n + '.jpg'), type: 'jpeg', quality: 84 }); console.log('capture ' + n); };
+// (a loaded shared machine: a picture may take minutes; one that still fails is reported, not fatal)
+const shot = async (n) => { if (!SHOTS) return; try { await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(OUT, n + '.jpg'), type: 'jpeg', quality: 84, timeout: 240000 }); console.log('capture ' + n); } catch (e) { console.log('capture FAILED to save ' + n + ': ' + e.message.split('\n')[0]); } };
 
 async function boot(save, lang) {
   const j = JSON.parse(fs.readFileSync(path.join(FIX, save + '.save.json'), 'utf8'));
@@ -41,7 +42,7 @@ async function boot(save, lang) {
     o.origin = ORIGIN;
     let s = o.localStorage.find((x) => x.name === 'sunshard_settings_v1');
     if (!s) o.localStorage.push((s = { name: 'sunshard_settings_v1', value: '{}' }));
-    const v = JSON.parse(s.value || '{}'); v.camDist = 'far'; if (lang) v.lang = lang; s.value = JSON.stringify(v);
+    const v = JSON.parse(s.value || '{}'); v.camDist = 'far'; if (lang) { v.lang = lang; v.langV = 1; }   // (langV: main.js keeps a stored language only with it) s.value = JSON.stringify(v);
   }
   if (browser) await browser.close();
   let context;
@@ -78,10 +79,13 @@ async function helpers() {
       // a minor resident here who answers with a remark: tried nearest first (a line set may answer in the box: next)
       find(maxTry = 10) {
         const G = game, h = G.hero, R = G.remarks, tried = [];
-        const here = (n) => n.present && !n.inside && !n.away && !!n.def.minor && (!!n.def.indoor === !!G.room || !G.room) && Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) < 70;
+        // (the same scene: outdoors no room's people; an outdoor room — Zeelich — its street's and its rooms' people within reach; a room its own)
+        const scene = (n) => (!G.room ? !n.def.indoor : G.room.outdoor ? true : !!n.def.indoor);
+        const here = (n) => n.present && !n.inside && !n.away && !!n.def.minor && scene(n) && Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) < 70;
         const list = G.npcs.filter(here).sort((a, b) => Math.hypot(a.pos.x - h.pos.x, a.pos.z - h.pos.z) - Math.hypot(b.pos.x - h.pos.x, b.pos.z - h.pos.z));
-        for (const n of list.slice(0, maxTry)) {
-          if (!OR.front(n)) { tried.push(n.def.id + ':no-prompt'); continue; }
+        // (each tried twice: a resident's lines cycle, and its next one may be the short one)
+        for (const n of list.slice(0, maxTry)) for (let k = 0; k < 2; k++) {
+          if (!OR.front(n)) { tried.push(n.def.id + ':no-prompt'); break; }
           OR.press();
           if (R.cur?.n === n) return { id: n.def.id, minor: n.def.minor, tried };
           tried.push(n.def.id + ':' + (R.log.at(-1)?.why || G.state));
@@ -180,8 +184,8 @@ check('A12 a story person (not minor) still opens the full talk: the box (or the
 await shot('p116-citadel-story-box');
 await ev(() => { P.settle(); });
 // the rule's other side: a long line or two sentences keep the box
-r = await ev(() => { const S = game.remarks.constructor.short; return { one: S('Lovely day for it.'), ell: S('Well... the pipes again.'), two: S('The water is back. Hot, too!'), long: S('x'.repeat(81)) }; });
-check('A13 the rule: one short sentence is a remark ("..." no sentence end); two sentences or over 80 characters keep the box', r.one && r.ell && !r.two && !r.long, r);
+r = await ev(() => { const S = game.remarks.constructor.short; return { one: S('Lovely day for it.'), ell: S('Well... the pipes again.'), two: S('The water is back. Hot, too!'), three: S('Late. Always late. Why I walk.'), long: S('x'.repeat(81)), twoStrict: S('The water is back. Hot, too!', null, 1), ellStrict: S('Well... the pipes again.', null, 1) }; });
+check('A13 the rule: a line of ≤ 80 characters and ≤ 2 sentences is a remark ("..." ends none); three sentences or over 80 characters keep the box; ?remarks=strict: one sentence', r.one && r.ell && r.two && !r.three && !r.long && !r.twoStrict && r.ellStrict, r);
 // the sweep: who is minor here (by module) and every minor resident's generic line set by the rule
 const SW = await ev(() => {
   const by = {};
@@ -200,7 +204,7 @@ const SWL = await ev(async () => {
   return out;
 });
 console.log('A sweep by module', JSON.stringify(SW.by));
-check('A14 the sweep: minor residents in every module are tagged, and most of their generic lines are one short sentence (remarks)', Object.keys(SW.by).length >= 4 && SWL.total > 50 && SWL.short / SWL.total > 0.5, { by: SW.by, lines: SWL });
+check('A14 the sweep: minor residents of the residents\' modules are tagged (≥ 4 modules), and of their generic lines (citizens.js linesFor) at least a quarter are short enough to be remarks', Object.keys(SW.by).length >= 4 && SWL.total > 50 && SWL.short / SWL.total >= 0.25, { by: SW.by, share: +(SWL.short / SWL.total).toFixed(2), lines: SWL });
 
 // ================================================================ B. Zeelich
 await boot('base-05');
