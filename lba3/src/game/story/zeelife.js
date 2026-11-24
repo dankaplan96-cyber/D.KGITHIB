@@ -302,7 +302,12 @@ export class ZeelichLife extends ChapterBase {
     // (THE SECOND SHIFT, part 2: Mill Lane's Kell and Brel after the ending have their own word from the lift's thread —
     //  Kell's at his bread in this bakehouse, story/zeelift.js; their epilogue lines there were never reached: a later
     //  chapter's talk does not go through chapter 3's, and they said their generic idle lines)
-    if ((id === 'zl_kell' || id === 'zl_brel') && this.story.cur?.key === 'home') return !!this.story.chapters[this.idx('zeelich')]?.lift?.talk(npc);
+    // (KELL-LINES: the same for Kell and Irsa in every chapter after the third but the council's (chapter 9 has its own
+    //  Mill Lane talk, story/zeelift.js KellThread): their later words, picked by the flags chapter 3's own talk reads.
+    //  Only in a game that played the lift (zt_v); one that never did keeps their idle lines, as Brel keeps his)
+    const ck = this.story.cur?.key, lift = this.story.chapters[this.idx('zeelich')]?.lift;
+    const later = this.story.index > this.idx('zeelich') && ck !== 'council' && !!lift?.on;
+    if (((id === 'zl_kell' || id === 'zl_brel') && ck === 'home') || ((id === 'zl_kell' || id === 'zl_irsa') && later)) return !!lift?.talk(npc);
     switch (id) {
       case 'zmole2':   // Mother Snuff
         if (f.zl_done && !f.zl_paid) {
