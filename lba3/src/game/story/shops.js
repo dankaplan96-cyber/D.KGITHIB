@@ -37,7 +37,7 @@ import '../text/shops.js';
 
 export const SH_PRICE = { flask: 5, clover: 22, darts: 4, penguin: 4, potion: 6, honey: 8, ticket: 5, sefaHoney: 7, sefaHoneyFriend: 5, tea: 4, cell: 5, darts10: 9, pcell: 12 };
 export const CARRY = 3;   // honey jars, cabin tickets
-const KEEPER = { mrbazoo: 'bazoo', pharmacist: 'pharmacy', ines: 'ticket', sefa: 'esmer', tibbo: 'gadget' };
+export const KEEPER = { mrbazoo: 'bazoo', pharmacist: 'pharmacy', ines: 'ticket', sefa: 'esmer', tibbo: 'gadget' };
 const REWARD = 15;
 // the trading house's door (its front, +z of its own frame: harbourzeelich.js), read when first needed
 let door = null;

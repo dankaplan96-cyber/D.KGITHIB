@@ -390,13 +390,15 @@
         for (let k = 0; k < 20 && G.state === 'play' && !forThis(); k++) { G.step(0.25); P.face(n.pos.x, n.pos.z); tg = P.target(); }
         P.tap('KeyE', 0.1);
       }
-      const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene';
+      // (P116: a minor resident's one short line over its head, the game not paused: walkers.js Remarks)
+      const remark = G.remarks?.cur?.n === n;
+      const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene' || remark;
       const s = P.settle();
       if (early && tries < 2 && s.speakers.length && !s.speakers.includes(id) && !s.speakers.includes('?')) {
         skipped.push({ speakers: s.speakers, lines: s.lines }); P.note(`talk ${id}: a dialogue by ${s.speakers.join(',')} opened on the way (${s.lines} lines); read it, talk again`);
         continue;
       }
-      return { r: talked ? 'talked' : 'no-dialog:' + r.r, to: tg?.id, state: s.state, lines: s.lines, speakers: s.speakers, ...(skipped.length ? { skipped } : {}) };
+      return { r: talked ? 'talked' : 'no-dialog:' + r.r, ...(remark ? { remark: true } : {}), to: tg?.id, state: s.state, lines: s.lines, speakers: s.speakers, ...(skipped.length ? { skipped } : {}) };
     }
   };
   // OPENING-TUT-2 (P31): the yard's steps (src/game/story/openingsteps.js) by input, each the way the panel asks: talk to

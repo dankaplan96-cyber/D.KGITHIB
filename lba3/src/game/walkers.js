@@ -30,6 +30,7 @@ import { LOOKS } from './characters.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
+import { spoken } from './i18n.js';
 import { workSpot, workStep, knockStep, storySig, standsAt, STEP_ACTS } from './workhands.js';
 const DIRECT_ACTS = new Set(['tinker', 'kneelWork', 'kneelLook', 'reach', 'reachHigh', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe']);
 
@@ -1122,3 +1123,126 @@ const SIT_SHAPES = new Map(), _m4 = new THREE.Matrix4(), _v1 = new THREE.Vector3
 // the red slatted bench (town.js, island.js): the seat's top over its feet, the backrest's front face and the seat's
 // front edge along the way the sitter faces (m, from the bench's middle); other benches give their own (seat.spec)
 export const BENCH_RED = { seatY: 0.485, back: -0.25, front: 0.225 };
+
+// ------------------------------------------------------------------ P116: a minor resident's remark over its head
+// The user's pick (23.11, built 24.11; docs/lba3-audit/dialogue.md decision 3, LBA2's overhead lines): a minor resident's
+// one short line is said over its head instead of in the dialogue box: the camera stays, the keys stay his, the game
+// runs on. The resident stops and turns to him (its own talk handler's engage / talking, as for the box) and speaks
+// with its voice; the line stays a few seconds by its length; E again or walking off closes it.
+// Who: a person the story's director tags `minor` (story/index.js npcDefs: a definition from the residents' modules —
+// the streets', the rooms', the islands', Zeelich's, the Hamalayi's, the shield's, the hostel's — never from a chapter's
+// cast or a side story, never a shopkeeper), not held by a chapter, not the objective's person (its star). What: the
+// talk's whole answer is ONE line by that person — no second line, no chain (base.js chain's `more`), no choice, no
+// scene, no flag, coin or life changed by it — of one short sentence (REMARK_MAX_CH characters of its English source,
+// so English and Hebrew decide alike). Anything else is the dialogue box, as before: the talk's say calls are replayed
+// unchanged. ?remarks=box turns it off (the old way, for the user's before/after).
+const REMARK_MAX_CH = 80, REMARK_AWAY = 6.5;   // (characters of the English line; m: walked this far off, it closes)
+const PICK_COUNTER = /^[a-z]+_n_/;           // (a line set's "which one next" counter: life.js, zeelife.js, kesh.js pick)
+export class Remarks {
+  constructor(game) {
+    this.game = game; this.cur = null; this.el = null; this.log = [];
+    this.on = typeof location === 'undefined' || new URLSearchParams(location.search).get('remarks') !== 'box';
+  }
+  // one short sentence: the English source (spoken) so both languages decide alike; "..." does not end a sentence
+  static short(text, en) {
+    const s = String(en || text || '').trim();
+    if (!s || s.length > REMARK_MAX_CH || /\n/.test(s)) return false;
+    return s.split(/(?<![.…])[.!?]+["'’”)\]]*\s+(?=\S)/).length <= 1;
+  }
+  minor(n) {
+    const g = this.game, d = n?.def;
+    if (!this.on || !d?.minor || d.noTalk || n.held || n.controlled || g.room?.noRemarks) return false;
+    // (the objective's person — a star on it, as INTERACT-PICK reads them — keeps the box: its words are the way on)
+    const ms = g.story?.markers?.() || [];
+    return !ms.some((m) => m.kind === 'star' && Number.isFinite(m.x) && Math.hypot(m.x - n.pos.x, m.z - n.pos.z) < 0.6);
+  }
+  // Twinsen's E on `n`: run(), the story's talk, with its say calls held; a minor resident's one short line goes over its
+  // head, everything else is said as it would have been (box() first: the Follow camera's two-shot, main.js)
+  talk(n, run, box) {
+    const g = this.game;
+    if (!this.minor(n)) { box(); run(); return false; }
+    const rec = [], own = Object.prototype.hasOwnProperty.call(g, 'say') ? g.say : null;
+    const f = g.flags || {}, f0 = { ...f }, h = g.hero, hp0 = h?.hp, c0 = h?.coins, st0 = g.state;
+    g.say = (...a) => { rec.push(a); };
+    try { run(); } finally { if (own) g.say = own; else delete g.say; }
+    let why = rec.length !== 1 ? 'calls' : g.state !== st0 || g.cutscene || g.cine || g.trans ? 'scene' : null;
+    if (!why) {
+      const [, lines, , sp, , opt] = rec[0];
+      if (sp !== n) why = 'speaker';
+      else if (!Array.isArray(lines) || lines.length !== 1 || typeof lines[0] !== 'string') why = 'lines';
+      else if (opt?.more) why = 'chain';
+      else if (h && (h.hp !== hp0 || h.coins !== c0)) why = 'gift';
+      else if (Object.keys(f).some((k) => f[k] !== f0[k] && !PICK_COUNTER.test(k)) || Object.keys(f0).some((k) => !(k in f))) why = 'flag';
+      else if (!Remarks.short(lines[0], spoken(lines[0]))) why = 'long';
+    }
+    this.log.push({ id: n.def.id, why: why || 'remark' }); if (this.log.length > 40) this.log.shift();
+    if (why) { box(); for (const a of rec) g.say(...a); return false; }
+    this.show(n, rec[0]);
+    return true;
+  }
+  show(n, [name, lines, done, , color]) {
+    const g = this.game, text = lines[0];
+    this.close('next');
+    if (!this.el) {
+      const el = (this.el = document.createElement('div'));
+      el.className = 'remark';
+      (document.getElementById('floats') || document.body).appendChild(el);
+    }
+    const el = this.el;
+    el.textContent = text;
+    el.style.setProperty('--spk', color || n.def.color || '#ffffff');
+    el.style.display = 'block'; el.style.opacity = '0';
+    // (the time to read it: as the box's AUTO-TALK reads a line, at least 2.6 s; the slow text speed a little longer)
+    const words = text.split(/\s+/).length, slow = (g.hud?.textRate ?? 50) < 40 ? 1.3 : 1;
+    const own = { talking: !n.talking, engaged: !!n.engage && !n.engaged };
+    if (own.talking) n.talking = true;
+    if (own.engaged) n.engage();
+    this.cur = { n, done, own, name, text, t: Math.min(7, Math.max(2.6, 1.6 + words * 0.32)) * slow, w: el.offsetWidth, hgt: el.offsetHeight };
+    // its voice, as the box's (voice.js Babble: the line's utterance planned at once; the mouth follows: driveMouth)
+    const B = g.audio?.babble;
+    if (B) { B.start(name); B.chars(text, 0, 1); }
+    this.place();
+  }
+  // why: 'time' (read), 'key' (E again), 'away' (walked off), 'state' (a box, a menu, a scene, a door), 'next'
+  close(why = 'time') {
+    const C = this.cur, g = this.game;
+    if (!C) return;
+    this.cur = null;
+    if (this.el) this.el.style.display = 'none';
+    const B = g.audio?.babble;
+    if (B && B.key === C.name && !g.hud?.talking) B.stop();
+    this.log.push({ id: C.n.def.id, closed: why }); if (this.log.length > 40) this.log.shift();
+    // the talk's own end (talking off, release, its save) as when the box closes; then what this put on, taken off
+    const rec = [], own = Object.prototype.hasOwnProperty.call(g, 'say') ? g.say : null;
+    g.say = (...a) => { rec.push(a); };
+    try { C.done?.(); } finally { if (own) g.say = own; else delete g.say; }
+    if (C.own.talking) C.n.talking = false;
+    if (C.own.engaged && C.n.engaged) C.n.release?.();
+    for (const a of rec) g.say(...a);   // (a talk that turned out to go on: its next line in the box, as before)
+  }
+  update(dt) {
+    const C = this.cur, g = this.game;
+    if (!C) return;
+    const n = C.n, h = g.hero;
+    if (g.state !== 'play' || g.trans) { this.close('state'); return; }
+    g.audio?.babble?.pump?.();
+    C.t -= dt;
+    if (C.t <= 0) { this.close('time'); return; }
+    if (!n.present || n.inside || n.away || Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) > REMARK_AWAY) { this.close('away'); return; }
+    this.place();
+  }
+  // over its head, kept inside the screen (its size measured when it was shown)
+  place() {
+    const C = this.cur, n = C.n, el = this.el, g = this.game;
+    if (n._rmTop == null) { const b = new THREE.Box3().setFromObject(n.rig.root); n._rmTop = Math.max(1.0, b.max.y - n.pos.y); }
+    const v = (this._v ||= new THREE.Vector3()).set(n.pos.x, n.pos.y + n._rmTop + 0.2, n.pos.z).project(g.camera);
+    if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) { el.style.visibility = 'hidden'; return; }
+    const W = innerWidth, H = innerHeight, m = 8;
+    const x = clamp((v.x + 1) / 2 * W, C.w / 2 + m, Math.max(C.w / 2 + m, W - C.w / 2 - m)), y = clamp((1 - v.y) / 2 * H, C.hgt + 14, H - m);
+    el.style.left = x.toFixed(0) + 'px';
+    el.style.top = y.toFixed(0) + 'px';
+    el.style.opacity = String(clamp(C.t / 0.3, 0, 1));
+    el.style.visibility = '';
+    C.x = x; C.y = y;
+  }
+}
