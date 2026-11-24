@@ -127,6 +127,8 @@ export class Shops extends ChapterBase {
     if (id === 'osk') return this.oskTalk(npc);
     const w = KEEPER[id];
     if (!w || !this.open(w)) return false;
+    // (TALK-ORDER: Tibbo's gift and Sefa's thanks wait behind the chapter's own talk with the keeper, base.js pendingTalk)
+    if (((w === 'gadget' && f.prologueDone && !f.sh_gift) || (w === 'esmer' && f.sh_parcel && !f.sh_sefaDone)) && this.ownFirst(npc)) return true;
     // Tibbo opens once the well is sorted (the end of chapter 1); before, a line and no counter
     if (w === 'gadget' && !f.prologueDone) { npc.engage?.(); this.chain([[id, 'sh_gadget_early']], () => npc.release?.()); return true; }
     const lines = [];

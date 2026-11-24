@@ -186,6 +186,7 @@ export class IslandPeople extends ChapterBase {
       }
       case 'mb_bzzra': {
         const reward = f.pp_beacon && !f.pp_bzzraDone;
+        if (reward && this.ownFirst(npc)) return true;   // (TALK-ORDER: waits behind the chapter's own talk, base.js pendingTalk)
         const lines = reward ? ['ip_bzzra_thanks'] : !f.pp_bzzra ? ['ip_bzzra_1', 'ip_bzzra_2'] : f.pp_bzzraDone ? [this.linesFor(npc)[0] || 'ip_bzzra_after'] : ['ip_bzzra_wait'];
         return c(lines, () => {
           f.pp_bzzra = true;
@@ -205,7 +206,7 @@ export class IslandPeople extends ChapterBase {
         return c([A.glove ? 'ip_lant_after' : 'ip_lant_mine']);
       case 'pf_chaplain':
         if (f.pp_bell) return plain();
-        if (f.pp_clapper) return c(['ip_chap_thanks'], () => {
+        if (f.pp_clapper) return this.ownFirst(npc) || c(['ip_chap_thanks'], () => {
           if (f.pp_bell) return;
           f.pp_bell = true; this.applyThings();
           const h = g.hero; h.clovers = Math.min(9, h.clovers + 1);

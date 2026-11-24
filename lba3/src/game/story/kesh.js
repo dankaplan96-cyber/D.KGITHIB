@@ -172,6 +172,7 @@ export class KeshLife extends ChapterBase {
         // (chapter 5: his jar and shovel come first)
         if (this.story.cur?.key === 'steam' && !f.c5_shovel) return false;
         if (f.k_done && !f.k_paid) {
+          if (this.ownFirst(npc)) return true;   // (TALK-ORDER: waits behind the chapter's own talk, base.js pendingTalk)
           return c([['dtrader', 'k_brosk_pay']], () => {
             f.k_paid = true;
             this.reward('k_owe', 'coin', 1, npc.pos.x, npc.pos.y + 1.2, npc.pos.z, { pop: true, value: 5 });
