@@ -142,6 +142,9 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
   const P3 = () => new v.constructor();
   let heldPrev = null;
   const cast = { twinsen: G.hero, zoe: G.npcs.find((n) => n.def.id === 'zoe'), arthur: G.npcs.find((n) => n.def.id === 'arthur') };
+  // (P120: Zoé is drawn from zoe.json with the spline lock of her tie and the twinsen head shape: her drawn mesh is not the
+  //  file's size either; it is the poly cast's model)
+  cast.zoe.rig.root.traverse((m) => { if (m.isSkinnedMesh && !polySizes[m.geometry.attributes.position.count]) polySizes[m.geometry.attributes.position.count] = ['zoe']; });
   const seen = new Set(), notPoly = [], pops = [], subsAt = [], solids = [], bumps = [];
   let prev = {}, lastSub = '', mid = null;
   // R5: Zoé's right hand against the tap's handle (a disc of the cross's radius) and the stream's axis
