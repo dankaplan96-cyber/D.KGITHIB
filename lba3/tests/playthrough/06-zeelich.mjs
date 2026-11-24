@@ -68,6 +68,29 @@ export const steps = [
     P.use(L.crank.x, L.crank.z, { near: 0.9, kind: 'zt_crank' }); idle(); for (let i = 0; i < 60 && !f.zt_bench; i++) { game.step(0.25); P.settle(); }
     return { ...r, dial: LT.dial, fail: f.zt_bench ? null : 'bench' };
   }],
+  // ---- THE SECOND SHIFT (story/zeelift.js, optional): Kell's lunch, by input in the continuous run (LBA3-RUN progression):
+  // down the stair and along the lane toward Kell's lever, Brel's word comes as he nears it; the handle taken, Up held while
+  // the cloth comes down to the nail, let go; Kell back with his bread. Then the handle is not offered again and no Kash,
+  // clover or item is given (no reward to duplicate). A save from before the thread has no lunch (ZT_OLD).
+  ["Kell's lunch (optional): Brel's word, the handle, the cloth to the nail", () => {
+    { const o = ZT_OLD(false); if (o) return o; }
+    const G = game, LT = G.story.cur.lift, L = LT.L, f = G.flags, S = L.spots, h = G.hero, keys = G.input.keys;
+    const until = (c, max = 60) => { let t = 0; for (; t < max && !c(); t += 0.1) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } return +t.toFixed(1); };
+    const err = () => +(L.clothY() - L.nailY).toFixed(3);
+    const bag = () => [h.coins, h.clovers, G.story.items().map((i) => i.id).join()].join('|'), bag0 = bag();
+    P.go(S.stairFoot.x, S.stairFoot.z, { tol: 0.7, maxT: 60 });
+    P.go(S.kell.x + 2.2, S.kell.z + 1.6, { tol: 0.6, maxT: 60, stopWhen: () => G.state === 'dialog' });
+    const tCall = until(() => LT.lunchPh === 'ready', 90);
+    if (LT.lunchPh !== 'ready') return { call: !!f.zt_lunchCall, ph: LT.lunchPh, fail: 'no lunch call by the lift' };
+    P.use(L.handle.x, L.handle.z, { near: 1.0, kind: 'zt_handle' }); until(() => !!LT.hold && G.heroHold, 20); G.step(0.8);
+    const held = !!LT.hold;
+    let n = 0; keys.add('ArrowUp'); for (; n < 600 && err() > 0.012; n++) G.step(1 / 30); keys.delete('ArrowUp'); G.step(1 / 30);
+    const at = err(); until(() => f.zt_lunch && !LT.walks.length, 60); P.settle();
+    // (the repeat visit: Kell asked again gives his after-lunch word, the handle is not offered, nothing is given)
+    P.talk('zl_kell', { run: true }); const offer = LT.lunchPh === 'ready', bag1 = bag();   // (zeelift.js offers the handle only in 'ready')
+    return { tCall, held, frames: n, at, lunch: !!f.zt_lunch, misses: LT.misses, offer, free: !G.heroHold && !LT.hold, same: bag1 === bag0, bag: bag1,
+      fail: f.zt_lunch && held && !G.heroHold && !offer && bag1 === bag0 ? null : 'lunch' };
+  }],
   // ---- the chapter as it was
   ['Baldino\'s workshop', () => {
     const Z = game.rooms.zeelich, d = Z.workshopDoor;
