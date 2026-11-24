@@ -258,7 +258,7 @@ export const FEEDS = [
 ];
 export const CODE = [2, 0, 1];                 // star, sun, wave (the dials: 0 sun · 1 wave · 2 star), as the lighthouse's
 export const NEEDLE = { start: 0.08, step: 0.13, lo: 0.5, hi: 0.7, settle: 1.2 };   // the MAINS gauge: two marks, a notch a turn
-export const FLY = { w: 1.6, brake: 0.3, win: 0.75, slip: 1.4 };                       // the MILLS flywheel: rad/s, s, ± rad, s
+export const FLY = { w: 1.2, brake: 0.3, win: 1.2, slip: 1.4 };   // (24.11: widened to the card's "no tight timing": ~2 s in each 5.2 s turn, was 0.9 s in 3.9)                       // the MILLS flywheel: rad/s, s, ± rad, s
 const DIAL_X = [-0.36, 0, 0.36];
 const norm = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
