@@ -136,6 +136,54 @@ winnable in every mode (nothing else got weaker).
 Talk, search and fight work in every behaviour (E / W / the pad's A; the attack key). Discreet's throw (proposal 5)
 and overhearing (7) not built.
 
-## Evidence
+## Evidence (24.11, commits on the worktree branch after `9d2c7278`)
 
-(filled in below as run)
+All **Automated runtime** (headless Chromium, SwiftShader, `game.step`; nobody played; no real GPU; no listening).
+
+| Run | Result | What it shows |
+|---|---|---|
+| `SERVE=1 node tests/opening.mjs` | PASS 50/50 | the opening film and the house unchanged (the Dino-Fly's new place is clear of the film's paths) |
+| `node tests/opening-tutorial.mjs` | PASS 48/48 (after two fixes: the test read a typing dialogue line; from the Dino-Fly the barrels and the well are approached from the other side, so the test faces them; and the kids' tips, see below) | A13 the tap then the Dino-Fly step (goal, Discreet key, Zoé's ask); A13b walked up in Normal: he wakes, Zoé's gentle line, the step stays; A13c Discreet: the caption ("Discreet · Hold Space to hide"), gone after 2 s; he dozes off; crept up to: "W Pet", the panel's "Pet him"; petted: his line, the step done, the barrels; A17 the whole house and yard by the steps 106.5 s of game time; B1 tips Off: every step by its keys, the caption with the name only; B10 the kids' "Switch to Discreet" / "Back to Normal" still shown; C3b a mid-yard save from before this step resumes on it (3 of 6), kettle and tap kept |
+| `node tests/tutor-targets.mjs` | PASS 28/28 | R1.9b the Dino-Fly step's marker and star on him; R3.1 a reload mid-yard: the Dino-Fly step, then the barrels; R3.4 an older mid-yard save (barrels hit, no `pr_dino`): loads on the Dino-Fly step, petted, the jump finishes the yard |
+| `node tests/combat.mjs` | PASS 84/84 (4 new checks; one run before had a test fault: the moved crawler went back to its arena post) | notice ranges standing still, measured in 0.5 m steps: Normal mite 5.5, sentry 8.5, crawler 8.5, guard 10, drone 9, dog 11 (unchanged rules); Discreet mite 2, sentry 2, crawler 2, guard 2.5, drone 2, dog 2.5; a guard at 12 m: "?", still on his round; at 7 m: "!", alerted; a jab: Normal 1, Discreet 1, Aggressive 1.5 |
+| `node tests/dialogue-check.mjs` | PASS (5695/5695 keys in Hebrew) | every new line has its Hebrew |
+
+Found and fixed while testing: the yard's Dino-Fly step switched to Discreet and back, which counted as the kids'
+"Switch to Discreet" and "Back to Normal" lessons, so the kids' scene lost its hint; a switch made during the yard's
+steps no longer counts for those two lessons (tutorial.js `observe`).
+
+Pictures and the clip (captures/behaviour-modes/):
+- `yard-dino-step.mp4` (29 s, 12.5 fps, 960×540; the bot by keys): the step begins (Zoé's ask), the walk in Normal (he
+  wakes, her line at the screen's edge), F4 (the caption), he dozes off, the creep up, "Pet", the line, the tick.
+- `mode-caption-{normal,athletic,aggressive,discreet}-{en,he}.jpg`, `mode-caption-discreet-tips-off.jpg`,
+  `mode-caption-and-pet-prompt.jpg`.
+- `hide-tip-first-discreet.jpg` (the first Discreet after the yard), `cover-tip-zoe-office.jpg` (STAGED: chapter 2's
+  own `startZoe()` with the chapter set: the 'cover' tip in Zoé's office).
+- `mark-question-guard.jpg`, `mark-exclaim-guard.jpg` (STAGED: the Citadel depot's guard alone in its yard, a fixed
+  camera; 13 m "?", 8 m "!" and the watch's own warning).
+- `dino-spot-lba2.jpg`, `dino-spot-yard.jpg`, `dino-spot-before-after.jpg`: the same view from the yard, before
+  (`?dino=lba2`: he is on the shelf behind the house, not seen) and after.
+
+Not verified at runtime (**Source only**): the watchers' "?" / "!" (Zoé's office, the archive: the staged office had no
+running watcher update), the sentries' and waking mites' "?" in their own places, the archive's and c3deep's 'cover'
+tip, the depot-watch suite and the Zeelich depot suite (their rules are untouched; only the "!" there is the new mark).
+
+## Files
+
+New: `src/game/noticemark.js`, `src/game/text/modes.js`, `src/game/text/he/modes.js`. Changed: `src/game/actors.js`
+(sneak, setBehaviour), `combat.js` (AGGR), `dinofly.js` (hearing, pet, DINO_AT), `enemies.js` (mites, sentries,
+crawlers, drones, watchers), `guards.js`, `guarddog.js`, `hud.js` (caption), `tutorial.js` (hide, cover, the dino
+step's keys, the kids' lessons), `story/openingsteps.js` (dino step, the pipe), `story/depotwatch.js` (cares, the "!"),
+`world.js` (two lines: the Dino-Fly's place), `main.js` (the pet's label, the marks' tick), `text/opening.js` +
+`text/he/opening.js`, `he-text.js`; tests `opening-tutorial.mjs`, `tutor-targets.mjs`, `combat.mjs`, `lib/player.js`.
+
+## סיכום למשתמש
+
+- אחרי כל החלפת מצב: למשך 2 שניות, בפינה למטה, שם המצב ומה עושה רווח בו (עם "טיפים: כבוי" רק השם).
+- טיפ הסתתרות: בפעם הראשונה במצב דיסקרטי, ובכל מקום שהסיפור מבקש להסתתר (המשרד של זואי): "להחזיק רווח כדי להסתתר".
+- צעד חדש בחצר: להתגנב לדינו־זבוב הישן במצב דיסקרטי וללטף אותו. אם הוא מתעורר, הוא נרדם שוב וזואי אומרת מילה עדינה. אי אפשר להיכשל.
+- הדינו־זבוב היה מחוץ לחצר (על המדף מאחורי הבית, 21.6 מ' מהדלת), ולכן הוא ישן עכשיו על הדשא ליד פינת הבית. שינוי שרואים: תמונות לפני/אחרי, ואפשר להחזיר אותו (?dino=lba2).
+- צעד הצינור מבקש עכשיו במפורש לעבור לאתלטי.
+- מצב דיסקרטי עובד עכשיו גם נגד הקרדיות, הזקיפים והזוחלים. בשאר המצבים שום דבר לא השתנה.
+- "?" מעל שומר, רחפן או כלב שמתחילים לחשוד, ו-"!" כשראו אותו.
+- במצב אגרסיבי המכות חזקות פי 1.5. דיבור, חיפוש ולחימה נשארים אפשריים בכל מצב.
