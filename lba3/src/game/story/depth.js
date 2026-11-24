@@ -861,9 +861,10 @@ export class Depth extends ChapterBase {
       const m = new THREE.Mesh(rg, rimM); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.rotation.y = r; m.castShadow = true; grp.add(m);
     }
     const cluster = new THREE.Group(); cluster.position.set(0, 0.26, 0.16); cluster.scale.setScalar(1.5); grp.add(cluster);
-    const cg = new THREE.OctahedronGeometry(0.09, 0), cm = MAT.glow('#d8f8ff', '#40d8ff', 1.8);
-    [[-0.22, 0.1, 2.2, 0.3], [0.0, 0, 3.0, -0.1], [0.2, 0.08, 2.4, -0.35], [-0.08, 0.16, 1.6, 0.6], [0.12, 0.18, 1.4, -0.7]].forEach(([x, z, sy, rz]) => {
-      const m = new THREE.Mesh(cg, cm); m.position.set(x, 0.09 * sy, z); m.scale.set(1, sy, 1); m.rotation.z = rz; cluster.add(m);
+    // (P128 CRYSTALS-ONE-LOOK: the well cave's glassy prism with its glowing core, same place, height and scale)
+    const cmat = crystalMats('cyan');
+    [[-0.22, 0.1, 2.2, 0.3], [0.0, 0, 3.0, -0.1], [0.2, 0.08, 2.4, -0.35], [-0.08, 0.16, 1.6, 0.6], [0.12, 0.18, 1.4, -0.7]].forEach(([x, z, sy, rz], i) => {
+      const m = crystalGem(cmat.shell, cmat.core, { v: i, hs: 0.09 }); m.position.set(x, 0.09 * sy, z); m.scale.set(1, sy, 1); m.rotation.z = rz; cluster.add(m);
     });
     // the crust: pale plates filling the pocket's mouth, glowing seams between them, a crack low in it (shown by the lantern)
     const crustM = MAT.flat('#ddd6ea', 0.55, { flatShading: true }), seamM = new THREE.MeshStandardMaterial({ color: '#cfefff', emissive: '#40c8ff', emissiveIntensity: 0, roughness: 0.4 });
