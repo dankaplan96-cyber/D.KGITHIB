@@ -201,3 +201,10 @@ The proposals are listed and none is built. Waves 1–2 were approved by the use
 and can start once the polish run allows it. H-15, H-16 (its boss) and H-19 are new and wait for the questions. The
 missing parts of this partial doc: full cards for H-15, H-16's boss and H-19 (steps, flags, tests per DEPTH-PLAN §9),
 and a check of U-4's and U-5's minutes against their docs.
+
+## The user's answers (24.11)
+1. **Whose 15 hours:** the thorough player (most optional content). Waves 1–8 target ~13–14 h for that player; the reserve wave only if the user's own measured times fall short.
+2. **Build now:** waves 1–2 (H-1, H-2 main path ch 15–16; H-3 glacier, H-4 desert cache, H-5 humming wall), after the current workers (TALK-ORDER, ROCKS-MASONRY, RELEASE-PREP) finish. Visible world changes get before/after pictures (P107).
+3. **Small keys and clover boxes:** bring them back (one key, one door, in one area; clover boxes raise the clover cap above 9). Needs its own design card before building.
+4. **Zeelich's lower world (H-16):** yes, build the Wannies' mine and the optional gas-monster boss (catch its fireballs with the glove, throw them back). Wave 6.
+Questions 2 (mini-games), 5 (chapter 7), 6 (the Francos' relic) and 7 (merges) are still open.
