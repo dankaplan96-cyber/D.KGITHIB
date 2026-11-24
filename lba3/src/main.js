@@ -34,7 +34,7 @@ import { preloadLba1Rooms } from './game/lba1room.js';
 import { preloadIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
 import { buildTownLife } from './game/townlife.js';
-import { Resident } from './game/walkers.js';
+import { Resident, Remarks } from './game/walkers.js';
 import { buildCityDressing } from './game/citydress.js';
 import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './game/containers.js';
 import { enterArena } from './game/arena.js';
@@ -608,6 +608,7 @@ class Game {
     this.evenPace.onChange = () => { this.renderer.budgetMs = this.paceBudget(); this.autoQ?.onPace?.(); if (this.screen === 'settings') this.syncSettingsUI?.(); };
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
+    this.remarks = new Remarks(this);   // (P116: a minor resident's one short line over its head: walkers.js Remarks)
     this.applySettings();
     this.wireUI();
     this.last = performance.now();
@@ -2580,9 +2581,13 @@ class Game {
   // false when there is nothing in reach (in Normal mode Twinsen then hops: see Hero.hop)
   tryInteract() {
     const it = this.findInteractable();
+    // (P116: E while a resident's remark is up closes it; on that same resident, that is all the key does)
+    const R = this.remarks, rn = R?.cur?.n;
+    if (rn) { R.close('key'); if (!it || (it.kind === 'npc' && it.npc === rn)) return true; }
     if (!it) return false;
     this.tutorial.event('interact', it.kind);
-    if (it.kind === 'npc') { (this.talkers ??= new Set()).add(it.npc); this.story.talk(it.npc); }   // (G1-CAM: the one he spoke to is in the two-shot from the first line)
+    // (G1-CAM: the one he spoke to is in the two-shot from the first line; P116: not for a remark over a resident's head)
+    if (it.kind === 'npc') { const n = it.npc, box = () => (this.talkers ??= new Set()).add(n); if (R) R.talk(n, () => this.story.talk(n), box); else { box(); this.story.talk(n); } }
     else if (it.kind === 'sign') this.say('', [t(it.sign.key)]);
     else if (it.kind === 'pet') it.pet.talk(this);
     else this.story.interact(it);
@@ -2687,6 +2692,7 @@ class Game {
 
   say(name, lines, done, speaker = null, color = null) {
     if (!Array.isArray(lines)) lines = [lines];
+    this.remarks?.close('state');   // (P116: a box opening takes the place of a remark over a head)
     this.setState('dialog');
     this.hud.prompt(null);
     this.speaker = speaker;
@@ -3375,6 +3381,7 @@ class Game {
     this.cues.update(dt, this, this.state === 'play' && !this.trans);
     if (this.state !== 'play') this.behMenu.show(false);
     this.hud.updateFloats(dt, this.camera);
+    this.remarks?.update(dt);   // (P116: the remark over a resident's head follows it; closes on its time, E, a walk off or a box)
     if (this.state !== 'dialog') this.bubble.visible = false;
     if (render && !this.trans?.hold && !(this.gfxHold && performance.now() - this.gfxHold.t < 4000)) {
       const t0 = performance.now();

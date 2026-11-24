@@ -112,7 +112,7 @@ export class ChapterBase {
         if (sp && sp !== g.hero) sp.talking = false;
         if (i + 1 >= lines.length) for (const [oid] of lines) { const o = this.speaker(oid); if (o && o !== g.hero) o.listenTo = null; }
         next(i + 1);
-      }, sp, SPEAKER_COLORS[id]);
+      }, sp, SPEAKER_COLORS[id], { more: i + 1 < lines.length });   // (more: a line follows: P116's remarks keep the box)
     };
     next(0);
   }
