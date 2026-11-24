@@ -31,6 +31,11 @@ function rifleProp() {
   return g;
 }
 
+// A guard's fight (TESTER-FIXES item 9): close: the baton's distance (m) — inside it he winds up; windup: its tell (s); windCue:
+// a bark as the baton goes up; lunge: the strike's step (m/s, 0.35 s); strikeR: the strike's reach (m); shotMin..shotRange:
+// where the rifle is used (m); tell: the aim line's time before the shot (s); boltV, boltDmg: the bolt's speed and damage;
+// shotCool: the rest after a shot (s). (The baton's damage stays: 2 for a Grobo, 1 for a Quetch.)
+const GUARD_TUNE = { close: 1.9, windup: 0.55, windCue: false, lunge: 2.2, strikeR: 1.6, shotMin: 0, shotRange: 8, tell: 0.8, boltV: 8, boltDmg: 1, shotCool: 1.8 };
 export class Guard extends Actor {
   constructor(game, def) {
     // (kind 'fclone': one of LBA1's fat FunFrock troopers, bodies 18–20, reactivated by the project — the Grobo
@@ -48,6 +53,9 @@ export class Guard extends Actor {
     this.state = 'patrol'; this.stateT = 0; this.coolT = 0; this.deadT = 0; this.hurtT = 0; this.jamT = 0; this.waitT = 0;
     this.present = true; this.material = 'flesh'; this.recentHitT = 0;
     this.hitR = grobo ? 0.8 : 0.5; this.hitH = grobo ? 2.2 : 1.9;
+    // (TESTER-FIXES item 9, the user's pick 24.11: a guard can be told to fight softer by its definition, def.tune; every
+    //  other guard keeps GUARD_TUNE, the values it always had. Today only the Zeelich depot's Grobo guard: chapter2.js)
+    this.tune = { ...GUARD_TUNE, ...(def.tune || {}) };
     this.bodyR = contactRadius(fat ? 'fclone' : grobo ? 'vguardG' : 'vguard', this.rig.root.scale.x);   // (SOLID-ENEMY: the race's girth, as a resident's)
     this.rifle = rifleProp();
     const hand = this.rig.j?.armR?.hand;
@@ -213,10 +221,12 @@ export class Guard extends Actor {
         break;
       case 'chase': {
         face = this.angleTo(hero); anim = 'walk';
-        const close = d < 1.9;
-        if (close && this.coolT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; break; }
-        if (!close && d < 8 && sees && this.coolT <= 0 && this.jamT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'aim'; this.stateT = 0; break; }
-        sp = d > 4.5 ? 2.4 : d > 2.2 ? 1.6 : 0;
+        const T = this.tune, close = d < T.close;
+        if (close && this.coolT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; if (T.windCue) g.audio.play('alert', this.pos); break; }
+        if (!close && d >= T.shotMin && d < T.shotRange && sees && this.coolT <= 0 && this.jamT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'aim'; this.stateT = 0; break; }
+        // (a guard that keeps his rifle for range — shotMin — walks right into the baton's reach instead of standing off)
+        const stop = T.shotMin > T.close ? T.close - 0.15 : T.close + 0.3;
+        sp = d > 4.5 ? 2.4 : d > stop ? 1.6 : 0;
         if (!sp) anim = 'idle';   // (ANIM-POLISH-3: waiting in reach for its turn it stands, not frozen mid-stride on one foot)
         if (!sees && this.stateT > 4) { this.state = 'search'; this.stateT = 0; this.last = { x: hero.pos.x, z: hero.pos.z }; }
         if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 16 || d > 18) { this.state = 'home'; this.stateT = 0; g.combatDir?.done(this); }
@@ -224,17 +234,17 @@ export class Guard extends Actor {
       }
       case 'aim': {   // the rifle comes up; the violet line brightens; then the shot
         face = this.angleTo(hero); anim = 'reach';
-        const tell = 0.8 * DF.windup;
+        const tell = this.tune.tell * DF.windup;
         const from = new THREE.Vector3(this.pos.x + Math.sin(this.angle) * 0.6, this.pos.y + 1.35, this.pos.z + Math.cos(this.angle) * 0.6);
         const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
         const L = this.aimLine; L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(1, 1, from.distanceTo(to)); L.material.opacity = 0.15 + 0.6 * Math.min(1, this.stateT / tell);
         this.rifle.userData.glow.emissiveIntensity = 1.6 + 2.5 * Math.min(1, this.stateT / tell);
         if (!this.sees(hero) || this.jamT > 0 || !this.clearShot(hero)) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); break; }
         if (this.stateT > tell) {
-          g.bolts.fire(from, to.sub(from).normalize(), 8, 1);
+          g.bolts.fire(from, to.sub(from).normalize(), this.tune.boltV, this.tune.boltDmg);
           g.audio.play('zap', this.pos);
           this.rifle.userData.glow.emissiveIntensity = 1.6;
-          this.state = 'recover'; this.stateT = 0; this.coolT = 1.8 * DF.cool; g.combatDir?.done(this);
+          this.state = 'recover'; this.stateT = 0; this.coolT = this.tune.shotCool * DF.cool; g.combatDir?.done(this);
         }
         break;
       }
@@ -244,11 +254,11 @@ export class Guard extends Actor {
         break;
       case 'windup':   // the baton goes up (the tell)
         face = this.angleTo(hero); anim = 'heavyCharge';
-        if (this.stateT > 0.55 * DF.windup) { this.state = 'strike'; this.stateT = 0; this.hitDone = false; }
+        if (this.stateT > this.tune.windup * DF.windup) { this.state = 'strike'; this.stateT = 0; this.hitDone = false; }
         break;
       case 'strike':
-        anim = 'heavy'; sp = 2.2;
-        if (!this.hitDone && this.stateT > 0.12 && d < 1.6 && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(this.grobo ? 2 : 1, this.pos, true); g.audio.play('punch', this.pos); }
+        anim = 'heavy'; sp = this.tune.lunge;
+        if (!this.hitDone && this.stateT > 0.12 && d < this.tune.strikeR && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(this.grobo ? 2 : 1, this.pos, true); g.audio.play('punch', this.pos); }
         if (this.stateT > 0.35) { this.state = 'recover'; this.stateT = 0; this.coolT = 1.2 * DF.cool; g.combatDir?.done(this); }
         break;
       case 'hurt':
