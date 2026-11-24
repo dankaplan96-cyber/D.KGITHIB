@@ -438,6 +438,17 @@ export class Story {
   // (the talk chain without depth.js: depth.js's hooks add their lines after a person's own, Depth.after; a chapter's own
   //  talkFirst, where it has one, before the town's stories: CAMPAIGN-6's lane in chapter 8)
   talkRest(npc) { if (this.cur.talkFirst?.(npc) || this.shops.talkFirst(npc) || this.stands.talkFirst(npc) || this.ihomes.talkFirst(npc) || this.hlife.talkFirst(npc) || this.ulife.talkFirst(npc) || this.islife.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return true; if (!this.cur.talk(npc) && !this.chapters.find((c) => c.key === 'survey')?.talkLater?.(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); return true; }   // (EXP-3: Ballastra's people on a return visit)
+  // TALK-ORDER (the user, 24.11; maturity's "gifts before a chapter's own talk"): a gift, thank-you or payment from a side
+  // story (the talkFirst hooks above run before the chapter's talk) played first even when the person had the chapter's
+  // urgent line to say — chapter 14's Ilka thanked him for her notebook before "Dallan said you'd come". Its hook asks
+  // here first: when the chapter has a talk with this person still to be had (ChapterBase.pendingTalk), that talk plays
+  // and the gift waits, unchanged, for the next talk. Nothing is saved; the gift's own condition still holds.
+  ownTalkFirst(npc) {
+    const cur = this.cur, id = npc?.def?.id;
+    if (!id || this._ownTalk || !cur?.pendingTalk?.(id)) return false;
+    this._ownTalk = true;
+    try { return !!(cur.talkFirst?.(npc) || cur.talk(npc)); } finally { this._ownTalk = false; }
+  }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }

@@ -12,10 +12,14 @@
 //                   camera's distance and height, the talk with her (her line, his answer), and her standing in the house (a
 //                   copy of her model set in the room by the script, a fixed camera: the interior's light); the bake's
 //                   misses (nothing of hers re-sculpted)
+// ZOE-HEAD-2 (P126): HEADS= also takes tall, tall-long, egg; PHASE=game takes ZD=<?zoehead= value> (pictures game-<ZD>-…);
+// SERVE=1 answers this checkout's files by request routing (no http.server). ZOE-HEAD-3 (P126): HEADS= and ZD= also take
+// twin-head, twin-head-s, twin-head-nose (Twinsen's head on her).
 // OUT=dir (default captures/p120/). Checks: the model keeps its 19 bones, eyes, mouth and brow morphs; the part of the hair
 // the tail bones carry stays 3 cm or more off her head, neck, collar and back through idle, talk, walk, run and a head
 // turned both ways and tipped back (lookdev, skinned vertex positions). SwiftShader, headless: Automated runtime only.
 import { launch, open, checker, URL0 } from './lib/boot.mjs';
+import { serveLocal } from './lib/serve.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const PHASE = process.env.PHASE || 'lookdev';
@@ -23,6 +27,7 @@ const CAP = process.env.OUT || fileURLToPath(new URL('../captures/p120/', import
 mkdirSync(CAP, { recursive: true });
 const { check, done } = checker({ info: 'always' });
 const { browser, page } = await launch({ width: 1280, height: 720 });
+if (process.env.SERVE) await serveLocal(page);   // (SERVE=1: this checkout's files without an http.server)
 const ev = (f, a) => page.evaluate(f, a);
 const jpg = (name) => page.screenshot({ path: CAP + name + '.jpg', type: 'jpeg', quality: 90, timeout: 180000 });
 const ld = async (q) => {
@@ -92,8 +97,9 @@ if (PHASE === 'lookdev') {
 }
 
 if (PHASE === 'game') {
-  const ZH = process.env.ZH ? `zoehair=${process.env.ZH}` : '';
-  const tag = process.env.ZH || 'default';
+  // (ZOE-HEAD-2: ZD=<?zoehead= value> too; the pictures then game-<ZD>-…)
+  const ZH = [process.env.ZH && `zoehair=${process.env.ZH}`, process.env.ZD && `zoehead=${process.env.ZD}`].filter(Boolean).join('&');
+  const tag = [process.env.ZH, process.env.ZD].filter(Boolean).join('-') || 'default';
   // ---- the opening film (the notebook cut): Zoé at the tap, her two first lines
   await page.goto(URL0 + (ZH ? '?' + ZH : ''), { waitUntil: 'load', timeout: 300000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 300000 });

@@ -452,12 +452,14 @@ export class Arsenal extends ChapterBase {
     switch (id) {
       case 'magus':
         if (!this.at('dig') || f.a_pearl || A.lightning) return false;
+        if (this.ownFirst(npc)) return true;   // (TALK-ORDER: a hand-over waits behind the chapter's own talk, base.js pendingTalk)
         return c(f.a_berAsk ? [['magus', 'a_hougo_pearl_asked']] : [['magus', 'a_hougo_pearl'], ['magus', 'a_hougo_pearl2']], () => {
           f.a_pearl = true; g.found('pearl', 'it_pearl'); g.save(false);
         });
       case 'bersimon': {
         if (A.lightning || (f.a_berAsk && !f.a_pearl)) return false;
         if (h.mp < h.mpMax) { h.mp = h.mpMax; g.audio.play('heal'); g.hud.toast('wz_toast_magic'); }   // (as always: baseTalk)
+        if (f.a_pearl && this.ownFirst(npc)) return true;
         if (f.a_pearl) return c([['bersimon', 'a_ber_pearl1'], ['bersimon', 'a_ber_pearl2'], ['bersimon', 'a_ber_pearl3']], () => { g.audio.play('thunder'); g.camRig.shake(0.3); this.gain('lightning', 'it_lightning'); g.save(false); });
         return c([['bersimon', 'a_ber_ask']], () => { f.a_berAsk = true; g.save(false); });
       }

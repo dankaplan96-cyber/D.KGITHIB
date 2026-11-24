@@ -417,6 +417,16 @@ export class Network extends ChapterBase {
     const m = this.Z.mills[0]; return [{ x: m.brake.x, y: m.brake.y, z: m.brake.z }];
   }
 
+  // (TALK-ORDER, base.js: the givers' people with a talk here still to be had: Ilka's greeting at the bore before her
+  //  notebook's fork; Arthur, who hands the talk to Zoé until she has asked, before his Pocket Set — not in the house
+  //  while the thread has him at home, where his line is a repeat)
+  pendingTalk(id) {
+    const f = this.f;
+    if (!this.isCur()) return false;
+    if (id === 'ilka') return !f.c10_ilka && !(f.nw_ilka === true && (f.c10_boreRelay || f.c10_bore));
+    if (id === 'arthur') return !f.c10_zoeAsk && !(this.thread.arthurHome() && this.room() === 'house');
+    return false;
+  }
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id;
     if (!this.isCur()) return false;

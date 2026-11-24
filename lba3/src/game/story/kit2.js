@@ -277,9 +277,10 @@ export class Kit2 extends ChapterBase {
   talkFirst(npc) {
     const g = this.game, f = this.f, A = this.A, id = npc.def.id;
     if (!this.canUse() || !this.open) return false;
-    if (id === 'arthur' && this.setReady && !A.pocketset && g.room?.id === 'house' && this.set) { this.chain(this.setLines(), () => this.giveSet()); return true; }
-    if (id === 'bram' && f.l_pump && f.l_bramThanks && !A.lance) return this.giveLance(true);
-    if (id === 'bram' && f.e2_bramOwes && f.e2_valve) { this.chain([['bram', 'e2_bram_valve']], () => this.payValve()); return true; }
+    // (TALK-ORDER: each gift or payment waits behind the chapter's own talk with the giver, base.js pendingTalk)
+    if (id === 'arthur' && this.setReady && !A.pocketset && g.room?.id === 'house' && this.set) { if (!this.ownFirst(npc)) this.chain(this.setLines(), () => this.giveSet()); return true; }
+    if (id === 'bram' && f.l_pump && f.l_bramThanks && !A.lance) return this.ownFirst(npc) || this.giveLance(true);
+    if (id === 'bram' && f.e2_bramOwes && f.e2_valve) { if (!this.ownFirst(npc)) this.chain([['bram', 'e2_bram_valve']], () => this.payValve()); return true; }
     return false;
   }
 
