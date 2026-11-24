@@ -67,3 +67,19 @@ off (the shop house's door sill, −33.75, −1.5, 0.24 m under the ground: geom
 ## The weight in the material (the user, 24.11: "don't touch the normal map, it's good; just make it weigh more in the material")
 The map is drawn exactly as before (`wnstr` stays 1). The material's `normalScale` is now **2.5** (was 1): the same map
 moves the light 2.5× as much. `?wnscale=` compares (1 = the old weight). Nothing else changes: no draw more, no new texture.
+
+## Zeelich (the user's pick, 24.11): the dressed stone and the corrugated sheet
+- **`stone`** (textures.js, the dressed stone of plinths, quoins, sills, surrounds, stair bases — Zeelich's and Citadel's
+  trims): its blocks recorded as the generator draws them (each row its own height), a flat face with a soft bevel into
+  the joints. **`zrib`** (zeelich.js `ribTex`, Zeelich's corrugated sheds and the Grand Hall's flanks): eight rounded ribs
+  to the tile, registered from zeelich.js (`registerWallTexture`, for textures drawn outside makeTextures). Both with the
+  shade's ambient occlusion (the ribs' troughs only a shade darker). **On by default** with the others; `?wallnormals=0`
+  the old look, by name `?wallnormals=stone` / `zrib`.
+- Not given relief: Zeelich's stucco (`plasterWall`, smooth by design), the granite (the ground's and cliffs' strata),
+  the paving and kerbs.
+- Draw calls (one frame where the save stands, a count): Zeelich (base-05) 103 → 106; Citadel (base-03) 409 → 429 for all
+  the wall types together (the stone ~10 of them: it is on many small trims).
+- The look: the stone's bevels read clearly where light reaches (Zeelich's stair bases, the walkway's stone strip),
+  softly on Citadel's kerbs, the well and the planters (`citadel-stone-before-after.jpg`); the corrugated sheet gains a
+  little relief in sun, little in shade. Zeelich's pictures are on the desktop (past chapter 2). Tests not run again
+  (materials only, as before).
