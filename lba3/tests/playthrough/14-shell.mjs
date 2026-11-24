@@ -38,6 +38,7 @@ export const steps = [
   // (H-1: the red lamp said the shutter is out of sight from the floor: the relay up to the catwalk's east post)
   ['the relay to the catwalk post (H-1)', () => { const G = game, RL = G.story._rl; if (!RL?.marks?.D2) return { r: 'no relays' }; const a = RL.marks.D1, b = RL.marks.D2;
     if (RL.at().includes('D1')) { P.use(a.x, a.z, { near: 0.9, kind: 'rl_take' }); SWAIT(60); }
+    const L = G.room.ladder; P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 });   // (up the stair to the catwalk first: the bracket is over it)
     P.use(b.x, b.z, { near: 0.9, kind: 'rl_set' }); SWAIT(100); const ok = !!RL.goodHere('c3deep');
     return { at: G.flags.dx_relay_at ?? null, ok, hand: RL.hand(), fail: ok ? null : 'relay D2' }; }],
   // (CAMPAIGN-9: the shutter starts down as he reaches it and her crystal holds it: the line read, then through)

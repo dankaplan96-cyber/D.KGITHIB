@@ -913,7 +913,7 @@ if (!ONLY || ONLY === 'O') {
   await SW_INSTALL();
   is('O5 after Continue: the shutter still held on her crystal; Baldino\'s relay on the catwalk\'s east post (EXPANSION WAVE 1, H-1: a save from before, the hall not past); through it to the galleries', await ev(() => {
     const G = game, D = G.room, S = D?.coolDoor; const st = [G.room?.id, !!S?.held, !!D?.holdCrystal?.visible]; SWAIT(60);
-    const m = G.story._rl.marks.D2; P.use(m.x, m.z, { near: 0.9, kind: 'rl_set' }); SWAIT(100);
+    const m = G.story._rl.marks.D2, L = D.ladder; P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 }); P.use(m.x, m.z, { near: 0.9, kind: 'rl_set' }); SWAIT(100);   // (up the stair to the catwalk first: the bracket is over it)
     P.exitTo('c3-gallery'); SWAIT(60);
     return [...st, G.room?.id, G.flags.dx_relay_deep];
   }), (v) => v[0] === 'c3deep' && v[1] && v[2] && v[3] === 'c3gallery' && v[4] === true);
