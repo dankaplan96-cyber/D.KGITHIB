@@ -192,9 +192,11 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
   // else its most buried rocks go; what is left has no sliver or shard of one rock showing out of another's face
   // (where masonry now stands: world.js's cut, each [inside(x, z, y), [x0, z0, x1, z1]]: a rock with a corner in it goes
   //  whole, before the rest are settled, so no rock is merged with or dropped for one that is not there)
-  for (const R of rocks) for (let t = R.t0 * 9; t < R.t1 * 9 && !R.gone; t += 3) {
-    const x = pos[t], y = pos[t + 1], z = pos[t + 2];
-    for (const [inside, [x0, z0, x1, z1]] of cut) if (x >= x0 && x <= x1 && z >= z0 && z <= z1 && inside(x, z, y)) { R.gone = true; break; }
+  //  (its corners and points every 0.15 m along its edges: a wall thinner than the rock runs through it between corners)
+  const cutAt = (x, y, z) => { for (const [inside, [x0, z0, x1, z1]] of cut) if (x >= x0 && x <= x1 && z >= z0 && z <= z1 && inside(x, z, y)) return true; return false; };
+  if (cut.length) for (const R of rocks) for (let t = R.t0 * 9; t < R.t1 * 9 && !R.gone; t += 3) {
+    const e = t + ((t / 3) % 3 === 2 ? -6 : 3), L = Math.hypot(pos[e] - pos[t], pos[e + 1] - pos[t + 1], pos[e + 2] - pos[t + 2]), n = Math.max(1, Math.floor(L / 0.15));
+    for (let k = 0; k < n && !R.gone; k++) { const f = k / n; if (cutAt(pos[t] + (pos[e] - pos[t]) * f, pos[t + 1] + (pos[e + 1] - pos[t + 1]) * f, pos[t + 2] + (pos[e + 2] - pos[t + 2]) * f)) R.gone = true; }
   }
   const st = settleRocks(rocks.filter((R) => !R.gone), pos, H);
   const keep = new Uint8Array(pos.length / 9).fill(1);

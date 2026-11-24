@@ -69,6 +69,11 @@ const KNOWN = [
   ['citadel', 'd', /statue/, [-44.7, -11.1], 2, 'low (9 cm): the statue\'s lowest step is set into the square\'s slope on its uphill side (looked at)'],
   ['citadel', 'c', /pipeline/, null, 0, 'by design: the project\'s pipeline goes into the ground by the station'],
   ['citadel', 'd', /pipeline/, null, 0, 'by design: the project\'s pipeline goes into the ground by the station'],
+  // P121 (g) in the caves, looked at from the room camera (captures/p121/cave-*.jpg)
+  ['tralucave', 'g', /#c4bcb2 through .*#(eceae6|c8c2b6)/, null, 0, 'by design (looked at): the rubble along the low near rims, set into the rim wall (tralucave.js); reads as stones on a rocky rim'],
+  ['c3gallery', 'g', /through .*#(8a90b0|aef6ff|e0c0ff)/, null, 0, 'by design (looked at): the gallery\'s crystals rise out of rubble heaps (underground.js)'],
+  ['c3shaft', 'g', /through .*#aef6ff/, null, 0, 'by design: a crystal rising out of the rock (underground.js)'],
+  ['citadel', 'g', /pipeline/, [-72.7, -30.9], 1, 'low (18 cm, 3 rays): the pipeline post\'s foot plate set into a cliff rock where the post meets the slope, as its ground entries'],
   ['citadel', 'c', /dressing/, [-27.2, -8.1], 1.5, 'looked at: the post stands on its feet on the ground; the feet are thinner than the rays\' spacing (the gap is to its board)'],
   ['bl_gardens', 'e', /pitWater/, null, 0, 'by design: the water standing in the pit (a see-through surface on its floor)'],
   ['c3core', 'c', /Octahedron/, null, 0, 'by design: the receivers\' crystals float in their brass cages (underground.js; place-scan\'s list too)'],
@@ -176,7 +181,9 @@ function findingsOf(r) {
     F.push({ area: a, cat: 'f', kind: 'rock in rock', x: s.x, z: s.z, y: s.y, size: `${Math.round(s.frac * 100)} % of the smaller in, ${s.v} m³`, text: `${nm(D, s.A)} | ${nm(D, s.B)} (vol ${s.va} / ${s.vb} m³, ${s.n} rays, box ${s.ba.join(',')} | ${s.bb.join(',')})`, raw: s });
   }
   // (g) a rock through a built part
-  for (const s of r.rockCut || []) F.push({ area: a, cat: 'g', kind: 'rock through masonry', x: s.x, z: s.z, y: s.y, size: `${s.d} m deep, ${s.m2} m²`, text: `${nm(D, s.A)} through ${nm(D, s.B)} (${s.n} rays, rock box ${s.ba.join(',')})`, raw: s });
+  // (not masonry: a part of the rock's own look, a cave's rock wall or a lintel the boulders are jammed into; nor a floor
+  //  or a ledge the rock is bedded in, the overlap in the lowest 35 % of the rock's height: as a rock in the terrain)
+  for (const s of r.rockCut || []) if (!((D[s.A]?.tex ? D[s.A].tex === D[s.B]?.tex : D[s.A]?.color === D[s.B]?.color && !D[s.B]?.tex) || s.y + s.d / 2 - s.ba[1] <= 0.35 * (s.ba[4] - s.ba[1]))) F.push({ area: a, cat: 'g', kind: 'rock through masonry', x: s.x, z: s.z, y: s.y, size: `${s.d} m deep, ${s.m2} m²`, text: `${nm(D, s.A)} through ${nm(D, s.B)} (${s.n} rays, rock box ${s.ba.join(',')})`, raw: s });
   for (const f of F) { const k = knownOf(f.area, f.cat, f); f.known = k ? k[5] : null; }
   return F;
 }

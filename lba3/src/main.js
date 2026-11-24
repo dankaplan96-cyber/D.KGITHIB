@@ -25,7 +25,7 @@ import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
-import { buildWorldSteps, POI, QUAY } from './game/world.js';
+import { buildWorldSteps, POI, QUAY, rocksOutOfMasonry } from './game/world.js';
 import { streetDist } from './game/town.js';
 import { buildWizardTent } from './game/wizards.js';
 import { buildLba1Door } from './game/lba1places.js';
@@ -391,6 +391,7 @@ class Game {
       timed('wizards', () => buildWizardTent(S, P, this.world));
       timed('lba1', () => buildLba1Door(S, P));
       timed('sewers', () => buildSewerHatch(S, P, this.world));   // (WA-14, DOORS-LBA2: the lower town's and the terrace's hatches)
+      timed('rocks', () => rocksOutOfMasonry(this.world));   // (P121: no cliff rock left standing in the masonry built above)
       bar.measured(BUILD_REF.town, performance.now() - t0);
     }
     L.citadel = Math.round(performance.now() - tm);

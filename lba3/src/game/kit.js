@@ -2,6 +2,7 @@
 // builder (src/game/zeelich.js keeps its own copy for now). Bevelled boxes with world-scaled UVs, lathes,
 // tubes, merged batches per material, wall panels with openings, polygon helpers.
 import * as THREE from 'three';
+import { settleRockRanges } from './rocksettle.js';
 import { textures, keyJSON } from '../engine/textures.js';
 export const MC = new Map();
 export const TILE = { cliff: 4.5, stone: 1.8, plaster: 2.2, planks: 2.2, brass: 1.6, teal: 2.2, hazard: 0.9, deck: 2.0, cobble: 3.2, grass: 4.0, dirt: 3.0, rubble: 1.7, tiles: 1.0, concrete: 2.6, metal: 2.6, roof: 1.6 };
@@ -103,10 +104,12 @@ export class Batch {
   build() {
     const out = [];
     for (const [mat, list] of this.items) {
-      const mesh = new THREE.Mesh(mergeGeos(list, !!mat.vertexColors), mat);
+      const geo = mergeGeos(list, !!mat.vertexColors);
+      const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = this.cast && !mat.transparent; mesh.receiveShadow = this.receive;
       this.parent.add(mesh); out.push(mesh);
     }
+    settleRockRanges(out.map((m) => m.geometry));   // (P121: no rock half inside another of its size)
     this.items.clear();
     return out;
   }

@@ -6,6 +6,7 @@
 // textures, and merged per material so a dense room stays cheap to draw.
 import * as THREE from 'three';
 import { rng } from '../engine/math.js';
+import { settleRockRanges } from './rocksettle.js';
 import { sculptRigid } from '../engine/sculpt.js';
 
 // ================================================================ geometry
@@ -133,12 +134,15 @@ export class Kit {
         this.buckets.delete(mat);
       }
     }
+    const geos = [];
     for (const [mat, list] of this.buckets) {
       const geo = mergeEntries(list, mat.userData.tile || 0, !!mat.vertexColors);
+      geos.push(geo);
       const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = !mat.userData.noShadow; mesh.receiveShadow = true;
       this.group.add(mesh);
     }
+    settleRockRanges(geos);   // (P121: no rock half inside another of its size)
     this.buckets.clear();
   }
 }
