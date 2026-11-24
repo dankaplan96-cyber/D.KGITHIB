@@ -1235,11 +1235,14 @@ export class Remarks {
     if (!n.present || n.inside || n.away || Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) > REMARK_AWAY) { this.close('away'); return; }
     this.place();
   }
-  // over its head, kept inside the screen (its size measured when it was shown)
+  // over its head, kept inside the screen (its size measured when it was shown). The head: the rig's height as the
+  // dialogue's speaker marker reads it (main.js updateBubble); a bounding box of the whole body stood a two-line bubble
+  // about 100 px off a head seen close (ears, a carried load, a skinned mesh's rest-pose bounds)
   place() {
     const C = this.cur, n = C.n, el = this.el, g = this.game;
-    if (n._rmTop == null) { const b = new THREE.Box3().setFromObject(n.rig.root); n._rmTop = Math.max(1.0, b.max.y - n.pos.y); }
-    const v = (this._v ||= new THREE.Vector3()).set(n.pos.x, n.pos.y + n._rmTop + 0.2, n.pos.z).project(g.camera);
+    const top = (n.rig.height || 2.0) * (n.rig.root.scale.y || 1);
+    n._rmTop = top;   // (the tests read where the head is)
+    const v = (this._v ||= new THREE.Vector3()).set(n.pos.x, n.pos.y + top + 0.08, n.pos.z).project(g.camera);
     if (v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1) { el.style.visibility = 'hidden'; return; }
     const W = innerWidth, H = innerHeight, m = 8;
     const x = clamp((v.x + 1) / 2 * W, C.w / 2 + m, Math.max(C.w / 2 + m, W - C.w / 2 - m)), y = clamp((1 - v.y) / 2 * H, C.hgt + 14, H - m);

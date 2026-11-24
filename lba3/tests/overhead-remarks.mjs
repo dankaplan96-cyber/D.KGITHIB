@@ -50,6 +50,8 @@ async function boot(save, lang) {
   if (SERVE) await context.route(ORIGIN + '/**', serveLocal);
   ev = (f, a) => page.evaluate(f, a);
   await open(page, '?nocine'); await menu(page, 'continue'); await ev(() => { P.settle(); });
+  // (the language as Settings applies it: a stored choice alone did not take in this boot)
+  if (lang) await ev((l) => { game.settings.lang = l; game.settings.langV = 1; game.applySettings(); game.step(0.1); }, lang);
   await helpers();
 }
 
