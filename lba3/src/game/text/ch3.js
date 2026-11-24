@@ -51,7 +51,7 @@ Object.assign(STR.en, {
   c3_core_tw1: "She's alive, Vesk. Wake her this early and the shell cracks under everyone, list or no list. Baldino's network turns the bore into a shield. Stop.",
   c3_core_vesk2: "Thirty percent was never a mistake. It was everyone I could carry. You chose everyone, Twinsen, and you'll lose them all.",
   c3_core_vesk3: 'Guardian. Keep him away from the pylons.',
-  c3_toast_fight: 'Stand on a glowing plate and bounce the ball off the brass panels',
+  c3_toast_fight: 'Stand still on a glowing plate and throw: the ball goes along its arrow and banks off the brass panel',
   c3_pylon_1: "Signal is out. Star, sun, wave, on Baldino's channel!",
   c3_pylon_2: 'All three valves open. If anyone asks, the water office did this.',
   c3_pylon_3: 'All three mills at full sail. Listen to that wind!',

@@ -137,6 +137,8 @@ const _footM = { x: 0, z: 0 };   // (Hero.footOfSlope's answer)
 const SLIDE_POSE = 0.07;   // s of sliding before the fall pose shows (Hero.update)
 
 // ------------------------------------------------------------------ hero
+// STEER-HOLD: how long (s) a move must be held to take over from the game's few steps (walkTo) to a use
+const STEER_TAKE = 0.22;
 export class Hero extends Actor {
   constructor(game, x, z) {
     super(game, createCharacter('twinsen'), x, z, 0.4);
@@ -274,8 +276,14 @@ export class Hero extends Actor {
     });
     const locked = cs.lock || this.hiding || this.hurtT > 0.15 || this.actT > 0;
     const speedK = cs.speedK ?? 1;
-    // a few steps the game asked for (walkTo): the player's own stick takes over at once; a hit cancels them
-    if (this.steer && (Math.hypot(mv.x, mv.y) > 0.3 || this.hurtT > 0.15 || wheel)) this.steer = null;
+    // a few steps the game asked for (walkTo): the player's own stick takes over; a hit cancels them
+    // (STEER-HOLD, INSTALL-69 P115: a key tapped while he steps up to the garden tap — a turn to line up, a nudge — threw
+    //  the use away with nothing said, and E "did nothing" for 40 s: a move held STEER_TAKE s (a deliberate walk away)
+    //  takes over; a tap shorter than that is ignored while the game's few steps play)
+    if (this.steer) {
+      this.steerPush = Math.hypot(mv.x, mv.y) > 0.3 ? (this.steerPush || 0) + dt : 0;
+      if (this.steerPush >= STEER_TAKE || this.hurtT > 0.15 || wheel) { this.steer = null; this.steerPush = 0; }
+    } else this.steerPush = 0;
 
     if (!locked && this.steer) {
       const s = this.steerStep(dt);
