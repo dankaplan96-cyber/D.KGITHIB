@@ -68,6 +68,6 @@ Status: the maturity verdict is PENDING (lba3-maturity is still running on the f
 
 ## Verdicts (separate, same build)
 - **Player maturity:** PENDING (lba3-maturity).
-- **Release readiness:** **NO-GO** for a public release (D-1, D-2, P-1). For private testers only, once the user settles D-1/D-2, the rest is NOT VERIFIED rather than NO-GO.
+- **Release readiness:** **NO-GO** for a public release (D-1, D-2, P-1). **The user's decision (24.11): the exe is for private testers only.** D-2 settled the same day: the data stays and the title disclaimer now names the original layouts. For private testers the verdict is **NOT VERIFIED**: P-1 (Windows installer, install and uninstall on the user's machine) is still open, and D-1 (branding) remains an open owner question that does not block this audience.
 
 A technical pass cannot overrule an unfinished adventure.
