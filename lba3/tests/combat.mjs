@@ -632,6 +632,7 @@ r = await ev(async () => {
     C.only([id], [6194, 8], Math.PI);
     const e = C.put(id, 6194, 8 - d, 0);
     e.state = calmState[id]; e.stateT = 0; e.hp = e.maxHp; e.noticeT = 0; e.suspicion = 0; e.calmT = 0; e.coolT = 0; e.hurtT = 0; e._nm && (e._nm.q = 0, e._nm.eT = 0);
+    e.home = { x: e.pos.x, z: e.pos.z };   // (its post here: a chase that took it 16 m from its arena post sent it back, a notice undone)
     if (e.patrol) { e.patrol = [[e.pos.x, e.pos.z]]; e.wp = 0; e.waitT = 1e9; }
     return e;
   };

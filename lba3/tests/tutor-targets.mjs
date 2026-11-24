@@ -194,7 +194,7 @@ check('R3.3 the pipe walked round (no jump): he goes on, the yard let go with on
 // a save as the build before TUT-MYSTERY wrote it: the steps' flags mid-yard, the barrels already hit (no barrel state saved)
 await ev(() => {
   const s0 = game.snapshot();
-  for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen']) delete s0.flags[k];
+  for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen', 'pr_dino']) delete s0.flags[k];   // (pr_dino: BEHAVIOUR-MODES, not in an older save)
   Object.assign(s0.flags, { pr_v2: 1, pr_tut2: 1, pr_kettle: true, pr_yard: true, pr_barrel: true });
   s0.tut = { v: 1, done: ['move', 'inventory', 'talk', 'use', 'advance', 'ball'], gone: [] };
   s0.room = null; s0.hero.x = -44.8; s0.hero.z = 74.5; s0.hero.hasBall = true;

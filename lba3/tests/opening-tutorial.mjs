@@ -288,7 +288,7 @@ const kids = await ev(() => {
   return { t1, t2, overheard: !!game.flags.overheard, done: ['discreet', 'normal'].filter((x) => game.tutorial.done.has(x)) };
 });
 check('B10 the kids brush him off: Switch to Discreet; overheard, then Back to Normal; both learned', /Discreet/.test(kids.t1 || '') && kids.overheard && /Normal/.test(kids.t2 || '') && kids.done.length === 2, kids);
-const kick = await ev(() => { const f = game.flags, W = game.world.well; f.key = true; f.pr_lidStuck = true; game.hero.hasKey = true; game.story.cur.setLid('stuck'); P.go(W.x + 2.4, W.z + 0.4, { tol: 0.5 }); P.face(W.x, W.z); game.step(1.2); const t1 = TT.tip();   // (facing the well: Gilbert by it may have the prompt otherwise, his place depends on the time) P.tap('F3', 0.2); game.step(1.0); const t2 = TT.tip(); return { t1, t2 }; });
+const kick = await ev(() => { const f = game.flags, W = game.world.well; f.key = true; f.pr_lidStuck = true; game.hero.hasKey = true; game.story.cur.setLid('stuck'); P.go(W.x + 2.4, W.z + 0.4, { tol: 0.5 }); P.face(W.x, W.z); game.step(1.2); const t1 = TT.tip(); P.tap('F3', 0.2); game.step(1.0); const t2 = TT.tip(); return { t1, t2 }; });   // (facing the well: Gilbert by it may have the prompt otherwise; his place depends on the time)
 check('B11 (reproduced: flags set) at the stuck lid: Switch to Aggressive, then the kick\'s key', /Aggressive/.test(kick.t1 || '') && /Kick the lid/.test(kick.t2 || ''), kick);
 
 // ============================================================ C: saves
