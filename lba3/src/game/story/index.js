@@ -449,10 +449,14 @@ export class Story {
     const c = this.game.physics.near(p.x, p.z).find((k) => k.type === 'box' && Math.abs(k.x - p.x) < 0.01 && Math.abs(k.z - p.z) < 0.01);
     if (c) c.enabled = show;
   }
-  update(dt) { this.citadelGlider(); this.isles.portLook(); this.stepMoves(dt); this.cur.update(dt); this._dt?.ambient(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); this.depth.update(dt); this.ferry.update(dt); this.oneplace.update(dt); this.offwall.update(dt); this.tyl.update(dt); this.qc.update(dt); }
+  update(dt) {
+    // (END-RESUME, base.js: once, at the first frame of play after a load — Story.update runs only in play, never in a fade)
+    if (this.endCheck) { this.endCheck = false; const c = this.cur; if (c?.endSaved() && !this.game.cine && !this.game.cutscene) { c.resumeEnd(); return; } }
+    this.citadelGlider(); this.isles.portLook(); this.stepMoves(dt); this.cur.update(dt); this._dt?.ambient(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); this.depth.update(dt); this.ferry.update(dt); this.oneplace.update(dt); this.offwall.update(dt); this.tyl.update(dt); this.qc.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); this.oneplace.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
+    this.endCheck = true;   // (END-RESUME, base.js: a load; the first frame of play looks whether its chapter's end was saved)
     for (let i = 0; i < this.chapters.length; i++) this.chapters[i].applyFlags(i < this.index, i === this.index);
     this.life.applyFlags();
     this.workshop.applyFlags();

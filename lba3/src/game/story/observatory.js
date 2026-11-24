@@ -451,13 +451,18 @@ export class Observatory extends ChapterBase {
     const g = this.game, f = this.f;
     if (f.c7_done) return;
     f.c7_done = true;
-    this.chain([['hesk', 'c7_hesk_go']], () => {
-      g.save(false);
-      // WC-1: the glider's film (TRAVEL-1): Hesk's glider runs off the terrace's lip by the monastery's gate and is seen coming
-      // down on Citadel's glider field on the plateau, where chapter 8 starts (Hesk flies on south: he stays aboard)
-      storyJourney(g, { from: this.slopeSpot(), to: 'citadel_glider', mode: 'glider', aboard: [this.npc('hesk')] },
-        (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then));
-    });
+    this.chain([['hesk', 'c7_hesk_go']], () => { g.save(false); this.fly(); });
+  }
+  // (END-RESUME, base.js: a save made at the glider's film — Save & quit during it — flies again after the load; leave()
+  //  above returns once c7_done is set, so it was a dead end: no prompt, no trigger)
+  endSaved() { return !!this.f.c7_done; }
+  resumeEnd() { this.fly(); }
+  fly() {
+    const g = this.game;
+    // WC-1: the glider's film (TRAVEL-1): Hesk's glider runs off the terrace's lip by the monastery's gate and is seen coming
+    // down on Citadel's glider field on the plateau, where chapter 8 starts (Hesk flies on south: he stays aboard)
+    storyJourney(g, { from: this.slopeSpot(), to: 'citadel_glider', mode: 'glider', aboard: [this.npc('hesk')] },
+      (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then));
   }
   // the monks' slope: the glider stands on the terrace's lip beside the monastery's gate, its nose over the drop to Lhar
   // (a hill to jump from, as Hesk wanted); watched from by the gate

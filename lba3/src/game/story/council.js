@@ -313,6 +313,8 @@ export class Council extends ChapterBase {
       });
     });
   }
+  // (END-RESUME, base.js: the end saved, the next chapter not begun: on to it after a load)
+  endSaved() { return !!this.f.c9_vote && !this.thread.on; }
   update(dt) {
     const g = this.game;
     if (!this.isCur()) return;
