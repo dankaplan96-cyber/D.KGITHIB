@@ -34,7 +34,8 @@ const SHOTS = [
   ['16-sendell-lamp-close', { room: 'c3sendell', cam: { p: [-5.6, 2.9, 0.5], l: [-7.2, 2.6, 0], fov: 40 } }],
 ];
 const stats = {};
-for (const [name, s] of SHOTS) {
+for (const [name, s0] of SHOTS) {
+  const s = { ...s0, brk: !!process.env.BREAK };
   if (ONLY && !ONLY.includes(name)) continue;
   try {
     const r = await ev((s) => {
@@ -66,7 +67,7 @@ for (const [name, s] of SHOTS) {
       const R3 = G.renderer.renderer, orig = R3.renderBufferDirect.bind(R3), n = { main: 0, shadow: 0, crystalMain: 0 };
       R3.renderBufferDirect = (cam, scene, geo, mat, obj, grp) => {
         if (scene) n.main++; else n.shadow++;
-        if (scene && mat.userData?.crystal) n.crystalMain++;
+        if (scene && mat.userData?.crystal) { n.crystalMain++; if (s.brk) { const k = mat.type + '#' + (mat.color?.getHexString() || '') + (mat.vertexColors ? '+vc' : '') + ' ' + obj.type + (obj.isBatchedMesh ? '' : ' tris' + ((geo.index ? geo.index.count : geo.attributes.position.count) / 3)); (n.brk ||= {})[k] = (n.brk[k] || 0) + 1; } }
         return orig(cam, scene, geo, mat, obj, grp);
       };
       G.renderer.render();
