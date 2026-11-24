@@ -65,6 +65,16 @@ class Vector:
     def length(self):
         return _r(math.sqrt(sum(a * a for a in self._v)))
 
+    def lerp(self, o, t):   # (Blender's Vector.lerp: self + (o - self)·t; HANDS-2: cast_poly.py's sleeves use it)
+        return Vector(a + (b - a) * t for a, b in zip(self._v, o))
+
+    @property
+    def length_squared(self):
+        return _r(sum(a * a for a in self._v))
+
+    def normalize(self):   # (in place, as Blender's)
+        self._v = list(self.normalized()._v)
+
     def normalized(self):
         n = math.sqrt(sum(a * a for a in self._v))
         return Vector(a / n for a in self._v) if n > 0 else Vector(self._v)

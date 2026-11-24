@@ -574,5 +574,8 @@ class Builder:
                 ob = bpy.data.objects.new(self.name + '_mouth', me)
                 self.coll.objects.link(ob)
                 ob.parent = self.arm
+        # HANDS-2: every model's hands rebuilt as hands (tools/blender/handpass.py; HANDS2_OLD=1 keeps the ones built above)
+        from handpass import apply as hands2
+        hands2(out, self.name)
         json.dump(out, open(path, 'w'), separators=(',', ':'))
         return out['tris']

@@ -1751,6 +1751,8 @@ for piv, poly, mtilt in MOUTHS:
     ob.parent_bone = 'head'
     ob.matrix_world = Matrix.Identity(4)
 
+from handpass import apply as hands2   # (HANDS-2: the fist rebuilt as an open, relaxed hand; HANDS2_OLD=1 keeps the fist)
+hands2(out, 'twinsen')
 json.dump(out, open(OUT, 'w'), separators=(',', ':'))
 print('parts', PART_TRIS)
 print('tris', out['tris'], 'verts', len(out['pos']) // 3, 'bones', out['bones'])

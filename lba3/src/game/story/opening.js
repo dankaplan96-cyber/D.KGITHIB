@@ -1161,6 +1161,11 @@ export function playOpening(story, cut = openingCut()) {
   atN(13.55, () => tw.rig.setFace('pleased', 0.6, 2.4));
   atN(14.15, () => look(tw, eyesOf(ar)));
   atN(14.9, () => look(tw, bookMid()));
+  // (HANDS-2, the user's pick 24.11: the lamp under repair stood between this shot's camera and his face, its green shade a
+  //  shape in the frame's corner for the whole 2.8 s: a film cheat, it is off the table for this shot only, back for the
+  //  next one and the mending; finish() puts it back if the film is skipped here)
+  atN(13.4, () => { TB.lamp.body.visible = TB.lamp.screw.visible = false; });
+  atN(16.2, () => { TB.lamp.body.visible = TB.lamp.screw.visible = true; });
   // the camera: over his right shoulder (book-local), easing in a little over the two spreads; his face from across the
   // table; back over the book and down onto the last page until its drawing fills the frame
   // (from above his right shoulder, not in his way: the book's pages face him, so this is the one side they read from)
@@ -1329,7 +1334,7 @@ export function playOpening(story, cut = openingCut()) {
       if (g.room !== R) g.enterRoom('house', twEnd, true, true);
       cine.focus = null;
       rest(TB.screwdriver, R.group, sdRest);
-      rest(BT.mast, R.group, mastFitted); setScrew(SCREW_END);
+      rest(BT.mast, R.group, mastFitted); setScrew(SCREW_END); TB.lamp.body.visible = TB.lamp.screw.visible = true;
       handle.rotation.y = 0; water(0); steam.forEach((s) => (s.visible = false));
       L.pose(1); L.shake(0); W.boatSurge = 0; WR.vein.power = 0;
       W.station.setActive(stationWas);

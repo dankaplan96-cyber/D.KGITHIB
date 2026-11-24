@@ -521,10 +521,14 @@ function buildHouse(scene, physics) {
   P.jar(k, tX + 0.15, 0.78, tZ + 0.28, 'vase', '#3a6fb0', 0.9);
   // the lamp under repair: its base, the shade set aside, a cloth with screws, a spare bulb
   const lmX = tX - 0.05, lmZ = tZ - 0.16;
-  k.at(lmX, 0.78, lmZ, 0.4, () => P.deskLamp(k, { shade: '#2f8a4a' }));
-  // (NO-AIR, the user 10.11: Twinsen "mended the lamp" with a screwdriver held in the air above it. What he mends: the
-  //  stem's loose collar, held by one screw on the side he stands at; the opening's screwdriver turns it in: opening.js)
-  k.add(cyl(0.022, 0.024, 0.05, 10), MAT.brass(), lmX, 0.78 + 0.2, lmZ);
+  // (HANDS-2, the user's pick 24.11: the lamp is its own group, not folded into the room's batches, so a shot can hide it:
+  //  the opening's close-up of Twinsen over his notebook had its green shade in the frame's corner for 2.8 s. +2 draws, here)
+  const lampBody = new THREE.Group(); lampBody.name = 'lampBody'; lampBody.userData.keep = true;
+  { const lk = new Kit(lampBody); lk.at(lmX, 0.78, lmZ, 0.4, () => P.deskLamp(lk, { shade: '#2f8a4a' }));
+    // (NO-AIR, the user 10.11: Twinsen "mended the lamp" with a screwdriver held in the air above it. What he mends: the
+    //  stem's loose collar, held by one screw on the side he stands at; the opening's screwdriver turns it in: opening.js)
+    lk.add(cyl(0.022, 0.024, 0.05, 10), MAT.brass(), lmX, 0.78 + 0.2, lmZ); lk.flush(); }
+  B.group.add(lampBody);
   const lampScrew = new THREE.Group(); lampScrew.name = 'lampScrew';
   { const sn = new THREE.Vector3(-0.75, 0, -0.66).normalize(), sat = new THREE.Vector3(lmX + sn.x * 0.022, 0.78 + 0.2, lmZ + sn.z * 0.022);
     const hd = new THREE.Mesh(cyl(0.0085, 0.0085, 0.012, 6), MAT.steel()); hd.rotation.x = Math.PI / 2; hd.position.z = 0.006; lampScrew.add(hd);
@@ -548,7 +552,7 @@ function buildHouse(scene, physics) {
   screwdriver.position.set(sdRest.x, sdRest.y, sdRest.z); screwdriver.rotation.y = sdRest.ry;
   B.group.add(screwdriver);
   R.table = { screwdriver, sdRest, ...B.world(tX, tZ), top: 0.78,
-    lamp: { screw: lampScrew, at: lampScrew.userData.at, n: lampScrew.userData.n, head: 0.0135, out: 0.006, shade: new THREE.Vector3(lmX + Math.sin(0.4) * -0.08, 0.78 + 0.415, lmZ + Math.cos(0.4) * -0.08), shadeDir: new THREE.Vector3(Math.sin(0.4), 0, Math.cos(0.4)) } };
+    lamp: { body: lampBody, screw: lampScrew, at: lampScrew.userData.at, n: lampScrew.userData.n, head: 0.0135, out: 0.006, shade: new THREE.Vector3(lmX + Math.sin(0.4) * -0.08, 0.78 + 0.415, lmZ + Math.cos(0.4) * -0.08), shadeDir: new THREE.Vector3(Math.sin(0.4), 0, Math.cos(0.4)) } };
   k.add(soft({ key: 'bread', prims: [{ type: 'ell', c: [0, 0.05, 0], r: [0.16, 0.07, 0.09], group: 'b', mat: 'b', wobble: (x, y, z) => (y > 0.08 ? Math.abs(Math.sin(x * 40)) * -0.008 : 0) }], groups: { b: 0.02 }, colors: { b: '#c88a40' }, paint: (p, m, c) => { if (p.y < 0.03) c.multiplyScalar(0.8); }, bounds: { min: [-0.2, -0.02, -0.12], max: [0.2, 0.14, 0.12] }, cell: 0.015 }), softMat, tX + 0.45, 0.78, tZ - 0.15, 0.4);
   for (const [mx, mz] of [[0.0, 0.25], [0.55, 0.2]]) k.add(lathe([[0.001, 0], [0.04, 0], [0.045, 0.09], [0.04, 0.09], [0.035, 0.01], [0.001, 0.01]], 10), MAT.flat('#e8d8b0', 0.4), tX + mx, 0.78, tZ + mz);
   k.at(tX, 0, tZ, 0, () => P.hangingLamp(k, 2.15, H + 0.2, { shade: '#3f7a5a' }));
