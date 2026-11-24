@@ -311,6 +311,7 @@ export class ZeelichLife extends ChapterBase {
     switch (id) {
       case 'zmole2':   // Mother Snuff
         if (f.zl_done && !f.zl_paid) {
+          if (this.ownFirst(npc)) return true;   // (TALK-ORDER: waits behind the chapter's own talk, base.js pendingTalk)
           const b = f.zl_crate === 'broken';   // (the ball way: the crate fell on her grass, nobody was on her roof)
           return c([['zmole2', !f.zl_ask ? (b ? 'zl_snuff_paynoask_b' : 'zl_snuff_paynoask') : b ? 'zl_snuff_pay_b' : 'zl_snuff_pay']], () => {
             f.zl_paid = true;
@@ -325,7 +326,7 @@ export class ZeelichLife extends ChapterBase {
         // asked already: what the street talks about now, then the flue
         return c([['zmole2', 'zl_snuff_i_' + ph], ['zmole2', 'zl_snuff_wait']]);
       case 'zbee1':    // Bzizz
-        if (f.zl_done && !f.zl_bzThanks) return c([['zbee1', f.zl_crate === 'broken' ? 'zl_bz_broken' : 'zl_bz_shoved']], () => { f.zl_bzThanks = true; g.save(false); });
+        if (f.zl_done && !f.zl_bzThanks) return this.ownFirst(npc) || c([['zbee1', f.zl_crate === 'broken' ? 'zl_bz_broken' : 'zl_bz_shoved']], () => { f.zl_bzThanks = true; g.save(false); });
         if (f.zl_done) return one('zbee1', pk('zl_bz_after'));
         if (!f.zl_bz) return c([['zbee1', 'zl_bz_1'], ['zbee1', 'zl_bz_2']], () => { f.zl_bz = true; g.save(false); });
         return c([['zbee1', 'zl_bz_i_' + (ph === 'post' ? 'pre' : ph)], ['zbee1', 'zl_bz_wait']]);

@@ -330,6 +330,7 @@ export class SewerLife extends ChapterBase {
     const topUp = () => { if (h.mp < h.mpMax) { h.mp = h.mpMax; g.audio.play('heal'); g.hud.toast('wz_toast_magic'); } };   // (as always: prologue.js baseTalk)
     // S-1: Bersimon (after the arsenal's pearl, which is asked first) sends him down to look; S-5: and explains the globe
     if (id === 'bersimon' && !f.sw_ber) {
+      if (this.ownFirst(npc)) return true;   // (TALK-ORDER: waits behind the chapter's own talk, base.js pendingTalk)
       topUp();
       this.chain([['bersimon', 'sw_ber1'], ['bersimon', 'sw_ber2'], ['hero', 'sw_tw_ber'], ['bersimon', 'sw_ber3']], () => {
         f.sw_ber = true; f.sw_trap = true; g.rooms.wtent?.trap?.setOpen(true); g.audio.play('clunk');

@@ -34,6 +34,13 @@ export class ChapterBase {
   interactables() {}
   interact() { return false; }
   talk() { return false; }
+  // TALK-ORDER (the user, 24.11): this chapter's own talk with the person `id` that moves the chapter on, still to be
+  // had (its talk() would play it now). A repeat or idle line is not pending. The side stories' gifts, thank-yous and
+  // payments wait behind it for the next talk (ownFirst, Story.ownTalkFirst). A chapter that gives a gift-giver a story
+  // talk declares it here (the givers: kit2b, kit2, arsenal, kesh, zeelife, islandpeople, shops, purposes, workshop, sewers).
+  pendingTalk() { return false; }
+  // (a giver's hook, before its gift plays: true = the chapter's own pending talk played instead; the gift waits)
+  ownFirst(npc) { return !!this.story.ownTalkFirst?.(npc); }
   ballHit() { return false; }
   ballTargets() { return []; }
   update() {}

@@ -153,6 +153,7 @@ export class Purposes extends ChapterBase {
       case 'keraooc': {
         // the pupils' friend, ward already learned: her treatment fills his magic too
         if (!f.pp_lamp || !A.protect) return false;
+        if (this.ownFirst(npc)) return true;   // (TALK-ORDER: waits behind the chapter's own talk, base.js pendingTalk)
         const h = g.hero;
         h.hp = h.maxHp; h.mp = h.mpMax; g.audio.play('heal'); g.hud.toast('wz_toast_magic'); g.hud.stats?.(h);
         return c([['keraooc', 'pp_ker_thanks']]);

@@ -75,7 +75,7 @@ export class WorkshopLife extends ChapterBase {
       this.chain([['baldino', 'w_bal_ask1'], ['baldino', 'w_bal_ask2']], () => { f.w_ask = true; g.save(false); });
       return true;
     }
-    if (f.w_pair && !f.w_paid) { this.pay(npc); return true; }
+    if (f.w_pair && !f.w_paid) { if (!this.ownFirst(npc)) this.pay(npc); return true; }   // (TALK-ORDER: waits behind the chapter's own talk, base.js pendingTalk)
     const i = f.w_n = ((f.w_n ?? -1) + 1) % YEARS;
     this.chain([['baldino', f.c2_key ? 'c2_bal_after' : 'c2_bal_wait'], ['baldino', 'w_bal_y' + i]]);
     return true;

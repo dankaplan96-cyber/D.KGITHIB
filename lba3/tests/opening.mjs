@@ -178,6 +178,7 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
     return n;
   };
   let lastCap = '', overlaySeen = false;
+  const title = { top: 0, withSub: 0, at: null };   // (TALK-ORDER task 2: the title and a subtitle never up together)
   const feetPrev = {}, footJumps = [];
   // OPEN-FILM: each line's speaker moves their mouth (the harbour's two included); no line plays the rig's looping talk
   // gesture; the aerial move (0-13 s) never stops; each footstep heard is a foot coming down (Zoé's walks)
@@ -330,12 +331,13 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
     const sub = document.querySelector('#cine-sub').classList.contains('show') ? document.querySelector('#cine-sub').textContent : '';
     if (sub && sub !== lastSub) subsAt.push(sub);
     lastSub = sub;
+    { const op = +getComputedStyle(document.querySelector('#cine-title')).opacity; title.top = Math.max(title.top, op); if (sub && op > title.withSub) { title.withSub = op; title.at = +c.t.toFixed(2); } }
   }
   const subs = window.__cine.def.subs;
   G.audio.play = play0;
   const offbeat = stepsHeard.filter((s) => !footDown.some((d) => Math.abs(s - d) <= 0.1));
   const paperOk = NBC ? NBC.turns.every((t0) => paper.some((p) => Math.abs(p - t0) < 0.05) && paper.some((p) => Math.abs(p - (t0 + NBC.turnLen - 0.08)) < 0.05)) : true;
-  return { nohands, turn, paper: { at: paper, ok: paperOk }, capsAt, overlaySeen, NA, mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
+  return { nohands, turn, paper: { at: paper, ok: paperOk }, capsAt, overlaySeen, title, NA, mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
 }, [polySizes, NBK, D2K]);
 check('the scene moves to the house; still nothing saved mid-scene', watch.mid?.room === 'house' && !watch.mid.saved, watch.mid);
 check('every character on screen is from the poly cast (assets/poly)', watch.notPoly.length === 0 && ['twinsen', 'zoe', 'arthur', 'worker'].every((n) => watch.seen.includes(n)), { notPoly: watch.notPoly, seen: watch.seen });
@@ -345,6 +347,7 @@ check('nobody walks through anybody else while the picture is up', watch.bumps.l
 check("R5: Zoé's hand is on the tap's handle every frame it turns (within 2 cm)", watch.hand.on >= 50 && watch.hand.off.length === 0, watch.hand);
 check('R5: her fingers are in the stream under the spout', watch.hand.wet >= 45 && watch.hand.dry.length === 0, watch.hand);
 check("R5: standing feet don't jump (more than 9 cm in a frame) while the picture is up", watch.footJumps.length === 0, watch.footJumps);
+check('the title is shown, and never while a subtitle is up (on the scene clock; maturity saw both at 25 s)', watch.title.top > 0.99 && watch.title.withSub < 0.01, watch.title);
 check('subtitles with the speaker, in order', watch.subsAt.length === watch.lines && watch.subsAt.some((x) => x.startsWith('Zoé') && x.includes("The tap's stopped again")) && watch.subsAt[0].startsWith('Resident'), watch.subsAt);
 check("every spoken line babbles in its speaker's voice", watch.ctx === 'running' && watch.voiced.every(([vk, n]) => vk && n >= 2), watch.voiced);
 check("OPEN-FILM: every line's speaker moves their mouth with it (the worker and the resident too)", watch.mouthBy.every(([vk, n]) => n >= 4), watch.mouthBy);

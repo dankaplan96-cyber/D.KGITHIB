@@ -509,18 +509,22 @@ export class Kit2b extends ChapterBase {
     const g = this.game, f = this.f, A = this.A, id = npc.def.id;
     if (!this.canUse()) return false;
     const c = (lines, done) => { this.chain(lines, done); return true; };
+    // (TALK-ORDER: each gift waits behind the chapter's own talk with the giver, base.js pendingTalk)
     // Ilka, her notebook back: her fork; then what the chapter has her say
     if (id === 'ilka' && f.c4_notebook && !A.fork && this.at('dig')) {
+      if (this.ownFirst(npc)) return true;
       return c([['ilka', 'e2b_ilka_f1'], ['ilka', 'e2b_ilka_f2'], ['ilka', 'e2b_ilka_f3'], ['hero', 'e2b_tw_f1'], ['ilka', 'e2b_ilka_f4'], ['ilka', 'e2b_ilka_f5']],
         () => this.gain('fork', 'it_fork', 'e2b_toast_forkhow', () => { if (g.state === 'play' && npc.present) this.story.talk(npc); }));
     }
     // Tashi, Lhar's smith, once Yorna has told of the frozen winch: the heat flask
     if (id === 'lhar1' && f.c6_yorna && !A.heatflask && this.at('pass')) {
+      if (this.ownFirst(npc)) return true;
       return c([['lhar1', 'e2b_tashi_1'], ['lhar1', 'e2b_tashi_2'], ['lhar1', 'e2b_tashi_3'], ['hero', 'e2b_tw_tashi'], ['lhar1', 'e2b_tashi_4']],
         () => this.gain('heatflask', 'it_heatflask', 'e2b_toast_flaskhow'));
     }
     // Nara after her stamp (chapter 9 on), the line never bought: her gift
     if (id === 'nara' && f.c9_nara && !A.line && this.at('council')) {
+      if (this.ownFirst(npc)) return true;
       return c([['nara', 'e2b_nara_g1'], ['nara', 'e2b_nara_g2']], () => { f.e2b_tip = true; this.gainLine(); });
     }
     return false;

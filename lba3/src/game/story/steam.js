@@ -237,6 +237,8 @@ export class Steam extends ChapterBase {
     return { id: 'c5_hangar', region: 'desert', mode: 'glider', craft: 'glider', x: r.x + ROOF.x, z: r.z + ROOF.z, a: ROOF.a, landing: { x: r.x + ROOF.lx, z: r.z + ROOF.lz, a: Math.PI } };
   }
 
+  // (TALK-ORDER, base.js: Ilka's radio call once the vent is open, before her notebook's fork)
+  pendingTalk(id) { const f = this.f; return this.isCur() && id === 'ilka' && !!f.c5_vent && !f.c5_radio; }
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id, h = g.hero;
     if (!this.isCur()) return false;

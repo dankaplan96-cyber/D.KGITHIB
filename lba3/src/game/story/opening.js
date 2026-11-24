@@ -344,6 +344,17 @@ export function playOpening(story, cut = openingCut()) {
     tracks.push({ t0: newOf(t0), t1: newEnd(t1), fn: (k, n, dt) => fn(k >= 1 ? 1 : Math.min(1, Math.max(0, (oldOf(n) - t0) / ((t1 - t0) || 1))), oldOf(n), dt) });
   };
   const trackN = (t0, t1, fn) => tracks.push({ t0, t1, fn });
+  // the title "LBA3 / The Awakening" up from n0 to n1 on the scene's own clock, as the subtitles are, with the stylesheet's
+  // 1.4 s ease in and out (maturity: in the notebook cut the stylesheet's fade ran on the wall clock, and whenever the scene
+  // ran ahead of it — a stepped capture, a stalled frame caught up — the title was still up as the first line came on at
+  // 24.2 s. On the scene's clock it is gone at 22.6, every time; at normal speed nothing changes)
+  const TITLE_FADE = 1.4;
+  const titleUp = (n0, n1) => trackN(n0, n1 + TITLE_FADE, (k, n) => {
+    const el = document.querySelector('#cine-title'); if (!el) return;
+    el.style.transition = 'none';
+    if (k >= 1) { el.classList.remove('show'); el.style.opacity = '0'; return; }   // (held at 0 to the end: finish() clears it)
+    el.style.opacity = String(n < n1 ? sm((n - n0) / TITLE_FADE) : 1 - sm((n - n1) / TITLE_FADE));
+  });
   // walk along points at a steady pace; the rig is told the real speed so the feet don't slide
   // (R5: `acc` / `dec`: seconds to get up to speed and to slow to a stop, so a walk starts from a standing weight
   // shift and settles instead of starting and stopping at full pace; each adds half its time to the walk)
@@ -947,8 +958,7 @@ export function playOpening(story, cut = openingCut()) {
     put(tw, twEnd.x, twEnd.z, twEndA + 0.6, 'idle'); look(tw, null);
     loop('lap', { quiet: true });
   });
-  at(76.4, () => document.querySelector('#cine-title').classList.add('show'));
-  at(81.0, () => document.querySelector('#cine-title').classList.remove('show'));
+  if (newOf(76.4) != null) titleUp(newOf(76.4), newOf(81.0));   // (the classic film: after its last line, before the dip)
   at(81.25, () => fade(true));
   at(81.6, NBCUT ? () => {
     sfx('door');
@@ -1218,8 +1228,7 @@ export function playOpening(story, cut = openingCut()) {
     overlay.style.opacity = String(n < NB_END ? Math.min(1, (n - OV0) / 0.2) : Math.max(0, 1 - sm((n - NB_END) / 1.3)));
   });
   // the title over the island
-  atN(18.2, () => document.querySelector('#cine-title').classList.add('show'));
-  atN(21.2, () => document.querySelector('#cine-title').classList.remove('show'));
+  titleUp(18.2, 21.2);   // (its fade out ends at 22.6, the first line at 24.2)
   // ...and at the island (old 8 s): the house hidden, the book put away; Twinsen to the lamp, the screwdriver in his hand
   at(8.0, () => {
     stopLoop('room');
@@ -1335,7 +1344,7 @@ export function playOpening(story, cut = openingCut()) {
       for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; if (a._plantLite != null) a.rig.plantLite = a._plantLite; if (a._contact) a.rig.contact = a._contact; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
-      document.querySelector('#cine-title').classList.remove('show');
+      { const ti = document.querySelector('#cine-title'); ti.classList.remove('show'); ti.style.transition = ti.style.opacity = ''; }   // (skipped mid-title)
       // the house as the player finds it
       if (g.room !== R) g.enterRoom('house', twEnd, true, true);
       cine.focus = null;

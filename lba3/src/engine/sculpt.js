@@ -266,7 +266,11 @@ function fnv(str) {
 export function fingerprint(def) {
   // UNSUFFIX: the published artifact bundles the modules into one file (tools/bundle-artifact.mjs), which renames
   // colliding top-level names to name$1; the sources never use that form, so stripping it keeps fingerprints equal.
-  const rep = (k, v) => (typeof v === 'function' ? unsuffix(v.toString()) : v);
+  // (TALK-ORDER task 3: makeSDF writes its scratch bounds p._c / p._r onto the primitives, and a body's arms share its
+  //  sleeves' sub-primitives (characters.js splitArms). The arms' fingerprint then depended on whether the body had been
+  //  sculpted first: at bake time it had, at a load from the bake it had not, so every sculpted body's arms (Twinsen's
+  //  sculpt, Tessa, the dockers) were sculpted again at every start. `_` fields are never design: left out.)
+  const rep = (k, v) => (k[0] === '_' ? undefined : typeof v === 'function' ? unsuffix(v.toString()) : v);
   return fnv(JSON.stringify([def.prims, def.groups, def.joinK, def.colors, def.bounds, def.cell, def.rigid, def.hard, def.bones, def.chains, def.bias, def.paint && unsuffix(def.paint.toString())], rep));
 }
 const BAKE = new Map();
