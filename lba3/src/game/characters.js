@@ -2124,26 +2124,118 @@ const zhLift = (p) => {
 };
 const ZH_BAND_BARE = { ...ZH_BAND, scalp: ZH_SKIN };
 const ZH_BAND_BIG = { ...ZH_BAND_BARE, ro: 0.014, rl: 0.019, off: 0.004, lift: 0.015 };
-function zoeBare(P, hb) {
+// ZOE-HEAD (the user, 24.11, on the bare scalp: "that's excellent, but her head shape is strange"; then "try to match the
+// shape of Twinsen's head"): with the hair gone her cranium read as a tall egg reaching far up and back. Twinsen's cranium
+// as built (assets/poly/twinsen.json, his skin above his eyes) is very nearly an ellipsoid (rms 0.3 mm): x semi-axis
+// 15.2 cm; in the side plane 13.9 cm along a line tipped 25° from straight down toward the back and 15.1 cm square to it;
+// its centre 1.4 cm above his eyes' pivot and 14.9 cm behind it. ZH_TW holds it. Her new cranium is that ellipsoid
+// scaled to her head (k: her eyes' spacing and eye-to-chin against his, 0.69 / 0.73 → 0.71; across, kx 0.69: she is
+// narrower) and placed by her eyes as his by his (her eye pivot + k × his offset). Her points move toward it along the
+// line from its centre by a weight that is 0 below a line round the head (above the brows in front, above the earrings
+// at the sides, down to the nape behind) and 1 a few centimetres above it, so the face, brows, lashes, earrings, neck
+// and body are not touched and the reshaped skull runs into the kept skin without a step. Behind and below, the target
+// keeps clear of the neck (a soft union with a cylinder round it), so the nape still covers the neck's top.
+// ?zoehead=twinsen (default) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison). The
+// lock and the tie move with the crown (zoeHair).
+const ZH_TW = { ax: 0.15192, a: [0.13867, 0.15100], ang: [-155.41, -65.41], off: [0.01433, -0.14902] };
+const ZOE_HEADS = { twinsen: { k: 0.71, kx: 0.69 }, round: { k: 0.77, kx: 0.69, dz: -0.008 } };
+export const ZOE_HEAD = (() => {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehead')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHead || ''; } catch { /* no storage */ }
+  s = String(s).trim().toLowerCase();
+  return s === 'current' || ZOE_HEADS[s] ? s : 'twinsen';
+})();
+// the band the weight rises over (y from, y to, m) by the angle round the head from the front (as the hairline's)
+// (the brows end at 50°, the earrings hang at 100–111° below 1.77 m; behind them it reaches down to the head's underside:
+//  the old egg's lower back goes too, no ledge under it)
+const ZHD_BAND = [[0, 1.866, 1.94], [50, 1.866, 1.935], [70, 1.835, 1.91], [90, 1.80, 1.88], [100, 1.785, 1.86], [118, 1.745, 1.85], [135, 1.68, 1.83], [155, 1.66, 1.81], [180, 1.66, 1.80]];
+const ZHD_NECK = { z: -0.03, r: 0.056, k: 0.03 };
+const zhdLerp = (th, j) => {
+  for (let i = 0; i + 1 < ZHD_BAND.length; i++) if (th <= ZHD_BAND[i + 1][0]) { const a = ZHD_BAND[i], b = ZHD_BAND[i + 1]; return a[j] + ((b[j] - a[j]) * (th - a[0])) / (b[0] - a[0]); }
+  return ZHD_BAND[ZHD_BAND.length - 1][j];
+};
+function zoeHeadShape(eye, S) {
+  const k = S.k, c = [0, eye[1] + k * ZH_TW.off[0], eye[2] + k * ZH_TW.off[1] + (S.dz || 0)];
+  const e = ZH_TW.ang.map((g) => [Math.cos((g * Math.PI) / 180), Math.sin((g * Math.PI) / 180)]), a = ZH_TW.a.map((x) => x * k), ax = ZH_TW.ax * S.kx;
+  const f = (p) => {
+    const th = (Math.atan2(Math.abs(p[0]), p[2] + 0.025) * 180) / Math.PI, w = sstep(zhdLerp(th, 1), zhdLerp(th, 2), p[1]);
+    if (w <= 0) return null;
+    const d = p.map((x, i) => x - c[i]), r = Math.hypot(...d), u = d.map((x) => x / r);
+    let rt = 1 / Math.sqrt((u[0] / ax) ** 2 + ((u[1] * e[0][0] + u[2] * e[0][1]) / a[0]) ** 2 + ((u[1] * e[1][0] + u[2] * e[1][1]) / a[1]) ** 2);
+    if (u[1] < 0) {   // (below the centre: not inside the cylinder round the neck, joined softly; never pushed out past
+      //  where it was or the ellipsoid: a line steeply down meets the cylinder far below)
+      const A = u[0] * u[0] + u[2] * u[2], oz = ZHD_NECK.z - c[2], B = -2 * u[2] * oz, C = oz * oz - ZHD_NECK.r ** 2;
+      const rn = A > 1e-6 ? (-B + Math.sqrt(Math.max(0, B * B - 4 * A * C))) / (2 * A) : 0;
+      const h = Math.min(1, Math.max(0, 0.5 + (0.5 * (rn - rt)) / ZHD_NECK.k));
+      rt = Math.min(rt * (1 - h) + rn * h + ZHD_NECK.k * h * (1 - h), Math.max(r, rt));
+    }
+    const rr = r + w * (rt - r);
+    return c.map((x, i) => x + u[i] * rr);
+  };
+  f.c = c;
+  return f;
+}
+// the lock (its spline's control points) moved as the skull right under its tie moved: the reshaped point nearest the line
+// from the new dome's centre through the tie gives the move, so the lock still rises from the tie on the crown, as far
+// out of the scalp as before, its shape above the tie as it was. Its root (under the scalp) is turned to point from the
+// tie toward the dome's centre, as far as before: on the rounder, shorter skull the old root would come out behind
+function zoeLockOnCrown(H, c, disp) {
+  const { pts } = H.points(), t = pts[1].toArray(), dt = t.map((x, i) => x - c[i]), lt = Math.hypot(...dt);
+  let best = null, bc = -2;
+  for (const [p, q] of disp) {
+    const d = p.map((x, i) => x - c[i]), cs = (d[0] * dt[0] + d[1] * dt[1] + d[2] * dt[2]) / (Math.hypot(...d) * lt);
+    if (cs > bc) { bc = cs; best = q.map((x, i) => x - p[i]); }
+  }
+  if (!best) return H;
+  const mv = new THREE.Vector3(...best);
+  const C = new THREE.Vector3(...c);
+  return { ...H, moved: mv, points: () => {
+    const o = H.points(), q = o.pts.map((p) => p.clone().add(mv));
+    q[0] = q[1].clone().addScaledVector(C.clone().sub(q[1]).normalize(), o.pts[0].distanceTo(o.pts[1]));
+    return { ...o, pts: q };
+  } };
+}
+function zoeBare(P, hb, shape = null) {
   const n = P.pos.length / 3, is = (v, c) => P.col[v * 3] === c[0] && P.col[v * 3 + 1] === c[1] && P.col[v * 3 + 2] === c[2];
   const scalp = (v) => { if (!is(v, ZH_HAIR) && !is(v, ZH_SKIN)) return false; let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k]; return w >= 0.99; };
   const key = (v) => `${P.pos[v * 3].toFixed(5)},${P.pos[v * 3 + 1].toFixed(5)},${P.pos[v * 3 + 2].toFixed(5)}`;
-  // the lift off: r' = r + lift(r) along the line from HC, solved for r (converges to 1e-10 m in a few steps)
+  // the lift off: r' = r + lift(r) along the line from HC, solved for r (converges to 1e-10 m in a few steps); then
+  // (ZOE-HEAD) the cranium reshaped. The moved points' keys are taken where they end up (the same place → the same move),
+  // so the normals below are made smooth over the new surface. (v154's bare skull took them where they started, which
+  // missed every moved point: its scalp kept the model's own normals. ?zoehead=current keeps that, as the user saw it.)
   const moved = new Set(), keys = new Set();
+  moved.disp = [];   // ([before, after] of each reshaped point: the lock follows the crown, zoeHair)
   for (let v = 0; v < n; v++) {
     if (!scalp(v)) continue;
-    const p = [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]];
-    if (zhLift(p) <= 0) continue;
-    keys.add(key(v));
-    const d = p.map((x, i) => x - ZH_HC[i]), rp = Math.hypot(...d), u = d.map((x) => x / rp);
-    let r = rp;
-    for (let it = 0; it < 8; it++) r = rp - zhLift(u.map((x, i) => ZH_HC[i] + x * r));
-    for (let i = 0; i < 3; i++) P.pos[v * 3 + i] = ZH_HC[i] + u[i] * r;
+    let p = [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]], m = false;
+    if (!shape && zhLift(p) > 0) keys.add(key(v));
+    if (zhLift(p) > 0) {
+      const d = p.map((x, i) => x - ZH_HC[i]), rp = Math.hypot(...d), u = d.map((x) => x / rp);
+      let r = rp;
+      for (let it = 0; it < 8; it++) r = rp - zhLift(u.map((x, i) => ZH_HC[i] + x * r));
+      p = ZH_HC.map((x, i) => x + u[i] * r); m = true;
+    }
+    const q = shape && shape(p);
+    if (q) { moved.disp.push([p, q]); p = q; m = true; }
+    if (!m) continue;
+    for (let i = 0; i < 3; i++) P.pos[v * 3 + i] = p[i];
     if (is(v, ZH_HAIR)) P.col.splice(v * 3, 3, ...ZH_SKIN);
     moved.add(v);
+    if (shape) keys.add(key(v));
   }
-  // smooth normals where it moved: area-weighted over every skin triangle of the head at those points
+  // smooth normals where it moved: area-weighted over every skin triangle of the head at those points. (ZOE-HEAD: and over
+  // the two rings of kept skin round them, so the kept skin's own normals meet the new ones without a line)
   const acc = new Map(), a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  for (let ring = 0; shape && ring < 2; ring++) {
+    const add = [];
+    for (let t = 0; t < n / 3; t++) {
+      const i = t * 3;
+      if (!scalp(i) || !scalp(i + 1) || !scalp(i + 2)) continue;
+      const ks = [key(i), key(i + 1), key(i + 2)];
+      if (ks.some((k) => keys.has(k))) add.push(...ks);
+    }
+    add.forEach((k) => keys.add(k));
+  }
   for (let t = 0; t < n / 3; t++) {
     const i = t * 3;
     if (!scalp(i) || !scalp(i + 1) || !scalp(i + 2)) continue;
@@ -2194,9 +2286,12 @@ function zoeHair(P0, H) {
   const ctx = { drop, weights: zhWeights };
   if (ZOE_SCALP === 'bare') {
     // (ZOE-HAIR-2: the skull bare first, so the tie is found on her skin; the moved points' indices past the dropped ponytail)
-    const moved = zoeBare(P, hb), keep = [];
+    // (ZOE-HEAD: the cranium reshaped in the same pass, ZOE_HEAD; the lock then moved as the skull under its tie moved)
+    const shape = ZOE_HEAD === 'current' ? null : zoeHeadShape(P.eyes[0].pivot, ZOE_HEADS[ZOE_HEAD]);
+    const moved = zoeBare(P, hb, shape), keep = [];
     let k = 0;
     for (let v = 0; v < n; v++) if (!drop.has(v)) { if (moved.has(v)) keep.push(k); k++; }
+    if (shape) H = zoeLockOnCrown(H, shape.c, moved.disp);
     swapHair(P, ctx, splineLock(ctx, true, H));
     hairBand(P, ctx, ZOE_BIGTIE ? ZH_BAND_BIG : ZH_BAND_BARE);
     zoeSeat(P, ctx, keep);
