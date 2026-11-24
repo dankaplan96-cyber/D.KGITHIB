@@ -161,7 +161,14 @@ export function buildCityDressing(root, physics, W) {
   for (const h of W.houses || []) {
     const d = h.door; if (!d || h.id === 'twinsen' || Math.hypot(d.x + 30.35, d.z - 75.3) < 1 || Math.hypot(d.x + 99.1, d.z - 31.55) < 1) continue;   // (not Twinsen's own, nor Zoé's spot by the east door, nor Nell's)
     const ry = h.ry ?? Math.atan2(d.x - h.x, d.z - h.z), nx = Math.sin(ry), nz = Math.cos(ry), ax = Math.cos(ry), az = -Math.sin(ry);
-    for (const s of [-1, 1]) tub(d.x + nx * 0.5 + ax * s * 1.65, d.z + nz * 0.5 + az * s * 1.65, seed++, s > 0 ? '#b8623a' : '#2f6a9a');
+    // (WALK-STOPS: not on a house's terrace, town.js P113: its landing, 1.5 m from the wall to the edge, is the way to the
+    //  door and along the front, and a tub anywhere on it closed that way — the shop's landing, Tibbo's counter and bench
+    //  cut off from the square, his bench stop on the tub itself)
+    for (const s of [-1, 1]) {
+      const x = d.x + nx * 0.5 + ax * s * 1.65, z = d.z + nz * 0.5 + az * s * 1.65;
+      if (h.terrace && Number.isFinite(W.terraceTop?.(x, z) ?? -Infinity)) { seed++; continue; }
+      tub(x, z, seed++, s > 0 ? '#b8623a' : '#2f6a9a');
+    }
   }
   // ---------------------------------------------------------------- the lane south from the square
   // a resting spot on the way down: against the south house's blank north wall, looking up the lane to the square, a bin at

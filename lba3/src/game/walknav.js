@@ -84,7 +84,9 @@ export class WalkNav {
       c.h = g;
       // (a low brick standing on land — a bench, a step-up crate, a planter's rim — is something to walk round, not over: the
       //  hero may climb it, a resident does not; a pier's planks over water, and a quay's floor, are the way)
-      const base = th >= WATER_FLOOR - 1 ? th : yref - 0.3;
+      // (WALK-STOPS: on a deck — a house's terrace at a raised level, town.js P113 — the deck is the land: its top is the
+      //  base, so it is neither a raised brick nor a low one underfoot; off it, its side is a low brick as before)
+      const base = gi.brick && this.deckAt(x, z, g) ? g : th >= WATER_FLOOR - 1 ? th : yref - 0.3;
       const minG = this.shores.length ? this.minGround(x, z) : MIN_GROUND;
       let ok = g >= minG && !(base >= minG && ((gi.brick && g - base > 0.3) || this.lowBrick(x, z, base))) && !P.blockedAt(x, z, g, this.safeR) && !P.steepAt(x, z, g + 0.05, MAX_SLOPE);
       if (ok) for (const d of this.keepOut) if (Math.hypot(x - d.x, z - d.z) < d.r) { ok = false; break; }
@@ -117,6 +119,11 @@ export class WalkNav {
       c.c = m;
     }
     return c;
+  }
+  // WALK-STOPS: a deck (a collider marked `deck`: a walked level on land, the houses' terraces) whose top is the ground g here
+  deckAt(x, z, g) {
+    for (const c of this.P.near(x, z)) if (c.enabled && c.deck && Math.abs(c.top - g) < 0.02 && this.P._inside(c, x, z, -0.05)) return true;
+    return false;
   }
   // a low solid within reach (a bench, a crate, a planter's rim: not tall enough to push anyone aside, tall enough to climb)
   lowBrick(x, z, base, r = 0.5) {

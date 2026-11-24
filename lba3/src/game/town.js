@@ -164,7 +164,9 @@ function buildTerrace(parent, physics, t) {
   const m = put(parent, geo, texMat('stone', 1, 1, '#d4cec4'), 0, 0, 0, t.ry);
   const cx = (t.x0 + t.x1) / 2, cz = (t.z0 + t.z1) / 2;
   m.position.set(t.x + t.c * cx + t.s * cz, (t.top + t.foot) / 2, t.z - t.s * cx + t.c * cz);
-  physics.add({ type: 'box', x: m.position.x, z: m.position.z, hw: wx / 2, hd: wz / 2, rot: t.ry, top: t.top, seeThrough: true });
+  // (WALK-STOPS: `deck` — a level walked on as the ground there: the residents' planner, walknav.js, takes its top for the
+  //  land on it, not a low brick to walk round; its sides to the street stay a kerb they walk round)
+  physics.add({ type: 'box', x: m.position.x, z: m.position.z, hw: wx / 2, hd: wz / 2, rot: t.ry, top: t.top, seeThrough: true, deck: true });
   return m;
 }
 // the houses beyond the square stand on level pads; those round it keep the town's own ground (world.js)
@@ -318,7 +320,7 @@ function heatPosts(parent, W, spots) {
   };
   const posts = [], hp = new THREE.Group(); parent.add(hp);
   for (const [x, z] of spots) {
-    const y = H(x, z) - 0.04;
+    const y = Math.max(H(x, z), W.terraceTop?.(x, z) ?? -Infinity) - 0.04;   // (WALK-STOPS: on a house's terrace, its top: P113 left the shop's post 0.4 m sunk in it)
     const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = posts.length * 1.7; g.scale.setScalar(1.3); hp.add(g);
     put(g, geo.base, teal, 0, 0.08, 0);
     put(g, geo.pipe, teal, 0, 0.66, 0);
