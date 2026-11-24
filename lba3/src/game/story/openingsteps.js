@@ -8,8 +8,17 @@
 //   yard    zoe      Talk to Zoé                                 talk, dialogue            her kettle (pr_kettle), the found box
 //           inv      Look at the Kettle Crystals in your inventory   the inventory key     (tut 'inventory')
 //           tap      Try the garden tap                          use with the hand         (pr_yard: hometap.js)
+//           dino     Sneak up to the sleeping Dino-Fly, pet him  Discreet, the hand key    (pr_dino: dinofly.js)
 //           barrels  Hit the barrels with the magic ball         the ball, a visible hit   (pr_barrel: prologue.js ballHit)
-//           pipe     Jump over the project's pipe                Athletic, a running jump  (pr_pipe: cleared, or three tries)
+//           pipe     Switch to Athletic, jump the project's pipe Athletic, a running jump  (pr_pipe: cleared, or three tries)
+//
+// BEHAVIOUR-MODES (P125, the user's pick 24.11, proposal 3): 'dino', a short step for Discreet. The Dino-Fly naps on the
+// yard's west lawn (dinofly.js DINO_AT: LBA2's own spot is outside the yard's edge); in Normal, Athletic or Aggressive he
+// hears Twinsen at 9 m and wakes; in Discreet he does not. Asleep, the hand key strokes him (pr_dino). Nothing fails and
+// nothing is timed: woken, he dozes off again 3 s after he last heard him, and Zoé says so once in a while
+// (t2_dino_woke). Petted early, it counts. On ?dino=lba2 (he naps on his shelf outside the yard) the step is left out.
+// The pipe step asks for the switch to Athletic in its goal: walked round after the switch, it ends as he leaves the yard
+// ("close enough"); walked round in another behaviour, the yard lets go as before (Zoé's one call).
 //
 // The current step is the first not done, so anything done early counts and is skipped. Each step: one goal line in the
 // tip panel (tutorial.js; always shown, Settings, Show control tips only hides its keys), a short line from Zoé over her
@@ -39,19 +48,22 @@ import * as THREE from 'three';
 import { t } from '../i18n.js';
 import '../text/opening.js';
 
-export const STEPS = ['ball', 'out', 'zoe', 'inv', 'tap', 'barrels', 'pipe'];
-export const YARD_STEPS = ['zoe', 'inv', 'tap', 'barrels', 'pipe'];
+export const STEPS = ['ball', 'out', 'zoe', 'inv', 'tap', 'dino', 'barrels', 'pipe'];
+export const YARD_STEPS = ['zoe', 'inv', 'tap', 'dino', 'barrels', 'pipe'];
 const LEASH = 15;          // m from the front door: the yard's edge while a yard step is open
 // the project's copper heat pipe along the lane's east side (tutorial.js PIPE, lanegate.js): 0.6 m high
 const PIPE = { x: -43.5, z0: 66.0, z1: 72.1 };
 const HOME = new Set(['house', 'cellar']);
 const TRIES = 3;           // jumps at the pipe before Zoé lets it go
+const DINO_NEAR = 6;       // m round the Dino-Fly that count as the yard while his step is open (he naps near its edge)
+const WOKE_AGAIN = 14;     // s at least between two of Zoé's "he heard you" 
 
 export class OpeningSteps {
   constructor(ch) { this.ch = ch; this.game = ch.game; this.reset(); }
   reset() {
     this.last = undefined; this.asked = new Set(); this.say = null; this.left = null;
     this.air = false; this.takeoff = 0; this.tries = 0; this.prevD = null;
+    this.woke = null; this.wokeSaid = -99;
     this.hideBubble();
   }
   get f() { return this.game.flags; }
@@ -60,6 +72,9 @@ export class OpeningSteps {
   door() { return this.game.world.houses[0].door; }
   fromDoor() { const d = this.door(), p = this.game.hero.pos; return Math.hypot(p.x - d.x, p.z - d.z); }
   inHouse() { return HOME.has(this.game.room?.id); }   // (the house and its cellar: P23)
+  // the Dino-Fly (dinofly.js: his pet entry, its state) and whether he naps inside the yard (else his step is left out)
+  dino() { return this.game.world?.pets?.find((p) => p.id === 'dinofly') || null; }
+  dinoInYard() { const p = this.dino(), d = this.door(); return !!p && Math.hypot(p.x - d.x, p.z - d.z) < LEASH - 2; }
 
   isDone(id) {
     const g = this.game, f = this.f;
@@ -69,6 +84,7 @@ export class OpeningSteps {
       case 'zoe': return !!f.pr_kettle;
       case 'inv': return g.tutorial.done.has('inventory');
       case 'tap': return !!f.pr_yard;
+      case 'dino': return !!f.pr_dino || !this.dinoInYard();
       case 'barrels': return !!f.pr_barrel;
       case 'pipe': return !!f.pr_pipe;
     }
@@ -109,6 +125,8 @@ export class OpeningSteps {
     switch (id) {
       case 'zoe': { const z = this.ch.npc('zoe'); return z?.present ? at(z.pos.x, z.pos.y, z.pos.z, 2.45, 0.6, 'zoe') : null; }
       case 'tap': { const Y = this.ch.home.parts.yard; return Y ? at(Y.x, Y.y, Y.z, 2.35, 0.45, 'tap') : null; }
+      // (over his back, a ring round him)
+      case 'dino': { const p = this.dino(); return p ? at(p.x, g.physics.groundAt(p.x, p.z), p.z, 2.6, 1.6, 'dino') : null; }
       // (TUT-MYSTERY: over the near barrel, the one in front of the joint; the hit still counts on either)
       case 'barrels': { const B = this.ch.home.parts.barrel, T = this.ch.barrels?.(); if (B && !B.aside) return at(B.x0, B.B.y, B.z0, 2.1, 0.6, 'barrels'); return T ? at(T.x, T.y - 0.55, T.z, 2.3, 1.1, 'barrels') : null; }
       // (the pipe is 6 m long: the marker stands on it level with him, so it points at the stretch he would jump)
@@ -132,6 +150,7 @@ export class OpeningSteps {
       //  is in the house) or the inventory (a key: the star over Zoé sent players back to her))
       case 'zoe': return z?.present ? [star(z.pos.x, z.pos.z, t('n_zoe'))] : [];
       case 'tap': return Y ? [star(Y.x, Y.z)] : [];
+      case 'dino': { const p = this.dino(); return p ? [star(p.x, p.z)] : []; }
       case 'barrels': return T ? [star(T.x, T.z)] : [];
       case 'pipe': return [star(PIPE.x, (PIPE.z0 + PIPE.z1) / 2)];
     }
@@ -178,9 +197,20 @@ export class OpeningSteps {
     // all five done: her last word, the well's objective and its star come back, the edge opens
     if (!cur && this.yardDone() && !g.room) { this.finish(); return; }
     if (this.say && (this.say.t -= dt) <= 0) { const k = this.say.key; this.say = null; this.speak(k); }
+    // the Dino-Fly's step: woken by Twinsen's steps, Zoé's gentle word (not on every waking, never as the step begins)
+    const S = cur === 'dino' ? this.dino()?.state : null;
+    if (!S) this.woke = null;
+    else if (this.woke == null) this.woke = S.woke;
+    else if (S.woke > this.woke) { this.woke = S.woke; if (!this.say && g.time - this.wokeSaid > WOKE_AGAIN) { this.wokeSaid = g.time; this.speak('t2_dino_woke', 4.2, true); } }
     // the yard's edge, walked across with a yard step open (TUT-MYSTERY: no call back, no walk back): the yard lets go,
-    // Zoé calls once with what matters next, and he goes on
-    if (d != null && !g.trans && cur && YARD_STEPS.includes(cur) && d > LEASH) this.leave(cur);
+    // Zoé calls once with what matters next, and he goes on. (BEHAVIOUR-MODES: round the Dino-Fly is still the yard
+    // while his step is open; the pipe walked round after the switch to Athletic ends the yard, "close enough")
+    if (d != null && !g.trans && cur && YARD_STEPS.includes(cur) && d > LEASH) {
+      const p = cur === 'dino' ? this.dino() : null;
+      if (p && Math.hypot(h.pos.x - p.x, h.pos.z - p.z) < DINO_NEAR) return;
+      if (cur === 'pipe' && (h.behaviour === 'athletic' || g.tutorial?.done?.has('athletic')) && YARD_STEPS.every((id) => id === 'pipe' || this.isDone(id))) { f.pr_pipe = 2; g.save(false); return; }
+      this.leave(cur);
+    }
   }
   // he heads off before the yard is done: her one call (over her head, or at the screen's edge with her name when she
   // is out of view), the well's objective and star back. Nothing is granted for what he skipped

@@ -13,6 +13,10 @@ import { angleDiff, dampAngle, clamp, damp } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
 import { createGuardianRig, createHaulerRig, createFan, createSlamMarks } from './bossmodels.js';
 import { solveHand, restoreJoints, PALM } from '../engine/handik.js';
+import { NEAR_K, suspect, calm as calmMark, seen as seenMark, draw as drawMark } from './noticemark.js';
+// BEHAVIOUR-MODES (P125): how far the creatures that notice by range alone notice Twinsen in Normal, Athletic and
+// Aggressive (m); Discreet multiplies them by hero.sneak() (0.4 sneaking, 0.25 still), hiding blinds them as before
+const MITE_SEE = 6, SENTRY_SEE = 9, SENTRY_SURE = 6, CRAWLER_SEE = 9;
 
 // SOLID-ENEMY (the user, 29.10: "what LBA2 did"): how wide each enemy's body is to Twinsen, who stops at it and slides
 // (Hero.keepApart; the enemy itself stops at him: Actor.keepOffHero). LBA2 makes every actor with a body solid to him
@@ -249,11 +253,14 @@ export class Mite extends Actor {
       sp = this.wanderT > 1 ? 1.2 : 0;
       // (def.wake: a mite that has noticed him stirs for that long before it comes: DIFFICULTY, the galleries' mites
       //  wake one after the other, not all with the first step into the room)
-      if (d < 6 && !hero.dead && hero.visibility() > 0.2) {
+      // (BEHAVIOUR-MODES, P125: Discreet works on it too: 6 m × hero.sneak(), 2.4 m sneaking, 1.5 m still; was 6 m in every
+      //  mode. A mite that stirs first (def.wake) shows a "?" while it stares: noticemark.js)
+      if (d < MITE_SEE * hero.sneak() && !hero.dead && hero.visibility() > 0.2) {
         this.noticeT = (this.noticeT || 0) + dt;
-        if (this.def.wake) { this.angle = dampAngle(this.angle, this.angleTo(hero), 4, dt); sp = 0; }
+        if (this.def.wake) { this.angle = dampAngle(this.angle, this.angleTo(hero), 4, dt); sp = 0; suspect(this, dt, () => true); }
         if (this.noticeT >= (this.def.wake || 0)) { this.state = 'chase'; this.noticeT = 0; g.audio.play('alert', this.pos); }
       } else this.noticeT = 0;
+      if (!(this.noticeT > 0)) calmMark(this, dt);
       this.rig.play('idle');
     } else if (this.state === 'chase') {
       this.angle = dampAngle(this.angle, this.angleTo(hero), 8, dt);
@@ -326,6 +333,8 @@ export class Mite extends Actor {
       const P = g.physics, fx = Math.sin(this.angle), fz = Math.cos(this.angle);
       P.move(this, (fx * sp + fz * side) * dt, (fz * sp - fx * side) * dt);
     }
+    if (this.state !== 'idle') calmMark(this, dt);
+    drawMark(this, this.markY + 0.45, dt);
     this.applyKnockback(dt);
     this.keepOffHero(dt);
     g.physics.fall(this, dt);
@@ -501,12 +510,13 @@ export class Drone extends Actor {
   }
   // can it see Twinsen? cone + range + line of sight, scaled by his visibility (P9: a calm watch looks without acting
   // on it: only the story's own look, raw, sees him then: story/depotwatch.js)
-  sees(hero, raw = false) {
+  // (k: the range stretched, for the "?" band: noticemark.js)
+  sees(hero, raw = false, k = 1) {
     if (!raw && this.def.calm?.()) return false;
     const d = this.distTo(hero);
     const vis = hero.visibility();
     if (hero.dead || vis <= 0.15 && d > 1.5) return false;
-    const range = 9 * vis;
+    const range = 9 * vis * k;
     if (d > range) return false;
     if (d > 1.8 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) > 0.75) return false;
     const P = this.game.physics;
@@ -553,7 +563,7 @@ export class Drone extends Actor {
       // "!" — a beat to react before it starts hunting
       this.rig.mood = 'alert';
       face = this.angleTo(hero);
-      if (this.stateT < dt * 1.5) { g.audio.play('alert', this.pos); g.hud.float('!', { x: this.pos.x, y: this.pos.y + this.hover + 0.9, z: this.pos.z }, '#ff5a3a'); g.alertGroup(this.group, hero.pos, 0.6); }
+      if (this.stateT < dt * 1.5) { g.audio.play('alert', this.pos); seenMark(this); g.alertGroup(this.group, hero.pos, 0.6); }   // (the "!": noticemark.js)
       if (this.stateT > 0.6) { this.state = 'chase'; this.stateT = 0; }
     } else if (this.state === 'chase') {
       this.rig.mood = 'alert';
@@ -594,6 +604,11 @@ export class Drone extends Actor {
       if (sees) { this.state = 'alerted'; this.stateT = 0; }
       else if (this.stateT > 5) { this.state = 'patrol'; this.stateT = 0; this.last = null; }
     }
+    // BEHAVIOUR-MODES (P125): the "?" while he is nearly seen on its round or its search (a calm watch: only where the
+    // watch minds him: def.cares, story/depotwatch.js), the "!" as it turns on him (above)
+    if ((this.state === 'patrol' || this.state === 'search') && (!this.def.calm?.() || this.def.cares?.())) suspect(this, dt, () => this.sees(hero, true, NEAR_K));
+    else calmMark(this, dt);
+    drawMark(this, this.markY + 0.45, dt);
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'windup' ? 6 : 4, dt);
     if (this.hurtT <= 0 && sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     else if (this.hurtT > 0) this.rig.play('hurt');
@@ -967,11 +982,15 @@ export class Sentry extends Actor {
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
     const d = this.distTo(hero);
     let sp = 0, face = null;
-    const sees = !hero.dead && d < 9 && hero.visibility() > 0.2 && P.lineOfSight(this.pos.x, this.pos.y + 1.4, this.pos.z, hero.pos.x, hero.pos.y + 1.1, hero.pos.z);
+    // (BEHAVIOUR-MODES, P125: Discreet works on it too: its sight 9 m and its sure 6 m × hero.sneak(); was 9 / 6 m in every mode)
+    const sn = hero.sneak(), see = (k) => !hero.dead && d < SENTRY_SEE * sn * k && hero.visibility() > 0.2 && P.lineOfSight(this.pos.x, this.pos.y + 1.4, this.pos.z, hero.pos.x, hero.pos.y + 1.1, hero.pos.z);
+    const sees = see(1);
     switch (this.state) {
       case 'idle':
         this.rig.play('idle');
-        if (sees && (d < 6 || Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 1)) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert', this.pos); }
+        if (sees && (d < SENTRY_SURE * sn || Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 1)) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert', this.pos); seenMark(this); }
+        // (the "?": in its sight but not yet sure of him, or nearly in it: noticemark.js)
+        else suspect(this, dt, () => sees || see(NEAR_K));
         break;
       case 'chase':
         face = this.angleTo(hero); this.rig.play('walk');
@@ -1013,6 +1032,8 @@ export class Sentry extends Actor {
         break;
       }
     }
+    if (this.state !== 'idle') calmMark(this, dt);
+    drawMark(this, this.markY + 0.45, dt);
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'bash' ? 1 : 3.5, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
@@ -1063,7 +1084,8 @@ export class Crawler extends Mite {
     let sp = 0;
     if (this.state === 'idle') {
       this.rig.play('idle');
-      if (d < 9 && !hero.dead && hero.visibility() > 0.2) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert', this.pos); }
+      // (BEHAVIOUR-MODES, P125: Discreet works on it too: 9 m × hero.sneak(); was 9 m in every mode)
+      if (d < CRAWLER_SEE * hero.sneak() && !hero.dead && hero.visibility() > 0.2) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert', this.pos); }
     } else if (this.state === 'chase') {
       this.angle = dampAngle(this.angle, this.angleTo(hero), 3, dt);
       this.rig.play('walk');
@@ -1177,8 +1199,9 @@ export class Watcher {
     }
     this.aim = 0;
   }
-  start() { this.active = true; this.wp = 0; this.waitT = 1; this.suspicion = 0; this.aim = 0; const [x, z] = this.patrol[0]; this.npc.placeAt({ x, z, a: 0, track: null }); this.cone.visible = true; if (this.torch) { this.torch.visible = true; this.torch.userData.beam.visible = true; } }
-  stop() { this.active = false; this.cone.visible = false; if (this.torch) this.torch.userData.beam.visible = false; }
+  // (BEHAVIOUR-MODES: game.watching, the watchers on their round: tutorial.js's 'cover' tip)
+  start() { (this.game.watching ??= new Set()).add(this); this.active = true; this.wp = 0; this.waitT = 1; this.suspicion = 0; this.aim = 0; const [x, z] = this.patrol[0]; this.npc.placeAt({ x, z, a: 0, track: null }); this.cone.visible = true; if (this.torch) { this.torch.visible = true; this.torch.userData.beam.visible = true; } }
+  stop() { this.game.watching?.delete(this); this.active = false; this.cone.visible = false; if (this.torch) this.torch.userData.beam.visible = false; }
   // (P12) the arm that holds the torch: solved for the fist's place each frame, on top of the walk's or the idle's own arm
   // (what it turns is put back before the rig's next update: rig._ov, as the hands-on-things layer's)
   holdTorch(dt) {
@@ -1240,7 +1263,12 @@ export class Watcher {
     const vis = hero.visibility();
     const rate = inCone ? (hd < 2 ? 3 : 1.3) * this.notice * Math.max(0.15, vis) * (1.2 - hd / this.range) : -this.cool;
     this.suspicion = clamp(this.suspicion + rate * dt, 0, 1);
-    if (this.suspicion >= 1) { this.suspicion = 0; this.onSpot?.(); }
+    // BEHAVIOUR-MODES (P125): the same "?" / "!" as the guards' over the watcher's head (noticemark.js): "?" once his
+    // suspicion has his torch coming up, "!" as he spots her
+    if (this.suspicion > 0.35) suspect(n, dt, () => true); else calmMark(n, dt);
+    if (this.suspicion >= 1) { this.suspicion = 0; seenMark(n); this.onSpot?.(); }
+    if (n._markY == null) { const b = new THREE.Box3().setFromObject(n.rig.root); n._markY = Math.max(1.6, b.max.y - n.pos.y) + 0.4; }
+    drawMark(n, n._markY, dt);
     n.rig.play(moving ? 'walk' : 'idle');
     n.rig.update(dt, moving ? this.speed : 0);
     n.sync();

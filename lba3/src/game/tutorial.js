@@ -54,10 +54,15 @@ const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
 // 'pset' while Arthur's hidden radio valve is to find in the house (how to hold the set out, then how to read it and put
 // it away; done when it is found), 'wswitch' once he comes to own a third weapon in play (the swap key's tap and hold,
 // the wheel; done the first time he uses the swap key or the wheel with a choice to make)
-export const ORDER = ['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'talk', 'use', 'advance', 'map', 'pset', 'wswitch'];
-const ANY = new Set(['pset', 'wswitch']);
-const YARD = ['zoe', 'inv', 'tap', 'barrels', 'pipe'];   // (OPENING-TUT-2: the yard's steps, story/openingsteps.js)
-const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'pset', 'wswitch']);
+// BEHAVIOUR-MODES (P125, the user's pick 24.11): two hide tips anywhere in the game (ANY). 'hide' the first time he is in
+// Discreet with the panel free ("Hold {k} to hide"; done the first time he hides); 'cover' wherever the story asks him
+// to hide (a watcher on his round: Zoé's office, the archive; or a room with cover spots and an enemy about): the same
+// key and where it works, in each such place until he hides there (not saved: shown again after a load, a few seconds)
+export const ORDER = ['cover', 'hide', 'move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'talk', 'use', 'advance', 'map', 'pset', 'wswitch'];   // (the hide tips first: they apply only in Discreet, the moment he is in it)
+const ANY = new Set(['pset', 'wswitch', 'hide', 'cover']);
+const YARD = ['zoe', 'inv', 'tap', 'dino', 'barrels', 'pipe'];   // (OPENING-TUT-2: the yard's steps, story/openingsteps.js; BEHAVIOUR-MODES: 'dino')
+const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'cover', 'discreet', 'hide', 'normal', 'kick', 'dodge', 'pset', 'wswitch']);
+const COVER_MAX = 12;       // s the 'cover' tip shows in one place at most
 
 let styled = false;
 function addStyle() {
@@ -100,12 +105,13 @@ export class Tutorial {
     this.html = null; this.stepId = null; this.okT = 0; this.okHtml = null;
     this.ownN = null; this.wsArmed = false;   // (WEAPON-SWITCH: how many weapons he owned last frame; a third one arrived in play)
     this.stepFor = null; this.stepT = 0; this.hintN = 0; this.markAt = null;   // (TUTOR-TARGETS: the step's clock, its marker)
+    this.coverAt = new Set(); this.coverT = {};   // (BEHAVIOUR-MODES: the places he has hidden in, the 'cover' tip's time in each)
   }
   snapshot() { return { v: 1, done: [...this.done], gone: [...this.gone] }; }
   // a save's lessons; a save from before the tips (no `tut`): all of them done, nothing pops up for a player under way
   load(s) {
     this.reset();
-    if (!s || s.v !== 1) { for (const id of ORDER) this.done.add(id); return; }
+    if (!s || s.v !== 1) { for (const id of ORDER) if (id !== 'cover') this.done.add(id); return; }   // ('cover' is per place, never done)
     for (const id of s.done || []) if (ORDER.includes(id)) this.done.add(id);
     for (const id of s.gone || []) if (ORDER.includes(id)) this.gone.add(id);
   }
@@ -168,11 +174,22 @@ export class Tutorial {
       // (anywhere) Arthur's valve still to find, he in the house with the set (as himself), nothing on him
       case 'pset': return !!f.e2_hide && !f.e2_tube && !!h.arms?.pocketset && g.room?.id === 'house' && h.body !== 'zoe' && h.body !== 'worker' && !g.story?.cur?.steps?.panelStep?.();
       case 'wswitch': return this.wsArmed && (h.combat?.cycleList?.().length || 0) > 2;
+      // BEHAVIOUR-MODES: in Discreet, not hiding, the panel free of the opening's steps
+      case 'hide': return h.behaviour === 'discreet' && !h.hiding && !g.story?.cur?.steps?.panelStep?.();
+      case 'cover': { const k = this.coverKey(); return !!k && h.behaviour === 'discreet' && !h.hiding && !this.coverAt.has(k) && (this.coverT[k] || 0) < COVER_MAX; }
     }
     return false;
   }
+  // where the story asks him to hide, as a key for this place (null elsewhere): a watcher on his round in this scene, or a
+  // room with cover spots and an enemy of it about
+  coverKey() {
+    const g = this.g, R = g.room;
+    if (g.watching) for (const w of g.watching) if (w.active) return 'w:' + (R?.id || 'out');
+    if (R?.cover?.length && g.enemies?.some((e) => e.alive && e.present)) return 'r:' + R.id;
+    return null;
+  }
   // an optional tip's time on screen in all before it is let go (none: it stays while it applies)
-  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 8, discreet: 40, normal: 10, dodge: 10, wswitch: 14 }[id]; }
+  max(id) { return { move: 40, inventory: 20, camera: 15, athletic: 25, jump: 25, ball: 40, arc: 15, magic: 8, discreet: 40, hide: 10, normal: 10, dodge: 10, wswitch: 14 }[id]; }
   text(id) {
     const g = this.g, d = this.dev(), K = (a) => this.key(a);
     switch (id) {
@@ -198,6 +215,8 @@ export class Tutorial {
       case 'dodge': return t('tut_dodge', { k: K('dodge') });
       case 'pset': return g.hero.combat?.weapon === 'pocketset' ? t('tut_pset_find', { e: K('interact'), k: K('swap') }) : t('tut_pset_hold', { k: K('swap') });
       case 'wswitch': return d === 'touch' ? t('tut_wswitch_touch', { k: K('swap') }) : t('tut_wswitch', { k: K('swap'), w: K('weapons') });
+      case 'hide': return t('tut_hide', { k: K('action') });
+      case 'cover': return t('tut_cover', { k: K('action') });
     }
     return '';
   }
@@ -244,6 +263,7 @@ export class Tutorial {
     if (!want) { this.hide(); return; }
     this.curT += dt;
     this.shownT[want] = (this.shownT[want] || 0) + dt;
+    if (want === 'cover') { const k = this.coverKey(); if (k) this.coverT[k] = (this.coverT[k] || 0) + dt; }
     const mx = this.max(want);
     if (mx && this.shownT[want] > mx) { this.gone.add(want); this.hide(); this.cur = null; return; }
     const tx = this.text(want);
@@ -283,6 +303,8 @@ export class Tutorial {
     if (g.settings.camera === 'lba' && (I.pressed('recenter') || I.pressed('recenterPad'))) this.finish('camera');
     if (h.combat?.throwing?.charging) this.finish('arc');
     if (h.combat?.dodgeT > 0) this.finish('dodge');
+    // BEHAVIOUR-MODES: he hid: the hide tip is learned, and this place's 'cover' tip is done
+    if (h.hiding) { this.finish('hide'); const k = this.coverKey(); if (k) { this.coverAt.add(k); if (this.cur === 'cover') this.hide(); } }
     if (g.flags.pr_lidOpen) this.finish('kick');
     if (this.mp0 != null && h.mp > this.mp0) this.finish('magic');
     this.mp0 = h.mp;
@@ -341,6 +363,8 @@ export class Tutorial {
       case 'zoe': return it?.kind === 'npc' && it.npc?.def?.id === 'zoe' ? t('t2_k_talk', { k: K('interact') }) : '';
       case 'inv': return t('tut_inv', { k: K('inventory') });
       case 'tap': return it?.kind === 'h_yard' ? t('t2_k_try', { k: K('interact') }) : '';
+      // (BEHAVIOUR-MODES: first the switch to Discreet; then, in reach of him asleep, the hand key)
+      case 'dino': return h.behaviour !== 'discreet' ? this.text('discreet') : it?.kind === 'pet' && it.pet?.id === 'dinofly' && it.label === 'p_pet' ? t('t2_k_pet', { k: K('interact') }) : '';
       case 'barrels': return this.text('ball');
       case 'pipe': return h.behaviour !== 'athletic' ? this.text('athletic') : t('t2_k_jump', { k: K('action') });
     }

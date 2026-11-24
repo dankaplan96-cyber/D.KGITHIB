@@ -20,6 +20,7 @@
 // The machinery of the fight is untouched; only who starts it, and why, is the story's.
 import { t } from '../i18n.js';
 import { dampAngle } from '../../engine/math.js';
+import { seen as seenMark } from '../noticemark.js';
 
 const GUARD_COLOR = '#9fe0d0';
 const RADIO_COLOR = '#a8ffb8';
@@ -35,7 +36,8 @@ export class DepotWatch {
   }
   get f() { return this.game.flags; }
   // the watch, as the chapter's enemy defs are made (story/chapter1.js enemyDefs)
-  def(d) { return { ...d, watch: true, calm: () => !this.hostile }; }
+  // (BEHAVIOUR-MODES: cares — the "?" over a calm one only where the watch minds him: the yard; noticemark.js)
+  def(d) { return { ...d, watch: true, calm: () => !this.hostile, cares: () => this.zone() === 'yard' }; }
   // present from the first chapter until the depot valve is opened (never in a later chapter, whatever a save holds)
   on(f) { return this.story.indexOf(f) <= this.ch.pos && !f.c1_valve_depot; }
 
@@ -88,7 +90,7 @@ export class DepotWatch {
   spotted(e) {
     const g = this.game, f = this.f, h = g.hero;
     g.audio.play('alert');
-    g.hud?.float?.('!', { x: e.pos.x, y: e.pos.y + (e.hover ?? 0) + (e.def.kind === 'gdog' ? 1.5 : 2.4), z: e.pos.z }, e.def.kind === 'drone' ? '#ffb060' : '#e090ff');
+    seenMark(e);   // (BEHAVIOUR-MODES: the same "!" as every enemy's: noticemark.js)
     if (e.def.kind === 'drone') { e.rig.mood = 'search'; e.angle = e.angleTo(h); }   // (its eye goes amber: called in)
     const dog = this.live().find((x) => x.def.kind === 'gdog');
     dog?.bark?.();

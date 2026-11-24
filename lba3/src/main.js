@@ -51,6 +51,7 @@ import { Weapons, freshArms } from './game/weapons.js';
 import { Gadgets } from './game/gadgets.js';
 import { createEnemy, Drone } from './game/enemies.js';
 import { koGone } from './game/death.js';
+import { tick as tickMarks } from './game/noticemark.js';   // (BEHAVIOUR-MODES: the enemies' "?" / "!")
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
@@ -2507,7 +2508,7 @@ class Game {
     }
     if (!this.room) {
       for (const s of W.signs) consider(dist(s.x, s.z), 2.0, { kind: 'sign', sign: s, label: 'p_read' });
-      for (const p of W.pets || []) consider(dist(p.x, p.z), p.r, { kind: 'pet', pet: p, label: 'p_talk' });
+      for (const p of W.pets || []) consider(dist(p.x, p.z), p.r, { kind: 'pet', pet: p, label: p.label?.() || 'p_talk' });   // (BEHAVIOUR-MODES: the sleeping Dino-Fly: 'p_pet')
     }
     // the chapter's own interactions first: on a tie (same spot) they win over the generic ones
     this.story.interactables(consider, dist);
@@ -3382,6 +3383,7 @@ class Game {
     this.cues.update(dt, this, this.state === 'play' && !this.trans);
     if (this.state !== 'play') this.behMenu.show(false);
     this.hud.updateFloats(dt, this.camera);
+    tickMarks(dt);   // (BEHAVIOUR-MODES: the enemies' "?" / "!" not drawn this frame go: noticemark.js)
     this.remarks?.update(dt);   // (P116: the remark over a resident's head follows it; closes on its time, E, a walk off or a box)
     if (this.state !== 'dialog') this.bubble.visible = false;
     if (render && !this.trans?.hold && !(this.gfxHold && performance.now() - this.gfxHold.t < 4000)) {

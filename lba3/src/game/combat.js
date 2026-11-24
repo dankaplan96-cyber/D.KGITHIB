@@ -50,6 +50,18 @@ export const COMBAT = {
     hard: { dmg: 1.5, windup: 0.85, cool: 0.8 },
   },
 };
+// BEHAVIOUR-MODES (P125, the user's pick 24.11, proposal 8): in Aggressive his blows land harder: the damage of a melee
+// move × AGGR (fists, kicks, the sword, the glove), the same moves and timing. Every mode can still fight with the
+// attack key (no LBA1-style mode lock); Aggressive is the one that fights best. An armour's rule is unchanged: a jab
+// (1.5) still braces off a Grobo's armour 2
+export const AGGR = 1.5;
+const AGGR_MOVES = new WeakMap();
+function aggr(D, h) {
+  if (h.behaviour !== 'aggressive' || !D) return D;
+  let A = AGGR_MOVES.get(D);
+  if (!A) { A = { ...D, dmg: D.dmg * AGGR, aggr: true }; AGGR_MOVES.set(D, A); }
+  return A;
+}
 // the dodge's distance for a hop `rel` rad round from his facing (0 ahead, ±π behind): COMBAT.dodge side / back / fwd
 export function dodgeDist(rel) {
   const D = COMBAT.dodge, c = Math.cos(rel), c2 = c * c;
@@ -625,7 +637,7 @@ export class HeroCombat {
   }
   // the enemies the sweep took are struck: damage, their reaction, the impact, the hit-stop
   land(m) {
-    const g = this.g, h = this.hero, D = m.def;
+    const g = this.g, h = this.hero, D = aggr(m.def, h);
     let any = false;
     for (const e of m.pending) {
       if (!e.alive || !e.present) continue;

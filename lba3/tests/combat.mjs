@@ -618,6 +618,45 @@ r = await ev(() => {
 check('ball aim: near and far — one hand-over in a sweep, the marked one held through a stick\'s 1° of noise (before 32 flips in 60 frames), the throw at the marked one', r.changes === 1 && r.flipsIn60 === 0 && r.throwAt, r);
 check('ball aim: a target squarely ahead before a mite 20° off it; a mite within ~10° of the line still first', r.aside20 === 'target' && r.aside6 === 'mite', r);
 
+// BEHAVIOUR-MODES (P125, the user's picks 24.11; docs/lba-maturity/BEHAVIOUR-MODES.md):
+//  (a) how far each kind notices Twinsen standing still in front of it, Normal and Discreet: the guards, drones and dogs
+//      as before (range × his visibility); the mites, sentries and crawlers now too (range × hero.sneak()); Normal's
+//      ranges unchanged (mite 6, sentry 9, crawler 9, guard 10, drone 9, dog 11 m)
+//  (b) the "?" over a guard he is nearly seen by (Normal, 12 m: past its 10 m, within the 15 m band), then the "!"
+//  (c) Aggressive's blows land ×1.5 (a jab on a mite), the same in every other mode
+r = await ev(async () => {
+  const { G, E } = C, h = G.hero, NM = await import('./src/game/noticemark.js');
+  const calmState = { a_mite: 'idle', a_sentry: 'idle', a_crawler: 'idle', a_guard: 'patrol', a_drone: 'patrol', a_gdog: 'guard' };
+  const out = {};
+  const reset = (id, d) => {
+    C.only([id], [6194, 8], Math.PI);
+    const e = C.put(id, 6194, 8 - d, 0);
+    e.state = calmState[id]; e.stateT = 0; e.hp = e.maxHp; e.noticeT = 0; e.suspicion = 0; e.calmT = 0; e.coolT = 0; e.hurtT = 0; e._nm && (e._nm.q = 0, e._nm.eT = 0);
+    if (e.patrol) { e.patrol = [[e.pos.x, e.pos.z]]; e.wp = 0; e.waitT = 1e9; }
+    return e;
+  };
+  const notices = (id, d, beh) => { const e = reset(id, d); h.behaviour = beh; h.hiding = false; C.step(0.8); return e.state !== calmState[id]; };
+  for (const id of Object.keys(calmState)) {
+    const range = (beh) => { let r = 0; for (let d = 1.0; d <= 12.5; d += 0.5) if (notices(id, d, beh)) r = d; return r; };
+    out[id] = { normal: range('normal'), discreet: range('discreet') };
+  }
+  // (b) the guard: 12 m in Normal
+  let e = reset('a_guard', 12); h.behaviour = 'normal'; C.step(0.6);
+  out.q12 = NM.shown(G.enemies).map((m) => m.kind).join('') || '-'; out.state12 = e.state;
+  e.pos.set(6194, e.pos.y, 8 - 7); C.step(0.1);
+  out.e7 = NM.shown(G.enemies).map((m) => m.kind).join('') || '-'; out.state7 = e.state;
+  // (c) a jab on a mite (its hp 99): Normal, then Aggressive
+  const jab = (beh) => { const m = reset('a_mite', 1.1); m.hp = m.maxHp = 99; m.coolT = 99; h.behaviour = beh; h.combat.equip('fists', true); C.press('KeyK'); C.step(0.6); return +(99 - m.hp).toFixed(2); };
+  out.jabNormal = jab('normal'); out.jabAggressive = jab('aggressive'); out.jabDiscreet = jab('discreet');
+  h.behaviour = 'normal'; h.combat.equip('ball', true);
+  return out;
+});
+const NORMAL = { a_mite: 6, a_sentry: 9, a_crawler: 9, a_guard: 10, a_drone: 9, a_gdog: 11 };
+check('BEHAVIOUR-MODES (a): Normal notice ranges unchanged (±0.5 m: mite 6, sentry 9, crawler 9, guard 10, drone 9, dog 11)', Object.entries(NORMAL).every(([id, n]) => Math.abs(r[id].normal - n) <= 0.5), r);
+check('BEHAVIOUR-MODES (a): Discreet (still) noticed from under half as far by every kind, mites, sentries and crawlers included', Object.keys(NORMAL).every((id) => r[id].discreet > 0 && r[id].discreet < r[id].normal * 0.5), r);
+check('BEHAVIOUR-MODES (b): a guard nearly seeing him shows "?" (no alert); a step into its sight: "!" and it turns on him', r.q12 === '?' && r.state12 === 'patrol' && r.e7 === '!' && r.state7 !== 'patrol', r);
+check('BEHAVIOUR-MODES (c): Aggressive\'s jab lands ×1.5; Normal and Discreet the same as before', r.jabNormal === 1 && r.jabDiscreet === 1 && Math.abs(r.jabAggressive - 1.5) < 1e-6, r);
+
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

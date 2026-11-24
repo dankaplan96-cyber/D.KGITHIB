@@ -16,6 +16,7 @@ import { Actor, contactRadius } from './actors.js';
 import { createCharacter } from './characters.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
+import { NEAR_K, suspect, calm as calmMark, seen as seenMark, draw as drawMark } from './noticemark.js';
 
 function rifleProp() {
   const g = new THREE.Group();
@@ -150,11 +151,12 @@ export class Guard extends Actor {
   // COMBAT-2: would the rifle's bolt get to him? Not through a chain-link fence or a railing (Bolts.update; as his ball)
   clearShot(hero) { return !this.game.physics.ballFenceBetween(this.pos.x, this.pos.y + 1.35, this.pos.z, hero.pos.x, hero.pos.y + 0.9, hero.pos.z); }
   // can it see Twinsen? a cone, a range scaled by his visibility, line of sight (P9: a calm watch only looks: raw)
-  sees(hero, raw = false) {
+  // (k: the range stretched, for the "?" band: noticemark.js)
+  sees(hero, raw = false, k = 1) {
     if (!raw && this.def.calm?.()) return false;
     const d = this.distTo(hero), vis = hero.visibility();
     if (hero.dead || (vis <= 0.15 && d > 1.5)) return false;
-    if (d > 10 * vis) return false;
+    if (d > 10 * vis * k) return false;
     if (d > 2 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) > 0.85) return false;
     return this.game.physics.lineOfSight(this.pos.x, this.pos.y + 1.6, this.pos.z, hero.pos.x, hero.pos.y + 1.2, hero.pos.z);
   }
@@ -202,7 +204,7 @@ export class Guard extends Actor {
         else if (this.waitT > 0) { this.waitT -= dt; anim = 'idle'; }
         else if (dd < 0.4 || this.patrol.length < 2) { this.wp = (this.wp + 1) % this.patrol.length; this.waitT = this.patrol.length < 2 ? 1e9 : 1.2; }
         else { face = Math.atan2(tx - this.pos.x, tz - this.pos.z); sp = 1.4; anim = 'walk'; }
-        if (sees) { this.state = 'alerted'; this.stateT = 0; g.audio.play('alert', this.pos); g.hud?.float?.('!', { x: this.pos.x, y: this.pos.y + 2.4, z: this.pos.z }, '#e090ff'); }
+        if (sees) { this.state = 'alerted'; this.stateT = 0; g.audio.play('alert', this.pos); seenMark(this); }   // (the "!": noticemark.js)
         break;
       }
       case 'alerted':   // a beat to turn and bark
@@ -259,7 +261,7 @@ export class Guard extends Actor {
         const dd = Math.hypot(tgt.x - this.pos.x, tgt.z - this.pos.z);
         face = dd > 0.8 ? Math.atan2(tgt.x - this.pos.x, tgt.z - this.pos.z) : this.angle + dt * 1.2;
         sp = dd > 0.8 ? 1.6 : 0; anim = sp ? 'walk' : 'search';
-        if (sees) { this.state = 'chase'; this.stateT = 0; }
+        if (sees) { this.state = 'chase'; this.stateT = 0; seenMark(this); }
         else if (this.stateT > 5) { this.state = 'home'; this.stateT = 0; }
         break;
       }
@@ -267,10 +269,15 @@ export class Guard extends Actor {
         const dx = this.home.x - this.pos.x, dz = this.home.z - this.pos.z;
         if (Math.hypot(dx, dz) < 0.5) { this.state = 'patrol'; this.stateT = 0; this.hp = Math.min(this.maxHp, this.hp + 1); }
         else { face = Math.atan2(dx, dz); sp = 1.5; anim = 'walk'; }
-        if (sees && d < 6) { this.state = 'chase'; this.stateT = 0; }
+        if (sees && d < 6) { this.state = 'chase'; this.stateT = 0; seenMark(this); }
         break;
       }
     }
+    // BEHAVIOUR-MODES (P125): the "?" while he is nearly seen on his round, his search or his way home (a calm watch: only
+    // where the watch minds him: def.cares, story/depotwatch.js), the "!" as he turns on him (above)
+    if ((this.state === 'patrol' || this.state === 'search' || this.state === 'home') && (!this.def.calm?.() || this.def.cares?.())) suspect(this, dt, () => this.sees(hero, true, NEAR_K));
+    else calmMark(this, dt);
+    drawMark(this, this.markY + 0.5, dt);
     if (this.state !== 'patrol') this.inv = null;   // (P93: whatever took him off his round ends a look)
     if (this.hurtT > 0 && this.state !== 'hurt') sp = 0;
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'strike' ? 1.5 : this.state === 'hurt' ? 16 : 4, dt);

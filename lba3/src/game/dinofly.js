@@ -10,6 +10,7 @@ import { LbaMaterial } from './characters.js';
 import { damp, angleDiff, clamp } from '../engine/math.js';
 import { t } from './i18n.js';
 import { STR } from './i18n.js';
+import './text/opening.js';   // (BEHAVIOUR-MODES: df_pet, p_pet)
 
 Object.assign(STR.en, {
   n_dinofly: 'Dino-Fly',
@@ -179,6 +180,11 @@ function stretchCurve(k) {
 // he lies turned this much from the spot's heading, so the play camera (looking west over the garden) sees his
 // left flank, the curled neck and the folded wings instead of a head-on lump
 const TURN = -1.3;
+// BEHAVIOUR-MODES (P125, the user's pick 24.11, proposal 3): he hears Twinsen coming, unless Twinsen sneaks. Within HEAR m
+// (from his body's middle) in Normal, Athletic or Aggressive he wakes and looks at him (as before: 9 m); in Discreet only
+// right against him (HEAR_SNEAK, about his flank's reach). Awake, he dozes off again SETTLE s after he last heard him.
+// Asleep, the hand key strokes his snout ("Pet") and he sleeps on: the opening's yard step (story/openingsteps.js 'dino').
+const HEAR = 9, HEAR_SNEAK = 1.2, SETTLE = 3;
 
 export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
   const y = W.H(x, z), ry = ry0 + (opts.turn ?? TURN);
@@ -200,28 +206,33 @@ export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
   W.physics.add({ type: 'cyl', x: tc.x, z: tc.z, r: 0.5, top: y + 0.6, noStand: true });
 
   // state: breathing, looking at Twinsen when he's near, a wing stretch now and then, a nuzzle when talked to
-  const S = { t: 0, stretchT: 0, nextStretch: 9, nuzzleT: 0, yaw: 0, pitch: 0, alert: 0, lid: 0.3, blinkT: 3, talks: 0, eye: 0, side: 1 };
+  // (awakeT: s until he dozes off again; woke: how many times he has woken, for the yard's step; petT: stroked asleep)
+  const S = { t: 0, stretchT: 0, nextStretch: 9, nuzzleT: 0, yaw: 0, pitch: 0, alert: 0, lid: 0.3, blinkT: 3, talks: 0, eye: 0, side: 1, awakeT: 0, woke: 0, petT: 0, x, z };
+  S.asleep = () => S.awakeT <= 0;
   root.userData.state = S;
   W.updaters.push((dt, tt, hero) => {
     // (PACE-SIM: Citadel not on screen — Twinsen indoors or in another area — he naps on as he is: his breath, his look
     //  and his stretches are all he does)
     if (W.root && !W.root.visible) return;
     S.t += dt;
-    if (!M || opts.rest) return;
-    const br = Math.sin(S.t * 1.6);
-    // look at Twinsen within 9 m (the neck lifts, the head turns, the eyes open), else doze, head low
     const h = hero || W._hero;
+    // heard: Twinsen near and not sneaking (BEHAVIOUR-MODES): awake for SETTLE s after the last sound of him
+    const dc = h ? Math.hypot(h.pos.x - x, h.pos.z - z) : 99;
+    if (h && !h.dead && h.present !== false && dc < (h.behaviour === 'discreet' ? HEAR_SNEAK : HEAR)) { if (S.awakeT <= 0) S.woke++; S.awakeT = SETTLE; }
+    else S.awakeT = Math.max(0, S.awakeT - dt);
+    S.petT = Math.max(0, S.petT - dt);
+    if (!M || opts.rest) return;
+    const br = Math.sin(S.t * (S.petT > 0 ? 1.1 : 1.6)) * (S.petT > 0 ? 1.6 : 1);   // (stroked: a slow, deep breath)
+    // awake, he looks at Twinsen (the neck lifts, the head turns, the eyes open); asleep, he dozes, head low
     let wantYaw = Math.sin(S.t * 0.13) * 0.15, wantPitch = Math.sin(S.t * 0.5) * 0.03, wantAlert = 0;
-    if (h) {
+    if (h && S.awakeT > 0) {
       const wx = M.bones.neck1.getWorldPosition(_v);
       const d = Math.hypot(h.pos.x - wx.x, h.pos.z - wx.z);
-      if (d < 9) {
-        wantAlert = 1;
-        wantYaw = clamp(angleDiff(ry, Math.atan2(h.pos.x - wx.x, h.pos.z - wx.z)), -1.4, 1.4);
-        wantPitch = clamp(-Math.atan2(h.pos.y + 1.3 - (wx.y + 0.6), d) * 0.6, -0.35, 0.35) + 0.12;   // (a little bowed: the head's top shows)
-        // the eye he regards Twinsen with: the side Twinsen is on (kept until he is well over to the other side)
-        if (wantYaw > 0.25) S.side = 1; else if (wantYaw < -0.25) S.side = -1;
-      }
+      wantAlert = 1;
+      wantYaw = clamp(angleDiff(ry, Math.atan2(h.pos.x - wx.x, h.pos.z - wx.z)), -1.4, 1.4);
+      wantPitch = clamp(-Math.atan2(h.pos.y + 1.3 - (wx.y + 0.6), d) * 0.6, -0.35, 0.35) + 0.12;   // (a little bowed: the head's top shows)
+      // the eye he regards Twinsen with: the side Twinsen is on (kept until he is well over to the other side)
+      if (wantYaw > 0.25) S.side = 1; else if (wantYaw < -0.25) S.side = -1;
     }
     if (S.nuzzleT > 0) { S.nuzzleT -= dt; wantPitch = 0.3 + Math.sin(S.nuzzleT * 9) * 0.12; }
     S.alert = damp(S.alert, wantAlert, 2, dt);
@@ -247,8 +258,17 @@ export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
   });
   W.pets = W.pets || [];
   W.pets.push({
-    id: 'dinofly', x, z, r: 3.6,
+    id: 'dinofly', x, z, r: 3.6, state: S,
+    // (BEHAVIOUR-MODES: asleep he is stroked, not spoken to)
+    label() { return S.asleep() ? 'p_pet' : 'p_talk'; },
     talk(g) {
+      if (S.asleep()) {
+        S.petT = 3.5;
+        g.flags.pr_dino = true;   // (the opening's yard step: story/openingsteps.js; harmless in any later chapter)
+        g.audio?.play?.('rumble');
+        g.say('n_dinofly', [t('df_pet')]);
+        return;
+      }
       S.nuzzleT = 1.2;
       const lines = S.talks++ === 0 ? [['hero', 'df_hi'], ['dinofly', 'df_rumble'], ['hero', 'df_rest']] : [['dinofly', 'df_again']];
       if (lines[0][1] === 'df_again') { const all = t('df_again'); g.say('n_dinofly', [all[Math.floor(Math.random() * all.length)]]); return; }
@@ -258,3 +278,10 @@ export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
   return root;
 }
 const _v = new THREE.Vector3();
+// BEHAVIOUR-MODES (P125): where he naps. LBA2's own spot (DINOFLY-POS below, world.js) is on the rock shelf south of
+// the house, 21.6 m from the front door and reached only round by the beach (26 m): outside the yard's 15 m edge. For
+// the yard's sneak step he naps on the yard's west lawn instead, the nearest open, level grass inside the edge, seen
+// from the yard (?dino=lba2: on LBA2's shelf, the step then left out)
+export const DINO_LBA2 = { x: -58.0, z: 95.3, ry: 1.84 };
+export const DINO_YARD = { x: -53.7, z: 70.6, ry: 1.84 };
+export const DINO_AT = typeof location !== 'undefined' && /[?&]dino=lba2\b/.test(location.search) ? DINO_LBA2 : DINO_YARD;

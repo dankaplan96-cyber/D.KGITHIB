@@ -11,6 +11,7 @@ import { Actor } from './actors.js';
 import { dogRig } from './dogs.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
+import { NEAR_K, suspect, calm as calmMark, seen as seenMark, draw as drawMark } from './noticemark.js';
 
 export class GuardDog extends Actor {
   constructor(game, def) {
@@ -57,13 +58,14 @@ export class GuardDog extends Actor {
     this.state = 'hurt'; this.stateT = 0; this.coolT = Math.max(this.coolT, 0.6);
   }
   // a wide cone and a good nose: it notices a running Twinsen close by even out of sight
-  notices(hero, raw = false) {
+  // (k: the range stretched, for the "?" band: noticemark.js; the nose is not stretched)
+  notices(hero, raw = false, k = 1) {
     if (!raw && this.def.calm?.()) return false;   // (P9: a calm watch: story/depotwatch.js)
     const d = this.distTo(hero), vis = hero.visibility();
     if (hero.dead) return false;
     if (d < 3.2 && vis > 0.5) return true;
     if (vis <= 0.15 && d > 1.5) return false;
-    if (d > 11 * vis) return false;
+    if (d > 11 * vis * k) return false;
     if (d > 2 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) > 1.4) return false;
     return this.game.physics.lineOfSight(this.pos.x, this.pos.y + 0.8, this.pos.z, hero.pos.x, hero.pos.y + 1.0, hero.pos.z);
   }
@@ -86,7 +88,7 @@ export class GuardDog extends Actor {
         else if (this.waitT > 0) { this.waitT -= dt; anim = 'sniff'; }
         else if (dd < 0.4 || this.patrol.length < 2) { this.wp = (this.wp + 1) % this.patrol.length; this.waitT = this.patrol.length < 2 ? 1e9 : 1.5; }
         else { face = Math.atan2(tx - this.pos.x, tz - this.pos.z); sp = 1.5; anim = 'walk'; }
-        if (sees) { this.state = 'warn'; this.stateT = 0; g.hud?.float?.('!', { x: this.pos.x, y: this.pos.y + 1.5, z: this.pos.z }, '#ffb060'); }
+        if (sees) { this.state = 'warn'; this.stateT = 0; seenMark(this); }   // (the "!": noticemark.js)
         break;
       }
       case 'warn':   // stops, barks twice, calls the others
@@ -129,10 +131,15 @@ export class GuardDog extends Actor {
         const dx = this.home.x - this.pos.x, dz = this.home.z - this.pos.z;
         if (Math.hypot(dx, dz) < 0.5) { this.state = 'guard'; this.stateT = 0; this.hp = Math.min(this.maxHp, this.hp + 1); }
         else { face = Math.atan2(dx, dz); sp = 2.2; anim = 'walk'; }
-        if (sees && d < 7 && this.stateT > 1.5) { this.state = 'warn'; this.stateT = 0; }
+        if (sees && d < 7 && this.stateT > 1.5) { this.state = 'warn'; this.stateT = 0; seenMark(this); }
         break;
       }
     }
+    // BEHAVIOUR-MODES (P125): the "?" while he is nearly noticed on its round or its way home (a calm watch: only where the
+    // watch minds him: def.cares, story/depotwatch.js; not while it lies calmed), the "!" as it turns on him (above)
+    if ((this.state === 'guard' || this.state === 'home') && !(this.calmT > 0) && (!this.def.calm?.() || this.def.cares?.())) suspect(this, dt, () => this.notices(hero, true, NEAR_K));
+    else calmMark(this, dt);
+    drawMark(this, this.markY + 0.45, dt);
     if (this.hurtT > 0 && this.state !== 'hurt') sp = 0;
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'lunge' ? 1.5 : 6, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
