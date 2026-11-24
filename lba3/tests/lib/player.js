@@ -418,7 +418,9 @@
         if (id === 'zoe') { P.talk('zoe'); found(); }
         else if (id === 'inv') { P.tap('KeyI', 0.3); P.tap('KeyI', 0.3); P.settle(); }
         else if (id === 'tap') { const Y = G.story.cur.home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); }
-        else if (id === 'barrels') { const B = G.story.cur.barrels(); if (hero().behaviour === 'athletic') P.tap('F1'); P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.face(B.x, B.z); P.tap('KeyF', 0.05); G.step(2.0); P.settle(); }
+        // (BEHAVIOUR-MODES: the sleeping Dino-Fly, crept up to in Discreet and petted)
+        else if (id === 'dino') { const D = G.world.pets.find((q) => q.id === 'dinofly'); if (hero().behaviour !== 'discreet') P.tap('F4'); P.use(D.x, D.z, { near: 2.0, kind: 'pet' }); P.settle(); }
+        else if (id === 'barrels') { const B = G.story.cur.barrels(); if (hero().behaviour !== 'normal') P.tap('F1'); P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.face(B.x, B.z); P.tap('KeyF', 0.05); G.step(2.0); P.settle(); }
         else if (id === 'pipe') {
           if (hero().behaviour !== 'athletic') P.tap('F2', 0.1);
           P.go(-46.4, 70.6, { tol: 0.3, run: true }); P.settle(); P.face(-40, 70.6);

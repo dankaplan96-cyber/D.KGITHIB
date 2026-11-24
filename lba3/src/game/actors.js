@@ -193,6 +193,14 @@ export class Hero extends Actor {
     if (this.behaviour === 'athletic' && this.speed > 4) return 1.25 * k;
     return k;
   }
+  // BEHAVIOUR-MODES (P125, proposal 4): the part of his visibility that is his own doing, Discreet's alone (no storm, no
+  // coat, no run): the creatures that notice by a fixed range (mites, sentries, crawlers: enemies.js) scale it by this,
+  // as the guards, drones and dogs scale theirs by visibility(). 1 in Normal, Athletic and Aggressive
+  sneak() {
+    if (this.hiding) return 0.12;
+    if (this.behaviour === 'discreet') return this.speed > 0.2 ? 0.4 : 0.25;
+    return 1;
+  }
 
   setBehaviour(b) {
     // (the user, 7.11: "in Zoé's part you can switch to running now": a story-held behaviour (Zoé's discreet search, the
@@ -202,6 +210,7 @@ export class Hero extends Actor {
     this.behaviour = b;
     this.game.audio.play('mode');
     this.game.hud.behaviour(b);
+    this.game.hud.modeCap?.(b);   // (BEHAVIOUR-MODES: the mode's name and what the action key does in it, for a moment)
   }
 
   update(dt, input) {

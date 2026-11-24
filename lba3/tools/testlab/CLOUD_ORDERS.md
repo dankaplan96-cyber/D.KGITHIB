@@ -1026,8 +1026,8 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
        preferred.)
 
 69. **The user, 24.11 (later): "give the local agent an order to install and test the game". FIRST in the queue; it
-    replaces 68 step 2.** Build: the cloud's `ccr-c1c2c4b9-dep6ed` head (artifact **v159**, commit "v159 published:
-    talk order, rocks out of masonry …", `desktop/package.json` = **0.50.0**). Reply in `WORLD_ART_REQUESTS.md` as
+    replaces 68 step 2.** Build: the cloud's `ccr-c1c2c4b9-dep6ed` head (artifact **v160** or newer: `git pull` first; v160 added the behaviour modes, P125, so in step 4
+    also try the new yard step — sneak up to the sleeping Dino-Fly in Discreet and pet him —, `desktop/package.json` = **0.50.0**). Reply in `WORLD_ART_REQUESTS.md` as
     **INSTALL-69**, one line per step (pass / fail + what you saw), pictures in `captures/hw-69/`, push your branch.
     **No frame-time or performance numbers** (the user's rule). **Do not upload the exe anywhere and do not commit it**
     (`desktop/release/` is ignored). Do not use `[build]` in a commit message (it publishes a GitHub pre-release).

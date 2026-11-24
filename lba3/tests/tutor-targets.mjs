@@ -10,6 +10,8 @@
 //   R3 a reload halfway through the yard: the step, the marker and the barrel's place come back; after the knock, saved
 //      and loaded again, the barrel stays aside; the pipe walked round, the yard let go with one call. A save written as
 //      the build before TUT-MYSTERY would have (pr_tut2 mid-yard, the barrels hit) loads and plays on.
+//   (BEHAVIOUR-MODES, P125) the Dino-Fly's step between the tap and the barrels: the panel, the marker and the star on
+//      him; a mid-yard save from before it resumes with it.
 // src/game/tutorial.js (mark, arrow), story/openingsteps.js, story/hometap.js, story/prologue.js (revealJoint).
 // Captures: captures/tutor-targets/*.jpg (the normal follow camera).
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -58,6 +60,9 @@ const helpers = () => ev(() => {
     // the throw from the path, until his first line is up (the barrel moved, the joint in view)
     throwStart() { const B = game.story.cur.barrels(); if (game.hero.behaviour === 'athletic') P.tap('F1'); P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.face(B.x, B.z); P.tap('KeyF', 0.05); for (let i = 0; i < 40 && game.state === 'play'; i++) game.step(0.1); game.step(0.5); },
     throwAtBarrels() { TM.throwStart(); P.settle(); game.step(1.0); },
+    // BEHAVIOUR-MODES: the Dino-Fly's step by keys: Discreet, crept up to, petted, back to Normal
+    dino() { return game.world.pets.find((q) => q.id === 'dinofly'); },
+    dinoPet() { const D = TM.dino(); if (game.hero.behaviour !== 'discreet') P.tap('F4', 0.1); P.use(D.x, D.z, { near: 2.0, kind: 'pet' }); P.settle(); game.step(0.4); P.tap('F1', 0.1); game.step(1.4); return !!game.flags.pr_dino; },
     // walk to the well as a player does: a remark on the way (the lane's knock) is read, and he walks on
     toWell(stopWhen) { const W = game.world.well; let r; for (let k = 0; k < 4; k++) { r = P.go(W.x, W.z, { tol: 2.5, maxT: 200, stopWhen }); P.settle(); if (r.r !== 'state:dialog') break; } return r; },
   };
@@ -108,6 +113,11 @@ const tap = await ev(() => {
 await shot('02-tap-knock-barrel-rocks');
 check('R1.9 the garden tap tried: dry; the knock answers from behind the barrels (his line says so), the near barrel visibly rocks, Zoé turns to it', tap.tg === 'h_yard' && tap.state === 'dialog' && /behind the barrels/.test(tap.line) && tap.rock > 0.03 && tap.look, tap);
 await ev(() => { P.settle(); game.step(2.0); });
+s = await M();
+const dp = await ev(() => { const D = TM.dino(); return [+D.x.toFixed(1), +D.z.toFixed(1)]; });
+check('R1.9b (BEHAVIOUR-MODES) the Dino-Fly step: the goal (sneak up in Discreet); the marker and the star on him, named Dino-Fly; Zoé asks', s.step === 'dino' && /Sneak up to the sleeping Dino-Fly/.test(s.tip) && s.vis && s.name === 't2_n_dino' && near(s.at, dp, 0.1) && agree(s) && (await ev(() => game.story.cur.steps.saidLog.includes('t2_ask_dino'))), s);
+await shot('02b-dino-step');
+const petted = await ev(() => TM.dinoPet());
 s = await M();
 const nb = await ev(() => { const R = game.story.cur.home.parts.barrel; return [+R.x0.toFixed(1), +R.z0.toFixed(1)]; });
 check('R1.10 the barrels step: the goal says knock the barrel aside; the marker and the star on the near barrel (in front of the joint); Zoé names the joint', s.step === 'barrels' && /barrel by the house aside/.test(s.tip) && s.vis && s.name === 't2_n_barrels' && near(s.at, nb, 0.1) && agree(s) && (await ev(() => game.story.cur.steps.saidLog.includes('t2_ask_barrels'))), s);
@@ -170,7 +180,10 @@ await ev(() => { TM.ballOut(); TM.out(); P.talk('zoe'); TM.found(); game.step(1.
 await cont(); await helpers();
 s = await M();
 const r3a = await ev(() => ({ b: TM.barrel(), room: game.room?.id ?? 'out' }));
-check('R3.1 saved mid-yard and loaded: the barrels step again, its marker and star on the near barrel, the barrel in its place', s.step === 'barrels' && s.vis && s.name === 't2_n_barrels' && agree(s) && !r3a.b.aside && r3a.room === 'out', { s, r3a });
+check('R3.1 saved mid-yard and loaded: the Dino-Fly step again (BEHAVIOUR-MODES), its marker and star on him', s.step === 'dino' && s.vis && s.name === 't2_n_dino' && agree(s) && r3a.room === 'out', { s, r3a });
+await ev(() => TM.dinoPet());
+s = await M();
+check('R3.1 petted: the barrels step, its marker and star on the near barrel, the barrel in its place', s.step === 'barrels' && s.vis && s.name === 't2_n_barrels' && agree(s) && !r3a.b.aside, { s, r3a });
 await ev(() => { TM.throwAtBarrels(); game.save(false); });
 await cont(); await helpers();
 s = await M();
@@ -181,7 +194,7 @@ check('R3.3 the pipe walked round (no jump): he goes on, the yard let go with on
 // a save as the build before TUT-MYSTERY wrote it: the steps' flags mid-yard, the barrels already hit (no barrel state saved)
 await ev(() => {
   const s0 = game.snapshot();
-  for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen']) delete s0.flags[k];
+  for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen', 'pr_dino']) delete s0.flags[k];   // (pr_dino: BEHAVIOUR-MODES, not in an older save)
   Object.assign(s0.flags, { pr_v2: 1, pr_tut2: 1, pr_kettle: true, pr_yard: true, pr_barrel: true });
   s0.tut = { v: 1, done: ['move', 'inventory', 'talk', 'use', 'advance', 'ball'], gone: [] };
   s0.room = null; s0.hero.x = -44.8; s0.hero.z = 74.5; s0.hero.hasBall = true;
@@ -189,7 +202,8 @@ await ev(() => {
 });
 await cont(); await helpers();
 s = await M();
-const r3d = await ev(() => { const b = TM.barrel(); P.tap('F2', 0.1); P.go(-46.4, 70.6, { tol: 0.3, run: true }); P.settle(); P.face(-40, 70.6); game.input.keys.add('ArrowUp'); game.step(0.45); P.tap('Space', 0.02); game.step(1.0); game.input.keys.delete('ArrowUp'); game.step(2.0); return { b, pipe: game.flags.pr_pipe, ok: !!game.flags.pr_yardOk, state: game.state }; });
-check('R3.4 an older save mid-yard (barrels hit before this build): loads at the pipe step, the barrel aside, the jump finishes the yard', s.step === 'pipe' && r3d.b.aside && r3d.pipe === 1 && r3d.ok && r3d.state === 'play', { s, r3d });
+const r3dino = s.step;
+const r3d = await ev(() => { const b = TM.barrel(); TM.dinoPet(); P.tap('F2', 0.1); P.go(-46.4, 70.6, { tol: 0.3, run: true }); P.settle(); P.face(-40, 70.6); game.input.keys.add('ArrowUp'); game.step(0.45); P.tap('Space', 0.02); game.step(1.0); game.input.keys.delete('ArrowUp'); game.step(2.0); return { b, pipe: game.flags.pr_pipe, ok: !!game.flags.pr_yardOk, state: game.state }; });
+check('R3.4 an older save mid-yard (barrels hit before this build): loads at the Dino-Fly step (new, BEHAVIOUR-MODES), the barrel aside; petted, the jump finishes the yard', r3dino === 'dino' && r3d.b.aside && r3d.pipe === 1 && r3d.ok && r3d.state === 'play', { s, r3d });
 await browser.close();
 done();

@@ -6,13 +6,15 @@
 //   A  a new player following the steps, keyboard (Classic, the default): the house (walk, the cupboard; Arthur's talk
 //      and the dialogue's key hint; the kitchen tap; the door waits for the ball) · save half way and load · the yard:
 //      Zoé calls · (TUT-MYSTERY: the skip and Zoé's one call: tests/tutor-targets.mjs R2) · Talk to Zoé · the inventory ·
-//      the garden tap · the barrels (misses first) · Athletic and the jump over the project's pipe (a missed run first) ·
+//      the garden tap · (BEHAVIOUR-MODES, P125) the sleeping Dino-Fly: woken in Normal, the switch to Discreet and its
+//      caption, crept up to and petted · the barrels (misses first) · Athletic and the jump over the project's pipe (a missed run first) ·
 //      the yard done: the well's way open · in and out of the house mid-step · the optional arc after · out of magic
 //   B  Show control tips off from the start: the goal lines stay, no key, every step by its key · tips on
 //      again · an experienced player doing the yard out of order · three missed jumps: "close enough" · a remapped key ·
 //      a faked gamepad (the step's keys in pad terms, the camera tip after the yard) · on to the well and the town's tips
 //   C  saves: from the cup's days and from P22's build (no steps, free to leave, no tip) · this build's save mid-yard
 //      (the steps resume; leaving lets the yard go with one call) · this build's save beyond the edge (let go, never pulled back)
+//      · (BEHAVIOUR-MODES) a mid-yard save from before the Dino-Fly's step (format 6, at the barrels): it resumes with it
 // Prints PASS/FAIL per check (R7-VERDICTS). Captures: captures/opening-tut-2/*.jpg (looked at by hand, not judged here).
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import { mkdirSync } from 'node:fs';
@@ -71,6 +73,10 @@ const helpers = () => ev(async () => {
     settleFound() { for (let i = 0; i < 40 && game.state !== 'play'; i++) { if (game.state === 'found') P.tap('KeyE', 0.2); P.settle(); } game.step(0.4); },
     tipBox() { const e = document.querySelector('#tip.show'); if (!e) return null; const r = e.getBoundingClientRect(); return { l: r.left | 0, t: r.top | 0, r: r.right | 0, b: r.bottom | 0, mid: r.right < innerWidth * 0.4 }; },
     stars() { return (game.story.cur.markers() || []).map((m) => [+m.x.toFixed(1), +m.z.toFixed(1), m.label || '']); },
+    // BEHAVIOUR-MODES: the Dino-Fly (his pet entry and state), and his step done by keys: Discreet, crept up to, petted,
+    // back to Normal; returns the caption shown at the switch
+    dino() { return game.world.pets.find((q) => q.id === 'dinofly'); },
+    dinoPet() { const D = TT.dino(); let cap = null; if (game.hero.behaviour !== 'discreet') { P.tap(TT.code('b4'), 0.1); cap = game.hud.modeShown; } P.use(D.x, D.z, { near: 2.0, kind: 'pet' }); P.settle(); game.step(0.4); P.tap(TT.code('b1'), 0.1); game.step(0.6); return { cap, dino: !!game.flags.pr_dino }; },
   };
 });
 
@@ -131,7 +137,22 @@ await shot('06-inventory-kettle');
 const inv2 = await ev(() => { P.tap(TT.code('inventory'), 0.3); game.step(1.6); game.step(1.0); return { st: game.state, tip: game.tutorial.shown, text: TT.tip(), said: TT.said() }; });
 check('A11 closed: the next goal, Try the garden tap, with its key; Zoé asks', inv2.st === 'play' && inv2.tip === 'step:tap' && /Try the garden tap/.test(inv2.text) && inv2.said.includes('t2_ask_tap'), inv2);
 const ytap = await ev(() => { const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); game.step(2.6); return { yard: !!game.flags.pr_yard, tip: game.tutorial.shown, text: TT.tip(), said: TT.said() }; });
-check('A13 the garden tap by its key: dry, knocking; then: Hit the barrels with the magic ball, in its key; Zoé\'s dare', ytap.yard && ytap.tip === 'step:barrels' && ytap.text.includes(await ev(() => TT.labels('ball'))) && ytap.said.includes('t2_ask_barrels'), ytap);
+check('A13 the garden tap by its key: dry, knocking; then: Sneak up to the sleeping Dino-Fly in Discreet, the Discreet key; Zoé asks', ytap.yard && ytap.tip === 'step:dino' && /Sneak up to the sleeping Dino-Fly/.test(ytap.text) && ytap.text.includes(await ev(() => TT.labels('b4'))) && ytap.said.includes('t2_ask_dino'), ytap);
+// BEHAVIOUR-MODES (P125): walked up to in Normal he wakes, Zoé says so gently, nothing fails; Discreet by its key: the
+// caption; he dozes off again; crept up to, he sleeps on: "Pet"; petted: the step done
+const woke = await ev(() => { const D = TT.dino(); P.go(D.x + 4.6, D.z + 3.6, { tol: 0.6 }); game.step(0.8); return { awake: !D.state.asleep(), said: TT.said(), step: TT.step(), prompt: document.querySelector('#prompt.show')?.textContent || '', d: +Math.hypot(game.hero.pos.x - D.x, game.hero.pos.z - D.z).toFixed(1) }; });
+check('A13b walked up to in Normal: the Dino-Fly wakes and looks; Zoé: he heard you; the step stays (nothing fails)', woke.awake && woke.said.includes('t2_dino_woke') && woke.step === 'dino', woke);
+await shot('07a-dino-woke');
+const sneak = await ev(() => {
+  const D = TT.dino(); P.tap(TT.code('b4'), 0.1); const cap = game.hud.modeShown; game.step(3.6); const asleep = D.state.asleep(), capLater = game.hud.modeShown;
+  P.go(D.x + 1.8, D.z + 1.6, { tol: 0.35 }); P.face(D.x, D.z); game.step(0.5);
+  const prompt = document.querySelector('#prompt.show')?.textContent || '', tip = TT.tip(), still = D.state.asleep();
+  P.tap('KeyE', 0.1); const line = game.hud.dialog?.full || ''; P.settle(); game.step(1.4);   // (the whole line: the box types it)
+  return { cap, capLater, asleep, prompt, tip, still, line, dino: !!game.flags.pr_dino, step: TT.step(), text: TT.tip(), woke: D.state.woke, said: TT.said() };
+});
+check('A13c Discreet by its key: the caption (the name, Hold [the action key] to hide) for a moment, gone after ~2 s', sneak.cap?.b === 'discreet' && /Discreet/.test(sneak.cap.text) && sneak.cap.text.includes(await ev(() => TT.labels('action'))) && /hide/.test(sneak.cap.text) && !sneak.capLater, sneak);
+check('A13c he dozes off again; crept up to in Discreet he sleeps on: "Pet" (the prompt and the panel\'s key); petted: his line, the step done, then the barrels (Zoé\'s dare)', sneak.asleep && sneak.still && /Pet/.test(sneak.prompt) && /Pet him/.test(sneak.tip) && /strokes his snout/.test(sneak.line) && sneak.dino && sneak.step === 'barrels' && sneak.said.includes('t2_ask_barrels') && sneak.text.includes(await ev(() => TT.labels('ball'))), sneak);
+await ev(() => { P.tap(TT.code('b1'), 0.1); game.step(0.3); });
 await ev(() => { P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); P.go(-45.3, 73.0, { tol: 0.4 }); game.step(0.6); });
 await shot('07-yard-barrels-step');
 const misses = await ev(() => {
@@ -184,13 +205,15 @@ const off = await ev(() => {
   P.talk('zoe'); TT.settleFound(); game.step(1.6); watch('zoe');
   P.tap(TT.code('inventory'), 0.3); P.tap(TT.code('inventory'), 0.3); game.step(1.6); watch('inv');
   const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); game.step(1.6); watch('tap');
+  const dp = TT.dinoPet(); watch('dino');
   P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); const B = game.story.cur.barrels(); P.face(B.x, B.z); P.tap(TT.code('ball'), 0.05); game.step(2.0); P.settle(); game.step(1.6); watch('barrels');
   P.tap(TT.code('b2'), 0.2); P.go(-46.4, 70.6, { tol: 0.3, run: true }); P.settle(); P.face(-40, 70.6); game.input.keys.add('ArrowUp'); game.step(0.45); P.tap('Space', 0.02); game.step(1.0); game.input.keys.delete('ArrowUp'); game.step(2.0); watch('pipe');
-  return { seen, flags: ['pr_kettle', 'pr_yard', 'pr_barrel', 'pr_pipe', 'pr_yardOk'].map((k) => !!game.flags[k]) };
+  return { seen, cap: dp.cap, flags: ['pr_kettle', 'pr_yard', 'pr_dino', 'pr_barrel', 'pr_pipe', 'pr_yardOk'].map((k) => !!game.flags[k]) };
 });
 const goals = off.seen.filter((x) => x[0] !== 'pipe').map((x) => x[1]);
 check('B1 tips off: the goal line stays at every step, with no key in it, and no dialogue key hint', off.seen.every((x) => !x[2] && !x[3]) && goals.every((g) => g.length > 0) && /Talk to Zoé/.test(off.seen[3][1]) && /Kettle Crystals/.test(off.seen[4][1]), off.seen);
-check('B1 tips off: every step completes by its key (kettle, tap, barrels, pipe; the yard done)', off.flags.every(Boolean), { flags: off.flags });
+check('B1 tips off: every step completes by its key (kettle, tap, Dino-Fly, barrels, pipe; the yard done)', off.flags.every(Boolean), { flags: off.flags });
+check('B1 tips off: the mode caption still names the behaviour, without the key line', off.cap?.b === 'discreet' && /Discreet/.test(off.cap.text) && !off.cap.key && !/hide/.test(off.cap.text), off.cap);
 await shot('11-tips-off');
 // tips on again (from pause): only the steps' keys come back; nothing else asked (a fresh game for the panel's keys)
 await ev(() => { game.settings.tips = 'on'; game.applySettings?.(); game.step(1.0); });
@@ -211,7 +234,7 @@ await page.reload(); await open(page, '?nocine'); await newGame(); await helpers
 const close = await ev(() => {
   const sp = game.room.searches.find((x) => x.id === 'cupboard'); P.use(sp.x, sp.z); TT.settleFound(); TT.out(); game.step(0.6);
   P.talk('zoe'); TT.settleFound(); P.tap(TT.code('inventory'), 0.3); P.tap(TT.code('inventory'), 0.3); game.step(1);
-  const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle();
+  const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); TT.dinoPet();
   P.go(-45.3, 73.0, { tol: 0.4 }); P.settle(); const B = game.story.cur.barrels(); P.face(B.x, B.z); P.tap(TT.code('ball'), 0.05); game.step(2.0); P.settle();
   P.tap(TT.code('b2'), 0.2); P.go(-45.2, 69.6, { tol: 0.3, run: true }); P.settle();   // (standing jumps beside the pipe: up and down on his side)
   const tries = [];
@@ -225,7 +248,7 @@ await page.reload(); await open(page, '?nocine'); await newGame(); await helpers
 await ev(() => {
   const sp = game.room.searches.find((x) => x.id === 'cupboard'); P.use(sp.x, sp.z); TT.settleFound(); TT.out(); game.step(0.6);
   P.talk('zoe'); TT.settleFound(); P.tap(TT.code('inventory'), 0.3); P.tap(TT.code('inventory'), 0.3); game.step(1);
-  const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); P.go(-45.3, 73.0, { tol: 0.4 }); game.step(1.2);
+  const Y = game.story.chapters[0].home.parts.yard; P.use(Y.x, Y.z, { near: 1.2, kind: 'h_yard' }); P.settle(); TT.dinoPet(); P.go(-45.3, 73.0, { tol: 0.4 }); const B0 = game.story.cur.barrels(); P.face(B0.x, B0.z); game.step(1.2);   // (BEHAVIOUR-MODES: from the Dino-Fly he comes the other way: facing them, as before)
 });
 await ev(() => game.pause());
 await page.click('#pause [data-act="controls"]');
@@ -265,7 +288,7 @@ const kids = await ev(() => {
   return { t1, t2, overheard: !!game.flags.overheard, done: ['discreet', 'normal'].filter((x) => game.tutorial.done.has(x)) };
 });
 check('B10 the kids brush him off: Switch to Discreet; overheard, then Back to Normal; both learned', /Discreet/.test(kids.t1 || '') && kids.overheard && /Normal/.test(kids.t2 || '') && kids.done.length === 2, kids);
-const kick = await ev(() => { const f = game.flags, W = game.world.well; f.key = true; f.pr_lidStuck = true; game.hero.hasKey = true; game.story.cur.setLid('stuck'); P.go(W.x + 2.4, W.z + 0.4, { tol: 0.5 }); game.step(1.2); const t1 = TT.tip(); P.tap('F3', 0.2); game.step(1.0); const t2 = TT.tip(); return { t1, t2 }; });
+const kick = await ev(() => { const f = game.flags, W = game.world.well; f.key = true; f.pr_lidStuck = true; game.hero.hasKey = true; game.story.cur.setLid('stuck'); P.go(W.x + 2.4, W.z + 0.4, { tol: 0.5 }); P.face(W.x, W.z); game.step(1.2); const t1 = TT.tip(); P.tap('F3', 0.2); game.step(1.0); const t2 = TT.tip(); return { t1, t2 }; });   // (facing the well: Gilbert by it may have the prompt otherwise; his place depends on the time)
 check('B11 (reproduced: flags set) at the stuck lid: Switch to Aggressive, then the kick\'s key', /Aggressive/.test(kick.t1 || '') && /Kick the lid/.test(kick.t2 || ''), kick);
 
 // ============================================================ C: saves
@@ -300,7 +323,7 @@ check('C2 a save from P22\'s build in the yard (no pr_tut2): plays on as before:
 // go with Zoé's one call (TUT-MYSTERY: no call back)
 await ev(() => {
   const s0 = game.snapshot(); s0.tut = { v: 1, done: ['move', 'inventory', 'talk', 'use', 'advance'], gone: [] };
-  for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen']) delete s0.flags[k];
+  for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen', 'pr_dino']) delete s0.flags[k];
   Object.assign(s0.flags, { pr_v2: 1, pr_tut2: 1, pr_kettle: true, pr_yard: false, pr_barrel: false });
   s0.room = null; s0.hero.x = -44.8; s0.hero.z = 74.5; s0.hero.hasBall = true;
   localStorage.setItem('lba3_save_v1', JSON.stringify(s0));
@@ -308,6 +331,18 @@ await ev(() => {
 await cont();
 const c3 = await ev(() => { game.step(1.0); const tip = game.tutorial.shown, text = TT.tip(); const sk = TT.skip(); return { tip, text, sk }; });
 check('C3 this build\'s save mid-yard: the steps resume where they were (Try the garden tap); leaving: one call, no walk back', c3.tip === 'step:tap' && c3.sk.maxD > 30 && c3.sk.zoe === 0 && (await ev(() => game.story.cur.steps.saidLog || [])).includes('t2_call_go') && (await ev(() => !!game.flags.pr_yardOk)), c3);
+// C3b (BEHAVIOUR-MODES) a mid-yard save from the build before the Dino-Fly's step (format 6: the tap done, at the barrels,
+// no pr_dino): it resumes with the new step first (the dots one more), the rest kept; done, on to the barrels
+await ev(() => {
+  const s0 = game.snapshot(); s0.tut = { v: 1, done: ['move', 'inventory', 'talk', 'use', 'advance'], gone: [] };
+  for (const k of ['pr_pipe', 'pr_yardOk', 'wellSeen', 'pr_dino']) delete s0.flags[k];
+  Object.assign(s0.flags, { pr_v2: 1, pr_tut2: 1, pr_kettle: true, pr_yard: true, pr_barrel: false });
+  s0.room = null; s0.hero.x = -44.8; s0.hero.z = 74.5; s0.hero.hasBall = true; s0.hero.behaviour = 'normal';
+  localStorage.setItem('lba3_save_v1', JSON.stringify(s0));
+});
+await cont();
+const c3b = await ev(() => { game.step(1.0); const tip = game.tutorial.shown, text = TT.tip(), prog = game.story.cur.steps.progress(); const d = TT.dinoPet(); game.step(1.6); return { tip, text, prog, dino: d.dino, after: game.tutorial.shown, kettle: !!game.flags.pr_kettle, yard: !!game.flags.pr_yard }; });
+check('C3b a mid-yard save from before the Dino-Fly\'s step: resumes on it (3 of 6 done), the kettle and the tap kept; petted, the barrels next', c3b.tip === 'step:dino' && c3b.prog[0] === 3 && c3b.prog[1] === 6 && c3b.kettle && c3b.yard && c3b.dino && c3b.after === 'step:barrels', c3b);
 // C4 this build's save somehow past the yard's edge (in the square): let go, never pulled back
 await ev(() => {
   const s0 = game.snapshot();
