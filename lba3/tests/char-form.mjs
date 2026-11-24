@@ -7,6 +7,7 @@
 // talking mouth are there, the ball is in his hand bone's hierarchy. OUT=dir (default captures/char-form/game-<TAG>),
 // TAG=before|after names the set. SwiftShader, headless: Automated runtime only.
 import { launch, open, checker } from './lib/boot.mjs';
+import { serveLocal } from './lib/serve.mjs';
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const TAG = process.env.TAG || 'after';
@@ -14,6 +15,7 @@ const CAP = process.env.OUT || fileURLToPath(new URL(`../captures/char-form/game
 mkdirSync(CAP, { recursive: true });
 const { check, done } = checker({ info: 'always' });
 const { browser, page } = await launch({ width: 1280, height: 720 });
+if (process.env.SERVE) await serveLocal(page);   // (SERVE=1: this checkout's files without an http.server)
 const ev = (f, a) => page.evaluate(f, a);
 const shot = async (n) => { await ev(() => { game.renderer.render(); }); await page.screenshot({ path: CAP + n + '.jpg', type: 'jpeg', quality: 85, timeout: 180000 }); };
 
