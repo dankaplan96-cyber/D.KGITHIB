@@ -76,6 +76,7 @@ The user, 17.11: "let's do all the fixes I wrote so far, I think the tokens are 
 Read this first, then `status.md` (the playtest inbox P1–P65), `WORKPLAN-2026-11-09.md` and `tools/testlab/CLOUD_ORDERS.md`.
 
 ## Standing rules (unchanged)
+- **PC only (the user, 24.11):** the game is for a desktop PC. The user opens it on a phone only to look at visuals, not to play. Do not spend work on phone/portrait framing or touch controls.
 - **The user, 20.11: keep tests to a minimum while working; one full test of everything at the end.**
 - **The user, 22.11: "don't test every version, it's unnecessary."** Publish fixes without a test round per version; a worker runs only the suite its fix touches; one full test at the very end, after the fixes are done.
 - **The user's machines (as of 22.11):** the home desktop — GTX 1050 (the local agent's machine, paused); a laptop with Intel UHD 620 (59.9 Hz); **the work computer** — Intel UHD Graphics (0xA7A8, D3D11), a **100 Hz** screen, 1745×937 at dpr 1.1, Chrome 157 (the user, 22.11: "it's a computer at work"; its benchmark is P101). Name the machine when quoting a result.
