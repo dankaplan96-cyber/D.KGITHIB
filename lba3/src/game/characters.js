@@ -2050,7 +2050,8 @@ const LOOK_MODEL = {
 // other vertices pass through unchanged). Applied to the loaded model (lookModel) so every Zoé — the yard, the film, the
 // chapters, the hero's own Zoé body, the statue — gets it. ?zoehair=a|b|c picks the variant (the setting `zoeHair` the
 // same), ?zoehair=old the model's own hair. The ponytail's weights pass from the head (to just past the tie) to tail0–2
-// along it, as the old ponytail's did, so the rig's follow-through still sways it.
+// along it, as the old ponytail's did, so the rig's follow-through still sways it. ZOE-HAIR-2 (the user after v153): the
+// gold over the skull is gone by default: her scalp bare skin like Twinsen's, only the lock and the tie (zoeBare below).
 const ZH_HAIR = [0xe3, 0xaf, 0x53], ZH_TRIM = [0x3f, 0x7b, 0x47];   // (the model's hair and trim colours: tools/blender/zoe_poly.py)
 const ZH_TONE = [[-2, [0xa0, 0x64, 0x10]], [0, [0xbc, 0x7c, 0x14]], [0.45, [0xd2, 0x94, 0x1c]], [1, [0xe2, 0xaa, 0x30]]];
 const zhTone = (u) => {
@@ -2090,12 +2091,86 @@ export const ZOE_HAIRS = {
 const ZH_BAND = { n: 24, s: 8, ro: 0.0095, rl: 0.014, off: 0.005, lift: 0.011, col: ZH_TRIM, hi: [0x74, 0xb0, 0x78], lo: [0x24, 0x4c, 0x2c], scalp: ZH_HAIR, minY: 1.85, reach: 0.12 };
 // the hair over the skull: its gold, combed toward the tie (k streaks round it, ± amp), darker by the tie; normals levelled
 const ZH_CAP = { col: [0xc6, 0x88, 0x18], root: [0xa8, 0x6c, 0x12], k: 13, amp: 0.1, up: 0.2 };
-export const ZOE_HAIR = (() => {
+// ZOE-HAIR-2 (the user, 24.11 after v153: "in the box art she has no hair around the ponytail — like Twinsen's: there is
+// the tie, and the hair comes out of it; apart from that there is no hair on the head"): by default her skull is bare
+// skin like his (zoeBare, below), only the lock and the tie; `-cap` after the variant (?zoehair=a-cap) keeps v153's gold
+// hair over the skull, for the comparison; `-bigtie` a rounder, chunkier tie (the box art's green knob) on the bare scalp
+const ZOE_HAIR_RAW = (() => {
   let s = '';
   try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehair')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHair || ''; } catch { /* no storage */ }
-  s = String(s).trim().toLowerCase();
+  return String(s).trim().toLowerCase();
+})();
+const ZOE_HAIR_OPT = ZOE_HAIR_RAW.split('-').slice(1);
+export const ZOE_SCALP = ZOE_HAIR_OPT.includes('cap') ? 'cap' : 'bare';
+const ZOE_BIGTIE = ZOE_HAIR_OPT.includes('bigtie');
+export const ZOE_HAIR = (() => {
+  const s = ZOE_HAIR_RAW.split('-')[0];
   return s === 'old' || ZOE_HAIRS[s] ? s : 'a';
 })();
+// the bare scalp. The model's hair over the skull is the head's own surface cut along a hairline and raised 3.5–5.5 mm off
+// the skull (tools/blender/zoe_poly.py, ZOE-LOOK-38: HAIRLINE, HC, the lift; ZH 1.95 m per H): that lift is taken off
+// again (each point moved back toward HC along the same line: the designed skull's dome, no step at the old hairline),
+// the surface painted her own skin, and its normals made smooth over the skull and the forehead it now runs into (the
+// skin's, not levelled: lit as skin). Then the tie is found on that skin as Twinsen's is on his, and the skin right round
+// the tie shaded a little darker (the tie's and the lock's shadow on the scalp, as his scalp by his tie).
+const ZH_SKIN = [0xd9, 0xa6, 0x79], ZH_SEAT = { col: [0xb2, 0x80, 0x58], k: 0.5, d: [0.004, 0.035] };
+const ZH_M = 1.95, ZH_HC = [0, 0.935 * 1.95, -0.03 * 1.95];
+const ZH_LINE = [[0, 0.958], [30, 0.956], [60, 0.949], [85, 0.937], [100, 0.925], [120, 0.905], [145, 0.889], [180, 0.881]];
+const zhLift = (p) => {
+  const x = p[0] / ZH_M, z = p[2] / ZH_M, th = (Math.atan2(Math.abs(x), z + 0.025) * 180) / Math.PI;
+  let line = ZH_LINE[ZH_LINE.length - 1][1];
+  for (let i = 0; i + 1 < ZH_LINE.length; i++) if (th <= ZH_LINE[i + 1][0]) { const [a0, y0] = ZH_LINE[i], [a1, y1] = ZH_LINE[i + 1]; line = y0 + ((y1 - y0) * (th - a0)) / (a1 - a0); break; }
+  return (0.0035 + 0.002 * sstep(0.95 * ZH_M, 0.99 * ZH_M, p[1])) * sstep(-0.003, 0.012, p[1] / ZH_M - line);
+};
+const ZH_BAND_BARE = { ...ZH_BAND, scalp: ZH_SKIN };
+const ZH_BAND_BIG = { ...ZH_BAND_BARE, ro: 0.014, rl: 0.019, off: 0.004, lift: 0.015 };
+function zoeBare(P, hb) {
+  const n = P.pos.length / 3, is = (v, c) => P.col[v * 3] === c[0] && P.col[v * 3 + 1] === c[1] && P.col[v * 3 + 2] === c[2];
+  const scalp = (v) => { if (!is(v, ZH_HAIR) && !is(v, ZH_SKIN)) return false; let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k]; return w >= 0.99; };
+  const key = (v) => `${P.pos[v * 3].toFixed(5)},${P.pos[v * 3 + 1].toFixed(5)},${P.pos[v * 3 + 2].toFixed(5)}`;
+  // the lift off: r' = r + lift(r) along the line from HC, solved for r (converges to 1e-10 m in a few steps)
+  const moved = new Set(), keys = new Set();
+  for (let v = 0; v < n; v++) {
+    if (!scalp(v)) continue;
+    const p = [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]];
+    if (zhLift(p) <= 0) continue;
+    keys.add(key(v));
+    const d = p.map((x, i) => x - ZH_HC[i]), rp = Math.hypot(...d), u = d.map((x) => x / rp);
+    let r = rp;
+    for (let it = 0; it < 8; it++) r = rp - zhLift(u.map((x, i) => ZH_HC[i] + x * r));
+    for (let i = 0; i < 3; i++) P.pos[v * 3 + i] = ZH_HC[i] + u[i] * r;
+    if (is(v, ZH_HAIR)) P.col.splice(v * 3, 3, ...ZH_SKIN);
+    moved.add(v);
+  }
+  // smooth normals where it moved: area-weighted over every skin triangle of the head at those points
+  const acc = new Map(), a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  for (let t = 0; t < n / 3; t++) {
+    const i = t * 3;
+    if (!scalp(i) || !scalp(i + 1) || !scalp(i + 2)) continue;
+    const ks = [key(i), key(i + 1), key(i + 2)];
+    if (!ks.some((k) => keys.has(k))) continue;
+    a.fromArray(P.pos, i * 3); b.fromArray(P.pos, (i + 1) * 3).sub(a); c.fromArray(P.pos, (i + 2) * 3).sub(a); b.cross(c);
+    if (b.x * P.nrm[i * 3] + b.y * P.nrm[i * 3 + 1] + b.z * P.nrm[i * 3 + 2] < 0) b.negate();
+    for (const k of ks) { if (!acc.has(k)) acc.set(k, new THREE.Vector3()); acc.get(k).add(b); }
+  }
+  for (let v = 0; v < n; v++) {
+    if (!scalp(v)) continue;
+    const k = key(v);
+    if (!keys.has(k) || !acc.has(k)) continue;
+    const nn = acc.get(k).clone().normalize();
+    P.nrm[v * 3] = nn.x; P.nrm[v * 3 + 1] = nn.y; P.nrm[v * 3 + 2] = nn.z;
+  }
+  return moved;
+}
+// the skin round the tie a little darker (the scalp it sits on, as by Twinsen's tie): by the distance to the lock's
+// surface, the old hair area only
+function zoeSeat(P, ctx, moved) {
+  for (const v of moved) {
+    const [d] = hairDist(ctx, [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]]);
+    const w = ZH_SEAT.k * (1 - sstep(ZH_SEAT.d[0], ZH_SEAT.d[1], d));
+    if (w > 0) P.col.splice(v * 3, 3, ...mixc(ZH_SKIN, ZH_SEAT.col, w));
+  }
+}
 function zoeHair(P0, H) {
   const P = { ...P0, pos: P0.pos.slice(), nrm: P0.nrm.slice(), col: P0.col.slice(), si: P0.si.slice(), sw: P0.sw.slice() };
   const n = P.pos.length / 3, hb = P.bones.indexOf('head'), tails = ['tail0', 'tail1', 'tail2'].map((b) => P.bones.indexOf(b));
@@ -2117,6 +2192,16 @@ function zoeHair(P0, H) {
   for (const vs of pieces.values()) if ((is(vs[0], ZH_HAIR) || is(vs[0], ZH_TRIM)) && vs.every(onHead) && vs.some(tailed)) vs.forEach((v) => drop.add(v));
   if (!drop.size) return P0;   // (not the model this was made for: leave it)
   const ctx = { drop, weights: zhWeights };
+  if (ZOE_SCALP === 'bare') {
+    // (ZOE-HAIR-2: the skull bare first, so the tie is found on her skin; the moved points' indices past the dropped ponytail)
+    const moved = zoeBare(P, hb), keep = [];
+    let k = 0;
+    for (let v = 0; v < n; v++) if (!drop.has(v)) { if (moved.has(v)) keep.push(k); k++; }
+    swapHair(P, ctx, splineLock(ctx, true, H));
+    hairBand(P, ctx, ZOE_BIGTIE ? ZH_BAND_BIG : ZH_BAND_BARE);
+    zoeSeat(P, ctx, keep);
+    return P;
+  }
   swapHair(P, ctx, splineLock(ctx, true, H));
   hairBand(P, ctx, ZH_BAND);
   // the hair over the skull: gold, combed toward the tie, levelled

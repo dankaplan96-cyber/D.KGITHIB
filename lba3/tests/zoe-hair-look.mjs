@@ -2,7 +2,7 @@
 // hair for the user's pick (P107), and the checks a script can make. Nothing here judges the look: a person does.
 //   PHASE=hash      Twinsen's model as built (lookdev): one hash of every vertex attribute, printed (before/after a change
 //                   to the hair code: the same hash = the same look, byte for byte)
-//   PHASE=lookdev   for each ?zoehair= value in HAIRS (default old,a,b,c): Zoé's whole figure from the front, ¾, side and
+//   PHASE=lookdev   for each ?zoehair= value in HAIRS (default old,a,b,c; ZOE-HAIR-2: a-cap = v153's gold over the skull, a-bigtie): Zoé's whole figure from the front, ¾, side and
 //                   back, her head from the same four sides, the talking pose (head, ¾) and the walk from behind; the
 //                   model's triangle count
 //   PHASE=game      (one boot, ?zoehair=<ZH>, default the game's default) the opening film's two Zoé lines (her at the
