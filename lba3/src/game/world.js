@@ -12,7 +12,7 @@ import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, bugFootDist, LAWN_FENCE, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG, OLD_PINK_DZ } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, HARBOUR_PLAT, plateauStairAt, plateauStairGround, PLATEAU_STAIR_BOX } from './island.js';
-import { buildDinoFly } from './dinofly.js';
+import { buildDinoFly, DINO_AT } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry, ROCKS_OLD } from './cliffs.js';
@@ -1813,7 +1813,9 @@ export function* buildWorldSteps(parentScene) {
   // the Dino-Fly naps where he lay in LBA2 (DINOFLY-POS): the user's files place him (scene 49, the start of LBA2 after
   // the storm, and scene 195; File3D 109, body 167) south-west of Twinsen's house, at our (-58.0, 95.3), turned 1200 of
   // 4096 (1.84 rad); twelve years on it is still his spot in the grass behind the house
-  buildDinoFly(scene, W, -58.0, 95.3, 1.84);
+  // (BEHAVIOUR-MODES, P125: for the yard's sneak step he naps on the yard's west lawn; ?dino=lba2 puts him back on this
+  //  shelf: dinofly.js DINO_AT)
+  buildDinoFly(scene, W, DINO_AT.x, DINO_AT.z, DINO_AT.ry);
   W.storm = 1;
   W.update = (dt, t) => {
     swayU.uTime.value = t;

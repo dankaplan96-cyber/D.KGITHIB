@@ -11,6 +11,7 @@ import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
 import { stage, lookOf, TURN } from './itemlook.js';
 import { TOOL_IDS } from './tools.js';
 import './text/wswitch.js';   // (WEAPON-SWITCH: the pill's key hint)
+import './text/modes.js';   // (BEHAVIOUR-MODES: the mode caption)
 
 const $ = (s) => document.querySelector(s);
 // WEAPON-SWITCH / POCKET-SET: the weapon pill's strip and the pocket set's dial (their own rules, added once)
@@ -33,7 +34,16 @@ function addHudStyle() {
 #weapon .meter .ndl { stroke: #ff5a3a; }
 #weapon .meter circle { fill: #ffe8a0; }
 #weapon .meter.lit .face { stroke: rgba(255, 232, 160, 0.95); }
-#weapon .meter b { font-size: 12px; font-weight: 800; color: #ffe8a0; min-width: 4ch; }`;
+#weapon .meter b { font-size: 12px; font-weight: 800; color: #ffe8a0; min-width: 4ch; }
+#modecap { position: absolute; bottom: 104px; inset-inline-start: 16px; display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-weight: 500; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; white-space: nowrap; }
+#modecap.show { opacity: 1; transform: none; transition: opacity 0.12s, transform 0.12s; }
+#modecap .ico { display: block; width: 28px; height: 28px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+#modecap b { font-size: 16px; color: var(--accent); letter-spacing: 0.02em; }
+#modecap .mk { font-size: 14px; opacity: 0.95; }
+#modecap .mk kbd { margin-inline-end: 3px; }
+body.hud-lba #modecap { bottom: 18px; border-radius: 0; background: rgba(0, 0, 0, 0.72); border: 1px solid rgba(255, 255, 255, 0.85); }
+#hud.busy #modecap, body.found-on #modecap { opacity: 0; transition: none; }
+body.big-text #modecap b { font-size: 19px; } body.big-text #modecap .mk { font-size: 17px; }`;
   document.head.appendChild(st);
 }
 
@@ -49,6 +59,7 @@ const SHORT_NAME = (r) => ({ citadel: 'map_citadel_s', desert: 'map_desert_s', h
 // for a few seconds when the goal changes, then steps aside; it stays in the pause menu, the Holomap and the journal.
 // A count in the goal ("(2/3)") is progress, told by its own short toast: it does not bring the panel back.
 const OBJ_SHOW = 5;          // seconds of play the panel stays up after a new goal
+const MODE_SHOW = 2.0;       // BEHAVIOUR-MODES: s of play the mode caption stays up after a switch
 const PROMPT_DWELL = 0.15;   // a target must stay in reach this long before its prompt shows (no flicker walking past)
 const RUN_SPEED = 3.6;       // (Hero: faster than this is the run) running past things shows no prompt
 const goalOf = (html) => {
@@ -104,6 +115,29 @@ export class HUD {
     document.querySelectorAll('#behaviour .beh').forEach((d) => { const on = d.dataset.b === b; d.classList.toggle('on', on); d.querySelector('.lbl').style.visibility = on ? '' : 'hidden'; });
   }
   wheel(on) { $('#behaviour').classList.toggle('wheel', on); }
+  // BEHAVIOUR-MODES (P125, the user's pick 24.11, proposals 1+2): after the player switches behaviour, for MODE_SHOW s of
+  // play, small at the bottom corner: the behaviour's picture and name (always) and what the action key does in it, in
+  // the key in use (Show control tips: Off leaves the key line out). Its clock starts in play: a switch made in the Ctrl
+  // menu shows once the menu closes (stats() below). Story-set behaviours (Zoé's search, the escorts) show nothing.
+  modeCap(b) { this.modeWant = b; }
+  _modeTick() {
+    const now = this.game.time ?? 0;
+    if (this.modeWant) {
+      const b = this.modeWant; this.modeWant = null;
+      let el = $('#modecap');
+      if (!el) { addHudStyle(); el = document.createElement('div'); el.id = 'modecap'; el.setAttribute('role', 'status'); this.el.appendChild(el); }
+      const tips = this.game.settings?.tips !== 'off';
+      const k = `<kbd>${String(this.key('action')).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])}</kbd>`;
+      el.innerHTML = `<span class="beh-${b}"><span class="ico"></span></span><b>${t('beh_' + b)}</b>${tips ? `<span class="mk">${keyHints(t('bm_' + b, { k }))}</span>` : ''}`;
+      el.dataset.b = b;
+      el.classList.add('show');
+      this.modeUntil = now + MODE_SHOW;
+      return;
+    }
+    if (this.modeUntil != null && now >= this.modeUntil) { this.modeUntil = null; $('#modecap')?.classList.remove('show'); }
+  }
+  // the caption up now (tests): { b, text } or null
+  get modeShown() { const el = typeof document !== 'undefined' && document.querySelector('#modecap.show'); return el ? { b: el.dataset.b, text: el.textContent, key: !!el.querySelector('kbd') } : null; }
 
   setStyle(lba) { this.lba = lba; document.body.classList.toggle('hud-lba', lba); }
 
@@ -121,6 +155,7 @@ export class HUD {
   stats(h) {
     this._incrust(h);
     this._objTick();
+    if (this.modeWant || this.modeUntil != null) this._modeTick();
     // (PERF-CPU: the panel is written only when a value it shows changed: a text set every frame, even to the same
     //  value, made the browser recompute the HUD's style and layout every frame)
     const L = (this._sv ??= {}), sh = h.shards;
