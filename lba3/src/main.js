@@ -100,6 +100,11 @@ const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below
 // the interact key before people and other things; a thing counts as the goal's when it lies within GOAL_R m of one of
 // the objective's stars (a person: on the star, GOAL_R_NPC)
 const GOAL_FACE = 0.25, GOAL_R = 1.0, GOAL_R_NPC = 0.4;
+// (GOAL-DRESS, LBA3-RUN progression: the rooms' and homes' own looks, signs, boards and pets describe a place and are
+//  never an objective's thing. A look measured at a piece the objective's star stands on — the research post's desk in
+//  chapter 4: the room's Look at the desk's middle, the desk's Search at the place before it, 1.25 m off the star — was
+//  taken for the goal and kept the key from the desk: the notebook could not be taken. They keep the plain ranking)
+const NOT_GOAL = new Set(['ihlook', 'ihfar', 'zhlook', 'hl_look', 'lhome', 'wlook', 'sign', 'termBoard', 'pet']);
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
 // carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none); v4 → v5: the final chapter is two
@@ -2561,7 +2566,7 @@ class Game {
     if (!S.length) return gi;
     for (let i = 0; i < C.n; i++) {
       const x = C.x[i], z = C.z[i];
-      if (!(x === x) || !(C.s[i] < gs)) continue;
+      if (!(x === x) || !(C.s[i] < gs) || NOT_GOAL.has(C.o[i].kind)) continue;
       const r = C.o[i].kind === 'npc' ? GOAL_R_NPC : GOAL_R;
       let on = false;
       for (let k = 0; k < S.length && !on; k++) on = Math.hypot(S[k].x - x, S[k].z - z) < r;
