@@ -79,3 +79,10 @@ off (the shop house's door sill, −33.75, −1.5, 0.24 m under the ground: geom
   softly on Citadel's kerbs, the well and the planters (`citadel-stone-before-after.jpg`); the corrugated sheet gains a
   little relief in sun, little in shade. Zeelich's pictures are on the desktop (past chapter 2). Tests not run again
   (materials only, as before).
+
+## The islands (24.11)
+- Desert Island's, the Hamalayi's and the isles' walls are built of `stone`, `fortStone` and stucco: they have the relief
+  already. Looked at on Desert Island (base-06; pictures on the desktop): the dressed stone's joints read too dark and
+  heavy against the desert's bright walls, so the dressed stone is now gentler — its relief 6.0 (was 8.0) and its joints'
+  shade 0.7 (was 0.58) — close to the game's look; the mean brightness of a sunlit wall within −1 to −4 % of off. Draws on
+  Desert Island the same (116 → 116). Citadel's stone picture redone with it.
