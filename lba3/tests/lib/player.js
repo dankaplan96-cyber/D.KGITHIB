@@ -650,6 +650,7 @@
     for (let k = 0; k < 200 && !done() && !h.dead && out.t < maxT; k++) {
       if (G.state !== 'play') { P.settle(); continue; }
       idle(); const g = G.enemies.find((e) => e.id === 'guardian'); if (!g || !g.alive) break;
+      if (phase === 'pylons' && C.fd?.pending?.() != null) { P.coreFeed(); continue; }   // (the guardian is down while a pylon is open)
       if (g.state !== 'stunned') {
         P.face(g.pos.x, g.pos.z, 1); P.tap('F1'); P.tap('KeyF', 0.05); out.stunThrows++;
         for (let s = 0; s < 1.3 && g.state !== 'stunned'; s += DT) tick(DT);
@@ -658,8 +659,9 @@
         if (g.state !== 'stunned') { if (++miss >= 2) { miss = 0; const A = g.arena; if (A) P.go((A.x0 + A.x1) / 2 + (g.pos.x - (A.x0 + A.x1) / 2) * 0.3, (A.z0 + A.z1) / 2 + (g.pos.z - (A.z0 + A.z1) / 2) * 0.3, { tol: 1.0, maxT: 3, fight: false }); } continue; }
         miss = 0; out.stuns++;
       }
+      if (phase === 'pylons' && C.fd?.pending?.() != null) { P.coreFeed(); continue; }   // (EXPANSION WAVE 1, H-2: a pylon open: its box)
       if (phase === 'pylons') {
-        const p = C.plates().filter((q) => !f['c3_pylon' + q.i]).sort((a, b) => Math.hypot(a.x - h.pos.x, a.z - h.pos.z) - Math.hypot(b.x - h.pos.x, b.z - h.pos.z))[0]; if (!p) { tick(0.5); continue; }   // (the nearest plate: the walk is inside the 2.6 s window)
+        const p = C.plates().filter((q) => !f['c3_pylon' + q.i] && f.c3_prime !== q.i).sort((a, b) => Math.hypot(a.x - h.pos.x, a.z - h.pos.z) - Math.hypot(b.x - h.pos.x, b.z - h.pos.z))[0]; if (!p) { tick(0.5); continue; }   // (the nearest plate: the walk is inside the 2.6 s window)
         P.go(p.x, p.z, { tol: 0.35, maxT: 3, fight: false }); tick(0.35); idle();   // (standing still on a plate lines him up)
       } else if (phase === 'bleed') {
         // (CHAPTER-BALANCE: the bleed valve on the deck ring, turned while the guardian is stunned: E, and the turn plays out)
@@ -679,6 +681,38 @@
       P.tap('KeyF', 0.05); out.shots++; tick(1.4); P.settle();
     }
     out.t = +out.t.toFixed(1); P.note(`core fight (${phase}): ` + JSON.stringify(out)); return out;
+  };
+  // EXPANSION WAVE 1 (H-2, story/relays.js): the open pylon's junction box, by input, as a player who heard its ally:
+  // LIGHTHOUSE three dials to star, sun, wave; MAINS the wheel a notch a turn until the needle is between the marks, then
+  // let it settle; MILLS the ball at the flywheel as its mark comes up toward the top (from 3 m in front of it)
+  P.coreFeed = ({ tries = 40 } = {}) => {
+    const h = hero(), C = G.story.cur, fd = C.fd, box = fd?.pending?.(), out = { box, presses: 0, throws: 0 };
+    if (box == null) return out;
+    const { CODE, NEEDLE, FLY } = fd.rules;
+    P.settle(); fd.ensure();
+    const press = () => { P.tap('KeyE', 0.05); out.presses++; for (let w = 0; w < 120 && (h.actT > 0 || h.steer); w++) G.step(DT); P.settle(); };
+    const stand = (q, a) => { if (Math.hypot(h.pos.x - q.x, h.pos.z - q.z) > 0.2) P.go(q.x, q.z, { tol: 0.15, maxT: 10, fight: false }); P.face(a.x, a.z, 1); };
+    for (let k = 0; k < tries && fd.pending() === box && !h.dead; k++) {
+      const B = fd.boxes[box], st = fd.box[box];
+      if (st.busy || G.state !== 'play') { G.step(0.2); P.settle(); continue; }
+      if (box === 0) {
+        const j = st.dials.findIndex((v, i) => v !== CODE[i]); if (j < 0) { G.step(0.3); continue; }
+        const d = fd.dialAt(B, j); stand(B.dialFront[j], d);
+        const tg = P.target(); if (tg?.kind === 'fd_dial' && Math.hypot(tg.x - d.x, tg.z - d.z) < 0.1) press(); else { G.step(0.2); P.note('coreFeed: dial ' + j + ' prompt ' + (tg?.kind || 'none')); }
+      } else if (box === 1) {
+        const w = fd.wheelAt(B); stand(B.wheelAt, w);
+        if (st.p < NEEDLE.lo - 1e-6) { if (P.target()?.kind === 'fd_wheel') press(); else G.step(0.2); }
+        else { for (let w2 = 0; w2 < 4 / DT && fd.pending() === box; w2++) G.step(DT); P.settle(); }
+      } else {
+        const tg = B.target, dx = B.front.x - tg.x, dz = B.front.z - tg.z, d = Math.hypot(dx, dz) || 1, sx = tg.x + dx / d * 3, sz = tg.z + dz / d * 3;
+        if (Math.hypot(h.pos.x - sx, h.pos.z - sz) > 0.4) P.go(sx, sz, { tol: 0.3, maxT: 10, fight: false });
+        P.face(tg.x, tg.z, 1); if (h.behaviour !== 'normal') P.tap('F1');
+        for (let w = 0; w < 90 && G.ball.state !== 'idle'; w++) G.step(DT);
+        for (let w = 0; w < 8 / DT && !(st.brakeT < 0 && st.slipT <= 0 && st.ang > 0.75 && st.ang < 1.15); w++) G.step(DT);
+        P.tap('KeyF', 0.05); out.throws++; G.step(1.6); P.settle();
+      }
+    }
+    P.note('core feed: ' + JSON.stringify({ ...out, done: fd.pending() !== box })); return { ...out, done: fd.pending() !== box };
   };
   // the spaceship between the planets (travel.js, PLANET-1): to the pad's travel point, E, the menu's one stop
   P.shipTo = (pid) => {

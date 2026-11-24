@@ -911,10 +911,12 @@ if (!ONLY || ONLY === 'O') {
   await shot('O4-held');
   await handover();
   await SW_INSTALL();
-  is('O5 after Continue: the shutter still held on her crystal; through it to the galleries', await ev(() => {
-    const G = game, D = G.room, S = D?.coolDoor; const st = [G.room?.id, !!S?.held, !!D?.holdCrystal?.visible]; P.exitTo('c3-gallery'); SWAIT(60);
-    return [...st, G.room?.id];
-  }), (v) => v[0] === 'c3deep' && v[1] && v[2] && v[3] === 'c3gallery');
+  is('O5 after Continue: the shutter still held on her crystal; Baldino\'s relay on the catwalk\'s east post (EXPANSION WAVE 1, H-1: a save from before, the hall not past); through it to the galleries', await ev(() => {
+    const G = game, D = G.room, S = D?.coolDoor; const st = [G.room?.id, !!S?.held, !!D?.holdCrystal?.visible]; SWAIT(60);
+    const m = G.story._rl.marks.D2, L = D.ladder; P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 }); P.use(m.x, m.z, { near: 0.9, kind: 'rl_set' }); SWAIT(100);   // (up the stair to the catwalk first: the bracket is over it)
+    P.exitTo('c3-gallery'); SWAIT(60);
+    return [...st, G.room?.id, G.flags.dx_relay_deep];
+  }), (v) => v[0] === 'c3deep' && v[1] && v[2] && v[3] === 'c3gallery' && v[4] === true);
   is('O6 the galleries: two hearts by direct throws; on the middle stone (ISO: put there, the hops have their own suite) its plate lines him up, the throw comes off the survey mirror onto the third heart; the last stones rise', await ev(() => {
     const G = game, f = G.flags, R = G.room, h = G.hero;
     for (const tg of R.ballTargets.filter((x) => x.pillar != null && !x.node)) P.hitTarget(tg, 3.5, { run: false, maxT: 40 }); SWAIT(60);
@@ -925,6 +927,7 @@ if (!ONLY || ONLY === 'O') {
   await shot('O6-mirror');
   is('O7 Sendell\'s chamber (ISO: on the far shelf): the arch grows shut behind him first, then her words say why; the checkpoint at full life; the arch refuses him', await ev(() => {
     const G = game, f = G.flags, R = G.room, h = G.hero; const e = R.exits.find((x) => x.to === 'c3-sendell'); h.pos.set(e.x, R.deckY, e.z + 2.0); h.onGround = true; G.step(0.3); P.note('ISO: put on the far shelf');
+    { const m = G.story._rl.marks.G3; P.use(m.x, m.z, { near: 0.9, kind: 'rl_set' }); SWAIT(100); }   // (H-1: the relay by the old arch)
     P.through(e.x, e.z, { fight: false }); SWAIT(300, () => !!f.c3_sendell);
     const hp = h.hp, mx = h.maxHp; const b = G.room.exits.find((x) => x.to === 'c3-gallery'); P.go(b.x, b.z, { tol: 0.3, maxT: 5, fight: false }); SWAIT(40);
     return [f.sh_shut, f.c3_sendell, hp === mx, G.room?.id, !!G.room?.seal?.shut];
