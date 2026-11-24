@@ -15,7 +15,7 @@ import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, HARB
 import { buildDinoFly } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
-import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry } from './cliffs.js';
+import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry, ROCKS_OLD } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
 import { mergeStatic } from '../engine/merge.js';
@@ -760,7 +760,9 @@ function islandColor(x, z, h, slope, c) {
 // CLIMB-1: the cliff rocks where masonry now stands (the asylum's climb, lba1places.js) are left out whole, after they are
 // all drawn (so no random draw and no other rock moves): each rock is a closed solid of its own triangles, found by the
 // corners they share; one that has a corner in the masonry goes, all of it. Only the triangles in box [x0, z0, x1, z1].
-function dropRocks(mesh, inside, [x0, z0, x1, z1]) {
+// (P121: `along` > 0 tests points every `along` m along each triangle's edges too: a wall thinner than the rock runs
+//  through it between its corners)
+function dropRocks(mesh, inside, [x0, z0, x1, z1], along = 0) {
   const P = mesh.geometry.attributes.position, A = P.array, nT = P.count / 3, par = new Map(), near = [];
   const key = (i) => `${A[i * 3].toFixed(4)},${A[i * 3 + 1].toFixed(4)},${A[i * 3 + 2].toFixed(4)}`;
   const find = (k) => { let r = k; while (par.get(r) !== r) r = par.get(r); par.set(k, r); return r; };
@@ -773,7 +775,12 @@ function dropRocks(mesh, inside, [x0, z0, x1, z1]) {
     par.set(find(ks[1]), find(ks[0])); par.set(find(ks[2]), find(ks[0]));
   }
   const gone = new Set();
-  for (const t of near) for (let v = 0; v < 3; v++) { const i = t * 3 + v; if (inside(A[i * 3], A[i * 3 + 2], A[i * 3 + 1])) gone.add(find(key(i))); }   // (x, z, y)
+  for (const t of near) for (let v = 0; v < 3; v++) {
+    const i = t * 3 + v; if (inside(A[i * 3], A[i * 3 + 2], A[i * 3 + 1])) { gone.add(find(key(i))); continue; }   // (x, z, y)
+    if (!along) continue;
+    const j = t * 3 + (v + 1) % 3, L = Math.hypot(A[j * 3] - A[i * 3], A[j * 3 + 1] - A[i * 3 + 1], A[j * 3 + 2] - A[i * 3 + 2]), n = Math.floor(L / along);
+    for (let k = 1; k < n; k++) { const f = k / n; if (inside(A[i * 3] + (A[j * 3] - A[i * 3]) * f, A[i * 3 + 2] + (A[j * 3 + 2] - A[i * 3 + 2]) * f, A[i * 3 + 1] + (A[j * 3 + 1] - A[i * 3 + 1]) * f)) { gone.add(find(key(i))); break; } }
+  }
   if (!gone.size) return 0;
   const drop = new Uint8Array(nT);
   for (const t of near) if (gone.has(find(key(t * 3)))) drop[t] = 1;
@@ -787,6 +794,16 @@ function dropRocks(mesh, inside, [x0, z0, x1, z1]) {
   for (const [name, at] of Object.entries(out)) g.setAttribute(name, at);
   g.computeBoundingBox(); g.computeBoundingSphere();
   return drop.reduce((a, b) => a + b, 0);
+}
+
+// P121: a cliff rock that built masonry now stands in (the fort's south wall over the hostel's yard, the climb's yard
+// walls: tests/overlap-sweep.mjs (g)) goes whole, once everything on Citadel is built (main.js, after the asylum's
+// climb and the hatches): a corner of it, or a point on an edge (every 10 cm), 10 cm or more inside a box collider (a
+// wall, a house, steps; not the camera's own volumes), under its top
+export function rocksOutOfMasonry(W) {
+  if (ROCKS_OLD || !W_cliffs) return 0;
+  const P = W.physics, inBox = (c, x, z) => { const dx = x - c.x, dz = z - c.z, lx = dx * c.cos + dz * c.sin, lz = -dx * c.sin + dz * c.cos; return Math.min(c.hw - Math.abs(lx), c.hd - Math.abs(lz)); };
+  return (W_cliffs.mesh.userData.masonryDropped = dropRocks(W_cliffs.mesh, (x, z, y) => P.near(x, z).some((c) => c.type === 'box' && c.enabled && !c.camOnly && y > c.bottom && y < c.top - 0.1 && inBox(c, x, z) > 0.1), [-220, -130, 70, 160], 0.1));
 }
 
 // Splat weights: [grass, sand, rock, dirt, cobbles]
@@ -1042,15 +1059,19 @@ export function* buildWorldSteps(parentScene) {
   // faceted rock faces on the terrace cliffs (not on the path ramps or the paved quay)
   // (WORLD-80: the scatter's view of the ground, as it stood before step 2: see PATHS_SCATTER)
   const SG = scatterGround(terrain), HS = SG.heightAt;
+  climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
+  // (P121: the rocks where masonry now stands go inside buildCliffRocks, before the rest are settled — were dropRocks
+  //  after it: a rock settled against one that was then dropped)
   W_cliffs = buildCliffRocks(scene, terrain, TX.cliff, {
     decide: SG,
     skip: (x, z) => pathDistScatter(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
+    cut: [
+      [climbDropRock, [-45, -54, -20, -16]],   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
+      // (FLAT-TOWN: the rocks of the old sea cliff and ridge under the promenade, its walls and its flight; flatClear)
+      [(x, z) => (x > -77.4 && x < PROM.x1 + 0.3 && z > PROM.z0 - 0.4 && z < PROM_WALLS[1].z1 + 0.2) || flatClear(x, z, 0.4), [-78, PROM.z0 - 3, PROM_STAIR.xa + 1, 21]],
+      [(x, z, y) => plateauStairAt(x, z, 0, y), [-90, -88, -78, -78]],   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js; CAVE-STAIR: and a rock standing up through its landing)
+    ],
   });
-  climbShelfRows(H);   // (CLOUD_ORDERS 17: the shelf's fill on this ground, so the rocks and the scatter keep out of it)
-  dropRocks(W_cliffs.mesh, climbDropRock, [-45, -54, -20, -16]);   // (CLIMB-1; CLIMB-15: and the shelf's wall; CLOUD_ORDERS 17: and the new paving)
-  // (FLAT-TOWN: the rocks of the old sea cliff and ridge under the promenade, its walls and its flight; flatClear)
-  dropRocks(W_cliffs.mesh, (x, z) => (x > -77.4 && x < PROM.x1 + 0.3 && z > PROM.z0 - 0.4 && z < PROM_WALLS[1].z1 + 0.2) || flatClear(x, z, 0.4), [-78, PROM.z0 - 3, PROM_STAIR.xa + 1, 21]);
-  dropRocks(W_cliffs.mesh, (x, z, y) => plateauStairAt(x, z, 0, y), [-90, -88, -78, -78]);   // (REVIEW-CITADEL-ART d: the steps up from the plateau's door, island.js; CAVE-STAIR: and a rock standing up through its landing)
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,

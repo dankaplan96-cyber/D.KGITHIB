@@ -2,6 +2,7 @@
 // builder (src/game/zeelich.js keeps its own copy for now). Bevelled boxes with world-scaled UVs, lathes,
 // tubes, merged batches per material, wall panels with openings, polygon helpers.
 import * as THREE from 'three';
+import { settleRockRanges } from './rocksettle.js';
 import { textures, keyJSON } from '../engine/textures.js';
 export const MC = new Map();
 export const TILE = { cliff: 4.5, stone: 1.8, plaster: 2.2, planks: 2.2, brass: 1.6, teal: 2.2, hazard: 0.9, deck: 2.0, cobble: 3.2, grass: 4.0, dirt: 3.0, rubble: 1.7, tiles: 1.0, concrete: 2.6, metal: 2.6, roof: 1.6 };
@@ -103,10 +104,12 @@ export class Batch {
   build() {
     const out = [];
     for (const [mat, list] of this.items) {
-      const mesh = new THREE.Mesh(mergeGeos(list, !!mat.vertexColors), mat);
+      const geo = mergeGeos(list, !!mat.vertexColors);
+      const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = this.cast && !mat.transparent; mesh.receiveShadow = this.receive;
       this.parent.add(mesh); out.push(mesh);
     }
+    settleRockRanges(out.map((m) => m.geometry));   // (P121: no rock half inside another of its size)
     this.items.clear();
     return out;
   }
@@ -118,7 +121,9 @@ export function mergeGeos(list, withColor) {
   const idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
   const nm = new THREE.Matrix3(), p = new THREE.Vector3();
   let vo = 0, io = 0;
+  const rocks = [];   // (P121: the index ranges that came from a rock's geometry, for the overlap sweep's rock checks)
   for (const [g, m] of list) {
+    if (g.userData.rock) rocks.push([io, io + (g.index ? g.index.count : g.attributes.position.count)]);
     nm.getNormalMatrix(m);
     const flip = m.determinant() < 0;
     const P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv, C = g.attributes.color;
@@ -139,6 +144,7 @@ export function mergeGeos(list, withColor) {
   if (col) out.setAttribute('color', new THREE.BufferAttribute(col, 3));
   out.setIndex(new THREE.BufferAttribute(idx, 1));
   out.computeBoundingSphere();
+  if (rocks.length) out.userData.rockRanges = rocks;
   return out;
 }
 export function compose(parts, withColor = false) { return mergeGeos(parts.map(([g, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx]) => [g, new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'YXZ')), new THREE.Vector3(sx, sy, sz))]), withColor); }

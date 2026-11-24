@@ -7,7 +7,7 @@
 // The ground is the terrain grid where an area has one (Citadel, the Desert, the Hamalayi, the isles' banks), else the
 // area's big slabs (a part wider than 25 m both ways: Zeelich's island top).
 //
-// SW.scan(area, opt) → { census, zf, interp, floats, sunk, buried, plants, decals, D }   (area as OVL: {room} | {bounds})
+// SW.scan(area, opt) → { census, zf, interp, floats, sunk, buried, plants, decals, rockIn, rockCut, D }   (area as OVL: {room} | {bounds})
 //   zf      (b) two different surfaces facing up within opt.tol (2 cm) on a ray, drawn from above: spots (rays of one
 //               pair within 1.2 m), with the gap, rays, rays seen (nothing opaque over them), looks. The ground too.
 //   interp  (a) two parts of DIFFERENT objects, one of them a free piece (an instance, or a lone mesh under 3 m), whose
@@ -21,6 +21,13 @@
 //   plants  (e) a foliage instance (grass, flowers, tulips, bushes: alpha-tested instanced cards) whose foot stands on a
 //               part's flat top that is not the ground (paving, a floor, a deck), or on terrain painted as cobbles
 //   decals  (e) a see-through decal mesh (no depth write) lying on a part that is not the ground (where its middle is)
+//   rockIn  (f) P121: two rock parts (the same object too: Citadel's cliff rocks are one mesh) overlapping on the rays:
+//               the overlap's volume, each part's volume (the runner judges how much of the smaller is inside the other)
+//   rockCut (g) P121: a rock part and a built part (a wall, a house, paving, a step: not rock, not the ground, not a
+//               plant) overlapping by more than 5 cm on a ray: the rock cut by the masonry
+//   (a rock part: its geometry says so, userData.rock (vegetation.js rockGeometry, cliffs.js, underground.js rockGeo; in
+//   a merged mesh userData.rockRanges, kit.js / props.js), or its object's path or texture names a rock, a boulder, a
+//   cliff, scree or a crag)
 // Every finding has the objects' paths, looks and boxes (D) so the runner can name and judge it.
 (() => {
 const G = game;
@@ -42,6 +49,7 @@ let solids = [];   // { oi, box [x0,y0,z0,x1,y1,z1], n (triangles), ground, cl (
 const look = (k, info) => { let i = lookKey.get(k); if (i === undefined) { i = looks.length; looks.push(info); lookKey.set(k, i); } return i; };
 const ck = (i, j) => i * 100003 + j;
 const compCache = new Map();
+const ROCK_RE = /rock|boulder|cliff|scree|crag|outcrop/i;
 
 // connected parts of a geometry: triangles that share a corner (welded by position, 0.1 mm), per triangle in draw order
 function components(g, ranges, total) {
@@ -81,7 +89,8 @@ function addMesh(o, A, stats) {
     if (o.isInstancedMesh && o.instanceColor) o.getColorAt(ins, ic); else ic.setRGB(1, 1, 1);
     const oi = objs.length;
     const base = solids.length; const used = new Map();
-    objs.push({ o, ins: o.isInstancedMesh ? ins : -1, free, base });
+    const rock = !!g.userData?.rock || ROCK_RE.test(pathOf(o) + ' ' + texName(mats[0]));
+    objs.push({ o, ins: o.isInstancedMesh ? ins : -1, free, base, rock });
     let added = 0;
     for (const [s0, s1, m] of ranges) {
       if (!m || m.visible === false || m.colorWrite === false || (m.transparent && m.opacity < 0.03)) { stats.skipMat++; continue; }
@@ -101,7 +110,7 @@ function addMesh(o, A, stats) {
         // its part
         const c = comp.lab[t / 3 | 0];
         let si = used.get(c);
-        if (si === undefined) { si = solids.length; used.set(c, si); solids.push({ oi, box: [1e9, 1e9, 1e9, -1e9, -1e9, -1e9], n: 0, ground: false, cl: -1, lk, vol: 0 }); }
+        if (si === undefined) { si = solids.length; used.set(c, si); solids.push({ oi, box: [1e9, 1e9, 1e9, -1e9, -1e9, -1e9], n: 0, ground: false, cl: -1, lk, vol: 0, rock: rock || !!g.userData?.rockRanges?.some(([a, b]) => t >= a && t < b) }); }
         const S = solids[si], bx = S.box; S.n++;
         if (minx < bx[0]) bx[0] = minx; if (miny < bx[1]) bx[1] = miny; if (minz < bx[2]) bx[2] = minz; if (maxx > bx[3]) bx[3] = maxx; if (maxy > bx[4]) bx[4] = maxy; if (maxz > bx[5]) bx[5] = maxz;
         grow(1); const b = N * 9;
@@ -249,7 +258,7 @@ SW.scan = async (area, opt = {}) => {
 
   // ------------------------------------------------ the rays
   const step = opt.step ?? 0.25, tol = opt.tol ?? 0.02, jx = 0.0731, jz = 0.1173;
-  const hits = [], zfRaw = [], pairs = new Map(), clMin = new Map(), solidG = new Map(), sunkCl = new Map();
+  const hits = [], zfRaw = [], pairs = new Map(), clMin = new Map(), solidG = new Map(), sunkCl = new Map(), rockP = new Map(), cutP = new Map();
   const rendered = (side, ndir) => side === 2 || (side === 0 ? ndir < 0 : ndir > 0);
   const outdoor = !area.room || !!G.rooms[area.room]?.outdoor;
   let nRays = 0;
@@ -343,6 +352,18 @@ SW.scan = async (area, opt = {}) => {
         const p = pairs.get(key); if (!p) pairs.set(key, { a: Math.min(si, sj), b: Math.max(si, sj), n: 1, d, v: d * step * step, at: [x, ym, z] }); else { p.n++; p.v += d * step * step; if (d > p.d) { p.d = d; p.at = [x, ym, z]; } }
       }
     }
+    // (f) rock in rock, (g) a rock through a built part: every pair of parts on this ray with a rock among them
+    for (let i = 0; i < ivs.length; i++) {
+      const [si, li] = ivs[i], Si = solids[si]; if (Si.ground) continue;
+      for (let j = i + 1; j < ivs.length; j++) {
+        const [sj, lj] = ivs[j], Sj = solids[sj]; if (Sj.ground || !(Si.rock || Sj.rock)) continue;
+        let o = 0, d = 0, ym = 0; for (const [ta, ba] of li) for (const [tb, bb2] of lj) { const q = Math.min(ta, tb) - Math.max(ba, bb2); if (q > 0) { o += q; if (q > d) { d = q; ym = (Math.min(ta, tb) + Math.max(ba, bb2)) / 2; } } }
+        if (o <= 0) continue;
+        const both = Si.rock && Sj.rock; if (!both && d <= 0.05) continue;
+        const M = both ? rockP : cutP, key = Math.min(si, sj) * 4194304 + Math.max(si, sj);
+        const p = M.get(key); if (!p) M.set(key, { a: Math.min(si, sj), b: Math.max(si, sj), n: 1, d, v: o * step * step, at: [x, ym, z] }); else { p.n++; p.v += o * step * step; if (d > p.d) { p.d = d; p.at = [x, ym, z]; } }
+      }
+    }
   }
   const t2 = performance.now();
 
@@ -377,6 +398,13 @@ SW.scan = async (area, opt = {}) => {
     need(a.oi); need(b.oi);
     interp.push({ n: p.n, m2: r2(p.n * step * step), d: r2(p.d), v: r3(p.v), frac: r2(fr), x: r2(p.at[0]), y: r2(p.at[1]), z: r2(p.at[2]), A: a.oi, B: b.oi, ba: sbox(p.a), bb: sbox(p.b) }); }
   interp.sort((a, b) => b.n * b.d - a.n * a.d);
+  // (f) rock pairs, (g) rocks through built parts
+  const rockIn = [], rockCut = [];
+  for (const p of rockP.values()) { if (p.n < 3) continue; const a = solids[p.a], b = solids[p.b]; need(a.oi); need(b.oi);
+    rockIn.push({ n: p.n, v: r3(p.v), va: r3(a.vol), vb: r3(b.vol), frac: r2(p.v / Math.max(1e-6, Math.min(a.vol, b.vol))), d: r2(p.d), x: r2(p.at[0]), y: r2(p.at[1]), z: r2(p.at[2]), A: a.oi, B: b.oi, sa: p.a, sb: p.b, ba: sbox(p.a), bb: sbox(p.b) }); }
+  for (const p of cutP.values()) { if (p.n < 3) continue; const a = solids[p.a], b = solids[p.b]; const [r, w] = a.rock ? [a, b] : [b, a]; need(r.oi); need(w.oi);
+    rockCut.push({ n: p.n, m2: r2(p.n * step * step), v: r3(p.v), d: r2(p.d), frac: r2(p.v / Math.max(1e-6, r.vol)), x: r2(p.at[0]), y: r2(p.at[1]), z: r2(p.at[2]), A: r.oi, B: w.oi, ba: sbox(a.rock ? p.a : p.b), bb: sbox(a.rock ? p.b : p.a) }); }
+  rockIn.sort((a, b) => b.frac - a.frac); rockCut.sort((a, b) => b.v - a.v);
   // (c) floating clusters
   const floats = [], members = new Map();
   solids.forEach((S, i) => { let l = members.get(S.cl); if (!l) members.set(S.cl, l = []); l.push(i); });
@@ -444,7 +472,7 @@ SW.scan = async (area, opt = {}) => {
   SW.last = { A };
   const census = { meshes: stats.meshes, tris: stats.tris, parts: solids.length, clusters: members.size, terrains: terrains.length, foliage: foliage.length, decals: decals.length, rays: nRays, skipped: stats.skipped, ms: [t1 - t0, t2 - t1, t3 - t2].map(Math.round) };
   compCache.clear();
-  return { area, A: { x0: r2(A.x0), x1: r2(A.x1), z0: r2(A.z0), z1: r2(A.z1) }, census, zf, interp, floats, sunk, buried, plants, decals: dec, D };
+  return { area, A: { x0: r2(A.x0), x1: r2(A.x1), z0: r2(A.z0), z1: r2(A.z1) }, census, zf, interp, floats, sunk, buried, plants, decals: dec, rockIn, rockCut, D };
 };
 
 // the store let go (the next area starts afresh; a picture needs it kept)

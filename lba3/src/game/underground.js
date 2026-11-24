@@ -76,6 +76,7 @@ export function rockGeo(seed, { detail = 1, rough = 0.32, flat = 0.3, freq = 1.4
       for (let j = 0; j < 3; j++) { col[(f + j) * 3] = t; col[(f + j) * 3 + 1] = t; col[(f + j) * 3 + 2] = t * 1.03; }
     }
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.userData.rock = true;   // (P121: the overlap sweep's rock parts)
     return g;
   });
 }

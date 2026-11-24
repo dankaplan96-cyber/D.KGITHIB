@@ -135,6 +135,7 @@ export function rockGeometry(seed = 1, lod = 0) {
     },
     bounds: { min: [-1.7, -0.5, -1.6], max: [1.7, 1.2, 1.6] }, cell: 0.07 * (lod ? 2.6 : 1),
   });
+  geo.userData.rock = true;   // (P121: the overlap sweep's rock parts)
   geos.set(key, geo);
   return geo;
 }
