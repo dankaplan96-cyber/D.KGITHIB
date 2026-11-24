@@ -1,0 +1,49 @@
+const {chromium}=require('playwright');
+const fs=require('fs');
+let rows='';
+for(let r=1;r<=15;r++){['א׳','ב׳'].forEach((b,i)=>{
+ rows+=`<tr class="${i?'b2':'b1'} ${r%2?'odd':''}">`+(i?'':`<td class="room" rowspan="2">${r}</td>`)+
+ `<td class="bed">מיטה ${b}</td><td><span class="box"></span></td><td><span class="box"></span></td><td><span class="box"></span></td><td></td><td></td></tr>`;});}
+const html=`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+@page{size:A4;margin:10mm 10mm 9mm}
+*{box-sizing:border-box}
+body{margin:0;font:12px/1.3 Heebo,Arial,sans-serif;color:#13282b}
+.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0b5c63;padding-bottom:6px;margin-bottom:8px}
+h1{margin:0;font-size:24px;font-weight:800;color:#0b5c63}
+.sub{font-size:11.5px;color:#4b5f62;margin-top:2px}
+.meta{display:flex;gap:14px;font-size:12px;margin-bottom:8px}
+.meta span{flex:1;white-space:nowrap}
+.meta i{display:inline-block;border-bottom:1px solid #13282b;width:calc(100% - 60px);height:14px;vertical-align:bottom;margin-inline-start:4px}
+.meta .sh{flex:1.3}
+.meta .sh b{font-weight:400;margin-inline-start:8px}
+.meta .sh b::before{content:"";display:inline-block;width:11px;height:11px;border:1.5px solid #13282b;border-radius:2px;vertical-align:-1px;margin-inline-end:4px}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{background:#0b5c63;color:#fff;font-weight:700;font-size:11.5px;padding:5px 3px;border:1px solid #0b5c63;line-height:1.2}
+td{border:1px solid #9fb3b5;height:7.6mm;text-align:center;vertical-align:middle;padding:0 3px}
+tr.odd td{background:#eef5f5}
+td.room{font-size:17px;font-weight:800;border:1.5px solid #13282b}
+tr.b1 td{border-top:1.5px solid #13282b}
+td.bed{font-size:11.5px;color:#33474a}
+.box{display:inline-block;width:5mm;height:5mm;border:1.5px solid #13282b;border-radius:1mm;background:#fff}
+.foot{display:flex;gap:20px;margin-top:10px;font-size:12px}
+.foot span{flex:1;display:flex;white-space:nowrap}
+.foot i{flex:1;display:inline-block;border-bottom:1px solid #13282b;height:14px;vertical-align:bottom;margin-inline-start:4px}
+.legend{font-size:10.5px;color:#4b5f62;margin-top:6px}
+</style></head><body>
+<div class="top"><div><h1>צ׳ק ליסט סידור חדרים – כח עזר</h1>
+<div class="sub">חדרים 1–15 · 2 מטופלים בחדר · יש לסמן ✓ בכל משימה שבוצעה</div></div></div>
+<div class="meta"><span>תאריך:<i></i></span><span class="sh">משמרת: <b>בוקר</b><b>ערב</b><b>לילה</b></span><span>שם:<i></i></span></div>
+<table><colgroup><col style="width:9%"><col style="width:11%"><col style="width:13%"><col style="width:13%"><col style="width:11%"><col style="width:12%"><col></colgroup>
+<thead><tr><th>חדר</th><th>מטופל</th><th>סידור ציוד<br>בארונות</th><th>הורדת ציוד<br>מקו חמצנים</th><th>זריקת<br>אוכל</th><th>ר״ת / חתימה</th><th>הערות</th></tr></thead>
+<tbody>${rows}</tbody></table>
+<div class="foot"><span>שעת סיום:<i></i></span><span>חתימת אחראי/ת משמרת:<i></i></span></div>
+</body></html>`;
+fs.writeFileSync('/home/user/geriatrics-course/ward-tasks/checklist-print.html',html);
+(async()=>{const b=await chromium.launch();const p=await b.newPage();
+await p.goto('file:///home/user/geriatrics-course/ward-tasks/checklist-print.html',{waitUntil:'networkidle'});
+await p.evaluate(()=>document.fonts.ready);
+console.log('heebo',await p.evaluate(()=>document.fonts.check('16px Heebo')));
+await p.pdf({path:'/home/user/geriatrics-course/ward-tasks/צק_ליסט_סידור_חדרים.pdf',format:'A4',printBackground:true,preferCSSPageSize:true});
+await b.close();})();
