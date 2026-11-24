@@ -1,0 +1,30 @@
+{
+ "a-twinsen": {
+  "tris": 10338,
+  "hairVerts": 4032,
+  "bodyVerts": 26022,
+  "leastToBody": 0.063,
+  "colours": 30456
+ },
+ "a-twin-head": {
+  "tris": 10446,
+  "hairVerts": 4032,
+  "bodyVerts": 23160,
+  "leastToBody": 0.144,
+  "colours": 30780
+ },
+ "a-twin-head-s": {
+  "tris": 10446,
+  "hairVerts": 4032,
+  "bodyVerts": 24324,
+  "leastToBody": 0.113,
+  "colours": 30780
+ },
+ "a-twin-head-nose": {
+  "tris": 10502,
+  "hairVerts": 4032,
+  "bodyVerts": 23328,
+  "leastToBody": 0.144,
+  "colours": 30948
+ }
+}

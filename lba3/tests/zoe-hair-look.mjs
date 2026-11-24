@@ -13,7 +13,8 @@
 //                   copy of her model set in the room by the script, a fixed camera: the interior's light); the bake's
 //                   misses (nothing of hers re-sculpted)
 // ZOE-HEAD-2 (P126): HEADS= also takes tall, tall-long, egg; PHASE=game takes ZD=<?zoehead= value> (pictures game-<ZD>-…);
-// SERVE=1 answers this checkout's files by request routing (no http.server).
+// SERVE=1 answers this checkout's files by request routing (no http.server). ZOE-HEAD-3 (P126): HEADS= and ZD= also take
+// twin-head, twin-head-s, twin-head-nose (Twinsen's head on her).
 // OUT=dir (default captures/p120/). Checks: the model keeps its 19 bones, eyes, mouth and brow morphs; the part of the hair
 // the tail bones carry stays 3 cm or more off her head, neck, collar and back through idle, talk, walk, run and a head
 // turned both ways and tipped back (lookdev, skinned vertex positions). SwiftShader, headless: Automated runtime only.
