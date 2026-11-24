@@ -20,10 +20,22 @@ game code as the web version, in a window of its own: no browser, no address bar
 cd desktop
 npm ci
 npm start            # run from source (copies the game into desktop/game first)
-npm run dist:win     # installer + zip in desktop/release (on Windows; on Linux add -c.win.signAndEditExecutable=false)
+npm run dist:win     # installer (NSIS .exe) + zip in desktop/release: on Windows
 npm run dist:mac     # .dmg (on a Mac)
 npm run dist:linux   # .AppImage
 ```
+On Linux without wine only the Windows **zip** can be built: `node copy-game.mjs && npx electron-builder --win zip
+--publish never` (electron-builder 26 still writes the exe's icon and version there; with
+`-c.win.signAndEditExecutable=false` it skips them). The **installer** (`LBA3-The-Awakening-Setup-<version>.exe`)
+needs wine on Linux (`spawn wine ENOENT` without it), or a Windows machine.
+
+The version shown on the title screen is `VERSION` in `src/main.js`; keep it equal to `version` in
+`desktop/package.json` (it names the files in `release/`). The "Updated …" date next to it is `src/build-stamp.js`,
+written by `tools/stamp-build.sh` when the web version is published; set `BUILD_NUMBER` before a build to add
+"(build N)". The package carries no repository address and no auto-update (`"publish": null`: no
+`resources/app-update.yml`). Ctrl+Shift+I opens the developer tools only when run from source (`npm start`) or with
+`LBA3_DEVTOOLS=1` set; the installed build has none.
+
 `copy-game.mjs` copies exactly the files the game loads (`tools/game-files.mjs` follows every import), and
 swaps the page's Google Fonts link for the bundled font.
 

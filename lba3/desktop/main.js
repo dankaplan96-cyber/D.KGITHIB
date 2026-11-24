@@ -65,11 +65,14 @@ function createWindow() {
   win.once('ready-to-show', () => win.show());
   win.on('enter-full-screen', () => rememberFullscreen(true));
   win.on('leave-full-screen', () => rememberFullscreen(false));
-  // F11 / Alt+Enter: fullscreen; Ctrl+Shift+I: developer tools
+  // F11 / Alt+Enter: fullscreen; Ctrl+Shift+I: developer tools, only when run from source (npm start) or with
+  // LBA3_DEVTOOLS=1 set (PK-3: the testers' installed build has no console). The game's own keys (F9 overlay, the
+  // pause menu's Benchmark) are the page's and pass through untouched
+  const devTools = !app.isPackaged || !!process.env.LBA3_DEVTOOLS;
   win.webContents.on('before-input-event', (e, input) => {
     if (input.type !== 'keyDown') return;
     if (input.key === 'F11' || (input.alt && input.key === 'Enter')) { win.setFullScreen(!win.isFullScreen()); e.preventDefault(); }
-    if (input.control && input.shift && input.key.toLowerCase() === 'i') win.webContents.toggleDevTools();
+    if (devTools && input.control && input.shift && input.key.toLowerCase() === 'i') win.webContents.toggleDevTools();
   });
   // links out of the game (none today) open in the user's browser, never inside the game window
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });

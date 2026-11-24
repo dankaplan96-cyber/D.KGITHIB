@@ -94,7 +94,7 @@ const CHILD_SCREENS = new Set(['settings', 'controls', 'confirmnew', ...SLOT_SCR
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd', 'found']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
 const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn', 'slidewind', 'slide', 'skid']);
-export const VERSION = '0.49.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.50.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // INTERACT-PICK (P115): the objective's own thing in reach and roughly faced (within ~75° of his facing, GOAL_FACE) takes
 // the interact key before people and other things; a thing counts as the goal's when it lies within GOAL_R m of one of
