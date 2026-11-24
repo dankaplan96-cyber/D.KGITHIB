@@ -809,7 +809,7 @@ function normalTexture(name) {
   const [c, x] = canvas(N), img = x.createImageData(N, N), D = img.data;
   // (the user's look, 23.11 pictures: about 4× the first try — readable along a sunlit face up close, quiet from the
   //  play camera, the wall's mean brightness within 2–4 % of before)
-  const k = (L.kind === 'rubble' ? 9.6 : L.kind === 'ribs' ? 3.2 : 8.0) * WALLNORM.str;   // (the ribs: 16 px a rib, already steep)
+  const k = (L.kind === 'rubble' ? 9.6 : L.kind === 'ribs' ? 3.2 : L.kind === 'blocks2' ? 6.0 : 8.0) * WALLNORM.str;   // (the dressed stone a little gentler: its many small trims, and the desert's bright walls)   // (the ribs: 16 px a rib, already steep)
   for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
     const dx = (h(xx + 1, y) - h(xx - 1, y)) * 0.5 * k, dy = (h(xx, y + 1) - h(xx, y - 1)) * 0.5 * k;
     // (u along the canvas's x; v up the texture, the canvas's y downward: the normal's y is +dh/dy of the canvas)
@@ -824,9 +824,10 @@ function normalTexture(name) {
   // there and the sunlit side is as the normal map makes it. Low in the mortar, 1 on a stone's or block's face.
   {
     const [ca, xa] = canvas(N), ia = xa.createImageData(N, N), A = ia.data;
+    const aoMin = L.kind === 'blocks2' ? 0.7 : 0.58;   // (the dressed stone's joints: a softer shade)
     const lo = L.kind === 'rubble' ? 0.42 : L.kind === 'ribs' ? -0.4 : 0.68, hi = L.kind === 'rubble' ? 0.78 : L.kind === 'ribs' ? 0.9 : 0.86;   // (height: the mortar's, a face's; ribs: the troughs only a shade darker)
     for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
-      const e = Math.min(1, Math.max(0, (h(xx, y) - lo) / (hi - lo))), v = 0.58 + 0.42 * e * e * (3 - 2 * e);
+      const e = Math.min(1, Math.max(0, (h(xx, y) - lo) / (hi - lo))), v = aoMin + (1 - aoMin) * e * e * (3 - 2 * e);
       const i = (y * N + xx) * 4; A[i] = A[i + 1] = A[i + 2] = v * 255; A[i + 3] = 255;
     }
     xa.putImageData(ia, 0, 0);
