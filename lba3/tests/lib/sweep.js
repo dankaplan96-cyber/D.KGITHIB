@@ -370,7 +370,7 @@ SW.scan = async (area, opt = {}) => {
   // ------------------------------------------------ findings
   const D = {}, need = (oi) => { if (D[oi]) return; const O = objs[oi]; if (!O) return; if (O.terrain) { D[oi] = { path: 'TERRAIN', terrain: true }; return; }
     const o = O.o, m = Array.isArray(o.material) ? o.material[0] : o.material; const b = new THREE.Box3().setFromObject(o);
-    D[oi] = { path: pathOf(o), ins: O.ins, inst: !!o.isInstancedMesh, free: !!O.free, geo: o.geometry?.type, mat: m?.name || m?.type, color: m?.color?.getHexString?.(), tex: texName(m), src: o.userData?.src || o.userData?.maker || null,
+    D[oi] = { path: pathOf(o), ins: O.ins, inst: !!o.isInstancedMesh, free: !!O.free, geo: o.geometry?.type, mat: m?.name || m?.type, color: m?.color?.getHexString?.(), tex: texName(m), src: o.userData?.src || o.userData?.maker || null, ...(m?.userData?.rockSet ? { rockSet: true } : {}),
       box: o.isInstancedMesh ? null : [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z].map(r2) }; };
   const sbox = (si) => solids[si].box.map(r2);
   // (b) spots

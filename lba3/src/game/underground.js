@@ -119,7 +119,7 @@ const floorMat = (base, alt, key) => M('ugfloor' + key, () => stdM({ map: floorT
 
 // --- crystals: hexagonal prisms with a pointed tip (same species as the well's)
 const crystalGeo = (sides = 6) => cached('cry' + sides, () => { const g = new THREE.LatheGeometry([[0.001, -0.05], [0.8, 0], [1, 0.12], [1, 0.72], [0.001, 1]].map(([a, b]) => new THREE.Vector2(a, b)), sides); return g.toNonIndexed(); });
-const crystalMat = (c, e, k, op = 0.9) => M(`ugcry${c}${e}${k}${op}`, () => stdM({ color: c, emissive: e, emissiveIntensity: k, roughness: 0.12, metalness: 0.1, transparent: op < 1, opacity: op, flatShading: true }, 0, { noShadow: true }));
+const crystalMat = (c, e, k, op = 0.9) => M(`ugcry${c}${e}${k}${op}`, () => stdM({ color: c, emissive: e, emissiveIntensity: k, roughness: 0.12, metalness: 0.1, transparent: op < 1, opacity: op, flatShading: true }, 0, { noShadow: true, rockSet: true }));   // (rockSet: crystals grow out of the rock: rocksettle.js rocksOutOfBuilt)
 const CYAN = () => crystalMat('#aef6ff', '#1ab8e8', 0.9), VIOLET = () => crystalMat('#e0c0ff', '#8a3aef', 0.8), DIM = () => crystalMat('#7a8aa8', '#203a5a', 0.35, 1);
 // cluster of crystals growing from (0,0,0) out along +y (tilt it with the kit), seed-stable
 function crystals(k, n, s, seed, mats, spread = 0.5) {
@@ -515,7 +515,9 @@ function buildShaft(scene, physics) {
   k.at(BC.x + 1.32, 1.5, BC.z + 1.32, Math.PI / 4, () => signPlate(k, 1.0, 0.38, signMat(['BORE 1', 'KEEP CLEAR'], { w: 384, h: 144, bg: '#6a2a24' })));
   // cracked rock at the bore's foot: the first crystals, warm steam
   // (REVIEW-UNDER: the east one stood on the cable trench's grating, x 4.2, on the walk to the tunnel; now smaller, at the bore's foot beside it)
-  for (const [x, z, s, sd, ry] of [[BC.x - 2.35, BC.z + 0.7, 0.6, 3, 0.4], [BC.x + 1.45, BC.z - 1.6, 0.32, 5, 1.6], [BC.x - 0.9, BC.z - 2.3, 0.45, 8, 2.2]]) {
+  // (ROCKS-MASONRY: the west cluster 45 cm further from the bore: its rock ran 0.4 m into the bore's base and the masonry pass
+  //  left it out, the crystals bare on the floor; here it keeps its rock)
+  for (const [x, z, s, sd, ry] of [[BC.x - 2.8, BC.z + 0.7, 0.6, 3, 0.4], [BC.x + 1.45, BC.z - 1.6, 0.32, 5, 1.6], [BC.x - 0.9, BC.z - 2.3, 0.45, 8, 2.2]]) {
     k.at(x, 0, z, ry, () => { crystals(k, 5, s, sd, [CYAN(), DIM(), VIOLET()]); k.add(rockGeo(sd + 2), rockD, 0, -0.05, 0, 0, { sx: s * 1.4, sy: s * 0.5, sz: s * 1.2 }); });
     B.ccol(x, z, s * 0.8, s * 1.4, { noStand: true });
   }
@@ -1322,8 +1324,8 @@ function buildGallery(scene, physics) {
     const pk = new Kit(g);
     // (REV-UNDER: opaque — at 0.93 it was drawn among the see-through things, after Twinsen: it covered him where he had
     //  already marked himself as seen, and his silhouette (characters.js addSilhouette) never showed through it)
-    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, flatShading: true }, 0, { noShadow: true });
-    const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true });
+    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, flatShading: true }, 0, { noShadow: true, rockSet: true });
+    const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true, rockSet: true });
     const r = rng(300 + i);
     pk.add(rockGeo(200 + i), rockD, p.x, CY, p.z, i, { sx: 1.6 * p.s, sy: 1.1, sz: 1.5 * p.s });
     pk.add(crystalGeo(), body, p.x, CY, p.z, i, { sx: 0.75 * p.s, sy: p.h, sz: 0.75 * p.s, rx: 0.05, rz: -0.06 });

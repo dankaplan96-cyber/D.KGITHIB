@@ -42,6 +42,7 @@ import { buildTicketRoom } from './ticket.js';
 import { buildPharmacyRoom } from './pharmacy.js';
 import { buildNbrHouseRoom } from './nbrhouse.js';
 import { occAuto } from './roomocc.js';
+import { rocksOutOfBuilt } from './rocksettle.js';
 import { ZHOMES, ZHOME_AT, buildZHome } from './zhomes.js';
 import { IHOME_IDS, IHOME_AT, buildIHome } from './ihomes.js';
 import { HAM_ROOMS, HAM_AT, buildHamRoom } from './hamrooms.js';
@@ -258,6 +259,9 @@ export class Regions {
     const S = this.S;
     for (let i = n0; i < S.children.length; i++) S.children[i].userData.src ??= gid;   // (tests/drawcalls.mjs: what each builder added)
     Object.assign(this.rooms_, rooms);
+    // (ROCKS-MASONRY: no rock left cut by what the area built after it — a machine, a crate, a deck, a floor; P121's rule
+    //  for every area: rocksettle.js rocksOutOfBuilt)
+    { const cols = this.P.colliders.slice(G.c0 ?? 0); for (const [id, R] of Object.entries(rooms)) if (R?.group) R.rocksMasonry = rocksOutOfBuilt(R.group, { colliders: cols, area: id }); }
     for (const [id, R] of Object.entries(rooms)) { const c = this.centreOf(id), r = R.center || R.group?.position; if (c && r && Math.hypot(c.x - r.x, c.z - r.z) > 0.5) console.warn('regions.js AT is out of date for', id, [r.x, r.z]); }
     G.ms = Math.round(busy); G.state = 'ready'; G.why = why; G.phase = this.phase;
     if (why === 'access' && this.phase === 'play') {
