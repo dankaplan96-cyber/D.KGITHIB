@@ -278,7 +278,8 @@ r = await ev(() => {
     const fa = Math.atan2(W.x - x, W.z - z) + off;
     for (const [n, s, dd] of [[gi, 1, 1.0], [mi, -1, 1.3]]) { const b = fa + s * 1.3; n.pos.set(x + Math.sin(b) * dd, n.pos.y, z + Math.cos(b) * dd); n.sync?.(); }
     IP.put(x, z, x + Math.sin(fa) * 3, z + Math.cos(fa) * 3); const o = IP.read2();
-    well.push({ r: +rr.toFixed(2), deg: k * 30, off, it: o.it, was: o.was });
+    const C = G._pick, wi = C.o.slice(0, C.n).findIndex((x) => x.kind === 'well');
+    well.push({ r: +rr.toFixed(2), deg: k * 30, off, it: o.it, was: o.was, itAim: o.itAim, wellIn: wi >= 0, wellAim: +IP.aimAt(W.x, W.z).toFixed(2), at: [+G.hero.pos.x.toFixed(2), +G.hero.pos.z.toFixed(2)], mira: [+mi.pos.x.toFixed(2), +mi.pos.z.toFixed(2)] });
     // turned to Gilbert squarely
     IP.put(x, z, gi.pos.x, gi.pos.z); const o2 = IP.read2();
     if (IP.aimAt(W.x, W.z) < 0.5) person.push({ r: +rr.toFixed(2), deg: k * 30, it: o2.it, was: o2.was });

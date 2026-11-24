@@ -102,7 +102,7 @@ const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below
 // the objective's stars (a person: on the star, GOAL_R_NPC)
 const GOAL_FACE = 0.25, GOAL_R = 1.0, GOAL_R_NPC = 0.4;
 // FACE-PICK (findInteractable's facingPick): a thing he faces within 60°, a person within ~39°, counts as faced
-const FACE_THING = 0.5, FACE_NPC = 0.78, LINE_TIE = 0.15, GOAL_KEEP = 0.85;   // (LINE_TIE m: two about as far off his line: the nearer along it)
+const FACE_THING = 0.5, FACE_NPC = 0.78, LINE_ALONG = 0.2, GOAL_KEEP = 0.85;
 // the states whose shot frames Twinsen on purpose: no see-through silhouette (setState)
 const SIL_OFF = new Set(['dialog', 'cutscene', 'shop']);
 // AIM-PLATE (aimPlate): on a throw plate = within PLATE_R m of its middle, facing its line within PLATE_A rad
@@ -2580,8 +2580,8 @@ class Game {
   // facing takes the key; a person takes it only when he faces them. The ranking above is distance first (a thing or a
   // person 80° to his side, a little nearer, still won): walking up to Zoé, the garden tap 0.8 m off at his side took
   // E; by the well Gilbert beside it answered while he faced the well. Each candidate in reach is read against his facing
-  // line: the one less far off it comes first; two about as far off it (within LINE_TIE) — the nearer along it (a ladder's
-  // top before the person behind it). A thing counts as faced within
+  // line: how far off it, plus a fifth of how far along it (LINE_ALONG) — the lower comes first (a ladder's top before the
+  // person behind it). A thing counts as faced within
   // 60° (FACE_THING), a person within ~39° (FACE_NPC). Then: a person wins over the faced thing only if he faces that
   // person and they stand nearer his line; a person he does not face gives the key to the faced thing; a thing he does
   // not face gives it to the person he faces. Things among themselves (and people among themselves) keep the ranking
@@ -2601,8 +2601,9 @@ class Game {
       L.lat[i] = d * Math.sqrt(Math.max(0, 1 - raw * raw)); L.al[i] = d * raw;
       return d < 0.5 ? (raw >= 0.9 ? 1 : 0) : aim(C.x[i], C.z[i]);
     };
-    // (i nearer his line than j: clearly less off it, or about as much — within LINE_TIE — and nearer along it)
-    const before = (i, j) => (Math.abs(L.lat[i] - L.lat[j]) > LINE_TIE ? L.lat[i] < L.lat[j] : L.al[i] < L.al[j]);
+    // (i before j: less far off his line, a fifth of the way along it counted too — so the tap at arm's length 20° aside
+    //  comes before Zoé 2.4 m ahead, and of two on the line the nearer)
+    const before = (i, j) => L.lat[i] + LINE_ALONG * L.al[i] < L.lat[j] + LINE_ALONG * L.al[j];
     let ri = -1, ti = -1, pi = -1;
     for (let i = 0; i < C.n; i++) {
       if (!(C.x[i] === C.x[i])) continue;
