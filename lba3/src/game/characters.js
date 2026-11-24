@@ -1659,7 +1659,8 @@ export async function preloadCharacters() {
   if (sv && POLY.twinsen) {
     try { const r = await fetch(`assets/poly/twinsen-sleeve${sv}.json`); if (r.ok) POLY.twinsen = applyPolyDelta(POLY.twinsen, await r.json()); } catch { /* the default sleeve */ }
   }
-  if (LOOK.size || ZOE_HAIR !== 'old') for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
+  const tw = POLY.twinsen;
+  if (LOOK.size || ZOE_HAIR !== 'old') for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n], tw);
 }
 // TWINSEN-ZOE-LOOK (the user, 22.11: Twinsen and Zoé "more like the original … keep the current one and we'll compare";
 // then the focus: Twinsen from behind under the Follow camera, "the hair is a bit too pixelated, but I'm not sure"; then
@@ -1716,8 +1717,8 @@ export const LOOK = (() => {
   }
   return on;
 })();
-function lookModel(name, P) {
-  if (name === 'zoe') return ZOE_HAIR === 'old' ? P : zoeHair(P, ZOE_HAIRS[ZOE_HAIR]);   // (P120: her hair, below)
+function lookModel(name, P, tw = null) {
+  if (name === 'zoe') return ZOE_HAIR === 'old' ? P : zoeHair(P, ZOE_HAIRS[ZOE_HAIR], tw);   // (P120: her hair, below; ZOE-HEAD-3: tw, Twinsen's model as loaded)
   const steps = Object.keys(LOOK_STEPS).filter((s) => LOOK.has(s) && LOOK_STEPS[s].includes(name));
   if (!steps.length) return P;
   const Q = { ...P, pos: P.pos.slice(), nrm: P.nrm.slice(), col: P.col.slice(), si: P.si.slice(), sw: P.sw.slice() };
@@ -2177,6 +2178,11 @@ const ZOE_HEADS = {
   tall: { egg: ZH_EGG.tall, tie: 4 },
   'tall-long': { egg: ZH_EGG.tall, tie: 4, chin: ZH_CHIN },
   egg: { egg: ZH_EGG.egg, tie: 4, chin: ZH_CHIN },
+  // ZOE-HEAD-3 (P126, the user 24.11 after the tall heads: "all terrible — try to copy Twinsen's head"): Twinsen's own head
+  // shell put on her (zoeTwinHead, below). twin: g his head's size (1 = his, as big as on him), nose hers or his
+  'twin-head': { twin: { g: 1, nose: 'hers' } },
+  'twin-head-s': { twin: { g: 0.92, nose: 'hers' } },
+  'twin-head-nose': { twin: { g: 1, nose: 'his' } },
 };
 export const ZOE_HEAD = (() => {
   let s = '';
@@ -2268,6 +2274,190 @@ function zoeLockOnCrown(H, c, disp, tie = null) {
     return { ...o, pts: q };
   } };
 }
+// ZOE-HEAD-3 (P126; docs/lba-maturity/ZOE-HEAD-3.md): Twinsen's head on her. Every head so far kept her own narrow face
+// and jaw and only reshaped the skull, so it read as a small bulb on a long neck; his head (assets/poly/twinsen.json, the
+// head bone's skin shell: 31 cm across, the face filling it, broad smooth cheeks, a rounded jaw) is taken whole instead.
+//  - her skull, face skin and hair cap (and her nose, for nose 'his') are taken out; his shell (and his nose pieces, for
+//    'his') put in, painted her skin, rigid on her head bone. It sits on her neck as it sits on his: g × his offsets from
+//    the foot of the neck and from the neck's axis (ZT_NECK), so her eyes stand where his stand, the head in front of the
+//    neck as his is.
+//  - her features are carried onto it: a similarity F (her eyes' mid-point → the new one, × f) and then each point set
+//    back onto the new surface as far out (× f) as it stood off her old one, along the same ray from a centre inside both
+//    heads (c → F(c)): brows, lid lines, lips (and her nose, 'hers') point by point, so they lie on his rounder face; the
+//    eyes, the mouth and the earrings whole (their pivots set so, their shapes × f), so the blink, the gaze, the talk and
+//    the mouth's drop work as before. f = g × fs: her eyes' spacing, eye-to-mouth and eye-to-chin are 0.65–0.73 of his,
+//    so fs 1.38 puts them where his features are and the face fills the head as his does.
+//  - her neck is drawn up into the bigger head (its top to where his neck enters his) and widened toward the top, so the
+//    nape runs into the head with no step and no thin stalk under it.
+//  - the lock and its tie: carried whole to the new crown, `tie`° back from straight up from the new centre (P120 a: the
+//    tie high, as the user picked), as far out of the scalp as before; its root aimed at the centre.
+const ZT_NECK = { her: [1.51, -0.03, 0.042, 1.706], his: [1.539, 0.0955, 0.0755, 1.785] };   // (foot of the neck y, axis z, radius at the top, top y: measured on the models)
+const ZT_EAR = [0xd6, 0xa2, 0x3a], ZT_LIP = [0xb3, 0x2b, 0x27], ZT_FS = 1.38, ZT_FM = 0.85, ZT_FN = 0.8, ZT_KE = 1.1, ZT_TIE = 30;
+function ztPieces(P) {
+  const n = P.pos.length / 3, par = new Int32Array(n).map((_, i) => i), find = (i) => { while (par[i] !== i) i = par[i] = par[par[i]]; return i; };
+  const join = (a, b) => { a = find(a); b = find(b); if (a !== b) par[a] = b; }, seen = new Map();
+  for (let v = 0; v < n; v++) {
+    const k = `${P.pos[v * 3].toFixed(5)},${P.pos[v * 3 + 1].toFixed(5)},${P.pos[v * 3 + 2].toFixed(5)},${P.col[v * 3]},${P.col[v * 3 + 1]},${P.col[v * 3 + 2]}`;
+    if (seen.has(k)) join(v, seen.get(k)); else seen.set(k, v);
+    if (v % 3 === 2) { join(v, v - 1); join(v, v - 2); }
+  }
+  const m = new Map();
+  for (let v = 0; v < n; v++) { const r = find(v); if (!m.has(r)) m.set(r, []); m.get(r).push(v); }
+  return [...m.values()];
+}
+// the farthest crossing of a ray (o + t·u, t > 0) with a list of triangles (9 numbers each); -1 for none
+function ztRay(tri, o, u) {
+  let best = -1;
+  for (let i = 0; i < tri.length; i += 9) {
+    const ax = tri[i], ay = tri[i + 1], az = tri[i + 2];
+    const e1x = tri[i + 3] - ax, e1y = tri[i + 4] - ay, e1z = tri[i + 5] - az, e2x = tri[i + 6] - ax, e2y = tri[i + 7] - ay, e2z = tri[i + 8] - az;
+    const px = u[1] * e2z - u[2] * e2y, py = u[2] * e2x - u[0] * e2z, pz = u[0] * e2y - u[1] * e2x, det = e1x * px + e1y * py + e1z * pz;
+    if (Math.abs(det) < 1e-12) continue;
+    const id = 1 / det, tx = o[0] - ax, ty = o[1] - ay, tz = o[2] - az, b1 = (tx * px + ty * py + tz * pz) * id;
+    if (b1 < -1e-6 || b1 > 1 + 1e-6) continue;
+    const qx = ty * e1z - tz * e1y, qy = tz * e1x - tx * e1z, qz = tx * e1y - ty * e1x, b2 = (u[0] * qx + u[1] * qy + u[2] * qz) * id;
+    if (b2 < -1e-6 || b1 + b2 > 1 + 1e-6) continue;
+    const t = (e2x * qx + e2y * qy + e2z * qz) * id;
+    if (t > best) best = t;
+  }
+  return best;
+}
+// the surface's distance from o along u; where a ray slips through a gap (an eye's or the nose's hole), the mean of a
+// ring of rays round it
+function ztR(tri, o, u) {
+  const r = ztRay(tri, o, u);
+  if (r > 0) return r;
+  const a = Math.abs(u[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+  const e1 = [u[1] * a[2] - u[2] * a[1], u[2] * a[0] - u[0] * a[2], u[0] * a[1] - u[1] * a[0]], l1 = Math.hypot(...e1);
+  const e1n = e1.map((x) => x / l1), e2 = [u[1] * e1n[2] - u[2] * e1n[1], u[2] * e1n[0] - u[0] * e1n[2], u[0] * e1n[1] - u[1] * e1n[0]];
+  for (const s of [0.06, 0.12, 0.2]) {
+    let sum = 0, k = 0;
+    for (let j = 0; j < 8; j++) {
+      const c = Math.cos((j * Math.PI) / 4) * s, d = Math.sin((j * Math.PI) / 4) * s;
+      const w = u.map((x, i) => x + c * e1n[i] + d * e2[i]), lw = Math.hypot(...w), t = ztRay(tri, o, w.map((x) => x / lw));
+      if (t > 0) { sum += t; k++; }
+    }
+    if (k >= 4) return sum / k;
+  }
+  return -1;
+}
+function zoeTwinHead(P, T, S, pieces, drop, hb) {
+  const is = (Q, v, c) => Q.col[v * 3] === c[0] && Q.col[v * 3 + 1] === c[1] && Q.col[v * 3 + 2] === c[2];
+  const onHead = (Q, b, v) => { let w = 0; for (let k = 0; k < 4; k++) if (Q.si[v * 4 + k] === b) w += Q.sw[v * 4 + k]; return w; };
+  // her pieces: the skull/face shell (the largest skin piece all on the head), the nose (the other skin piece(s) there),
+  // the hair cap; her features (every other piece all on the head); her neck (skin, partly on the head)
+  const all = pieces.filter((vs) => !drop.has(vs[0]) && vs.every((v) => onHead(P, hb, v) >= 0.99));
+  const skin = all.filter((vs) => is(P, vs[0], ZH_SKIN)).sort((a, b) => b.length - a.length);
+  const shell = skin[0], nose = skin.slice(1).flat(), cap = all.filter((vs) => is(P, vs[0], ZH_HAIR)).flat();
+  const feats = all.filter((vs) => vs !== shell && !is(P, vs[0], ZH_SKIN) && !is(P, vs[0], ZH_HAIR));
+  const neck = pieces.filter((vs) => is(P, vs[0], ZH_SKIN) && vs.some((v) => onHead(P, hb, v) > 0.01) && vs.some((v) => onHead(P, hb, v) < 0.99)).flat();
+  // his: the shell and the nose pieces (skin, all on his head)
+  const tb = T.bones.indexOf('head');
+  const tsk = ztPieces(T).filter((vs) => is(T, vs[0], SKIN_RGB) && vs.every((v) => onHead(T, tb, v) >= 0.99)).sort((a, b) => b.length - a.length);
+  if (!shell || !tsk.length || !P.eyes?.length || !T.eyes?.length) return null;
+  const tShell = tsk[0], tNose = tsk.slice(1).flat();
+  const g = S.g, f = g * (S.fs || ZT_FS), Eh = [0, T.eyes[0].pivot[1], T.eyes[0].pivot[2]], Eo = [0, P.eyes[0].pivot[1], P.eyes[0].pivot[2]];
+  let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
+  for (const v of tShell) for (let i = 0; i < 3; i++) { lo[i] = Math.min(lo[i], T.pos[v * 3 + i]); hi[i] = Math.max(hi[i], T.pos[v * 3 + i]); }
+  const Ch = [0, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
+  const Y = [0, ZT_NECK.her[0] + g * (Eh[1] - ZT_NECK.his[0]) + (S.dy || 0), ZT_NECK.her[1] + g * (Eh[2] - ZT_NECK.his[1])];
+  const G = (p) => p.map((x, i) => Y[i] + g * (x - Eh[i])), F = (p) => p.map((x, i) => Y[i] + f * (x - Eo[i]));
+  const co = Eo.map((x, i) => x + (g / f) * (Ch[i] - Eh[i])), cn = G(Ch);
+  const tris = (Q, vs, M) => { const out = new Float64Array(vs.length * 3); vs.forEach((v, k) => { const p = M([Q.pos[v * 3], Q.pos[v * 3 + 1], Q.pos[v * 3 + 2]]); out[k * 3] = p[0]; out[k * 3 + 1] = p[1]; out[k * 3 + 2] = p[2]; }); return out; };
+  const triOld = tris(P, [...shell, ...cap], (p) => p), triNew = tris(T, tShell, G);
+  // a point of her face set on the new head: along its ray from the old centre, as far off the new surface (× f) as it
+  // stood off the old one
+  const snap = (p) => {
+    const d = p.map((x, i) => x - co[i]), r = Math.hypot(...d), u = d.map((x) => x / r);
+    const ro = ztR(triOld, co, u), rn = ztR(triNew, cn, u);
+    if (ro < 0 || rn < 0) return F(p);
+    return cn.map((x, i) => x + u[i] * (rn + f * (r - ro)));
+  };
+  const out = { pos: [], nrm: [], col: [], si: [], sw: [] }, gone = new Set([...shell, ...cap, ...(S.nose === 'his' ? nose : [])]);
+  const moveTo = new Map();   // (feature vertex → its new place)
+  // (the lips and her nose a little smaller than × f, so the face keeps her small nose and her mouth not too wide on
+  //  the broader face: the lips about the mouth's pivot × fm, the nose about its root × fn, before they are set on)
+  const M0 = P.mouths?.[0]?.pivot || Eo, fm = S.fm ?? ZT_FM, fn = S.fn ?? ZT_FN;
+  let nz = 1e9; for (const v of nose) nz = Math.min(nz, P.pos[v * 3 + 2]);
+  const nr0 = [0, 0, 0]; let nk = 0;
+  for (const v of nose) if (P.pos[v * 3 + 2] < nz + 0.008) { nr0[1] += P.pos[v * 3 + 1]; nr0[2] += P.pos[v * 3 + 2]; nk++; }
+  const N0 = [0, nr0[1] / (nk || 1), nr0[2] / (nk || 1)];
+  const pre = (v, A, k) => [0, 1, 2].map((i) => A[i] + k * (P.pos[v * 3 + i] - A[i]));
+  for (const vs of feats.concat(S.nose === 'his' ? [] : [nose])) {
+    if (!vs.length) continue;
+    if (vs === nose || is(P, vs[0], ZT_LIP)) { const [A, k] = vs === nose ? [N0, fn] : [M0, fm]; for (const v of vs) moveTo.set(v, snap(pre(v, A, k))); continue; }
+    if (is(P, vs[0], ZT_EAR)) {
+      // (an earring whole, her own size × ke: its top, where it hangs from the head, set just into the new surface, and the
+      //  hoop turned about it to lie along the head's side below, as it hung along hers: with no ear to hang from, a hoop
+      //  hanging straight down off the side of the bigger head would stand off its jaw)
+      let top = vs[0], bot = vs[0];
+      for (const v of vs) { if (P.pos[v * 3 + 1] > P.pos[top * 3 + 1]) top = v; if (P.pos[v * 3 + 1] < P.pos[bot * 3 + 1]) bot = v; }
+      const at = (v) => [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]], a = at(top), ke = S.ke ?? ZT_KE, h = (a[1] - P.pos[bot * 3 + 1]) * ke;
+      const onNew = (d) => { const l = Math.hypot(...d), u = d.map((x) => x / l); return cn.map((x, i) => x + u[i] * ztR(triNew, cn, u)); };
+      const da = a.map((x, i) => x - co[i]), A = onNew(da), n0 = Math.hypot(...da), B = onNew([A[0] - cn[0], A[1] - h - cn[1], A[2] - cn[2]]);
+      const Ap = A.map((x, i) => x + (da[i] / n0) * 0.001);
+      // the turn: about the horizontal line square to the outward direction, by the angle between straight down and A → B
+      const ab = B.map((x, i) => x - A[i]), out = [A[0] - cn[0], 0, A[2] - cn[2]], lo = Math.hypot(...out), o = out.map((x) => x / lo);
+      const th = Math.atan2(-(ab[0] * o[0] + ab[2] * o[2]), -ab[1]), ax = [o[2], 0, -o[0]], c = Math.cos(th), sn = Math.sin(th);
+      const rot = (q) => { const d = ax[0] * q[0] + ax[2] * q[2], x = [ax[1] * q[2] - ax[2] * q[1], ax[2] * q[0] - ax[0] * q[2], ax[0] * q[1] - ax[1] * q[0]]; return q.map((y, i) => y * c + x[i] * sn + ax[i] * d * (1 - c)); };
+      // (first turned about the upright so the hoop's plane, square to x on her, is square to the head's outward line)
+      const sg = Math.sign(a[0]) || 1, ps = Math.atan2(-sg * o[2], sg * o[0]), cp = Math.cos(ps), sp = Math.sin(ps);
+      const yaw = (q) => [q[0] * cp + q[2] * sp, q[1], -q[0] * sp + q[2] * cp];
+      for (const v of vs) { const r = rot(yaw(at(v).map((x, i) => (x - a[i]) * ke))); moveTo.set(v, Ap.map((x, i) => x + r[i])); }
+    } else for (const v of vs) moveTo.set(v, snap([P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]]));
+  }
+  // her neck drawn up to where his enters his head (× g) and widened toward its top
+  const ya = ZT_NECK.her[0] + 0.105, top0 = ZT_NECK.her[3], top1 = Y[1] - g * (Eh[1] - ZT_NECK.his[3]), rk = (S.neckR || g * 0.064) / ZT_NECK.her[2];
+  const neckSet = new Set(neck);
+  const map = new Int32Array(P.pos.length / 3).fill(-1);
+  for (let v = 0, k = 0, n = P.pos.length / 3; v < n; v++) {
+    if (gone.has(v)) continue;
+    map[v] = k++;
+    let p = moveTo.get(v) || [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]], nr = [P.nrm[v * 3], P.nrm[v * 3 + 1], P.nrm[v * 3 + 2]];
+    if (neckSet.has(v) && p[1] > ya) {
+      const t = Math.min(1, (p[1] - ya) / (top0 - ya)), w = (sstep(-0.4, 1, t) - sstep(-0.4, 1, 0)) / (1 - sstep(-0.4, 1, 0)), s = 1 + (rk - 1) * w;
+      p = [p[0] * s, ya + (p[1] - ya) * (top1 - ya) / (top0 - ya), ZT_NECK.her[1] + (p[2] - ZT_NECK.her[1]) * s];
+      // (the normal of a cylinder widening upward tips down a little)
+      const rr = Math.hypot(nr[0], nr[2]), dr = ((rk - 1) * ZT_NECK.her[2] * 0.9) / (top1 - ya);
+      if (rr > 0.3) { const ny = nr[1] - dr * rr, l = Math.hypot(nr[0], ny, nr[2]); nr = [nr[0] / l, ny / l, nr[2] / l]; }
+    }
+    out.pos.push(...p); out.nrm.push(...nr); out.col.push(P.col[v * 3], P.col[v * 3 + 1], P.col[v * 3 + 2]);
+    for (let j = 0; j < 4; j++) { out.si.push(P.si[v * 4 + j]); out.sw.push(P.sw[v * 4 + j]); }
+  }
+  const start = out.pos.length / 3;
+  for (const v of tShell.concat(S.nose === 'his' ? tNose : [])) {
+    out.pos.push(...G([T.pos[v * 3], T.pos[v * 3 + 1], T.pos[v * 3 + 2]])); out.nrm.push(T.nrm[v * 3], T.nrm[v * 3 + 1], T.nrm[v * 3 + 2]);
+    out.col.push(...ZH_SKIN); out.si.push(hb, 0, 0, 0); out.sw.push(1, 0, 0, 0);
+  }
+  const end = out.pos.length / 3;
+  // the eyes and the mouth whole: the pivot set on the new face, the shape × f (the eyes mirrored: one mesh, one blink)
+  const ep = snap(P.eyes[0].pivot), fe = f * (S.fe || 1);
+  P.eyes = P.eyes.map((e) => ({ ...e, pivot: [Math.sign(e.pivot[0]) * Math.abs(ep[0]), ep[1], ep[2]], pos: e.pos.map((x) => x * fe) }));
+  // (the mouth: its pivot set on, and each of its points too, about the mouth's pivot × fm like the lips, so its corners
+  //  bend back with the broader face's curve and do not stand out past the lips' corners)
+  P.mouths = P.mouths?.map((m) => {
+    const pv = snap(m.pivot.map((x, i) => M0[i] + fm * (x - M0[i]))).map((x, i) => (i === 0 ? 0 : x)), pos = [];
+    for (let i = 0; i < m.pos.length; i += 3) { const q = snap([0, 1, 2].map((j) => M0[j] + fm * (m.pivot[j] + m.pos[i + j] - M0[j]))); pos.push(q[0] - pv[0], q[1] - pv[1], q[2] - pv[2]); }
+    return { ...m, pivot: pv, pos, drop: m.drop * f * fm };
+  });
+  Object.assign(P, out);
+  const nd = new Set([...drop].map((v) => map[v]).filter((v) => v >= 0));
+  // the lock: the tie set on the new crown `tie`° back from straight up from the new centre, as far out of the scalp as it
+  // stood out of her bare scalp
+  const lock = (H) => {
+    const { pts } = H.points(), t1 = pts[1].toArray(), d = t1.map((x, i) => x - co[i]), r = Math.hypot(...d), u = d.map((x) => x / r);
+    const so = ztR(triOld, co, u), sOld = co.map((x, i) => x + u[i] * so), bare = so - zhLift(sOld);
+    const a = ((S.tie ?? ZT_TIE) * Math.PI) / 180, w = [0, Math.cos(a), -Math.sin(a)], rn = ztR(triNew, cn, w);
+    const tNew = cn.map((x, i) => x + w[i] * rn + u[i] * (r - bare));
+    const mv = new THREE.Vector3(...tNew.map((x, i) => x - t1[i])), C = new THREE.Vector3(...cn);
+    return { ...H, moved: mv, points: () => {
+      const o = H.points(), q = o.pts.map((p) => p.clone().add(mv));
+      q[0] = q[1].clone().addScaledVector(C.clone().sub(q[1]).normalize(), o.pts[0].distanceTo(o.pts[1]));
+      return { ...o, pts: q };
+    } };
+  };
+  return { drop: nd, shell: [start - nd.size, end - nd.size], lock, info: { g, f, Y, co, cn, top1 } };
+}
 function zoeBare(P, hb, shape = null) {
   const n = P.pos.length / 3, is = (v, c) => P.col[v * 3] === c[0] && P.col[v * 3 + 1] === c[1] && P.col[v * 3 + 2] === c[2];
   const scalp = (v) => { if (!is(v, ZH_HAIR) && !is(v, ZH_SKIN)) return false; let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k]; return w >= 0.99; };
@@ -2336,7 +2526,7 @@ function zoeSeat(P, ctx, moved) {
     if (w > 0) P.col.splice(v * 3, 3, ...mixc(ZH_SKIN, ZH_SEAT.col, w));
   }
 }
-function zoeHair(P0, H) {
+function zoeHair(P0, H, tw = null) {
   const P = { ...P0, pos: P0.pos.slice(), nrm: P0.nrm.slice(), col: P0.col.slice(), si: P0.si.slice(), sw: P0.sw.slice() };
   const n = P.pos.length / 3, hb = P.bones.indexOf('head'), tails = ['tail0', 'tail1', 'tail2'].map((b) => P.bones.indexOf(b));
   const is = (v, c) => P.col[v * 3] === c[0] && P.col[v * 3 + 1] === c[1] && P.col[v * 3 + 2] === c[2];
@@ -2357,6 +2547,18 @@ function zoeHair(P0, H) {
   for (const vs of pieces.values()) if ((is(vs[0], ZH_HAIR) || is(vs[0], ZH_TRIM)) && vs.every(onHead) && vs.some(tailed)) vs.forEach((v) => drop.add(v));
   if (!drop.size) return P0;   // (not the model this was made for: leave it)
   const ctx = { drop, weights: zhWeights };
+  // (ZOE-HEAD-3: Twinsen's head on her, the lock and tie on its crown; the scalp bare skin as hers)
+  const TW = ZOE_HEADS[ZOE_HEAD]?.twin;
+  const R = TW && tw && zoeTwinHead(P, tw, TW, [...pieces.values()], drop, hb);
+  if (R) {
+    ctx.drop = R.drop;
+    swapHair(P, ctx, splineLock(ctx, true, R.lock(H)));
+    hairBand(P, ctx, ZOE_BIGTIE ? ZH_BAND_BIG : ZH_BAND_BARE);
+    const shell = [];
+    for (let v = R.shell[0]; v < R.shell[1]; v++) shell.push(v);
+    zoeSeat(P, ctx, shell);
+    return P;
+  }
   if (ZOE_SCALP === 'bare') {
     // (ZOE-HAIR-2: the skull bare first, so the tie is found on her skin; the moved points' indices past the dropped ponytail)
     // (ZOE-HEAD: the cranium reshaped in the same pass, ZOE_HEAD; the lock then moved as the skull under its tie moved)
