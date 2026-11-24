@@ -242,6 +242,8 @@ SW.scan = async (area, opt = {}) => {
     if (!o.isInstancedMesh) { bb.setFromObject(o); if (bb.max.x < A.x0 || bb.min.x > A.x1 || bb.max.z < A.z0 || bb.min.z > A.z1 || bb.max.y < A.y0 || bb.min.y > A.y1) return; }
     if (o.isInstancedMesh && (m0?.alphaTest > 0 || /smallPool|grass|flower|tulip|weed|clover|fern|daisy/i.test(pathOf(o)))) { if (o.name !== 'smallPool') foliage.push(o); return skip('foliage'); }
     if (o.name === 'blobBatch') return skip('blob');
+    // (CRYSTALS-ONE-LOOK: a crystal's see-through shell is not a decal; its opaque core inside stands for it as a part)
+    if (!Array.isArray(o.material) && m0?.userData?.crystal && m0.transparent && m0.depthWrite === false) return skip('crystal shell');
     if (!Array.isArray(o.material) && m0?.transparent && m0.depthWrite === false) { if (!(SW.blob && m0.map === SW.blob)) decals.push(o); return skip('decal'); }   // (a blob shadow under someone is not a decal)
     if (opt.skipName && opt.skipName.test(pathOf(o))) return skip('name');
     if (/(^|<)(dog|cat|fish|bee|drone)|gull|bird/i.test(pathOf(o))) return skip('animal');

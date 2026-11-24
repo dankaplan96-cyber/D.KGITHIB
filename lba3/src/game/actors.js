@@ -10,7 +10,8 @@ import { WATER_FLOOR, GRAVITY } from '../engine/physics.js';
 import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
-import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
+import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalModel, bonusMat } from './bonuslook.js';
+import { gemGeo, crystalShell, crystalCore } from './crystallook.js';
 import { workHands } from './workhands.js';
 import { ballGeo, ballMaterial, ballEmissive, ballGlowTexture, swordMeshes } from './equiplook.js';
 
@@ -1921,15 +1922,16 @@ const PICK = {
   // a clover leaf (the extra life): four heart-shaped leaflets on a stem
   clover: () => new THREE.Mesh(cloverGeo(), bonusMat('clover')),
   // a singing crystal: three blue spikes from one root, like the well's crystals in miniature
-  crystal: () => new THREE.Mesh(crystalGeo(), bonusMat('crystal')),   // (its three spikes one mesh: ITEMS-1)
+  crystal: () => crystalModel(),   // (its three spikes one shell mesh + one core mesh: ITEMS-1, CRYSTALS-ONE-LOOK)
   // a Sendell shard: a bright crystal in a ring of light (its parts made once and shared: ITEMS-1)
   shard: () => {
     const S = (SHARD ??= {
-      gem: new THREE.OctahedronGeometry(0.45, 0), gemMat: new THREE.MeshStandardMaterial({ color: '#fff0a0', emissive: '#ffb000', emissiveIntensity: 3.5, metalness: 0.3, roughness: 0.1 }),
+      // (CRYSTALS-ONE-LOOK: the well's faceted crystal, shell + core; Sendell's gold kept: crystallook.js)
+      gem: gemGeo(0, 0.45, 0.27), gemMat: crystalShell('#fff0a0', '#ffb000', 1.6, 0.82), core: gemGeo(0, 0.45, 0.27, true), coreMat: crystalCore('#fff6c8'),
       ring: new THREE.TorusGeometry(0.75, 0.03, 6, 32), ringMat: new THREE.MeshBasicMaterial({ color: '#ffe080', transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }),
     });
     const g = new THREE.Group();
-    const m = new THREE.Mesh(S.gem, S.gemMat); m.scale.set(0.7, 1.4, 0.7); g.add(m);
+    const m = new THREE.Mesh(S.gem, S.gemMat); m.scale.set(0.7, 1.4, 0.7); m.add(new THREE.Mesh(S.core, S.coreMat)); g.add(m);
     const ring = new THREE.Mesh(S.ring, S.ringMat); ring.rotation.x = Math.PI / 2; g.add(ring);
     return g;
   },

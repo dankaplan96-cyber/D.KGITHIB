@@ -22,6 +22,7 @@
 // zlClear(x, z, pad) keeps Zeelich's scatter (trees, rocks, grass) out of these places; it is applied after the
 // scatter's random draws, so everything else on the island keeps its place.
 import * as THREE from 'three';
+import { crystalMats, gemGeo } from './crystallook.js';
 import { tm, pm, ctex, bbox, boxUV, cyl, lathe, Batch, compose, tint, cached } from './kit.js';
 import { capM, glassM } from './props-esmer.js';
 
@@ -257,7 +258,9 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     col({ type: 'box', x: CROSS.x + 0.1, z: 8.55, hw: 0.32, hd: 0.25, rot: 0, top: Y0 + 0.75, noStand: true, seeThrough: true });
   }
   // ---- heat posts, after Citadel's: lit where the project's heat goes, dark (with a tag) where it is promised
-  const glassLit = pm('#ffd0a0', 0.25, { emissive: '#ff9a3c', emissiveIntensity: 1.4, flatShading: true });
+  // (CRYSTALS-ONE-LOOK: the well's faceted crystal, shell + core, the project's warm tint: crystallook.js; an unlit one the
+  //  same prism, dull)
+  const glassLit = crystalMats('warm');
 
   const posts = [];
   const post = (x, z, lit, tag) => {
@@ -267,8 +270,8 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     L.add(cached('zlppipe', () => tint(cyl(0.075, 0.075, 1.05, 10).scale(s, s, s), TEAL)), C.MVC, ...at(0, 0.66, 0));
     for (const cy of [0.2, 0.62, 1.12]) L.add(cached('zlpcol', () => tint(cyl(0.105, 0.105, 0.07, 12).scale(s, s, s), BRASS)), C.MVC, ...at(0, cy, 0));
     L.add(cached('zlpcup', () => tint(cyl(0.17, 0.09, 0.14, 8, 0, true).scale(s, s, s), BRASS)), C.MVC, ...at(0, 1.24, 0));
-    if (lit) LF.add(cached('zlpgem', () => new THREE.OctahedronGeometry(0.15, 0).scale(s, 1.5 * s, s)), glassLit, ...at(0, 1.4, 0));
-    else L.add(cached('zlpgemd', () => tint(new THREE.OctahedronGeometry(0.15, 0).scale(s, 1.5 * s, s), '#6a4a3a')), C.MVC, ...at(0, 1.4, 0));
+    if (lit) { LF.add(gemGeo(posts.length, 0.225 * s, 0.095 * s), glassLit.shell, ...at(0, 1.4, 0)); LF.add(gemGeo(posts.length, 0.225 * s, 0.095 * s, true, glassLit.shell.userData.coreTint), glassLit.core, ...at(0, 1.4, 0)); }
+    else L.add(cached('zlpgemd' + (posts.length % 4), () => tint(gemGeo(posts.length, 0.225 * s, 0.095 * s).clone(), '#6a4a3a')), C.MVC, ...at(0, 1.4, 0));
     col({ type: 'cyl', x, z, r: 0.2, top: Y0 + 1.95, noStand: true, seeThrough: true });
     if (tag) {
       // the tag faces the street (south of the street for the north side, north for the south side)

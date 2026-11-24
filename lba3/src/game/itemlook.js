@@ -12,6 +12,7 @@
 // above (camera alpha 60 x MUL_ANGLE 4 = 240 of 4096); the selected inventory object turns one unit a millisecond (a
 // turn in 4.1 s), the found object two (a turn in 2.05 s).
 import * as THREE from 'three';
+import { gemGeo, coreOfGem, linkedCore, asShell } from './crystallook.js';
 import { pickupModel } from './actors.js';
 import { ballLookMesh, swordMeshes } from './equiplook.js';
 import { blowgunModel, pistolModel, gloveModel, pulseModel } from './weapons.js';
@@ -42,7 +43,11 @@ function paper(kind, w = 0.3, h = 0.36, bend = 0.04, back = '#e8dcc0') {
   put(g, geo, M('#ffffff', { map: tex, roughness: 0.9, side: THREE.DoubleSide }));
   return g;
 }
-function crystal(g, mat, x, y, z, s, rx = 0, rz = 0) { const m = put(g, new THREE.OctahedronGeometry(s, 0), mat, x, y, z, rx, 0, rz); m.scale.y = 1.7; return m; }
+// (CRYSTALS-ONE-LOOK: the well's faceted crystal, a translucent shell over a core that glows with it: crystallook.js)
+function crystal(g, mat, x, y, z, s, rx = 0, rz = 0, v = 0) {
+  if (!mat.userData.crystal) { asShell(mat, 0.82); mat.userData.core = linkedCore(mat); }
+  const m = put(g, gemGeo(v, s, s * 0.62), mat, x, y, z, rx, 0, rz); m.add(coreOfGem(mat, mat.userData.core, { v, hs: s, rr: s * 0.62 })); m.scale.y = 1.7; return m;
+}
 function cogGeo(r = 0.12, teeth = 10, th = 0.04) {
   const s = new THREE.Shape();
   for (let i = 0; i < teeth * 2; i++) { const a0 = (i / (teeth * 2)) * Math.PI * 2, a1 = ((i + 1) / (teeth * 2)) * Math.PI * 2, rr = i % 2 ? r * 0.8 : r; s.lineTo(Math.cos(a0) * rr, Math.sin(a0) * rr); s.lineTo(Math.cos(a1) * rr, Math.sin(a1) * rr); }
@@ -125,7 +130,7 @@ const LOOKS = {
   kettle: () => {
     const g = new THREE.Group(), glow = M('#e8fbff', { emissive: '#56d8ff', emissiveIntensity: 0.55, roughness: 0.25, flatShading: true });
     put(g, new THREE.CylinderGeometry(0.11, 0.12, 0.03, 9), M('#c8c0b0', { roughness: 0.95, flatShading: true }), 0, -0.07);
-    crystal(g, glow, 0, 0.02, 0, 0.06, 0.1, 0.1); crystal(g, glow, 0.06, -0.01, 0.03, 0.04, 0.3, -0.4); crystal(g, glow, -0.055, -0.02, -0.02, 0.035, -0.2, 0.45);
+    crystal(g, glow, 0, 0.02, 0, 0.06, 0.1, 0.1, 0); crystal(g, glow, 0.06, -0.01, 0.03, 0.04, 0.3, -0.4, 1); crystal(g, glow, -0.055, -0.02, -0.02, 0.035, -0.2, 0.45, 2);
     return g;
   },
   // a warm stone from the bay (prologue.js: a pale crystal glowing cyan)
@@ -188,7 +193,7 @@ const LOOKS = {
   },
   cell: () => {
     const g = new THREE.Group();
-    put(g, new THREE.OctahedronGeometry(0.08, 0), M('#bff4ff', { emissive: '#2a9aff', emissiveIntensity: 0.9, roughness: 0.15, flatShading: true })).scale.y = 1.4;
+    crystal(g, M('#bff4ff', { emissive: '#2a9aff', emissiveIntensity: 0.9, roughness: 0.15, flatShading: true }), 0, 0, 0, 0.08).scale.y = 1.4;
     for (const s of [-1, 1]) put(g, new THREE.CylinderGeometry(0.05, 0.05, 0.03, 12), brass(), 0, s * 0.12);
     return g;
   },
