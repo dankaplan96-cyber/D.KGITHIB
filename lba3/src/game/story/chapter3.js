@@ -489,7 +489,7 @@ export class Chapter3 extends ChapterBase {
     const f = this.f;
     if (!this.reached()) return;
     if (this.isCur()) this.sh.applyFlags();   // (CAMPAIGN-9: the thread on in a save from before, its steps past counted done)
-    this.rl.applyFlags(); if (this.part === 2) this.fd.applyFlags();   // (H-1, H-2: a save from before: the halls and pylons past counted done)
+    this.rl.applyFlags(); this.fd.applyFlags();   // (H-1, H-2: a save from before: the halls and pylons past counted done, before the rooms are dressed)
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     if (this.part === 1) this.game.regions.whenBuilt('c3deep', () => this.applyRooms());   // (the rooms, for both parts: once)
