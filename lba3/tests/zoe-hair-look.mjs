@@ -6,12 +6,13 @@
 //                   back, her head from the same four sides, the talking pose (head, ¾) and the walk from behind; the
 //                   model's triangle count
 //   PHASE=game      (one boot, ?zoehair=<ZH>, default the game's default) the opening film's two Zoé lines (her at the
-//                   tap), the yard under the play camera (Follow, Far) by her, walking away from her and back past her
-//                   (her from behind), the talk with her (her line, his answer), and her standing in the house (a copy of
-//                   her model set in the room by the script: the interior's light)
-// OUT=dir (default captures/p120/). Checks: the model keeps its 19 bones, eyes, mouth and brow morphs; the hair stays off
-// the head and the collar while she talks and turns (lookdev: every hair vertex outside the skin's hull by bone). SwiftShader,
-// headless: Automated runtime only.
+//                   tap), the yard under the play camera (Follow, Far) by her, a fixed camera behind her at about the Far
+//                   camera's distance and height, the talk with her (her line, his answer), and her standing in the house (a
+//                   copy of her model set in the room by the script, a fixed camera: the interior's light); the bake's
+//                   misses (nothing of hers re-sculpted)
+// OUT=dir (default captures/p120/). Checks: the model keeps its 19 bones, eyes, mouth and brow morphs; the part of the hair
+// the tail bones carry stays 3 cm or more off her head, neck, collar and back through idle, talk, walk, run and a head
+// turned both ways and tipped back (lookdev, skinned vertex positions). SwiftShader, headless: Automated runtime only.
 import { launch, open, checker, URL0 } from './lib/boot.mjs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -47,9 +48,9 @@ if (PHASE === 'lookdev') {
     const Z = `zoehair=${zh}`;
     await ld(`c=zoe&anim=idle&t=0.5&views=${views.map((v) => v[1]).join(',')}&gap=0.95&dist=5.0&cy=1.35&ly=1.2&fov=30&${Z}`);
     await jpg(`ld-${zh}-turn`);
-    for (const [n, a] of views) { await ld(`c=zoe&anim=idle&t=0.5&yaw=0&focus=head&fd=1.25&fy=0.17&cyaw=${a}&cpitch=0.12&fov=30&${Z}`); await jpg(`ld-${zh}-head-${n}`); }
+    for (const [n, a] of views) { await ld(`c=zoe&anim=idle&t=0.5&yaw=0&focus=head&fd=1.6&fy=0.24&cyaw=${a}&cpitch=0.12&fov=30&${Z}`); await jpg(`ld-${zh}-head-${n}`); }
     // the talking pose (the rig's talk gesture, the mouth half open) close, ¾; the walk from behind at the play camera's pitch
-    await ld(`c=zoe&anim=talk&t=1.3&mouth=0.6&yaw=0&focus=head&fd=1.25&fy=0.12&cyaw=0.62&cpitch=0.1&fov=30&${Z}`); await jpg(`ld-${zh}-talk`);
+    await ld(`c=zoe&anim=talk&t=1.3&mouth=0.6&yaw=0&focus=head&fd=1.6&fy=0.2&cyaw=0.62&cpitch=0.1&fov=30&${Z}`); await jpg(`ld-${zh}-talk`);
     await ld(`c=zoe&anim=walk&t=0.9&yaw=3.14&focus=head&fd=3.2&fy=-0.4&cyaw=3.14&cpitch=0.55&fov=30&${Z}`); await jpg(`ld-${zh}-walk-back`);
     // the counts and the clearance: through a talk and a turn (idle, talk, walk, run; the head turned both ways and
     // tipped back), the least distance of any hair vertex below the crown to the body's skin under it
@@ -108,12 +109,16 @@ if (PHASE === 'game') {
   await ev(async () => {
     const CH = await import('./src/game/characters.js');
     const z = CH.createCharacter('zoe'), h = game.hero;
-    z.root.position.set(h.pos.x + 0.9, h.pos.y, h.pos.z + 0.6); z.root.rotation.y = 2.6;
+    const rt = new (h.pos.constructor)().setFromMatrixColumn(game.camera.matrixWorld, 0); rt.y = 0; rt.normalize();   // (1.6 m to his left on screen: into the room, clear of him)
+    z.root.position.set(h.pos.x - rt.x * 1.6, h.pos.y, h.pos.z - rt.z * 1.6);
     game.scene.add(z.root); window.__zc = z;
     for (let i = 0; i < 30; i++) { z.play('idle'); z.update(1 / 30, 0); }
-    // (a fixed camera 3 m off her ¾ front, as tests/char-form.mjs's close-ups: the room's camera shows her too small)
-    const p = z.root.position, a = z.root.rotation.y + 0.6;
-    game.camRig.override = { pos: p.clone().add({ x: Math.sin(a) * 3, y: 1.9, z: Math.cos(a) * 3 }), look: p.clone().add({ x: 0, y: 1.55, z: 0 }) };
+    // (the room's own camera dollied in toward her along its line of sight, so the cutaway still shows the room and no wall
+    //  comes between: framing about 1.5 m of her with the room's long lens; she is turned to face it, ¾)
+    const c = game.camera.position.clone(), t = z.root.position.clone().add({ x: 0, y: 1.45, z: 0 });
+    z.root.rotation.y = Math.atan2(c.x - t.x, c.z - t.z) + 0.6;
+    const d = 0.75 / Math.tan((game.camera.fov * Math.PI) / 360);
+    game.camRig.override = { pos: t.clone().add(c.clone().sub(t).normalize().multiplyScalar(d)), look: t };
     game.step(2.5); for (let i = 0; i < 30; i++) { z.play('idle'); z.update(1 / 30, 0); } game.renderer.render();
   });
   await jpg(`game-${tag}-house`);
@@ -131,11 +136,14 @@ if (PHASE === 'game') {
   check('the bake: nothing of Zoé re-sculpted at load', bake.zoe.length === 0, bake);
   await ev(() => { if (game.tutorial?._mk) game.tutorial._mk.group.visible = false; const z = P.npc('zoe'); const h = game.hero.pos; const dx = z.pos.x - h.x, dz = z.pos.z - h.z, d = Math.hypot(dx, dz); if (d > 3.2) P.go(h.x + dx * (1 - 3 / d), h.z + dz * (1 - 3 / d), { tol: 0.5, maxT: 60 }); P.face(z.pos.x, z.pos.z); P.settle(); game.step(2.0); game.renderer.render(); });
   await jpg(`game-${tag}-far-standing`);
-  // her from behind: Twinsen walked round behind her and facing her (the Follow camera behind him) ...
-  await ev(() => { const z = P.npc('zoe'), f = z.rig.root.rotation.y; P.go(z.pos.x - Math.sin(f) * 2.6, z.pos.z - Math.cos(f) * 2.6, { tol: 0.6, maxT: 60 }); P.face(z.pos.x, z.pos.z); P.settle(); game.step(2.0); game.renderer.render(); });
-  await jpg(`game-${tag}-follow-behind`);
-  // ... and a fixed camera behind her at about the Far camera's distance and height (her heading may follow him)
-  await ev(() => { const z = P.npc('zoe'), p = z.rig.root.position, f = z.rig.root.rotation.y; game.camRig.override = { pos: p.clone().add({ x: -Math.sin(f) * 7, y: 5.5, z: -Math.cos(f) * 7 }), look: p.clone().add({ x: 0, y: 1.6, z: 0 }) }; game.step(2.5); game.renderer.render(); });
+  // her from behind under the same Follow camera (Far): she is turned to face away from it for this one frame (walking round
+  // her in this yard puts the tree and the fence between the camera and her); the target marker hidden
+  await ev(() => {
+    const z = P.npc('zoe'), r = z.rig.root, c = game.camera.position;
+    r.rotation.y = Math.atan2(r.position.x - c.x, r.position.z - c.z);
+    game.scene.traverse((o) => { if (o.isSprite && o.renderOrder === 20) o.visible = false; });
+    r.updateMatrixWorld(true); game.renderer.render();
+  });
   await jpg(`game-${tag}-far-herback`);
   await ev(() => { game.camRig.override = null; game.step(0.3); });
   await ev(() => {

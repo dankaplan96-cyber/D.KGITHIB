@@ -1,0 +1,30 @@
+{
+ "old": {
+  "tris": 8410,
+  "hairVerts": 1296,
+  "bodyVerts": 23079,
+  "leastToBody": 0.044,
+  "colours": 24672
+ },
+ "a": {
+  "tris": 9974,
+  "hairVerts": 4032,
+  "bodyVerts": 23904,
+  "leastToBody": 0.084,
+  "colours": 29364
+ },
+ "b": {
+  "tris": 9974,
+  "hairVerts": 4032,
+  "bodyVerts": 23958,
+  "leastToBody": 0.05,
+  "colours": 29364
+ },
+ "c": {
+  "tris": 9974,
+  "hairVerts": 4032,
+  "bodyVerts": 23838,
+  "leastToBody": 0.09,
+  "colours": 29364
+ }
+}
