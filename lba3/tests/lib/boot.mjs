@@ -15,6 +15,7 @@
 // makes the exit code non-zero and is printed as a late FAIL.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { fileURLToPath } from 'node:url';
+import { serveLocal } from './serve.mjs';
 const HARNESS = fileURLToPath(new URL('./player.js', import.meta.url));
 export const URL0 = process.env.GAME_URL || 'http://localhost:8123/';
 const ORIGIN = new URL(URL0).origin;
@@ -82,6 +83,8 @@ export async function launch({ width = 960, height = 540, storageState, locale, 
   if (process.env.WALKCHECK) await context.addInitScript(() => { window.__walkcheck = 1; });
   // (CPU-WALK: NOFREEZE=1 runs a suite on the walk and the draw-batch check as they were before CPU-WALK, the A/B)
   if (process.env.NOFREEZE) await context.addInitScript(() => { window.__nofreeze = 1; });
+  // (SERVE=1: this checkout's files by the browser's request routing, no http.server: tests/lib/serve.mjs)
+  if (process.env.SERVE) await serveLocal(context);
   const page = await context.newPage();
   const errs = watch(page);
   return { browser, context, page, errs };
