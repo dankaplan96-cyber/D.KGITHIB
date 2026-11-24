@@ -56,7 +56,7 @@ export function pumpAngle(t) {
   if (t < Q.lift + Q.push) return up + (dn - up) * smooth((t - Q.lift) / Q.push);
   return dn * (1 - smooth((t - Q.lift - Q.push) / Q.back));
 }
-const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
+const CRAFT = new Set(['tinker', 'lean', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 // the actions in which the player's character keeps his feet planted (Rig._plant)
@@ -584,6 +584,14 @@ export class Rig {
       p.hipsY = 0.94 + b; p.torsoX = 0.28 + w2 * 0.015; p.headX = 0.3;
       T.armL = -0.62; T.elL = -1.25; T.armR = -0.7 + w * 0.06; T.elR = -1.15 + w * 0.12;
       T.legL = 0.02; T.legR = -0.04; T.kneeL = 0.06; T.kneeR = 0.04;
+    } else if (a === 'lean') {
+      // (P119) leaning over a table on both hands, looking at what lies there (a book, a map, a plan): still — no working
+      // loop. 'tinker' was used for this (the opening's notebook) and its work went on under hands held flat on the table:
+      // the right arm pumping at 1 Hz and the chest swaying at 0.5 Hz, the head bobbing 2 cm in the close-up — rocking.
+      // Only a slower, smaller breath stays
+      p.hipsY = 0.945 + b * 0.5; p.torsoX = 0.34 + Math.sin(this.t * 1.3) * 0.004; p.headX = 0.3;
+      T.armL = -0.55; T.elL = -0.75; T.armR = -0.55; T.elR = -0.75;
+      T.legL = 0.03; T.legR = -0.03; T.kneeL = 0.05; T.kneeR = 0.05;
     } else if (a === 'kneelWork' || a === 'kneelLook' || a === 'kneelShow') {
       // a child kneeling on the floor over a project
       p.hipsY = 0.52 + b; T.legL = -1.35; T.legR = -1.2; T.kneeL = 2.3; T.kneeR = 2.1; T.footL = 0.4; T.footR = 0.4;
@@ -1659,7 +1667,10 @@ export class Rig {
     // (ARM-CLEAR: last frame's forward turn off the arms is taken off first, so the joints ease from their own pose; not where
     //  something after the update has set the arm itself)
     const AW = this._ac?.wx;
-    if (AW) { if (AW[0] !== null && j.armL.sh.rotation.x === AW[0]) j.armL.sh.rotation.x += this._ac.L[1]; if (AW[1] !== null && j.armR.sh.rotation.x === AW[1]) j.armR.sh.rotation.x += this._ac.R[1]; }
+    // (P119: "where it is" within a hair, not to the last bit — a story scene's pose layer added on top and taken off again
+    //  (opening.js applyBend: a shoulder's bend, a line's beat) leaves (x + v) - v, which is x only nine frames in ten:
+    //  the tenth kept last frame's turn in the joint and turned it again, the arm creeping forward under a beat)
+    if (AW) { if (AW[0] !== null && Math.abs(j.armL.sh.rotation.x - AW[0]) < 1e-9) j.armL.sh.rotation.x += this._ac.L[1]; if (AW[1] !== null && Math.abs(j.armR.sh.rotation.x - AW[1]) < 1e-9) j.armR.sh.rotation.x += this._ac.R[1]; }
     set(j.armL.sh, T.armL, 'x', Ru); set(j.armR.sh, T.armR, 'x', Ru);
     set(j.armL.el, T.elL, 'x', Ru); set(j.armR.el, T.elR, 'x', Ru);
     set(j.armR.sh, T.twR, 'y', Ru); set(j.armL.sh, -(T.twL ?? 0), 'y', Ru);
