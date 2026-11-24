@@ -1,0 +1,18 @@
+[
+ {
+  "t": "10.5",
+  "by": "bolt",
+  "near": "guardian:stunned:5.0",
+  "st": "stunned",
+  "d": 5,
+  "hp": 11
+ },
+ {
+  "t": "19.5",
+  "by": "bolt",
+  "near": "guardian:chase:4.7",
+  "st": "chase",
+  "d": 4.7,
+  "hp": 10
+ }
+]

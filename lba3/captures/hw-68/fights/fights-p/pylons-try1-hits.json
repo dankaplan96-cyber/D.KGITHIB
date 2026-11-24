@@ -1,0 +1,378 @@
+[
+ {
+  "t": "45.6",
+  "by": "bolt",
+  "near": "guardian:stunned:8.5",
+  "st": "stunned",
+  "d": 8.5,
+  "hp": 11
+ },
+ {
+  "t": "55.3",
+  "by": "bolt",
+  "near": "guardian:stunned:8.4",
+  "st": "stunned",
+  "d": 8.4,
+  "hp": 10
+ },
+ {
+  "t": "65.2",
+  "by": "bolt",
+  "near": "guardian:stunned:8.2",
+  "st": "stunned",
+  "d": 8.2,
+  "hp": 9
+ },
+ {
+  "t": "70.0",
+  "by": "bolt",
+  "near": "guardian:stunned:8.0",
+  "st": "stunned",
+  "d": 8,
+  "hp": 8
+ },
+ {
+  "t": "74.9",
+  "by": "bolt",
+  "near": "guardian:stunned:8.0",
+  "st": "stunned",
+  "d": 8,
+  "hp": 7
+ },
+ {
+  "t": "79.8",
+  "by": "bolt",
+  "near": "guardian:stunned:8.0",
+  "st": "stunned",
+  "d": 8,
+  "hp": 6
+ },
+ {
+  "t": "84.6",
+  "by": "bolt",
+  "near": "guardian:stunned:7.9",
+  "st": "stunned",
+  "d": 7.9,
+  "hp": 5
+ },
+ {
+  "t": "89.5",
+  "by": "bolt",
+  "near": "guardian:stunned:8.0",
+  "st": "stunned",
+  "d": 8,
+  "hp": 4
+ },
+ {
+  "t": "94.3",
+  "by": "bolt",
+  "near": "guardian:stunned:7.8",
+  "st": "stunned",
+  "d": 7.8,
+  "hp": 3
+ },
+ {
+  "t": "99.3",
+  "by": "bolt",
+  "near": "guardian:stunned:8.0",
+  "st": "stunned",
+  "d": 8,
+  "hp": 2
+ },
+ {
+  "t": "104.1",
+  "by": "bolt",
+  "near": "guardian:stunned:7.9",
+  "st": "stunned",
+  "d": 7.9,
+  "hp": 1
+ },
+ {
+  "t": "109.1",
+  "by": "bolt",
+  "near": "guardian:stunned:8.0",
+  "st": "stunned",
+  "d": 8,
+  "hp": 0
+ },
+ {
+  "t": "113.7",
+  "by": "bolt",
+  "near": "guardian:chase:6.9",
+  "st": "chase",
+  "d": 6.9,
+  "hp": 11
+ },
+ {
+  "t": "120.1",
+  "by": "bolt",
+  "near": "guardian:chase:6.7",
+  "st": "chase",
+  "d": 6.7,
+  "hp": 10
+ },
+ {
+  "t": "126.5",
+  "by": "bolt",
+  "near": "guardian:chase:6.6",
+  "st": "chase",
+  "d": 6.6,
+  "hp": 9
+ },
+ {
+  "t": "133.1",
+  "by": "bolt",
+  "near": "guardian:chase:6.7",
+  "st": "chase",
+  "d": 6.7,
+  "hp": 8
+ },
+ {
+  "t": "139.6",
+  "by": "bolt",
+  "near": "guardian:chase:6.6",
+  "st": "chase",
+  "d": 6.6,
+  "hp": 7
+ },
+ {
+  "t": "146.2",
+  "by": "bolt",
+  "near": "guardian:chase:6.3",
+  "st": "chase",
+  "d": 6.3,
+  "hp": 6
+ },
+ {
+  "t": "152.9",
+  "by": "bolt",
+  "near": "guardian:chase:6.2",
+  "st": "chase",
+  "d": 6.2,
+  "hp": 5
+ },
+ {
+  "t": "159.8",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 4
+ },
+ {
+  "t": "169.3",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 3
+ },
+ {
+  "t": "178.8",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 2
+ },
+ {
+  "t": "188.3",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 1
+ },
+ {
+  "t": "197.8",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 0
+ },
+ {
+  "t": "202.4",
+  "by": "bolt",
+  "near": "guardian:chase:6.6",
+  "st": "chase",
+  "d": 6.6,
+  "hp": 11
+ },
+ {
+  "t": "208.7",
+  "by": "bolt",
+  "near": "guardian:chase:6.2",
+  "st": "chase",
+  "d": 6.2,
+  "hp": 10
+ },
+ {
+  "t": "215.3",
+  "by": "bolt",
+  "near": "guardian:chase:6.3",
+  "st": "chase",
+  "d": 6.3,
+  "hp": 9
+ },
+ {
+  "t": "221.9",
+  "by": "bolt",
+  "near": "guardian:chase:6.2",
+  "st": "chase",
+  "d": 6.2,
+  "hp": 8
+ },
+ {
+  "t": "228.6",
+  "by": "bolt",
+  "near": "guardian:chase:6.6",
+  "st": "chase",
+  "d": 6.6,
+  "hp": 7
+ },
+ {
+  "t": "235.1",
+  "by": "bolt",
+  "near": "guardian:chase:6.2",
+  "st": "chase",
+  "d": 6.2,
+  "hp": 6
+ },
+ {
+  "t": "241.4",
+  "by": "bolt",
+  "near": "guardian:chase:6.3",
+  "st": "chase",
+  "d": 6.3,
+  "hp": 5
+ },
+ {
+  "t": "248.3",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 4
+ },
+ {
+  "t": "257.9",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 3
+ },
+ {
+  "t": "267.4",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 2
+ },
+ {
+  "t": "276.9",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 1
+ },
+ {
+  "t": "286.4",
+  "by": "bolt",
+  "near": "guardian:stunned:7.1",
+  "st": "stunned",
+  "d": 7.1,
+  "hp": 0
+ },
+ {
+  "t": "291.0",
+  "by": "bolt",
+  "near": "guardian:chase:6.2",
+  "st": "chase",
+  "d": 6.2,
+  "hp": 11
+ },
+ {
+  "t": "297.5",
+  "by": "bolt",
+  "near": "guardian:chase:6.4",
+  "st": "chase",
+  "d": 6.4,
+  "hp": 10
+ },
+ {
+  "t": "304.1",
+  "by": "bolt",
+  "near": "guardian:chase:6.4",
+  "st": "chase",
+  "d": 6.4,
+  "hp": 9
+ },
+ {
+  "t": "310.6",
+  "by": "bolt",
+  "near": "guardian:chase:6.2",
+  "st": "chase",
+  "d": 6.2,
+  "hp": 8
+ },
+ {
+  "t": "317.0",
+  "by": "bolt",
+  "near": "guardian:chase:6.7",
+  "st": "chase",
+  "d": 6.7,
+  "hp": 7
+ },
+ {
+  "t": "323.3",
+  "by": "bolt",
+  "near": "guardian:chase:6.4",
+  "st": "chase",
+  "d": 6.4,
+  "hp": 6
+ },
+ {
+  "t": "329.9",
+  "by": "bolt",
+  "near": "guardian:chase:6.6",
+  "st": "chase",
+  "d": 6.6,
+  "hp": 5
+ },
+ {
+  "t": "346.0",
+  "by": "bolt",
+  "near": "guardian:stunned:7.0",
+  "st": "stunned",
+  "d": 7,
+  "hp": 4
+ },
+ {
+  "t": "360.1",
+  "by": "bolt",
+  "near": "guardian:stunned:7.0",
+  "st": "stunned",
+  "d": 7,
+  "hp": 3
+ },
+ {
+  "t": "369.5",
+  "by": "bolt",
+  "near": "guardian:stunned:7.0",
+  "st": "stunned",
+  "d": 7,
+  "hp": 2
+ },
+ {
+  "t": "402.3",
+  "by": "bolt",
+  "near": "guardian:stunned:7.0",
+  "st": "stunned",
+  "d": 7,
+  "hp": 1
+ }
+]

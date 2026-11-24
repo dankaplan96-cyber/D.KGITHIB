@@ -1,0 +1,76 @@
+== try 1 zdepot (base-05): hp 11/11 mp 5
+[1.7] STAGED at the gate
+[1.8] fight: hp 11 mp 4; zguard1 patrol 10.9m, zdrone1 patrol 14.1m, zdrone2 patrol 14.9m, zgdog1 guard 18.3m; throws 0
+[1.8] fight → {"r":"clear","throws":0,"dodges":0}
+[1.9] at 2410.0,6.1 hp 11; near: zguard1 patrol 11.1, zdrone1 patrol 14.3, zdrone2 patrol 14.8, zgdog1 guard 18.3; prompt "E Talk"
+[2.0] plan 3 pts, wp 1 → 2414.4,22.1 keys KeyW cam 0.30,0.83
+[5.8] to the locker → threat
+[7.2] fight: hp 11 mp 3; zdrone2 chase 6.0m, zguard1 recover 6.5m, zdrone1 windup 7.3m, zgdog1 chase 8.6m; throws 1
+[7.8] HIT hp 11→10 BOLT, nearest drone:zdrone2 (windup, 6.1 m)
+[10.2] HIT hp 10→9  nearest gdog:zgdog1 (lunge, 1.3 m)
+[11.4] HIT hp 9→8  nearest guardG:zguard1 (chase, 5.0 m)
+[13.0] HIT hp 8→7  nearest guardG:zguard1 (recover, 5.6 m)
+[13.0] fight: hp 7 mp 0; zguard1 recover 5.6m, zdrone2 windup 6.4m; throws 4
+[15.5] HIT hp 7→6 BOLT, nearest guardG:zguard1 (recover, 4.5 m)
+[18.9] HIT hp 6→5  nearest guardG:zguard1 (chase, 3.1 m)
+[18.9] fight: hp 5 mp 0; zguard1 chase 3.1m; throws 7
+[21.8] HIT hp 5→4 BOLT, nearest guardG:zguard1 (chase, 2.2 m)
+[23.1] HIT hp 4→3  nearest guardG:zguard1 (recover, 2.4 m)
+[24.6] fight: hp 3 mp 0; zguard1 chase 2.2m; throws 11
+[26.1] HIT hp 3→2  nearest guardG:zguard1 (recover, 2.8 m)
+[28.9] HIT hp 2→1  nearest guardG:zguard1 (recover, 3.0 m)
+[30.3] fight: hp 1 mp 0; zguard1 aim 2.2m; throws 15
+[31.8] HIT hp 1→0  nearest guardG:zguard1 (chase, 3.0 m)
+[36.0] fight: hp 11 mp 6; zguard1 aim 2.2m; throws 19
+[37.5] HIT hp 11→10 BOLT, nearest guardG:zguard1 (chase, 2.6 m)
+[38.9] HIT hp 10→9 BOLT, nearest guardG:zguard1 (recover, 2.8 m)
+[42.0] HIT hp 9→8  nearest guardG:zguard1 (recover, 3.0 m)
+[42.0] fight: hp 8 mp 4; zguard1 recover 3.0m; throws 23
+[45.0] HIT hp 8→7  nearest guardG:zguard1 (chase, 3.0 m)
+[46.4] fight → {"r":"clear","throws":26,"dodges":0}
+[46.5] at 2404.6,9.5 hp 7; near: ; prompt "E Talk"
+[46.5] plan 3 pts, wp 1 → 2407.4,9.9 keys KeyW cam 0.89,-0.02
+[51.6] plan 3 pts, wp 2 → 2415.0,23.1 keys KeyW cam 0.55,0.68
+[56.0] to the locker → there
+SUMMARY {"try":1,"result":"no cylinder","hpIn":11,"hpOut":7,"maxHp":11,"dead":false,"secs":58,"hits":15,"byKind":{"bolt":5,"gdog":1,"guardG":9},"enemiesSeen":4,"beaten":4}
+== try 2 zdepot (base-05): hp 11/11 mp 5
+[1.7] STAGED at the gate
+[1.8] fight: hp 11 mp 4; zguard1 patrol 10.9m, zdrone1 patrol 14.2m, zdrone2 patrol 14.9m, zgdog1 guard 18.3m; throws 0
+[1.8] fight → {"r":"clear","throws":0,"dodges":0}
+[1.9] at 2410.0,6.1 hp 11; near: zguard1 patrol 11.0, zdrone1 patrol 14.3, zdrone2 patrol 14.8, zgdog1 guard 18.3; prompt "E Talk"
+[1.9] plan 3 pts, wp 1 → 2414.4,22.1 keys KeyW cam 0.30,0.83
+[5.7] to the locker → threat
+[7.1] fight: hp 11 mp 3; zguard1 recover 6.5m, zdrone1 windup 7.3m, zdrone2 patrol 7.4m, zgdog1 guard 11.3m; throws 1
+[7.8] HIT hp 11→10 BOLT, nearest guardG:zguard1 (recover, 6.7 m)
+[12.2] HIT hp 10→9  nearest guardG:zguard1 (chase, 5.4 m)
+[12.2] fight: hp 9 mp 2; zguard1 chase 5.4m, zgdog1 chase 6.1m; throws 3
+[15.2] HIT hp 9→8 BOLT, nearest guardG:zguard1 (chase, 3.7 m)
+[16.5] HIT hp 8→7  nearest guardG:zguard1 (recover, 3.9 m)
+[18.3] fight: hp 7 mp 0; zguard1 aim 2.8m; throws 7
+[19.9] HIT hp 7→6  nearest guardG:zguard1 (chase, 3.4 m)
+[22.8] HIT hp 6→5  nearest guardG:zguard1 (chase, 2.4 m)
+[24.1] fight: hp 5 mp 0; zguard1 recover 2.2m; throws 11
+[24.2] HIT hp 5→4 BOLT, nearest guardG:zguard1 (recover, 2.5 m)
+[27.0] HIT hp 4→3  nearest guardG:zguard1 (recover, 2.9 m)
+[29.9] HIT hp 3→2  nearest guardG:zguard1 (recover, 3.1 m)
+[29.9] fight: hp 2 mp 0; zguard1 recover 3.1m; throws 15
+[32.8] HIT hp 2→1  nearest guardG:zguard1 (recover, 3.1 m)
+[35.6] HIT hp 1→0  nearest guardG:zguard1 (chase, 2.9 m)
+[35.6] fight: hp 0 mp 0; zguard1 chase 2.9m; throws 19
+[40.0] HIT hp 11→10 BOLT, nearest guardG:zguard1 (recover, 2.4 m)
+[41.4] fight: hp 10 mp 6; zguard1 chase 2.2m; throws 23
+[42.7] HIT hp 10→9  nearest guardG:zguard1 (recover, 2.8 m)
+[45.9] HIT hp 9→8  nearest guardG:zguard1 (recover, 3.1 m)
+[47.2] fight: hp 8 mp 3; zguard1 aim 2.2m; throws 27
+[48.7] HIT hp 8→7  nearest guardG:zguard1 (chase, 3.0 m)
+[51.6] HIT hp 7→6  nearest guardG:zguard1 (chase, 2.6 m)
+[53.0] fight: hp 6 mp 1; zguard1 hurt 2.4m; throws 31
+[54.5] HIT hp 6→5  nearest ?
+[54.5] fight → {"r":"clear","throws":32,"dodges":0}
+[54.9] at 2408.6,-0.1 hp 5; near: ; prompt "E Talk"
+[55.0] plan 3 pts, wp 1 → 2411.0,9.9 keys KeyW cam 0.48,0.74
+[60.1] plan 3 pts, wp 1 → 2411.0,9.9 keys KeyW cam -0.24,0.85
+[65.0] at 2412.2,18.4 hp 5; near: ; prompt "E Talk"
+[65.1] plan 2 pts, wp 1 → 2415.0,22.9 keys KeyW cam 0.25,0.84
+[67.7] to the locker → there
+SUMMARY {"try":2,"result":"no cylinder","hpIn":11,"hpOut":5,"maxHp":11,"dead":false,"secs":69.7,"hits":17,"byKind":{"bolt":4,"guardG":12,"?":1},"enemiesSeen":4,"beaten":4}

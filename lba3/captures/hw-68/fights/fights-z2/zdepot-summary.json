@@ -1,0 +1,36 @@
+[
+ {
+  "try": 1,
+  "result": "no cylinder",
+  "hpIn": 11,
+  "hpOut": 7,
+  "maxHp": 11,
+  "dead": false,
+  "secs": 58,
+  "hits": 15,
+  "byKind": {
+   "bolt": 5,
+   "gdog": 1,
+   "guardG": 9
+  },
+  "enemiesSeen": 4,
+  "beaten": 4
+ },
+ {
+  "try": 2,
+  "result": "no cylinder",
+  "hpIn": 11,
+  "hpOut": 5,
+  "maxHp": 11,
+  "dead": false,
+  "secs": 69.7,
+  "hits": 17,
+  "byKind": {
+   "bolt": 4,
+   "guardG": 12,
+   "?": 1
+  },
+  "enemiesSeen": 4,
+  "beaten": 4
+ }
+]
