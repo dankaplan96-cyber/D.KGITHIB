@@ -76,6 +76,7 @@ The user, 17.11: "let's do all the fixes I wrote so far, I think the tokens are 
 Read this first, then `status.md` (the playtest inbox P1–P65), `WORKPLAN-2026-11-09.md` and `tools/testlab/CLOUD_ORDERS.md`.
 
 ## Standing rules (unchanged)
+- **OPEN-TASKS.he.md (the user, 24.11):** the open-tasks table for the user. Update it whenever a task opens, finishes or waits for the user.
 - **PC only (the user, 24.11):** the game is for a desktop PC. The user opens it on a phone only to look at visuals, not to play. Do not spend work on phone/portrait framing or touch controls.
 - **The user, 20.11: keep tests to a minimum while working; one full test of everything at the end.**
 - **The user, 22.11: "don't test every version, it's unnecessary."** Publish fixes without a test round per version; a worker runs only the suite its fix touches; one full test at the very end, after the fixes are done.
