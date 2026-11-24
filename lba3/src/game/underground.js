@@ -515,7 +515,9 @@ function buildShaft(scene, physics) {
   k.at(BC.x + 1.32, 1.5, BC.z + 1.32, Math.PI / 4, () => signPlate(k, 1.0, 0.38, signMat(['BORE 1', 'KEEP CLEAR'], { w: 384, h: 144, bg: '#6a2a24' })));
   // cracked rock at the bore's foot: the first crystals, warm steam
   // (REVIEW-UNDER: the east one stood on the cable trench's grating, x 4.2, on the walk to the tunnel; now smaller, at the bore's foot beside it)
-  for (const [x, z, s, sd, ry] of [[BC.x - 2.35, BC.z + 0.7, 0.6, 3, 0.4], [BC.x + 1.45, BC.z - 1.6, 0.32, 5, 1.6], [BC.x - 0.9, BC.z - 2.3, 0.45, 8, 2.2]]) {
+  // (ROCKS-MASONRY: the west cluster 45 cm further from the bore: its rock ran 0.4 m into the bore's base and the masonry pass
+  //  left it out, the crystals bare on the floor; here it keeps its rock)
+  for (const [x, z, s, sd, ry] of [[BC.x - 2.8, BC.z + 0.7, 0.6, 3, 0.4], [BC.x + 1.45, BC.z - 1.6, 0.32, 5, 1.6], [BC.x - 0.9, BC.z - 2.3, 0.45, 8, 2.2]]) {
     k.at(x, 0, z, ry, () => { crystals(k, 5, s, sd, [CYAN(), DIM(), VIOLET()]); k.add(rockGeo(sd + 2), rockD, 0, -0.05, 0, 0, { sx: s * 1.4, sy: s * 0.5, sz: s * 1.2 }); });
     B.ccol(x, z, s * 0.8, s * 1.4, { noStand: true });
   }
