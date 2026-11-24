@@ -1,6 +1,6 @@
-# LBA3-RUN: final report (draft, 24.11 05:35 UTC)
+# LBA3-RUN: final report (24.11)
 
-Status: the maturity verdict is PENDING (lba3-maturity is still running on the frozen candidate). This file will be completed when it reports.
+Both final reviewers judged the same frozen candidate.
 
 ## Build
 - Frozen candidate: `1bc16b5e8db3114d7729e912b8b7f6f507278d57` (branch ccr-c1c2c4b9-dep6ed). Later commits on the branch touch only docs.
@@ -29,7 +29,7 @@ Status: the maturity verdict is PENDING (lba3-maturity is still running on the f
 - Performance: performance.md
 - Progression: progression.md
 - Release: release.md
-- Maturity: maturity.md (pending)
+- Maturity: maturity.md (contact sheets in captures/maturity/)
 - Checkpoints: CHECKPOINTS.md
 
 ## Faults this run found and fixed (all game-wide)
@@ -67,7 +67,12 @@ Status: the maturity verdict is PENDING (lba3-maturity is still running on the f
 - **The user's picks:** see docs/lba-maturity/MORNING-24-11.he.md.
 
 ## Verdicts (separate, same build)
-- **Player maturity:** PENDING (lba3-maturity).
+- **Player maturity:** **NEEDS POLISH.** The adventure is complete. The bot played every chapter from New Game to the end card and into free play: the chain 16/16, with chapter 13 started from a staged save; exp-ballastra 33/33, exp-balances 37/37. Every story thread pays off. Three actions, by priority:
+  1. **The first fights.** The chapter 2 depot leaves the player at 3/10 with no heal between chapters, and the Zeelich depot then needed an assist. The third Core pylon drags. Options for the user, then a person plays the depots and the Core.
+  2. **The ending's staging (a user decision).** The game opens with an 88 s film but ends with seven lines in the overhead house view. Proposal: a short closing scene.
+  3. **Gifts before a chapter's own talk.** `kit2b.js talkFirst`: for example, in chapter 14 Ilka thanks Twinsen for the notebook before her urgent line. Game-wide fix: the pending story talk plays first.
+  
+  Lower priority: chapter 10 is talk-heavy, chapter 14 repeats the mill climb, chapter 7's vent repeats chapter 4's discs, Zeelich looks plainer than Citadel, two camera clips, and the title overlaps a subtitle in the opening at about 25 s.
 - **Release readiness:** **NO-GO** for a public release (D-1, D-2, P-1). **The user's decision (24.11): the exe is for private testers only.** D-2 settled the same day: the data stays and the title disclaimer now names the original layouts. For private testers the verdict is **NOT VERIFIED**: P-1 (Windows installer, install and uninstall on the user's machine) is still open, and D-1 (branding) remains an open owner question that does not block this audience.
 
 A technical pass cannot overrule an unfinished adventure.
