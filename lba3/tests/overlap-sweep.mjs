@@ -183,7 +183,9 @@ function findingsOf(r) {
   // (g) a rock through a built part
   // (not masonry: a part of the rock's own look, a cave's rock wall or a lintel the boulders are jammed into; nor a floor
   //  or a ledge the rock is bedded in, the overlap in the lowest 35 % of the rock's height: as a rock in the terrain)
-  for (const s of r.rockCut || []) if (!((D[s.A]?.tex ? D[s.A].tex === D[s.B]?.tex : D[s.A]?.color === D[s.B]?.color && !D[s.B]?.tex) || s.y + s.d / 2 - s.ba[1] <= 0.35 * (s.ba[4] - s.ba[1]))) F.push({ area: a, cat: 'g', kind: 'rock through masonry', x: s.x, z: s.z, y: s.y, size: `${s.d} m deep, ${s.m2} m²`, text: `${nm(D, s.A)} through ${nm(D, s.B)} (${s.n} rays, rock box ${s.ba.join(',')})`, raw: s });
+  // (nor a part marked as the rock's company, material.userData.rockSet: crystals out of rubble, a mouth's dark inside, a
+  //  niche's sill, Tralu's rims — ROCKS-MASONRY, the same mark rocksettle.js rocksOutOfBuilt keeps clear of)
+  for (const s of r.rockCut || []) if (!D[s.B]?.rockSet && !((D[s.A]?.tex ? D[s.A].tex === D[s.B]?.tex : D[s.A]?.color === D[s.B]?.color && !D[s.B]?.tex) || s.y + s.d / 2 - s.ba[1] <= 0.35 * (s.ba[4] - s.ba[1]))) F.push({ area: a, cat: 'g', kind: 'rock through masonry', x: s.x, z: s.z, y: s.y, size: `${s.d} m deep, ${s.m2} m²`, text: `${nm(D, s.A)} through ${nm(D, s.B)} (${s.n} rays, rock box ${s.ba.join(',')})`, raw: s });
   for (const f of F) { const k = knownOf(f.area, f.cat, f); f.known = k ? k[5] : null; }
   return F;
 }

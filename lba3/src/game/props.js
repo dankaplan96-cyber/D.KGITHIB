@@ -156,8 +156,10 @@ function mergeEntries(list, tile, withColor) {
   const v = new THREE.Vector3(), n = new THREE.Vector3(), nm = new THREE.Matrix3();
   let vo = 0, io = 0;
   const rocks = [];   // (P121: the index ranges that came from a rock's geometry, for the overlap sweep's rock checks)
+  const parts = [], partVerts = [];   // (ROCKS-MASONRY: where each piece's indices and vertices start: one closed part each, rocksettle.js rocksOutOfBuilt)
   for (const e of list) {
     const g = e.geo, P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv, C = g.attributes.color;
+    parts.push(io); partVerts.push(vo);
     if (g.userData.rock) rocks.push([io, io + (g.index ? g.index.count : P.count)]);
     nm.getNormalMatrix(e.m);
     const flip = e.m.determinant() < 0;
@@ -204,6 +206,7 @@ function mergeEntries(list, tile, withColor) {
   geo.setIndex(new THREE.BufferAttribute(idx, 1));
   geo.computeBoundingSphere();
   if (rocks.length) geo.userData.rockRanges = rocks;
+  if (parts.length > 1) { geo.userData.parts = parts; geo.userData.partVerts = partVerts; }
   return geo;
 }
 

@@ -119,7 +119,7 @@ const floorMat = (base, alt, key) => M('ugfloor' + key, () => stdM({ map: floorT
 
 // --- crystals: hexagonal prisms with a pointed tip (same species as the well's)
 const crystalGeo = (sides = 6) => cached('cry' + sides, () => { const g = new THREE.LatheGeometry([[0.001, -0.05], [0.8, 0], [1, 0.12], [1, 0.72], [0.001, 1]].map(([a, b]) => new THREE.Vector2(a, b)), sides); return g.toNonIndexed(); });
-const crystalMat = (c, e, k, op = 0.9) => M(`ugcry${c}${e}${k}${op}`, () => stdM({ color: c, emissive: e, emissiveIntensity: k, roughness: 0.12, metalness: 0.1, transparent: op < 1, opacity: op, flatShading: true }, 0, { noShadow: true }));
+const crystalMat = (c, e, k, op = 0.9) => M(`ugcry${c}${e}${k}${op}`, () => stdM({ color: c, emissive: e, emissiveIntensity: k, roughness: 0.12, metalness: 0.1, transparent: op < 1, opacity: op, flatShading: true }, 0, { noShadow: true, rockSet: true }));   // (rockSet: crystals grow out of the rock: rocksettle.js rocksOutOfBuilt)
 const CYAN = () => crystalMat('#aef6ff', '#1ab8e8', 0.9), VIOLET = () => crystalMat('#e0c0ff', '#8a3aef', 0.8), DIM = () => crystalMat('#7a8aa8', '#203a5a', 0.35, 1);
 // cluster of crystals growing from (0,0,0) out along +y (tilt it with the kit), seed-stable
 function crystals(k, n, s, seed, mats, spread = 0.5) {
@@ -1322,8 +1322,8 @@ function buildGallery(scene, physics) {
     const pk = new Kit(g);
     // (REV-UNDER: opaque — at 0.93 it was drawn among the see-through things, after Twinsen: it covered him where he had
     //  already marked himself as seen, and his silhouette (characters.js addSilhouette) never showed through it)
-    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, flatShading: true }, 0, { noShadow: true });
-    const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true });
+    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, flatShading: true }, 0, { noShadow: true, rockSet: true });
+    const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true, rockSet: true });
     const r = rng(300 + i);
     pk.add(rockGeo(200 + i), rockD, p.x, CY, p.z, i, { sx: 1.6 * p.s, sy: 1.1, sz: 1.5 * p.s });
     pk.add(crystalGeo(), body, p.x, CY, p.z, i, { sx: 0.75 * p.s, sy: p.h, sz: 0.75 * p.s, rx: 0.05, rz: -0.06 });
