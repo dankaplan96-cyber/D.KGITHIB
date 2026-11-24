@@ -208,6 +208,8 @@ export class Pass extends ChapterBase {
     return false;
   }
 
+  // (END-RESUME, base.js: the end saved, the next chapter not begun: on to it after a load)
+  endSaved() { return !!this.f.c6_done; }
   update(dt) {
     const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;

@@ -417,6 +417,8 @@ export class Dig extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- per frame
+  // (END-RESUME, base.js: the end saved, the next chapter not begun: on to it after a load)
+  endSaved() { return !!this.f.c4_done; }
   update(dt) {
     const g = this.game, f = this.f, D = g.regions?.built('desert');   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (this.isCur()) this.test.update(dt);

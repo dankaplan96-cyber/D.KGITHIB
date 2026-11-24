@@ -2360,7 +2360,12 @@ function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
 // the least turn out (spread) and forward that clears a side: the mix from how each turn changes the depth, then halved in
 // on the least amount that clears (at most AC_MAX)
 function acSolve(D, s, sh, sgn, Mel, Mhand, Mtorso) {
-  const pen = (dz, dx) => acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso), K = D.k[s];
+  // (ARM-NAN, LBA3-RUN progression: acDepth is -Infinity when no arm point lies in the body's rows — a turn of the shoulder
+  //  can lift the last one above them. The gradient below then came out infinite and its direction Infinity/Infinity = NaN:
+  //  the shoulder's rotation NaN, kept by the easing for the rest of the session — Twinsen's arm and hand gone, every ball
+  //  thrown from that hand flying as NaN and never striking anything (the harbour bell in chapter 1: no way on). Clear by
+  //  a metre counts the same as clear by more)
+  const pen = (dz, dx) => Math.max(-1, acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso)), K = D.k[s];
   // (last frame's answer, while it still just clears — within 1 cm past the gap —: one look a frame; the poses change slowly)
   if (K[0] > 0) { const p = pen(K[0] * K[1], K[0] * K[2]); if (p <= 0 && p > -0.015) { D.dir[0] = K[1]; D.dir[1] = K[2]; return K[0]; } }
   const p0 = pen(0, 0);
@@ -2396,11 +2401,14 @@ Rig.prototype._armClear = function (dt, a) {
         _acC.copy(arm.el.matrix); _acD.multiplyMatrices(arm.el.matrix, arm.hand.matrix);
         const k = acSolve(D, s, arm.sh, sgn, _acC, _acD, Mtorso);
         T[0] = k * D.dir[0]; T[1] = k * D.dir[1]; T[2] = 1;
+        // (ARM-NAN: an answer that is not a number is no answer — the arm as posed, the solve from scratch next time)
+        if (!Number.isFinite(T[0]) || !Number.isFinite(T[1])) { T[0] = T[1] = 0; D.k[s][0] = 0; }
       }
       tz = T[0]; tx = T[1];
     } else D.t[s][2] = 0;
     const rd = off ? 30 : 6;   // (into a strike or a throw: its own arm within a few frames)
     st[0] = damp(st[0], tz, tz > st[0] ? 20 : rd, dt); st[1] = damp(st[1], tx, tx > st[1] ? 20 : rd, dt);
+    if (!(st[0] < 1e-4 && st[1] < 1e-4) && !(Number.isFinite(st[0]) && Number.isFinite(st[1]))) st[0] = st[1] = 0;   // (ARM-NAN: never into the joint)
     if (st[0] < 1e-4 && st[1] < 1e-4) { st[0] = st[1] = 0; D.wx[w] = null; continue; }
     arm.sh.rotation.z += sgn * st[0];
     arm.sh.rotation.x -= st[1];

@@ -582,6 +582,8 @@ export class Network extends ChapterBase {
     this.b8.dress();   // (EXP-3: Tessa's boxes on the relays)
   }
   regionBuilt() { this.showProps(); }
+  // (END-RESUME, base.js: the end saved, the next chapter not begun: on to it after a load)
+  endSaved() { return !!this.f.c10_done; }
   applyFlags() {
     const f = this.f, on = this.isCur();
     // the pulse tool is Twinsen's from here on (older saves past this chapter get it too)

@@ -435,6 +435,8 @@ export class Chapter3 extends ChapterBase {
     });
     this.plateMat = brass;
   }
+  // (END-RESUME, base.js: the end saved, the next chapter not begun: on to it after a load)
+  endSaved() { return this.part === 2 && !!this.f.c3_done; }
   update(dt) {
     const g = this.game, f = this.f;
     if (!this.on()) return;
