@@ -45,11 +45,14 @@ let frame = 0;
 
 function state(a) { return (a._nm ??= { a, q: 0, eT: 0, scanT: Math.random() * SCAN, near: false, spr: null, f: -1 }); }
 
-// a frame of the "?" band: near() is the enemy's sight test at the stretched range (called only every SCAN s)
-export function suspect(a, dt, near) {
+// a frame of the "?" band. Returns the enemy's mark state when its sight test is due (every SCAN s): the caller sets
+// .near on it (its sight test at the stretched range); null between tests (no closure, no test: noticemark's cost)
+export function suspect(a, dt) {
   const m = state(a);
-  if ((m.scanT -= dt) <= 0) { m.scanT = SCAN; m.near = !!near(); }
   m.q = Math.max(0, Math.min(1, m.q + (m.near ? RISE : -FALL) * dt));
+  if ((m.scanT -= dt) > 0) return null;
+  m.scanT = SCAN;
+  return m;
 }
 // nothing to suspect this frame (a fight under way, a calm watch): the "?" fades
 export function calm(a, dt) { const m = a._nm; if (m) { m.near = false; m.q = Math.max(0, m.q - FALL * 2 * dt); } }

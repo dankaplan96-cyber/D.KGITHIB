@@ -275,7 +275,7 @@ export class Guard extends Actor {
     }
     // BEHAVIOUR-MODES (P125): the "?" while he is nearly seen on his round, his search or his way home (a calm watch: only
     // where the watch minds him: def.cares, story/depotwatch.js), the "!" as he turns on him (above)
-    if ((this.state === 'patrol' || this.state === 'search' || this.state === 'home') && (!this.def.calm?.() || this.def.cares?.())) suspect(this, dt, () => this.sees(hero, true, NEAR_K));
+    if ((this.state === 'patrol' || this.state === 'search' || this.state === 'home') && (!this.def.calm?.() || this.def.cares?.())) { const nm = suspect(this, dt); if (nm) nm.near = this.sees(hero, true, NEAR_K); }
     else calmMark(this, dt);
     drawMark(this, this.markY + 0.5, dt);
     if (this.state !== 'patrol') this.inv = null;   // (P93: whatever took him off his round ends a look)

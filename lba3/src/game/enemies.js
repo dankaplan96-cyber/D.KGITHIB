@@ -257,7 +257,7 @@ export class Mite extends Actor {
       //  mode. A mite that stirs first (def.wake) shows a "?" while it stares: noticemark.js)
       if (d < MITE_SEE * hero.sneak() && !hero.dead && hero.visibility() > 0.2) {
         this.noticeT = (this.noticeT || 0) + dt;
-        if (this.def.wake) { this.angle = dampAngle(this.angle, this.angleTo(hero), 4, dt); sp = 0; suspect(this, dt, () => true); }
+        if (this.def.wake) { this.angle = dampAngle(this.angle, this.angleTo(hero), 4, dt); sp = 0; const nm = suspect(this, dt); if (nm) nm.near = true; }
         if (this.noticeT >= (this.def.wake || 0)) { this.state = 'chase'; this.noticeT = 0; g.audio.play('alert', this.pos); }
       } else this.noticeT = 0;
       if (!(this.noticeT > 0)) calmMark(this, dt);
@@ -606,7 +606,7 @@ export class Drone extends Actor {
     }
     // BEHAVIOUR-MODES (P125): the "?" while he is nearly seen on its round or its search (a calm watch: only where the
     // watch minds him: def.cares, story/depotwatch.js), the "!" as it turns on him (above)
-    if ((this.state === 'patrol' || this.state === 'search') && (!this.def.calm?.() || this.def.cares?.())) suspect(this, dt, () => this.sees(hero, true, NEAR_K));
+    if ((this.state === 'patrol' || this.state === 'search') && (!this.def.calm?.() || this.def.cares?.())) { const nm = suspect(this, dt); if (nm) nm.near = this.sees(hero, true, NEAR_K); }
     else calmMark(this, dt);
     drawMark(this, this.markY + 0.45, dt);
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'windup' ? 6 : 4, dt);
@@ -975,6 +975,8 @@ export class Sentry extends Actor {
     if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
     if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break', this.pos); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); new KnockOut(this, 'sentry', from); g.onEnemyKilled(this); }
   }
+  // its sight (BEHAVIOUR-MODES): within SENTRY_SEE × hero.sneak() (× k: the "?" band), his visibility over 0.2, a clear line
+  seeAt(hero, d, sn, k) { return !hero.dead && d < SENTRY_SEE * sn * k && hero.visibility() > 0.2 && this.game.physics.lineOfSight(this.pos.x, this.pos.y + 1.4, this.pos.z, hero.pos.x, hero.pos.y + 1.1, hero.pos.z); }
   update(dt) {
     if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
@@ -983,14 +985,13 @@ export class Sentry extends Actor {
     const d = this.distTo(hero);
     let sp = 0, face = null;
     // (BEHAVIOUR-MODES, P125: Discreet works on it too: its sight 9 m and its sure 6 m × hero.sneak(); was 9 / 6 m in every mode)
-    const sn = hero.sneak(), see = (k) => !hero.dead && d < SENTRY_SEE * sn * k && hero.visibility() > 0.2 && P.lineOfSight(this.pos.x, this.pos.y + 1.4, this.pos.z, hero.pos.x, hero.pos.y + 1.1, hero.pos.z);
-    const sees = see(1);
+    const sn = hero.sneak(), sees = this.seeAt(hero, d, sn, 1);
     switch (this.state) {
       case 'idle':
         this.rig.play('idle');
         if (sees && (d < SENTRY_SURE * sn || Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 1)) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert', this.pos); seenMark(this); }
         // (the "?": in its sight but not yet sure of him, or nearly in it: noticemark.js)
-        else suspect(this, dt, () => sees || see(NEAR_K));
+        else { const nm = suspect(this, dt); if (nm) nm.near = sees || this.seeAt(hero, d, sn, NEAR_K); }
         break;
       case 'chase':
         face = this.angleTo(hero); this.rig.play('walk');
@@ -1265,7 +1266,7 @@ export class Watcher {
     this.suspicion = clamp(this.suspicion + rate * dt, 0, 1);
     // BEHAVIOUR-MODES (P125): the same "?" / "!" as the guards' over the watcher's head (noticemark.js): "?" once his
     // suspicion has his torch coming up, "!" as he spots her
-    if (this.suspicion > 0.35) suspect(n, dt, () => true); else calmMark(n, dt);
+    if (this.suspicion > 0.35) { const nm = suspect(n, dt); if (nm) nm.near = true; } else calmMark(n, dt);
     if (this.suspicion >= 1) { this.suspicion = 0; seenMark(n); this.onSpot?.(); }
     if (n._markY == null) { const b = new THREE.Box3().setFromObject(n.rig.root); n._markY = Math.max(1.6, b.max.y - n.pos.y) + 0.4; }
     drawMark(n, n._markY, dt);

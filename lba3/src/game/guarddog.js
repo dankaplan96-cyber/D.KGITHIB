@@ -137,7 +137,7 @@ export class GuardDog extends Actor {
     }
     // BEHAVIOUR-MODES (P125): the "?" while he is nearly noticed on its round or its way home (a calm watch: only where the
     // watch minds him: def.cares, story/depotwatch.js; not while it lies calmed), the "!" as it turns on him (above)
-    if ((this.state === 'guard' || this.state === 'home') && !(this.calmT > 0) && (!this.def.calm?.() || this.def.cares?.())) suspect(this, dt, () => this.notices(hero, true, NEAR_K));
+    if ((this.state === 'guard' || this.state === 'home') && !(this.calmT > 0) && (!this.def.calm?.() || this.def.cares?.())) { const nm = suspect(this, dt); if (nm) nm.near = this.notices(hero, true, NEAR_K); }
     else calmMark(this, dt);
     drawMark(this, this.markY + 0.45, dt);
     if (this.hurtT > 0 && this.state !== 'hurt') sp = 0;

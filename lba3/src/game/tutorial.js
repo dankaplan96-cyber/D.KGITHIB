@@ -58,7 +58,7 @@ const PIPE = { x: -43.5, z0: 66.0, z1: 72.1, reach: 4.5 };
 // Discreet with the panel free ("Hold {k} to hide"; done the first time he hides); 'cover' wherever the story asks him
 // to hide (a watcher on his round: Zoé's office, the archive; or a room with cover spots and an enemy about): the same
 // key and where it works, in each such place until he hides there (not saved: shown again after a load, a few seconds)
-export const ORDER = ['cover', 'hide', 'move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'normal', 'kick', 'dodge', 'talk', 'use', 'advance', 'map', 'pset', 'wswitch'];   // (the hide tips first: they apply only in Discreet, the moment he is in it)
+export const ORDER = ['cover', 'normal', 'hide', 'move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'discreet', 'kick', 'dodge', 'talk', 'use', 'advance', 'map', 'pset', 'wswitch'];   // (the hide tips first: they apply only in Discreet, the moment he is in it; the kids' "Back to Normal" before the plain hide tip)
 const ANY = new Set(['pset', 'wswitch', 'hide', 'cover']);
 const YARD = ['zoe', 'inv', 'tap', 'dino', 'barrels', 'pipe'];   // (OPENING-TUT-2: the yard's steps, story/openingsteps.js; BEHAVIOUR-MODES: 'dino')
 const PANEL = new Set(['move', 'inventory', 'camera', 'athletic', 'jump', 'ball', 'arc', 'magic', 'cover', 'discreet', 'hide', 'normal', 'kick', 'dodge', 'pset', 'wswitch']);
@@ -287,8 +287,11 @@ export class Tutorial {
     if (this.lastBeh !== h.behaviour) {
       if (this.lastBeh != null) {
         if (h.behaviour === 'athletic') this.finish('athletic');
-        if (h.behaviour === 'discreet') this.finish('discreet');
-        if (h.behaviour === 'normal' && this.lastBeh === 'discreet') this.finish('normal');
+        // (BEHAVIOUR-MODES: the yard's Dino-Fly step switches to Discreet and back; the kids' two tips are about their
+        //  scene (sneak up to overhear Tim, then back): a switch made during the yard's steps does not count for them)
+        const yard = !!g.story?.cur?.steps?.on;
+        if (h.behaviour === 'discreet' && !yard) this.finish('discreet');
+        if (h.behaviour === 'normal' && this.lastBeh === 'discreet' && !yard) this.finish('normal');
       }
       this.lastBeh = h.behaviour;
     }
