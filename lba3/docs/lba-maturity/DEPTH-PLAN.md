@@ -253,6 +253,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | the drift must not sit on a main-path route or a slide spot (`slidetraps`, `overlaps`); FunFrock stays dead (an old note only). Flags `dx_gaze_sketch/seen/shovel/dug` |
 | Test | the clues by input; dig refused without the shovel (the line says why); the crystal; the pocket set's hum at the drift |
 | Evidence → principle | sample 3, sample 4, P1, gives two scenery pieces a meaning (R11) |
+| **Built** (24.11.2026, wave 2 = H-4) | `story/depth.js` (DES-1), `tests/depth-wave2.mjs`, `WAVE2.md`. Where the geometry decided: the twin pillars stand 150 m east of the two standing figures, so the drift lies on the sand flat between the **two figures** west of Kesh (3305, −45.6), not between the pillars; the figures had no faces (LBA2's peach columns), so each gets **painted eyes on its band** turned to the drift (a visible change on existing scenery, for the user's pick). Not built: the sketch's new mark (Anko's sketch is a carried item with a fixed text in `purposes.js`); the hook is Brosk's grandfather's saying instead ("dig where the stone people look"). The Look at a figure: the talk shot shows its face, then a camera beat follows its gaze to the drift (normal play; no beats with `?nocine`/tests). Flags `dx_gaze_ask/f0/f1/seen/drift/shovel/dug/open/back`. |
 
 #### DES-2 · Rector Hougo's rebound trials (a skill game that teaches the finale)
 > **15.11.2026: not built on its own; folded into U-3 "Off the Wall"** (one rebound school, Tali's; its crystal slot
@@ -334,6 +335,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | the brother is a new name (narrative developer chooses it). Flags `dx_pack_seen/thawed/given` |
 | Test | the ball refused (line); the flask by input; the mirror by input (separately, from a fresh save); the crystal |
 | Evidence → principle | P1, P6, P3 |
+| **Built** (24.11.2026, wave 2 = H-3) | `story/depth.js` (HAM-3), `tests/depth-wave2.mjs`, `WAVE2.md`. The ice wall stands against the glacier basin's north rock (4252, −72.6), 25 m north of the vent; the crew's signal mirror 6.6 m south-east of it on the ice, turning in eighths (its spot of sunlight shows where it lands: snow, rock, the ice). The brother stays unnamed ("my brother", as in chapter 6). Fixed on the way: the open vent's heat could never be drawn (its 3.4 m collider kept its middle out of reach; `kit2b.js heatNear` now draws at its rim). Flags `dx_pack_ask/seen/mirSeen/mir/mirSaid/thawed/taken/given/later`. |
 
 #### HAM-4 · The gorge's ice arch (a short return with the line)
 | | |
@@ -366,6 +368,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | chapter 11 is meant to be empty of people: this is a find, not a person. Flag `dx_source` |
 | Test | the hum line only with a crystal held; the fork and the lantern+ball ways from fresh saves; the epilogue's visit |
 | Evidence → principle | P1, COL-1 |
+| **Built** (24.11.2026, wave 2 = H-5) | `story/depth.js` (UND-1), `tests/depth-wave2.mjs`, `WAVE2.md`. A crusted pocket on the start shelf's west wall (between Ilka's wheel and the crew's crates); the hum (line once, the seams pulse) only with a crystal in his pocket; the ball skips off the crust until the lantern has shown its crack; the fork cracks it any time. Open from the descent (chapter 15) through the epilogue. Flags `dx_src_hum/crack`, `dx_source`. |
 
 ---
 

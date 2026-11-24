@@ -27,6 +27,7 @@
 // findings (the game camera near, from above). GAME_URL, BOOT_TIMEOUT as the other tests.
 // Run: BOOT_TIMEOUT=900000 GAME_URL=http://localhost:8123/ node tests/overlap-sweep.mjs   (~25 min quiet; Automated runtime only)
 import { launch, open, menu, checker, report } from './lib/boot.mjs';
+import { serveLocal } from './lib/serve.mjs';   // (SERVE=1: this checkout's files by request routing, no http.server)
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -192,7 +193,8 @@ function findingsOf(r) {
 
 // ------------------------------------------------------------------ the ray sweep, per batch
 async function runBatch(list) {
-  const { browser, page } = await launch({ width: 960, height: 540 });
+  const { browser, context, page } = await launch({ width: 960, height: 540 });
+  if (process.env.SERVE) await serveLocal(context);
   page.setDefaultTimeout(3600000);
   try {
     await open(page, '?nocine');

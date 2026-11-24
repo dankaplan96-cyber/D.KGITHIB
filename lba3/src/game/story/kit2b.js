@@ -411,7 +411,8 @@ export class Kit2b extends ChapterBase {
     if (near(this.crack, DRAW_R + 0.6)) return { ...this.crack, what: 'crack' };
     if (near(this.brazier, DRAW_R)) return { ...this.brazier, what: 'brazier' };
     if (M.heatPost?.on && near(M.heatPost, DRAW_R + 0.4)) return { x: M.heatPost.x, z: M.heatPost.z, what: 'post' };
-    if (M.vent?.open && near(M.vent, 4.5)) return { x: M.vent.x, z: M.vent.z, what: 'vent' };
+    // (WAVE2: the vent's own collider is 3.4 m round, so its middle was never within reach: drawn at its rim, toward him)
+    if (M.vent?.open && near(M.vent, 4.5)) { const d = Math.hypot(h.pos.x - M.vent.x, h.pos.z - M.vent.z) || 1; return { x: M.vent.x + (h.pos.x - M.vent.x) / d * 3.6, z: M.vent.z + (h.pos.z - M.vent.z) / d * 3.6, what: 'vent' }; }
     return null;
   }
 
