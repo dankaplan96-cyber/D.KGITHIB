@@ -94,8 +94,8 @@ def spec(name, look):
     """The hand a model gets: (style, k, crease: where the wrist's crease sits down the hand bone's axis, sides) or None."""
     race = look.get('race')
     kid = bool(look.get('kid'))
-    if name == 'twinsen':   # (his fist was the cast's biggest hand, 15.7 cm: the user's "paws"; now 13 cm, a third narrower)
-        return dict(QUETCH, sides=8), 1.45, 0.024, 'LR'
+    if name == 'twinsen':   # (HANDS-2b, the user 24.11: "bring his hands back to what they were — it's better": his own fist kept)
+        return None
     if name == 'zoe':       # (her ZOE-OPEN mitten's length and place, slimmer)
         return dict(scaled(QUETCH, 0.84, 0.86, 0.84), sides=8), 1.45, -0.004, 'LR'
     if name == 'baldino':   # (his own script's ball, r 0.06, centred 3.5 cm down the hand)
