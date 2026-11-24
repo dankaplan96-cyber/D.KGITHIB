@@ -250,7 +250,7 @@ export class LiftThread {
         if (!f.zt_brel) return c([['zl_brel', 'zt_brel_1'], ['zl_brel', 'zt_brel_2']], () => { f.zt_brel = true; g.updateObjective(); g.save(false); });
         return c([['zl_brel', f.zt_water ? (f.zt_bench ? 'zt_brel_after' : 'zt_brel_water') : 'zt_brel_3']]);
       case 'zl_kell':
-        if (!cur) return c([['zl_kell', this.breadTime() ? 'zt_kell_bread' : this.story.cur?.key === 'home' ? 'zt_kell_home' : this.on ? 'zt_kell_later' : 'zt_kell_idle']]);   // (DIALOGUE-2: the epilogue's word; THE SECOND SHIFT: at his bread)
+        if (!cur) return c([['zl_kell', this.breadTime() ? 'zt_kell_bread' : this.story.cur?.key === 'home' ? 'zt_kell_home' : this.on ? (f.c2_veskDown ? 'zt_kell_later' : 'zt_kell_after') : 'zt_kell_idle']]);   // (DIALOGUE-2: the epilogue's word; THE SECOND SHIFT: at his bread; KELL-LINES: later chapters reach here through zeelife.js talkFirst)
         if (!f.zt_kell && !f.zt_bell) return c([['zl_kell', 'zt_kell_1'], ['hero', 'zt_tw_kell'], ['zl_kell', 'zt_kell_2'], ['zl_kell', 'zt_kell_3']], () => { f.zt_kell = true; g.updateObjective(); g.save(false); });
         if (!f.zt_bell) return c([['zl_kell', 'zt_kell_wait']]);
         if (!f.zt_feed) return c([['zl_kell', 'zt_kell_wait2']]);
@@ -258,7 +258,7 @@ export class LiftThread {
         if (!f.zt_kellThanks) return c([['zl_kell', 'zt_kell_done']], () => { f.zt_kellThanks = true; g.save(false); });
         return c([['zl_kell', f.c2_veskDown ? 'zt_kell_later' : 'zt_kell_after']]);
       case 'zl_irsa':
-        if (!cur) return c([['zl_irsa', this.story.cur?.key === 'home' ? 'zt_irsa_home' : this.on ? 'zt_irsa_later' : 'zt_irsa_idle']]);
+        if (!cur) return c([['zl_irsa', this.story.cur?.key === 'home' ? 'zt_irsa_home' : this.on ? (f.c2_veskDown ? 'zt_irsa_later' : 'zt_irsa_after') : 'zt_irsa_idle']]);
         if (f.zt_bench) return c([['zl_irsa', f.c2_veskDown ? 'zt_irsa_later' : 'zt_irsa_after']]);
         if (!f.zt_water) { if (f.zt_irsa) return c([['zl_irsa', 'zt_irsa_wait']]); return c([['zl_irsa', 'zt_irsa_1'], ['zl_irsa', 'zt_irsa_2']], () => { f.zt_irsa = true; g.updateObjective(); g.save(false); }); }
         if (!f.zt_irsa2) return c([['zl_irsa', 'zt_irsa_3'], ['zl_irsa', 'zt_irsa_4']], () => { f.zt_irsa2 = true; g.updateObjective(); g.save(false); });
