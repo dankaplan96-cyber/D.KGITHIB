@@ -9,11 +9,15 @@ export const steps = [
     if (!S || !f.rf_v || f.rf_roof) return { skip: true };
     for (let k = 0; k < 5 && Math.hypot(h.pos.x - S.x, h.pos.z - S.z) > 9 && !T.busy; k++) { P.go(S.x + 3, S.z - 7, { tol: 1.0, maxT: 200, stopWhen: () => G.state === 'dialog' }); P.settle(); }
     for (let i = 0; i < 900 && !f.rf_shut; i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
-    P.settle(); P.use(S.sefa.x, S.sefa.z, { near: 0.5, kind: 'rf_shutter' }); for (let i = 0; i < 40 && !T.hold; i++) G.step(0.1);
-    const keys = G.input.keys;
-    for (const key of ['ArrowLeft', 'ArrowDown', 'ArrowRight']) { keys.add(key); for (let i = 0; i < 300 && !f.rf_roof; i++) G.step(1 / 30); keys.delete(key); if (f.rf_roof) break; }
+    P.settle(); const u = P.use(S.sefa.x, S.sefa.z, { near: 0.5, kind: 'rf_shutter' }); for (let i = 0; i < 40 && !T.hold; i++) G.step(0.1);
+    const held = !!T.hold, keys = G.input.keys;
+    // (a player watching the light through the sight: left until it is level with the landing, then nearer, then farther
+    //  until it is on it — as tests/second-shift.mjs I4; a blind sweep each way ran the light past the landing's 3 m)
+    const hold = (key, until, max) => { keys.add(key); let n = 0; for (; n < max && !until(); n++) G.step(1 / 30); keys.delete(key); G.step(1 / 30); return n; };
+    const SS = T.S, want = SS && Math.atan2(SS.station.x - SS.eye.x, SS.station.z - SS.eye.z);
+    if (held && SS) { hold('ArrowLeft', () => f.rf_roof || SS.az >= want - 0.02, 300); if (!f.rf_roof) hold('ArrowDown', () => f.rf_roof || T.hold?.R <= 15, 250); if (!f.rf_roof) hold('ArrowUp', () => f.rf_roof, 300); }
     for (let i = 0; i < 300 && (G.state === 'dialog' || T.walk || T.later.length); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
-    return { roof: !!f.rf_roof, fail: f.rf_roof ? null : 'shutter' };
+    return { use: u.r, target: u.target?.kind, held, az: SS && +SS.az.toFixed(3), want: want && +want.toFixed(3), R: T.hold?.R ?? null, roof: !!f.rf_roof, fail: f.rf_roof ? null : 'shutter' };
   }],
   // (CAMPAIGN-5: out of the yard the snow shakes beside him and he says so: read it, as a player would, and walk on)
   ['into the observatory', () => { const d = game.rooms.hamalayi.observatory.door; let r = P.through(d.x, d.z, { run: true }); for (let k = 0; k < 2 && game.room?.id !== 'obsv'; k++) { P.settle(); r = P.through(d.x, d.z, { run: true }); } return { ...r, snow: !!game.flags.ob_snow, fail: game.room?.id === 'obsv' ? null : 'observatory' }; }],
