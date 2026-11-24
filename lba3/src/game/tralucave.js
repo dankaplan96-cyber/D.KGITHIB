@@ -24,7 +24,7 @@ export const TRALUCAVE_AT = { x: 8400, z: 0 };
 
 const std = (map, color, rough, tile, glow = 0) => { const m = new THREE.MeshStandardMaterial({ map, color, roughness: rough, ...(glow ? { emissive: '#ffffff', emissiveMap: map, emissiveIntensity: glow } : {}) }); m.userData.tile = tile; return m; };
 const blockM = () => M('tc_block', () => std(TEX.stone('grey'), '#b8b4aa', 0.9, 2, 0.14));   // (CAVE-LOOK: less of its own glow, lit by the room's key light now)
-const capM = () => M('tc_cap', () => std(TEX.stone('grey'), '#c8c2b6', 0.9, 1.2, 0.12));
+const capM = () => M('tc_cap', () => { const m = std(TEX.stone('grey'), '#c8c2b6', 0.9, 1.2, 0.12); m.userData.rockSet = true; return m; });   // (rockSet: the rubble is set into the rims it caps: rocksettle.js rocksOutOfBuilt)
 const waterM = () => M('tc_water', () => { const m = new THREE.MeshStandardMaterial({ color: '#8ccfd8', emissive: '#4e9aa0', emissiveIntensity: 0.6, roughness: 0.25, metalness: 0.05, transparent: true, opacity: 0.88 }); m.userData.noShadow = true; return m; });
 const boneM = () => M('tc_bone', () => new THREE.MeshStandardMaterial({ color: '#e6d4b8', roughness: 0.7, emissive: '#5a4c3c', emissiveIntensity: 0.6 })), tipM = () => MAT.paint('#5a3a2c', 0.6), rustM = () => MAT.paint('#6e4532', 0.85);
 const globeM = () => MAT.glow('#d6f2ff', '#5ab0e0', 1.5), eggM = () => M('tc_egg', () => new THREE.MeshStandardMaterial({ color: '#5aa0c8', roughness: 0.3, emissive: '#1e4a66', emissiveIntensity: 0.6 }));
@@ -35,7 +35,7 @@ const globeM = () => MAT.glow('#d6f2ff', '#5ab0e0', 1.5), eggM = () => M('tc_egg
 // program, flat facets with a tone per face), the floor that kit's natural rock floor; the light of the globes, the
 // pool and the door is baked into their vertex colours (bake() below), so the battery profile's two lamps still show it
 const caveRock = () => rockMat('#c4bcb2');
-const caveFloor = () => M('tc_floorbake', () => { const m = new THREE.MeshStandardMaterial({ map: floorTex('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), color: '#eceae6', vertexColors: true, flatShading: true, roughness: 0.93 }); m.userData.tile = 4.5; return m; });   // (the shaft's floor texture, shared; flat shading on a flat floor changes nothing and keeps the rock's program)
+const caveFloor = () => M('tc_floorbake', () => { const m = new THREE.MeshStandardMaterial({ map: floorTex('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), color: '#eceae6', vertexColors: true, flatShading: true, roughness: 0.93 }); m.userData.tile = 4.5; m.userData.rockSet = true; return m; });   // (rockSet: the cave's rock floor and the rock face's lip; rocks lie in them: rocksettle.js rocksOutOfBuilt) (the shaft's floor texture, shared; flat shading on a flat floor changes nothing and keeps the rock's program)
 // the faceted rocks, 16 shapes (12 small ones) of the underground's cache: made once (~0.5 ms each), shared with it
 const rk = (sd, small = false) => (small ? rockGeo(sd % 12, { detail: 0 }) : rockGeo(sd % 16));
 const hash2 = (x, y, s) => { const h = Math.sin(x * 127.1 + y * 311.7 + s * 74.7) * 43758.5453; return h - Math.floor(h); };

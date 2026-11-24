@@ -1,5 +1,8 @@
 # Orders from the cloud to the laptop (3.11.2026, night mode)
 
+> **24.11.2026, later: ORDER 69 (at the very end) FIRST — the user: "give the local agent an order to install and test the
+> game".** It replaces 68 step 2. Then 68 steps 1, 3, 4. Still no performance or frame-time work.
+
 > **24.11.2026: ORDER 68 (below, at the end) is the queue now — the user: "give the local agent tasks; I'll get to the computer
 > and start".** Still no performance or frame-time work. Report each step in `WORLD_ART_REQUESTS.md`, push your branch.
 
@@ -1022,3 +1025,30 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
        pictures. (The artifact is no longer at a file limit since v150's bundle, but code-generated maps are still
        preferred.)
 
+69. **The user, 24.11 (later): "give the local agent an order to install and test the game". FIRST in the queue; it
+    replaces 68 step 2.** Build: the cloud's `ccr-c1c2c4b9-dep6ed` head (artifact **v159**, commit "v159 published:
+    talk order, rocks out of masonry …", `desktop/package.json` = **0.50.0**). Reply in `WORLD_ART_REQUESTS.md` as
+    **INSTALL-69**, one line per step (pass / fail + what you saw), pictures in `captures/hw-69/`, push your branch.
+    **No frame-time or performance numbers** (the user's rule). **Do not upload the exe anywhere and do not commit it**
+    (`desktop/release/` is ignored). Do not use `[build]` in a commit message (it publishes a GitHub pre-release).
+    1. **Build** on Windows from a clean checkout of that head: `cd lba3\desktop && npm ci && npm run dist:win`.
+       Record `certutil -hashfile release\LBA3-The-Awakening-Setup-0.50.0.exe SHA256` and the exe size.
+    2. **Install** (a new Windows user account if the user allows, else theirs): SmartScreen "More info → Run anyway"
+       (unsigned, expected); note the install folder and that a Start-menu / desktop shortcut appears.
+    3. **First launch:** opens fullscreen; the title screen shows **v0.50.0**; F11 / Alt+Enter leaves fullscreen and the
+       choice is remembered at the next launch; Ctrl+Shift+I does **nothing**; there is **no**
+       `resources\app-update.yml` in the install folder; Alt+Tab out and back keeps the game and its sound.
+    4. **Play as a player, with real keys and mouse (Modern controls), with sound:** New Game → watch the notebook
+       opening whole once → the house → the yard and the first errands of chapter 1 → into chapter 2 as far as the
+       first depot fight if time allows. Report anything a tester would trip on: stuck spots, a door or a talk that does
+       nothing, a story line arriving after a gift line (v159 fixed the order: say if any is still wrong), a rock inside a
+       wall, text cut off, missing or crackling sound, the camera inside a wall, a crash or a black screen. For the depot:
+       health on entering and leaving, deaths, how many tries (this also covers 68 step 3 for that fight).
+    5. **Saves:** Pause → Save & quit → Quit Game; relaunch → **Continue** resumes where you saved. Also load a save from
+       the published page if you have one (format 6 must load).
+    6. **Language and offline:** Settings → עברית → quit → relaunch (still Hebrew, the opening and a talk read right to
+       left); one full launch with the network off (the game starts and plays the same).
+    7. **Uninstall** from Settings → Apps; note whether `%APPDATA%\LBA3 The Awakening` is kept (documented: kept) and
+       that the shortcut is gone.
+    8. **Summary line for the user** at the top of INSTALL-69: "installs / runs / saves / Hebrew / offline / uninstalls:
+       yes/no", and the three worst things a tester would notice, each with its picture. The cloud turns it into fixes.

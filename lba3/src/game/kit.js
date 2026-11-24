@@ -122,7 +122,9 @@ export function mergeGeos(list, withColor) {
   const nm = new THREE.Matrix3(), p = new THREE.Vector3();
   let vo = 0, io = 0;
   const rocks = [];   // (P121: the index ranges that came from a rock's geometry, for the overlap sweep's rock checks)
+  const parts = [], partVerts = [];   // (ROCKS-MASONRY: where each piece's indices and vertices start: one closed part each, rocksettle.js rocksOutOfBuilt)
   for (const [g, m] of list) {
+    parts.push(io); partVerts.push(vo);
     if (g.userData.rock) rocks.push([io, io + (g.index ? g.index.count : g.attributes.position.count)]);
     nm.getNormalMatrix(m);
     const flip = m.determinant() < 0;
@@ -145,6 +147,7 @@ export function mergeGeos(list, withColor) {
   out.setIndex(new THREE.BufferAttribute(idx, 1));
   out.computeBoundingSphere();
   if (rocks.length) out.userData.rockRanges = rocks;
+  if (parts.length > 1) { out.userData.parts = parts; out.userData.partVerts = partVerts; }
   return out;
 }
 export function compose(parts, withColor = false) { return mergeGeos(parts.map(([g, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx]) => [g, new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'YXZ')), new THREE.Vector3(sx, sy, sz))]), withColor); }

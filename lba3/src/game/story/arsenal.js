@@ -24,7 +24,10 @@
 import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
-import { Kit, MAT, rbox, cyl, sphere, torus, crate, canvasTex } from '../props.js';
+import { Kit, MAT, M, rbox, cyl, sphere, torus, crate, canvasTex } from '../props.js';
+// (ROCKS-MASONRY: a part set into a rock by design — a mouth's dark inside, a niche's sill — is the rock's company, not
+//  masonry through it: its own copy of the material, marked, so rocksettle.js and tests/overlap-sweep.mjs (g) know it)
+const inRock = (key, make) => M('ars-inrock-' + key, () => { const m = make().clone(); m.userData = { ...m.userData, rockSet: true }; delete m.userData.vcKey; return m; });
 import { ARMS } from '../weapons.js';
 import { jetpackModel } from '../jetpack.js';
 import { LINE_PRICE } from './kit2b.js';
@@ -127,8 +130,8 @@ export class Arsenal extends ChapterBase {
       const grp = holder(GL, at.x, at.y, at.z, at.a, true), k = new Kit(grp);
       const rockM = MAT.flat('#9a8ea8', 0.9, { vertexColors: true });
       k.add(rockGeometry(11), rockM, 0, -0.05, -0.35, 0, { sx: 1.25, sy: 1.6, sz: 0.9 });
-      k.add(rbox(0.62, 0.62, 0.5, 0.18), MAT.flat('#06070a', 1), 0, 0.5, 0.18);          // the hollow, cut by hand
-      k.add(rbox(0.8, 0.08, 0.3, 0.03), MAT.stone('grey', 1), 0, 0.17, 0.38);
+      k.add(rbox(0.62, 0.62, 0.5, 0.18), inRock('hollow', () => MAT.flat('#06070a', 1)), 0, 0.5, 0.18);          // the hollow, cut by hand
+      k.add(rbox(0.8, 0.08, 0.3, 0.03), inRock('sill', () => MAT.stone('grey', 1)), 0, 0.17, 0.38);
       k.flush();
       const clover = new THREE.Group(); clover.position.set(0, 0.5, 0.42); grp.add(clover);
       for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2 + 0.78; const l = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), MAT.flat('#5fe36a', 0.5)); l.position.set(Math.cos(a) * 0.06, Math.sin(a) * 0.06, 0); clover.add(l); }
@@ -188,7 +191,7 @@ export class Arsenal extends ChapterBase {
       // a mound of weathered rocks round the mouth (the island's own rock shapes), dark inside
       const rockM = MAT.flat('#b8a8c0', 0.92, { vertexColors: true, emissive: '#3a2030', emissiveIntensity: 0.35 });
       for (const [rx, ry, rz, sx, sy, sz, rot, seed] of [[-1.85, 0, -0.5, 1.0, 2.6, 1.3, 0.4, 3], [1.85, 0, -0.4, 1.0, 2.4, 1.3, 2.1, 5], [0.05, 1.75, -0.95, 1.9, 1.0, 1.2, 1.2, 2], [0, -0.1, -2.0, 2.2, 2.6, 1.3, 0.2, 7]]) k.add(rockGeometry(seed), rockM, rx, ry, rz, 0, { sx, sy, sz, rx: rot * 0.05 });
-      k.add(rbox(1.7, 2.1, 1.4, 0.3), MAT.flat('#040506', 1), 0, 1.05, -0.45);          // the dark inside
+      k.add(rbox(1.7, 2.1, 1.4, 0.3), inRock('adit', () => MAT.flat('#040506', 1)), 0, 1.05, -0.45);          // the dark inside
       for (const sx of [-0.92, 0.92]) k.add(rbox(0.2, 2.3, 0.22, 0.03), timber, sx, 1.15, 0.45, 0, { rz: sx * -0.04 });
       k.add(rbox(2.3, 0.24, 0.26, 0.03), timber, 0, 2.33, 0.45, 0, { rz: 0.03 });
       k.add(rbox(0.9, 0.42, 0.04, 0.02), MAT.planks('honey'), 1.45, 1.5, 0.62, 0, { rz: 0.08 });   // the sign
