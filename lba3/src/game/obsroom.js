@@ -12,6 +12,7 @@
 //   {ice:true}); the second beam enters only once it is broken
 //   R.crystal {x,z, setLit(b)}; R.telescope {x,z}; R.npcSpots {keeper}; exit 'obs-out'
 import * as THREE from 'three';
+import { gemGeo, coreOfGem, linkedCore, asShell } from './crystallook.js';
 import { RoomBuilder, glowSprite } from './interiors.js';
 import { MAT, rbox, plane, cyl, sphere, torus, lathe, canvasTex } from './props.js';
 import { mergeStatic } from '../engine/merge.js';
@@ -108,9 +109,11 @@ export function buildObsRoom(scene, physics) {
     pitch.rotation.x = -(ease.from.el + (ease.to.el - ease.from.el) * Math.min(1.1, u * o));
   });
   // the shrine: a niche in the back wall with Sendell's crystal on a plinth
-  const crystalM = new THREE.MeshStandardMaterial({ color: '#bfefff', emissive: '#6ad0ff', emissiveIntensity: 0.15, roughness: 0.1, transparent: true, opacity: 0.9, flatShading: true });
+  // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a translucent shell over a core that wakes with it: crystallook.js)
+  const crystalM = asShell(new THREE.MeshStandardMaterial({ color: '#bfefff', emissive: '#6ad0ff', emissiveIntensity: 0.15, roughness: 0.1 }), 0.82);
   k.add(cyl(0.45, 0.55, 1.0, 10), MAT.stone('lav'), CRYSTAL.x, 0.5, CRYSTAL.z - 0.6);
-  const cr = k.mesh(new THREE.OctahedronGeometry(0.35, 0).scale(1, 1.8, 1), crystalM, CRYSTAL.x, 1.55, CRYSTAL.z - 0.6);
+  const cr = k.mesh(gemGeo(0, 0.63, 0.25), crystalM, CRYSTAL.x, 1.55, CRYSTAL.z - 0.6, 0, { cast: false });
+  cr.add(coreOfGem(crystalM, linkedCore(crystalM), { v: 0, hs: 0.63, rr: 0.25 }));
   const halo = glowSprite('#9fe8ff', 2.4, 0); halo.position.set(B.cx + CRYSTAL.x, 1.6, B.cz + CRYSTAL.z - 0.6); B.group.add(halo); halo.position.set(CRYSTAL.x, 1.6, CRYSTAL.z - 0.6);
   B.ccol(CRYSTAL.x, CRYSTAL.z - 0.6, 0.6, 1.2);
   R.crystal = {

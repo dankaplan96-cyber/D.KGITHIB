@@ -19,6 +19,7 @@
 // save with pr_cup or pr_zoeOut (the cup's flags) loads and plays on: they are no longer read.
 // Not a chapter: story/prologue.js owns it and asks it first (as chapter1.js asks depotwatch.js).
 import * as THREE from 'three';
+import { crystalGem, linkedCore, asShell, gemGeo } from '../crystallook.js';
 import { t as tr } from '../i18n.js';
 import { mergeStatic } from '../../engine/merge.js';
 import { buildPumpKiosk } from '../pumproom.js';
@@ -78,7 +79,7 @@ export class HomeTap {
       add(new THREE.CylinderGeometry(0.035, 0.035, 1.3, 8), lead, 0.62, 0.14, 0, 0, Math.PI / 2);     // (along the wall's foot, from the lane side)
       add(new THREE.CylinderGeometry(0.035, 0.035, 0.26, 8), lead, -0.05, 0.14, 0.1, Math.PI / 2);   // (an elbow into the wall)
       add(new THREE.CylinderGeometry(0.09, 0.09, 0.24, 12), brass, 0.02, 0.14, 0, 0, Math.PI / 2);  // the coupling (his repair: bright brass)
-      for (let i = 0; i < 14; i++) { const c = add(new THREE.OctahedronGeometry(0.03 + (i % 3) * 0.012, 0), fur, -0.1 + (i % 6) * 0.04, 0.12 + ((i * 3) % 5) * 0.03 - 0.02, -0.075 + ((i * 7) % 4) * 0.02); c.scale.y = 1.8; c.rotation.set(i, i * 2, 0.4); }
+      for (let i = 0; i < 14; i++) { const c = add(gemGeo(i, 0.03 + (i % 3) * 0.012), fur, -0.1 + (i % 6) * 0.04, 0.12 + ((i * 3) % 5) * 0.03 - 0.02, -0.075 + ((i * 7) % 4) * 0.02); c.scale.y = 1.8; c.rotation.set(i, i * 2, 0.4); }
       mergeStatic(grp, { recolor: false });
       // the wet ground: a dark, shiny patch round the barrel's foot (a little shows past the barrel before it moves)
       const wet = new THREE.Mesh(new THREE.CircleGeometry(0.62, 18), new THREE.MeshStandardMaterial({ color: '#2a1e14', roughness: 0.1, metalness: 0.15, transparent: true, opacity: 0.85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
@@ -123,10 +124,11 @@ export class HomeTap {
       water.rotation.x = -Math.PI / 2; water.position.set(POOL.x, POOL.h + 0.012, POOL.z); R.group.add(water);
       g.physics.add({ type: 'cyl', x: o.x + POOL.x, z: o.z + POOL.z, r: POOL.r + 0.04, top: 0.75, noStand: true, seeThrough: true });   // (walked round, reached into from beside it)
       // the growth: crystals climbing the old pillar's west side (they lean when the pump runs: kept apart, one draw)
-      const glow = new THREE.MeshStandardMaterial({ color: '#d8fbff', emissive: '#56d8ff', emissiveIntensity: 0.9, roughness: 0.25 });
+      // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a translucent shell over a core that glows with it: crystallook.js)
+      const glow = asShell(new THREE.MeshStandardMaterial({ color: '#d8fbff', emissive: '#56d8ff', emissiveIntensity: 0.9, roughness: 0.25 }), 0.8), glowCore = linkedCore(glow);
       const growth = new THREE.Group(); growth.position.set(GROW.x - GROW.r - 0.02, 0, GROW.z + 0.1); growth.userData.keep = true; R.group.add(growth);
       for (let i = 0; i < 11; i++) {
-        const s = 0.07 + ((i * 7) % 5) * 0.022, c = new THREE.Mesh(new THREE.OctahedronGeometry(s, 0), glow);
+        const s = 0.07 + ((i * 7) % 5) * 0.022, c = crystalGem(glow, glowCore, { v: i, hs: s });
         c.scale.y = 2.1; c.position.set(-0.04 - (i % 3) * 0.05, 0.25 + i * 0.2, ((i * 5) % 7) * 0.09 - 0.3); c.rotation.set(0.3 * ((i % 4) - 1.5), i, 0.9 + 0.2 * (i % 3)); growth.add(c);
       }
       mergeStatic(growth, { recolor: false });

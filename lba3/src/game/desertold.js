@@ -24,6 +24,7 @@
 // match them to the original's landmarks (tools/worldscore/landmarks.json). All geometry goes into the island's one
 // draw batch per material (desert.js B), so the island's draw calls grow only by the few new materials.
 import * as THREE from 'three';
+import { crystalGem, linkedCore, asShell } from './crystallook.js';
 import { tm, pm, ctex, bbox, cyl, lathe, tube, cached, frame, scaleUV, TILE } from './kit.js';
 import { fitAdd } from './worldfit.js';
 import { roomOcc, occCollider } from './roomocc.js';
@@ -313,8 +314,9 @@ export function buildOldPlaces(C) {
       {
         const lx = Hh.x + 1.75, lz = dz0 - 0.32, ly = sill + 2.55;
         B.add(bbox(0.08, 0.08, 0.42, 0, 1), M.iron, lx, ly - 0.32, dz0 - 0.2);
-        const mat = new THREE.MeshStandardMaterial({ color: '#9fb0bc', roughness: 0.35, emissive: '#22303a', emissiveIntensity: 0.5 });
-        const gem = new THREE.Mesh(cached('pp-crystal', () => new THREE.OctahedronGeometry(0.2, 0).scale(1, 1.7, 1)), mat);
+        // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a translucent shell over a core that wakes with it: crystallook.js)
+        const mat = asShell(new THREE.MeshStandardMaterial({ color: '#9fb0bc', roughness: 0.35, emissive: '#22303a', emissiveIntensity: 0.5 }), 0.84);
+        const gem = crystalGem(mat, linkedCore(mat), { v: 0, hs: 0.34, rr: 0.14 });
         gem.position.set(lx, ly, lz); C.group?.add(gem);
         R.studyLamp = { ...W(lx, lz), y: ly, mesh: gem,
           wake(on) { mat.color.set(on ? '#e8fcff' : '#9fb0bc'); mat.emissive.set(on ? '#7fd8ff' : '#22303a'); mat.emissiveIntensity = on ? 1.8 : 0.5; } };

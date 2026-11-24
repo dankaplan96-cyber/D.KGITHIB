@@ -29,6 +29,7 @@
 //   the pillar's foot with the crystal. Each wrong turn says what the stone faces now. State: dx_way_seen, dx_way_ask,
 //   dx_way_face (0..3, the quarter turns made, mod 4), dx_way_turns, dx_way_open.
 import * as THREE from 'three';
+import { crystalMats, crystalGem, gemGeo } from '../crystallook.js';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { IH, roomOf } from '../ihomes.js';
@@ -170,12 +171,13 @@ export class Depth extends ChapterBase {
       bins[k] = { grp: b, lamp, x: X(L[k].x), z: Z(b.position.z), lx: L[k].x, lz: b.position.z };
     }
     // the stones: one blue crystal each, the warm ones crusted pale with dust motes rising off them
-    const blue = MAT.flat('#7ab8e8', 0.25, { metalness: 0.1, flatShading: true }), crustM = MAT.flat('#f6f8f2', 0.95, { flatShading: true });
-    const gg = new THREE.OctahedronGeometry(0.05, 0), cg = new THREE.OctahedronGeometry(0.022, 0), mg = new THREE.SphereGeometry(0.006, 4, 3), moteM = MAT.flat('#f4efe4', 1);
+    // (CRYSTALS-ONE-LOOK: the well's faceted crystal, shell + core: crystallook.js; the crust's bits the same prism, opaque)
+    const blue = crystalMats('cyan'), crustM = MAT.flat('#f6f8f2', 0.95, { flatShading: true });
+    const cg = gemGeo(0, 0.022), mg = new THREE.SphereGeometry(0.006, 4, 3), moteM = MAT.flat('#f4efe4', 1);
     const gems = [];
     for (let i = 0; i < GEMS; i++) {
       const warm = WARM.includes(i), m = new THREE.Group(); grp.add(m);
-      const c = new THREE.Mesh(gg, blue); c.scale.set(1, 1.4, 1); c.position.y = 0.06; c.rotation.y = i * 0.7; m.add(c);
+      const c = crystalGem(blue.shell, blue.core, { v: i, hs: 0.05 }); c.scale.set(1, 1.4, 1); c.position.y = 0.06; c.rotation.y = i * 0.7; m.add(c);
       const motes = [];
       if (warm) {
         for (let j = 0; j < 7; j++) { const a = j * 0.9 + i, q = new THREE.Mesh(cg, crustM); q.position.set(Math.sin(a) * 0.034, 0.03 + (j % 3) * 0.022, Math.cos(a) * 0.034); q.rotation.set(a, a * 2, 0); m.add(q); }

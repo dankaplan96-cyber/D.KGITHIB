@@ -30,6 +30,7 @@
 // the old plain's BASE = 5.0 (the dig steps down 1.6 m per terrace to bottomY = 0.2), the post's pad, the camp, the
 // glider field and the condenser hall at the original's level there.
 import * as THREE from 'three';
+import { crystalMats, gemGeo } from './crystallook.js';
 import { Terrain } from '../engine/terrain.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
@@ -1347,13 +1348,17 @@ export function* buildDesertSteps(scene, physics) {
     // off them: crystals grow where heat leaks, as Ilka says); two are cold and bare, their vents already closing.
     // Warm ones are ball targets with `seal` 0–2 (old saves' c4_seal0–2), cold ones carry `cold` 0–1 (story/dig.js).
     const sealM = tm('fortStone', { color: '#d8b090' });
-    const cryM = pm('#cfefff', 0.15, { emissive: '#3aa8d8', emissiveIntensity: 0.9, flatShading: true });
-    const cryG = cached('digCry', () => new THREE.OctahedronGeometry(1, 0).scale(0.45, 1, 0.45));
+    // (CRYSTALS-ONE-LOOK: the well's faceted crystals, shell + core, where octahedra were: crystallook.js)
+    const cryP = crystalMats('cyan');
     // a crust of crystals around (x,y,z) (one batch for all) and dust motes drifting up out of it (one point cloud)
     const CB = new Batch(group, { cast: false }), motes = [];
     const breath = (x, y, z, n, s, seed, big = 1) => {
       const r = rng(seed);
-      for (let i = 0; i < n; i++) { const k = (0.09 + r() * 0.12) * big; CB.add(cryG, cryM, x + (r() - 0.5) * s, y + (r() - 0.3) * s * 0.4, z + (r() - 0.5) * s, (r() - 0.5) * 0.9, r() * 3, (r() - 0.5) * 0.9, k, k, k); }
+      for (let i = 0; i < n; i++) {
+        const k = (0.09 + r() * 0.12) * big, px = x + (r() - 0.5) * s, py = y + (r() - 0.3) * s * 0.4, pz = z + (r() - 0.5) * s, rx = (r() - 0.5) * 0.9, ry = r() * 3, rz = (r() - 0.5) * 0.9;
+        CB.add(gemGeo(i, 1, 0.34), cryP.shell, px, py, pz, rx, ry, rz, k, k, k);
+        CB.add(gemGeo(i, 1, 0.34, true, cryP.shell.userData.coreTint), cryP.core, px, py, pz, rx, ry, rz, k, k, k);
+      }
       for (let i = 0; i < 6; i++) motes.push({ x, y, z, ph: i / 6 + r() * 0.1, dx: (r() - 0.5) * s, dz: (r() - 0.5) * s });
     };
     const SLOTS = [['seal', 0], ['cold', 0], ['seal', 1], ['cold', 1], ['seal', 2]];   // left to right, as the carving's vents

@@ -19,6 +19,7 @@
 //   R.wheel { x, z, spin() }; R.tea { x, z }; R.altar { x, z }; R.beds { x, z }; R.setGuests(b)
 //   dressLharRoom(R, info, room, physics) → { set(phase, home), shown }   (info: ihomes IH[rid]; room: 'lhar0'…'lhar4')
 import * as THREE from 'three';
+import { crystalGem, linkedCore, asShell } from './crystallook.js';
 import { esmerRoom } from './zhomes.js';
 import { Kit, MAT, rbox, cyl, sphere, crate, rug, hangingLamp, potStove, kettle, jar, barrel } from './props.js';
 import { sackPile, hanging } from './roomdress.js';
@@ -51,7 +52,9 @@ function hall(scene, physics) {
   for (const s of [-1, 1]) k.add(cyl(0.12, 0.1, 0.22, 10), MAT.brass(), AX + s * 1.25, 1.1, BZ + 0.35);
   B.col(AX, BZ + 0.6, 2.0, 0.65, 1.0, { noStand: true });
   // the blue stone: its own mesh (its glow), with a cold light of its own
-  const stone = new THREE.Mesh(new THREE.OctahedronGeometry(0.2, 0).scale(1, 1.6, 1), new THREE.MeshStandardMaterial({ color: '#9fd8ff', emissive: '#6ab8ff', emissiveIntensity: 1.2, roughness: 0.2, flatShading: true }));
+  // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a translucent shell over a core that glows with it: crystallook.js)
+  const stoneM = asShell(new THREE.MeshStandardMaterial({ color: '#9fd8ff', emissive: '#6ab8ff', emissiveIntensity: 1.2, roughness: 0.2 }), 0.8);
+  const stone = crystalGem(stoneM, linkedCore(stoneM), { v: 0, hs: 0.32, rr: 0.13 });
   stone.position.set(AX, 1.62, BZ + 0.42); o.R.group.add(stone);
   B.light('#bfe4ff', 1.6, 5, AX, 1.9, BZ + 1.3);
   R.updaters.push((dt, t) => { stone.rotation.y = t * 0.3; stone.material.emissiveIntensity = 1.1 + Math.sin(t * 1.3) * 0.2; });

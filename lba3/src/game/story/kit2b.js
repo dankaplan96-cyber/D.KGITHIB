@@ -24,6 +24,7 @@
 //     beside it): heat frees it (a clover and 10 kashes; once). Fights: the ice mites at the lift (double damage).
 // Nothing on the main path needs any of them; each is optional where the old arsenal is.
 import * as THREE from 'three';
+import { crystalMats, crystalGem, linkedCore, asShell } from '../crystallook.js';
 import { ChapterBase } from './base.js';
 import { MAT, rbox, cyl, sphere, torus, crate, canvasTex, Kit } from '../props.js';
 import { rockGeometry } from '../vegetation.js';
@@ -96,12 +97,14 @@ export class Kit2b extends ChapterBase {
     k.flush();
     // the crust: warm crystal grown over the hollow's mouth
     const crust = new THREE.Group(); crust.position.set(0, 0.66, 0.6); grp.add(crust);
-    const cm = MAT.glow('#bff8ff', '#30c8f0', 0.9), cg = new THREE.OctahedronGeometry(0.11, 0);
-    [[-0.2, 0.12, 0.3, 1.6], [0.05, 0.18, -0.2, 2.0], [0.22, 0.05, 0.4, 1.4], [-0.1, -0.12, 0.9, 1.8], [0.15, -0.16, -0.6, 1.5], [-0.25, -0.1, 1.2, 1.3], [0.0, 0.0, 0.1, 2.2]].forEach(([x, y, rz, sy]) => {
-      const m = new THREE.Mesh(cg, cm); m.position.set(x, y, 0); m.rotation.set(0.3, 0, rz); m.scale.set(1, sy, 0.8); crust.add(m);
+    // (CRYSTALS-ONE-LOOK: the well's faceted crystals, shell + core, where octahedra were: crystallook.js)
+    const cm = crystalMats('cyan');
+    [[-0.2, 0.12, 0.3, 1.6], [0.05, 0.18, -0.2, 2.0], [0.22, 0.05, 0.4, 1.4], [-0.1, -0.12, 0.9, 1.8], [0.15, -0.16, -0.6, 1.5], [-0.25, -0.1, 1.2, 1.3], [0.0, 0.0, 0.1, 2.2]].forEach(([x, y, rz, sy], i) => {
+      const m = crystalGem(cm.shell, cm.core, { v: i, hs: 0.11 }); m.position.set(x, y, 0); m.rotation.set(0.3, 0, rz); m.scale.set(1, sy, 0.8); crust.add(m);
     });
     // the sleeping crystal on the ledge (dull until a strike wakes it: then a lamp; no light, its own glow)
-    const sleeper = new THREE.Mesh(new THREE.OctahedronGeometry(0.08, 0), new THREE.MeshStandardMaterial({ color: '#6a7a88', emissive: '#40d8ff', emissiveIntensity: 0, roughness: 0.25 }));
+    const sleepM = asShell(new THREE.MeshStandardMaterial({ color: '#6a7a88', emissive: '#40d8ff', emissiveIntensity: 0, roughness: 0.25 }), 0.84);
+    const sleeper = crystalGem(sleepM, linkedCore(sleepM), { v: 1, hs: 0.08 });   // (its core wakes with it)
     sleeper.position.set(0.17, 0.55, 0.38); sleeper.scale.set(1, 1.9, 1); grp.add(sleeper);
     const tin = new THREE.Group(); tin.position.set(-0.12, 0.44, 0.4); grp.add(tin);
     const tb = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.14), MAT.flat('#7a8a8a', 0.45, { metalness: 0.5 })); tb.position.y = 0.04; tin.add(tb);
@@ -120,8 +123,8 @@ export class Kit2b extends ChapterBase {
     const slab = new THREE.Group(); grp.add(slab);
     const sm = new THREE.Mesh(rbox(1.08, 1.48, 0.16, 0.03), MAT.stone('slate', 1)); sm.position.y = 0.75; sm.castShadow = true; slab.add(sm);
     const rosette = new THREE.Group(); rosette.position.set(0, 0.88, 0.1); slab.add(rosette);
-    const pm = MAT.glow('#d8c8ff', '#8a5aff', 0.8), pg = new THREE.OctahedronGeometry(0.06, 0);
-    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2, m = new THREE.Mesh(pg, pm); m.position.set(Math.sin(a) * 0.2, Math.cos(a) * 0.2, 0.02); m.rotation.z = -a; m.scale.set(1, 2.2, 0.8); rosette.add(m); }
+    const pm = crystalMats('violet');
+    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2, m = crystalGem(pm.shell, pm.core, { v: i, hs: 0.06 }); m.position.set(Math.sin(a) * 0.2, Math.cos(a) * 0.2, 0.02); m.rotation.z = -a; m.scale.set(1, 2.2, 0.8); rosette.add(m); }
     const hub = new THREE.Mesh(cyl(0.07, 0.07, 0.06, 10), MAT.brass()); hub.rotation.x = Math.PI / 2; rosette.add(hub);
     const cache = new THREE.Group(); cache.position.set(0.1, 0.02, -0.1); grp.add(cache);
     const cb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.14, 0.2), MAT.flat('#5a6a5a', 0.5, { metalness: 0.4 })); cb.position.y = 0.07; cache.add(cb);
