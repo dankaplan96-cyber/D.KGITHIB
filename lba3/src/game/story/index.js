@@ -52,7 +52,7 @@ import { MagicLevels } from './magic.js';
 import { SewerLife } from './sewers.js';
 import { ChapterBase } from './base.js';
 import { HostelLife } from './hostel.js';
-import { Shops } from './shops.js';
+import { Shops, KEEPER as SHOP_KEEPER } from './shops.js';
 import { Purposes } from './purposes.js';
 import { IslandPeople } from './islandpeople.js';
 import { CitadelStands } from './stands.js';
@@ -172,7 +172,17 @@ export class Story {
   // ---- construction
   npcDefs() {
     const seen = new Map();
-    for (const c of [...this.chapters, this.life, this.citizens, this.interiors, this.hostel, this.zlife, this.stands, this.ihomes, this.hlife, this.ulife, this.islife, this.ferry, this.oneplace, this.offwall, this.tyl, this.qc]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
+    // P116 (walkers.js Remarks): the minor residents — a person from the residents' modules (the streets', rooms' and
+    // islands' walkers, Zeelich's, the islands' and the Hamalayi's people at home, the shield crew, the hostel), never a
+    // chapter's cast (asked first: a chapter's own person keeps its definition), a side story's person, Citadel's
+    // errand people (life), Corla's kiosk (stands) or a shopkeeper; `minor` names the module (tests count by it)
+    const MINOR = new Map([[this.citizens, 'citizens'], [this.interiors, 'interiors'], [this.hostel, 'hostel'], [this.zlife, 'zlife'], [this.ihomes, 'ihomes'], [this.hlife, 'hlife'], [this.ulife, 'ulife'], [this.islife, 'islife']]);
+    for (const c of [...this.chapters, this.life, this.citizens, this.interiors, this.hostel, this.zlife, this.stands, this.ihomes, this.hlife, this.ulife, this.islife, this.ferry, this.oneplace, this.offwall, this.tyl, this.qc]) for (const d of c.npcDefs()) {
+      if (seen.has(d.id)) continue;
+      seen.set(d.id, d);
+      const m = MINOR.get(c);
+      if (m && !SHOP_KEEPER[d.id] && d.id !== 'osk') d.minor = m; else delete d.minor;
+    }
     const list = [...seen.values()];
     // DRESS-1 (characters.js): people who share a model each get their own dress; the one the model is named after (or
     // else the first) keeps the model's. Worked out from the whole cast every time, so a person's dress never depends on
@@ -449,10 +459,14 @@ export class Story {
     const c = this.game.physics.near(p.x, p.z).find((k) => k.type === 'box' && Math.abs(k.x - p.x) < 0.01 && Math.abs(k.z - p.z) < 0.01);
     if (c) c.enabled = show;
   }
-  update(dt) { this.citadelGlider(); this.isles.portLook(); this.stepMoves(dt); this.cur.update(dt); this._dt?.ambient(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); this.depth.update(dt); this.ferry.update(dt); this.oneplace.update(dt); this.offwall.update(dt); this.tyl.update(dt); this.qc.update(dt); }
+  update(dt) {
+    // (END-RESUME, base.js: once, at the first frame of play after a load — Story.update runs only in play, never in a fade)
+    if (this.endCheck) { this.endCheck = false; const c = this.cur; if (c?.endSaved() && !this.game.cine && !this.game.cutscene) { c.resumeEnd(); return; } }
+    this.citadelGlider(); this.isles.portLook(); this.stepMoves(dt); this.cur.update(dt); this._dt?.ambient(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); this.depth.update(dt); this.ferry.update(dt); this.oneplace.update(dt); this.offwall.update(dt); this.tyl.update(dt); this.qc.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); this.oneplace.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
+    this.endCheck = true;   // (END-RESUME, base.js: a load; the first frame of play looks whether its chapter's end was saved)
     for (let i = 0; i < this.chapters.length; i++) this.chapters[i].applyFlags(i < this.index, i === this.index);
     this.life.applyFlags();
     this.workshop.applyFlags();

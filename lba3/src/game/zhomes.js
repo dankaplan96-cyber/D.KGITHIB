@@ -264,6 +264,9 @@ function bakery(scene, physics) {
   for (let i = 0; i < 3; i++) k.at(W / 2 - 1.2, 0, 0.4 + i * 0.5, 0, () => basket(k, { r: 0.22, fill: '#c8843a' }));
   k.at(0, 0, 0.9, 0, () => hangingLamp(k, 2.5, H, { shade: '#6a5a7a' }));
   k.at(-1.6, 1.9, BZ + 0.04, 0, () => frame(k, 0.5, 0.38, canvasTex(128, 96, (x, w, h) => { x.fillStyle = '#e8dcc8'; x.fillRect(0, 0, w, h); x.fillStyle = '#5a4a5a'; x.font = 'bold 14px serif'; x.textAlign = 'center'; x.fillText('WATCH HOUSE', w / 2, 40); x.fillText('ORDER OF THE', w / 2, 60); x.fillText('ISLAND GUARD', w / 2, 78); }), { mat: MAT.iron() }));
+  // THE SECOND SHIFT (story/zeelift.js, free play): where Kell eats his warm bread, by the oven's warm front, clear of the table,
+  // facing the room (Esmers stand: walkers.js canSit)
+  ZH.zh_bakery.npcSpots.kell = { x: o.X(1.3), z: o.Z(-0.65), a: 0.75 };
   ZH.zh_bakery.setOven = (hot) => { mouth.material = hot ? hotM : coldM; ember.intensity = hot ? 3.2 : 0; loaves.visible = !!hot; };
   ZH.zh_bakery.setOven(false);
   return { zh_bakery: B.finish() };

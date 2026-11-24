@@ -28,7 +28,7 @@
 //
 // Flags: bh_started, bh_go, bh_fen1, bh_book, bh_bench, bh_oren, bh_crates, bh_def, bh_fig, bh_rig1, bh_band0-2
 // (0 low · 1 mid · 2 high), bh_test, bh_done; wk_started, wk_in, wk_door, wk_card, wk_ledger, wk_bay2, wk_ask, wk_ring,
-// wk_solo, wk_bell, wk_rung, wk_awake, wk_done; nwb_trim, nwb_fit, nwb_band, nwb_set; ep_bl. Only the expanded
+// wk_solo, wk_bell, wk_rung, wk_awake, wk_food, wk_chair, wk_done; nwb_trim, nwb_fit, nwb_band, nwb_set; ep_bl. Only the expanded
 // campaign plays any of it (Story.inCampaign). No save is made inside the rig's run or the hand-to-hand at the lever:
 // a load restarts that run (the bands and the ring kept).
 import { ChapterBase, SPEAKER_COLORS } from './base.js';
@@ -40,6 +40,10 @@ import { ROOMS } from '../ballastra/archrooms.js';
 import * as THREE from 'three';
 import { cyl, MAT } from '../props.js';
 import { compose } from '../kit.js';
+import { Resident } from '../walkers.js';
+import { LOOKS } from '../characters.js';
+import { SEAT } from '../roomlife.js';
+import { stepWalk } from './zeelift.js';
 import '../text/ballastra.js';
 
 const gold = '#ffcf4a';
@@ -341,12 +345,48 @@ export class Balances extends BlChapter {
 }
 
 // ===================================================================== chapter 13
+// THE SECOND SHIFT (P109 part 2, docs/SECOND-SHIFT.md "Ballastra, expanded chapter 13 only — A chair by the cradle"): after
+// the families' decision (Jory awake, the rule said, Nan Odra keeping her mother asleep), while Tessa waits at the door,
+// Wenna crosses the hall with a bowl of the row's soup for Nan Odra, who has stood by her mother's cradle (the back row's
+// second, behind her) since the bell. She will not sit at the keepers' table and leave her mother alone; Wenna would sit
+// with her if there were anything to sit on. A real chair stands against the left wall: Twinsen carries it to the cradle
+// (archrooms.js cradles.chair). Wenna sits; Nan Odra: don't let anyone lift her lid, not yet; she goes to eat at the
+// keepers' desk, on their stool. The lid stays shut. On any later visit Wenna is still in that chair by the cradle, Nan
+// Odra at the desk. No word from Oren, no reward, nothing anyone needs; Tessa ends the chapter when he talks to her.
+// Flags (saved): wk_food (Wenna has brought the bowl: she stands by Nan Odra with it), wk_chair (the chair moved, the two
+// seated). A base-campaign save never plays chapter 13 and never has either.
+const WENNA_WAY = [{ x: -4.3, z: 1.7 }];   // (hall-local: west of J-16, then north between it and the keepers' desk)
+const ODRA_WAY = [{ x: -5.2, z: -1.55 }, { x: -6.6, z: -1.12 }];
+// a person's seated pose on a seat (its middle and the way the sitter faces: world {x, z, a}): as walkers.js seatPose,
+// but for Ballastra's people (the canal bodies: short thighs, a big head carried low — sitShape's "back" between the seat
+// and 0.55 m over it is the back of that head, 0.36 m behind them, and set clear of the backrest it put them a quarter of
+// a metre in front of the seat, sitting on air) the thighs go on the seat with the knees at its front edge
+function seatOn(n, s, sp) {
+  const sh = Resident.prototype.sitShape.call({ def: { char: n.def?.char || 'twinsen' }, rig: n.rig, carryMesh: null, foldCoat: Resident.prototype.foldCoat });
+  const zl = LOOKS[n.def?.char]?.race === 'canal' ? Math.max(-0.02, sp.front + 0.015 - sh.knee) : Math.max(sp.back + 0.07 - sh.back, sp.front + 0.015 - sh.shin);
+  return { x: s.x + Math.sin(s.a) * zl, z: s.z + Math.cos(s.a) * zl, y: sp.seatY + 0.008 - sh.bottom, a: s.a, anim: 'sit', pin: true };
+}
+let BOWL = null;
+function handBowl(n, on) {
+  BOWL ||= (() => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), MAT.paint("#e8dcc0", 0.6)); m.scale.set(1, 0.6, 1); m.castShadow = true; return m; })();
+  const hand = n?.rig?.j?.armR?.hand;
+  if (on && hand) { const sc = n.rig.root.scale.x || 1; hand.add(BOWL); BOWL.position.set(0, -0.08 / sc, 0.06 / sc); BOWL.rotation.set(Math.PI, 0, 0); BOWL.scale.set(1 / sc, 0.6 / sc, 1 / sc); BOWL.visible = true; }
+  else if (BOWL.parent && (!n || BOWL.parent === hand || !on)) BOWL.parent.remove(BOWL);
+}
 export class Cradles extends BlChapter {
   place(id) {
     const f = this.f;
     if (!CAST_WK.has(id) || !this.inMine()) return undefined;
     const cur = this.isCur(), A = this.A, hl = this.hall(), GD = this.GD, hs = this.house();
     const at = (p, extra) => (p ? { x: p.x, z: p.z, a: p.a ?? 0, ...extra } : undefined);
+    // (THE SECOND SHIFT: on their way across the hall, where they are; once the chair is by the cradle, Wenna in it and
+    //  Nan Odra at the keepers' desk, in this chapter and on every later visit)
+    { const W = this.walks?.find((w) => w.n.def.id === id); if (W) return { x: W.n.pos.x, y: W.n.pos.y, z: W.n.pos.z, a: W.n.angle, pin: true }; }
+    if (f.wk_chair && (id === 'bl_wenna' || id === 'bl_odra')) {
+      const n = this.npc(id);
+      if (!hl || !n) return undefined;
+      return id === 'bl_wenna' ? seatOn(n, hl.chairCradle, SEAT.chair) : seatOn(n, hl.stool, SEAT.lowStool);
+    }
     // after the chapter (a return visit, the epilogue): Fennick at his counter, the keepers in the hall, Jory with Wenna
     if (!cur) {
       switch (id) {
@@ -367,6 +407,7 @@ export class Cradles extends BlChapter {
       case 'bl_wenna':
         if (!f.wk_started) return at(GD?.stands.rigWatch1);
         if (!f.wk_in) return outside ? { x: outside.x - 1.3, z: outside.z + 1.1, a: -Math.PI / 2 } : undefined;
+        if (f.wk_food) return hl ? at(hl.odraSide) : undefined;   // (THE SECOND SHIFT: by Nan Odra with the bowl)
         return hl ? at(hl.wenna) : undefined;
       case 'tessa': return f.wk_awake && hl ? { x: hl.door.x + 1.4, z: hl.door.z - 0.6, a: Math.PI / 2 } : at(GD?.stands.tessa_rig);
     }
@@ -384,13 +425,24 @@ export class Cradles extends BlChapter {
     const C = this.game.regions.built('bl_arches')?.arches?.cradles;
     if (C && this.game.regions.built('bl_cradles')) {
       C.setRing(!!f.wk_ring); C.setLid('j17', f.wk_awake ? 1 : 0, instant); C.setWarm(f.wk_awake ? 1 : 0); C.setLever(0, instant);
-      for (let i = 0; i < 7; i++) C.setLid(i, f.ep_bl && [1, 4, 5].includes(i) ? 1 : 0, instant);
+      // (the epilogue's three open lids: J-17 and two of the back row's. Not the second: Nan Odra's mother's, behind her
+      //  spot, whose lid stays shut — "Not yet. But it's mine to say now." It stood open among them before)
+      for (let i = 0; i < 7; i++) C.setLid(i, f.ep_bl && [4, 5].includes(i) ? 1 : 0, instant);
+      // THE SECOND SHIFT: the chair by the wall, or by the cradle (and the bowl on the keepers' desk) once moved
+      if (!this.carry) C.chair.at(f.wk_chair ? ROOMS.cradles.chairCradle : ROOMS.cradles.chairWall);
+      C.setBowl(!!f.wk_chair && !this.walks?.some((w) => w.n.def.id === 'bl_odra'));
       C.setLamp(0, 'green'); C.setLamp(1, 'green');
     }
   }
   get C() { return this.game.regions.built('bl_arches')?.arches?.cradles; }
   regionBuilt(ids) { if (ids.includes('bl_arches')) this.sync(true); }
-  applyFlags() { this.rota = null; this.leaving = false; this.waits = []; this.unface(); if (!this.f.wk_started) this.begun = false; if (this.inMine()) this.sync(true); }
+  applyFlags() {
+    this.rota = null; this.leaving = false; this.waits = []; this.unface(); if (!this.f.wk_started) this.begun = false;
+    // (THE SECOND SHIFT: nothing in hand, nobody on the way, the bowl where the flags have it)
+    for (const W of this.walks || []) W.n.controlled = false;
+    this.walks = []; this.carry = null; this.chairBusy = false; this.foodT = 0; this.hands = null; handBowl(null, false);
+    if (this.inMine()) this.sync(true);
+  }
 
   begin() {
     const g = this.game, f = this.f;
@@ -415,6 +467,10 @@ export class Cradles extends BlChapter {
     const g = this.game, f = this.f;
     if (!this.isCur() || !this.inMine()) return;
     this.stepWaits(dt);
+    // (THE SECOND SHIFT: the walks across the hall, the chair in his hands; Wenna brings the soup a moment after the decision)
+    for (const W of (this.walks || []).slice()) if (stepWalk(g, W, dt)) { this.walks.splice(this.walks.indexOf(W), 1); W.done?.(); }
+    this.stepCarry();
+    if (this.foodDue() && !this.chairBusy && g.state === 'play' && !g.trans && !this.rota) { if ((this.foodT = (this.foodT || 0) + dt) > 2.0 && this.npc('bl_wenna')?.present && this.npc('bl_odra')?.present) { this.foodT = 0; this.bringFood(); } }
     if (this.rota) this.stepRota(dt);
     if (g.state !== 'play' || g.trans || g.cine) return;
     if (!f.wk_started && !this.begun) { this.begin(); return; }
@@ -450,6 +506,8 @@ export class Cradles extends BlChapter {
     if (r === 'bl_cradles' && f.wk_door) {
       const H = ROOMS.cradles;
       at(H.card, 'wk_card', 'p_read'); at(H.ledger, 'wk_ledger', 'p_read'); at(H.plaque, 'wk_bay2', 'p_read'); at(H.board, 'wk_board', 'p_read');
+      // (THE SECOND SHIFT: the chair by the wall, once Wenna has brought the soup)
+      if (f.wk_food && !f.wk_chair && !this.chairBusy && !this.carry) consider(dist(H.chairWall.x + 0.6, H.chairWall.z), 1.3, { kind: 'wk_chair', label: 'p_move' });
       if (!f.wk_awake) {
         at(H.rings, 'wk_rings', 'p_listen');
         if (f.wk_ask && !f.wk_ring) at(H.ring, 'wk_ring', 'p_push');
@@ -465,6 +523,7 @@ export class Cradles extends BlChapter {
     const c = (lines, done) => this.chain(lines, done);
     const after = () => { g.updateObjective(); g.save(false); };
     switch (it.kind) {
+      case 'wk_chair': this.takeChair(); return true;
       case 'wk_card': f.wk_card = true; c([['narrator', 'wk_card'], ['bl_wenna', 'wk_we_card']], after); return true;
       case 'wk_ledger': f.wk_ledger = true; c([['narrator', 'wk_ledger'], ['bl_garrow', 'wk_ga_ledger']], after); return true;
       case 'wk_bay2': f.wk_bay2 = true; c([['narrator', 'wk_bay2']], after); return true;
@@ -571,7 +630,62 @@ export class Cradles extends BlChapter {
       ['hero', 'wk_tw_who'], ['bl_odra', 'wk_od_rule'], ['oren', 'wk_or_7'], ['bl_odra', 'wk_od_mine'], ['bl_garrow', 'wk_ga_key']], () => {
       g.updateObjective(); g.save(false);
       this.story.refreshCast({ walk: true });
-      this.chain([['tessa', 'wk_te_1'], ['tessa', 'wk_te_2'], ['hero', 'wk_tw_te'], ['tessa', 'wk_te_3']], () => { f.wk_done = true; g.save(false); });
+      // (THE SECOND SHIFT: Tessa waits at the door for him to talk to her ("Talk to Tessa", her star): the hall has a
+      //  moment after the decision. Before, her lines followed at once, and a save made between the two, after the
+      //  decision, came back to a Tessa who only said "Thank me when it repeats": the chapter could not end)
+    });
+  }
+  tessaEnd() {
+    const g = this.game, f = this.f;
+    this.chain([['tessa', 'wk_te_1'], ['tessa', 'wk_te_2'], ['hero', 'wk_tw_te'], ['tessa', 'wk_te_3']], () => { f.wk_done = true; g.save(false); });
+    return true;
+  }
+  // ---- THE SECOND SHIFT: a chair by the cradle
+  foodDue() { const f = this.f; return this.isCur() && this.inMine() && !!f.wk_awake && !f.wk_done && !f.wk_food && this.room() === 'bl_cradles'; }
+  walkTo(n, pts, then) {
+    if (!n?.present) { then?.(); return; }
+    n.controlled = true;
+    (this.walks ||= []).push({ n, pts: pts.map((p) => ({ ...p })), spd: 1.1, done: () => { n.controlled = false; then?.(); } });
+  }
+  // Wenna crosses the hall with the row's soup for Nan Odra
+  bringFood() {
+    const g = this.game, f = this.f, H = ROOMS.cradles, n = this.npc('bl_wenna');
+    this.chairBusy = true;
+    const R = g.rooms.bl_cradles, L = (p) => ({ x: R.center.x + p.x, z: R.center.z + p.z });
+    handBowl(n, true);
+    this.walkTo(n, [...WENNA_WAY.map(L), { ...H.odraSide }], () => {
+      f.wk_food = true; g.save(false);
+      this.story.refreshCast();
+      this.chain([['bl_wenna', 'wk_we_food'], ['bl_odra', 'wk_od_food'], ['bl_wenna', 'wk_we_sit']], () => { this.chairBusy = false; g.updateObjective(); });
+    });
+  }
+  // he takes the chair from the wall (its side, the room's), carries it to the cradle and sets it down beside it
+  takeChair() {
+    const g = this.game, f = this.f, h = g.hero, H = ROOMS.cradles, C = this.C, A = H.chairWall, B = H.chairCradle;
+    this.chairBusy = true;
+    const go = (pts, a, then) => { h.walkTo(pts, { a, speed: 1.4, then, fail: then }); if (h.steer) h.steer.indoor = true; };
+    const lift = () => h.act('pickup', 1.0, () => { this.carry = true; g.audio.play('put'); }, 0.5);
+    const aB = Math.atan2(B.x - A.x, B.z - A.z), stand = { x: B.x - Math.sin(aB) * 0.62, z: B.z - Math.cos(aB) * 0.62 };
+    const down = () => h.act('setDown', 1.2, () => {
+      this.carry = null; C.chair.at(B); g.audio.play('thump');
+      f.wk_chair = true; g.save(false);
+      this.seat();
+    }, 0.6);
+    go([{ x: A.x + 0.8, z: A.z }], -Math.PI / 2, () => { lift(); this.after(1.05, () => go([stand], aB, down)); });
+  }
+  // the chair in his hands, in front of him while he walks
+  stepCarry() {
+    const h = this.game.hero, C = this.C;
+    if (!this.carry || !C) return;
+    C.chair.carry(h.pos.x + Math.sin(h.angle) * 0.6, h.pos.y + 0.32, h.pos.z + Math.cos(h.angle) * 0.6, h.angle + Math.PI);
+  }
+  // Wenna sits with her; Nan Odra goes to eat at the keepers' desk
+  seat() {
+    const g = this.game, H = ROOMS.cradles, wn = this.npc('bl_wenna'), od = this.npc('bl_odra'), R = g.rooms.bl_cradles, L = (p) => ({ x: R.center.x + p.x, z: R.center.z + p.z });
+    this.chain([['bl_wenna', 'wk_we_go'], ['bl_odra', 'wk_od_lid'], ['bl_wenna', 'wk_we_notyet']], () => {
+      handBowl(wn, false); handBowl(od, true);
+      this.story.refreshCast();
+      this.walkTo(od, [...ODRA_WAY.map(L), { x: H.stool.x, z: H.stool.z - 0.45 }], () => { handBowl(od, false); this.C?.setBowl(true); this.chairBusy = false; this.story.refreshCast(); g.updateObjective(); });
     });
   }
 
@@ -582,13 +696,16 @@ export class Cradles extends BlChapter {
     switch (id) {
       case 'bl_wenna':
         if (!f.wk_started) return false;
+        if (this.chairBusy) return false;
+        if (f.wk_chair) return c([['bl_wenna', 'wk_we_chair']]);   // (THE SECOND SHIFT: in the chair by the cradle)
+        if (f.wk_food) return c([['bl_wenna', 'wk_we_bowl']]);
         if (f.wk_awake) return c([['bl_wenna', 'wk_we_after']]);
         if (!f.wk_in) return c([['bl_wenna', 'wk_we_3']]);
         return c([['bl_wenna', !f.wk_card ? 'wk_we_card0' : f.wk_solo && !f.wk_rung ? 'wk_we_bell' : 'wk_we_wait']]);
       case 'bl_garrow': return c([['bl_garrow', f.wk_awake ? 'wk_ga_after' : f.wk_bay2 ? 'wk_ga_bay2' : 'wk_ga_2']]);
-      case 'bl_odra': return c([['bl_odra', f.wk_awake ? 'wk_od_mine' : 'wk_od_1']]);
+      case 'bl_odra': if (this.chairBusy) return false; return c([['bl_odra', f.wk_chair ? 'wk_od_soup' : f.wk_food ? 'wk_od_bowl' : f.wk_awake ? 'wk_od_mine' : 'wk_od_1']]);
       case 'bl_jory': return c([['bl_jory', 'wk_jo_after']]);
-      case 'tessa': return c([['tessa', f.wk_awake ? 'wk_te_3' : 'wk_te_wait']]);
+      case 'tessa': if (f.wk_awake && !f.wk_done && !this.carry) return this.tessaEnd(); return c([['tessa', f.wk_awake ? 'wk_te_3' : 'wk_te_wait']]);
       case 'bl_fennick': return c([['bl_fennick', 'bh_fe_after']]);
       case 'doran': return c([['doran', 'bh_do_wait']]);
     }

@@ -28,7 +28,9 @@ export const steps = [
     let t = 0; while (!G.story.cur.stormy && t < 120) { G.step(0.25); t += 0.25; if (G.state !== 'play') P.settle(); }
     // (DESERT-BAR: the notebook is on the foreman's desk inside the office: in through the office's door, Search at the desk)
     const e = P.enter('ih_post_cabin0'); const d = G.story.cur.deskSpot();
-    const r = d ? P.use(d.at.x, d.at.z, { near: 1.2, kind: 'c4desk' }) : { r: 'no desk' }; P.wait(1); P.settle();
+    // (from the place to stand before it, as the prompt measures it — dig.js: within 1.5 m of front.desk; walked to the desk's
+    //  middle the bot came round to its side, 1.67 m off that place, and the room's Look answered: LBA3-RUN progression)
+    const r = d ? P.use(d.x, d.z, { near: 0.6, kind: 'c4desk' }) : { r: 'no desk' }; P.wait(1); P.settle();
     const out = P.exitTo('ih_post_cabin0-out');
     return { waited: t, stormy: G.story.cur.stormy, enter: e.r, ...r, out: out.to, notebook: G.flags.c4_notebook, fail: G.flags.c4_notebook ? null : 'notebook' };
   }],

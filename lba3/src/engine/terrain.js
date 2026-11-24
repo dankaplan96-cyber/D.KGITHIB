@@ -21,13 +21,28 @@ const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVary
 // the five tiles a pixel before, 1.28 after): the rock's 3 triplanar reads where its weight can be > 0, the grass where
 // its colour is used (it is also the wobble of the soil's and the paving's edges), the sand's 2, the dirt and the
 // cobbles where theirs is > 0, every read with explicit gradients so Direct3D keeps the branches (PERF-GPU 3).
+// LAWN-EDGES (P112): a terrain may carry, per grid point, the signed distance to its paving's edge and the width of an
+// earth band inside it (Terrain edgeFn; the `edge` attribute, int16 over ±EDGE_RANGE m; EDGE_OFF where there is none).
+// The distance is linear across a triangle along a straight edge, so the cut at 0 is a straight line on the ground,
+// not the grid's zig-zag: the paving's share is set by it per pixel (anti-aliased over about a pixel), and the band's
+// earth takes the grass's share up to its width. Only where the distance is under EDGE_RANGE − 0.05 (near an edge).
+export const EDGE_RANGE = 4, EDGE_OFF = EDGE_RANGE;
+const EDGE_CUT = `
+          if (vEdge.x < ${EDGE_RANGE - 0.05}) {
+            float aa = clamp(ew * 0.6, 0.004, 0.25);
+            float pe = 1.0 - smoothstep(-aa, aa, vEdge.x);
+            float tot = sp.x + sp.y + sp.z + sp.w + sp2, oth = tot - sp2, rem = tot * (1.0 - pe);
+            if (oth > 0.002) sp *= rem / oth; else sp = vec4(0.0, 0.0, 0.0, rem);   // (beside the line, a point painted paving lends its share to the earth)
+            sp2 = tot * pe;
+            if (vEdge.y > 0.05) { float be = 1.0 - smoothstep(vEdge.y - aa, vEdge.y + aa, vEdge.x); float g = sp.x * be; sp.x -= g; sp.w += g; }
+          }`;
 function splatShader(S) {
   const nv = S.nrmVarying;
-  const vpre = 'attribute vec4 splat; attribute float splat2; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos;\n'
+  const vpre = 'attribute vec4 splat; attribute float splat2; attribute vec2 edge; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
-  const vert = 'vSplat = splat; vSplat2 = splat2; vWPos = (modelMatrix * vec4(position, 1.0)).xyz;\n'
+  const vert = `vSplat = splat; vSplat2 = splat2; vEdge = edge * ${EDGE_RANGE}.0; vWPos = (modelMatrix * vec4(position, 1.0)).xyz;\n`
     + (nv ? 'vWNrm = normalize(mat3(modelMatrix) * normal);\n' : '#ifdef FLAT_SHADED\nvWNrm = normalize(mat3(modelMatrix) * normal);\n#endif\n');
-  const fpre = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos;\n'
+  const fpre = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
   // SHADE-COST: the world normal from the view-space one three interpolates anyway (vNormal), turned back by the view's
   // rotation: the same direction (a rotation commutes with the interpolation), and the weights below do not depend on
@@ -35,7 +50,7 @@ function splatShader(S) {
   const wn = nv ? 'normalize(vWNrm)' : '\n#ifdef FLAT_SHADED\nnormalize(vWNrm)\n#else\n(vec4(vNormal, 0.0) * viewMatrix).xyz\n#endif\n';
   let frag;
   if (S.diag === 'implicit') frag = `
-          vec2 tuv = vWPos.xz * 0.22;
+          vec2 tuv = vWPos.xz * 0.22; float ew = fwidth(vEdge.x);
           vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
           vec3 rock = texture2D(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14).rgb * bw.x
                     + texture2D(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14).rgb * bw.z
@@ -57,7 +72,7 @@ function splatShader(S) {
             float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
             float dk = smoothstep(0.42, 0.58, d);
             sp.x = gs * (1.0 - dk); sp.w = gs * dk;
-          }
+          }${EDGE_CUT}
           vec3 sandT = vec3(0.0);
           if (sp.y > 0.003) {
             vec3 sand1 = texture2D(tSand, tuv * 1.2).rgb;
@@ -75,6 +90,7 @@ function splatShader(S) {
           // Citadel's street ~half the screen) with their weight 0 on most of them; and Direct3D cannot keep a branch
           // around implicit-gradient reads (texture2D), so the sand's branch ran everywhere too. Same pixels.
           vec3 dPx = dFdx(vWPos), dPy = dFdy(vWPos);
+          float ew = fwidth(vEdge.x);   // (LAWN-EDGES: before any branch)
           vec2 gx = dPx.xz * 0.22, gy = dPy.xz * 0.22;
           vec4 sp = vSplat; float sp2 = vSplat2;
           // cliffs: triplanar rock so steep faces show undistorted strata
@@ -113,7 +129,7 @@ function splatShader(S) {
             float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
             float dk = smoothstep(0.42, 0.58, d);
             sp.x = gs * (1.0 - dk); sp.w = gs * dk;
-          }
+          }${EDGE_CUT}
           // sand: a second, turned and coarser sample modulates the first so the tile's ripples never line up
           // into rows or repeat at one visible interval (POLISH-AUDIT #16)
           // (only where there is sand: elsewhere, Citadel's grass for one, it costs no texture reads at all; the weight
@@ -149,9 +165,9 @@ function splatShader(S) {
 export class Terrain {
   // squares (HEADING-LOAD-2): > 0 draws the tiles' cells in squares of that many cells a side, all in one BatchedMesh
   // whose squares three culls one by one against the view (the caller passes it only with WEBGL_multi_draw)
-  constructor({ size, segs, heightFn, colorFn, splatFn, textures, cx = 0, cz = 0, tile = 70, squares = 0 }) {
+  constructor({ size, segs, heightFn, colorFn, splatFn, edgeFn = null, textures, cx = 0, cz = 0, tile = 70, squares = 0 }) {
     this.tile = tile; this.squares = squares;
-    this.splatFn = splatFn;
+    this.splatFn = splatFn; this.edgeFn = edgeFn;   // (LAWN-EDGES: edgeFn(x, z, h, e) sets e = [distance to the paving's edge, band width]; none: no edge)
     this.tex = textures;
     this.size = size;
     this.segs = segs;
@@ -209,6 +225,7 @@ export class Terrain {
     const col = new Float32Array(n * n * 3);
     const spl = new Float32Array(n * n * 4);
     const spl2 = new Float32Array(n * n);
+    const edg = new Int16Array(n * n * 2).fill(32767), e = [EDGE_OFF, 0], q16 = (v) => Math.round(Math.max(-1, Math.min(1, v / EDGE_RANGE)) * 32767);
     const w = [0, 0, 0, 0, 0];
     const c = new THREE.Color();
     for (let j = 0; j < n; j++) {
@@ -225,6 +242,7 @@ export class Terrain {
           const sum = w[0] + w[1] + w[2] + w[3] + w[4] || 1;
           for (let q = 0; q < 4; q++) spl[k * 4 + q] = w[q] / sum;
           spl2[k] = w[4] / sum;
+          if (this.edgeFn) { e[0] = EDGE_OFF; e[1] = 0; this.edgeFn(x, z, h, e); edg[k * 2] = q16(e[0]); edg[k * 2 + 1] = q16(e[1]); }
         }
       }
     }
@@ -246,6 +264,7 @@ export class Terrain {
     if (this.splatFn && this.tex) {
       geo.setAttribute('splat', new THREE.BufferAttribute(spl, 4));
       geo.setAttribute('splat2', new THREE.BufferAttribute(spl2, 1));
+      geo.setAttribute('edge', new THREE.BufferAttribute(edg, 2, true));   // (LAWN-EDGES; every splat terrain has it: one shader program)
       this._splatMaterial(mat);
     }
     // drawn in tiles of TILE × TILE cells sharing the vertex data, each with its own bounds, so the camera

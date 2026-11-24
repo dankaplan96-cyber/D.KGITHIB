@@ -29,7 +29,7 @@ Object.assign(STR.he, {
 
 // the model loads once, when this module is first imported (long before the island is built)
 let DATA = null;
-const LOAD = fetch(new URL('../../assets/poly/dinofly.json', import.meta.url))
+const LOAD = fetch('assets/poly/dinofly.json')
   .then((r) => (r.ok ? r.json() : null)).then((j) => (DATA = j)).catch(() => null);
 
 const D = Math.PI / 180;

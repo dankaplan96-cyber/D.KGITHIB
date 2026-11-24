@@ -56,7 +56,7 @@ export function pumpAngle(t) {
   if (t < Q.lift + Q.push) return up + (dn - up) * smooth((t - Q.lift) / Q.push);
   return dn * (1 - smooth((t - Q.lift - Q.push) / Q.back));
 }
-const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
+const CRAFT = new Set(['tinker', 'lean', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 // the actions in which the player's character keeps his feet planted (Rig._plant)
@@ -584,6 +584,14 @@ export class Rig {
       p.hipsY = 0.94 + b; p.torsoX = 0.28 + w2 * 0.015; p.headX = 0.3;
       T.armL = -0.62; T.elL = -1.25; T.armR = -0.7 + w * 0.06; T.elR = -1.15 + w * 0.12;
       T.legL = 0.02; T.legR = -0.04; T.kneeL = 0.06; T.kneeR = 0.04;
+    } else if (a === 'lean') {
+      // (P119) leaning over a table on both hands, looking at what lies there (a book, a map, a plan): still — no working
+      // loop. 'tinker' was used for this (the opening's notebook) and its work went on under hands held flat on the table:
+      // the right arm pumping at 1 Hz and the chest swaying at 0.5 Hz, the head bobbing 2 cm in the close-up — rocking.
+      // Only a slower, smaller breath stays
+      p.hipsY = 0.945 + b * 0.5; p.torsoX = 0.34 + Math.sin(this.t * 1.3) * 0.004; p.headX = 0.3;
+      T.armL = -0.55; T.elL = -0.75; T.armR = -0.55; T.elR = -0.75;
+      T.legL = 0.03; T.legR = -0.03; T.kneeL = 0.05; T.kneeR = 0.05;
     } else if (a === 'kneelWork' || a === 'kneelLook' || a === 'kneelShow') {
       // a child kneeling on the floor over a project
       p.hipsY = 0.52 + b; T.legL = -1.35; T.legR = -1.2; T.kneeL = 2.3; T.kneeR = 2.1; T.footL = 0.4; T.footR = 0.4;
@@ -1659,7 +1667,10 @@ export class Rig {
     // (ARM-CLEAR: last frame's forward turn off the arms is taken off first, so the joints ease from their own pose; not where
     //  something after the update has set the arm itself)
     const AW = this._ac?.wx;
-    if (AW) { if (AW[0] !== null && j.armL.sh.rotation.x === AW[0]) j.armL.sh.rotation.x += this._ac.L[1]; if (AW[1] !== null && j.armR.sh.rotation.x === AW[1]) j.armR.sh.rotation.x += this._ac.R[1]; }
+    // (P119: "where it is" within a hair, not to the last bit — a story scene's pose layer added on top and taken off again
+    //  (opening.js applyBend: a shoulder's bend, a line's beat) leaves (x + v) - v, which is x only nine frames in ten:
+    //  the tenth kept last frame's turn in the joint and turned it again, the arm creeping forward under a beat)
+    if (AW) { if (AW[0] !== null && Math.abs(j.armL.sh.rotation.x - AW[0]) < 1e-9) j.armL.sh.rotation.x += this._ac.L[1]; if (AW[1] !== null && Math.abs(j.armR.sh.rotation.x - AW[1]) < 1e-9) j.armR.sh.rotation.x += this._ac.R[1]; }
     set(j.armL.sh, T.armL, 'x', Ru); set(j.armR.sh, T.armR, 'x', Ru);
     set(j.armL.el, T.elL, 'x', Ru); set(j.armR.el, T.elR, 'x', Ru);
     set(j.armR.sh, T.twR, 'y', Ru); set(j.armL.sh, -(T.twL ?? 0), 'y', Ru);
@@ -2177,28 +2188,52 @@ function acArmShare(geo, v, names) {
   return w;
 }
 // a body's surface round its middle (bind space, the y axis): the greatest radius per 2 cm of height and 1/32 of a turn
-function acProfiles(mesh) {
-  const geo = mesh.geometry, names = mesh.skeleton.bones.map((b) => b.name), key = 'armClear:' + names.join(',');
-  if (geo.userData[key] !== undefined) return geo.userData[key];
-  const P = geo.attributes.position;
-  if (!geo.attributes.skinIndex) return (geo.userData[key] = null);
-  const n = P.count, grp = new Int8Array(n), bm = mesh.bindMatrix, v = new THREE.Vector3();
-  const X = new Float32Array(n * 3);
-  let y0 = Infinity, y1 = -Infinity;
-  for (let i = 0; i < n; i++) {
-    const nm = names[acDominant(geo, i)];
-    grp[i] = acArmShare(geo, i, names) > 0.08 ? 0 : AC_T.has(nm) ? 1 : AC_H.has(nm) ? 2 : 0;   // (cloth tied to an arm, Twinsen's cape: not the body)
-    v.fromBufferAttribute(P, i).applyMatrix4(bm); X[i * 3] = v.x; X[i * 3 + 1] = v.y; X[i * 3 + 2] = v.z;
-    if (grp[i]) { y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); }
+// (ARM-COST, LBA3-RUN performance: made by a job that can stop at a time and go on later — armClearWarm makes them ahead
+//  of the characters' first poses, behind an arrival's black and in a frame's spare time in play: made at a character's
+//  first pose it took 4-54 ms of that one frame (SwiftShader's machine), ten times in Zeelich's first minute. The same
+//  profile either way; a first pose that comes before its job is done finishes it there)
+const AC_JOBS = new WeakMap();
+const acKey = (mesh) => 'armClear:' + mesh.skeleton.bones.map((b) => b.name).join(',');
+function acJob(mesh, key = acKey(mesh)) {
+  const geo = mesh.geometry;
+  if (geo.userData[key] !== undefined) return null;
+  let J = AC_JOBS.get(geo);
+  if (!J || J.key !== key) AC_JOBS.set(geo, (J = { key, mesh, ph: 0, i: 0 }));
+  return J;
+}
+// on until done (true: the profile is in geo.userData[key]) or until performance.now() passes `until`
+function acRun(J, until = Infinity) {
+  const mesh = J.mesh, geo = mesh.geometry, key = J.key;
+  const fin = (v) => { geo.userData[key] = v; AC_JOBS.delete(geo); return true; };
+  if (J.ph === 0) {
+    if (!geo.attributes.skinIndex) return fin(null);
+    const n = geo.attributes.position.count;
+    Object.assign(J, { ph: 1, i: 0, n, grp: new Int8Array(n), X: new Float32Array(n * 3), y0: Infinity, y1: -Infinity, names: mesh.skeleton.bones.map((b) => b.name) });
   }
-  if (!(y1 > y0)) return (geo.userData[key] = null);
-  const ny = Math.ceil((y1 - y0) / AC_DY) + 2, T = new Float32Array(ny * AC_NS), H = new Float32Array(ny * AC_NS);
+  if (J.ph === 1) {
+    const P = geo.attributes.position, bm = mesh.bindMatrix, v = _acV, { grp, X, names, n } = J;
+    let i = J.i, y0 = J.y0, y1 = J.y1;
+    for (; i < n; i++) {
+      if ((i & 255) === 0 && i > J.i && performance.now() > until) break;
+      const nm = names[acDominant(geo, i)];
+      grp[i] = acArmShare(geo, i, names) > 0.08 ? 0 : AC_T.has(nm) ? 1 : AC_H.has(nm) ? 2 : 0;   // (cloth tied to an arm, Twinsen's cape: not the body)
+      v.fromBufferAttribute(P, i).applyMatrix4(bm); X[i * 3] = v.x; X[i * 3 + 1] = v.y; X[i * 3 + 2] = v.z;
+      if (grp[i]) { y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); }
+    }
+    J.i = i; J.y0 = y0; J.y1 = y1;
+    if (i < n) return false;
+    if (!(y1 > y0)) return fin(null);
+    const ny = Math.ceil((y1 - y0) / AC_DY) + 2, idx = geo.index ? geo.index.array : null;
+    Object.assign(J, { ph: 2, i: 0, ny, T: new Float32Array(ny * AC_NS), H: new Float32Array(ny * AC_NS), idx, nt: idx ? idx.length / 3 : n / 3 });
+  }
+  const { grp, X, y0, T, H, idx, nt } = J;
   const put = (R, x, y, z) => {
     const yb = Math.round((y - y0) / AC_DY), s = Math.floor((Math.atan2(x, z) / (2 * Math.PI) + 0.5) * AC_NS) % AC_NS, r = Math.hypot(x, z), k = yb * AC_NS + s;
     if (r > R[k]) R[k] = r;
   };
-  const idx = geo.index ? geo.index.array : null, nt = idx ? idx.length / 3 : n / 3;
-  for (let t = 0; t < nt; t++) {
+  let t = J.i;
+  for (; t < nt; t++) {
+    if ((t & 31) === 0 && t > J.i && performance.now() > until) break;
     const a = idx ? idx[t * 3] : t * 3, b = idx ? idx[t * 3 + 1] : t * 3 + 1, c = idx ? idx[t * 3 + 2] : t * 3 + 2;
     if (!grp[a] || !grp[b] || !grp[c]) continue;
     const R = (grp[a] === 1) + (grp[b] === 1) + (grp[c] === 1) >= 2 ? T : H;
@@ -2206,7 +2241,39 @@ function acProfiles(mesh) {
     const m = Math.max(1, Math.ceil(Math.max(Math.hypot(bx, by, bz), Math.hypot(cx, cy, cz), Math.hypot(bx - cx, by - cy, bz - cz)) / 0.012));
     for (let i = 0; i <= m; i++) for (let j = 0; i + j <= m; j++) { const u = i / m, w = j / m; put(R, ax + bx * u + cx * w, ay + by * u + cy * w, az + bz * u + cz * w); }
   }
-  return (geo.userData[key] = { y0, ny, T, H });
+  J.i = t;
+  if (t < nt) return false;
+  return fin({ y0, ny: J.ny, T, H });
+}
+const _acV = new THREE.Vector3();
+function acProfiles(mesh) {
+  const key = acKey(mesh), J = acJob(mesh, key);
+  if (J) acRun(J);
+  return mesh.geometry.userData[key];
+}
+// (a rig a profile is made for: armClearInit's own conditions)
+function acRigOk(rig) {
+  const j = rig.j, mesh = rig.mesh;
+  if (!mesh?.isSkinnedMesh || !j?.armL?.el || !j.armL.hand || !j.armR?.hand || !j.torso || !j.hips) return false;
+  const sk = mesh.skeleton;
+  return sk.bones.indexOf(j.torso) >= 0 && sk.bones.indexOf(j.hips) >= 0 && j.armL.sh.parent === j.torso && j.armR.sh.parent === j.torso && j.torso.parent === j.hips;
+}
+// ARM-COST: the body profiles of these rigs (in the caller's order: nearest first) made ahead of their first poses, for at
+// most about `ms`; true while one is left (call again). A rig whose profile is made, or cannot be, is noted and passed
+// (in a set of its own: no new field on the rigs, whose shape the per-frame code is compiled for).
+const AC_WARMED = new WeakSet();
+export const armClearWarmed = (r) => !r || AC_WARMED.has(r) || r._ac !== undefined;
+export function armClearWarm(rigs, ms) {
+  const until = performance.now() + ms;
+  for (const r of rigs) {
+    if (armClearWarmed(r)) continue;
+    if (!acRigOk(r)) { AC_WARMED.add(r); continue; }
+    const J = acJob(r.mesh);
+    if (J && !acRun(J, until)) return true;
+    AC_WARMED.add(r);
+    if (performance.now() > until) return true;
+  }
+  return false;
 }
 // the forearms' and hands' points (each in its bone's own space at rest): the skinned ones whose main bone is the elbow or
 // the hand (every skinned surface on the skeleton: a sculpted body's arms are a mesh of their own) and the rigid hands
@@ -2249,15 +2316,15 @@ function acArmPoints(rig) {
   return out;
 }
 function armClearInit(rig) {
-  const j = rig.j, mesh = rig.mesh;
-  if (!mesh?.isSkinnedMesh || !j?.armL?.el || !j.armL.hand || !j.armR?.hand || !j.torso || !j.hips) return null;
-  const sk = mesh.skeleton, ti = sk.bones.indexOf(j.torso), hi = sk.bones.indexOf(j.hips);
-  if (ti < 0 || hi < 0 || j.armL.sh.parent !== j.torso || j.armR.sh.parent !== j.torso || j.torso.parent !== j.hips) return null;
+  if (!acRigOk(rig)) return null;
+  const j = rig.j, mesh = rig.mesh, sk = mesh.skeleton, ti = sk.bones.indexOf(j.torso), hi = sk.bones.indexOf(j.hips);
   const prof0 = acProfiles(mesh);
   if (!prof0) return null;
   // (only below the shoulders: round them the body is no longer one surface round its middle — the shoulder's cap stood out
   //  over a forearm passing in front of it, Twinsen's run, as if the arm were inside it)
   const si = sk.bones.indexOf(j.armL.sh), shY = -sk.boneInverses[si].elements[13], top = Math.max(0, Math.min(prof0.ny, Math.floor((shY - 0.08 - prof0.y0) / AC_DY)));
+  // (ARM-COST, LBA3-RUN performance: each height's greatest radius over every bearing, once per body — acDepth's bound)
+  if (!prof0.TM) { const rm = (R) => { const M = new Float32Array(prof0.ny); for (let y = 0; y < prof0.ny; y++) for (let b = 0; b < AC_NS; b++) if (R[y * AC_NS + b] > M[y]) M[y] = R[y * AC_NS + b]; return M; }; prof0.TM = rm(prof0.T); prof0.HM = rm(prof0.H); }
   const prof = { ...prof0, ny: top };
   const pts = acArmPoints(rig);
   if (!pts.L.el.length && !pts.L.hand.length) return null;
@@ -2270,7 +2337,7 @@ function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
   const pr = D.prof, y0 = pr.y0, ny = pr.ny;
   let worst = -Infinity;
   for (let pass = 0; pass < 2; pass++) {
-    const R = pass ? pr.H : pr.T;
+    const R = pass ? pr.H : pr.T, RM = pass ? pr.HM : pr.TM;
     // (to the body's rest space: the chest's part through the torso's rest frame, the pelvis's part through the hips', the
     //  torso's own turn on the hips between)
     if (pass) _acA.multiplyMatrices(D.HB, Mtorso).multiply(_acS); else _acA.multiplyMatrices(D.TB, _acS);
@@ -2284,10 +2351,17 @@ function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
         const x = e[0] * px + e[4] * py + e[8] * pz + e[12], y = e[1] * px + e[5] * py + e[9] * pz + e[13], z = e[2] * px + e[6] * py + e[10] * pz + e[14];
         const yb = Math.round((y - y0) / AC_DY);
         if (yb < 0 || yb >= ny) continue;
+        // (ARM-COST: a point that could not be deeper than the deepest so far even at the height's greatest radius is
+        //  passed without its bearing — the same answer: the bearing's radius is never more than that, and the deepest is
+        //  all this returns: an arm well clear of the body costs a square root a point, not an atan2 and two look-ups)
+        const rm = RM[yb];
+        if (!rm) continue;
+        const r = Math.hypot(x, z);
+        if (rm - r + AC_GAP <= worst) continue;
         const u = (Math.atan2(x, z) / (2 * Math.PI) + 0.5) * AC_NS - 0.5, s0 = Math.floor(u), a0 = (s0 + AC_NS) % AC_NS, a1 = (s0 + 1) % AC_NS;
         const r0 = R[yb * AC_NS + a0], r1 = R[yb * AC_NS + a1];
         if (!r0 && !r1) continue;
-        const d = Math.max(r0, r1) - Math.hypot(x, z) + AC_GAP;   // (the larger of the two bearings: a round belly between them is not cut short)
+        const d = Math.max(r0, r1) - r + AC_GAP;   // (the larger of the two bearings: a round belly between them is not cut short)
         if (d > worst) worst = d;
       }
     }
@@ -2297,7 +2371,12 @@ function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
 // the least turn out (spread) and forward that clears a side: the mix from how each turn changes the depth, then halved in
 // on the least amount that clears (at most AC_MAX)
 function acSolve(D, s, sh, sgn, Mel, Mhand, Mtorso) {
-  const pen = (dz, dx) => acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso), K = D.k[s];
+  // (ARM-NAN, LBA3-RUN progression: acDepth is -Infinity when no arm point lies in the body's rows — a turn of the shoulder
+  //  can lift the last one above them. The gradient below then came out infinite and its direction Infinity/Infinity = NaN:
+  //  the shoulder's rotation NaN, kept by the easing for the rest of the session — Twinsen's arm and hand gone, every ball
+  //  thrown from that hand flying as NaN and never striking anything (the harbour bell in chapter 1: no way on). Clear by
+  //  a metre counts the same as clear by more)
+  const pen = (dz, dx) => Math.max(-1, acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso)), K = D.k[s];
   // (last frame's answer, while it still just clears — within 1 cm past the gap —: one look a frame; the poses change slowly)
   if (K[0] > 0) { const p = pen(K[0] * K[1], K[0] * K[2]); if (p <= 0 && p > -0.015) { D.dir[0] = K[1]; D.dir[1] = K[2]; return K[0]; } }
   const p0 = pen(0, 0);
@@ -2333,11 +2412,14 @@ Rig.prototype._armClear = function (dt, a) {
         _acC.copy(arm.el.matrix); _acD.multiplyMatrices(arm.el.matrix, arm.hand.matrix);
         const k = acSolve(D, s, arm.sh, sgn, _acC, _acD, Mtorso);
         T[0] = k * D.dir[0]; T[1] = k * D.dir[1]; T[2] = 1;
+        // (ARM-NAN: an answer that is not a number is no answer — the arm as posed, the solve from scratch next time)
+        if (!Number.isFinite(T[0]) || !Number.isFinite(T[1])) { T[0] = T[1] = 0; D.k[s][0] = 0; }
       }
       tz = T[0]; tx = T[1];
     } else D.t[s][2] = 0;
     const rd = off ? 30 : 6;   // (into a strike or a throw: its own arm within a few frames)
     st[0] = damp(st[0], tz, tz > st[0] ? 20 : rd, dt); st[1] = damp(st[1], tx, tx > st[1] ? 20 : rd, dt);
+    if (!(st[0] < 1e-4 && st[1] < 1e-4) && !(Number.isFinite(st[0]) && Number.isFinite(st[1]))) st[0] = st[1] = 0;   // (ARM-NAN: never into the joint)
     if (st[0] < 1e-4 && st[1] < 1e-4) { st[0] = st[1] = 0; D.wx[w] = null; continue; }
     arm.sh.rotation.z += sgn * st[0];
     arm.sh.rotation.x -= st[1];

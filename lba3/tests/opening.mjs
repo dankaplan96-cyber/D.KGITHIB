@@ -23,9 +23,12 @@
 //      shade; Arthur's left hand on his hull, the mast seated by his right hand (home in its step before he lets go, and
 //      not moving as he does), then that hand on the deck; Zoé's palms on the tray's soil; the screwdriver not moving as
 //      it is laid down; everybody's standing feet on the ground
-//  12. LBA3-RUN, the notebook: the history's four captions in order, then where and when; Twinsen's right hand on the
-//      page's corner as it lifts (within 3 cm); the page's picture laid over the screen gone after the island, the camera's
-//      up back to the world's (the straight-down view turns it), every skip leaves neither behind
+//  12. LBA3-RUN, the notebook: the history's four captions in order, then where and when; (P122, the user 24.11: "make the
+//      notebook film without the hands") nothing of Twinsen (hands, sleeves, forearms) seen in any shot over the book, no
+//      hand in his close-up (the frame drawn without them is the same); each page turns by itself, its top outer corner
+//      up first, flat on the right before and on the left after, its two paper sounds at the lift and the landing; the page's
+//      picture laid over the screen gone after the island, the camera's up back to the world's (the straight-down view
+//      turns it), every skip leaves neither behind
 //   (times below are the film's own "old" seconds where they name its beats, put on the scene's clock by N(): the notebook
 //   came first and the outside shot was cut, src/game/story/opening.js newOf)
 //   (R5: the scene's dips now come back up on its own clock, so 7 and 8 cover the whole scene: with wall-clock timers the
@@ -34,8 +37,10 @@
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch as watchPage, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
+import { serveLocal } from './lib/serve.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+if (process.env.SERVE) await serveLocal(page);   // (SERVE=1: this checkout's files without an http.server)
 const errs = watchPage(page);
 const ev = (f, a) => page.evaluate(f, a);
 const { check, done } = checker({ info: 'always' });
@@ -137,6 +142,9 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
   const P3 = () => new v.constructor();
   let heldPrev = null;
   const cast = { twinsen: G.hero, zoe: G.npcs.find((n) => n.def.id === 'zoe'), arthur: G.npcs.find((n) => n.def.id === 'arthur') };
+  // (P120: Zoé is drawn from zoe.json with the spline lock of her tie and the twinsen head shape: her drawn mesh is not the
+  //  file's size either; it is the poly cast's model)
+  cast.zoe.rig.root.traverse((m) => { if (m.isSkinnedMesh && !polySizes[m.geometry.attributes.position.count]) polySizes[m.geometry.attributes.position.count] = ['zoe']; });
   const seen = new Set(), notPoly = [], pops = [], subsAt = [], solids = [], bumps = [];
   let prev = {}, lastSub = '', mid = null;
   // R5: Zoé's right hand against the tap's handle (a disc of the cross's radius) and the stream's axis
@@ -147,8 +155,28 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
     for (let i = 0; i < si.count; i++) for (let k = 0; k < 4; k++) if (si.getComponent(i, k) === bi && sw.getComponent(i, k) > 0.5) { hIdx.push(i); break; } }
   const handPts = () => { cast.zoe.rig.root.updateMatrixWorld(true); return hIdx.map((i) => zMesh.getVertexPosition(i, new v.constructor()).applyMatrix4(zMesh.matrixWorld)); };
   const TURNS = NW([[41.5, 42.2], [44.05, 44.5], [58.6, 59.1], [69.45, 69.85]]), WET = [N(60.3), N(62.0)];
-  // LBA3-RUN: the notebook's page turns (his right hand on the corner as it lifts), its captions, the page's picture
-  const NBC = c.notebook, page = { n: 0, max: 0, off: [] }, capsAt = [];
+  // LBA3-RUN: the notebook's captions, the page's picture; P122: no hands in its shots, the pages turning by themselves
+  const NBC = c.notebook, capsAt = [], nohands = { over: 0, close: 0, seen: [] }, turn = { flatR: 0, flatL: 0, cornerFirst: 0, bad: [] }, paper = [];
+  // (P122) what of Twinsen the camera really shows, behind the table and his own body included: the frame drawn without
+  // him (key 'all') or with a part folded away (an arm's joint: 'hand', the hands; 'sh', the whole arm, sleeve to hand —
+  // the bone scaled to nothing) against the frame drawn as it is, the shadows and the motion smoothing held; the pixels
+  // that differ
+  const gl = G.renderer.renderer.getContext(), GW = gl.drawingBufferWidth, GH = gl.drawingBufferHeight, bufB = new Uint8Array(GW * GH * 4), bufC = new Uint8Array(GW * GH * 4);
+  const armsSeen = (key) => {
+    const R = G.renderer, smap = R.renderer.shadowMap, au = smap.autoUpdate, M = R.motion, hold = M?.hold, root = G.hero.rig.root;
+    const bones = key === 'all' ? [] : ['L', 'R'].map((sd) => G.hero.rig.j['arm' + sd][key]), sc = bones.map((b) => b.scale.clone()), vis = root.visible;
+    R.render();
+    smap.autoUpdate = false; if (M) M.hold = true;
+    try {
+      bones.forEach((b) => b.scale.setScalar(1e-3)); if (key === 'all') root.visible = false; root.updateMatrixWorld(true);
+      R.render(); gl.readPixels(0, 0, GW, GH, gl.RGBA, gl.UNSIGNED_BYTE, bufB);
+    } finally { bones.forEach((b, k) => b.scale.copy(sc[k])); root.visible = vis; root.updateMatrixWorld(true); }
+    R.render(); gl.readPixels(0, 0, GW, GH, gl.RGBA, gl.UNSIGNED_BYTE, bufC);
+    smap.autoUpdate = au; if (M) M.hold = hold;
+    let n = 0;
+    for (let k = 0; k < bufB.length; k += 4) if (Math.abs(bufB[k] - bufC[k]) + Math.abs(bufB[k + 1] - bufC[k + 1]) + Math.abs(bufB[k + 2] - bufC[k + 2]) > 24) n++;
+    return n;
+  };
   let lastCap = '', overlaySeen = false;
   const feetPrev = {}, footJumps = [];
   // OPEN-FILM: each line's speaker moves their mouth (the harbour's two included); no line plays the rig's looping talk
@@ -156,7 +184,7 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
   const speakerOf = { n_zoe: cast.zoe, n_hero: cast.twinsen, n_arthur: cast.arthur, n_worker: c.extras?.worker, n_resident: c.extras?.resident };
   const mouthBy = {}, talking = [], aerial = { min: 99, at: null }, footDown = [], stepsHeard = [];
   const play0 = G.audio.play.bind(G.audio);
-  G.audio.play = (n, ...r) => { if (/^step-/.test(n) && G.cine) stepsHeard.push(+G.cine.t.toFixed(3)); return play0(n, ...r); };
+  G.audio.play = (n, ...r) => { if (/^step-/.test(n) && G.cine) stepsHeard.push(+G.cine.t.toFixed(3)); if (n === 'paper' && G.cine) paper.push(+G.cine.t.toFixed(3)); return play0(n, ...r); };
   const zf = { L: { h: null, hi: -1, down: false, t: 0 }, R: { h: null, hi: -1, down: false, t: 0 } };
   let camPrev = null;
   // OPEN-3: every actor's path, frame by frame, stays out of the solids (walls, furniture, counters, fences,
@@ -277,8 +305,23 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
         f.h = h; f.t = +c.t.toFixed(3);
       }
     }
-    if (NBC && G.room === HOUSE && c.t < NBC.end) {
-      for (const [i, t0] of NBC.turns.entries()) if (c.t >= t0 + 0.05 && c.t <= t0 + 0.4) { G.scene.updateMatrixWorld(); rec(page, CT.handTo(cast.twinsen, 'R', NBC.leaves[i], { tool: false }), c.t); }
+    if (NBC && G.room === HOUSE && c.t < NBC.end && !dark) {
+      // (P122) nothing of him in the shots over the book (no hand, sleeve or forearm, nor his medal on its cord); no hand in
+      // his close-up (every 6th frame: three draws each)
+      if (i % 6 === 0) {
+        const close = c.t >= NBC.closeUp[0] && c.t < NBC.closeUp[1], px = armsSeen(close ? 'hand' : 'all');
+        if (close) nohands.close++; else nohands.over++;
+        if (px > 0 && nohands.seen.length < 6) nohands.seen.push({ t: +c.t.toFixed(2), close, px });
+      }
+      // each page turns by itself: flat on its right page before, over on the left after, its top outer corner up first
+      const [SEG, ROWS] = NBC.leafGrid, NV = ROWS + 1;
+      for (const [i, t0] of NBC.turns.entries()) {
+        const P = NBC.leaves[i].geometry.attributes.position, near = SEG * NV + ROWS, far = SEG * NV;
+        let minX = 9, maxX = -9; for (let k = 0; k < P.count; k++) { minX = Math.min(minX, P.getX(k)); maxX = Math.max(maxX, P.getX(k)); }
+        if (c.t < t0 - 0.02) { if (minX > -0.001) turn.flatR++; else if (turn.bad.length < 6) turn.bad.push({ t: +c.t.toFixed(2), leaf: i, early: +minX.toFixed(3) }); }
+        else if (c.t > t0 + NBC.turnLen + 0.02) { if (maxX < 0.001) turn.flatL++; else if (turn.bad.length < 6) turn.bad.push({ t: +c.t.toFixed(2), leaf: i, late: +maxX.toFixed(3) }); }
+        else if (c.t > t0 + 0.08 && c.t < t0 + 0.3) { if (P.getY(far) > P.getY(near) + 0.004) turn.cornerFirst++; else if (turn.bad.length < 6) turn.bad.push({ t: +c.t.toFixed(2), leaf: i, corner: [+P.getY(far).toFixed(4), +P.getY(near).toFixed(4)] }); }
+      }
     }
     const capEl = document.querySelector('#cine-cap'), cap = capEl && capEl.style.opacity === '1' ? capEl.textContent : '';
     if (cap && cap !== lastCap) capsAt.push(cap);
@@ -291,7 +334,8 @@ const watch = await ev(([polySizes, NBK, D2K]) => {
   const subs = window.__cine.def.subs;
   G.audio.play = play0;
   const offbeat = stepsHeard.filter((s) => !footDown.some((d) => Math.abs(s - d) <= 0.1));
-  return { page, capsAt, overlaySeen, NA, mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
+  const paperOk = NBC ? NBC.turns.every((t0) => paper.some((p) => Math.abs(p - t0) < 0.05) && paper.some((p) => Math.abs(p - (t0 + NBC.turnLen - 0.08)) < 0.05)) : true;
+  return { nohands, turn, paper: { at: paper, ok: paperOk }, capsAt, overlaySeen, NA, mouthBy: window.__cine.def.subs.map((s, i) => [s.voice, mouthBy[i] || 0]), talking, aerial, steps: { heard: stepsHeard.length, feet: footDown.length, offbeat: offbeat.slice(0, 8) }, mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
 }, [polySizes, NBK, D2K]);
 check('the scene moves to the house; still nothing saved mid-scene', watch.mid?.room === 'house' && !watch.mid.saved, watch.mid);
 check('every character on screen is from the poly cast (assets/poly)', watch.notPoly.length === 0 && ['twinsen', 'zoe', 'arthur', 'worker'].every((n) => watch.seen.includes(n)), { notPoly: watch.notPoly, seen: watch.seen });
@@ -307,8 +351,9 @@ check("OPEN-FILM: every line's speaker moves their mouth with it (the worker and
 check('OPEN-FILM: no line plays the looping talk gesture (one gesture per line, or none)', watch.talking.length === 0, watch.talking);
 check('OPEN-FILM: the aerial move does not stop (old 8.5-12.5 s; it stopped dead at 9 s)', watch.aerial.min > 1.5, watch.aerial);
 if (CUT === 'notebook') {
-  check('LBA3-RUN: the history over the notebook, a caption at a time, then where and when', watch.capsAt.length === 5 && watch.capsAt[0].startsWith('FunFrock') && watch.capsAt[3].startsWith('On Zeelich') && watch.capsAt[4].startsWith('Citadel Island'), watch.capsAt);
-  check("LBA3-RUN: Twinsen's right hand is on the page's corner as it lifts, at both turns (within 3 cm)", watch.page.n >= 18 && watch.page.off.length === 0, watch.page);
+  check('LBA3-RUN: the history over the notebook, a caption at a time, then where and when', watch.capsAt.length === 5 && watch.capsAt[0].startsWith('FunFrock') && watch.capsAt[3].includes('Zeelich') && watch.capsAt[4].startsWith('Citadel Island'), watch.capsAt);
+  check("P122: no hands in the notebook's film: nothing of Twinsen (hand, sleeve, forearm) in any shot over the book, no hand in his close-up", watch.nohands.over > 50 && watch.nohands.close > 10 && watch.nohands.seen.length === 0, watch.nohands);
+  check('P122: each page turns by itself: flat on the right before, its top outer corner up first, over on the left after; a paper sound at the lift and at the landing', watch.turn.bad.length === 0 && watch.turn.cornerFirst >= 10 && watch.turn.flatR > 200 && watch.turn.flatL > 100 && watch.paper.ok, { ...watch.turn, paper: watch.paper });
   check("LBA3-RUN: the page's drawing is laid over the screen as it turns into the island", watch.overlaySeen);
 } else check('the classic cut: where and when, then the originals in two lines; no notebook', watch.capsAt.length === 2 && watch.capsAt[0].startsWith('Citadel Island') && !watch.overlaySeen, watch.capsAt);
 // (the notebook cut: her walk outside is cut: her steps to the sink and down the hall are left, 6 or 7)

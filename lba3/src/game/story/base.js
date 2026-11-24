@@ -44,6 +44,15 @@ export class ChapterBase {
   applyFlags() {}
   journal() { return []; }        // [{key, done}] lines for the journal screen
   items() { return []; }          // [{id, icon, n?}] items carried from this chapter
+  // END-RESUME (LBA3-RUN progression): a chapter's end is saved (its flag, then g.save) before its last film or loading
+  // card, and the next chapter saves only once it has begun. A load of a save made in between (Save & quit during the
+  // end's film, which never saves half a film; the tab closed under the loading card) stood in the old chapter with its end
+  // done: its trigger and prompt gone, no way on. endSaved() says this chapter's end was reached; at the first frame of
+  // play after a load the Story then plays the way on (resumeEnd: by default the scene change to the next chapter).
+  // Chapters that resume their end themselves (chapter 2's console, steam's and the evacuation's boarding prompts,
+  // throttle, Ballastra, the House of Balances, the Cradles, chapter 9's thread) keep false.
+  endSaved() { return false; }
+  resumeEnd() { const g = this.game; g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); }
 
   // ---- helpers
   speaker(id) {
@@ -103,7 +112,7 @@ export class ChapterBase {
         if (sp && sp !== g.hero) sp.talking = false;
         if (i + 1 >= lines.length) for (const [oid] of lines) { const o = this.speaker(oid); if (o && o !== g.hero) o.listenTo = null; }
         next(i + 1);
-      }, sp, SPEAKER_COLORS[id]);
+      }, sp, SPEAKER_COLORS[id], { more: i + 1 < lines.length });   // (more: a line follows: P116's remarks keep the box)
     };
     next(0);
   }

@@ -142,6 +142,10 @@ checks the wording of the opening's captions, `c8_zoe_2`, `cn_vesk_1` or `c3_cor
    now: Zoé's yard bubble and residents' talk-ahead lines only; every talk opens the box. (b) One-line greetings and
    "after" lines of minor residents as bubbles. *Recommendation: (b), residents only*, never for a line that carries a
    clue or a choice. A UI change, not text; for the controls or UI owner.
+   **The user picked (b), residents only (23.11); built 24.11 as P116** (`docs/lba-maturity/P116.md`): a minor
+   resident (a person from the residents' modules, never a chapter's cast, a side story or a shopkeeper) whose talk is
+   one line of ≤ 80 characters and ≤ 2 sentences, changing no flag, coin or life, says it over its head; everything
+   else keeps the box. `?remarks=box` shows the old way, `?remarks=strict` one sentence only.
 4. **The notebook cut's place/time card** (`op_cap_place` + `op_cap_time`, 66 chars in 3.2 s = 20.6/s). (a) Give it
    the time to 17.55 s (it ends at 16.85 today; the picture opens out from 16.9). (b) Shorten the shared sub-line to
    "Twelve years later" (it also changes the classic card, where nothing has yet said later than what). *Recommendation:

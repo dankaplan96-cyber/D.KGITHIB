@@ -1631,13 +1631,35 @@ export async function loadPolys(names = ONDEMAND_POLYS) {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
 }
+// TUNIC-SLEEVE (P123, the user 24.11: Twinsen's tunic "looks like a sleeve inside the tunic"). The default model's sleeve
+// is the tunic's side to its end, the hand straight out of it (tools/blender/twinsen_poly.py TUNIC_SLEEVE). For the
+// user's comparison: ?sleeve=old (or the settings' `charSleeve`) loads v156's sleeve with the cuff band under it, and
+// ?sleeve=hem the new sleeve with a rolled hem of the tunic's blue round its edge. Each is a small delta of triangles
+// against twinsen.json (assets/poly/twinsen-sleeve<name>.json, tools/blender/polydelta.py), fetched only when asked.
+function sleeveVariant() {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('sleeve')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.charSleeve || ''; } catch { /* no storage */ }
+  return /^(old|hem)$/.test(s) ? s : '';
+}
+const DELTA_PER = { pos: 9, nrm: 9, col: 9, si: 12, sw: 12 };
+function applyPolyDelta(base, d) {
+  const out = { ...base };
+  for (const k in DELTA_PER) out[k] = base[k].slice();
+  for (const [at, n, ins] of [...d.ops].sort((a, b) => b[0] - a[0])) for (const k in DELTA_PER) out[k].splice(at * DELTA_PER[k], n * DELTA_PER[k], ...ins[k]);
+  out.tris = d.tris;
+  return out;
+}
 export async function preloadCharacters() {
   let names = ['twinsen'];
   try { const r = await fetch('assets/poly/index.json'); if (r.ok) names = await r.json(); } catch { /* twinsen only */ }
   await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
-  if (LOOK.size) for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
+  const sv = sleeveVariant();
+  if (sv && POLY.twinsen) {
+    try { const r = await fetch(`assets/poly/twinsen-sleeve${sv}.json`); if (r.ok) POLY.twinsen = applyPolyDelta(POLY.twinsen, await r.json()); } catch { /* the default sleeve */ }
+  }
+  if (LOOK.size || ZOE_HAIR !== 'old') for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
 }
 // TWINSEN-ZOE-LOOK (the user, 22.11: Twinsen and Zoé "more like the original … keep the current one and we'll compare";
 // then the focus: Twinsen from behind under the Follow camera, "the hair is a bit too pixelated, but I'm not sure"; then
@@ -1695,6 +1717,7 @@ export const LOOK = (() => {
   return on;
 })();
 function lookModel(name, P) {
+  if (name === 'zoe') return ZOE_HAIR === 'old' ? P : zoeHair(P, ZOE_HAIRS[ZOE_HAIR]);   // (P120: her hair, below)
   const steps = Object.keys(LOOK_STEPS).filter((s) => LOOK.has(s) && LOOK_STEPS[s].includes(name));
   if (!steps.length) return P;
   const Q = { ...P, pos: P.pos.slice(), nrm: P.nrm.slice(), col: P.col.slice(), si: P.si.slice(), sw: P.sw.slice() };
@@ -1839,32 +1862,49 @@ const hsTone = (u) => {
   for (let i = 1; i < HS_TONE.length; i++) if (u <= HS_TONE[i][0]) return mixc(HS_TONE[i - 1][1], HS_TONE[i][1], Math.max(0, (u - HS_TONE[i - 1][0]) / (HS_TONE[i][0] - HS_TONE[i - 1][0])));
   return HS_TONE[HS_TONE.length - 1][1];
 };
-// the spine (x 0): from the root under the scalp, out and back through the balls' centres to a soft point with a slight
-// outward flick; sampled densely by arc length: point and tangent at s, and the balls' weight coordinate u at s
-// (hfWeights: 0 the crown ball's centre, 1 tuft 1, 2 tuft 2)
-function hsSpine(ctx) {
-  const V = (y, z) => new THREE.Vector3(0, y, z);
-  const C = ctx.balls.map((b) => V(b.c[1], b.c[2])), R = ctx.balls.map((b) => b.r);
-  const e = C[2].clone().sub(C[1]).normalize(), eo = V(-e.z, e.y);   // (eo: square to e, up and back)
-  const A = C[0].clone().add(V(...HS_ROOT_AT));
-  const E1 = C[2].clone().addScaledVector(e, R[2] * 1.25);
-  const T = E1.clone().addScaledVector(e.clone().multiplyScalar(0.75).addScaledVector(eo, 0.6).normalize(), R[2] * 0.95);   // the flick
-  const curve = new THREE.CatmullRomCurve3([A, C[0], C[1], C[2], E1, T], false, 'centripetal');
-  const NS = 500, pts = [], L = [0];   // (points 1–3, the centres, at samples 100, 200, 300)
+// A lock's own parameters (P120: Twinsen's below; Zoé's, ZOE_HAIRS, from the same sweep): points(ctx) its spine's control
+// points (the root under the scalp first, then q 0's point) and R0, its width's unit; u(S) the coordinate its weights and
+// tones read at arc length s; width(S) its width profile (knots [q, × R0, slope?]); flat(q) its section's depth across
+// (× the width); tone(u) and sheen its colours; m, root, nb, ridges, win, band: the section's points round, the rings
+// before q 0 and after it, the strand ridges, the tangent's window (samples), the painted sheen band [q, spread, strength]
+// Twinsen's (P106, the user's pick 23.11): the spine (x 0) from the root under the scalp, out and back through the three
+// balls' centres to a soft point with a slight outward flick; u the balls' weight coordinate (hfWeights: 0 the crown
+// ball's centre, 1 tuft 1, 2 tuft 2)
+const HS_TWINSEN = {
+  points(ctx) {
+    const V = (y, z) => new THREE.Vector3(0, y, z);
+    const C = ctx.balls.map((b) => V(b.c[1], b.c[2])), R = ctx.balls.map((b) => b.r);
+    const e = C[2].clone().sub(C[1]).normalize(), eo = V(-e.z, e.y);   // (eo: square to e, up and back)
+    const A = C[0].clone().add(V(...HS_ROOT_AT));
+    const E1 = C[2].clone().addScaledVector(e, R[2] * 1.25);
+    const T = E1.clone().addScaledVector(e.clone().multiplyScalar(0.75).addScaledVector(eo, 0.6).normalize(), R[2] * 0.95);   // the flick
+    return { pts: [A, C[0], C[1], C[2], E1, T], R0: R[0] };
+  },
+  u: ({ sK: [, sB, sC, sD], R0 }) => (s) => (s < sB ? (s - sB) / R0 : s < sC ? (s - sB) / (sC - sB) : s < sD ? 1 + (s - sC) / (sD - sC) : 2 + (s - sD) / (sD - sC)),
+  width: ({ sK: [, sB, sC, sD], sE }) => [[-1, HS_ROOT_W, 0.5], [0, 1, 0], [(sC - sB) / (sE - sB), 0.8], [(sD - sB) / (sE - sB), 0.56], [0.82, 0.32], [1, 0, -1.1]],
+  flat: (q) => 0.95 - 0.33 * sstep(0, 0.7, q),
+  tone: (u) => hsTone(u), sheen: HS_SHEEN, m: HS_M, root: HS_ROOT, nb: HS_NB, ridges: HS_RIDGES, win: HS_WIN, band: [0.3, 0.22, 0.24],
+};
+// the spine sampled densely by arc length (control point k at sample 100 k): point and tangent at s, the lock's u at s
+function hsSpine(ctx, H) {
+  const { pts: K, R0 } = H.points(ctx), V = (y, z) => new THREE.Vector3(0, y, z);
+  const curve = new THREE.CatmullRomCurve3(K, false, 'centripetal');
+  const NS = 100 * (K.length - 1), pts = [], L = [0];
   for (let i = 0; i <= NS; i++) { pts.push(curve.getPoint(i / NS)); if (i) L.push(L[i - 1] + pts[i].distanceTo(pts[i - 1])); }
-  const sB = L[100], sC = L[200], sD = L[300], sE = L[NS];
+  const sK = K.map((_, k) => L[100 * k]), sB = sK[1], sE = L[NS];
   const at = (s) => {
     let i = 0;
     while (i < NS - 1 && L[i + 1] < s) i++;
     const f = Math.min(1, Math.max(0, (s - L[i]) / (L[i + 1] - L[i] || 1)));
-    // (the section's plane square to the tangent taken over ±HS_WIN of the curve: square to the curve itself, the rings
+    // (the section's plane square to the tangent taken over ±win of the curve: square to the curve itself, the rings
     //  would cross on the inside of the bend over the crown, where it turns tighter than the lock is thick)
-    const ia = Math.max(0, i - HS_WIN), ib = Math.min(NS, i + 1 + HS_WIN), tan = pts[ib].clone().sub(pts[ia]).normalize();
+    const ia = Math.max(0, i - H.win), ib = Math.min(NS, i + 1 + H.win), tan = pts[ib].clone().sub(pts[ia]).normalize();
     return { p: pts[i].clone().lerp(pts[i + 1], f), t: tan, n: V(-tan.z, tan.y) };   // n: the section's up-and-back axis
   };
-  const u = (s) => (s < sB ? (s - sB) / R[0] : s < sC ? (s - sB) / (sC - sB) : s < sD ? 1 + (s - sC) / (sD - sC) : 2 + (s - sD) / (sD - sC));
   const sOf = (q) => (q < 0 ? sB * (1 + q) : sB + q * (sE - sB));
-  return { at, u, sOf, qC: (sC - sB) / (sE - sB), qD: (sD - sB) / (sE - sB), R0: R[0], A, T };
+  const S = { at, sOf, sK, sE, R0, A: K[0], T: K[K.length - 1] };
+  S.u = H.u(S);
+  return S;
 }
 // a normal levelled for LBA's ramp: it turns a dark colour grey where a surface faces the fixed light (mostly from above:
 // N·L past 0.6 mixes in white), so the normal keeps its sideways part and loses most of its upward one (`up`); one
@@ -1901,32 +1941,32 @@ function hsTube(V, tris, rings, poles) {
   if (poles[0]) { const f = V.push(poles[0]) - 1; for (let i = 0; i < M; i++) tris.push([f, id(0, i + 1), id(0, i)]); }
   if (poles[1]) { const t = V.push(poles[1]) - 1, j = rings.length - 1; for (let i = 0; i < M; i++) tris.push([t, id(j, i), id(j, i + 1)]); }
 }
-function splineLock(ctx, strands) {
-  const S = hsSpine(ctx), X = new THREE.Vector3(1, 0, 0), V = [], tris = [];
-  const W = [[-1, HS_ROOT_W, 0.5], [0, 1, 0], [S.qC, 0.8], [S.qD, 0.56], [0.82, 0.32], [1, 0, -1.1]];   // the width (× R0)
-  const width = (q) => S.R0 * hsProfile(W, q), flat = (q) => 0.95 - 0.33 * sstep(0, 0.7, q), G = strands ? 0.09 : 0;
+function splineLock(ctx, strands, H = HS_TWINSEN) {
+  const S = hsSpine(ctx, H), X = new THREE.Vector3(1, 0, 0), V = [], tris = [], M = H.m, [bq, bs, bk] = H.band;
+  const W = H.width(S);   // the width (× R0)
+  const width = (q) => S.R0 * hsProfile(W, q), flat = H.flat, G = strands ? 0.09 : 0;
   const ring = (q) => {
     const s = S.sOf(q), w = width(q), k = flat(q), { p: c, n } = S.at(s), u = S.u(s), row = [];
     const g = G * sstep(0.02, 0.3, q) * (1 + 0.4 * q) * (1 - 0.5 * sstep(0.8, 1, q)), tw = 0.9 * Math.max(0, q);
-    const band = Math.exp(-(((q - 0.3) / 0.22) ** 2));
-    for (let i = 0; i < HS_M; i++) {
-      const a = (2 * Math.PI * i) / HS_M, rid = Math.cos(HS_RIDGES * a + tw), rr = 1 + g * rid;
+    const band = Math.exp(-(((q - bq) / bs) ** 2));
+    for (let i = 0; i < M; i++) {
+      const a = (2 * Math.PI * i) / M, rid = Math.cos(H.ridges * a + tw), rr = 1 + g * rid;
       const out = X.clone().multiplyScalar(Math.sin(a)).addScaledVector(n, Math.cos(a) * k);
       const p = c.clone().addScaledVector(X, w * rr * Math.sin(a)).addScaledVector(n, w * k * rr * Math.cos(a));
       // the strands: crests a little lighter, grooves darker; the painted sheen up and back, a band along the lock
-      let col = hsTone(u).map((x) => x * (1 + (G ? 2.2 * g * rid : 0)));
-      col = mixc(col, HS_SHEEN, 0.24 * sstep(0.3, 0.95, Math.cos(a)) * band * (0.75 + 0.25 * rid));
+      let col = H.tone(u).map((x) => x * (1 + (G ? 2.2 * g * rid : 0)));
+      col = mixc(col, H.sheen, bk * sstep(0.3, 0.95, Math.cos(a)) * band * (0.75 + 0.25 * rid));
       row.push({ p, out, u, q, col: col.map((x) => Math.max(0, Math.min(255, Math.round(x)))) });
     }
     return row;
   };
   const rings = [];
-  for (let j = 0; j < HS_ROOT; j++) rings.push(ring(-1 + j / HS_ROOT));
-  for (let j = 0; j <= HS_NB; j++) rings.push(ring(1 - (1 - j / (HS_NB + 1)) ** 1.2));
+  for (let j = 0; j < H.root; j++) rings.push(ring(-1 + j / H.root));
+  for (let j = 0; j <= H.nb; j++) rings.push(ring(1 - (1 - j / (H.nb + 1)) ** 1.2));
   const t0 = S.at(0).t, t1 = S.at(S.sOf(1)).t, uE = S.u(S.sOf(1));
-  hsTube(V, tris, rings, [{ p: S.A.clone().addScaledVector(t0, -0.01), out: t0.clone().negate(), u: -2, q: -1, col: hsTone(-2) }, { p: S.T.clone(), out: t1, u: uE, q: 1, col: hsTone(uE) }]);
-  const cen = rings.map((r) => r.reduce((a, v) => a.add(v.p), new THREE.Vector3()).multiplyScalar(1 / HS_M));
-  ctx.sdf = rings.map((r, j) => ({ c: cen[j].toArray(), r: r[0].p.distanceTo(cen[j]), col: hsTone(r[0].u) }));
+  hsTube(V, tris, rings, [{ p: S.A.clone().addScaledVector(t0, -0.01), out: t0.clone().negate(), u: -2, q: -1, col: H.tone(-2) }, { p: S.T.clone(), out: t1, u: uE, q: 1, col: H.tone(uE) }]);
+  const cen = rings.map((r) => r.reduce((a, v) => a.add(v.p), new THREE.Vector3()).multiplyScalar(1 / M));
+  ctx.sdf = rings.map((r, j) => ({ c: cen[j].toArray(), r: r[0].p.distanceTo(cen[j]), col: H.tone(r[0].u) }));
   ctx.lockRings = { rings: rings.map((r) => r.map((v) => v.p)), cen };
   const N = hsNormals(V, tris);
   return { verts: V.map((v, i) => [[v.p.x, v.p.y, v.p.z], v.col, v.u, [N[i].x, N[i].y, N[i].z]]), tris };
@@ -1937,18 +1977,21 @@ function splineLock(ctx, strands) {
 // gap. On the head bone (it does not sway). HB_N round it × HB_S round its section.
 const HB_N = 20, HB_S = 6, HB_RO = 0.0075, HB_RL = 0.012, HB_OFF = 0.0035, HB_LIFT = 0.0095;
 const HB_COL = [0xb8, 0x8a, 0x34], HB_HI = [0xe8, 0xc4, 0x6c], HB_LO = [0x7a, 0x58, 0x1c];
-function hairBand(P, ctx) {
+// (a band's own: n × s segments, its section's half depth ro and half length rl, how far off the hair (off) and up from
+//  the scalp (lift), its colours, the scalp's colour it sits on, and where the scalp is looked for: above minY, within reach)
+const HB_TWINSEN = { n: HB_N, s: HB_S, ro: HB_RO, rl: HB_RL, off: HB_OFF, lift: HB_LIFT, col: HB_COL, hi: HB_HI, lo: HB_LO, scalp: SKIN_RGB, minY: 1.8, reach: 0.25 };
+function hairBand(P, ctx, B = HB_TWINSEN) {
   const L = ctx.lockRings;
   if (!L) return;
   // the skull: the head's skin triangles near the crown (centroid, outward normal); a point's signed distance is taken
   // from the plane of the nearest
   const hb = P.bones.indexOf('head'), sk = [], v3 = (i) => new THREE.Vector3(P.pos[i * 3], P.pos[i * 3 + 1], P.pos[i * 3 + 2]);
-  const skin = (v) => { if (P.col[v * 3] !== SKIN_RGB[0] || P.col[v * 3 + 1] !== SKIN_RGB[1] || P.col[v * 3 + 2] !== SKIN_RGB[2]) return false; let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k]; return w >= 0.99; };
+  const skin = (v) => { if (P.col[v * 3] !== B.scalp[0] || P.col[v * 3 + 1] !== B.scalp[1] || P.col[v * 3 + 2] !== B.scalp[2]) return false; let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k]; return w >= 0.99; };
   for (let t = 0, n = P.pos.length / 9; t < n; t++) {
     const i = t * 3;
     if (!skin(i) || !skin(i + 1) || !skin(i + 2)) continue;
     const a = v3(i), c = a.clone().add(v3(i + 1)).add(v3(i + 2)).multiplyScalar(1 / 3);
-    if (c.y < 1.8 || c.distanceTo(L.cen[0]) > 0.25) continue;
+    if (c.y < B.minY || c.distanceTo(L.cen[0]) > B.reach) continue;
     const nf = v3(i + 1).sub(a).cross(v3(i + 2).sub(a)).normalize(), nv = new THREE.Vector3(P.nrm[i * 3], P.nrm[i * 3 + 1], P.nrm[i * 3 + 2]);
     sk.push([c, nf.dot(nv) < 0 ? nf.negate() : nf]);
   }
@@ -1968,32 +2011,32 @@ function hairBand(P, ctx) {
   for (let k = 0; k < 2; k++) { const e0 = E.map((p) => p.clone()); E.forEach((p, i) => p.copy(e0[i]).multiplyScalar(0.5).addScaledVector(e0[(i + 1) % E.length], 0.25).addScaledVector(e0[(i + E.length - 1) % E.length], 0.25)); }
   const cE = new THREE.CatmullRomCurve3(E, true), cO = new THREE.CatmullRomCurve3(E.map((p, i) => p.clone().add(O[i])), true), cT = new THREE.CatmullRomCurve3(E.map((p, i) => p.clone().add(T[i])), true);
   const grid = [];
-  for (let k = 0; k < HB_N; k++) {
-    const e = cE.getPoint(k / HB_N), tl = cT.getPoint(k / HB_N).sub(e).normalize(), o = cO.getPoint(k / HB_N).sub(e);
+  for (let k = 0; k < B.n; k++) {
+    const e = cE.getPoint(k / B.n), tl = cT.getPoint(k / B.n).sub(e).normalize(), o = cO.getPoint(k / B.n).sub(e);
     o.addScaledVector(tl, -o.dot(tl)).normalize();
     const row = [];
-    for (let m = 0; m < HB_S; m++) {
-      const b = (2 * Math.PI * m) / HB_S, cb = Math.cos(b), sb = Math.sin(b);
-      const p = e.clone().addScaledVector(o, HB_OFF + HB_RO * cb).addScaledVector(tl, HB_LIFT + HB_RL * sb);
-      const n = hsLevel(o.clone().multiplyScalar(cb / HB_RO).addScaledVector(tl, sb / HB_RL), o, 0.5);
+    for (let m = 0; m < B.s; m++) {
+      const b = (2 * Math.PI * m) / B.s, cb = Math.cos(b), sb = Math.sin(b);
+      const p = e.clone().addScaledVector(o, B.off + B.ro * cb).addScaledVector(tl, B.lift + B.rl * sb);
+      const n = hsLevel(o.clone().multiplyScalar(cb / B.ro).addScaledVector(tl, sb / B.rl), o, 0.5);
       // brass: lighter on its outer face, darker where it turns under toward the scalp
-      const col = cb > 0 ? mixc(HB_COL, HB_HI, 0.55 * cb * (0.6 + 0.4 * Math.max(0, sb))) : mixc(HB_COL, HB_LO, -cb * 0.6);
+      const col = cb > 0 ? mixc(B.col, B.hi, 0.55 * cb * (0.6 + 0.4 * Math.max(0, sb))) : mixc(B.col, B.lo, -cb * 0.6);
       row.push([p, n, col]);
     }
     grid.push(row);
   }
   const put = ([p, n, col]) => { P.pos.push(p.x, p.y, p.z); P.nrm.push(n.x, n.y, n.z); P.col.push(...col); P.si.push(hb, 0, 0, 0); P.sw.push(1, 0, 0, 0); };
-  for (let k = 0; k < HB_N; k++) for (let m = 0; m < HB_S; m++) {
-    const a = grid[k][m], b = grid[(k + 1) % HB_N][m], c = grid[(k + 1) % HB_N][(m + 1) % HB_S], d = grid[k][(m + 1) % HB_S];
+  for (let k = 0; k < B.n; k++) for (let m = 0; m < B.s; m++) {
+    const a = grid[k][m], b = grid[(k + 1) % B.n][m], c = grid[(k + 1) % B.n][(m + 1) % B.s], d = grid[k][(m + 1) % B.s];
     const f = b[0].clone().sub(a[0]).cross(c[0].clone().sub(a[0]));   // (wound to face outward: the material is double-sided)
     (f.dot(a[1]) + f.dot(c[1]) >= 0 ? [a, b, c, a, c, d] : [a, c, b, a, d, c]).forEach(put);
   }
-  ctx.bandTris = HB_N * HB_S * 2;
+  ctx.bandTris = B.n * B.s * 2;
 }
 // the balls' vertices dropped and a lock's triangles added in their place (verts: [position, colour, u, normal?]; no
 // normal: the flat shade's, down), with the balls' weights along it; the cap's painted hairline round it
 function swapHair(P, ctx, { verts, tris }) {
-  const drop = new Set(ctx.balls.flatMap((b) => b.vs));
+  const drop = ctx.drop || new Set(ctx.balls.flatMap((b) => b.vs)), weights = ctx.weights || hfWeights;   // (P120: Zoé's lock names its own)
   const out = { pos: [], nrm: [], col: [], si: [], sw: [] };
   for (let v = 0, n = P.pos.length / 3; v < n; v++) {
     if (drop.has(v)) continue;
@@ -2002,7 +2045,7 @@ function swapHair(P, ctx, { verts, tris }) {
     for (let k = 0; k < 4; k++) { out.si.push(P.si[v * 4 + k]); out.sw.push(P.sw[v * 4 + k]); }
   }
   for (const t of tris) for (const i of t) {
-    const [p, col, u, nr] = verts[i], w = hfWeights(u), tot = w.reduce((a, e) => a + e[1], 0);
+    const [p, col, u, nr] = verts[i], w = weights(u), tot = w.reduce((a, e) => a + e[1], 0);
     out.pos.push(...p); out.nrm.push(...(nr || [0, -1, 0])); out.col.push(...col);
     for (let k = 0; k < 4; k++) { out.si.push(w[k] ? P.bones.indexOf(w[k][0]) : 0); out.sw.push(w[k] ? w[k][1] / tot : 0); }
   }
@@ -2019,3 +2062,280 @@ const LOOK_MODEL = {
   hairsmooth(P, ctx) { if (!ctx.sdf) { swapHair(P, ctx, splineLock(ctx, false)); ctx.capLevel = true; } },
   hairband: hairBand,
 };
+// P120 ZOE-HAIR (the user, 24.11, a photo of the screen and LBA2's box art: "Zoé's hair should be like Twinsen's"; the
+// pale cap, the pale little ponytail and the thin band read bald; docs/lba-maturity/P120.md): her ponytail and its tie
+// rebuilt with Twinsen's spline lock and band (splineLock, hairBand) on her own parameters, golden blonde (warmer and more
+// saturated than the model's #e3af53, which the ramp's lit top turned to near-white cream), a chunky green tie at its
+// root, rising from the crown and sweeping up and back like the box art's; the swept-up hair over the skull (the model's
+// own surface, cut along the hairline) the same gold, combed toward the tie in soft streaks, its normals levelled like
+// Twinsen's lock so the top of the head is no longer washed pale. Her face, body and outfit are not touched (the model's
+// other vertices pass through unchanged). Applied to the loaded model (lookModel) so every Zoé — the yard, the film, the
+// chapters, the hero's own Zoé body, the statue — gets it. ?zoehair=a|b|c picks the variant (the setting `zoeHair` the
+// same), ?zoehair=old the model's own hair. The ponytail's weights pass from the head (to just past the tie) to tail0–2
+// along it, as the old ponytail's did, so the rig's follow-through still sways it. ZOE-HAIR-2 (the user after v153): the
+// gold over the skull is gone by default: her scalp bare skin like Twinsen's, only the lock and the tie (zoeBare below).
+const ZH_HAIR = [0xe3, 0xaf, 0x53], ZH_TRIM = [0x3f, 0x7b, 0x47];   // (the model's hair and trim colours: tools/blender/zoe_poly.py)
+const ZH_TONE = [[-2, [0xa0, 0x64, 0x10]], [0, [0xbc, 0x7c, 0x14]], [0.45, [0xd2, 0x94, 0x1c]], [1, [0xe2, 0xaa, 0x30]]];
+const zhTone = (u) => {
+  for (let i = 1; i < ZH_TONE.length; i++) if (u <= ZH_TONE[i][0]) return mixc(ZH_TONE[i - 1][1], ZH_TONE[i][1], Math.max(0, (u - ZH_TONE[i - 1][0]) / (ZH_TONE[i][0] - ZH_TONE[i - 1][0])));
+  return ZH_TONE[ZH_TONE.length - 1][1];
+};
+// her lock: control points [x, y, z] (m, on the model; the root under the scalp at the back of the crown, then the tie),
+// widths [q, × 3 cm, slope?] (gathered at the tie, full over the top, tapering to the tip); u is q (-1 the root … 0 the tie
+// … 1 the tip); weights along q
+const zhLock = ({ pts, w, flat = 0.12 }) => ({
+  points: () => ({ pts: pts.map((p) => new THREE.Vector3(...p)), R0: 0.03 }),
+  u: ({ sK: [, sB], sE }) => (s) => (s < sB ? s / sB - 1 : (s - sB) / (sE - sB)),
+  width: () => w, flat: (q) => 0.95 - flat * sstep(0, 0.8, q),
+  tone: zhTone, sheen: [0xf0, 0xc8, 0x58], m: 28, root: 5, nb: 26, ridges: 6, win: 90, band: [0.32, 0.3, 0.3],
+});
+const ZH_PLAN = [['head', 0.04], ['tail0', 0.22], ['tail1', 0.5], ['tail2', 0.82]];
+const zhWeights = (q) => {
+  if (q <= ZH_PLAN[0][1]) return [['head', 1]];
+  for (let i = 0; i + 1 < ZH_PLAN.length; i++) {
+    if (q > ZH_PLAN[i + 1][1]) continue;
+    const t = sstep(ZH_PLAN[i][1], ZH_PLAN[i + 1][1], q);
+    return [[ZH_PLAN[i][0], 1 - t], [ZH_PLAN[i + 1][0], t]].filter((e) => e[1] > 1e-4);
+  }
+  return [['tail2', 1]];
+};
+const ZH_W = [[-1, 0.95, 0.3], [0, 0.95, 0], [0.12, 1.4], [0.32, 2.2], [0.55, 2.1], [0.78, 1.4], [0.92, 0.7], [1, 0, -1.1]];
+// the variants: a, the box art's (tall, swept up from the crown, over and back, falling behind her head to a tip that flicks
+// out); b, calmer (it rises less and falls closer behind, the tip turned in); c, a's sweep with the tip curled under and
+// forward into a C
+export const ZOE_HAIRS = {
+  a: zhLock({ pts: [[0, 1.905, -0.112], [0, 1.985, -0.125], [0.002, 2.06, -0.145], [0.006, 2.105, -0.215], [0.01, 2.09, -0.305], [0.014, 2.03, -0.365], [0.016, 1.945, -0.39], [0.016, 1.885, -0.385], [0.014, 1.845, -0.41]], w: ZH_W }),
+  b: zhLock({ pts: [[0, 1.905, -0.112], [0, 1.98, -0.13], [0.002, 2.025, -0.17], [0.006, 2.04, -0.245], [0.01, 2.02, -0.32], [0.013, 1.95, -0.355], [0.014, 1.875, -0.36], [0.013, 1.815, -0.345], [0.011, 1.78, -0.32]], w: ZH_W }),
+  c: zhLock({ pts: [[0, 1.905, -0.112], [0, 1.985, -0.122], [0.002, 2.07, -0.135], [0.006, 2.12, -0.205], [0.01, 2.11, -0.3], [0.014, 2.04, -0.365], [0.016, 1.95, -0.385], [0.016, 1.89, -0.35], [0.014, 1.895, -0.295]], w: ZH_W }),
+};
+// her tie: chunkier than his brass cuff (the box art's round green tie), in her trims' green; found on her hair over the
+// skull (the model's hair colour on the head bone) where his is found on his scalp
+const ZH_BAND = { n: 24, s: 8, ro: 0.0095, rl: 0.014, off: 0.005, lift: 0.011, col: ZH_TRIM, hi: [0x74, 0xb0, 0x78], lo: [0x24, 0x4c, 0x2c], scalp: ZH_HAIR, minY: 1.85, reach: 0.12 };
+// the hair over the skull: its gold, combed toward the tie (k streaks round it, ± amp), darker by the tie; normals levelled
+const ZH_CAP = { col: [0xc6, 0x88, 0x18], root: [0xa8, 0x6c, 0x12], k: 13, amp: 0.1, up: 0.2 };
+// ZOE-HAIR-2 (the user, 24.11 after v153: "in the box art she has no hair around the ponytail — like Twinsen's: there is
+// the tie, and the hair comes out of it; apart from that there is no hair on the head"): by default her skull is bare
+// skin like his (zoeBare, below), only the lock and the tie; `-cap` after the variant (?zoehair=a-cap) keeps v153's gold
+// hair over the skull, for the comparison; `-bigtie` a rounder, chunkier tie (the box art's green knob) on the bare scalp
+const ZOE_HAIR_RAW = (() => {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehair')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHair || ''; } catch { /* no storage */ }
+  return String(s).trim().toLowerCase();
+})();
+const ZOE_HAIR_OPT = ZOE_HAIR_RAW.split('-').slice(1);
+export const ZOE_SCALP = ZOE_HAIR_OPT.includes('cap') ? 'cap' : 'bare';
+const ZOE_BIGTIE = ZOE_HAIR_OPT.includes('bigtie');
+export const ZOE_HAIR = (() => {
+  const s = ZOE_HAIR_RAW.split('-')[0];
+  return s === 'old' || ZOE_HAIRS[s] ? s : 'a';
+})();
+// the bare scalp. The model's hair over the skull is the head's own surface cut along a hairline and raised 3.5–5.5 mm off
+// the skull (tools/blender/zoe_poly.py, ZOE-LOOK-38: HAIRLINE, HC, the lift; ZH 1.95 m per H): that lift is taken off
+// again (each point moved back toward HC along the same line: the designed skull's dome, no step at the old hairline),
+// the surface painted her own skin, and its normals made smooth over the skull and the forehead it now runs into (the
+// skin's, not levelled: lit as skin). Then the tie is found on that skin as Twinsen's is on his, and the skin right round
+// the tie shaded a little darker (the tie's and the lock's shadow on the scalp, as his scalp by his tie).
+const ZH_SKIN = [0xd9, 0xa6, 0x79], ZH_SEAT = { col: [0xb2, 0x80, 0x58], k: 0.5, d: [0.004, 0.035] };
+const ZH_M = 1.95, ZH_HC = [0, 0.935 * 1.95, -0.03 * 1.95];
+const ZH_LINE = [[0, 0.958], [30, 0.956], [60, 0.949], [85, 0.937], [100, 0.925], [120, 0.905], [145, 0.889], [180, 0.881]];
+const zhLift = (p) => {
+  const x = p[0] / ZH_M, z = p[2] / ZH_M, th = (Math.atan2(Math.abs(x), z + 0.025) * 180) / Math.PI;
+  let line = ZH_LINE[ZH_LINE.length - 1][1];
+  for (let i = 0; i + 1 < ZH_LINE.length; i++) if (th <= ZH_LINE[i + 1][0]) { const [a0, y0] = ZH_LINE[i], [a1, y1] = ZH_LINE[i + 1]; line = y0 + ((y1 - y0) * (th - a0)) / (a1 - a0); break; }
+  return (0.0035 + 0.002 * sstep(0.95 * ZH_M, 0.99 * ZH_M, p[1])) * sstep(-0.003, 0.012, p[1] / ZH_M - line);
+};
+const ZH_BAND_BARE = { ...ZH_BAND, scalp: ZH_SKIN };
+const ZH_BAND_BIG = { ...ZH_BAND_BARE, ro: 0.014, rl: 0.019, off: 0.004, lift: 0.015 };
+// ZOE-HEAD (the user, 24.11, on the bare scalp: "that's excellent, but her head shape is strange"; then "try to match the
+// shape of Twinsen's head"): with the hair gone her cranium read as a tall egg reaching far up and back. Twinsen's cranium
+// as built (assets/poly/twinsen.json, his skin above his eyes) is very nearly an ellipsoid (rms 0.3 mm): x semi-axis
+// 15.2 cm; in the side plane 13.9 cm along a line tipped 25° from straight down toward the back and 15.1 cm square to it;
+// its centre 1.4 cm above his eyes' pivot and 14.9 cm behind it. ZH_TW holds it. Her new cranium is that ellipsoid
+// scaled to her head (k: her eyes' spacing and eye-to-chin against his, 0.69 / 0.73 → 0.71; across, kx 0.69: she is
+// narrower) and placed by her eyes as his by his (her eye pivot + k × his offset). Her points move toward it along the
+// line from its centre by a weight that is 0 below a line round the head (above the brows in front, above the earrings
+// at the sides, down to the nape behind) and 1 a few centimetres above it, so the face, brows, lashes, earrings, neck
+// and body are not touched and the reshaped skull runs into the kept skin without a step. Behind and below, the target
+// keeps clear of the neck (a soft union with a cylinder round it), so the nape still covers the neck's top.
+// ?zoehead=twinsen (default) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison). The
+// lock and the tie move with the crown (zoeHair).
+const ZH_TW = { ax: 0.15192, a: [0.13867, 0.15100], ang: [-155.41, -65.41], off: [0.01433, -0.14902] };
+const ZOE_HEADS = { twinsen: { k: 0.71, kx: 0.69 }, round: { k: 0.77, kx: 0.69, dz: -0.008 } };
+export const ZOE_HEAD = (() => {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehead')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHead || ''; } catch { /* no storage */ }
+  s = String(s).trim().toLowerCase();
+  return s === 'current' || ZOE_HEADS[s] ? s : 'twinsen';
+})();
+// the band the weight rises over (y from, y to, m) by the angle round the head from the front (as the hairline's)
+// (the brows end at 50°, the earrings hang at 100–111° below 1.77 m; behind them it reaches down to the head's underside:
+//  the old egg's lower back goes too, no ledge under it)
+const ZHD_BAND = [[0, 1.866, 1.94], [50, 1.866, 1.935], [70, 1.835, 1.91], [90, 1.80, 1.88], [100, 1.785, 1.86], [118, 1.745, 1.85], [135, 1.68, 1.83], [155, 1.66, 1.81], [180, 1.66, 1.80]];
+const ZHD_NECK = { z: -0.03, r: 0.056, k: 0.03 };
+const zhdLerp = (th, j) => {
+  for (let i = 0; i + 1 < ZHD_BAND.length; i++) if (th <= ZHD_BAND[i + 1][0]) { const a = ZHD_BAND[i], b = ZHD_BAND[i + 1]; return a[j] + ((b[j] - a[j]) * (th - a[0])) / (b[0] - a[0]); }
+  return ZHD_BAND[ZHD_BAND.length - 1][j];
+};
+function zoeHeadShape(eye, S) {
+  const k = S.k, c = [0, eye[1] + k * ZH_TW.off[0], eye[2] + k * ZH_TW.off[1] + (S.dz || 0)];
+  const e = ZH_TW.ang.map((g) => [Math.cos((g * Math.PI) / 180), Math.sin((g * Math.PI) / 180)]), a = ZH_TW.a.map((x) => x * k), ax = ZH_TW.ax * S.kx;
+  const f = (p) => {
+    const th = (Math.atan2(Math.abs(p[0]), p[2] + 0.025) * 180) / Math.PI, w = sstep(zhdLerp(th, 1), zhdLerp(th, 2), p[1]);
+    if (w <= 0) return null;
+    const d = p.map((x, i) => x - c[i]), r = Math.hypot(...d), u = d.map((x) => x / r);
+    let rt = 1 / Math.sqrt((u[0] / ax) ** 2 + ((u[1] * e[0][0] + u[2] * e[0][1]) / a[0]) ** 2 + ((u[1] * e[1][0] + u[2] * e[1][1]) / a[1]) ** 2);
+    if (u[1] < 0) {   // (below the centre: not inside the cylinder round the neck, joined softly; never pushed out past
+      //  where it was or the ellipsoid: a line steeply down meets the cylinder far below)
+      const A = u[0] * u[0] + u[2] * u[2], oz = ZHD_NECK.z - c[2], B = -2 * u[2] * oz, C = oz * oz - ZHD_NECK.r ** 2;
+      const rn = A > 1e-6 ? (-B + Math.sqrt(Math.max(0, B * B - 4 * A * C))) / (2 * A) : 0;
+      const h = Math.min(1, Math.max(0, 0.5 + (0.5 * (rn - rt)) / ZHD_NECK.k));
+      rt = Math.min(rt * (1 - h) + rn * h + ZHD_NECK.k * h * (1 - h), Math.max(r, rt));
+    }
+    const rr = r + w * (rt - r);
+    return c.map((x, i) => x + u[i] * rr);
+  };
+  f.c = c;
+  return f;
+}
+// the lock (its spline's control points) moved as the skull right under its tie moved: the reshaped point nearest the line
+// from the new dome's centre through the tie gives the move, so the lock still rises from the tie on the crown, as far
+// out of the scalp as before, its shape above the tie as it was. Its root (under the scalp) is turned to point from the
+// tie toward the dome's centre, as far as before: on the rounder, shorter skull the old root would come out behind
+function zoeLockOnCrown(H, c, disp) {
+  const { pts } = H.points(), t = pts[1].toArray(), dt = t.map((x, i) => x - c[i]), lt = Math.hypot(...dt);
+  let best = null, bc = -2;
+  for (const [p, q] of disp) {
+    const d = p.map((x, i) => x - c[i]), cs = (d[0] * dt[0] + d[1] * dt[1] + d[2] * dt[2]) / (Math.hypot(...d) * lt);
+    if (cs > bc) { bc = cs; best = q.map((x, i) => x - p[i]); }
+  }
+  if (!best) return H;
+  const mv = new THREE.Vector3(...best);
+  const C = new THREE.Vector3(...c);
+  return { ...H, moved: mv, points: () => {
+    const o = H.points(), q = o.pts.map((p) => p.clone().add(mv));
+    q[0] = q[1].clone().addScaledVector(C.clone().sub(q[1]).normalize(), o.pts[0].distanceTo(o.pts[1]));
+    return { ...o, pts: q };
+  } };
+}
+function zoeBare(P, hb, shape = null) {
+  const n = P.pos.length / 3, is = (v, c) => P.col[v * 3] === c[0] && P.col[v * 3 + 1] === c[1] && P.col[v * 3 + 2] === c[2];
+  const scalp = (v) => { if (!is(v, ZH_HAIR) && !is(v, ZH_SKIN)) return false; let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k]; return w >= 0.99; };
+  const key = (v) => `${P.pos[v * 3].toFixed(5)},${P.pos[v * 3 + 1].toFixed(5)},${P.pos[v * 3 + 2].toFixed(5)}`;
+  // the lift off: r' = r + lift(r) along the line from HC, solved for r (converges to 1e-10 m in a few steps); then
+  // (ZOE-HEAD) the cranium reshaped. The moved points' keys are taken where they end up (the same place → the same move),
+  // so the normals below are made smooth over the new surface. (v154's bare skull took them where they started, which
+  // missed every moved point: its scalp kept the model's own normals. ?zoehead=current keeps that, as the user saw it.)
+  const moved = new Set(), keys = new Set();
+  moved.disp = [];   // ([before, after] of each reshaped point: the lock follows the crown, zoeHair)
+  for (let v = 0; v < n; v++) {
+    if (!scalp(v)) continue;
+    let p = [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]], m = false;
+    if (!shape && zhLift(p) > 0) keys.add(key(v));
+    if (zhLift(p) > 0) {
+      const d = p.map((x, i) => x - ZH_HC[i]), rp = Math.hypot(...d), u = d.map((x) => x / rp);
+      let r = rp;
+      for (let it = 0; it < 8; it++) r = rp - zhLift(u.map((x, i) => ZH_HC[i] + x * r));
+      p = ZH_HC.map((x, i) => x + u[i] * r); m = true;
+    }
+    const q = shape && shape(p);
+    if (q) { moved.disp.push([p, q]); p = q; m = true; }
+    if (!m) continue;
+    for (let i = 0; i < 3; i++) P.pos[v * 3 + i] = p[i];
+    if (is(v, ZH_HAIR)) P.col.splice(v * 3, 3, ...ZH_SKIN);
+    moved.add(v);
+    if (shape) keys.add(key(v));
+  }
+  // smooth normals where it moved: area-weighted over every skin triangle of the head at those points. (ZOE-HEAD: and over
+  // the two rings of kept skin round them, so the kept skin's own normals meet the new ones without a line)
+  const acc = new Map(), a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  for (let ring = 0; shape && ring < 2; ring++) {
+    const add = [];
+    for (let t = 0; t < n / 3; t++) {
+      const i = t * 3;
+      if (!scalp(i) || !scalp(i + 1) || !scalp(i + 2)) continue;
+      const ks = [key(i), key(i + 1), key(i + 2)];
+      if (ks.some((k) => keys.has(k))) add.push(...ks);
+    }
+    add.forEach((k) => keys.add(k));
+  }
+  for (let t = 0; t < n / 3; t++) {
+    const i = t * 3;
+    if (!scalp(i) || !scalp(i + 1) || !scalp(i + 2)) continue;
+    const ks = [key(i), key(i + 1), key(i + 2)];
+    if (!ks.some((k) => keys.has(k))) continue;
+    a.fromArray(P.pos, i * 3); b.fromArray(P.pos, (i + 1) * 3).sub(a); c.fromArray(P.pos, (i + 2) * 3).sub(a); b.cross(c);
+    if (b.x * P.nrm[i * 3] + b.y * P.nrm[i * 3 + 1] + b.z * P.nrm[i * 3 + 2] < 0) b.negate();
+    for (const k of ks) { if (!acc.has(k)) acc.set(k, new THREE.Vector3()); acc.get(k).add(b); }
+  }
+  for (let v = 0; v < n; v++) {
+    if (!scalp(v)) continue;
+    const k = key(v);
+    if (!keys.has(k) || !acc.has(k)) continue;
+    const nn = acc.get(k).clone().normalize();
+    P.nrm[v * 3] = nn.x; P.nrm[v * 3 + 1] = nn.y; P.nrm[v * 3 + 2] = nn.z;
+  }
+  return moved;
+}
+// the skin round the tie a little darker (the scalp it sits on, as by Twinsen's tie): by the distance to the lock's
+// surface, the old hair area only
+function zoeSeat(P, ctx, moved) {
+  for (const v of moved) {
+    const [d] = hairDist(ctx, [P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]]);
+    const w = ZH_SEAT.k * (1 - sstep(ZH_SEAT.d[0], ZH_SEAT.d[1], d));
+    if (w > 0) P.col.splice(v * 3, 3, ...mixc(ZH_SKIN, ZH_SEAT.col, w));
+  }
+}
+function zoeHair(P0, H) {
+  const P = { ...P0, pos: P0.pos.slice(), nrm: P0.nrm.slice(), col: P0.col.slice(), si: P0.si.slice(), sw: P0.sw.slice() };
+  const n = P.pos.length / 3, hb = P.bones.indexOf('head'), tails = ['tail0', 'tail1', 'tail2'].map((b) => P.bones.indexOf(b));
+  const is = (v, c) => P.col[v * 3] === c[0] && P.col[v * 3 + 1] === c[1] && P.col[v * 3 + 2] === c[2];
+  // the model's pieces: vertices welded where they share a place and a colour, joined by their triangles
+  const par = new Int32Array(n).map((_, i) => i), find = (i) => { while (par[i] !== i) i = par[i] = par[par[i]]; return i; };
+  const join = (a, b) => { a = find(a); b = find(b); if (a !== b) par[a] = b; }, seen = new Map();
+  for (let v = 0; v < n; v++) {
+    const k = `${P.pos[v * 3].toFixed(5)},${P.pos[v * 3 + 1].toFixed(5)},${P.pos[v * 3 + 2].toFixed(5)},${P.col[v * 3]},${P.col[v * 3 + 1]},${P.col[v * 3 + 2]}`;
+    if (seen.has(k)) join(v, seen.get(k)); else seen.set(k, v);
+    if (v % 3 === 2) { join(v, v - 1); join(v, v - 2); }
+  }
+  const pieces = new Map();
+  for (let v = 0; v < n; v++) { const r = find(v); if (!pieces.has(r)) pieces.set(r, []); pieces.get(r).push(v); }
+  // the old ponytail (hair carried by the tail bones) and its band (trim on the head and the tail): out
+  const onHead = (v) => { for (let k = 0; k < 4; k++) if (P.sw[v * 4 + k] > 0 && P.si[v * 4 + k] !== hb && !tails.includes(P.si[v * 4 + k])) return false; return true; };
+  const tailed = (v) => { for (let k = 0; k < 4; k++) if (P.sw[v * 4 + k] > 0.01 && tails.includes(P.si[v * 4 + k])) return true; return false; };
+  const drop = new Set();
+  for (const vs of pieces.values()) if ((is(vs[0], ZH_HAIR) || is(vs[0], ZH_TRIM)) && vs.every(onHead) && vs.some(tailed)) vs.forEach((v) => drop.add(v));
+  if (!drop.size) return P0;   // (not the model this was made for: leave it)
+  const ctx = { drop, weights: zhWeights };
+  if (ZOE_SCALP === 'bare') {
+    // (ZOE-HAIR-2: the skull bare first, so the tie is found on her skin; the moved points' indices past the dropped ponytail)
+    // (ZOE-HEAD: the cranium reshaped in the same pass, ZOE_HEAD; the lock then moved as the skull under its tie moved)
+    const shape = ZOE_HEAD === 'current' ? null : zoeHeadShape(P.eyes[0].pivot, ZOE_HEADS[ZOE_HEAD]);
+    const moved = zoeBare(P, hb, shape), keep = [];
+    let k = 0;
+    for (let v = 0; v < n; v++) if (!drop.has(v)) { if (moved.has(v)) keep.push(k); k++; }
+    if (shape) H = zoeLockOnCrown(H, shape.c, moved.disp);
+    swapHair(P, ctx, splineLock(ctx, true, H));
+    hairBand(P, ctx, ZOE_BIGTIE ? ZH_BAND_BIG : ZH_BAND_BARE);
+    zoeSeat(P, ctx, keep);
+    return P;
+  }
+  swapHair(P, ctx, splineLock(ctx, true, H));
+  hairBand(P, ctx, ZH_BAND);
+  // the hair over the skull: gold, combed toward the tie, levelled
+  const tie = H.points().pts[1], ax = tie.clone().sub(new THREE.Vector3(0, 1.8, -0.06)).normalize();
+  const e1 = new THREE.Vector3(1, 0, 0).addScaledVector(ax, -ax.x).normalize(), e2 = ax.clone().cross(e1);
+  const p = new THREE.Vector3(), nv = new THREE.Vector3();
+  for (let v = 0, m = P.pos.length / 3; v < m; v++) {
+    if (!is(v, ZH_HAIR)) continue;
+    let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k];
+    if (w < 0.99) continue;
+    p.set(P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]).sub(tie);
+    const r = p.length(), ph = Math.atan2(p.dot(e1), p.dot(e2));
+    const col = mixc(ZH_CAP.col, ZH_CAP.root, sstep(0.08, 0.02, r)).map((x) => Math.max(0, Math.min(255, Math.round(x * (1 + ZH_CAP.amp * Math.cos(ZH_CAP.k * ph + 6 * r))))));
+    nv.set(P.nrm[v * 3], P.nrm[v * 3 + 1], P.nrm[v * 3 + 2]);
+    const nl = hsLevel(nv, nv, ZH_CAP.up);
+    P.col.splice(v * 3, 3, ...col);
+    P.nrm.splice(v * 3, 3, nl.x, nl.y, nl.z);
+  }
+  return P;
+}

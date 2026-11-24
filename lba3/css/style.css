@@ -266,6 +266,17 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.88); border:
 
 #floats { position: fixed; inset: 0; pointer-events: none; z-index: 3; }
 .float { position: absolute; transform: translate(-50%, -50%); font-weight: 900; font-size: 22px; color: #ffe35a; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000; white-space: nowrap; }
+/* P116: a minor resident's one short line over its head (walkers.js Remarks): its colour on the edge (LBA2's speaker
+   colours), the dialogue's sizes scaled down (read at Far from 1366x768 down to a phone), the Text Size setting followed;
+   in Hebrew only the text turns (the page's plaintext rule), the bubble and its tail stay where they are */
+.remark { position: absolute; transform: translate(-50%, -100%); display: none; width: max-content; max-width: min(360px, 72vw); padding: 6px 13px 7px; margin-top: -9px;
+  background: rgba(6, 12, 20, 0.88); border: 2px solid var(--spk, #fff); border-radius: 10px; color: #fff; font-weight: 600; text-align: center; white-space: normal;
+  font-size: calc(clamp(15px, 1.35vw, 20px) * var(--txs, 1)); line-height: 1.32; text-shadow: 0 1px 2px #000; pointer-events: none; z-index: 1; }
+.remark::after { content: ''; position: absolute; left: 50%; top: 100%; transform: translateX(-50%); border: 8px solid transparent; border-top-color: var(--spk, #fff); border-bottom: 0; }
+body.hud-lba .remark { border-radius: 0; background: rgba(0, 0, 0, 0.66); border-width: 1px; font-weight: 700; }
+body.big-text .remark { font-size: calc(clamp(18px, 1.65vw, 24px) * var(--txs, 1)); max-width: min(430px, 80vw); }
+body.xl-text .remark { font-size: calc(clamp(21px, 1.95vw, 28px) * var(--txs, 1)); max-width: min(500px, 86vw); }
+body.hud-busy .remark, body.found-on .remark { visibility: hidden !important; }
 
 /* behaviour menu */
 #behmenu { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 7; display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; }

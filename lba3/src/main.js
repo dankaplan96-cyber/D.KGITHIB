@@ -16,7 +16,7 @@ import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
 import { RefreshMeter, limitRefreshes, EvenPace, paceBudgetMs } from './engine/pace.js';
 import { FarCull, BlobBatch, BoxCull, MW, FOGCULL, setFogCull, CASTER_ONLY } from './engine/drawcull.js';
-import { BLOBS, PLANT_VIEW } from './engine/rig.js';
+import { BLOBS, PLANT_VIEW, armClearWarm, armClearWarmed } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
 import { DrawBatch, warmLayers, runFor } from './engine/drawbatch.js';
@@ -25,7 +25,7 @@ import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
-import { buildWorldSteps, POI, QUAY } from './game/world.js';
+import { buildWorldSteps, POI, QUAY, rocksOutOfMasonry } from './game/world.js';
 import { streetDist } from './game/town.js';
 import { buildWizardTent } from './game/wizards.js';
 import { buildLba1Door } from './game/lba1places.js';
@@ -34,7 +34,7 @@ import { preloadLba1Rooms } from './game/lba1room.js';
 import { preloadIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
 import { buildTownLife } from './game/townlife.js';
-import { Resident } from './game/walkers.js';
+import { Resident, Remarks } from './game/walkers.js';
 import { buildCityDressing } from './game/citydress.js';
 import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './game/containers.js';
 import { enterArena } from './game/arena.js';
@@ -94,8 +94,17 @@ const CHILD_SCREENS = new Set(['settings', 'controls', 'confirmnew', ...SLOT_SCR
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd', 'found']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
 const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn', 'slidewind', 'slide', 'skid']);
-export const VERSION = '0.49.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.50.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
+// INTERACT-PICK (P115): the objective's own thing in reach and roughly faced (within ~75° of his facing, GOAL_FACE) takes
+// the interact key before people and other things; a thing counts as the goal's when it lies within GOAL_R m of one of
+// the objective's stars (a person: on the star, GOAL_R_NPC)
+const GOAL_FACE = 0.25, GOAL_R = 1.0, GOAL_R_NPC = 0.4;
+// (GOAL-DRESS, LBA3-RUN progression: the rooms' and homes' own looks, signs, boards and pets describe a place and are
+//  never an objective's thing. A look measured at a piece the objective's star stands on — the research post's desk in
+//  chapter 4: the room's Look at the desk's middle, the desk's Search at the place before it, 1.25 m off the star — was
+//  taken for the goal and kept the key from the desk: the notebook could not be taken. They keep the plain ranking)
+const NOT_GOAL = new Set(['ihlook', 'ihfar', 'zhlook', 'hl_look', 'lhome', 'wlook', 'sign', 'termBoard', 'pet']);
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
 // carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none); v4 → v5: the final chapter is two
@@ -382,6 +391,7 @@ class Game {
       timed('wizards', () => buildWizardTent(S, P, this.world));
       timed('lba1', () => buildLba1Door(S, P));
       timed('sewers', () => buildSewerHatch(S, P, this.world));   // (WA-14, DOORS-LBA2: the lower town's and the terrace's hatches)
+      timed('rocks', () => rocksOutOfMasonry(this.world));   // (P121: no cliff rock left standing in the masonry built above)
       bar.measured(BUILD_REF.town, performance.now() - t0);
     }
     L.citadel = Math.round(performance.now() - tm);
@@ -599,6 +609,7 @@ class Game {
     this.evenPace.onChange = () => { this.renderer.budgetMs = this.paceBudget(); this.autoQ?.onPace?.(); if (this.screen === 'settings') this.syncSettingsUI?.(); };
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
+    this.remarks = new Remarks(this);   // (P116: a minor resident's one short line over its head: walkers.js Remarks)
     this.applySettings();
     this.wireUI();
     this.last = performance.now();
@@ -845,6 +856,7 @@ class Game {
   }
   // the cast of an area just built: NPCs that waited for its spots go there, its enemies are made
   addActors() {
+    this._acWarm = true;   // (ARM-COST: their body profiles, ahead of their first poses)
     for (const d of this.story.npcDefs()) {
       const n = this.npcs.find((x) => x.def.id === d.id);
       if (!n) { const m = d.ambient ? new Resident(this, d) : new NPC(this, d); if (d.pending) m.setPresent(false); this.npcs.push(m); continue; }
@@ -1082,6 +1094,9 @@ class Game {
       });
     }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)
+    // (ARM-COST: the body profiles ARM-CLEAR needs of the people here, made now in slices, not at each one's first pose in view)
+    this._acWarm = true;
+    S.push(() => { const t0 = performance.now(), p0 = P0(), more = this.warmArms(PREP_SLICE_MS); put('arm profiles', t0, p0); return more; });
     stepT('batch meshes', () => this.uploadBatches(root));
     stepT('textures', () => { this.uploadTextures(root); this.uploadExtras(root); });   // (ROTATE-STALL: what the area's first frame still made)
     stepT('shadow programs', () => { if (this._shadowWarm) { this._shadowWarm = false; this.warmShadows(); } });   // (LAZY-REGIONS: an area built since the last warm-up)
@@ -1732,9 +1747,19 @@ class Game {
     this.state = s;
     if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
-    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); }
+    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); this.endAct(); }
     if (s !== 'play') { this.targeting?.hide(); this._swapT = -1; }   // (a swap key held into a dialogue never acts after it)
     this.hud?.busy(s !== 'play');
+    this.audio?.hold?.(s === 'pause' || s === 'map' || s === 'inventory');   // (LBA3-SOUND: a fight's music waits under a menu)
+  }
+  // ACT-RESUME (lba3-controls, 23.11): a one-shot action whose moment has passed (his hand on the tap, the valve, a kick,
+  // a pick-up: its callback ran and opened a talk, a found box or a film) ends when play comes back. It used to wait out
+  // the talk frozen and play its last 0.45 s after it: the gesture again, and the keys locked (actT > 0) — "W Try Tap" on
+  // screen and W doing nothing, walking doing nothing, for that long after every such talk. An action still to reach its
+  // moment (its callback pending) or with a follow-up (a knockdown's get-up) goes on as before
+  endAct() {
+    const h = this.hero;
+    if (h && h.actT > 0 && !h.actCb && !h.actNext) h.actT = 0;
   }
   // INVENTORY-CALM: the inventory window shuts back to play, or to the pause menu it was opened from (its Journal
   // button selected again)
@@ -2440,12 +2465,22 @@ class Game {
     // him: someone standing just behind him does not take the prompt from the pump he faces at arm's length
     // (FIX-PUMP-N: Bram 0.9 m behind beat the pump 1.4 m ahead)
     const fx = Math.sin(h.angle), fz = Math.cos(h.angle);
+    // (INTERACT-PICK: every candidate in reach is kept with its score and the point it was measured at — the last dist()
+    //  before its consider(), every story file measures its thing that way — for the goal's rule at the end)
+    const C = (this._pick ||= { o: [], s: [], x: [], z: [], n: 0 });
+    C.n = 0;
+    let px = NaN, pz = NaN;
     const consider = (d, max, o) => {
+      const x = px, z = pz;
+      px = pz = NaN;
       if (!(d < max)) return;
       const s = d + (o.kind === 'npc' && !o.behind ? -0.35 : 0);
+      const i = C.n++;
+      C.o[i] = o; C.s[i] = s; C.x[i] = x; C.z[i] = z;
       if (s < bd) { bd = s; best = o; }
     };
     const dist = (x, z) => {
+      px = x; pz = z;
       const dx = x - h.pos.x, dz = z - h.pos.z, d = Math.hypot(dx, dz);
       const facing = d > 1e-3 ? (dx * fx + dz * fz) / d : 1;
       return d + (1 - facing) * 0.45;
@@ -2481,31 +2516,79 @@ class Game {
     // (CONTAINERS-3: facing the house's dresser, Zoé at the sink 1.2 m to his side got "Talk" and the tap beside it
     //  "Tap" from every level place in front of it, so the dresser could not be searched while she stood there)
     // (a person he faces at least as squarely still wins)
-    const gv = best && h.onGround ? this.giverInReach() : null;
-    if (gv) {
-      const ga = aim(gv.x, gv.z);
-      if (ga > 0.7 && !(faced && fa >= ga) && dist(gv.x, gv.z) < bd) return null;
+    let gva = 0;   // (how squarely he faces the container that takes the key, when one does)
+    const pick = (() => {
+      const gv = best && h.onGround ? this.giverInReach() : null;
+      if (gv) {
+        const ga = aim(gv.x, gv.z);
+        if (ga > 0.7 && !(faced && fa >= ga) && dist(gv.x, gv.z) < bd) { gva = ga; return null; }
+      }
+      if (faced && best?.kind === 'roomsearch' && fa > aim(best.spot.x, best.spot.z)) return faced;
+      // (and a sign beside them: Esren reading the spaceport's departures board, Twinsen at her elbow and facing her,
+      //  got "Read" — E read the board — however close he came; the sign he faces more squarely still wins)
+      if (faced && best?.kind === 'sign' && fa > aim(best.sign.x, best.sign.z)) return faced;
+      // (the same for a terminal's departures board, story/islands.js: Twinsen turned squarely to Mr Rollo in the evacuation's
+      //  queue, walking past behind the board's reading spot 1.3 m off, got "Read" — the board 0.7 m ahead, a little aside)
+      if (faced && best?.kind === 'termBoard' && fa > aim(best.tm.H.board.x, best.tm.H.board.z)) return faced;
+      // (and another person off to his side: in chapter 8 Safi, walking her round past Brosk's stall, stood 1.3 m straight
+      //  ahead of him and Brosk 1.0 m off at 58°; her walker's tie-break and the side penalty gave Brosk "Talk" and E spoke
+      //  to him (WORKPLAN d5). Only a clear difference counts: two people about as squarely ahead keep the ranking above)
+      if (faced && best?.kind === 'npc' && best !== faced && fa > aim(best.npc.pos.x, best.npc.pos.z) + 0.25) return faced;
+      return best;
+    })();
+    // INTERACT-PICK (P115, the desktop's real-keys play of the opening): the thing the objective is about, in reach and
+    // roughly faced, takes the key before a person or another thing beside it — Zoé by the garden tap took "Talk" from
+    // the tap at the tap's step, Mira by the well took it from the well's Inspect/Kick from most sides, Gilbert from the
+    // well's way down. Only when there is a choice (two in reach, or a container taking the key). He can still turn
+    // squarely to the other one while the goal's thing stands well to his side (≥ 60°): then that one answers.
+    C.base = pick;   // (the ranking without the goal's rule, for tests/interact-pick.mjs's before/after)
+    if (C.n < 2 && !(C.n === 1 && !pick)) return pick;
+    const gi = this.goalPick(C, aim);
+    if (gi < 0 || C.o[gi] === pick) return pick;
+    let pa = gva;
+    if (pick) {
+      const j = C.o.indexOf(pick);
+      // (a thing with no measured point — "let go" of the lift's handle, a hatch under his feet — always keeps the key)
+      if (j < 0 || j >= C.n || !(C.x[j] === C.x[j])) return pick;
+      pa = aim(C.x[j], C.z[j]);
     }
-    if (faced && best?.kind === 'roomsearch' && fa > aim(best.spot.x, best.spot.z)) return faced;
-    // (and a sign beside them: Esren reading the spaceport's departures board, Twinsen at her elbow and facing her,
-    //  got "Read" — E read the board — however close he came; the sign he faces more squarely still wins)
-    if (faced && best?.kind === 'sign' && fa > aim(best.sign.x, best.sign.z)) return faced;
-    // (the same for a terminal's departures board, story/islands.js: Twinsen turned squarely to Mr Rollo in the evacuation's
-    //  queue, walking past behind the board's reading spot 1.3 m off, got "Read" — the board 0.7 m ahead, a little aside)
-    if (faced && best?.kind === 'termBoard' && fa > aim(best.tm.H.board.x, best.tm.H.board.z)) return faced;
-    // (and another person off to his side: in chapter 8 Safi, walking her round past Brosk's stall, stood 1.3 m straight
-    //  ahead of him and Brosk 1.0 m off at 58°; her walker's tie-break and the side penalty gave Brosk "Talk" and E spoke
-    //  to him (WORKPLAN d5). Only a clear difference counts: two people about as squarely ahead keep the ranking above)
-    if (faced && best?.kind === 'npc' && best !== faced && fa > aim(best.npc.pos.x, best.npc.pos.z) + 0.25) return faced;
-    return best;
+    return pa > 0.9 && aim(C.x[gi], C.z[gi]) < 0.5 ? pick : C.o[gi];
+  }
+  // INTERACT-PICK: the candidate (index in C) that is the objective's thing — within GOAL_R of a star of story.markers()
+  // (a person on it), roughly faced or right by him — or -1. The stars are read once a frame.
+  goalPick(C, aim) {
+    const h = this.hero;
+    if (this._goalT !== this.time || this._goalRoom !== this.room) {
+      this._goalT = this.time; this._goalRoom = this.room;
+      const ms = this.story?.markers?.() || [];
+      this._goals = ms.filter((m) => m.kind === 'star' && Number.isFinite(m.x) && Number.isFinite(m.z));
+    }
+    const S = this._goals;
+    let gi = -1, gs = 1e9;
+    if (!S.length) return gi;
+    for (let i = 0; i < C.n; i++) {
+      const x = C.x[i], z = C.z[i];
+      if (!(x === x) || !(C.s[i] < gs) || NOT_GOAL.has(C.o[i].kind)) continue;
+      const r = C.o[i].kind === 'npc' ? GOAL_R_NPC : GOAL_R;
+      let on = false;
+      for (let k = 0; k < S.length && !on; k++) on = Math.hypot(S[k].x - x, S[k].z - z) < r;
+      if (!on) continue;
+      if (!(aim(x, z) > GOAL_FACE || Math.hypot(x - h.pos.x, z - h.pos.z) < 0.8)) continue;
+      gi = i; gs = C.s[i];
+    }
+    return gi;
   }
 
   // false when there is nothing in reach (in Normal mode Twinsen then hops: see Hero.hop)
   tryInteract() {
     const it = this.findInteractable();
+    // (P116: E while a resident's remark is up closes it; on that same resident, that is all the key does)
+    const R = this.remarks, rn = R?.cur?.n;
+    if (rn) { R.close('key'); if (!it || (it.kind === 'npc' && it.npc === rn)) return true; }
     if (!it) return false;
     this.tutorial.event('interact', it.kind);
-    if (it.kind === 'npc') { (this.talkers ??= new Set()).add(it.npc); this.story.talk(it.npc); }   // (G1-CAM: the one he spoke to is in the two-shot from the first line)
+    // (G1-CAM: the one he spoke to is in the two-shot from the first line; P116: not for a remark over a resident's head)
+    if (it.kind === 'npc') { const n = it.npc, box = () => (this.talkers ??= new Set()).add(n); if (R) R.talk(n, () => this.story.talk(n), box); else { box(); this.story.talk(n); } }
     else if (it.kind === 'sign') this.say('', [t(it.sign.key)]);
     else if (it.kind === 'pet') it.pet.talk(this);
     else this.story.interact(it);
@@ -2610,6 +2693,7 @@ class Game {
 
   say(name, lines, done, speaker = null, color = null) {
     if (!Array.isArray(lines)) lines = [lines];
+    this.remarks?.close('state');   // (P116: a box opening takes the place of a remark over a head)
     this.setState('dialog');
     this.hud.prompt(null);
     this.speaker = speaker;
@@ -3168,6 +3252,25 @@ class Game {
     const frame = Math.max(this.frameCapMs || 0, this._vsync || 1000 / 60);
     return Math.max(0.5, Math.min(max, 0.75 * frame - (this._workMs ?? 0)));
   }
+  // ARM-COST (LBA3-RUN performance): ARM-CLEAR's body profiles (rig.js) of the people and enemies of the scene on screen —
+  // indoors within the room's reach, outdoors within the far cull's (offscene.js's bounds), nearest to Twinsen first —
+  // made for at most `ms`; true while any is left. A profile made at a character's first pose took 4-54 ms of that frame
+  // (SwiftShader's machine, Zeelich's first minute: ten of them); one per look, kept for the session.
+  warmArms(ms) {
+    const h = this.hero?.pos, R = this.room;
+    if (!h) return false;
+    const inside = R && !R.outdoor, c = inside ? (R.center || R.group?.position) : h, far = inside ? 60 : Math.max(this.scene?.fog?.far ?? 0, 250) + 10;
+    if (!c) return false;
+    let L = null;
+    for (const list of [this.npcs, this.enemies]) for (const a of list || []) {
+      const r = a?.rig, p = a?.pos;
+      if (!r || armClearWarmed(r) || !p || (p.x - c.x) ** 2 + (p.z - c.z) ** 2 > far * far) continue;
+      (L ||= []).push([(p.x - h.x) ** 2 + (p.z - h.z) ** 2, r]);
+    }
+    if (!L) return false;
+    L.sort((a, b) => a[0] - b[0]);
+    return armClearWarm(L.map((x) => x[1]), ms);
+  }
 
   // Deterministic stepping for automated tests: game.step(seconds).
   // CONTROLS-BY-DEVICE: when the device in use changes between a pad and the keyboard/mouse, the movement scheme and
@@ -3279,6 +3382,7 @@ class Game {
     this.cues.update(dt, this, this.state === 'play' && !this.trans);
     if (this.state !== 'play') this.behMenu.show(false);
     this.hud.updateFloats(dt, this.camera);
+    this.remarks?.update(dt);   // (P116: the remark over a resident's head follows it; closes on its time, E, a walk off or a box)
     if (this.state !== 'dialog') this.bubble.visible = false;
     if (render && !this.trans?.hold && !(this.gfxHold && performance.now() - this.gfxHold.t < 4000)) {
       const t0 = performance.now();
@@ -3424,10 +3528,14 @@ class Game {
     const it = this.findInteractable();
     // (nothing else in reach and an unsearched container by him: the verb, no more — CONTAINERS)
     this.hud.prompt(it ? t(it.label) : h.onGround && this.giverInReach() ? t('p_rummage') : null);
+    // (INTERACT-PICK: what the prompt on screen offers, for the tip panel's key line: it names the key only for this)
+    this.promptFor = this.hud._prompt ? it : null;
     this.hud.stats(h);
     // (where he is and the doors he used, for the maps; the region's map drawn a slice further; the minimap when shown.
     //  RENDER-INV: once per displayed frame: a slow frame's catch-up steps each drew another slice of the map)
     if (!this._inner) this.hud.mapTick();
+    // (ARM-COST: the body profiles still to make for the people here, in what this frame's own work leaves, as the map)
+    if (!this._inner && this._acWarm !== false) { const t0 = performance.now(); this._acWarm = this.warmArms(this.spareMs(2)); this._bgMs = (this._bgMs || 0) + performance.now() - t0; }
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
     this.occluders(dt);
   }

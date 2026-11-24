@@ -6,6 +6,7 @@
 // textures, and merged per material so a dense room stays cheap to draw.
 import * as THREE from 'three';
 import { rng } from '../engine/math.js';
+import { settleRockRanges } from './rocksettle.js';
 import { sculptRigid } from '../engine/sculpt.js';
 
 // ================================================================ geometry
@@ -133,12 +134,15 @@ export class Kit {
         this.buckets.delete(mat);
       }
     }
+    const geos = [];
     for (const [mat, list] of this.buckets) {
       const geo = mergeEntries(list, mat.userData.tile || 0, !!mat.vertexColors);
+      geos.push(geo);
       const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = !mat.userData.noShadow; mesh.receiveShadow = true;
       this.group.add(mesh);
     }
+    settleRockRanges(geos);   // (P121: no rock half inside another of its size)
     this.buckets.clear();
   }
 }
@@ -151,8 +155,10 @@ function mergeEntries(list, tile, withColor) {
   const idx = new Uint32Array(ni);
   const v = new THREE.Vector3(), n = new THREE.Vector3(), nm = new THREE.Matrix3();
   let vo = 0, io = 0;
+  const rocks = [];   // (P121: the index ranges that came from a rock's geometry, for the overlap sweep's rock checks)
   for (const e of list) {
     const g = e.geo, P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv, C = g.attributes.color;
+    if (g.userData.rock) rocks.push([io, io + (g.index ? g.index.count : P.count)]);
     nm.getNormalMatrix(e.m);
     const flip = e.m.determinant() < 0;
     const [sx, sy, sz] = e.s;
@@ -197,6 +203,7 @@ function mergeEntries(list, tile, withColor) {
   if (col) geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   geo.setIndex(new THREE.BufferAttribute(idx, 1));
   geo.computeBoundingSphere();
+  if (rocks.length) geo.userData.rockRanges = rocks;
   return geo;
 }
 

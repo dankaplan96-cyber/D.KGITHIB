@@ -145,6 +145,8 @@ Object.assign(STR.en, {
   zt_kell_after: 'She runs on the mill line now. If you ever need a lift, ask.',
   // (DIALOGUE-2: the aftermath on Mill Lane, after the core)
   zt_kell_home: 'She runs off the mills now, on a switch of her own. Irsa made them fit a proper one.',
+  // (THE SECOND SHIFT, free play: in Mother Snuff's bakehouse with his bread, Brum at the handle)
+  zt_kell_bread: "Still warm. Go and get your own.",
   zt_irsa_home: 'Baldino brought me the shield readings. No more three and a rest. I took the strip down from over my bench.',
   zt_kell_later: "The chief gave us the mill line that day. I don't know what to think of the rest.",
   zt_fall: '(A long way down. The stair is round the back.)',

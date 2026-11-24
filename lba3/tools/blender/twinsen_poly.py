@@ -3,6 +3,9 @@
 #   python tools/blender/twinsen_poly.py art/characters/skeletons.json assets/poly [art/characters/twinsen/twinsen_poly.blend]
 #   (the skeleton file may hold every character or Twinsen alone; the output may be a .json file or a folder;
 #   the .blend is written only when named, and it is Twinsen's own file, not the cast's cast_poly.blend)
+#   Without Blender: PYTHONPATH=tools/blender/nobpy python3 tools/blender/twinsen_poly.py art/characters/skeletons.json OUT.json
+#   (P123: matches the shipped v156 model to the JSON's last digit, except the medallion's cord, which is laid by ray casts:
+#   up to 1.2 mm off; docs/lba-maturity/P123.md)
 #
 # Built from the measurements of LBA2's in-game model (docs/character-review.md §11): every ring below is a
 # horizontal section of the original (height, half-width, front and back extent, fractions of the height H).
@@ -351,6 +354,18 @@ N = 24
 # TW_BALL_HAND) builds its own model without CHAR-FORM.
 FORM = os.environ.get('TW_FORM', '1') != '0' and not FIGURE and not any(os.environ.get(k) for k in (
     'TW_CAPE_046', 'TW_CAPE_CUT', 'TW_LOOK_38', 'TW_LOOK_OLD', 'TW_LEGS_OLD', 'TW_CUFF_OLD', 'TW_BALL_HAND'))
+# TUNIC-SLEEVE (P123, the user 24.11, on a photo of v155/v156: "it looks like a sleeve inside the tunic; it shouldn't be
+# like that"). The tunic's side is his sleeve (LBA2's weights: it rides the forearm), but under its edge a second, narrower
+# cone (`cuff*`, with CUFF-HEM's rolled rim) stuck out 4 cm and flared past it, lit lighter than the tunic: a sleeve
+# inside the sleeve. Now there is one garment: the cuff and its rolled hem are gone, and the tunic's own edge comes down
+# over each arm by the cuff's length (SLEEVE_DROP; the front, the back and the belt line untouched), so its side ends
+# where the cuff ended and the hand comes straight out of it, as much of the hand showing as before. Its dark inner lip
+# (the cloth's thickness, the tunic's hem all round) follows the edge; a dark lid just inside the sleeve, round the
+# wrist, closes the view up the sleeve (it was the cuff's). TW_SLEEVE_HEM=1 adds a rolled hem of the tunic's blue round
+# the sleeve's edge (the option); TW_SLEEVE_OLD=1 builds the sleeve inside the sleeve (v156).
+TUNIC_SLEEVE = FORM and not os.environ.get('TW_SLEEVE_OLD')
+SLEEVE_HEM = TUNIC_SLEEVE and os.environ.get('TW_SLEEVE_HEM', '0') == '1'
+SLEEVE_DROP = float(os.environ.get('TW_SLEEVE_DROP', '0.020'))   # (H: the side's edge 0.408 → 0.388, the old cuff's lowest point; 4.2 cm in the game)
 # NECK-TW: the cape's top. It was flat (0.765 → 0.772 H while narrowing from ±0.052 to ±0.03) and, being ring()s,
 # notched at the back, so the neck stuck out of it like a cut pipe. Now the shoulders slope up into a soft rolled
 # collar round the neck, as the original's cape rises onto its neck (measured: ±0.138 at 0.744, ±0.107 at 0.768,
@@ -378,7 +393,11 @@ def cape_folds(pts, amp):
 
 
 CAPE_FOLD = lambda y: 0.03 * smooth(0.64, 0.45, y) if FORM else 0.0
-loft(lip, [cape_folds(r_, CAPE_FOLD(0.43)) for r_ in (ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62))])
+# (TUNIC-SLEEVE: the edge over each arm, the 75-105 degree columns round each side, lowered by SLEEVE_DROP, easing back
+# to the old hem by 45 degrees; the front and back of the tunic keep their hem)
+sleeve_g = lambda t: smooth(0.72, 0.96, abs(math.sin(t))) if TUNIC_SLEEVE else 0.0
+hem_s = lambda t: hem(t) - SLEEVE_DROP * sleeve_g(t)
+loft(lip, [cape_folds(r_, CAPE_FOLD(0.43)) for r_ in (ring(lambda t: hem_s(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem_s, 0.209, 0.126, -0.075, N, 0.62))])
 if CAPE_CUT:
     cut_sleeves(lip, N, 2)
 PARTS.append(lip)
@@ -390,7 +409,7 @@ CAPE_BODY = [
     ring(0.74, 0.122, 0.096, -0.028, N, 0.8),
 ]
 if FORM:   # (CHAR-FORM: y, half-width, front, back, roundness; the front and back as the old cone's at each height)
-    CAPE_BODY = [cape_folds(ring(hem, 0.212, 0.128, -0.077, N, 0.62), CAPE_FOLD(0.43))] + [cape_folds(ring(y_, hw_, zf_, zb_, N, p_), CAPE_FOLD(y_)) for y_, hw_, zf_, zb_, p_ in (
+    CAPE_BODY = [cape_folds(ring(hem_s, 0.212, 0.128, -0.077, N, 0.62), CAPE_FOLD(0.43))] + [cape_folds(ring(y_, hw_, zf_, zb_, N, p_), CAPE_FOLD(y_)) for y_, hw_, zf_, zb_, p_ in (
         (0.495, 0.2135, 0.130, -0.077, 0.62),
         (0.54, 0.214, 0.132, -0.077, 0.62),
         (0.58, 0.2095, 0.135, -0.0715, 0.64),
@@ -401,6 +420,32 @@ if FORM:   # (CHAR-FORM: y, half-width, front, back, roundness; the front and ba
         (0.74, 0.134, 0.096, -0.028, 0.8),     # the shoulder's top, nearly level into the collar
     )]
 loft(cape, CAPE_BODY + CAPE_TOP)
+if SLEEVE_HEM:
+    # (TUNIC-SLEEVE, the option: a rolled hem of the tunic's own blue along the sleeve's edge, the 45-135 degree columns
+    # round each side, 1 cm thick, fading to nothing where the edge meets the tunic's front and back hem; on the cape's
+    # weights there, so it moves with the edge)
+    HR = 0.0048
+    edge = CAPE_BODY[0]
+    for ks in (range(3, 10), range(15, 22)):
+        pts = []
+        for k in ks:
+            a, b = Vector(edge[k % N]), Vector(edge[(k + 1) % N])
+            pts.append(a)
+            if k != ks[-1]:
+                pts.append(a.lerp(b, 0.5))
+        rings_ = []
+        for i, p in enumerate(pts):
+            u = i / (len(pts) - 1)
+            r = HR * min(1.0, math.sin(math.pi * u) * 2.2)
+            out_ = Vector((p.x, 0.0, p.z - 0.025)).normalized()
+            tg = (pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized()
+            c = p + out_ * (r * 0.35) + Vector((0, 1, 0)) * (r * 0.55)
+            v1 = tg.cross(Vector((0, 1, 0))).normalized()
+            v2 = tg.cross(v1).normalized()
+            rings_.append(ell_ring(tuple(c), v1, v2, max(r, 1e-4), max(r, 1e-4), 6))
+        shem = Part('sleeveHem' + side(edge[ks[0]][0]), 'tunic', w_cape, angle=80)
+        loft_along(shem, rings_, cap0=False, cap1=False)
+        PARTS.append(shem)
 if CAPE_CUT:
     cut_sleeves(cape, N, CUT_RINGS)
 PARTS.append(cape)
@@ -607,8 +652,9 @@ for sx in (1, -1):
         tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
     else:
         loft_along(cuff, [cuff_ring(sx, y, r) for y, r in CUFF_WALL], cap0=False, cap1=False)
-    PARTS.append(cuff)
-    if not TW_CUFF_OLD:
+    if not TUNIC_SLEEVE:   # (TUNIC-SLEEVE: no cuff and no rolled cuff hem: the tunic's side is the sleeve to its end)
+        PARTS.append(cuff)
+    if not TW_CUFF_OLD and not TUNIC_SLEEVE:
         # CUFF-HEM: the cuff ended in the cone's bare edge (no thickness: a knife edge from every side, a flat dark lid just
         # inside it). Now the cloth turns under in a rolled hem: out a little, round under and back in by the cloth's
         # thickness (1.5 cm), so the cuff ends in a lit, rounded edge over a dark opening. Softly shaded on its own (a fine
@@ -661,7 +707,12 @@ for sx in (1, -1):
         wall.cls = ['sleeve' if j < CUT_RINGS else 'shared' for j in range(CUT_RINGS + 1) for _ in range(WM + 1)]
         PARTS.append(wall)
     cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
-    if TW_CUFF_OLD:
+    if TUNIC_SLEEVE:
+        # (TUNIC-SLEEVE: the sleeve's dark inside round the wrist, a flat oval lid 1.6 cm up inside the tunic's side, the
+        # wrist running through it: narrower across than the cuff's lid, so it stays inside the side's cloth)
+        cin.add([(sx * 0.19, 0.404, 0.016)] + ell_ring((sx * 0.19, 0.404, 0.016), (1, 0, 0), (0, 0, 1), 0.0175, 0.034, 12),
+                [[0, 1 + i, 1 + (i + 1) % 12] for i in range(12)])
+    elif TW_CUFF_OLD:
         cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
     else:   # (CUFF-HEM: the cloth's inside, dark, from the hem's inner edge up into the sleeve, closed there; the wrist runs
         #      through that lid as it ran through the old one)
@@ -1751,6 +1802,8 @@ for piv, poly, mtilt in MOUTHS:
     ob.parent_bone = 'head'
     ob.matrix_world = Matrix.Identity(4)
 
+from handpass import apply as hands2   # (HANDS-2: the fist rebuilt as an open, relaxed hand; HANDS2_OLD=1 keeps the fist)
+hands2(out, 'twinsen')
 json.dump(out, open(OUT, 'w'), separators=(',', ':'))
 print('parts', PART_TRIS)
 print('tris', out['tris'], 'verts', len(out['pos']) // 3, 'bones', out['bones'])

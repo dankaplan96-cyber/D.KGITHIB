@@ -57,6 +57,10 @@ const LIFT = { x: 24, z: -22.2, top: { x: 24, z: -28.5 } };        // platform o
 const MONAST = { x: 34, z: -44 };
 const RIDGE = [[18, -40], [6, -56], [-6, -66]];                     // monastery terrace → peak (L3 → L4)
 const OBS = { x: -14, z: -72 };
+// THE SECOND SHIFT (chapter 7, "The wrong roof"): Sefa's old signalling shutter on the peak's south lip, and the old house
+// in Lhar it was aimed at (the goats' house now: its ridge clears the rock shelf, Lhar's other roofs do not)
+const SHUT = { x: -12.6, z: -59.7 };
+const GOATS = { x: -21, z: 27, ry: Math.PI };
 const BASIN = { x: -48, z: -46, r: 20 };
 const DESCENT = [[-22, -66], [-34, -58]];                            // peak → basin (L4 → LB)
 const VENT = { x: -50, z: -48 };
@@ -511,6 +515,22 @@ export function* buildHamalayiSteps(scene, physics) {
         return { hw: 1.4, hd: 0.8, top: 2 };
       }, { see: true });
     }
+    // THE SECOND SHIFT (P109 part 2, chapter 7 "The wrong roof", story/observatory.js RoofThread): Pim's grandmother's
+    // old house on the village's south rim, two storeys under a steep slate roof: the goats' house now (goats below, hay
+    // in the loft), its windows dark. Its ridge is the one roof in Lhar the dome's peak can see over the rock shelf
+    // (physics.lineOfSight from the signalling shutter, below: Lhar's ground and its other roofs are hidden by it).
+    // Not one of the village's doors (DOOR-SWEEP: no 'ham-lhar' id of its own; its door is shut and only looked at)
+    {
+      const x = GOATS.x, z = GOATS.z, ry = GOATS.ry, w = 4.2, d = 3.6, h = 4.8;
+      let gy = 1e9; for (const [lx, lz] of [[0, 0], [-w / 2, -d / 2], [w / 2, -d / 2], [-w / 2, d / 2], [w / 2, d / 2]]) { const [px, pz] = loc(x, z, ry, lx, lz); gy = Math.min(gy, H(px, pz)); }
+      gy = Math.min(gy, H(x, z) - 0.3);
+      const fp = put('lhar', 'goatHouse', x, z, ry, (k) => mountainHouse(k, { w, d, h, seed: 11, wall: '#d2c4ae', trim: TRIM.ochre, doorC: '#7a5a3a', chimney: false, glow: MM.dark() }), { y: gy, nocheck: true, col: false });
+      col({ type: 'box', x, z, hw: fp.hw, hd: fp.hd, rot: ry, top: gy + fp.top });
+      const [hx, hz] = loc(x, z, ry, -1.25, d / 2 + 0.75);
+      put('lhar', 'goatHay', hx, hz, ry, (k) => hayRack(k, { w: 1.2 }));
+      const [dx, dz] = loc(x, z, ry, w * 0.4 - w / 2 + 0.5, d / 2 + 0.9);
+      R.goatHouse = { ...W(x, z), door: W(dx, dz), ridgeY: gy + fp.ridge.y };
+    }
     // drifts round the square's edge and against the walls
     for (const [x, z, l, h, d, ry, sd] of [[-19.5, 18, 2.6, 0.5, 1.4, 0.8, 1], [6.5, 13.4, 2.2, 0.45, 1.2, 2.4, 2], [-1.5, -8.2, 2.4, 0.5, 1.3, 0.1, 3], [-27, 14.5, 3, 0.6, 1.6, 0.4, 0], [11, 17, 3.4, 0.55, 1.6, 1.2, 1]]) put('lhar', 'drift', x, z, ry, (k) => { drift(k, 0, -0.08, 0, l, h, d, 0, sd); }, { col: false, nocheck: true });
   }
@@ -753,6 +773,43 @@ export function* buildHamalayiSteps(scene, physics) {
     put('obs', 'signObs', -2.3, -66.8, 0, (k) => mountainSign(k, [{ text: 'OBSERVATORY', a: -1.5 }, { text: 'MONASTERY', a: 0.66 }]));
   }
   R.observatory = { ...W(OBS.x, OBS.z), door: W(OBS.x, OBS.z + 6.0) };
+  // THE SECOND SHIFT (P109 part 2, chapter 7): the observatory's old signalling shutter (a heliograph) on a stone post on the
+  // peak's south lip: a round mirror on a yoke that turns (az: the game's heading, 0 = +z) and tips (el: up), four slats in
+  // front of it that open and shut, a sighting tube along its top. story/observatory.js RoofThread works it:
+  //   R.shutter { x, z, y (its ground), eye {x,y,z} (the mirror's middle, world), stand {x,z,a} (where one works it, behind
+  //     it, for the aim az0), az0/el0 (Sefa's old aim: the goats' house ridge), aim(az, el), open(0..1) }
+  {
+    const gy = H(SHUT.x, SHUT.z), brass = MAT.brass(), iron = MAT.iron();
+    const sh = new THREE.Group(); sh.name = 'shutter'; sh.position.set(SHUT.x, gy, SHUT.z); group.add(sh);
+    const add = (parent, geo, mat, x, y, z, o = {}) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (o.rx) m.rotation.x = o.rx; if (o.rz) m.rotation.z = o.rz; m.castShadow = true; parent.add(m); return m; };
+    add(sh, cyl(0.2, 0.26, 1.0, 10), stone('#b8ae9e'), 0, 0.5, 0);
+    add(sh, cyl(0.24, 0.24, 0.08, 10), stone('#cfc6b6'), 0, 1.04, 0);
+    const yaw = new THREE.Group(); yaw.position.y = 1.08; sh.add(yaw);
+    for (const sx of [-1, 1]) add(yaw, bbox(0.05, 0.46, 0.06, 0.01), brass, sx * 0.37, 0.23, 0);
+    add(yaw, bbox(0.8, 0.05, 0.08, 0.01), brass, 0, 0.02, 0);
+    const tilt = new THREE.Group(); tilt.position.y = 0.34; yaw.add(tilt);
+    add(tilt, cyl(0.3, 0.3, 0.05, 20), pm('#e8f2f6', 0.08, { metalness: 0.95 }), 0, 0, -0.04, { rx: Math.PI / 2 });
+    add(tilt, new THREE.TorusGeometry(0.31, 0.025, 6, 24), brass, 0, 0, -0.03);
+    add(tilt, cyl(0.035, 0.04, 0.55, 8), brass, 0, 0.37, -0.05, { rx: Math.PI / 2 });   // (the sighting tube)
+    const slats = [];
+    for (let i = 0; i < 4; i++) { const pv = new THREE.Group(); pv.position.set(0, -0.24 + i * 0.16, 0.09); tilt.add(pv); add(pv, bbox(0.66, 0.15, 0.02, 0.005), iron, 0, 0, 0); slats.push(pv); }
+    col({ type: 'cyl', x: SHUT.x, z: SHUT.z, r: 0.42, top: gy + 1.45, noStand: true });
+    const eyeY = gy + 1.42, G = R.goatHouse;
+    const az0 = Math.atan2(G.x - ox - SHUT.x, G.z - oz - SHUT.z), el0 = Math.atan2(G.ridgeY + 0.4 - eyeY, Math.hypot(G.x - ox - SHUT.x, G.z - oz - SHUT.z));
+    R.shutter = {
+      ...W(SHUT.x, SHUT.z), y: gy, eye: { ...W(SHUT.x, SHUT.z), y: eyeY }, az0, el0, az: az0, el: el0,
+      stand: { ...W(SHUT.x - Math.sin(az0) * 0.95, SHUT.z - Math.cos(az0) * 0.95), a: az0 },
+      // who stands where for it (chapter 7): Sefa working it, Sefa stepped aside, Pim beside it; and the one who answers:
+      // the lift's top landing, by its crank, facing the peak (Tashi minds the upper brake while the line still kicks)
+      sefa: { ...W(SHUT.x - Math.sin(az0) * 0.95, SHUT.z - Math.cos(az0) * 0.95), a: az0 },
+      aside: { ...W(SHUT.x - 1.9, SHUT.z - 0.4), a: az0 + 0.6 },
+      pim: { ...W(SHUT.x + 1.7, SHUT.z - 0.2), a: az0 - 0.45 },
+      station: { ...W(26.3, -31.0), a: Math.atan2(SHUT.x - 26.3, SHUT.z + 31.0) },
+      aim(az, el) { this.az = az; this.el = el; yaw.rotation.y = az; tilt.rotation.x = -el; },
+      open(k) { for (const s of slats) s.rotation.x = Math.max(0, Math.min(1, k)) * 1.35; },
+    };
+    R.shutter.aim(az0, el0); R.shutter.open(0);
+  }
 
   // ---- the glacier basin and the ice vent
   // (HAMALAYI-POLISH: the vent's plug is a heaved cap of cracked ice with meltwater pooled round it; the basin has seracs,
@@ -883,6 +940,8 @@ export function* buildHamalayiSteps(scene, physics) {
     // (REV-HAM: none on the monks' slope east of the gate, the gliders' ground — chapter 7's take-off, chapter 10's
     //  parked glider (story/network.js): a pine at (44.5, −28.5) stood through the wing)
     for (let i = list.length - 1; i >= 0; i--) if (list[i].x > MONAST.x && list[i].x < MONAST.x + 13 && list[i].z > MONAST.z + 10.5 && list[i].z < MONAST.z + 19) list.splice(i, 1);
+    // (THE SECOND SHIFT: none through the goats' house in Lhar nor at the peak's signalling shutter; filtered, no draw moves)
+    for (let i = list.length - 1; i >= 0; i--) if (Math.hypot(list[i].x - GOATS.x, list[i].z - GOATS.z) < 3.0 + 1.67 * list[i].s || Math.hypot(list[i].x - SHUT.x, list[i].z - SHUT.z) < 1.2 + 1.67 * list[i].s) list.splice(i, 1);
     lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
     // (CAM-COVER, release audit v75 F-8: their crowns count for the play camera's sight lines as Citadel's pines do —
     //  world.js SIGHT, camera.js _line: by Lhar's door a pine filled the view while the sight test read him as seen)
@@ -895,7 +954,8 @@ export function* buildHamalayiSteps(scene, physics) {
     }
     // (REVIEW-HAMALAYI: none on a walk or in the icefall's spur — one stood him on top of it at the tree bridge's north end;
     //  marked after the draws, kept in the list, so nothing else moves or changes its shape)
-    for (const q of rocks) q.off = PATHS.some(([P, hw]) => seg(P, q.x, q.z) < hw + q.s) || (Math.abs(q.x + 10) < 3.6 && q.z < -15.5 && q.z > -27);
+    for (const q of rocks) q.off = PATHS.some(([P, hw]) => seg(P, q.x, q.z) < hw + q.s) || (Math.abs(q.x + 10) < 3.6 && q.z < -15.5 && q.z > -27)
+      || Math.hypot(q.x - GOATS.x, q.z - GOATS.z) < 3.4 + q.s || Math.hypot(q.x - SHUT.x, q.z - SHUT.z) < 1.4 + q.s;   // (THE SECOND SHIFT: the goats' house, the shutter)
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((r, i) => i % 3 === v && !r.off && !lba1.within(r.x, r.z, 0.8)));
     for (const r of rocks) if (r.s > 0.6 && !r.off && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });

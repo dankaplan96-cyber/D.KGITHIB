@@ -262,6 +262,36 @@ const u0 = await view();
 check('a save naming a chapter this build lacks ("wound") goes on from the last chapter before it that the build knows (the shell), and says so in the log', u0.key === 'shell' && u0.chapter === 14 && u0.cur === 'shell' && warns.some((w) => /'wound' is not in this build; continuing from 'shell'/.test(w)), { u0: [u0.key, u0.chapter, u0.state, u0.room], warns: warns.slice(0, 3) });
 
 await ctx.close();
+
+// ---------------------------------------------------------------- END-RESUME (LBA3-RUN progression, story/base.js)
+console.log('END-RESUME: the earlier sections done');
+// A chapter's end is saved (its flag, g.save) before its last film or loading card; the next chapter saves once begun.
+// STAGED: a fixture with the end's flag added, as the save written in between reads (Save & quit during the end's film
+// never saves; a tab closed under the card). Continue → the next chapter, with no input (before: no prompt, no trigger).
+for (const [fx, add, want] of [
+  ['base-07-dig', { c4_carving: true, c4_done: true }, 'steam'],
+  ['base-09', { c6_up: true, c6_done: true }, 'observatory'],
+  ['base-10', { c7_vent: true, c7_done: true }, 'evacuation'],
+  ['base-13', { c10_done: true }, 'shell'],
+  ['base-15', { c3_fight: true, c3_turned: true, co_go: true, co_vesk: true, co_lock: true, co_signal: true, c3_done: true }, 'home'],
+]) {
+  const s = fixture(fx); Object.assign(s.flags, add);
+  const c2 = await browser.newContext({ viewport: { width: 960, height: 540 } });
+  const p2 = await c2.newPage();
+  const errs = watch(p2);
+  await p2.addInitScript((v) => { if (!sessionStorage.getItem('er_set')) { localStorage.clear(); localStorage.setItem('lba3_save_v1', v); sessionStorage.setItem('er_set', '1'); } }, JSON.stringify(s));
+  await open(p2, '?nocine');
+  // (in slices of 2 s of game time, the page's own tasks between them: a scene change builds the next areas asynchronously)
+  // (the chapter the save stands in; the resume itself may already have run in the first second after Continue)
+  const from = s.flags.chapterKey;
+  let t = 0, key = await p2.evaluate(() => { game.act('continue'); for (let i = 0; i < 20; i++) game.step(0.05); return game.flags.chapterKey; });
+  for (; t < 240 && key !== want; t += 2) { key = await p2.evaluate(() => { const G = game; for (let s = 0; s < 2; s += 0.1) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } return G.flags.chapterKey; }); await p2.waitForTimeout(50); }
+  for (let i = 0; i < 5; i++) { await p2.evaluate(() => { const G = game; for (let s = 0; s < 1; s += 0.1) { if (G.state === 'dialog') P.settle(); else G.step(0.1); } }); await p2.waitForTimeout(50); }
+  const r = { from, t, ...(await p2.evaluate(() => ({ key: game.flags.chapterKey, state: game.state, saved: JSON.parse(localStorage.getItem('lba3_save_v1') || 'null')?.flags?.chapterKey }))) };
+  console.log('END-RESUME case', fx, JSON.stringify(r));
+  check(`END-RESUME ${fx} + ${Object.keys(add).pop()} (a save between the end and the next chapter) → Continue goes on to '${want}' by itself and saves there`, r.from !== want && r.key === want && r.saved === want && !errs.length, { ...r, errs: errs.slice(0, 2) });
+  await c2.close();
+}
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

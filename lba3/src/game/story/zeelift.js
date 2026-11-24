@@ -33,6 +33,7 @@
 import * as THREE from 'three';
 import { revealBeat } from './revealcam.js';
 import { handTo } from './reach.js';
+import { ZH } from '../zhomes.js';
 import '../text/thread.js';
 
 const DIALS = ['steady', 'double', 'triple'];
@@ -95,6 +96,17 @@ export class LiftThread {
     if (L.barrowAt().shown && !(this.on && this.ch.isCur() && f.zt_lunchCall)) L.setBarrow(null);
   }
   lunchOn() { const f = this.f; return this.on && this.ch.isCur() && !!f.zt_water && !!f.zt_kellThanks; }
+  // THE SECOND SHIFT, free play (the brief: "Kell can finally eat warm bread in the bakery while the lift runs outside"):
+  // after the ending, once Brum has the handle (chapter 9's lesson, cn_brum) and Mother Snuff's oven is hot (the Second
+  // Bake, zl_crate), Kell eats his bread in her bakehouse; nobody else stands at his lever (Brum has it: council.js). No
+  // banner, no scene: he is just there. A game without Brum's lesson or with her oven cold keeps him where he was.
+  breadTime() { const f = this.f; return this.story.cur?.key === 'home' && f.cn_brum === true && !!f.zl_crate; }
+  // his loaf in his hand while he is there (asked every frame by story/zeelife.js, which runs in every chapter)
+  kellBread() {
+    const n = this.ch.npc('zl_kell'), on = !!n?.present && this.breadTime();
+    if (on === !!this._bread && (!on || this._loaf?.parent)) return;
+    this._bread = on; this.loaf(n, on);
+  }
   lunchOpen() { return this.lunchOn() && !!this.f.zt_lunchCall && !this.f.zt_lunch; }
   // where Brel stands behind his barrow (its heading a: 0 = the wheel west), facing it
   behind(p) { const b = this.L.shift.behind; return { x: p.x + Math.cos(p.a || 0) * b, z: p.z - Math.sin(p.a || 0) * b, a: Math.atan2(-Math.cos(p.a || 0), Math.sin(p.a || 0)) }; }
@@ -110,6 +122,9 @@ export class LiftThread {
         // THE SECOND SHIFT: off for his bread while Twinsen has the handle; back by the lever with it; after chapter 9
         // Brum has the handle and Kell sees to the cart up at the cistern
         if (this.lunchOpen()) { if (this.kellAway) return null; if (f.zt_lunchGo) return { ...SH.kellAside }; }
+        // (free play after the ending, Brum at the handle and Mother Snuff's oven hot: in her bakehouse with his bread; the
+        //  bakehouse not built yet: he waits for it, Story.refreshCast)
+        if (!cur && this.breadTime()) { const B = this.game.regions?.built?.('zh_bakery'); const s = B && ZH.zh_bakery?.npcSpots?.kell; return s ? { ...s } : undefined; }
         if (!cur && f.cn_brum === true && this.story.index > this.story.chapters.findIndex((c) => c.key === 'council')) return { ...SH.kellCart, y: L.top, anim: 'tinker' };
         return { ...S.kell, anim: this.on && cur && !f.zt_ride ? 'use' : null };   // (his hand on the brake until the deck is up)
       case 'zl_brel':
@@ -235,7 +250,7 @@ export class LiftThread {
         if (!f.zt_brel) return c([['zl_brel', 'zt_brel_1'], ['zl_brel', 'zt_brel_2']], () => { f.zt_brel = true; g.updateObjective(); g.save(false); });
         return c([['zl_brel', f.zt_water ? (f.zt_bench ? 'zt_brel_after' : 'zt_brel_water') : 'zt_brel_3']]);
       case 'zl_kell':
-        if (!cur) return c([['zl_kell', this.story.cur?.key === 'home' ? 'zt_kell_home' : this.on ? 'zt_kell_later' : 'zt_kell_idle']]);   // (DIALOGUE-2: the epilogue's word)
+        if (!cur) return c([['zl_kell', this.breadTime() ? 'zt_kell_bread' : this.story.cur?.key === 'home' ? 'zt_kell_home' : this.on ? (f.c2_veskDown ? 'zt_kell_later' : 'zt_kell_after') : 'zt_kell_idle']]);   // (DIALOGUE-2: the epilogue's word; THE SECOND SHIFT: at his bread; KELL-LINES: later chapters reach here through zeelife.js talkFirst)
         if (!f.zt_kell && !f.zt_bell) return c([['zl_kell', 'zt_kell_1'], ['hero', 'zt_tw_kell'], ['zl_kell', 'zt_kell_2'], ['zl_kell', 'zt_kell_3']], () => { f.zt_kell = true; g.updateObjective(); g.save(false); });
         if (!f.zt_bell) return c([['zl_kell', 'zt_kell_wait']]);
         if (!f.zt_feed) return c([['zl_kell', 'zt_kell_wait2']]);
@@ -243,7 +258,7 @@ export class LiftThread {
         if (!f.zt_kellThanks) return c([['zl_kell', 'zt_kell_done']], () => { f.zt_kellThanks = true; g.save(false); });
         return c([['zl_kell', f.c2_veskDown ? 'zt_kell_later' : 'zt_kell_after']]);
       case 'zl_irsa':
-        if (!cur) return c([['zl_irsa', this.story.cur?.key === 'home' ? 'zt_irsa_home' : this.on ? 'zt_irsa_later' : 'zt_irsa_idle']]);
+        if (!cur) return c([['zl_irsa', this.story.cur?.key === 'home' ? 'zt_irsa_home' : this.on ? (f.c2_veskDown ? 'zt_irsa_later' : 'zt_irsa_after') : 'zt_irsa_idle']]);
         if (f.zt_bench) return c([['zl_irsa', f.c2_veskDown ? 'zt_irsa_later' : 'zt_irsa_after']]);
         if (!f.zt_water) { if (f.zt_irsa) return c([['zl_irsa', 'zt_irsa_wait']]); return c([['zl_irsa', 'zt_irsa_1'], ['zl_irsa', 'zt_irsa_2']], () => { f.zt_irsa = true; g.updateObjective(); g.save(false); }); }
         if (!f.zt_irsa2) return c([['zl_irsa', 'zt_irsa_3'], ['zl_irsa', 'zt_irsa_4']], () => { f.zt_irsa2 = true; g.updateObjective(); g.save(false); });

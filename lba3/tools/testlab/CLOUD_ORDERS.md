@@ -1,5 +1,8 @@
 # Orders from the cloud to the laptop (3.11.2026, night mode)
 
+> **24.11.2026: ORDER 68 (below, at the end) is the queue now — the user: "give the local agent tasks; I'll get to the computer
+> and start".** Still no performance or frame-time work. Report each step in `WORLD_ART_REQUESTS.md`, push your branch.
+
 > **23.11.2026: ORDERS 66 and 67 — still no performance or measurement work (the user).** Finish 66.5 (chapter 1 played
 > with real input), then do 67 below (the user, 23.11: "let the local agent work the walls and make normal maps").
 > Other performance orders (61, 63, 64, 65, P96) stay paused. Report each step in `WORLD_ART_REQUESTS.md`, push your branch.
@@ -984,4 +987,38 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     5. Each wall type is a **visible change for the user's pick** (the user picks one by one): put each behind a switch
        (e.g. `?wallnormals=1` or per texture) with the default unchanged, and list them in your report. Send the diff as
        usual (`WORLD_ART_REQUESTS.md`, your branch).
+
+68. **The user, 24.11: "give the local agent tasks; I'll get to the computer and start".** Build: the cloud's
+    `ccr-c1c2c4b9-dep6ed` head (artifact **v158**, stamp commit "v158 published"). `git pull` before each step: the cloud
+    keeps merging. **No performance or frame-time work** (still the user's rule). Reply in `WORLD_ART_REQUESTS.md`, one entry
+    per step, pictures in `captures/hw-68/`, push your branch. The cloud's open-tasks table for the user is
+    `docs/lba-maturity/OPEN-TASKS.he.md` (items 22–24 are yours). Steps, in this order:
+    1. **v158 on the real GPU: the changes since v148, looked at, not measured.** Headed Chrome, the artifact or the branch.
+       Pictures from the play camera and at dialogue distance; say what reads wrong. Each item names its doc:
+       - Zoé: the bare scalp and the tie, the twinsen head shape (P120.md), in the house and talking.
+       - Twinsen: his hands (v154's fist, P122) and the one-piece sleeve (P123.md), walking, throwing, talking.
+       - The cast's new fingers (HANDS-2.md): Arthur, a Grobo, a Rabbibunny, a Sphero; talking and the idle gesture.
+       - The notebook opening without hands (P122.md, the default `?opening=notebook`): watch it whole once with sound;
+         the pages turn by themselves. Say if anything shows at the frame's edges at your window size.
+       - Rocks settled into the ground (P121.md), the door-level terraces (P113), the straight lawn edges (P112,
+         LAWN-EDGES.md) in Citadel; the overhead remarks of minor townsfolk (P116.md).
+    2. **P-1: the Windows installer (release blocker for the private testers; docs/lba3-audit/release.md §7 P-1).**
+       Wait until `desktop/package.json` says **0.50.0** (the cloud's RELEASE-PREP: version, no GitHub name in
+       app-update.yml, DevTools only unpackaged); if it isn't merged yet, do step 3 first and pull again. Then on Windows,
+       from a clean checkout: `cd lba3\desktop && npm ci && npm run dist:win`;
+       `certutil -hashfile release\LBA3-The-Awakening-Setup-<ver>.exe SHA256` (record it); install (on a new Windows user
+       account if the user allows, else the user's own); first launch (fullscreen default; SmartScreen "Run anyway" —
+       the exe is unsigned); New Game → skip the opening → Pause → Save & quit → Quit Game; relaunch → Continue resumes in
+       the house; Settings → Language עברית → quit → relaunch (still Hebrew); one session with the network off;
+       Ctrl+Shift+I does nothing; no `resources\app-update.yml` in the install folder; the title shows v0.50.0;
+       Settings → Apps → uninstall; note whether `%APPDATA%\LBA3 The Awakening` is kept (documented: kept). Report each
+       step pass/fail with a picture. Do not upload the exe anywhere.
+    3. **The first fights, played (the maturity review's first action; OPEN-TASKS item 12).** With real input (keys and
+       mouse; Modern controls), from the staged saves the tests use or by playing: the chapter 2 depot, the Zeelich depot
+       (chapter 3) and the Core's third pylon (chapter 16 — late-game: report only to the cloud, not to the user). For each:
+       health on entering and leaving, deaths, what killed you, what felt unfair or unclear, how many tries. No frame
+       times. The cloud turns this into options for the user.
+    4. **ORDER 67 WALL-NORMALS** (above), as written: fortStone and rubbleHouse first, behind a switch, before/after
+       pictures. (The artifact is no longer at a file limit since v150's bundle, but code-generated maps are still
+       preferred.)
 

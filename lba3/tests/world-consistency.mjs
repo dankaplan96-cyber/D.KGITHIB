@@ -211,9 +211,13 @@ const CH = [
   { n: '6', key: 'pass', flags: { c6_started: true },
     MIN: { hamalayi: 8 },
     MOVE: [['hamalayi', ['yorna', 'pim'], 5, 3]] },
-  { n: '7', key: 'observatory', flags: { ...DONE6, c7_started: true },
+  // (THE SECOND SHIFT, part 2: the dome measured with Sefa back inside it — the wrong-roof scene at his shutter on the peak
+  //  done, rf_roof; that scene, Sefa outside until it is, is tests/second-shift.mjs I)
+  { n: '7', key: 'observatory', flags: { ...DONE6, c7_started: true, rf_roof: true },
     MIN: { hamalayi: 8 },
-    MOVE: [['hamalayi', ['yorna', 'pim', 'lhar1'], 5, 3], ['obsv', ['keeper'], 1, 1]] },
+    // (THE SECOND SHIFT, part 2: Pim is up on the peak by the shutter until the vent breathes, so the yard has one person
+    //  with a round fewer: 4, measured 24.11 — yorna, lhar2, lhar3 moved, Tashi at the lift's landing stands at the brake)
+    MOVE: [['hamalayi', ['yorna', 'pim', 'lhar1'], 4, 3], ['obsv', ['keeper'], 1, 1]] },
   { n: '8', key: 'evacuation', flags: { c8_started: true },
     MIN: { citadel: 2, citadel_rooms: 2, terminal: 8, port_citadel: 4 },
     MOVE: [['citadel', ['gilbert'], 3, 2], ['citadel', ['farmer1'], 4, 3], ['citadel', ['tim', 'lulu', 'xil'], 3, 2]] },

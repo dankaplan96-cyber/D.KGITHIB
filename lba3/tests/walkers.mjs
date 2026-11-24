@@ -197,15 +197,17 @@ const talk = await ev(() => { const G = game, W = G.walkers, P = G.physics, h = 
   h.pos.set(hx, P.groundAt(hx, hz, 30), hz); h.angle = u.angle + Math.PI; h.onGround = true; h.vy = 0; h.sync(); G.camRig.lba && (G.camRig.lba.init = false); G.step(0.3, 1 / 30);
   const prompt = game.findInteractable(); out.prompt = prompt?.kind === 'npc' ? prompt.npc.def.id : prompt?.kind;
   game.tryInteract();
-  out.state = G.state; out.engaged = u.engaged; out.speaker = G.speaker === u;
+  // (P116: a minor resident's one short line is said over her head, the game not paused: walkers.js Remarks)
+  const up = () => G.state === 'dialog' || G.remarks?.cur?.n === u;
+  out.state = G.state; out.remark = G.remarks?.cur?.n === u; out.engaged = u.engaged; out.speaker = G.speaker === u || out.remark;
   const at = [u.pos.x, u.pos.z]; let mouth = 0, faced = 0, minDiff = 9;
-  for (let i = 0; i < 50 && G.state === 'dialog'; i++) { G.step(0.05, 1 / 30); mouth = Math.max(mouth, u.rig.mOpen || 0); const d = Math.abs(Math.atan2(Math.sin(u.angleTo(h) - u.angle), Math.cos(u.angleTo(h) - u.angle))); minDiff = Math.min(minDiff, d); }
+  for (let i = 0; i < 50 && up(); i++) { G.step(0.05, 1 / 30); mouth = Math.max(mouth, u.rig.mOpen || 0); const d = Math.abs(Math.atan2(Math.sin(u.angleTo(h) - u.angle), Math.cos(u.angleTo(h) - u.angle))); minDiff = Math.min(minDiff, d); }
   out.stayed = +Math.hypot(u.pos.x - at[0], u.pos.z - at[1]).toFixed(2); out.faceDiff = +minDiff.toFixed(2); out.mouth = +mouth.toFixed(2); out.state2 = G.state;
   return out; });
 check('Twinsen\'s prompt is Ume (a walking resident can be talked to)', talk.walking && talk.prompt === 'ume', talk);
-check('spoken to she stops where she is, turns to him and is the speaker', talk.state === 'dialog' && talk.engaged && talk.speaker && talk.stayed < 0.05 && talk.faceDiff < 0.5, talk);
+check('spoken to she stops where she is, turns to him and is the speaker (in the box, or P116 over her head)', (talk.state === 'dialog' || talk.remark) && talk.engaged && talk.speaker && talk.stayed < 0.05 && talk.faceDiff < 0.5, talk);
 const after = await ev(() => { const G = game, W = G.walkers, u = CIT().find((r) => r.def.id === 'ume');
-  let n = 0; for (let i = 0; i < 400 && G.state === 'dialog'; i++) { G.input.taps.add('KeyE'); G.step(0.05, 1 / 30); n++; }
+  let n = 0; for (let i = 0; i < 400 && (G.state === 'dialog' || G.remarks?.cur?.n === u); i++) { G.input.taps.add('KeyE'); G.step(0.05, 1 / 30); n++; }
   const out = { state: G.state, engaged: u.engaged }; const p0 = [u.pos.x, u.pos.z];
   G.hero.pos.set(u.pos.x + 12, G.physics.groundAt(u.pos.x + 12, u.pos.z, 30), u.pos.z + 12); G.hero.sync();
   for (let i = 0; i < 60; i++) G.step(0.1, 1 / 30);

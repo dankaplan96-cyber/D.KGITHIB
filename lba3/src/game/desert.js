@@ -312,6 +312,7 @@ const DRY = new Map();
 function dryRock(seed, lo = 0) {
   const k = seed * 2 + (lo ? 1 : 0); if (DRY.has(k)) return DRY.get(k);
   const g = rockGeometry(seed, lo).clone(), a = g.attributes.color;
+  g.userData.rock = true;   // (P121: the overlap sweep's rock parts)
   if (a) for (let i = 0; i < a.count; i++) { const l = Math.max(0.27, 0.3 * a.getX(i) + 0.59 * a.getY(i) + 0.11 * a.getZ(i)); a.setXYZ(i, l * 1.06, l, l * 0.9); }
   DRY.set(k, g); return g;
 }
