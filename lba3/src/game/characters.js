@@ -1637,7 +1637,7 @@ export async function preloadCharacters() {
   await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
-  if (LOOK.size) for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
+  if (LOOK.size || ZOE_HAIR !== 'old') for (const n of names) if (POLY[n]) POLY[n] = lookModel(n, POLY[n]);
 }
 // TWINSEN-ZOE-LOOK (the user, 22.11: Twinsen and Zoé "more like the original … keep the current one and we'll compare";
 // then the focus: Twinsen from behind under the Follow camera, "the hair is a bit too pixelated, but I'm not sure"; then
@@ -1695,6 +1695,7 @@ export const LOOK = (() => {
   return on;
 })();
 function lookModel(name, P) {
+  if (name === 'zoe') return ZOE_HAIR === 'old' ? P : zoeHair(P, ZOE_HAIRS[ZOE_HAIR]);   // (P120: her hair, below)
   const steps = Object.keys(LOOK_STEPS).filter((s) => LOOK.has(s) && LOOK_STEPS[s].includes(name));
   if (!steps.length) return P;
   const Q = { ...P, pos: P.pos.slice(), nrm: P.nrm.slice(), col: P.col.slice(), si: P.si.slice(), sw: P.sw.slice() };
@@ -2039,3 +2040,100 @@ const LOOK_MODEL = {
   hairsmooth(P, ctx) { if (!ctx.sdf) { swapHair(P, ctx, splineLock(ctx, false)); ctx.capLevel = true; } },
   hairband: hairBand,
 };
+// P120 ZOE-HAIR (the user, 24.11, a photo of the screen and LBA2's box art: "Zoé's hair should be like Twinsen's"; the
+// pale cap, the pale little ponytail and the thin band read bald; docs/lba-maturity/P120.md): her ponytail and its tie
+// rebuilt with Twinsen's spline lock and band (splineLock, hairBand) on her own parameters, golden blonde (warmer and more
+// saturated than the model's #e3af53, which the ramp's lit top turned to near-white cream), a chunky green tie at its
+// root, rising from the crown and sweeping up and back like the box art's; the swept-up hair over the skull (the model's
+// own surface, cut along the hairline) the same gold, combed toward the tie in soft streaks, its normals levelled like
+// Twinsen's lock so the top of the head is no longer washed pale. Her face, body and outfit are not touched (the model's
+// other vertices pass through unchanged). Applied to the loaded model (lookModel) so every Zoé — the yard, the film, the
+// chapters, the hero's own Zoé body, the statue — gets it. ?zoehair=a|b|c picks the variant (the setting `zoeHair` the
+// same), ?zoehair=old the model's own hair. The ponytail's weights pass from the head (to just past the tie) to tail0–2
+// along it, as the old ponytail's did, so the rig's follow-through still sways it.
+const ZH_HAIR = [0xe3, 0xaf, 0x53], ZH_TRIM = [0x3f, 0x7b, 0x47];   // (the model's hair and trim colours: tools/blender/zoe_poly.py)
+const ZH_TONE = [[-2, [0xa0, 0x64, 0x10]], [0, [0xbc, 0x7c, 0x14]], [0.45, [0xd2, 0x94, 0x1c]], [1, [0xe2, 0xaa, 0x30]]];
+const zhTone = (u) => {
+  for (let i = 1; i < ZH_TONE.length; i++) if (u <= ZH_TONE[i][0]) return mixc(ZH_TONE[i - 1][1], ZH_TONE[i][1], Math.max(0, (u - ZH_TONE[i - 1][0]) / (ZH_TONE[i][0] - ZH_TONE[i - 1][0])));
+  return ZH_TONE[ZH_TONE.length - 1][1];
+};
+// her lock: control points [x, y, z] (m, on the model; the root under the scalp at the back of the crown, then the tie),
+// widths [q, × 3 cm, slope?] (gathered at the tie, full over the top, tapering to the tip); u is q (-1 the root … 0 the tie
+// … 1 the tip); weights along q
+const zhLock = ({ pts, w, flat = 0.12 }) => ({
+  points: () => ({ pts: pts.map((p) => new THREE.Vector3(...p)), R0: 0.03 }),
+  u: ({ sK: [, sB], sE }) => (s) => (s < sB ? s / sB - 1 : (s - sB) / (sE - sB)),
+  width: () => w, flat: (q) => 0.95 - flat * sstep(0, 0.8, q),
+  tone: zhTone, sheen: [0xf0, 0xc8, 0x58], m: 28, root: 5, nb: 26, ridges: 6, win: 90, band: [0.32, 0.3, 0.3],
+});
+const ZH_PLAN = [['head', 0.04], ['tail0', 0.22], ['tail1', 0.5], ['tail2', 0.82]];
+const zhWeights = (q) => {
+  if (q <= ZH_PLAN[0][1]) return [['head', 1]];
+  for (let i = 0; i + 1 < ZH_PLAN.length; i++) {
+    if (q > ZH_PLAN[i + 1][1]) continue;
+    const t = sstep(ZH_PLAN[i][1], ZH_PLAN[i + 1][1], q);
+    return [[ZH_PLAN[i][0], 1 - t], [ZH_PLAN[i + 1][0], t]].filter((e) => e[1] > 1e-4);
+  }
+  return [['tail2', 1]];
+};
+const ZH_W = [[-1, 0.95, 0.3], [0, 0.95, 0], [0.12, 1.4], [0.32, 2.2], [0.55, 2.1], [0.78, 1.4], [0.92, 0.7], [1, 0, -1.1]];
+// the variants: a, the box art's (tall, swept up from the crown, over and back, falling behind her head to a tip that flicks
+// out); b, calmer (it rises less and falls closer behind, the tip turned in); c, a's sweep with the tip curled under and
+// forward into a C
+export const ZOE_HAIRS = {
+  a: zhLock({ pts: [[0, 1.905, -0.112], [0, 1.985, -0.125], [0.002, 2.06, -0.145], [0.006, 2.105, -0.215], [0.01, 2.09, -0.305], [0.014, 2.03, -0.365], [0.016, 1.945, -0.39], [0.016, 1.885, -0.385], [0.014, 1.845, -0.41]], w: ZH_W }),
+  b: zhLock({ pts: [[0, 1.905, -0.112], [0, 1.98, -0.13], [0.002, 2.025, -0.17], [0.006, 2.04, -0.245], [0.01, 2.02, -0.32], [0.013, 1.95, -0.355], [0.014, 1.875, -0.36], [0.013, 1.815, -0.345], [0.011, 1.78, -0.32]], w: ZH_W }),
+  c: zhLock({ pts: [[0, 1.905, -0.112], [0, 1.985, -0.122], [0.002, 2.07, -0.135], [0.006, 2.12, -0.205], [0.01, 2.11, -0.3], [0.014, 2.04, -0.365], [0.016, 1.95, -0.385], [0.016, 1.89, -0.35], [0.014, 1.895, -0.295]], w: ZH_W }),
+};
+// her tie: chunkier than his brass cuff (the box art's round green tie), in her trims' green; found on her hair over the
+// skull (the model's hair colour on the head bone) where his is found on his scalp
+const ZH_BAND = { n: 24, s: 8, ro: 0.0095, rl: 0.014, off: 0.005, lift: 0.011, col: ZH_TRIM, hi: [0x74, 0xb0, 0x78], lo: [0x24, 0x4c, 0x2c], scalp: ZH_HAIR, minY: 1.85, reach: 0.12 };
+// the hair over the skull: its gold, combed toward the tie (k streaks round it, ± amp), darker by the tie; normals levelled
+const ZH_CAP = { col: [0xc6, 0x88, 0x18], root: [0xa8, 0x6c, 0x12], k: 13, amp: 0.1, up: 0.2 };
+export const ZOE_HAIR = (() => {
+  let s = '';
+  try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehair')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHair || ''; } catch { /* no storage */ }
+  s = String(s).trim().toLowerCase();
+  return s === 'old' || ZOE_HAIRS[s] ? s : 'a';
+})();
+function zoeHair(P0, H) {
+  const P = { ...P0, pos: P0.pos.slice(), nrm: P0.nrm.slice(), col: P0.col.slice(), si: P0.si.slice(), sw: P0.sw.slice() };
+  const n = P.pos.length / 3, hb = P.bones.indexOf('head'), tails = ['tail0', 'tail1', 'tail2'].map((b) => P.bones.indexOf(b));
+  const is = (v, c) => P.col[v * 3] === c[0] && P.col[v * 3 + 1] === c[1] && P.col[v * 3 + 2] === c[2];
+  // the model's pieces: vertices welded where they share a place and a colour, joined by their triangles
+  const par = new Int32Array(n).map((_, i) => i), find = (i) => { while (par[i] !== i) i = par[i] = par[par[i]]; return i; };
+  const join = (a, b) => { a = find(a); b = find(b); if (a !== b) par[a] = b; }, seen = new Map();
+  for (let v = 0; v < n; v++) {
+    const k = `${P.pos[v * 3].toFixed(5)},${P.pos[v * 3 + 1].toFixed(5)},${P.pos[v * 3 + 2].toFixed(5)},${P.col[v * 3]},${P.col[v * 3 + 1]},${P.col[v * 3 + 2]}`;
+    if (seen.has(k)) join(v, seen.get(k)); else seen.set(k, v);
+    if (v % 3 === 2) { join(v, v - 1); join(v, v - 2); }
+  }
+  const pieces = new Map();
+  for (let v = 0; v < n; v++) { const r = find(v); if (!pieces.has(r)) pieces.set(r, []); pieces.get(r).push(v); }
+  // the old ponytail (hair carried by the tail bones) and its band (trim on the head and the tail): out
+  const onHead = (v) => { for (let k = 0; k < 4; k++) if (P.sw[v * 4 + k] > 0 && P.si[v * 4 + k] !== hb && !tails.includes(P.si[v * 4 + k])) return false; return true; };
+  const tailed = (v) => { for (let k = 0; k < 4; k++) if (P.sw[v * 4 + k] > 0.01 && tails.includes(P.si[v * 4 + k])) return true; return false; };
+  const drop = new Set();
+  for (const vs of pieces.values()) if ((is(vs[0], ZH_HAIR) || is(vs[0], ZH_TRIM)) && vs.every(onHead) && vs.some(tailed)) vs.forEach((v) => drop.add(v));
+  if (!drop.size) return P0;   // (not the model this was made for: leave it)
+  const ctx = { drop, weights: zhWeights };
+  swapHair(P, ctx, splineLock(ctx, true, H));
+  hairBand(P, ctx, ZH_BAND);
+  // the hair over the skull: gold, combed toward the tie, levelled
+  const tie = H.points().pts[1], ax = tie.clone().sub(new THREE.Vector3(0, 1.8, -0.06)).normalize();
+  const e1 = new THREE.Vector3(1, 0, 0).addScaledVector(ax, -ax.x).normalize(), e2 = ax.clone().cross(e1);
+  const p = new THREE.Vector3(), nv = new THREE.Vector3();
+  for (let v = 0, m = P.pos.length / 3; v < m; v++) {
+    if (!is(v, ZH_HAIR)) continue;
+    let w = 0; for (let k = 0; k < 4; k++) if (P.si[v * 4 + k] === hb) w += P.sw[v * 4 + k];
+    if (w < 0.99) continue;
+    p.set(P.pos[v * 3], P.pos[v * 3 + 1], P.pos[v * 3 + 2]).sub(tie);
+    const r = p.length(), ph = Math.atan2(p.dot(e1), p.dot(e2));
+    const col = mixc(ZH_CAP.col, ZH_CAP.root, sstep(0.08, 0.02, r)).map((x) => Math.max(0, Math.min(255, Math.round(x * (1 + ZH_CAP.amp * Math.cos(ZH_CAP.k * ph + 6 * r))))));
+    nv.set(P.nrm[v * 3], P.nrm[v * 3 + 1], P.nrm[v * 3 + 2]);
+    const nl = hsLevel(nv, nv, ZH_CAP.up);
+    P.col.splice(v * 3, 3, ...col);
+    P.nrm.splice(v * 3, 3, nl.x, nl.y, nl.z);
+  }
+  return P;
+}
