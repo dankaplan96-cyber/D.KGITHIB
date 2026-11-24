@@ -24,7 +24,7 @@
 //     beside it): heat frees it (a clover and 10 kashes; once). Fights: the ice mites at the lift (double damage).
 // Nothing on the main path needs any of them; each is optional where the old arsenal is.
 import * as THREE from 'three';
-import { crystalMats, crystalGem, linkedCore, asShell } from '../crystallook.js';
+import { crystalMats, crystalGem, addGem, linkedCore, asShell } from '../crystallook.js';
 import { ChapterBase } from './base.js';
 import { MAT, rbox, cyl, sphere, torus, crate, canvasTex, Kit } from '../props.js';
 import { rockGeometry } from '../vegetation.js';
@@ -98,10 +98,11 @@ export class Kit2b extends ChapterBase {
     // the crust: warm crystal grown over the hollow's mouth
     const crust = new THREE.Group(); crust.position.set(0, 0.66, 0.6); grp.add(crust);
     // (CRYSTALS-ONE-LOOK: the well's faceted crystals, shell + core, where octahedra were: crystallook.js)
-    const cm = crystalMats('cyan');
+    const cm = crystalMats('cyan'), ck = new Kit(crust);
     [[-0.2, 0.12, 0.3, 1.6], [0.05, 0.18, -0.2, 2.0], [0.22, 0.05, 0.4, 1.4], [-0.1, -0.12, 0.9, 1.8], [0.15, -0.16, -0.6, 1.5], [-0.25, -0.1, 1.2, 1.3], [0.0, 0.0, 0.1, 2.2]].forEach(([x, y, rz, sy], i) => {
-      const m = crystalGem(cm.shell, cm.core, { v: i, hs: 0.11 }); m.position.set(x, y, 0); m.rotation.set(0.3, 0, rz); m.scale.set(1, sy, 0.8); crust.add(m);
+      addGem(ck, cm, x, y, 0, 0, { rx: 0.3, rz, sx: 1, sy, sz: 0.8 }, { v: i, hs: 0.11 });   // (merged: one shell draw, one core draw)
     });
+    ck.flush();
     // the sleeping crystal on the ledge (dull until a strike wakes it: then a lamp; no light, its own glow)
     const sleepM = asShell(new THREE.MeshStandardMaterial({ color: '#6a7a88', emissive: '#40d8ff', emissiveIntensity: 0, roughness: 0.25 }), 0.84);
     const sleeper = crystalGem(sleepM, linkedCore(sleepM), { v: 1, hs: 0.08 });   // (its core wakes with it)
@@ -124,7 +125,7 @@ export class Kit2b extends ChapterBase {
     const sm = new THREE.Mesh(rbox(1.08, 1.48, 0.16, 0.03), MAT.stone('slate', 1)); sm.position.y = 0.75; sm.castShadow = true; slab.add(sm);
     const rosette = new THREE.Group(); rosette.position.set(0, 0.88, 0.1); slab.add(rosette);
     const pm = crystalMats('violet');
-    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2, m = crystalGem(pm.shell, pm.core, { v: i, hs: 0.06 }); m.position.set(Math.sin(a) * 0.2, Math.cos(a) * 0.2, 0.02); m.rotation.z = -a; m.scale.set(1, 2.2, 0.8); rosette.add(m); }
+    { const rk = new Kit(rosette); for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; addGem(rk, pm, Math.sin(a) * 0.2, Math.cos(a) * 0.2, 0.02, 0, { rz: -a, sx: 1, sy: 2.2, sz: 0.8 }, { v: i, hs: 0.06 }); } rk.flush(); }   // (merged: two draws)
     const hub = new THREE.Mesh(cyl(0.07, 0.07, 0.06, 10), MAT.brass()); hub.rotation.x = Math.PI / 2; rosette.add(hub);
     const cache = new THREE.Group(); cache.position.set(0.1, 0.02, -0.1); grp.add(cache);
     const cb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.14, 0.2), MAT.flat('#5a6a5a', 0.5, { metalness: 0.4 })); cb.position.y = 0.07; cache.add(cb);

@@ -208,6 +208,11 @@ export function crystalGem(shell, core, { v = 0, hs = 0.1, rr = hs * 0.6 } = {})
   m.add(coreOfGem(shell, core, { v, hs, rr }));
   return m;
 }
+// that crystal into a Kit (merged with the rest of its kind: a shell draw and a core draw for all of them)
+export function addGem(k, mats, x, y, z, ry, o, { v = 0, hs = 0.1, rr = hs * 0.6 } = {}) {
+  k.add(gemGeo(v, hs, rr), mats.shell, x, y, z, ry, o);
+  k.add(gemGeo(v, hs, rr, true, mats.core.vertexColors ? mats.shell.userData.coreTint || '#ffffff' : null), mats.core, x, y, z, ry, o);
+}
 export function coreOfGem(shell, core, { v = 0, hs = 0.1, rr = hs * 0.6 } = {}) {
   const c = new THREE.Mesh(gemGeo(v, hs, rr, true, core.vertexColors ? shell.userData.coreTint || '#ffffff' : null), core);
   c.castShadow = false;

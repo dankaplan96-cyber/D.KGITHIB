@@ -81,6 +81,17 @@ for (const [name, s] of SHOTS) {
     check('shot ' + name, true);
   } catch (e) { check('shot ' + name, false, e.message.slice(0, 300)); }
 }
+// the item icons with crystals (itemlook.js thumbnails, 128 px): the kettle crystals, a warm stone, a crystal cell, the
+// singing crystal — one strip
+if (!ONLY || ONLY.includes('17-item-icons')) {
+  try {
+    const urls = await ev(async () => { const M = await import('/src/game/itemlook.js'); return ['kettle', 'warmstone', 'cell', 'crystal'].map((k) => M.stage.thumb(k, 128)); });
+    const html = '<body style="margin:0;background:#2a2620">' + urls.map((u) => `<img src="${u}" width=256 height=256>`).join('') + '</body>';
+    const p2 = await page.context().newPage(); await p2.setViewportSize({ width: 1024, height: 256 }); await p2.setContent(html);
+    await p2.screenshot({ path: path.join(OUT, '17-item-icons.png') }); await p2.close();
+    check('icons drawn', urls.every(Boolean), urls.map((u) => !!u));
+  } catch (e) { check('icons drawn', false, e.message.slice(0, 300)); }
+}
 fs.writeFileSync(path.join(OUT, 'drawcalls.json'), JSON.stringify(stats, null, 1));
 const fails = done();
 await browser.close();
