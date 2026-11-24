@@ -277,5 +277,5 @@ export function renderLine(v, g, o, rms) {
 export function workerSource() {
   return [`const VOWELS = ${JSON.stringify(VOWELS)}, CONS = ${JSON.stringify(CONS)}, NZ = ${JSON.stringify(NZ)};`, res, setRes, `const run = ${run};`, antiRun, setAnti, setBP, runBP, renderGesture, renderLine,
     'onmessage = (e) => { const d = e.data, t0 = performance.now(); const pcm = renderLine(d.v, d.g, d.o, d.rms); postMessage({ id: d.id, pcm, ms: performance.now() - t0 }, [pcm.buffer]); };']
-    .map((x) => (typeof x === 'function' ? x.toString() : x)).join('\n');
+    .map((x) => (typeof x === 'function' ? x.toString() : x)).join('\n').replace(/([A-Za-z_0-9])\$\d+\b/g, '$1'); // bundled names (name$1) back to the source's
 }

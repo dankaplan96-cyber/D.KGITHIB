@@ -257,14 +257,17 @@ export function sculptRigid(def) {
 // Sculpting is CPU-heavy (seconds per character), so `tools/bake.mjs` saves every
 // sculpted geometry once (quantised) to assets/bake.bin; at start-up the game loads
 // it and only re-sculpts models whose design changed (fingerprint mismatch).
+export const unsuffix = (src) => src.replace(/([A-Za-z_0-9])\$\d+\b/g, '$1');
 function fnv(str) {
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
   return (h >>> 0).toString(16);
 }
 export function fingerprint(def) {
-  const rep = (k, v) => (typeof v === 'function' ? v.toString() : v);
-  return fnv(JSON.stringify([def.prims, def.groups, def.joinK, def.colors, def.bounds, def.cell, def.rigid, def.hard, def.bones, def.chains, def.bias, def.paint && def.paint.toString()], rep));
+  // UNSUFFIX: the published artifact bundles the modules into one file (tools/bundle-artifact.mjs), which renames
+  // colliding top-level names to name$1; the sources never use that form, so stripping it keeps fingerprints equal.
+  const rep = (k, v) => (typeof v === 'function' ? unsuffix(v.toString()) : v);
+  return fnv(JSON.stringify([def.prims, def.groups, def.joinK, def.colors, def.bounds, def.cell, def.rigid, def.hard, def.bones, def.chains, def.bias, def.paint && unsuffix(def.paint.toString())], rep));
 }
 const BAKE = new Map();
 export const bakeStats = { hit: 0, miss: 0, missed: [] };
