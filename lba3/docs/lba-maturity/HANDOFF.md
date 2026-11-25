@@ -19,7 +19,7 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
   off by default; recommended a + c; the user picks. CLOUD_ORDERS 74 asks the local agent to replay 71 with a,c.
   The test bot's dodge (`tests/lib/player.js P.meleeThreat`) now reads a guard's own wind-up (0.9 s at Zeelich).
   Merged-branch tests 26.11 (automated runtime only, SwiftShader): tester-fixes 10/10, wave7 E+S 12/12, wave4 B+D+E
-  20/20, dialogue-check PASS.
+  20/20, combat 84/84 (after the #58 merge), dialogue-check PASS.
 - **Published:** **v170**, artifact version **`1795635920-1400`** = the next `base_version`.
   - Slug `6f31d0d2-efe4-4413-a370-7d95a7f5785b`.
   - URL https://claude.ai/artifact/EjPMQXPwbmre2kDevMC4tA.
