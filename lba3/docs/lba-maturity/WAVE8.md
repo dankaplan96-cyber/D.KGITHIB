@@ -170,3 +170,6 @@ shown (the HUD's goal is chapter 14's).
 17 אנשים אומרים תודה פעם אחת, חלקם עם מתנה קטנה (חיים או קסם); וביומן נוסף פרק "טובות פתוחות" עם כל סיפור צדדי שהתחיל
 ולא נגמר, ובסוף המשחק גם מי עוד רוצה לומר מילה. דגלים חדשים בלבד (w8), שמירות ישנות נטענות. הכול ריצה אוטומטית בלבד
 (SwiftShader). התמונות ב־captures/wave8 ממתינות לבחירת המשתמש.
+
+## The user's picks (25.11)
+Keep and publish, everything as built: the dog wakes at 3.2 m walking and 1.3 m sneaking; the news shows the newest headline plus one older.
