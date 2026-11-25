@@ -154,7 +154,8 @@ export class KeysClover extends ChapterBase {
     const cx = m.x + (top.x - m.x) - 0, cz = top.z - 3.3;   // (the tower's middle in the world: millTop is 3.3 m out on +z)
     const ang = MILL_KEY_A;
     this.mill = {
-      door: { x: m.door.x, z: m.door.z, y: g.physics.groundAt(m.door.x, m.door.z, 40) },
+      // (the street's level at the door: under the gallery and the stair-stones the highest ground is up there)
+      door: { x: m.door.x, z: m.door.z, y: R.closedDoors?.find((d) => d.id === 'mill-north')?.y ?? top.y - 8.75 },
       centre: { x: cx, z: cz },
       key: { x: cx + Math.sin(ang) * 3.3, z: cz + Math.cos(ang) * 3.3, y: top.y },
       out: { x: cx + Math.sin(ang) * 3.92, z: cz + Math.cos(ang) * 3.92 },
@@ -393,9 +394,9 @@ export class KeysClover extends ChapterBase {
   talkFirst(npc) {
     const id = npc?.def?.id, f = this.f;
     if (!f.kc_pump_on || !this.able()) return false;
-    const say = (flag, key) => { if (f[flag]) return false; f[flag] = true; npc.engage?.(); this.chain([[id, key]], () => { npc.release?.(); this.game.save(false); }); return true; };
-    if (id === 'ot_sweep') return say('kc_sweep', 'kc_sweep_jet');
-    if (id === 'ot_ulla') return say('kc_ulla', 'kc_ulla_jet');
+    const remark = (flag, key) => { if (f[flag]) return false; f[flag] = true; npc.engage?.(); this.chain([[id, key]], () => { npc.release?.(); this.game.save(false); }); return true; };
+    if (id === 'ot_sweep') return remark('kc_sweep', 'kc_sweep_jet');
+    if (id === 'ot_ulla') return remark('kc_ulla', 'kc_ulla_jet');
     return false;
   }
 

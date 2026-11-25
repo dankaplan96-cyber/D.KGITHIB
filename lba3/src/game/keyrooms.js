@@ -130,9 +130,12 @@ export function buildKcTunnel(scene, physics) {
   for (let y = 0.3; y < H + 0.4; y += 0.32) k.add(cyl(0.022, 0.022, 0.5, 6), MAT.wood('honey'), LAD, y, -D / 2 + 0.2, 0, { rz: Math.PI / 2 });
   k.add(plane(1.0, 0.8), dark, LAD, H - 0.2, -D / 2 + 0.01);
   const shaftLight = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.6), MAT.glow('#f4f0e4', '#e8e0c8', 1.2)); shaftLight.position.set(LAD, H - 0.15, -D / 2 + 0.02); B.group.add(shaftLight);
-  const boltM = new THREE.Group(); boltM.position.set(LAD + 0.4, 1.4, -D / 2 + 0.12); B.group.add(boltM);
+  const boltM = new THREE.Group(); boltM.position.set(LAD - 1.1, 1.4, -D / 2 + 0.12); B.group.add(boltM);
   { const bm = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.06, 0.06), iron); bm.castShadow = true; boltM.add(bm); const kn = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), MAT.brass()); kn.position.set(0.21, 0, 0.04); boltM.add(kn); }
-  k.add(rbox(0.12, 0.14, 0.06, 0.01), iron, LAD + 0.66, 1.4, -D / 2 + 0.1);
+  k.add(rbox(0.12, 0.14, 0.06, 0.01), iron, LAD - 0.84, 1.4, -D / 2 + 0.1);
+  // (the bolt's rod up the wall to the hatch: drawn here, 1.2 m from the ladder, so he is not standing in the ladder's way up when it opens)
+  k.add(cyl(0.02, 0.02, H - 1.3, 5), iron, LAD - 1.3, 1.4 + (H - 1.3) / 2, -D / 2 + 0.1);
+  k.add(rbox(1.1, 0.04, 0.04, 0.01), iron, LAD - 0.75, H - 0.05, -D / 2 + 0.1);
   // rubble and an old barrel at the east end; a fallen grille at the west
   B.put(W / 2 - 0.7, -D / 2 + 0.6, 0.3, (kk) => barrel(kk, { r: 0.28, h: 0.78, pal: 'dark' }));
   B.put(W / 2 - 1.5, D / 2 - 0.55, 0.1, (kk) => crate(kk, 0.55, { pal: 'dark' }));
@@ -147,11 +150,11 @@ export function buildKcTunnel(scene, physics) {
       { ...B.world(TABLE, -D / 2 + 1.1), r: 1.2, key: 'roster' },
     ],
     box: { ...B.world(BOX.x, BOX.z + 0.55), y: 0 },
-    bolt: B.world(LAD, -D / 2 + 0.75),
+    bolt: B.world(LAD - 1.2, -D / 2 + 0.75),
     fromYard: { ...B.world(LAD, -D / 2 + 1.7), a: 0 },
     setBox(open) { lidB.setOpen(open); },
     setBolt(open) {
-      shaftLight.visible = !!open; boltM.position.x = B.cx * 0 + LAD + (open ? 0.2 : 0.4);
+      shaftLight.visible = !!open; boltM.position.x = LAD - (open ? 1.3 : 1.1);
       const i = R.exits.indexOf(exitYard);
       if (open && i < 0) R.exits.push(exitYard); else if (!open && i >= 0) R.exits.splice(i, 1);
     },
@@ -211,7 +214,7 @@ export function buildKcGoats(scene, physics) {
     body: wall, low: MAT.wood('dark'), dado: 0.9, rail: wood, cap: MAT.stone('grey', 1), beam: wood,
     posts: wood, postsAt: (L) => [0.3, L - 0.3],
     left: [{ at: DOORZ, w: 1.1, h: 2.1, y0: 0, kind: 'door', frame: wood }],
-    back: [{ at: -1.0, w: 0.7, h: 0.8, y0: LOFT + 0.55, kind: 'window', frame: wood, view: { tile: 'village' } }] });
+    back: [{ at: -0.35, w: 0.7, h: 0.8, y0: LOFT + 0.55, kind: 'window', frame: wood, view: { tile: 'village' } }] });
   R.exits.push({ ...B.world(-W / 2 + 0.4, DOORZ), r: 0.7, to: 'kc_goats-out' });
   R.spawn = { ...B.world(-W / 2 + 1.4, DOORZ), a: Math.PI / 2 };
   // the stall below: straw, the manger along the back wall under the loft, a milking stool, a bucket, a bell on a hook
@@ -223,14 +226,21 @@ export function buildKcGoats(scene, physics) {
   k.add(cyl(0.012, 0.012, 0.18, 5), MAT.iron(), -W / 2 + 0.06, 1.75, -0.4);
   k.add(cyl(0.07, 0.1, 0.13, 8), MAT.brass(), -W / 2 + 0.1, 1.6, -0.4);
   // the stair up along the back wall's east half (eight steps, climbing west), the loft over the west half
-  const N = 8, rise = LOFT / N, run = 0.27, SX0 = 2.12, SZ = -D / 2 + 0.47;
+  // (treads 1.1 m deep: he is 0.9 m across, and the rail along their open side keeps him off them from the room; the
+  //  treads are stair bricks — the height under his feet decides — laid a little over each other: no seam to drop him)
+  const N = 8, rise = LOFT / N, run = 0.27, SX0 = 2.12, SD = 1.1, SZ = -D / 2 + SD / 2;
   for (let i = 0; i < N; i++) {
     const x = SX0 - i * run, top = (i + 1) * rise;
-    k.add(rbox(run + 0.02, 0.06, 0.88, 0.01), MAT.planks('honey'), x, top - 0.03, SZ);
-    k.add(rbox(run, top - 0.06, 0.82, 0.01), planks, x, (top - 0.06) / 2, SZ);
-    B.col(x, SZ, run / 2, 0.45, top, { stair: true });
+    k.add(rbox(run + 0.02, 0.06, SD - 0.02, 0.01), MAT.planks('honey'), x, top - 0.03, SZ);
+    k.add(rbox(run, top - 0.06, SD - 0.08, 0.01), planks, x, (top - 0.06) / 2, SZ);
+    B.col(x, SZ, run / 2 + 0.09, SD / 2, top, { stair: true });   // (+0.09: over each other and the loft's edge under groundAt's 5 cm shrink)
   }
   const LX1 = SX0 - (N - 1) * run - run / 2;   // (the loft's east edge: the top step's west edge)
+  // the rail along the treads' open side, from the third tread up to the loft (the first two are stepped onto from the room)
+  { const x0 = LX1, x1 = SX0 - 1.5 * run, zr = SZ + SD / 2 + 0.03, len = x1 - x0, slope = Math.atan2(rise, run);
+    for (let x = x0 + 0.05; x <= x1 + 0.01; x += (x1 - x0) / 3) { const ty = (SX0 - x) / run * rise + rise; k.add(rbox(0.05, 0.9, 0.05, 0.01), wood, x, ty + 0.45, zr); }
+    k.add(rbox(Math.hypot(len, len / run * rise) + 0.1, 0.06, 0.07, 0.02), wood, (x0 + x1) / 2, ((SX0 - x0) / run * rise + (SX0 - x1) / run * rise) / 2 + rise + 0.9, zr, 0, { rz: -slope });
+    B.col((x0 + x1) / 2, zr, len / 2, 0.04, LOFT + 1.0, { noStand: true, seeThrough: true }); }
   const LD = 2.0, LW = LX1 + W / 2;           // (the loft: from the west wall to LX1, the back wall 2.0 m out)
   k.add(rbox(LW, 0.14, LD, 0.02), MAT.planks('honey'), -W / 2 + LW / 2, LOFT - 0.07, -D / 2 + LD / 2);
   for (const x of [-W / 2 + 0.6, LX1 - 0.15]) k.add(rbox(0.16, LOFT, 0.16, 0.02), wood, x, LOFT / 2, -D / 2 + LD - 0.1);
@@ -243,10 +253,10 @@ export function buildKcGoats(scene, physics) {
   B.col(-W / 2 + (LW - 0.3) / 2, -D / 2 + LD - 0.05, (LW - 0.3) / 2, 0.06, LOFT + 1.0, { bottom: LOFT, noStand: true, seeThrough: true });
   // up on the loft: hay, Grandma's trunk, a chair by the window, the clover box on a crate
   B.put(-W / 2 + 0.55, -D / 2 + 0.45, 0, (kk) => { kk.add(rbox(0.9, 0.6, 0.7, 0.1), straw, 0, 0.3, 0); kk.add(rbox(0.7, 0.4, 0.5, 0.1), straw, 0.1, 0.7, 0.05); return { hw: 0.45, hd: 0.35, top: 0.9 }; }, { y: LOFT });
-  B.put(-0.35, -D / 2 + 0.4, 0, (kk) => chest(kk, { w: 0.8, d: 0.46, h: 0.44, pal: 'red' }), { y: LOFT });
-  B.put(-1.25, -D / 2 + 1.25, 2.6, (kk) => chair(kk, { pal: 'dark', cushion: '#a83a5a' }), { y: LOFT });
-  B.put(-W / 2 + 0.45, -D / 2 + 1.5, 0, (kk) => crate(kk, 0.5, { pal: 'honey' }), { y: LOFT });
-  const BOX = { x: -W / 2 + 0.45, z: -D / 2 + 1.5, y: LOFT + 0.5 };
+  B.put(-0.95, -D / 2 + 0.3, 0, (kk) => chest(kk, { w: 0.8, d: 0.46, h: 0.44, pal: 'red' }), { y: LOFT });
+  B.put(-1.45, -D / 2 + 1.6, 2.9, (kk) => chair(kk, { pal: 'dark', cushion: '#a83a5a' }), { y: LOFT });
+  B.put(-W / 2 + 0.4, -D / 2 + 1.55, 0, (kk) => crate(kk, 0.5, { pal: 'honey' }), { y: LOFT });
+  const BOX = { x: -W / 2 + 0.4, z: -D / 2 + 1.55, y: LOFT + 0.5 };   // (the loft's middle stays clear from the stair's top: he walks in past the rail)
   const lidB = boxLid(B.group, BOX.x, BOX.y, BOX.z, Math.PI / 2);
   k.at(BOX.x, BOX.y, BOX.z, Math.PI / 2, () => cloverBox(k));
   // lights: a lamp under the loft over the stall, one up in the loft
@@ -257,10 +267,12 @@ export function buildKcGoats(scene, physics) {
   KR.kc_goats = {
     looks: [
       { ...B.world(-1.3, -D / 2 + 1.0), y: 0, r: 1.2, key: 'stall' },
-      { ...B.world(-0.35, -D / 2 + 1.05), y: ly, r: 0.9, key: 'trunk' },
-      { ...B.world(-1.0, -D / 2 + 1.0), y: ly, r: 0.75, key: 'window' },
+      { ...B.world(-0.95, -D / 2 + 0.95), y: ly, r: 0.9, key: 'trunk' },
+      { ...B.world(-0.35, -D / 2 + 0.75), y: ly, r: 0.75, key: 'window' },
     ],
     box: { ...B.world(BOX.x + 0.55, BOX.z + 0.05), y: ly },
+    // the stair: where he stands before it, its first tread, and the way up (west, along the back wall)
+    stair: { foot: B.world(SX0, SZ + 1.0), onto: B.world(SX0, SZ), top: B.world(LX1 - 0.4, SZ), a: -Math.PI / 2 },   // (the first tread is stepped onto from the room, beside the east wall)
     setBox(open) { lidB.setOpen(open); },
   };
   return { kc_goats: R };

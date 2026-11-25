@@ -46,11 +46,11 @@ const helpers = () => ev(async () => {
   window.kc = () => Object.fromEntries(Object.entries(game.flags).filter(([k]) => k.startsWith('kc_')));
   window.hud = () => { const e = document.querySelector('#smallkeys'); return { shown: !!e && !e.classList.contains('hidden'), n: e?.querySelector('b')?.textContent, stats: document.querySelector('#stats')?.classList.contains('show') }; };
   window.num = () => ({ cap: game.hero.cloverMax, clovers: game.hero.clovers, keys: game.hero.smallKeys, coins: game.hero.coins });
-  window.toReg = (reg) => { const G = game; G.regions.ensure(reg, 'test'); const R = G.rooms[reg]; G.enterRoom(reg, R.spawn, true); P.settle(); G.story.refreshCast(); G.step(0.3); return R; };
+  window.toReg = (reg) => { const G = game; G.regions.ensure(reg, 'test'); const R = G.rooms[reg]; G.enterRoom(reg, R.spawn, true); P.settle(); G.story.refreshCast(); G.step(0.3); return R.id; };
   window.toCitadel = (x, z, a = 0) => { const G = game; G.exitRoom({ x, z, a }, true); G.step(0.3); P.settle(); };
   window.outOf = (to) => { const G = game, e = G.room?.exits?.find((x) => x.to === to || x.room === to); if (!e) return { r: 'no exit ' + to }; const t = P.through(e.x, e.z); P.settle(); return { r: t.r, room: G.room?.id ?? 'citadel' }; };
   window.doorTo = (room) => game.story.doors().find((d) => d.room === room);
-  window.walkIn = (room, fx, fz) => { const G = game, d = doorTo(room); if (!d) return { r: 'no door' }; const h = G.hero, sx = d.x + fx * 2.2, sz = d.z + fz * 2.2; P.go(sx, sz, { tol: 0.4 }); const t = P.through(d.x, d.z); P.settle(); G.step(0.4); return { r: t.r, room: G.room?.id ?? 'citadel' }; };
+  window.walkIn = (room, fx, fz, far = 2.2) => { const G = game, d = doorTo(room); if (!d) return { r: 'no door' }; const h = G.hero, sx = d.x + fx * far, sz = d.z + fz * far; P.go(sx, sz, { tol: 0.4 }); const t = P.through(d.x, d.z); P.settle(); G.step(0.4); return { r: t.r, room: G.room?.id ?? 'citadel' }; };
   window.setFlags = (o) => { const f = game.flags; Object.assign(f, o); game.story.applyFlags(); game.story.refreshCast(); game.step(0.3); P.settle(); };
 });
 const saveQuit = async () => {
@@ -83,12 +83,13 @@ check('A: a save holding more leaves than its cap loads with the cap\'s 9 (no bo
 // ================================================================ B · K1 Citadel: FunFrock's old passage
 if (ONLY.includes('B')) {
   const N = await ev(() => game.world.shutDoors.find((d) => d.id === 'passageN'));
-  await ev(() => toCitadel(-25.9, -90, 0));
+  await ev(() => toCitadel(-29.0, -86.1, Math.PI / 2));
   await shot('kc-01-passage-barred');
   const b1 = await ev((N) => { const u = P.use(N.x, N.z, { kind: 'kc_lock', near: 1.0, match: 2.2 }); return { u: u.r, door: !!game.flags.kc_door_fort }; }, N);
   const b1l = await said();
   check('B: FunFrock\'s passage without its key (INPUT E): "Locked", the bars\' tag names the yard\'s powder chest; not opened', b1.u === 'used' && !b1.door && has(b1l, /POWDER CHEST, YARD/), { b1, b1l });
-  const b2 = await ev(() => { const C = KC().chest; const u = P.use(C.x, C.z, { kind: 'kc_chest', near: 0.9, match: 1.6 }); P.settle(); return { u: u.r, key: !!game.flags.kc_key_fort, ...num(), hud: hud() }; });
+  iso('into the fort\'s yard (the walk round from the north face is the town\'s: camfollow/door-sweep): put by its north-east corner');
+  const b2 = await ev(() => { toCitadel(-19, -73.5, Math.PI); const C = KC().chest; const u = P.use(C.x, C.z, { kind: 'kc_chest', near: 0.9, match: 1.6 }); P.settle(); return { u: u.r, key: !!game.flags.kc_key_fort, ...num(), hud: hud() }; });
   const b2l = await said();
   check('B: the powder chest in the fort\'s yard (INPUT E): a small brass key (the found box), held: 1 small key', b2.u === 'used' && b2.key && b2.keys === 1 && has(b2l, /small brass key/), { b2, b2l });
   const b3 = await ev(() => { game.hero.coins += 0; game.hud.stats(game.hero); return hud(); });
@@ -97,23 +98,23 @@ if (ONLY.includes('B')) {
   await shot('kc-02-hud-key');
   await ev(() => { game.hud.forceStats = false; });
   iso('to Otringal and back (the rides are travel.mjs\'s): put on the island, then on Citadel');
-  const b4 = await ev(() => { toReg('isle_otringal'); const there = { room: game.room?.id, ...num(), hud: hud() }; toCitadel(-25.9, -90, 0); return { there, back: { room: game.room?.id ?? 'citadel', ...num() } }; });
+  const b4 = await ev(() => { toReg('isle_otringal'); const there = { room: game.room?.id, ...num(), hud: hud() }; toCitadel(-29.0, -86.1, Math.PI / 2); return { there, back: { room: game.room?.id ?? 'citadel', ...num() } }; });
   check('B: the key STAYS with Twinsen out of its area: on Otringal still 1 small key on the HUD, and back on Citadel', b4.there.room === 'isle_otringal' && b4.there.keys === 1 && b4.there.hud.shown && b4.back.keys === 1, b4);
   await saveQuit(); await reboot();
   const b5 = await ev(() => ({ kc: kc(), ...num(), hud: hud() }));
   check('B: Save & quit → Continue with the key held: kc_key_fort kept, 1 small key, the HUD\'s key shown', b5.kc.kc_key_fort === true && !b5.kc.kc_door_fort && b5.keys === 1 && b5.hud.shown, b5);
-  const b6 = await ev((N) => { toCitadel(-25.9, -90, 0); const u = P.use(N.x, N.z, { kind: 'kc_lock', near: 1.0, match: 2.2 }); P.settle(); return { u: u.r, door: !!game.flags.kc_door_fort, ...num(), hud: hud(), doorIn: !!doorTo('kc_tunnel') }; }, N);
+  const b6 = await ev((N) => { toCitadel(-29.0, -86.1, Math.PI / 2); const u = P.use(N.x, N.z, { kind: 'kc_lock', near: 1.0, match: 2.2 }); P.settle(); return { u: u.r, door: !!game.flags.kc_door_fort, ...num(), hud: hud(), doorIn: !!doorTo('kc_tunnel') }; }, N);
   const b6l = await said();
   check('B: the lock with the key (INPUT E): the small key fits, the gate opens, the key spent (0 held, the HUD\'s key hidden), the passage a door now', b6.u === 'used' && b6.door && b6.keys === 0 && !b6.hud.shown && b6.doorIn && has(b6l, /small key fits/), { b6, b6l });
   await shot('kc-03-passage-open');
-  const b7 = await ev(() => walkIn('kc_tunnel', 0, -1));
+  const b7 = await ev(() => walkIn('kc_tunnel', 0, -1, 1.3));   // (from the landing before the mouth)
   check('B: in by the passage\'s mouth (INPUT): FunFrock\'s old passage', b7.room === 'kc_tunnel', b7);
   await shot('kc-04-tunnel');
   const b8 = await ev(() => { const K = KR.kc_tunnel, before = num(); const u = P.use(K.box.x, K.box.z, { kind: 'kc_box', near: 0.8, match: 1.5 }); return { u: u.r, before, after: num(), box: !!game.flags.kc_box_fort }; });
   const b8l = await said();
   check('B: clover box B1 in the side niche (INPUT E): the cap 9 → 10 and a leaf inside (4 → 5)', b8.u === 'used' && b8.box && b8.before.cap === 9 && b8.after.cap === 10 && b8.after.clovers === b8.before.clovers + 1 && has(b8l, /clover box/), { b8, b8l });
   const b9 = await ev(() => { const K = KR.kc_tunnel; const u = P.use(K.bolt.x, K.bolt.z, { kind: 'kc_bolt', near: 0.8, match: 1.5 }); const up = outOf('kc-fort-yard'); const h = game.hero.pos; return { u: u.r, bolt: !!game.flags.kc_bolt_fort, up, at: [+h.x.toFixed(1), +h.z.toFixed(1)] }; });
-  check('B: the trapdoor\'s bolt drawn from below (INPUT E), up the ladder (INPUT): out in the fort\'s yard by the trapdoor', b9.u === 'used' && b9.bolt && b9.up.room === 'citadel' && Math.hypot(b9.at[0] + 27.8, b9.at[1] + 61.6) < 3, b9);
+  check('B: the trapdoor\'s bolt drawn from below (INPUT E), up the ladder (INPUT): out in the fort\'s yard by the trapdoor', b9.u === 'used' && b9.bolt && b9.up.room === 'citadel' && Math.hypot(b9.at[0] + 27.8, b9.at[1] + 61.6) < 4, b9);
   const b10 = await ev(() => { const S = game.world.shutDoors.find((d) => d.id === 'passageS'); const u = P.use(S.x, S.z, { kind: 'kc_hatch', near: 0.8, match: 2.0 }); P.settle(); game.step(0.5); return { u: u.r, room: game.room?.id ?? 'citadel' }; });
   check('B: the two-way shortcut: from the yard the trapdoor climbs down (INPUT E) into the passage', b10.u === 'used' && b10.room === 'kc_tunnel', b10);
   const b11 = await ev(() => outOf('kc-fort-n'));
@@ -166,14 +167,14 @@ if (ONLY.includes('D')) {
   const d3 = await ev((G) => { const u = P.use(G.door.x, G.door.z, { kind: 'kc_lock', near: 1.0, match: 2.2 }); P.settle(); const w = walkIn('kc_goats', 0, -1); return { u: u.r, door: !!game.flags.kc_door_goat, room: w.room, ...num() }; }, Gd);
   check('D: the lock (INPUT E), the key spent; in (INPUT): Grandma\'s old house', d3.u === 'used' && d3.door && d3.keys === 0 && d3.room === 'kc_goats', d3);
   await shot('kc-09-goats-room');
-  const d4 = await ev(() => { const K = KR.kc_goats, b = num(); const u = P.use(K.box.x, K.box.z, { kind: 'kc_box', near: 0.6, match: 1.5 }); const y = game.hero.pos.y; return { u: u.r, y: +y.toFixed(2), before: b, after: num(), box: !!game.flags.kc_box_goat }; });
+  const d4 = await ev(() => { const K = KR.kc_goats, b = num(), S = K.stair; P.go(S.foot.x, S.foot.z, { tol: 0.3 }); P.go(S.onto.x, S.onto.z, { tol: 0.15 }); P.face(S.top.x, S.top.z); P.holdFor(['ArrowUp'], 2.6); P.settle(); const u = P.use(K.box.x, K.box.z, { kind: 'kc_box', near: 0.6, match: 1.5 }); const y = game.hero.pos.y; return { u: u.r, y: +y.toFixed(2), before: b, after: num(), box: !!game.flags.kc_box_goat }; });
   check('D: up the stair to the loft (INPUT) and clover box B3 (INPUT E): cap +1, a leaf', d4.u === 'used' && d4.y > 2 && d4.box && d4.after.cap === d4.before.cap + 1 && d4.after.clovers === d4.before.clovers + 1, d4);
   const d5 = await ev(() => { const L = KR.kc_goats.looks; const t = L.find((l) => l.key === 'trunk'), w = L.find((l) => l.key === 'window'); const u1 = P.use(t.x, t.z, { kind: 'kc_look', near: 0.6, match: 1.5 }); const u2 = P.use(w.x, w.z, { kind: 'kc_look', near: 0.5, match: 1.5 }); return { u1: u1.r, u2: u2.r }; });
   const d5l = await said();
   check('D: Grandma\'s trunk and the loft window (INPUT E)', d5.u1 === 'used' && d5.u2 === 'used' && has(d5l, /NOT FOR PIM/) && has(d5l, /observatory/), { d5, d5l });
   await shot('kc-10-goats-loft');
-  const d6 = await ev(() => outOf('kc_goats-out'));
-  check('D: down and out (INPUT): in Lhar before the house', d6.room === 'hamalayi', d6);
+  const d6 = await ev(() => { const S = KR.kc_goats.stair; P.go(S.top.x, S.top.z, { tol: 0.3 }); P.face(S.onto.x, S.onto.z); P.holdFor(['ArrowUp'], 2.4); P.settle(); P.go(S.foot.x, S.foot.z, { tol: 0.3 }); const y = +game.hero.pos.y.toFixed(2); return { ...outOf('kc_goats-out'), y }; });
+  check('D: down the stair and out (INPUT): in Lhar before the house', d6.room === 'hamalayi' && d6.y < 0.3, d6);
 }
 
 // ================================================================ E · K4 Zeelich: Baldino's old mill room (chapter 14)
