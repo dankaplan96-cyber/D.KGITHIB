@@ -25,6 +25,7 @@ import { t } from './i18n.js';
 import './text/map.js';
 import { WATER_FLOOR } from '../engine/physics.js';
 import { textures } from '../engine/textures.js';
+import { ihomeName } from './ihomes.js';
 
 const PAL = {
   twinsun: { build: [204, 128, 94], edge: [74, 42, 30], floor: [218, 207, 186], tree: [46, 98, 48], wall: [58, 44, 38], fence: [120, 96, 74], path: [214, 186, 132], street: [200, 192, 176], shallow: [104, 182, 206], deep: [26, 72, 120], foam: [226, 246, 246], sea: 0 },
@@ -35,7 +36,9 @@ const PAL = {
 };
 export const palOf = (region) => (region === 'desert' ? PAL.desert : region === 'hamalayi' ? PAL.hamalayi : region === 'zeelich' || region.startsWith('isle_') ? PAL.zeelich : PAL.twinsun);
 
-export const roomName = (id) => { const k = 'room_' + id, s = t(k); return s === k ? titleCase(id) : s; };
+// (#45, 25.11: every room has a name of its own, room_<id> (text/map.js); a house behind an island's, Kesh's or the
+//  Hamalayi's door its kind and place (ihomes.js ihomeName); the id in title case is the last fallback only)
+export const roomName = (id) => { const k = 'room_' + id, s = t(k); return s !== k ? s : ihomeName(id, t) ?? titleCase(id); };
 export const titleCase = (w) => { const s = String(w || '').toLowerCase(); return s.charAt(0).toUpperCase() + s.slice(1); };
 
 // the region's square (world metres) and its terrain

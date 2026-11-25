@@ -121,6 +121,13 @@ export const regionOf = (d) => (d.startsWith('kesh-') || d.startsWith('post-') |
 export const IHOME_IDS = Object.keys(IHOMES).filter((d) => !EXCEPT.has(d)).map(roomOf);
 const DOOR = Object.fromEntries(Object.keys(IHOMES).map((d) => [roomOf(d), d]));
 export const doorOf = (r) => DOOR[r] || null;
+// #45 (25.11): the name of a room here on the map and in a save, when it has no room_<id> name of its own (mapdraw.js
+// roomName): its kind and its place, "Tea room, Otringal" (text/map.js ihn_<kind>, ihn_fmt). The ids were shown before
+const PLACE_OF = (d) => { const reg = regionOf(d); return reg.startsWith('isle_') ? reg : d.startsWith('kesh-') ? 'mp_kesh' : d.startsWith('post-') ? 'mp_post' : d.startsWith('ham-lhar') ? 'mp_lhar' : d.startsWith('ham-obs') ? 'mp_observatory' : reg === 'hamalayi' ? 'map_hamalayi' : 'map_desert'; };
+export function ihomeName(id, t) {
+  const d = doorOf(id), H = d && IHOMES[d];
+  return H?.k ? t('ihn_fmt', { kind: t('ihn_' + H.k), place: t(PLACE_OF(d)) }) : null;
+}
 // far from every other place (regions.js AT: up to x ≈ 10 100), 50 m apart (a room is at most 8 m across)
 export const IHOME_AT = Object.fromEntries(IHOME_IDS.map((r, i) => [r, { x: 10400 + (i % 12) * 50, z: -800 - Math.floor(i / 12) * 50 }]));
 // the keepers (story/ihomes.js): their room, their look
