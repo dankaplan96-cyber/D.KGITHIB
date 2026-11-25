@@ -463,14 +463,14 @@ export class Story {
   }
   ballHit(p) { return this.lb.ballHit(p) || this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.lb.meleeHit(o) || this.arsenal.meleeHit(o); }
-  pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
+  pulseHit(o) { return this.cur.pulseHit?.(o) || this.depth.pulseHit(o) || false; }   // (WAVE3: the project store's motor, depth.js)
   jetHit(o) { return this.cur.jetHit?.(o) || this.kit2.jetHit(o); }   // (EQUIP-2a: the pump lance's jet, tools.js)
   // EQUIP-2b (tools.js): the singing fork's note, the heat flask's blast, what the Esmer line can catch here
   // (WAVE2: the fork's note answers everything warm in reach: depth.js is asked as well, not only when nothing else took it —
   //  the galleries' crusted pocket stands within a strike of Ilka's wheel)
   forkHit(o) { const a = this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o); return this.depth.forkHit(o) || a; }
   heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o) || this.depth.heatHit(o); }
-  lineTargets() { return this.kit2b.lineTargets(); }
+  lineTargets() { const a = this.kit2b.lineTargets(), b = this.depth.lineTargets(); return b.length ? [...a, ...b] : a; }   // (WAVE3: the far doors' and the gorge's rings, depth.js)
   ballTargets() { return this.cur.ballTargets(); }
   // (REVIEW-DESERT, the same on Citadel: the plateau's parked glider stood in its field from chapter 1, though the glider
   //  routes to Citadel open only with the evacuation (travel.js edges); before that it is not there — on a change only,
