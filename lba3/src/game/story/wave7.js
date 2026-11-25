@@ -89,8 +89,9 @@ export class Wave7 extends ChapterBase {
   }
   // the high ring's hook as a ball target of Desert Island (the ball's aim finds it while the ring waits for it)
   shadeTarget(D) {
-    const S = W7.shade, f = this.f, self = this; if (!S || this._ringT) return;
-    this._ringT = { x: S.hook.x, y: S.hook.y, z: S.hook.z, r: 0.75, material: 'wood', result: 'switch', get done() { return !(f.w7d_dallan && self.shadeTorn()); }, onHit: () => this.ringUp() };
+    const S = W7.shade, self = this; if (!S || this._ringT) return;
+    // (the flags read when asked: a load replaces the flags object)
+    this._ringT = { x: S.hook.x, y: S.hook.y, z: S.hook.z, r: 0.75, material: 'wood', result: 'switch', get done() { return !(self.f.w7d_dallan && self.shadeTorn()); }, onHit: () => this.ringUp() };
     D.ballTargets.push(this._ringT);
   }
   applyFlags() {

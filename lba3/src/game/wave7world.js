@@ -99,8 +99,8 @@ export function buildLiftBits(game) {
     L, ctrl: { x: kn.x, z: kn.z },
     crateA: () => wp(L.crate),
     crateB: () => { const v = new THREE.Vector3(-0.6, 0.76, 0.1); L.barge.updateMatrixWorld(true); v.applyMatrix4(L.barge.matrixWorld); return { x: v.x, y: v.y, z: v.z }; },
-    setOn(on) { for (const d of decals) d.visible = !!on; },
-    setPin(on) { pin.visible = !!on; },
+    setOn(on) { for (const d of decals) { d.visible = !!on; if (on) d.updateMatrixWorld(true); } },   // (drawcull.js skips hidden subtrees' matrices: brought up to date when shown)
+    setPin(on) { pin.visible = !!on; if (on) pin.updateMatrixWorld(true); },
     setCrate(on) { L.crate.visible = !!on; },
   };
   W7.lift.setOn(false); W7.lift.setPin(false);
@@ -120,7 +120,7 @@ export function buildStallCrate(game) {
   k.flush();
   const ch = new THREE.Mesh(plane(0.48, 0.24), decalMat('chalk', chalkTex)); ch.position.set(x + Math.sin(a + 0.2) * 0.285, y + 0.3, z + Math.cos(a + 0.2) * 0.285); ch.rotation.y = a + 0.2; g.add(ch);
   const col = game.physics.add({ type: 'box', x, z, hw: 0.28, hd: 0.28, rot: a + 0.2, top: y + 0.55, noStand: true });
-  W7.stall = { x: x + Math.sin(a) * 0.75, z: z + Math.cos(a) * 0.75, at: { x, z }, setOn(on) { g.visible = !!on; col.enabled = !!on; } };
+  W7.stall = { x: x + Math.sin(a) * 0.75, z: z + Math.cos(a) * 0.75, at: { x, z }, setOn(on) { g.visible = !!on; col.enabled = !!on; if (on) g.updateMatrixWorld(true); } };
   return W7.stall;
 }
 
@@ -210,10 +210,10 @@ export function buildBackStore(R, plan, physics) {
     inside: (x, z) => x > X(x0) && x < X(x1) && z > Z(z0) && z < Z(z1),
     u: 0,
     setShutter(u) { S7.u = u = Math.max(0, Math.min(1, u)); curtain.scale.y = Math.max(0.04, 1 - u); shutCol.enabled = u < 0.85; },
-    setBales(where) { bales.visible = !!where; if (where) bales.position.x = X(BALES[where] ?? BALES.back); },
+    setBales(where) { bales.visible = !!where; if (where) { bales.position.x = X(BALES[where] ?? BALES.back); bales.updateMatrixWorld(true); } },
     baleX(x) { bales.position.x = X(x); }, BALES,
-    setPin(on) { pin.visible = !!on; },
-    setDoor(open) { leaf.rotation.y = open ? -1.7 : 0; leaf.position.x = X(x0 - dt / 2) + (open ? 0.3 : 0); leaf.position.z = Z(D.z) + (open ? -D.w / 2 + 0.05 : 0); passage.visible = !!open; doorCol.enabled = !open; },
+    setPin(on) { pin.visible = !!on; if (on) pin.updateMatrixWorld(true); },
+    setDoor(open) { leaf.rotation.y = open ? -1.7 : 0; leaf.position.x = X(x0 - dt / 2) + (open ? 0.3 : 0); leaf.position.z = Z(D.z) + (open ? -D.w / 2 + 0.05 : 0); passage.visible = !!open; doorCol.enabled = !open; g.updateMatrixWorld(true); },
     setLever(p) { lever.rotation.z = -p * 0.55; },   // (−1 in · 0 stopped · 1 out: toward the hall)
     group: g,
   };
@@ -239,7 +239,7 @@ export function buildBackDoor(game) {
   const D = {
     x: x - 0.75, z, y, door: { x: x - 0.75, z },
     out: { x: x - 1.95, z, a: -Math.PI / 2 },
-    setOpen(on) { leaf.rotation.y = on ? 1.6 : 0; dark.visible = !!on; },
+    setOpen(on) { leaf.rotation.y = on ? 1.6 : 0; dark.visible = !!on; g.updateMatrixWorld(true); },
     group: g,
   };
   D.setOpen(false);
@@ -259,7 +259,7 @@ export function buildShelterStock(game, frame, parent) {
   k.at(B.x, yb, B.z, ry, () => { P.barrel(k, { r: 0.26, h: 0.7 }); k.at(0.0, 0, -0.62, 0, () => P.barrel(k, { r: 0.26, h: 0.7 })); });
   k.flush();
   const cols = [PH.add({ type: 'box', x: A.x, z: A.z, hw: 0.34, hd: 0.3, rot: ry, top: ya + 1.3, noStand: true }), PH.add({ type: 'box', x: B.x - frame.n.x * 0.0, z: B.z, hw: 0.3, hd: 0.62, rot: ry, top: yb + 0.72, noStand: true })];
-  W7.stock = { at: A, setOn(on) { g.visible = !!on; for (const c of cols) c.enabled = !!on; } };
+  W7.stock = { at: A, setOn(on) { g.visible = !!on; for (const c of cols) c.enabled = !!on; if (on) g.updateMatrixWorld(true); } };
   W7.stock.setOn(false);
   return W7.stock;
 }
@@ -280,11 +280,14 @@ export function buildShade(R) {
     const me = new THREE.Mesh(geo, mat); me.castShadow = true; return me;
   };
   const [p0, p1, p2] = P0;
-  // torn: two ragged strips hanging off the low poles' tops, and the high pole bare
+  // torn: what is left between the two low poles sagging deep, a long rag hanging off one of them, the rest blown down
+  // in a heap by the high pole's foot; the high pole bare
   const torn = new THREE.Group(); g.add(torn);
-  torn.add(tri(p1, [p1[0] - 0.35, p1[1] - 1.5, p1[2] - 0.1], [p1[0] - 0.75, p1[1] - 0.9, p1[2] + 0.25], 0.02));
-  torn.add(tri(p2, [p2[0] - 0.2, p2[1] - 1.3, p2[2] - 0.35], [p2[0] - 0.55, p2[1] - 0.6, p2[2] - 0.6], 0.02));
-  torn.add(tri(p1, [p1[0] - 0.8, p1[1] - 0.25, p1[2] - 0.3], [p1[0] - 0.5, p1[1] - 0.75, p1[2] - 0.15], 0.0));
+  const mid = [(p1[0] + p2[0]) / 2, Math.min(p1[1], p2[1]) - 1.25, (p1[2] + p2[2]) / 2];
+  torn.add(tri(p1, p2, mid, 0.05));
+  torn.add(tri(p2, [p2[0] + 0.25, p2[1] - 1.9, p2[2] - 0.15], [p2[0] - 0.45, p2[1] - 1.45, p2[2] + 0.35], 0.02));
+  torn.add(tri(p1, [p1[0] - 0.3, p1[1] - 1.7, p1[2] - 0.2], [p1[0] - 0.6, p1[1] - 1.1, p1[2] + 0.2], 0.02));
+  { const gx = p0[0] + 0.9, gz = p0[2] + 0.7, gy = S.H(gx, gz) + 0.04; torn.add(tri([gx - 0.6, gy + 0.05, gz - 0.3], [gx + 0.7, gy + 0.02, gz - 0.1], [gx, gy + 0.18, gz + 0.65], -0.05)); }
   // rigged: the new canvas tied to the low poles, its third corner down by the high pole's foot, the ring on it
   const rigged = new THREE.Group(); g.add(rigged);
   const low = [p0[0] + 0.35, S.H(p0[0] + 0.35, p0[2] + 0.35) + 0.4, p0[2] + 0.35];
@@ -313,6 +316,7 @@ export function buildShade(R) {
       S.mesh.visible = s === 'whole' || s === 'up';
       torn.visible = s === 'torn'; rigged.visible = s === 'rigged';
       roll.visible = s === 'rigged';
+      g.updateMatrixWorld(true);   // (drawcull.js skips hidden subtrees' matrices: the pieces shown now are brought up to date)
     },
     group: g,
   };
