@@ -144,7 +144,7 @@ export class HUD {
   // In the LBA HUD the panel only "incrusts" for a few seconds when a value changes
   // (InitIncrustDisp(..., timeout) in the original), or while life is low.
   _incrust(h) {
-    const key = [Math.ceil(h.hp), h.coins, h.clovers, h.hasKey, h.magicLevel, h.shards.join()].join('|');
+    const key = [Math.ceil(h.hp), h.coins, h.clovers, h.hasKey, h.smallKeys, h.magicLevel, h.shards.join()].join('|');
     if (this._last !== undefined && key !== this._last) this.incrustT = 3;
     this._last = key;
     this.incrustT = Math.max(0, (this.incrustT || 0) - 1 / 60);
@@ -160,14 +160,17 @@ export class HUD {
     //  value, made the browser recompute the HUD's style and layout every frame)
     const L = (this._sv ??= {}), sh = h.shards;
     let shards = 0; for (let i = 0; i < sh.length; i++) if (sh[i]) shards |= 1 << i;
-    if (L.hp === h.hp && L.maxHp === h.maxHp && L.mp === h.mp && L.mpMax === h.mpMax && L.lv === h.magicLevel && L.cl === h.clovers && L.co === h.coins && L.key === h.hasKey && L.sh === shards) return;
-    L.hp = h.hp; L.maxHp = h.maxHp; L.mp = h.mp; L.mpMax = h.mpMax; L.lv = h.magicLevel; L.cl = h.clovers; L.co = h.coins; L.key = h.hasKey; L.sh = shards;
+    if (L.hp === h.hp && L.maxHp === h.maxHp && L.mp === h.mp && L.mpMax === h.mpMax && L.lv === h.magicLevel && L.cl === h.clovers && L.co === h.coins && L.key === h.hasKey && L.sk === h.smallKeys && L.sh === shards) return;
+    L.hp = h.hp; L.maxHp = h.maxHp; L.mp = h.mp; L.mpMax = h.mpMax; L.lv = h.magicLevel; L.cl = h.clovers; L.co = h.coins; L.key = h.hasKey; L.sk = h.smallKeys; L.sh = shards;
     $('#lifebar i').style.width = (100 * h.hp) / h.maxHp + '%';
     $('#magicbar i').style.width = (100 * h.mp) / h.mpMax + '%';
     $('#magicbar').dataset.level = h.magicLevel;
     $('#clovers b').textContent = h.clovers;
     $('#coins b').textContent = h.coins;
     $('#keyicon').classList.toggle('hidden', !h.hasKey);
+    // (KEYS-CLOVER: the small keys he holds, a round-bowed brass key and their count beside the kashes; a story key keeps
+    //  its own icon. The count shows with the panel, as the clovers' and the kashes' do: story/keysclover.js h.smallKeys)
+    { const sk = $('#smallkeys'); if (sk) { sk.classList.toggle('hidden', !(h.smallKeys > 0)); sk.querySelector('b').textContent = h.smallKeys | 0; } }
     document.querySelectorAll('#shards i').forEach((e, i) => e.classList.toggle('got', h.shards[i]));
   }
 

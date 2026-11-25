@@ -456,7 +456,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     if (it.spot.id === 'asylum_register') {
       g.searched.push(it.spot.id); g.audio.play('search');
-      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
+      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(h.cloverMax, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
       return true;
     }
     if (it.spot.id === 'as_cell') {

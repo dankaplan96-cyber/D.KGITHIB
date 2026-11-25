@@ -44,6 +44,7 @@ Object.assign(INSIDE, { bl_shed: 'ballastra', bl_oren: 'bl_arches', bl_mags: 'bl
 // (WAVE6 second round: every interior whose door stands outside Citadel answers its own region, not 'citadel': Otringal's
 //  bar and hotel, the Dark Monk's temple on Celebration, Zeelich's homes, EXP-3's two Ballastra rooms)
 Object.assign(INSIDE, { otrbar: 'isle_otringal', otrhotel: 'isle_otringal', celtemple: 'isle_celebration', zh_pelleck: 'zeelich', zh_nara: 'zeelich', zh_oku: 'zeelich', zh_bakery: 'zeelich', bl_cradles: 'bl_arches', bl_house: 'bl_gardens' });
+Object.assign(INSIDE, { kc_pump: 'isle_otringal', kc_goats: 'hamalayi', kc_mill: 'zeelich' });   // (KEYS-CLOVER: the small-key rooms; FunFrock's passage is Citadel's)
 let lastOut = 'citadel', lastPos = null;
 export function regionOf(game) {
   const R = game.room;

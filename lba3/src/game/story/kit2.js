@@ -207,8 +207,8 @@ export class Kit2 extends ChapterBase {
           if (f.e2_tin) return;
           f.e2_tin = true; this.applyFlags(); T.tin.visible = true;
           g.audio.play('chest');
-          const full = h.clovers >= 9;
-          if (full) h.coins += 10; else h.clovers = Math.min(9, h.clovers + 1);
+          const full = h.clovers >= h.cloverMax;
+          if (full) h.coins += 10; else h.clovers = Math.min(h.cloverMax, h.clovers + 1);
           hero(['e2_tin_lift', full ? 'e2_tin_kashes' : 'e2_tin_clover'], () => { T.tin.visible = false; if (full) g.hud.toast('a_toast_kashes', { n: 10 }); else g.hud.toast('toast_clover_found'); g.hud.stats?.(h); g.save(false); });
         }, 0.3);
         return true;

@@ -52,8 +52,9 @@ export class BehaviourMenu {
     q('.magic').style.width = (h.magicLevel / 4) * 100 + '%';
     q('.magic i').style.width = (100 * h.mp) / h.mpMax + '%';
     q('.kash b').textContent = h.coins;
-    q('.keys b').textContent = h.hasKey ? 1 : 0;
-    const boxes = Math.max(5, h.clovers);
+    q('.keys b').textContent = (h.hasKey ? 1 : 0) + (h.smallKeys | 0);   // (KEYS-CLOVER: a story key and the small keys he holds)
+    // (KEYS-CLOVER: the box row is the clover cap, 9 and one more for each clover box found, the leaves filled in, as LBA's)
+    const boxes = Math.max(h.cloverMax || 9, h.clovers);
     q('.clovers').innerHTML = Array.from({ length: boxes }, (_, i) => `<span class="${i < h.clovers ? 'full' : ''}"></span>`).join('');
     q('.shardrow').innerHTML = h.shards.map((s) => `<span class="${s ? 'got' : ''}"></span>`).join('');
   }

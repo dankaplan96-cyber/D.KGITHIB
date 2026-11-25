@@ -128,7 +128,7 @@ export class IslandPeople extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     if (f.pp_light || !f.pp_lens) return;
     f.pp_light = true; this.applyThings();
-    h.clovers = Math.min(9, h.clovers + 1);
+    h.clovers = Math.min(h.cloverMax, h.clovers + 1);
     g.audio.play('chest'); g.hud.toast('toast_clover_found'); g.hud.stats?.(h);
     const L = this.T('knartas').light; if (L) g.particles?.burst(L.x, L.y + 3.4, L.z, '#fff0b0', 18, 1.4);
     const q = this.npc('kn_quill'), near = q?.present && !q.away && Math.hypot(q.pos.x - h.pos.x, q.pos.z - h.pos.z) < 18;
@@ -209,7 +209,7 @@ export class IslandPeople extends ChapterBase {
         if (f.pp_clapper) return this.ownFirst(npc) || c(['ip_chap_thanks'], () => {
           if (f.pp_bell) return;
           f.pp_bell = true; this.applyThings();
-          const h = g.hero; h.clovers = Math.min(9, h.clovers + 1);
+          const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1);
           g.audio.play('chest'); g.hud.toast('toast_clover_found'); g.hud.stats?.(h); g.save(false);
         });
         if (!f.pp_bellAsk) return c(['ip_chap_1', 'ip_chap_2'], () => { f.pp_bellAsk = true; g.save(false); });

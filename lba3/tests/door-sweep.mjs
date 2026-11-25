@@ -35,6 +35,8 @@ for (const ci of CH) {
     Object.assign(f, { prologueDone: true, intro: true, chapter: ci, chapterKey: k }); G.hero.hasBall = true; S.refreshCast?.(); P.settle();
     return k;
   }, ci);
+  // (FLAGS='{"kc_door_fort":true}': story flags set over the chapter's, for doors that open with the story: KEYS-CLOVER)
+  if (process.env.FLAGS) { const fl = JSON.parse(process.env.FLAGS); iso('flags ' + JSON.stringify(fl)); await ev((fl) => { Object.assign(game.flags, fl); game.story.applyFlags(); P.settle(); }, fl); }
   iso(`chapter index ${ci} (${key}) by its flags`);
   await ev(() => { const G = game; for (const id of G.regions.of.keys()) if (G.regions.centreOf(id)?.outdoor || id.startsWith('isle_')) G.regions.ensure(id, 'sweep'); });
   const doors = await ev(({ only }) => game.story.doors().filter((d) => !only || only.includes(d.room)).map((d) => ({ room: d.room, region: d.region || 'citadel', x: d.x, z: d.z, r: d.r, prompt: !!d.prompt })), { only: ONLY });

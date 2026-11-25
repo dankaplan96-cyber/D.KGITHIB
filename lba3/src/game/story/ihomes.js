@@ -82,7 +82,7 @@ export class IsleHomes extends ChapterBase {
     for (const d of this.ours(rid) || []) {
       if (FAR[d.id]) { const s = this.farSpot(g.room, d); if (s && Math.abs(y - s.y) < 2.5) consider(dist(s.x, s.z), FAR_LOOK_R, { kind: 'ihfar', key: FAR[d.id], label: 'p_look' }); }
       if (Math.abs(y - d.y) >= 1.6) continue;
-      if (EXCEPT.has(d.id)) consider(dist(d.x, d.z), 1.6, { kind: 'ihshut', key: IHOMES[d.id].ex, label: 'p_door' });
+      if (EXCEPT.has(d.id)) { if (!this.story.kc?.opened(d.id)) consider(dist(d.x, d.z), 1.6, { kind: 'ihshut', key: IHOMES[d.id].ex, label: 'p_door' }); }   // (KEYS-CLOVER: the pump house, once its small lock is open, is story/keysclover.js's door)
       else { const k = this.shutNow(d.id); if (k) consider(dist(d.x, d.z), 1.6, { kind: 'ihshut', key: k, label: 'p_door' }); }
     }
   }

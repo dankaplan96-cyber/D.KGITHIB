@@ -21,7 +21,7 @@ Object.assign(STR.en, {
   shd_flask: 'Drunk on the spot: half your magic back.',
   shd_tea: 'Drunk on the spot: all your magic back.',
   shd_cordial: 'Drunk on the spot: all your magic back.',
-  shd_clover: 'Kept for later. When your life runs out, it puts you back on your feet. Up to nine.',
+  shd_clover: 'Kept for later. When your life runs out, it puts you back on your feet. Up to nine, one more for each clover box.',
   shd_honey: 'When your life runs low, a spoonful is taken by itself: half your life back. Carry up to three.',
   shd_ticket: 'Board the Desert Island ferry with it and step off with full life and magic. Carry up to three.',
   shd_blowgun: 'A weapon. Choose it and Attack fires darts, fast and straight; light damage. Six darts come with it.',

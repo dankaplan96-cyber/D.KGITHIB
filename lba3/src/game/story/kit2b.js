@@ -403,7 +403,7 @@ export class Kit2b extends ChapterBase {
   // a clover and some kashes (with nine clovers already: 10 kashes more instead of the clover); the kashes given
   luck(kashes) {
     const h = this.game.hero;
-    if (h.clovers >= 9) { h.coins += kashes + 10; return kashes + 10; }
+    if (h.clovers >= h.cloverMax) { h.coins += kashes + 10; return kashes + 10; }
     h.clovers += 1; h.coins += kashes;
     return kashes;
   }
@@ -451,8 +451,8 @@ export class Kit2b extends ChapterBase {
           if (f.e2b_dtin) return;
           f.e2b_dtin = true; this.applyFlags();
           g.audio.play('chest');
-          const full = h.clovers >= 9;
-          if (full) h.coins += 10; else h.clovers = Math.min(9, h.clovers + 1);
+          const full = h.clovers >= h.cloverMax;
+          if (full) h.coins += 10; else h.clovers = Math.min(h.cloverMax, h.clovers + 1);
           hero([full ? 'e2b_dtin_kashes' : 'e2b_dtin_clover'], () => { if (full) g.hud.toast('a_toast_kashes', { n: 10 }); else g.hud.toast('toast_clover_found'); g.hud.stats?.(h); g.save(false); });
         }, 0.3);
         return true;
