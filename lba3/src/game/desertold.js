@@ -37,6 +37,13 @@ import { rng, smoothstep } from '../engine/math.js';
 //  School moves there, facing south down the valley; the mask (body 43) by the pool stays, a mask without a door)
 export const SCHOOL_SITE = { x: 4.1, z: 2.9, ry: Math.PI, w: 6.69, d: 3.34, h: 8.64 };
 export const SCHOOL_DOOR = { x: 4.1, z: -0.2 };                    // where he stands to go in: LBA2's own door zone for scene 28 (decoded)
+// (P113's door-level rule, the School's mask: the ground before a door is level with its sill. The valley's floor before
+//  the chin door is (1.2–3.6 m out), but a tongue of the hollow's east bank spilled into the doorway's west half, 0.2–0.5 m
+//  over the sill 0.3–0.9 m out (worldfit: "door sill under the ground by 0.25 m"; the step's corner under the sand).
+//  As every house's floor is levelled before its door (world.js houseFlats), the sand is cut back to the sill level over
+//  the door's surround and 1.8 m out (never lower: desert.js heightFn); the mask is not moved)
+const SCHOOL_DOORWAY = { x0: 2.8, x1: 5.4, z0: -0.6, z1: 1.6 };
+export function schoolDoorwayAt(x, z) { return rectW(SCHOOL_DOORWAY, x, z, 0.6); }
 const MASK_SITE = { x: -69.1, z: -72.7, ry: Math.PI / 2, w: 6.69, d: 3.34, h: 8.64 };   // (the mask by the pool: the School's place until 15.11)
 const HALL = { x: -67.8, z: -61.7, w: 10.19, d: 7.02, top: 6.69 };  // (body 48; its top 6.69 m over the pool's floor)
 const POOL = { x0: -78.5, x1: -50.6, z0: -66.0, z1: -50.5 };       // the sunken pool (the original's 0 m hollow) the hall stands in; its rim walk runs round it
