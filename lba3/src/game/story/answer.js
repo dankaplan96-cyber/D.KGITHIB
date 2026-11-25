@@ -308,7 +308,8 @@ export class ShellThread {
     this.busy = true;
     g.audio.play('radio');
     if (n !== 2) { this.ch.chain([[home ? 'arthurradio' : 'zoeradio', home ? 'co_ar_wrong' : 'co_zoe_wrong']], () => { this.busy = false; }); return; }
-    this.ch.chain([...(home ? [['arthurradio', 'co_ar_two'], ['zoeradio', 'co_zoe_sig']] : [['zoeradio', 'co_zoe_two_b']])], () => { f.co_signal = true; this.shield(); });
+    // (WAVE4: Arthur's boat, if it won its race, gets one line after Zoé's: story/wave4.js coRadio)
+    this.ch.chain([...(home ? [['arthurradio', 'co_ar_two'], ['zoeradio', 'co_zoe_sig'], ...(this.story.w4?.coRadio?.() || [])] : [['zoeradio', 'co_zoe_two_b']])], () => { f.co_signal = true; this.shield(); });
   }
   shield() {
     const g = this.game, f = this.f, C = this.R('c3core'), N = this.R('c3sendell');

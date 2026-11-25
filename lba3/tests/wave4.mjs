@@ -15,10 +15,17 @@
 //      Otringal: Sim (TALK) in the bar; Raph outside its door (TALK) with the borrowed harp, then the case: his guitar,
 //      20 kashes; Madam Orla's lens price with Raph's word (the price function, chapter 9's state set by flags: ISO)
 //   D  the ending (ISO: the chapter key set to 'home'): Arthur at the pier (TALK): the boat's lamp blinks; a wrong
-//      answer (the boat blinks all over, his line); watched again, the right one: the boat comes in, his clover leaf;
-//      Raph by the lighthouse door (TALK)
+//      answer (the boat blinks all over, his line); watched again, the right one: the boat comes in, his 10 kashes (no
+//      leaf: clover option A); Raph by the lighthouse door (TALK)
+//   E  the after-lines (TASK #65), each at its chapter (ISO: the chapter key and the stories' state set by flags), each
+//      once: chapter 8 (The Evacuation, Grandpa has told): Arthur (TALK) packing — the race waits (hooked, not won), then
+//      with the race won, the boat in the bag, and not again; Knartas: Mila (TALK) about Citadel's shelters, once;
+//      chapter 9 (The Council), Otringal: Raph (TALK) about his old lighthouse's cliffs, once; Save & quit → Continue:
+//      the said flags kept, Raph his own line again; chapter 12 (The Core): the two knocks heard at home (answer.js
+//      signal(2), the shield stubbed: the radio is not a TALK) — Arthur's boat line after Zoé's, once; the ending: Tellem
+//      (TALK) and Mila (TALK) — the next shuttle home; Tem (TALK, the quay light dark): the lamp house at the quay's end
 // ISO (logged): the travel between regions is travel.mjs's (here: put in the region by the travel network's own move);
-// chapter D's state is set by flags. ONLY=A..D runs a part (the state before it set by its flags, logged). SHOTS=dir
+// chapter D's and E's states are set by flags. ONLY=A..E runs a part (the state before it set by its flags, logged). SHOTS=dir
 // writes the pictures (the play camera; before/after pairs where something visible changes: the before frame is the
 // same frame with this wave's pieces hidden). SERVE=1 answers this checkout's files by request routing.
 // Automated runtime only (SwiftShader, headless Chromium): no listening, no hardware figure.
@@ -29,7 +36,7 @@ import { fileURLToPath } from 'node:url';
 const { check, done } = checker({ info: 'always' });
 const HARNESS = fileURLToPath(new URL('./lib/player.js', import.meta.url));
 const FIX = fileURLToPath(new URL('./fixtures/campaign/base-07-dig.save.json', import.meta.url));
-const ONLY = process.env.ONLY || 'ABCD';
+const ONLY = process.env.ONLY || 'ABCDE';
 const SHOTS = process.env.SHOTS || null;
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 let { browser, page } = await launch({ scale: 1 });
@@ -212,6 +219,70 @@ if (ONLY.includes('D')) {
   const d5 = await ev(() => { const k = P.talk('w4_raph'); return { k: k.r }; });
   const d5l = await said();
   check('D: Raph sits by the lighthouse door with his guitar (TALK): "somebody has to sing to it"', d4.anim === 'sit' && d5.k === 'talked' && has(d5l, /sing to it/), { d4, d5, d5l });
+}
+
+// ================================================================ E · the after-lines in later chapters
+if (ONLY.includes('E')) {
+  // the chapter by its key (ISO: flags), the w4 state replaced, the cast placed again
+  const chap = (key, extra, w4s) => ev(([key, extra, w4s]) => { const G = game, f = G.flags; f.chapterKey = key; f.chapter = G.story.chapters.findIndex((c) => c.key === key); Object.assign(f, extra); setW4(w4s); return { cur: G.story.cur?.key }; }, [key, extra, w4s]);
+  const WON = { w4b_hook: 1, w4b_seen: true, w4b_keelSeen: true, w4b_keel: true, w4b_sail: 'half', w4b_won: true };
+  const LET = { w4l_ask: true, w4l_heard: true, w4l_sack: true, w4l_given: true, w4l_reply: true, w4l_milaAfter: true, w4l_temAfter: true };
+  const RAPH = { w4r_fenn: true, w4r_card: true, w4r_case: true, w4r_sim: true, w4r_met: true, w4r_found: true };
+  // a talk whose one line may go over the person's head (P116, walkers.js Remarks: a minor resident's short line): its
+  // text read off the remark, which is then let run out (its talk's end, and the flag, come when it closes)
+  const defTalkR = () => ev(() => { window.talkR = (id) => { const k = P.talk(id); const over = game.remarks?.cur?.n?.def?.id === id ? game.remarks.cur.text : ''; for (let i = 0; i < 40 && game.remarks?.cur; i++) game.step(0.25); P.settle(); return { k: k.r, over, room: game.room?.id, f: w4() }; }; });
+  await defTalkR();
+  // Mila: outdoors (kn_mother) or at home by the radio (il_mila: in by her blue-domed house's door, INPUT)
+  const mila = () => ev(() => { const pick = () => (P.npc('kn_mother')?.present ? 'kn_mother' : 'il_mila'); if (!P.npc(pick())?.present) { const d = game.story.ihomes.doors().find((q) => q.house === 'knartas-19--20'); if (d) { P.go(d.x, d.z, { tol: 0.3, maxT: 40 }); for (let i = 0; i < 30 && game.trans; i++) game.step(0.1); P.settle(); } } const id = pick(); return { id, ...talkR(id) }; });
+  const heard = (lines, r, re) => has(lines, re) || re.test(r.over || '');
+  iso('chapter 8 (The Evacuation) by flags: Grandpa Gilbert has told (c8_home, c8_gilbert); Arthur\'s race hooked, not won');
+  const e1c = await chap('evacuation', { c8_home: true, c8_gilbert: true }, { w4b_hook: 1, w4b_seen: true });
+  const e1 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); const talks = []; let k; for (let i = 0; i < 3 && !game.flags.w4b_ar8; i++) { k = P.talk('arthur'); talks.push(k.r); } return { k: k.r, talks, room: game.room?.id, ar8: !!game.flags.w4b_ar8 }; });
+  const e1l = await said();
+  check('E: chapter 8, Arthur at home (TALK; his pocket set first if it is due — TALK-ORDER — then again) after Grandpa\'s tunnels, the race not won: his packing line, then "the race waits till all this is over" (once: flagged)', e1c.cur === 'evacuation' && e1.k === 'talked' && e1.ar8 && has(e1l, /spare torch/) && has(e1l, /race waits till all this is over/), { e1c, e1, e1l });
+  iso('the same chapter with the race won (flags; the line not yet said)');
+  await chap('evacuation', {}, { ...WON });
+  const e2 = await ev(() => { const k1 = P.talk('arthur'); P.settle(); return { k1: k1.r, ar8: !!game.flags.w4b_ar8 }; });
+  const e2l = await said();
+  const e2b = await ev(() => { const k2 = P.talk('arthur'); return { k2: k2.r }; });
+  const e2bl = await said();
+  check('E: chapter 8, the race won: Arthur (TALK) — "And my boat. It\'s in the bag"; asked again (TALK): his chapter line only, the boat not again', e2.k1 === 'talked' && e2.ar8 && has(e2l, /It's in the bag/) && e2b.k2 === 'talked' && has(e2bl, /spare torch/) && !has(e2bl, /in the bag|race waits/), { e2, e2l, e2b, e2bl });
+  iso('Knartas by the travel network (chapter 8 still): the letters delivered (flags)');
+  await chap('evacuation', {}, { ...WON, w4b_ar8: true, ...LET });
+  await ev(() => { toIsle('knartas'); });
+  const e3a = await mila(); const e3al = await said();
+  const e3b = await mila(); const e3bl = await said();
+  check('E: chapter 8, Knartas: Mila (TALK; at home by the radio, or outdoors) — the radio talks only of Citadel\'s shelters, "now I know which desk it\'s stuck on" (once); again: not repeated', e3a.k === 'talked' && e3a.f.w4l_milaCrisis && heard(e3al, e3a, /which desk/) && e3b.k === 'talked' && !heard(e3bl, e3b, /which desk/), { e3a, e3al, e3b, e3bl });
+  iso('chapter 9 (The Council) by flags, Otringal by the travel network: Raph has his guitar (flags)');
+  await chap('council', {}, { ...WON, w4b_ar8: true, ...LET, w4l_milaCrisis: true, ...RAPH });
+  const e4 = await ev(() => { toIsle('otringal'); const k = P.talk('w4_raph'); return { k: k.r, crisis: !!game.flags.w4r_crisis }; });
+  const e4l = await said();
+  const e4b = await ev(() => { const k = P.talk('w4_raph'); return { k: k.r }; });
+  const e4bl = await said();
+  check('E: chapter 9, Otringal: Raph (TALK) — Citadel\'s hill families "up on my old lighthouse\'s cliffs" (once); again: his own line ("Six strings")', e4.k === 'talked' && e4.crisis && has(e4l, /old lighthouse's cliffs/) && e4b.k === 'talked' && has(e4bl, /Six strings/) && !has(e4bl, /cliffs/), { e4, e4l, e4b, e4bl });
+  iso('Save & quit through the pause menu on Otringal, then Continue (as a player)');
+  await saveQuit(); await reboot(); await defTalkR();
+  const e5 =await ev(() => { const f = game.flags; const k = P.talk('w4_raph'); return { ch: f.chapterKey, ar8: !!f.w4b_ar8, mc: !!f.w4l_milaCrisis, rc: !!f.w4r_crisis, k: k.r }; });
+  const e5l = await said();
+  check('E: Save & quit → Continue (chapter 9): the said lines\' flags kept (Arthur\'s, Mila\'s, Raph\'s); Raph (TALK): his own line, the cliffs not again', e5.ch === 'council' && e5.ar8 && e5.mc && e5.rc && e5.k === 'talked' && has(e5l, /Six strings/) && !has(e5l, /cliffs/), { e5, e5l });
+  iso('chapter 12 (The Core) by flags, Arthur at home on the radio (nw_v): the two knocks answered — answer.js signal(2) called, its shield stubbed (the core\'s rooms are not built here)');
+  await chap('core', { nw_v: true, nw_zoe: true }, { ...WON, w4b_ar8: true, ...LET, w4l_milaCrisis: true, ...RAPH, w4r_crisis: true });
+  const e6 = await ev(() => { const G = game, th = G.story.cur.sh; th.shield = () => { th.busy = false; }; th.signal(2); let n = 0; while (G.state === 'dialog' && n++ < 20) P.tap('KeyE', 0.15); P.settle(); const again = G.story.w4.coRadio(); return { ar12: !!G.flags.w4b_ar12, again: again.length, signal: !!G.flags.co_signal }; });
+  const e6l = await said();
+  const i2 = e6l.findIndex((l) => /Twice for water, that's Dad/.test(l)), iz = e6l.findIndex((l) => /Star, sun, wave/.test(l)), ib = e6l.findIndex((l) => /radio table/.test(l));
+  check('E: chapter 12, the two knocks heard at home: Arthur on the radio ("that\'s Dad!"), Zoé\'s signal, then Arthur: "My boat\'s here on the radio table. It won"; once (asked again: nothing)', e6.ar12 && e6.again === 0 && e6.signal && i2 >= 0 && iz > i2 && ib > iz, { e6, e6l });
+  iso('the ending (chapter key home, flags), Citadel: the hostel');
+  await chap('home', { ep_dinner: true, co_signal: true }, { ...WON, w4b_ar8: true, w4b_ar12: true, ...LET, w4l_replyGiven: true, w4l_telSent: true, w4l_telAfter: true, w4l_milaCrisis: true, w4l_temAfter: false, ...RAPH, w4r_crisis: true });
+  const e7 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); return talkR('hs_worker2'); });
+  const e7l = await said();
+  const e7b = await ev(() => talkR('hs_worker2'));
+  const e7bl = await said();
+  check('E: the ending, the hostel: Tellem (TALK) — "I\'m on the next shuttle to Knartas" (once: flagged; again: not repeated)', e7.k === 'talked' && e7.room === 'asylum' && e7.f.w4l_telHome && heard(e7l, e7, /next shuttle to Knartas/) && e7b.k === 'talked' && !heard(e7bl, e7b, /next shuttle/), { e7, e7l, e7b, e7bl });
+  await ev(() => { game.flags.pp_light = false; toIsle('knartas'); });
+  const e8a = await mila(); const e8al = await said();
+  const e8b = await ev(() => { const k = P.talk('kn_kid'); return { k: k.r, over: game.remarks?.el?.textContent || '', done: !!game.flags.w4l_temAfter }; });
+  const e8bl = await said();
+  check('E: the ending, Knartas: Mila (TALK) — "Tellem\'s coming home on the next shuttle" (once); Tem (TALK, the quay light still dark): his after-line, then the lamp house at the quay\'s end', e8a.k === 'talked' && e8a.f.w4l_milaHome && heard(e8al, e8a, /coming home on the next shuttle/) && e8b.k === 'talked' && e8b.done && (has(e8bl, /lamp house at the quay's end/) || /lamp house/.test(e8b.over)), { e8a, e8al, e8b, e8bl });
 }
 
 const ov = await ev(() => window.__overflow || []);

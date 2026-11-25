@@ -26,13 +26,20 @@
 //   the door; the stage is Lys's, WAVE6). Raph on a crate by the bar's door with a borrowed Esmer harp. The case: his
 //   guitar again, 20 kashes from his tip jar, a word with Madam Orla (the Knartas lens at 8). 4. The ending: Raph plays
 //   by Citadel's lighthouse door.
+// After-lines (TASK #65, WAVE4.md "Filled"): what the three stories changed, said once each, later in the story, in each
+//   person's own voice. No reward, no new piece, nothing to do: Arthur packing for the shelter (chapter 8, after
+//   Grandpa's tunnels: the boat in the bag, or the race waiting); Arthur on the radio after the two knocks (chapter 12,
+//   The Core: answer.js asks coRadio()); Tem's pointer to the quay light's lamp house (with his after-line, while it is
+//   dark); Mila while Citadel is in its shelters (chapters 8-9); Raph about his old lighthouse's cliffs (chapter 9, or 8
+//   once Zoé has the hill families there); Tellem and Mila in the ending (the next shuttle home).
 //
 // State (flags, new only; an old save has none: nothing is made up, each story is there as for a new player):
 //   w4b_hook (1), w4b_seen, w4b_keelSeen, w4b_wind, w4b_keel, w4b_sail ('tight'|'half'|'free'), w4b_tries, w4b_won,
 //   w4b_arAfter, w4b_luAfter, w4b_lampHeard, w4b_lamp, w4b_lampTries, w4b_lampSaid;
 //   w4l_ask, w4l_heard (Odile's explanation), w4l_wrong, w4l_sack, w4l_given, w4l_reply, w4l_replyGiven, w4l_telSent,
 //   w4l_telAfter, w4l_milaAfter, w4l_temAfter, w4l_odAfter;
-//   w4r_fenn, w4r_card, w4r_case, w4r_sim, w4r_met, w4r_found.
+//   w4r_fenn, w4r_card, w4r_case, w4r_sim, w4r_met, w4r_found;
+//   the after-lines said: w4b_ar8, w4b_ar12, w4l_milaCrisis, w4l_milaHome, w4l_telHome, w4r_crisis.
 //   A race or a signal under way is not saved: a load stands the boats at rest.
 import * as THREE from 'three';
 import { t } from '../i18n.js';
@@ -69,6 +76,8 @@ export class Wave4 extends ChapterBase {
   built(id) { return this.game.regions?.built?.(id); }
   busy() { return !!(this.race || this.lamp); }
   pending(id) { return !!this.story.cur?.pendingTalk?.(id); }
+  // (another story's business with Arthur comes first: his pocket set, the pliers)
+  arthurBusy() { const f = this.f; return !!((this.story.kit2?.setReady && !this.game.hero.arms?.pocketset) || (f.l_needPliers && !f.l_pliers && !f.l_arPliers)); }
 
   // ================================================================ the cast
   npcDefs() { return [{ id: 'w4_raph', name: 'n_w4_raph', char: 'keeper_b', tint: '#fff2e0', color: COLORS.w4_raph, x: 0, z: -40, angle: 0 }]; }
@@ -259,10 +268,15 @@ export class Wave4 extends ChapterBase {
         if (this.pending('arthur')) return false;
         if (this.lampOpen() && out) return this.lampTalk(npc, c);
         if (this.ck === 'home' && f.w4b_lamp && !f.w4b_lampSaid) return c(['w4b_ar_lampdone'], () => { f.w4b_lampSaid = true; });
+        // chapter 8: packing for the shelter, once Grandpa has told (his own "spare torch" line first): the boat goes too
+        if (this.ck === 'evacuation') {
+          if (!f.c8_gilbert || !f.w4b_hook || f.w4b_ar8 || this.arthurBusy()) return false;
+          return c(['c8_ar_after', f.w4b_won ? 'w4b_ar_bag' : 'w4b_ar_bag_wait'], () => { f.w4b_ar8 = true; });
+        }
         if (!this.boatOpen()) return false;
         if (!f.w4b_hook) {
           // (not over another story's business with him: the pocket set, the pliers)
-          if ((this.story.kit2?.setReady && !g.hero.arms?.pocketset) || (f.l_needPliers && !f.l_pliers && !f.l_arPliers)) return false;
+          if (this.arthurBusy()) return false;
           return c(['w4b_ar_hook1', 'w4b_ar_hook2'], () => { f.w4b_hook = 1; g.save(false); this.story.refreshCast({ walk: true }); this.applyWorld(); });
         }
         if (f.w4b_won) { if (f.w4b_arAfter || out) return false; return c(['w4b_ar_after'], () => { f.w4b_arAfter = true; }); }
@@ -282,7 +296,8 @@ export class Wave4 extends ChapterBase {
       case 'kn_kid':
         if (!f.w4l_given || f.w4l_temAfter) return false;
         f.w4l_temAfter = true;   // (before the line: said once, then his own lines again; a remark over his head would never call back)
-        return c(['w4l_tem_after']);
+        // (while the quay light is dark: where it stands, the lens quest's lamp house: islandpeople.js)
+        return c(f.pp_light ? ['w4l_tem_after'] : ['w4l_tem_after', 'w4l_tem_light']);
       // ---- H-11
       case 'fenn':
         if (!this.isleOpen() || f.w4r_fenn || f.w4r_case) return false;
@@ -316,6 +331,7 @@ export class Wave4 extends ChapterBase {
     }
     if (f.w4l_given && !f.w4l_telSent) return c(['w4l_tel_sent'], () => { f.w4l_telSent = true; g.save(false); });
     if (!f.w4l_given) return c(['w4l_tel_wait']);
+    if (this.ck === 'home' && !f.w4l_telHome) return c(['w4l_tel_home'], () => { f.w4l_telHome = true; });   // (the ending: going home)
     if (!f.w4l_telAfter && f.w4l_replyGiven) return c(['w4l_tel_after'], () => { f.w4l_telAfter = true; });
     return false;
   }
@@ -354,11 +370,17 @@ export class Wave4 extends ChapterBase {
       });
     }
     if (f.w4l_given && !f.w4l_milaAfter) return c(['w4l_mila_after'], () => { f.w4l_milaAfter = true; });
+    // (later, once each: while Citadel is in its shelters; in the ending)
+    if (f.w4l_given && islePhase(this.story) === 'crisis' && !f.w4l_milaCrisis) return c(['w4l_mila_crisis'], () => { f.w4l_milaCrisis = true; });
+    if (f.w4l_given && this.ck === 'home' && !f.w4l_milaHome) return c(['w4l_mila_home'], () => { f.w4l_milaHome = true; });
     return false;
   }
   raph(npc, c) {
     const f = this.f, g = this.game, h = g.hero;
     if (this.ck === 'home' && f.w4r_found) return c(['w4r_raph_home']);
+    // (once, after the case or a first meeting: Citadel's hill families on his old lighthouse's cliffs, chapter 8's
+    //  plan done or chapter 9)
+    if ((f.w4r_found || (f.w4r_met && !f.w4r_case)) && !f.w4r_crisis && (this.ck === 'council' || (this.ck === 'evacuation' && f.c8_zoeDone))) return c(['w4r_raph_crisis'], () => { f.w4r_crisis = true; });
     if (f.w4r_found) return c(['w4r_raph_after']);
     if (f.w4r_case) {
       return c(['w4r_raph_case', 'w4r_raph_case2'], () => {
@@ -510,7 +532,7 @@ export class Wave4 extends ChapterBase {
     f.w4b_lamp = true;
     this.chain([['arthur', 'w4b_ar_lampyes'], ['arthur', 'w4b_ar_lampgift']], () => {
       // (CLOVER-BALANCE option A, the user's pick 25.11: kashes, not a leaf)
-      h.coins += CLOVER_FULL_KASHES; g.hud.toast('w4b_toast_kashes', { n: CLOVER_FULL_KASHES }); g.hud.stats?.(h);
+      h.coins += CLOVER_FULL_KASHES; g.hud.toast('w4b_toast_kashesAr', { n: CLOVER_FULL_KASHES }); g.hud.stats?.(h);   // (his own toast: Lulu's said "from Arthur" while the two shared one key)
       g.audio.play('coin');
       this.story.refreshCast(); this.applyWorld(); g.save(false);
     });
@@ -523,6 +545,14 @@ export class Wave4 extends ChapterBase {
     if (g.cutscene && g.state === 'cutscene') { g.cutscene = null; g.setState('play'); }
     g.camRig.override = null; g.camRig.snap?.();
     if (!silent) g.input.clearEdges?.();
+  }
+
+  // chapter 12 (The Core), the two knocks heard at home: Arthur's line on the radio after Zoé's (answer.js signal), once
+  coRadio() {
+    const f = this.f;
+    if (!f.w4b_won || f.w4b_ar12) return [];
+    f.w4b_ar12 = true;
+    return [['arthurradio', 'w4b_ar_radio']];
   }
 
   // ================================================================ each frame (the boats bob at rest)
