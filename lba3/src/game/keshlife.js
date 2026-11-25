@@ -451,6 +451,7 @@ export function buildKesh({ group, col, H, W, updaters, ox, oz }) {
     const tex = stripes('ksail', ['#e86a3a', '#f4e8d0'], 2, true);
     const sail = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: 0.9, transparent: true, opacity: 0.82 }));
     sail.castShadow = true; group.add(sail);
+    out.sail = { mesh: sail, pts: P, group, H };   // (WAVE7 H-18, wave7world.js: the shade torn, rigged again, up; local to the group)
     for (const [x, y, z] of P) B.add(cyl(0.012, 0.012, 0.6, 4, 0), rope, x, y - 0.2, z, 0.3, 0, 0);
   }
   out.lumi = { ...W(LUMI.x, LUMI.z), a: LUMI.a, anim: 'tinker' };
