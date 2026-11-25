@@ -374,7 +374,7 @@ export function makeTextures() {
   }
   islandTextures(T);
   nameWorldTextures(T);   // (DEPTH-LOOK: each painted texture's relief weight by its name)
-  if (DL.paint) paintDepth(T);   // (DEPTH-LOOK ?depth=paint: off by default)
+  if (DL.paint) paintDepth(T);   // (DEPTH-LOOK paint: on by default since the user's pick 25.11, P132; ?depth=none off)
   return T;
 }
 
@@ -752,8 +752,9 @@ export const WALLNORM = {
   //  dressed stone `stone` and Zeelich's corrugated sheet `zrib` are off until the user picks them (order 70.2):
   //  `?wallnormals=all` or by name, `?wallnormals=fortStone,rubbleHouse,rubble,stone,zrib`)
   names: (() => { const ON = ['fortStone', 'rubbleHouse', 'rubble'], ALL = [...ON, 'stone', 'zrib'];
-    if (!WN_ARG || WN_ARG[1] === '1') return new Set(ON);
-    if (WN_ARG[1] === 'all') return new Set(ALL);
+    // (P132, the user's pick 25.11 "e + f": all five by default now; `?wallnormals=1` the three as before)
+    if (!WN_ARG || WN_ARG[1] === 'all') return new Set(ALL);
+    if (WN_ARG[1] === '1') return new Set(ON);
     return WN_ARG[1] === '0' ? new Set() : new Set(WN_ARG[1].split(',')); })(),
   str: (typeof location !== 'undefined' && +(/[?&]wnstr=([\d.]+)/.exec(location.search) || [])[1]) || 1,
   // (the user, 24.11: "don't touch the normal map, it's good; just make it weigh more in the material": the map is drawn

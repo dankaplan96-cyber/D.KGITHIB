@@ -190,3 +190,6 @@ its normal, `isnan` checked) and the re-take is clean. Medium has no bloom and n
 ההמלצה: paint + contact + relief (ואפשר גם f): הבלוקים בחומה בולטים מהמישקים גם בצל (+24% פרטים בקיר), רגל הקיר
 והקרקע לידה מתכהות, ושום דבר לא נהיה כהה או "מלוכלך". האור החזק (b) והפינות (d) — לא, כי b מכהה את הצל ו-d לא נראה.
 הכול נבדק אוטומטית בלבד (SwiftShader), בלי GPU אמיתי; את העלות על המחשבים של המשתמש צריך לבדוק שם.
+
+## The user's pick (25.11)
+"e + f, no cost": the painted relief (e) is on by default (`?depth=none` turns it off), and the wall normal maps on all five textures (f: `fortStone`, `rubbleHouse`, `rubble`, `stone`, `zrib`; `?wallnormals=1` the three as before). (a) relief, (b) light, (c) contact and (d) rim stay behind their switches until their cost is measured on a real GPU.

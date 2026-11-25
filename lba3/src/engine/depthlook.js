@@ -34,7 +34,8 @@ export const DL = {
   light: ALL || SET.has('light'),
   contact: ALL || SET.has('contact'),
   rim: ALL || SET.has('rim'),
-  paint: ALL || SET.has('paint'),
+  // (P132, the user's pick 25.11: "e + f, no cost": the painted relief is ON by default; `?depth=none` turns it off)
+  paint: ALL || SET.has('paint') || !SET.has('none'),
   // (the preset: the relief lighter where the paint already carries it, the light a little softer than alone)
   reliefK: num('dlrel', SET.has('preset') ? 0.7 : 1), aoK: num('dlao', 1), rimK: num('dlrim', 1), keyK: num('dlkey', SET.has('preset') ? 0.8 : 1), paintK: num('dlpaint', 1),
   focus: new THREE.Vector3(), area: null, bakes: 0, lastBake: null,
