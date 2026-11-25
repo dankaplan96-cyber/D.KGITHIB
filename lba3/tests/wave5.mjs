@@ -61,6 +61,8 @@ const helpers = () => ev(async () => {
   window.items = () => [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span')?.textContent || b.textContent);
   window.pick = (txt) => { const n = items().findIndex((s) => s.includes(txt)); return n >= 0 ? P.menuPick(n).r : 'no item ' + txt; };
   window.inv = () => G.inventory.items().map((i) => i.id);
+  // a shop or menu left as a player leaves it (its Leave button, else Escape)
+  window.closeShop = () => { if (G.state !== 'shop') return 'none'; document.querySelector('#shop .leave')?.click(); G.step(0.2); if (G.state === 'shop') P.tap('Escape', 0.2); if (G.state === 'shop') G.hud.shopClose?.(); G.step(0.2); P.settle(); return G.state; };
   // ISO: into a region by the travel network's own move (the room switch the glider and the shuttles use)
   window.goRegion = (id, x, z, a = 0) => { if (id === 'citadel') { if (G.room) G.exitRoom({ x, z, a }, true); else { G.hero.pos.set(x, G.physics.groundAt(x, z), z); } } else { G.regions.ensure(id, 'test'); const R = G.rooms[id]; G.enterRoom(id, x == null ? R.spawn : { x, z, a }, true); } G.story.refreshCast(); P.settle(); G.step(0.3); return G.room?.id ?? 'citadel'; };
   window.J = {
@@ -140,9 +142,9 @@ if (ONLY.includes('D')) {
   const d3 = await ev(() => { const S = W5.stakes[0]; P.go(S.x - 1.2, S.z - 0.6, { tol: 0.4 }); P.face(S.x, S.z); const w = useTool('fork'); P.settle(); return { w, read: w5().w5b_1 }; });
   const d3l = await said();
   check('D: stake 1 by the fork (INPUT: the fork in hand, K by the stake): "rings low and long: warm ground"; reading 1 of 3', d3.w === 'fork' && d3.read === 'fork' && has(d3l, /rings low and long/), { d3, d3l });
-  const d4 = await ev(() => { const G = game, S = W5.stakes[1], h = G.hero; G.hero.combat.equip('fists', true); const u = P.use(S.x, S.z, { kind: 'w5b_stake', near: 1.0, match: 1.6 }); const watching = !!W().watch; G.step(1.2); P.go(S.x + 3.5, S.z + 1.5, { tol: 0.4 }); G.step(3); return { u: u.r, watching, read: w5().w5b_2 ?? null, after: !!W().watch, d: r2(Math.hypot(h.pos.x - S.x, h.pos.z - S.z)) }; });
-  check('D: stake 2 on the dig\'s rim watched (INPUT, E), walked off after 1.2 s: the watch ends, no reading', d4.u === 'used' && d4.watching && d4.read === null && !d4.after, d4);
-  const d5 = await ev(() => { const G = game, S = W5.stakes[1]; const u = P.use(S.x, S.z, { kind: 'w5b_stake', near: 1.0, match: 1.6 }); let lift = 0, t = 0; while (W().watch && t < 5) { G.step(0.1); t += 0.1; lift = Math.max(lift, S.lift); } P.settle(); return { u: u.r, t: r2(t), lift: r2(lift), read: w5().w5b_2 }; });
+  const d4 = await ev(() => { const G = game, S = W5.stakes[1], h = G.hero; G.hero.combat.equip('fists', true); const u = P.use(S.x, S.z, { kind: 'w5b_stake', near: 1.0, match: 1.6 }); const watching = !!W().watch; G.step(0.6); P.go(S.x + 4.5, S.z + 2.5, { tol: 0.4, run: true, maxT: 2 }); G.step(3); return { u: u.r, watching, read: w5().w5b_2 ?? null, after: !!W().watch, d: r2(Math.hypot(h.pos.x - S.x, h.pos.z - S.z)) }; });
+  check('D: stake 2 on the dig\'s rim watched (INPUT, E), walked off (run) after 0.6 s: the watch ends, no reading', d4.u === 'used' && d4.watching && d4.read === null && !d4.after, d4);
+  const d5 = await ev(() => { const G = game, S = W5.stakes[1]; const u = P.use(S.x, S.z, { kind: 'w5b_stake', near: 1.0, match: 1.6 }); let lift = 0, t = W().watch?.t || 0; while (W().watch && t < 5) { G.step(0.1); t += 0.1; lift = Math.max(lift, S.lift); } P.settle(); return { u: u.r, t: r2(t), lift: r2(lift), read: w5().w5b_2 }; });
   const d5l = await said();
   check('D: stake 2 watched to the end (INPUT, E, standing by it): about three seconds, the flag lifts, "Warm ground"; reading 2 of 3', d5.u === 'used' && d5.read === 'flag' && d5.t >= 2.8 && d5.t <= 3.3 && d5.lift > 0.5 && has(d5l, /flag hangs/), { d5, d5l });
   if (SHOTS) { await ev(() => { const S = W5.stakes[2]; P.go(S.x - 1.2, S.z - 0.6, { tol: 0.4 }); P.face(S.x, S.z); W5.stakes[2].lift = 1; game.step(0.05); }); await shot('wave5-02-stake-flag-lifts'); }
@@ -182,10 +184,10 @@ if (ONLY.includes('T')) {
   // the rule of every stack: nothing to stand on within 6 m that its top would bring in the pack's reach
   const rule = (n) => ev((n) => { const G = game, P0 = G.physics, T = P0.terrain, S = W5.tins[n]; let bad = []; const g0 = S.y; for (const r of [3.2, 4, 5, 6]) for (let i = 0; i < 32; i++) { const x = S.x + Math.sin(i * 0.19635) * r, z = S.z + Math.cos(i * 0.19635) * r, hc = P0.groundAt(x, z, g0 + 8), ht = T.heightAt(x, z); if ((hc > ht + 0.25 && hc > g0 + 0.6) || ht > g0 + 1.8) bad.push([r2(x), r2(z), r2(hc - g0)]); } return { n, at: [r2(S.x), r2(S.z)], h: r2(S.top - S.y), bad: bad.slice(0, 6) }; }, n);
   const r2d = await rule(2);
-  iso('to Citadel by the travel network\'s own move: the plateau of the Whispering Cliffs');
-  const t6 = await ev(() => { goRegion('citadel', -50, -36, Math.PI); const S = W5.tins[1]; const r = J.hop(S.x, S.z, { t: 4, top: S.top }); P.tap('KeyE', 0.1); let k = 0; while (game.hero.actT > 0 && k++ < 60) game.step(1 / 30); P.settle(); return { y: r.y, top: r2(S.top), got: !!w5().w5t_1, n: W().tins() }; });
+  iso('to Citadel by the travel network\'s own move: by the stack under the Whispering Cliffs');
+  const t6 = await ev(() => { goRegion('citadel', -60, -20, Math.PI); const S = W5.tins[1]; goRegion('citadel', S.x + 3, S.z + 3, Math.atan2(-3, -3)); const r = J.hop(S.x, S.z, { t: 4, top: S.top }); P.tap('KeyE', 0.1); let k = 0; while (game.hero.actT > 0 && k++ < 60) game.step(1 / 30); P.settle(); return { y: r.y, top: r2(S.top), got: !!w5().w5t_1, n: W().tins() }; });
   const r1d = await rule(1);
-  check('T: Citadel\'s stack on the Whispering Cliffs\' plateau: up with the pack (INPUT), the tin (E): two of three', Math.abs(t6.y - t6.top) < 0.1 && t6.got && t6.n === 2, t6);
+  check('T: Citadel\'s stack under the Whispering Cliffs: up with the pack (INPUT), the tin (E): two of three', Math.abs(t6.y - t6.top) < 0.1 && t6.got && t6.n === 2, t6);
   if (SHOTS) { await ev(() => { const S = W5.tins[1]; P.go(S.x + 3.0, S.z + 3.0, { tol: 0.5 }); P.face(S.x, S.z); P.settle(); }); await pair('wave5-05-tin-citadel', hideW5); }
   iso('to the Hamalayi by the travel network\'s own move');
   const t7 = await ev(() => { game.regions.ensure('hamalayi', 'test'); const S = W5.tins[3]; goRegion('hamalayi', S.x + 3, S.z + 3, Math.atan2(-3, -3)); const r = J.hop(S.x, S.z, { t: 4, top: S.top }); P.tap('KeyE', 0.1); let k = 0; while (game.hero.actT > 0 && k++ < 60) game.step(1 / 30); P.settle(); return { y: r.y, top: r2(S.top), got: !!w5().w5t_3, n: W().tins() }; });
@@ -203,20 +205,20 @@ if (ONLY.includes('N')) {
   const n1 = await ev(() => { goRegion('citadel', -99.5, 31.5, -Math.PI / 2); const k = P.talk('nell'); return { k: k.r, ask: !!w5().w5n_ask, shop: game.state === 'shop' }; });
   const n1l = await said();
   check('N: Nell (TALK, INPUT): her own line, then the hook — "the right part and I\'ll tune any of your gadgets", the list chalked on her bench', n1.k === 'talked' && n1.ask && !n1.shop && has(n1l, /tune any of your gadgets/) && has(n1l, /chalked on my bench/), { n1, n1l });
-  if (SHOTS) { await ev(() => { const L = W5.list; P.go(L.x - 1.6, L.z + 1.9, { tol: 0.4 }); P.face(L.x, L.z); P.settle(); }); await pair('wave5-07-nell-list', hideW5); }
+  if (SHOTS) { await ev(() => { const L = W5.list; P.go(L.x + 2.0, L.z + 2.2, { tol: 0.4 }); P.face(L.x, L.z); P.settle(); }); await pair('wave5-07-nell-list', hideW5); }
   const n2 = await ev(() => { const L = W5.list; const u = P.use(L.x, L.z, { kind: 'w5n_list', near: 1.0, match: 1.6 }); return { u: u.r, list: !!w5().w5n_list }; });
   const n2l = await said();
   check('N: the chalk list (INPUT, E): a line for each tool he owns — the lance (Pello, the Orchard, 15), the flask (Tashi, Lhar, 20), the pack (Baldino\'s tins, 25)', n2.u === 'used' && n2.list && has(n2l, /PUMP LANCE/) && has(n2l, /HEAT FLASK/) && has(n2l, /HOP-PACK/), { n2, n2l });
-  const n3 = await ev(() => { const k = P.talk('nell'); const shop = game.state === 'shop'; const it = shop ? items() : []; if (shop) { document.querySelector('#shop .leave')?.click(); game.step(0.2); P.settle(); } return { k: k.r, shop, it }; });
+  const n3 = await ev(() => { const k = P.talk('nell'); const shop = game.state === 'shop'; const it = shop ? items() : []; const left = closeShop(); return { k: k.r, shop, it, left }; });
   const n3l = await said();
   check('N: Nell (TALK) with the tins but no other part: "What are we tuning?" — only the hop-pack on her menu', n3.shop && n3.it.length === 1 && /Hop-pack/.test(n3.it[0]) && has(n3l, /What are we tuning/), { n3, n3l });
   iso('to the Orchard by the travel network\'s own move (the shuttle\'s pad)');
   const n4 = await ev(() => { goRegion('isle_orchard'); const k = P.talk('or_pell'); return { k: k.r, bulb: !!w5().w5n_bulb, inv: inv(), where: P.here() }; });
   const n4l = await said();
   check('N: Pello the press-master (TALK): asked for the bulb, "Take it. It never fitted.": the pressure bulb (found)', n4.k === 'talked' && n4.bulb && n4.inv.includes('w5n_bulb') && has(n4l, /never fitted/), { n4, n4l });
-  const n4b = await ev(() => { P.settle(); const k = P.talk('or_pell'); if (game.state === 'shop') { document.querySelector('#shop .leave')?.click(); game.step(0.2); } P.settle(); return { k: k.r }; });
+  const n4b = await ev(() => { P.settle(); const k = P.talk('or_pell'); let left = closeShop(); for (let i = 0; i < 8 && left !== 'shop' && game.state === 'play'; i++) { game.step(0.5); if (game.state === 'shop') left = closeShop(); } P.release(); if (game.state === 'shop') left = closeShop(); return { k: k.r, remark: !!k.remark, left, state: game.state, bulbs: inv().filter((i) => i === 'w5n_bulb').length }; });
   const n4bl = await said();
-  check('N: Pello again (TALK): his own line and stall, no second bulb', !has(n4bl, /never fitted/), { n4b, n4bl });
+  check('N: Pello again (TALK): his own line (over his head) and his stall, left; no second bulb', n4b.state === 'play' && n4b.bulbs === 1 && !has(n4bl, /never fitted/), { n4b, n4bl });
   iso('to the Hamalayi by the travel network\'s own move');
   const n5 = await ev(() => { goRegion('hamalayi', 4334, -35, Math.PI); const k = P.talk('lhar1'); return { k: k.r, sleeve: !!w5().w5n_sleeve, inv: inv() }; });
   const n5l = await said();
@@ -236,7 +238,7 @@ if (ONLY.includes('N')) {
   const n9 = await ev(() => { const G = game, h = G.hero; const x = -60, z = 4; P.go(x, z, { tol: 0.6, maxT: 60 }); P.settle(); const g0 = G.physics.groundAt(h.pos.x, h.pos.z, h.pos.y + 1); J.athletic(); const r = J.hold(['Space'], 5); J.hold([], 2.5, { until: () => h.onGround }); return { lift: r2(r.maxY - g0), lit: r.litS }; });
   check('N: the tuned pack flown on the square (INPUT: Athletic, Space held 5 s): it burns about 3 s, and lifts him no higher than its cap (2.4 m) above the ground', n9.lift <= 2.45 && n9.lit > 2.4 && n9.lit < 3.4, n9);
   await saveQuit();
-  const n10 = await ev(() => { const k = P.talk('nell'); const shop = game.state === 'shop'; P.settle(); return { k: k.r, shop, num: NUM(), f: Object.keys(w5()).filter((k) => /w5n_(lance|flask|pack)/.test(k)), j: (game.story.journal().find((s) => /Odd Jobs/.test(s.title))?.lines || []).map((l) => [l.key, l.done]) }; });
+  const n10 = await ev(() => { const k = P.talk('nell'); const shop = game.state === 'shop'; closeShop(); return { k: k.r, shop, num: NUM(), f: Object.keys(w5()).filter((k) => /w5n_(lance|flask|pack)/.test(k)), j: (game.story.journal().find((s) => /Odd Jobs/.test(s.title))?.lines || []).map((l) => [l.key, l.done]) }; });
   check('N: Save & quit → Continue: the three tunes kept (12, 150, 3.0 from the flags); Nell (TALK) opens no menu (each tune-up once); the journal\'s "Odd Jobs" lists them done', !n10.shop && n10.num.tank === 12 && n10.num.keep === 150 && n10.num.fuel === 3 && n10.f.length === 3 && n10.j.filter((l) => /w5_j_(lance|flask|pack)/.test(l[0])).every((l) => l[1]), n10);
 }
 

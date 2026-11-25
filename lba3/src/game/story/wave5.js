@@ -59,9 +59,11 @@ export const WATCH_T = 3.0;        // s by a stake before its flag lifts (the sl
 // where things are searched for or set (world coordinates; measured 25.11 on the built regions)
 export const SPOTS = {
   tins: {
-    1: { region: 'citadel', near: 'plateau', color: '#b8ab98', seed: 31 },
-    2: { region: 'desert', cx: 3398, cz: 14, color: '#d8b48a', seed: 41 },
-    3: { region: 'hamalayi', cx: 4296, cz: -4, color: '#c8c0b8', seed: 51, snow: true },
+    // (Citadel: the Whispering Cliffs' plateau is too small for the rule — its standing stones, 3.5 m, stand within 6 m of
+    //  every spot on it —, so the stack stands below them, on the open ground north of the cliffs; then other fields)
+    1: { region: 'citadel', centres: [[-45, -84], [-62, -62], [-85, -49.5], [-100, 80]], color: '#a09888', seed: 31 },
+    2: { region: 'desert', cx: 3398, cz: 14, color: '#b89070', seed: 41 },
+    3: { region: 'hamalayi', centres: [[4285, -6], [4281, -2], [4292, -5]], color: '#8e8a86', seed: 51, snow: true },   // (by the icefall's pond, west of Lhar's houses)
   },
   stakes: [{ cx: 3369, cz: -23 }, { cx: 3450, cz: 12 }, { cx: 3382.2, cz: -23.2 }],
   cistern: { x: 4341.42, z: -36.2, ry: -Math.PI / 2 },  // against the yard's east wall (its inner face at x 4342.65), its door to the yard (-x); the basin at its -z side, 0.6 m short of the bench
@@ -117,8 +119,9 @@ export class Wave5 extends ChapterBase {
     const g = this.game, P = g.physics;
     const Wd = g.world;
     if (Wd?.life?.shop?.bench && Wd.root && !W5.list) {
-      const B = Wd.life.shop.bench, y = P.groundAt(B.x + 0.9, B.z - 0.9, B.y + 1.5);
-      buildChalkList(Wd.root, B.x + 0.95, y, B.z - 0.85, Math.PI * 0.75);
+      // (outside the lean-to's east post, facing the path from town: townlife.js SHOP, its open front to the south)
+      const B = Wd.life.shop.bench, x = B.x + 2.15, z = B.z + 0.4, y = P.groundAt(x, z, (B.y ?? 3) + 1.5);
+      buildChalkList(Wd.root, x, y, z, Math.PI / 4);
     }
     if (Wd?.shard1Spot && Wd.root && !W5.tins?.[1]) this.placeTin(1, Wd.root);
     const D = this.built('desert');
@@ -142,10 +145,16 @@ export class Wave5 extends ChapterBase {
   // a tin's rock stack: the first spot round its centre that is level for 2.4 m round, clear of anything within 2.4 m,
   // and with nothing to stand on within 6 m that its top would bring in reach (arsenal.js stepSpot's rule)
   placeTin(n, parent) {
-    const g = this.game, P = g.physics, T = P.terrain, S = SPOTS.tins[n];
-    let c = { x: S.cx, z: S.cz };
-    if (S.near === 'plateau') { const sp = g.world.shard1Spot; c = { x: sp.x + 9.5, z: sp.z + 2 }; }
-    const y0 = T.heightAt(c.x, c.z), why = {};
+    const S = SPOTS.tins[n];
+    if (this._noSpot?.[n]) return;
+    const why = {};
+    for (const [cx, cz] of S.centres || [[S.cx, S.cz]]) if (this.tinNear(n, parent, S, cx, cz, why)) return;
+    console.warn('[wave5] no spot for tin ' + n + ' ' + JSON.stringify(why));
+    (this._noSpot ||= {})[n] = true;   // (not searched again on every build)
+  }
+  tinNear(n, parent, S, cx, cz, why) {
+    const P = this.game.physics, T = P.terrain, c = { x: cx, z: cz };
+    const y0 = T.heightAt(c.x, c.z);
     const no = (k) => { why[k] = (why[k] || 0) + 1; return null; };
     const ok = (x, z) => {
       const gi = P.groundInfo(x, z, T.heightAt(x, z) + 0.6), g0 = gi.h;
@@ -158,8 +167,8 @@ export class Wave5 extends ChapterBase {
       }
       // (within 6 m: no standable thing — a roof, a wall's top, a crate — over g0 + 0.6, which the stack's top would bring
       //  in the pack's reach; and no rise of the ground itself over g0 + 1.8, which could be a cliff's lip)
-      for (const r of [3.2, 4.0, 5.0, 6.0]) for (let i = 0; i < 16; i++) {
-        const xx = x + Math.sin(i * 0.3927) * r, zz = z + Math.cos(i * 0.3927) * r;
+      for (const r of [3.2, 4.0, 5.0, 6.0]) for (let i = 0; i < 32; i++) {
+        const xx = x + Math.sin(i * 0.19635) * r, zz = z + Math.cos(i * 0.19635) * r;
         const hc = P.groundAt(xx, zz, g0 + 8), ht = T ? T.heightAt(xx, zz) : hc;
         if (hc > ht + 0.25 && hc > g0 + 0.6) return no('object');
         if (ht > g0 + 1.8) return no('rise');
@@ -168,9 +177,9 @@ export class Wave5 extends ChapterBase {
     };
     for (const d of [0, 1.5, 3, 4.5, 6, 7.5, 9, 11, 13]) for (let i = 0; i < (d ? 16 : 1); i++) {
       const a = i * (Math.PI / 8), x = c.x + Math.sin(a) * d, z = c.z + Math.cos(a) * d, y = ok(x, z);
-      if (y != null) { buildTinStack(parent, P, n, x, y, z, S); return; }
+      if (y != null) { buildTinStack(parent, P, n, x, y, z, S); return true; }
     }
-    console.warn('[wave5] no spot for tin ' + n + ' ' + JSON.stringify(why));
+    return false;
   }
   // a free spot for a small thing near (cx, cz): not blocked within r, the ground level round it
   freeSpot(cx, cz, r) {

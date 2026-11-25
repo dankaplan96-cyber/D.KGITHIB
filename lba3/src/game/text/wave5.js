@@ -42,7 +42,7 @@ Object.assign(STR.en, {
 
   // ================================================================ H-12 · Baldino's prototype tins
   w5t_bal1: "My first prototype went up nicely and came down wherever it liked. Three tins of its parts are still up on rocks all over Twinsun.",
-  w5t_bal2: 'One on the Whispering Cliffs, one by the School of Magic, one above Lhar. Lilac paint. Nell would know what to do with them.',
+  w5t_bal2: "One on Citadel under the Whispering Cliffs, one by the School of Magic, one under Lhar's frozen falls. Lilac paint. Nell would know what to do with them.",
   w5t_low: "A lilac tin on top of the rock. Baldino's colour. Too high for a jump.",
   w5t_low_pack: "A lilac tin on top of the rock. Baldino's colour. One storey up: a job for the hop-pack.",
   w5t_take: "One of Baldino's tins. Parts, and eight kashes rattling at the bottom.",
