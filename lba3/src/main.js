@@ -2868,7 +2868,7 @@ class Game {
     const own = where === 'citadel' ? SHOP : [];
     const items = () => [...own.map((s) => {
       const it = { ...s };
-      if (s.id === 'clover') it.disabled = h.clovers >= h.cloverMax;
+      if (s.id === 'clover' && !h.shopClover()) { it.disabled = true; it.why = 'shop_clover_nine'; }   // (CLOVER-BALANCE: sold only below nine: actors.js)
       return it;
     }), ...(this.story.shops?.stock(where) || []), ...(this.story.arsenal?.shopItems(where) || [])];
     this.hud.openShop(items, (it) => {
@@ -2879,7 +2879,7 @@ class Game {
       if (it.shop) { this.story.shops.buy(it); this.save(false); return; }
       if (it.id === 'potion') h.hp = h.maxHp;
       if (it.id === 'flask') h.mp = Math.min(h.mpMax, h.mp + Math.ceil(h.mpMax * 0.5));   // (the user, 16.11: a bought flask fills part too — half the bar; a found one 30 %)
-      if (it.id === 'clover') h.clovers++;
+      if (it.id === 'clover') h.gainClover();
       this.audio.play('heal');
       this.save(false);
     }, () => this.setState('play'), where === 'citadel' ? 'shop_title' : this.story.shops?.title(where) || 'a_shop_' + where);
@@ -3022,11 +3022,13 @@ class Game {
   enemyBonus(e, x, y, z) { return this.giveBonus(['money', 'life', 'magic'], 1, x, y, z, this.hero.pos); }
 
   // A heart is not taken while his life is full, nor a flask while his magic is (LBA2 does the same: EXTRA.CPP leaves
-  // it and it hops off); it stays on the ground for later. Coins, keys, clovers and the rest are always taken.
+  // it and it hops off); it stays on the ground for later. So is a clover leaf while he holds his cap (CLOVER-BALANCE:
+  // the one clover rule, actors.js). Coins, keys and the rest are always taken.
   canTake(p) {
     const h = this.hero;
     if (p.type === 'heart') return h.hp < h.maxHp;
     if (p.type === 'flask') return h.mp < h.mpMax - 0.01;
+    if (p.type === 'clover') return !h.cloverFull();
     return true;
   }
   collect(p) {
@@ -3039,7 +3041,7 @@ class Game {
       case 'coin': h.coins += p.value || 1; this.audio.play('coin'); break;
       case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('pickLife'); break;
       case 'flask': h.mp = Math.min(h.mpMax, h.mp + Math.ceil(h.mpMax * 0.3)); this.audio.play('pickMagic'); break;   // (P29, the user 15.11: a flask found filled his magic to the top "straight to the end" — it gives a part, as a heart gives 3 of 10 life; the shop's bought flask and the rests still fill it)
-      case 'clover': h.clovers = Math.min(h.cloverMax, h.clovers + 1); this.audio.play('pickClover'); break;   // (the ♣ and the counter say it)
+      case 'clover': h.gainClover(); this.audio.play('pickClover'); break;   // (the ♣ and the counter say it)
       case 'crystal': {
         const n = this.crystalCount();
         this.applyCrystals(); h.hp = h.maxHp;

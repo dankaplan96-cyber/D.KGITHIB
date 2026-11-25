@@ -6,7 +6,7 @@
 //   Arthur's pocket set (chapter 2, The Joint Project, after its radio scene; and later): on the rug in Arthur's toy corner, by his radio. Arthur
 //     calls out to it once when Twinsen comes home; talking to him or taking it, Arthur explains (or his note does).
 //     Its lesson: "something hums in the cellar" — with the set in hand the cellar whistles and the needle leads to a
-//     loose tile in the south-east corner; under it Twinsen's old tin (a clover, or 10 kashes when he has nine; once).
+//     loose tile in the south-east corner; under it Twinsen's old tin (10 kashes; once).
 //     Nothing else shows the tile: without the set there is no prompt. In fights: the squeal (the depot's drones).
 //     POCKET-SET (the user, 17.11: "using Arthur's device is not clear"): its first use is at once, in the house. Giving
 //     it, Arthur says he hid one of his old radio valves in the house (or his note does); it hums in Twinsen's own coat
@@ -28,6 +28,7 @@ import { ChapterBase } from './base.js';
 import { MAT, rbox, cyl, lathe, torus, Kit } from '../props.js';
 import { pocketSetModel, LANCE } from '../tools.js';
 import { WATER_FLOOR } from '../../engine/physics.js';
+export const TIN_KASHES = 10;   // Twinsen's old tin (CLOVER-BALANCE option A, 25.11: kashes in place of its clover leaf)
 import '../text/kit2.js';
 
 const SPOT = {
@@ -208,9 +209,8 @@ export class Kit2 extends ChapterBase {
           if (f.e2_tin) return;
           f.e2_tin = true; this.applyFlags(); T.tin.visible = true;
           g.audio.play('chest');
-          const full = h.clovers >= h.cloverMax;
-          if (full) h.coins += 10; else h.clovers = Math.min(h.cloverMax, h.clovers + 1);
-          hero(['e2_tin_lift', full ? 'e2_tin_kashes' : 'e2_tin_clover'], () => { T.tin.visible = false; if (full) g.hud.toast('a_toast_kashes', { n: 10 }); else g.hud.toast('toast_clover_found'); g.hud.stats?.(h); g.save(false); });
+          h.coins += TIN_KASHES;   // (CLOVER-BALANCE option A: kashes, no longer a clover leaf)
+          hero(['e2_tin_lift', 'e2_tin_kashes'], () => { T.tin.visible = false; g.hud.toast('a_toast_kashes', { n: TIN_KASHES }); g.hud.stats?.(h); g.save(false); });
         }, 0.3);
         return true;
       }

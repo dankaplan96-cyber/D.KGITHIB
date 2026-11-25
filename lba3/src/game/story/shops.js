@@ -65,7 +65,7 @@ export class Shops extends ChapterBase {
     const carry = (k) => ((f[k] || 0) >= CARRY ? 'sh_why_carry' : null);
     if (w === 'bazoo') {
       own('flask', 'shop_flask', half(SH_PRICE.flask), fullMp);
-      own('clover', 'shop_clover', half(SH_PRICE.clover), h.clovers >= h.cloverMax ? 'shop_max' : null);
+      own('clover', 'shop_clover', half(SH_PRICE.clover), h.shopClover() ? null : 'shop_clover_nine');   // (CLOVER-BALANCE: below nine only: actors.js)
       if (A.blowgun) arm('darts', half(SH_PRICE.darts), A.darts >= M.darts);
       if (f.prologueDone) arm('penguin', half(SH_PRICE.penguin), A.penguins >= M.penguins);
     } else if (w === 'pharmacy') {
@@ -92,7 +92,7 @@ export class Shops extends ChapterBase {
       case 'potion': h.hp = h.maxHp; g.audio.play('heal'); break;
       case 'flask': h.mp = Math.min(h.mpMax, h.mp + Math.ceil(h.mpMax * 0.5)); g.audio.play('heal'); break;   // (the user, 16.11: partial, half the bar)
       case 'tea': h.mp = h.mpMax; g.audio.play('heal'); break;
-      case 'clover': h.clovers = Math.min(h.cloverMax, h.clovers + 1); g.audio.play('heal'); break;
+      case 'clover': h.gainClover(); g.audio.play('heal'); break;
       case 'darts10': { const A = h.arms; A.darts = Math.min(ARMS.max.darts, A.darts + 10); g.audio.play('coin'); g.hud.toast('a_toast_darts', { n: 10 }); break; }
       case 'pcell': f.sh_pcell = true; g.audio.play('coin'); g.hud.toast('a_toast_got', { n: t('it_pcell') }); break;   // (a toast, as the other goods: no found box over the counter)
       case 'honey': case 'ticket': {

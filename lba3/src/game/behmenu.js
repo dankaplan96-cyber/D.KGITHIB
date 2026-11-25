@@ -5,7 +5,7 @@
 // (bar length grows with magic level), kashes, keys and clover boxes.
 import * as THREE from 'three';
 import { createCharacter } from './characters.js';
-import { BEHAVIOURS } from './actors.js';
+import { BEHAVIOURS, CLOVER_BASE } from './actors.js';
 import { t } from './i18n.js';
 
 const POSE = { normal: ['idle', 0], athletic: ['run', 6.5], aggressive: ['punch', 0], discreet: ['sneak', 0.67] };
@@ -54,7 +54,7 @@ export class BehaviourMenu {
     q('.kash b').textContent = h.coins;
     q('.keys b').textContent = (h.hasKey ? 1 : 0) + (h.smallKeys | 0);   // (KEYS-CLOVER: a story key and the small keys he holds)
     // (KEYS-CLOVER: the box row is the clover cap, 9 and one more for each clover box found, the leaves filled in, as LBA's)
-    const boxes = Math.max(h.cloverMax || 9, h.clovers);
+    const boxes = Math.max(h.cloverMax || CLOVER_BASE, h.clovers);
     q('.clovers').innerHTML = Array.from({ length: boxes }, (_, i) => `<span class="${i < h.clovers ? 'full' : ''}"></span>`).join('');
     q('.shardrow').innerHTML = h.shards.map((s) => `<span class="${s ? 'got' : ''}"></span>`).join('');
   }

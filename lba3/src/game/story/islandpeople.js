@@ -5,7 +5,7 @@
 //   Otringal      the Imperial Hotel's coin machines: life or magic, 5 kashes each (the lobby, any time).
 //   Knartas       the quay light is dark: the project bought its lens. Quill asks for it back (pp_quill). From chapter 9 the
 //                 bar's boss at Otringal sells the project's leftover stores, the lens among them (20 kashes; 8 once the
-//                 Lift Dock's crane driver has shown Twinsen the manifest: pp_manifest). Fitted (pp_light): a clover.
+//                 Lift Dock's crane driver has shown Twinsen the manifest: pp_manifest). Fitted (pp_light): 15 kashes.
 //   Lift Dock     the crane driver's manifest: where the lens went (the bar's price comes down).
 //   Mosquibee     the hives are restless: the shuttles cut low over the meadow. Bzzra (pp_bzzra) sells honey; once the
 //                 beacon on the Orchard's cloud catcher is lit by the ball (pp_beacon) the shuttles swing wide and she gives
@@ -14,7 +14,7 @@
 //   Celebration   the lantern seller: a lantern for 10 kashes if Twinsen has none (the old Wannie mine below is dark).
 //   Under Celeb.  the gas-works foreman points to the old mine (the Wannie glove: story/arsenal.js).
 //   The Platform  the chapel bell has lost its clapper (pp_bellAsk); it lies by the ore cart (pp_clapper); brought back
-//                 (pp_bell): the chaplain's thanks, a clover.
+//                 (pp_bell): the chaplain's thanks, 10 kashes.
 //   The Old Watch the telescope shows a supply crate on the Orchard's far side (pp_spied); searched (pp_cache): 15 kashes
 //                 and a jar of honey.
 // The lines follow the chapter: chapters 4–7, the evacuation (8: news from Twinsun; Zeelich itself unchanged), the council
@@ -24,6 +24,8 @@ import { ChapterBase } from './base.js';
 import { ISLE_THINGS, ISLE_IDS, ISLE_ROOM_IDS, lineState, islePhase, dressIsle } from '../islandlife.js';
 import { HOTEL } from '../otrhotel.js';
 import { CARRY } from './shops.js';
+// the quay light's and the chapel bell's thanks (CLOVER-BALANCE option A, the user, 25.11: kashes in place of a clover leaf)
+export const IP_KASHES = { light: 15, bell: 10 };
 import '../text/islandpeople.js';
 
 export const IP_PRICE = { life: 5, magic: 5, lens: 20, lensPaper: 8, honey: 6, honeyFriend: 4, cordial: 4, lantern: 10 };
@@ -128,8 +130,8 @@ export class IslandPeople extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     if (f.pp_light || !f.pp_lens) return;
     f.pp_light = true; this.applyThings();
-    h.clovers = Math.min(h.cloverMax, h.clovers + 1);
-    g.audio.play('chest'); g.hud.toast('toast_clover_found'); g.hud.stats?.(h);
+    h.coins += IP_KASHES.light;   // (CLOVER-BALANCE option A: kashes, no longer a clover leaf)
+    g.audio.play('coin'); g.hud.toast('a_toast_kashes', { n: IP_KASHES.light }); g.hud.stats?.(h);
     const L = this.T('knartas').light; if (L) g.particles?.burst(L.x, L.y + 3.4, L.z, '#fff0b0', 18, 1.4);
     const q = this.npc('kn_quill'), near = q?.present && !q.away && Math.hypot(q.pos.x - h.pos.x, q.pos.z - h.pos.z) < 18;
     this.chain([['narrator', 'ip_light_on'], ...(near ? [['kn_quill', 'ip_quill_thanks']] : [])], () => g.save(false));
@@ -209,8 +211,8 @@ export class IslandPeople extends ChapterBase {
         if (f.pp_clapper) return this.ownFirst(npc) || c(['ip_chap_thanks'], () => {
           if (f.pp_bell) return;
           f.pp_bell = true; this.applyThings();
-          const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1);
-          g.audio.play('chest'); g.hud.toast('toast_clover_found'); g.hud.stats?.(h); g.save(false);
+          const h = g.hero; h.coins += IP_KASHES.bell;   // (CLOVER-BALANCE option A: kashes, no longer a clover leaf)
+          g.audio.play('coin'); g.hud.toast('a_toast_kashes', { n: IP_KASHES.bell }); g.hud.stats?.(h); g.save(false);
         });
         if (!f.pp_bellAsk) return c(['ip_chap_1', 'ip_chap_2'], () => { f.pp_bellAsk = true; g.save(false); });
         return c(['ip_chap_wait']);

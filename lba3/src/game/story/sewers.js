@@ -32,13 +32,15 @@
 //   9. The globe's room behind the well-house's little blue door (Bersimon's key: sw_gdoor): the project's heat pipe
 //      has clouded his weather globe. The bleed cock shut, it clears and shows the sky over Citadel as the weather is
 //      (sw_globe); Bersimon explains that's where his magic for Twinsen comes from (sw_berGlobe).
-//  10. Tralu's cave (C-2): Raph's guitar case, and a cache under the lantern (a clover, once: sw_cache). Luc mentions it.
+//  10. Tralu's cave (C-2): Raph's guitar case, and a cache under the lantern (10 kashes, once: sw_cache). Luc mentions it.
 //   Old saves have none of these flags: every door they name is shut and nothing is owed. The flags kept their
 //   meaning through DOORS-LBA2 (sw_bolt: the terrace way open; sw_works: the street way out open).
 // Nothing on the main path needs any of it.
 import * as THREE from 'three';
 import { ChapterBase } from './base.js';
 import { SEWER, LIFT } from '../sewers.js';
+// the cave's cache (CLOVER-BALANCE option A, the user, 25.11: kashes in place of a clover leaf; its owed flag kept its name)
+export const CACHE_KASHES = 10;
 import '../text/sewers.js';
 
 // the lift (SEWER-LIFT): down, the lever pulled, a short take-up, then a steady descent; the scene changes after
@@ -58,7 +60,7 @@ export class SewerLife extends ChapterBase {
     this.hat = null;
     this.applyRooms();
     this.settleOwed('sw_oweClover', 'clover', 1, 'sw_toast_owed');
-    this.settleOwed('sw_oweClover2', 'clover', 1, 'sw_toast_owed2');
+    this.settleOwed('sw_oweClover2', 'coin', CACHE_KASHES, 'sw_toast_owed2');   // (the cave's cache: kashes now; an older save's owed clover there too)
   }
   // the rooms below as the flags have them (LAZY-REGIONS: also right after they are built, which may be while the
   // grate stands open above: that stays as it is)
@@ -195,7 +197,7 @@ export class SewerLife extends ChapterBase {
         h.act('use', 0.7, () => {
           f.sw_cache = true; g.audio.play('chest');
           say(['sw_cache1'], () => {
-            this.reward('sw_oweClover2', 'clover', 1, C.at.x + (C.x - C.at.x) * 0.5, 1.0, C.at.z + (C.z - C.at.z) * 0.5, { pop: true });
+            this.reward('sw_oweClover2', 'coin', 1, C.at.x + (C.x - C.at.x) * 0.5, 1.0, C.at.z + (C.z - C.at.z) * 0.5, { pop: true, value: CACHE_KASHES });   // (CLOVER-BALANCE option A)
             g.save(false);
           });
         }, 0.35);

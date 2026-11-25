@@ -1809,7 +1809,7 @@ export function* buildWorldSteps(parentScene) {
   // hidden-object search spots
   // givers outdoors (most are indoors, as in the original): the sage's barrels and the old stump
   W.givers.push({ id: 'barrels', x: W.barrels.x, z: W.barrels.z, r: 2.0, top: 1.1, kinds: ['magic'] });
-  W.givers.push({ id: 'stump', ...STUMP, r: 2.0, top: 0.8, kinds: ['clover'] });
+  W.givers.push({ id: 'stump', ...STUMP, r: 2.0, top: 0.8, kinds: ['money'], n: 10, once: true });   // (CLOVER-BALANCE option A: 10 kashes in place of its clover, once ever as before)
   // the Dino-Fly naps where he lay in LBA2 (DINOFLY-POS): the user's files place him (scene 49, the start of LBA2 after
   // the storm, and scene 195; File3D 109, body 167) south-west of Twinsen's house, at our (-58.0, 95.3), turned 1200 of
   // 4096 (1.84 rad); twelve years on it is still his spot in the grass behind the house

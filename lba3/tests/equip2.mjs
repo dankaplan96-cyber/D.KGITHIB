@@ -108,7 +108,7 @@ await snap('eq2-1-pocketset-cellar').catch(() => {});
 const c3 = await ev(() => { const G = game, h = G.hero, K = G.story.kit2.tin; const k0 = h.clovers, c0 = h.coins; const r = P.use(K.x, K.z, { kind: 'e2_tin', near: 1.0 }); P.settle(); G.step(0.3);
   return { r: r.r, tin: !!G.flags.e2_tin, clovers: h.clovers - k0, coins: h.coins - c0, sense: G.gadgets.tools.sense, needle: G.gadgets.tools.needle.visible, journal: G.story.journal().flatMap((j) => j.lines).filter((l) => l.key === 'e2_j_set2') }; });
 const c3l = await said();
-check('…the tile lifted (E): Twinsen\'s old tin, a clover (once); the hum is gone, the journal line done', c3.tin && (c3.clovers === 1 || c3.coins === 10) && !c3.sense && !c3.needle && c3.journal[0]?.done && c3l.some((l) => /old hiding place/.test(l)), { c3, c3l });
+check('…the tile lifted (E): Twinsen\'s old tin, 10 kashes (no clover: CLOVER-BALANCE A; once); the hum is gone, the journal line done', c3.tin && c3.clovers === 0 && c3.coins === 10 && !c3.sense && !c3.needle && c3.journal[0]?.done && c3l.some((l) => /old hiding place/.test(l)), { c3, c3l });
 const c4 = await ev(() => { const G = game; const K = G.story.kit2.tin; P.go(K.x - 0.7, K.z, { tol: 0.35 }); P.face(K.x, K.z); G.step(0.2); return { prompt: P.target()?.kind || null }; });
 check('…and no second tin', c4.prompt !== 'e2_tin', c4);
 

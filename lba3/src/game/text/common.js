@@ -12,7 +12,7 @@ Object.assign(STR.en, {
   idle_generic: 'Hello, Twinsen.',
   // Joe the Elf (LBA2), still in town
   asy_register1: '(The asylum\'s old register. The workers keep it on the shelf like a relic. The last page: "Patient: Twinsen. Diagnosis: dreams of a goddess. Cell 2." Someone has drawn a moustache on FunFrock\'s signature.)',
-  asy_register2: 'Cell 2. I remember the bed was terrible. There\'s a clover pressed between the pages... for luck, I suppose.',
+  asy_register2: 'Cell 2. I remember the bed was terrible. Someone hid a few kashes between the pages.',
   // ASYLUM-1: his old cell (src/game/lba1places.js), the marks he scratched there in LBA1
   as_cell1: 'Twelve years. My marks are still on the wall.',
   as_cell2: 'This pipe is warm. Whatever the project is digging under the fort, it runs hot.',

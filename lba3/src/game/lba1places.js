@@ -837,7 +837,7 @@ export function buildLba1Asylum(scene, physics) {
     const reg = R.cell(46.5, 14, 23.5);
     R.searches.push({ id: 'asylum_register', x: reg.x, z: reg.z, r: 1.6 });
     const gv = R.cell(50.5, 14, 22.5);
-    R.givers.push({ id: 'asylum_desk', x: gv.x, z: gv.z, y: gv.y, r: 1.2, top: 1, kinds: ['money', 'life', 'clover'], n: 3 });
+    R.givers.push({ id: 'asylum_desk', x: gv.x, z: gv.z, y: gv.y, r: 1.2, top: 1, kinds: ['money', 'life'], n: 3 });   // (CLOVER-BALANCE option A: no clover, so it refills as other containers do)
     asylumNow(R, physics);
     dressAsylum(R, physics);
   }
@@ -946,7 +946,7 @@ export function buildLba1Temple(scene, physics) {
     // the far end: the chest the dark halls had, and the way back up to the temple
     const give = R.cell(14, 1, 12.4);
     R.exits.push({ x: goal.x, z: goal.z, r: 0.8, room: 'butemple' });
-    R.givers.push({ id: 'bu_halls', x: give.x, z: give.z, y: give.y, r: 1.2, top: 1, kinds: ['life', 'magic', 'clover'], n: 3 });
+    R.givers.push({ id: 'bu_halls', x: give.x, z: give.z, y: give.y, r: 1.2, top: 1, kinds: ['life', 'magic'], n: 3 });   // (CLOVER-BALANCE option A: no clover, so it refills as other containers do)
     R.goal = goal;
     R.entries = { butemple: R.spawn };
   }

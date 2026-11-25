@@ -58,7 +58,7 @@ Object.assign(STR.en, {
   e2b_chest_look: "An old chest, frozen into the ice by the wall. The monks' stores, from before the melt.",
   e2b_chest_look2: 'Frozen solid. Some heat would free it.',
   e2b_chest_free: 'The ice slumps and runs off. The lid is free.',
-  e2b_chest_open: 'Blankets, a lamp wick, and at the bottom a clover and some kashes.',
+  e2b_chest_open: 'Blankets, a lamp wick, and at the bottom a purse of kashes.',
   e2b_j_winch: 'Tashi says the heat flask can thaw the frozen winch.',
   e2b_j_chest: 'A chest is frozen into the ice by the monastery wall.',
 });

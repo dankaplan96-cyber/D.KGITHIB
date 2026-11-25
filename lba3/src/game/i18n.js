@@ -73,6 +73,7 @@ export const STR = {
     toast_saved: 'Game saved', toast_save_full: 'Storage is full: the autosave failed. Delete old slots from Load Game.', toast_save_fail: "Can't save: the browser's storage isn't available.", toast_clover: 'A clover leaf saved you!', toast_save_error: "The save couldn't be loaded. It was kept aside; starting a new game.",
     toast_magic: 'Magic level {n}!', toast_nomp: 'Not enough magic: weak throw',
     toast_clover_found: 'Clover leaf',
+    toast_clover_kashes: '+{n} kashes: your clover leaves are full',
     toast_alert: 'Spotted!',
     hint_jump: 'Athletic ({b}), then {k} to jump',
     hint_armour: 'The armour takes it. Hold {b} for a charged throw, or land a heavier blow (a kick: the third {k}).',
@@ -82,6 +83,7 @@ export const STR = {
     shop_title: "Pippa's Stall", shop_leave: 'Leave',
     shop_potion: 'Heart potion: full health', shop_flask: 'Magic flask: half your magic back', shop_clover: 'Clover leaf: extra life',
     shop_max: 'Already at maximum.',
+    shop_clover_nine: 'Sold only while you hold fewer than nine clover leaves.',
     n_pippa: 'Pippa', n_hero: 'Twinsen',
   },
 };

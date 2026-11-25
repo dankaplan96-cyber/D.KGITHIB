@@ -2,7 +2,7 @@
 
 The user asked on 25.11 to re-check the clover balance: four clover boxes now raise the cap from 9 to 13, and 13 leaves
 may make death rare. This card counts every leaf source, estimates what players hold and spend per chapter, and offers
-three options. **No game code was changed.** The user decides.
+three options. The card itself changed no code. **The user picked Option A on 25.11; it is built: see "Built" at the end.**
 
 **Labels.** *Source*: read in the code at `6e026556`. *Automated runtime (old)*: the playthrough bot's numbers in
 `chapter-balance.md` (9.11 and COMBAT-2) and its campaign saves in `tests/fixtures/campaign/` (older builds, the base
@@ -344,3 +344,180 @@ at the cost of the save rule.
   - **B:** קופסאות ריקות. זה כמעט לא משנה, כי השחקן היסודי ממלא את המקומות מפרסים אחרים.
   - **C (הצורה של LBA2):** בסיס 5 ועוד ארבע קופסאות, עד 9. הקופסאות שוות יותר, אבל צריך כלל שמירה חדש כדי ששמירות ישנות לא יאבדו עלים.
 - **ליקויים שנמצאו (לא תוקנו):** שלושה מקומות בגלים 4 ו־7 עדיין משווים למספר 9 קבוע, ולא לתקרה. בנוסף אין כלל אחד לפרס שמגיע בתקרה: יש פרסים שהופכים לקאשים ויש שמתבזבזים.
+
+## Built · Option A (the user's pick, 25.11)
+
+The work is on the worktree branch, based on `7ccb8532`. The report lists the commits. Nothing was published.
+
+### The one clover rule (`src/game/actors.js`)
+
+- **The rule's numbers:** `CLOVER_BASE = 9`, `CLOVER_FULL_KASHES = 10`, `SHOP_CLOVER_BELOW = 9`.
+- **Three hero methods:**
+  - `cloverFull()`: he holds his cap. The cap (`cloverMax`) is 9 + the boxes found; `keysclover.js` still keeps it.
+  - `gainClover()`: a reward's leaf. At the cap it pays 10 kashes instead.
+  - `shopClover()`: a shop may sell a leaf, because he holds fewer than nine.
+- **Every cap site asks these methods.** `ChapterBase.giveClover(toast)` gives the leaf with its toast. At the cap it
+  gives the 10 kashes with "+10 kashes: your clover leaves are full".
+- **A leaf on the ground at the cap stays on the ground** (`Game.canTake`, as a heart does at full life):
+  - it hops aside and is taken once there is room;
+  - the ball's catch sets it down at his feet.
+- **An owed leaf settled after a load** (`settleOwed`: its pickup no longer lies anywhere) counts as a reward. At the
+  cap it pays 10 kashes.
+- **The shops:**
+  - Pippa's stall and Mr Bazoo's grey the leaf from 9 held, with "Sold only while you hold fewer than nine clover
+    leaves."
+  - The leaf's shop description no longer says "Up to nine, one more for each clover box".
+
+### Changed sources
+
+**Leaf → kashes (12):**
+
+| Source | Ch | Now | Line changed (English + Hebrew) |
+|---|---|---|---|
+| Old stump (giver) | 1 | 10 kashes, once ever | — (no line) |
+| Asylum register | 1 | 10 kashes | `asy_register2` |
+| Tralu's cave cache | 1 | 10 kashes (owed pickup) | `sw_cache1`, `sw_toast_owed2` |
+| Twinsen's old tin | 2 | 10 kashes | — (`e2_tin_kashes` existed) |
+| Cloud-canal crate | 3 | 22 kashes | — |
+| Ilka's tin | 4 | 10 kashes | — (`e2b_dtin_kashes` existed) |
+| Coal chute | 4 | 22 kashes | `a_boards_cache` |
+| Platform chapel bell | 4 | 10 kashes | `ip_chap_thanks` |
+| Far quay locker | 4 | 15 kashes (owed pickup) | `dx_far_locker2` |
+| Frozen chest | 6 | 20 kashes | `e2b_chest_open` |
+| Knartas quay light | 9 | 15 kashes | `ip_quill_thanks` |
+| Hop-pack test-step tin | 14 | 20 kashes | `a_jet_tin` |
+
+- **The mixed givers:**
+  - The asylum desk (money, life) and the Bù maze's chest (life, magic) no longer list `clover`.
+  - They are no longer once-ever givers, so they refill as other containers do (defect 3).
+- **Older saves:**
+  - A far-quay or cave-cache leaf still owed is settled as its kashes.
+  - A stump already searched stays searched.
+  - No flag was renamed. The save format is still 6.
+
+**Kept as leaves (16 sources, plus the 2 at the start):**
+- the main route: Tim, Tarra, Wenna;
+- the four boxes;
+- the cliff top, the sewers' star chest, Bram, the strongbox after the Blow, the gorge arch chest, the hollow
+  boulder;
+- **Mila, Arthur and Pippa.**
+  - The coordinator's brief asked for their leaf under a box-raised cap (defect 1), so they stay leaves.
+  - The card's Option A list converts them. See the gap under "Holdings after".
+
+### Defects fixed
+
+1. **The fixed 9 in the waves.** `wave4.js` (Mila, Arthur) and `wave7.js` (Pippa) compared with a fixed 9. Each now
+   asks `gainClover`.
+   - With a box found and 9–12 leaves held, each gives a leaf.
+   - At the cap, each pays 10 kashes:
+
+     | | Before (at 9 and above) | Now (at the cap) |
+     |---|---|---|
+     | Mila | 30 kashes | 15 + 10 kashes |
+     | Arthur | 10 kashes | 10 kashes |
+     | Pippa | 15 kashes | 10 kashes |
+
+   - Arthur's toast at the cap used to say "kashes from Lulu". It now uses the rule's own toast.
+2. **One rule at the cap everywhere.** The game-wide sweep:
+   - **Writes to `clovers`:** only `actors.js` (`gainClover`, the revive), the start and the save's load and clamp
+     write the count. No site clamps silently any more.
+   - **Cap sites routed through the helper:**
+     - `steam.js`: Tarra;
+     - `arsenal.js`: the boulder;
+     - `keysclover.js`: the box;
+     - `liftbelow.js`: the strongbox (at the cap +10 kashes; it was +15);
+     - `main.js`: the pickup and Pippa's stall;
+     - `shops.js`: Bazoo;
+     - `base.js`: `settleOwed`.
+   - **Fixed 9s removed:** the `|| 9` fallback in `behmenu.js` and the `> 9` in `inventory.js` now read
+     `CLOVER_BASE`. `keysclover.js` re-exports `CLOVER_BASE` from `actors.js`.
+   - **Left in place:** `tests/townlife`, `tests/sewers` and `tests/depth-wave3` still write `Math.min(9, …)` or
+     `>= 9` for kept sources. These are test tolerances, not game code: in those runs the leaf stays below the cap.
+3. **The once-ever mixed givers:** fixed by dropping their clover (above).
+
+### Holdings after (Estimate)
+
+From the "BUILT" rule in `calc.mjs` (session scratchpad, `clover-a/`), with mid spending:
+
+| Ch end | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8–13 | 14 | 15 | 16 | Ep |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Main | 3 | 2 | 2 | 1 | 2 | 2 | 2 | 2–3 | 2 | 2 | 1 | 1 |
+| Steady | 4.5 | 4 | 4 | 5 | 6 | 7 | 7 | 7.5–8.5 | 7.5 | 8 | 7 | 7.5 |
+| Thorough (cap) | 6 (10) | 6 | 6 | 9 (12) | 10 | 12 (13) | 12 | **13** | 12 | 13 | 12 | 13 |
+
+- **At the cap:** for the thorough player 1 reward pays 10 kashes, and nothing is wasted. Before the build, 14
+  rewards reached him at the cap.
+- **The gap from the card's Option A:**
+  - Mila, Pippa and Arthur stayed leaves, so the thorough player holds 13 from chapter 8 to 13 and in the epilogue.
+    The card's A had him at 11–12.
+  - The steady player holds about one leaf more: 7–8.5, against 6–7.5.
+  - **To match the card exactly,** convert those three to kashes:
+    - three small edits (Mila 15 + 10, Arthur 10, Pippa 10);
+    - new lines for `w4l_mila_gift`, `w4b_ar_lampgift` and `w7m_pi_done2`.
+    - The user picks.
+
+### Results (Automated runtime only: SwiftShader, headless Chromium; nobody played)
+
+- **`tests/clover-rules.mjs`** (new; one run): **14/14 PASS**. It covers:
+  - the cap: 9 with no box and 13 with four;
+  - a reward at the cap: 10 kashes, with its toast;
+  - an owed leaf settled at the cap;
+  - a leaf on the ground: left at the cap, taken once there is room;
+  - Pippa's stall: greyed at 9 with its reason, selling at 8;
+  - Bazoo's: greyed at 9 and at 12;
+  - Mila, Arthur and Pippa, with a box found and 10, 9 and 12 leaves held: a leaf each. At the cap: their kashes;
+  - the quay light: 15 kashes;
+  - the stump, the asylum desk and the Bù chest.
+- **Hebrew:** `node tools/he-bundle.mjs`, then `node tests/dialogue-check.mjs`: PASS (6261 of 6261 keys).
+- **The suites whose checks name a changed reward's leaf** (each run once; checks updated to the new rewards):
+
+  | Suite | Result | What it covers here |
+  |---|---|---|
+  | asylum | PASS | the register: 10 kashes, no clover |
+  | lba1rooms (`GAME_URL` on a local static server, since it has no `SERVE` support) | 8/8 PASS | the register |
+  | island-people | PASS | the bell 10 kashes; the quay light 15 kashes |
+  | arsenal | 34/34 PASS | the coal chute: 22 kashes |
+  | jetpack | the test-step tin PASS (20 kashes) | 1 FAIL, not clover: the lit pack's draw calls +8 against a budget of +6 |
+  | sewers-ways | the cave cache PASS (10 kashes) | 2 FAIL, not clover: Old Fenn's tavern line; Luc's pointer to Raph's guitar |
+  | equip2 | the old tin PASS (10 kashes); Bram's clover PASS | 1 FAIL, not clover: the pocket-set dial's prompt by the coat |
+  | equip2b | **not reached** | its first check failed (the cloud canal not built on Zeelich: `npcSpots.esmer1` missing), and the suite stopped before the crate, Ilka's tin and the frozen chest. Those three are Source only |
+  | depth-wave3, part 8 | 13/13 PASS | the far quay: 15 kashes; the gate crew's chest: a leaf |
+  | wave4, part B | 9/9 PASS | Mila: a leaf and 15 kashes |
+  | wave7, parts A and E | 30/30 PASS | Pippa: a leaf, in chapter 8 and in the ending |
+
+- **arsenal's first run** stopped on a page error the clover work did not cause. A mite lured by the Nitro-Meca-Penguin
+  asked `hero.sneak()`, which the penguin's stand-in lacked; BEHAVIOUR-MODES added the call. **Fixed:** the stand-in
+  (`gadgets.js`) now answers `sneak: () => 1`. Every enemy calls only `damage`, `sneak` and `visibility` on the hero,
+  and the stand-in has all three. The second run passed.
+- **depth-wave3's first run** read the far quay's kashes after the coin had already flown to him. The test now
+  measures them before the search. Part 8 was then run alone.
+- **Not run:**
+  - `containers` and `wave6-mine`: their changed check is a label only, or the leaf is below the cap there.
+  - `townlife`, `sewers` and `shops`: kept sources, unchanged checks.
+  - `keys-clover`: the cap and box logic it checks are unchanged, and `clover-rules` covers the rule.
+
+### סיכום בעברית
+
+- **אפשרות A נבנתה** (בחירת המשתמש, 25.11). התקרה נשארת 13, ועלה תלתן נשאר בכל קופסה.
+- **כלל אחד לכל המשחק** (`actors.js`):
+  - פרס שהיה נותן עלה כשהגיבור בתקרה נותן במקומו 10 קאשים, עם הודעה.
+  - עלה שמונח על הקרקע כשהגיבור בתקרה נשאר על הקרקע.
+  - החנויות של פיפה ושל מר בזו מוכרות עלה רק כשיש לגיבור פחות מתשעה.
+- **12 פרסים הפכו לקאשים:**
+  - הגדם, ספר הרישום בבית המשוגעים, המחבוא במערה של טרלו, הפחית הישנה של טווינסן;
+  - הארגז מתעלת העננים, הפחית של אילקה, מגלשת הפחם, הפעמון בפלטפורמה;
+  - הארונית ברציף הרחוק, התיבה הקפואה, המגדלור בקנרטס, הפחית על מדרגת הניסוי.
+- **שני המיכלים המעורבים** (השולחן בבית המשוגעים והתיבה במבוך של בו) כבר לא נותנים עלה. לכן הם מתמלאים מחדש כמו מיכלים אחרים.
+- **מילה, ארתור ופיפה תוקנו:**
+  - הם השוו למספר 9 קבוע. עכשיו הם בודקים את התקרה האמיתית.
+  - עם קופסה אחת לפחות ועם 9–12 עלים, כל אחד מהם נותן עלה.
+  - לפי הבקשה הם נשארו עלים. ברשימה של אפשרות A בכרטיס הם הופכים לקאשים, ולכן כאן השחקן היסודי מגיע ל־13 מפרק 8.
+  - כדי להתאים לכרטיס, אפשר להפוך גם אותם לקאשים. ההחלטה של המשתמש.
+- **שורות:** כל שורה שהזכירה עלה שהפך לקאשים שונתה, באנגלית ובעברית.
+- **שמירות:** פורמט השמירה לא השתנה (6).
+- **תוצאות (ריצה אוטומטית בלבד; אף אדם לא שיחק):**
+  - חבילת הבדיקות החדשה עברה 14 מתוך 14.
+  - בדיקת הדיאלוג עברה.
+  - חבילות הבדיקה של הפרסים שהשתנו עברו בבדיקות הקשורות לתלתן. שלושת הפרסים של kit2b (הארגז, הפחית של אילקה והתיבה הקפואה) לא נבדקו בריצה: החבילה שלהם נעצרה בבדיקה הראשונה, מסיבה שאינה קשורה לתלתן.
+  - נמצאו כשלים שאינם קשורים לתלתן: מספר קריאות הציור של חבילת הסילון, שתי שורות דיאלוג במסלולי הביוב, ומחוון ערכת הכיס.
+- **תוקן בדרך:** פינגווין שמושך אויב גרם לשגיאה בדף, כי לדמות שמחליפה את הגיבור חסרה הפונקציה sneak. התיקון ב־`gadgets.js`.

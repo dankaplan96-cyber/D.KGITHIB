@@ -192,7 +192,7 @@ export class Depth extends ChapterBase {
     this.settleOwed('dx_owe_store', 'coin', STORE.pay, 'dx_toast_kashes');
     this.settleOwed('dx_owe_far_yard', 'coin', FAR_PAY, 'dx_toast_kashes');
     this.settleOwed('dx_owe_arch', 'coin', ARCH.pay, 'dx_toast_kashes');
-    this.settleOwed('dx_owe_far_quay', 'clover', 1, 'dx_toast_clover');
+    this.settleOwed('dx_owe_far_quay', 'coin', FAR_PAY, 'dx_toast_kashes');   // (an older save's owed clover there: its kashes now)
     this.settleOwed('dx_owe_arch_clover', 'clover', 1, 'dx_toast_clover');
     this.applyWorld();
   }
@@ -1374,14 +1374,14 @@ export class Depth extends ChapterBase {
   //     barges' yard (the cargo store) and west quay (a dock worker's house), each over an old mooring rock in the cloud
   //     with an Esmer arch (shore davit → rock → the far davit, and back the same way). Mosquibee's honey islet is walked
   //     to over its plank bridge (BRIDGES: no ring there; its arrival is seen on foot, farUpdate). What is over there: the yard's
-  //     barge crate (the project's leftover optics: a read, 15 kashes), the dock worker's locker (his note, a clover), the
+  //     barge crate (the project's leftover optics: a read, 15 kashes), the dock worker's locker (his note, 15 kashes), the
   //     hive's honey pot (a full heal on each visit). The rooms behind the doors were always there (ihomes.js).
   //   HAM-4 · the gorge below the old gate: an ice arch from a rock stack in the meltwater to the north bank, a cord ring
   //     frozen into its crown (from the tree bridge or the bank: onto the stack) and one in its foot (back to the bank). On
   //     the stack the road crew's tool chest: a clover, 12 kashes and their note.
   // A ring is offered only with the line in hand, from the place it serves (near shore, rock, far patch). State:
   // dx_far_yard / dx_far_quay / dx_far_honey (crossed), dx_far_crate, dx_far_locker, dx_far_honeyN (pots taken),
-  // dx_arch_seen, dx_arch (crossed), dx_arch_chest; owed dx_owe_far_yard (kashes), dx_owe_far_quay (clover),
+  // dx_arch_seen, dx_arch (crossed), dx_arch_chest; owed dx_owe_far_yard (kashes), dx_owe_far_quay (kashes),
   // dx_owe_arch (kashes), dx_owe_arch_clover.
   hasLine() { return !!this.game.hero.arms?.line && this.able(); }
   // a ring the line can catch: hung from a davit (a post and an arm over the gap) or an Esmer arch; its route from where
@@ -1511,7 +1511,7 @@ export class Depth extends ChapterBase {
       f[C.def.flag] = true; g.audio.play('chest');
       say(C.def.read, () => {
         if (C.def.kind === 'crate') this.reward('dx_owe_far_yard', 'coin', 1, T.x, T.y + 0.9, T.z + 0.6, { pop: true, value: FAR_PAY });
-        else this.reward('dx_owe_far_quay', 'clover', 1, T.x, T.y + 0.9, T.z + 0.6, { pop: true });
+        else this.reward('dx_owe_far_quay', 'coin', 1, T.x, T.y + 0.9, T.z + 0.6, { pop: true, value: FAR_PAY });   // (CLOVER-BALANCE option A: kashes, no longer a clover leaf)
       });
     }, 0.45);
     return true;

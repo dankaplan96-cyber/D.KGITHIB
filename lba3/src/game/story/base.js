@@ -2,6 +2,7 @@
 // hooks it needs; the Story director (index.js) routes game events to the
 // current chapter and falls back to these defaults.
 import { t } from '../i18n.js';
+import { CLOVER_FULL_KASHES } from '../actors.js';
 
 export const SPEAKER_COLORS = {
   hero: '#8fc2ff', narrator: '#ffffff', sendell: '#bff4ff', zoe: '#ffb0d0', vesk: '#c8a8ff', baldino: '#ffd890', radio: '#a8ffb8',
@@ -75,6 +76,14 @@ export class ChapterBase {
     this.f[flag] = (this.f[flag] || 0) + n;
     for (let i = 0; i < n; i++) this.game.pickups.spawn(type, x, y, z, { ...opts, owe: flag });
   }
+  // A reward's clover leaf (CLOVER-BALANCE, the one rule: actors.js): the leaf and its toast, or at the cap
+  // CLOVER_FULL_KASHES kashes and theirs. True: a leaf given.
+  giveClover(toastKey = 'toast_clover_found', vars = undefined) {
+    const g = this.game, h = g.hero, got = h.gainClover();
+    g.hud.toast(got ? toastKey : 'toast_clover_kashes', got ? vars : { n: CLOVER_FULL_KASHES });
+    g.hud.stats?.(h);
+    return got;
+  }
   // After a load: what is still owed and isn't lying in the world any more is given straight away, with a toast.
   settleOwed(flag, type, value = 1, toastKey = null) {
     const g = this.game, n = this.f[flag] || 0;
@@ -82,7 +91,12 @@ export class ChapterBase {
     delete this.f[flag];
     const h = g.hero;
     if (type === 'coin') h.coins += n * value;
-    else if (type === 'clover') h.clovers = Math.min(h.cloverMax, h.clovers + n);
+    else if (type === 'clover') {
+      // (CLOVER-BALANCE: a leaf that no longer lies anywhere is a reward: at the cap it pays its kashes, actors.js)
+      let paid = 0;
+      for (let i = 0; i < n; i++) if (!h.gainClover()) paid += CLOVER_FULL_KASHES;
+      if (paid) { g.hud.toast('toast_clover_kashes', { n: paid }); if (paid === n * CLOVER_FULL_KASHES) return true; }
+    }
     if (toastKey) g.hud.toast(toastKey, { n: n * value });
     return true;
   }

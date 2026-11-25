@@ -259,7 +259,7 @@ export class Steam extends ChapterBase {
         }
         return c([['dallan', f.c5_dallanOK ? 'c5_dallan_gate3' : 'c5_dallan_3']]);
       case 'tarra':
-        if (f.c5_vent && !f.c5_clover) return c([...(f.dt_divert ? [['tarra', 'dt_tarra_steam']] : []), ['tarra', 'c5_tarra_2']], () => { f.c5_clover = true; h.clovers = Math.min(h.cloverMax, h.clovers + 1); g.hud.toast('c5_toast_clover'); this.radio(); });
+        if (f.c5_vent && !f.c5_clover) return c([...(f.dt_divert ? [['tarra', 'dt_tarra_steam']] : []), ['tarra', 'c5_tarra_2']], () => { f.c5_clover = true; this.giveClover('c5_toast_clover'); this.radio(); });
         if (f.c5_vent && !f.c5_radio) { this.radio(); return true; }
         return c([['tarra', f.c5_vent ? 'c4_tarra_idle' : 'c5_tarra_1']]);
       case 'ilka':

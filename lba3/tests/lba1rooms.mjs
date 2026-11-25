@@ -26,9 +26,9 @@ const r = await page.evaluate(() => {
   const A = G.enemies.filter((e) => e.group === 'asylum');
   out.guards = A.filter((e) => e.present).length; out.kinds = [...new Set(A.map((e) => e.def.kind))].sort();
   for (const e of A) e.setPresent(false);   // (search in peace)
-  const R = G.rooms.asylum, s = R.searches[0], c0 = h.clovers;
+  const R = G.rooms.asylum, s = R.searches[0], c0 = h.clovers, k0 = h.coins;
   h.pos.set(s.x + 0.6, G.physics.groundAt(s.x + 0.6, s.z, 30), s.z); h.onGround = true; G.step(0.5);
-  G.input.taps.add('KeyE'); G.step(0.1); out.search = G.state; talkAll(); out.clover = h.clovers > c0;
+  G.input.taps.add('KeyE'); G.step(0.1); out.search = G.state; talkAll(); out.clover = h.clovers > c0; out.kashes = h.coins - k0;
   out.out = stand(R.exits[0].x, R.exits[0].z, 10);
   G.enterRoom('butemple'); G.step(2);
   const st = G.rooms.butemple.exits.find((e) => e.room === 'bumaze');
@@ -39,7 +39,7 @@ const r = await page.evaluate(() => {
 });
 check('the asylum: in through the block-house on Citadel, standing on its floor', r.enter === 'asylum' && r.floor, r);
 check("the asylum's guards are posted (ASYLUM-2: Vesk's two on his store, a Quetch and a Grobo)", r.guards === 2 && r.kinds.join() === 'guard,guardG', r);
-check('the old register in the office: a search, a clover', r.search === 'dialog' && r.clover, r);
+check('the old register in the office: a search, 10 kashes (no clover: CLOVER-BALANCE A)', r.search === 'dialog' && !r.clover && r.kashes === 10, r);
 check('out by the stair-well, back on Citadel', r.out === 'citadel', r);
 check("the Temple of Bù: down the stair into the maze", r.maze === 'bumaze' && r.mazeFloor, r);
 check("DECLUTTER: the dark halls are merged into the maze: the halls' chest stands at the maze's far end", r.chest && r.hallsGone, r);
