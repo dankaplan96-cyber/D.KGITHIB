@@ -6,15 +6,16 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
 ## תקציר בעברית (למשתמש)
 - **פורסם:** v170 (25.11). כל מה שאישרת היום בפנים: העומק בקירות (e + f), הראש של זואי almond-m, החפירה של הפרנקוס,
   גלים 5 ו־8, איזון התלתן (אפשרות א, גם מילה/ארתור/פיפה בקאש), והתיקונים הקטנים מדוח 70.
-- **בעבודה עכשיו:** כלום. כל הסוכנים סיימו, הענף נקי ודחוף, וראש הענף = מה שפורסם.
+- **בלילה (26.11):** נבנו בענף ולא פורסמו: פערי גל 4 (#65) והתיקונים הקטנים (#59, #62, #64, #45; דף `captures/smallfix/sheet.png`). #63 לא נמצא. #58 הקרבות עדיין בעבודה. שום דבר לא יפורסם בלי הבחירה שלך.
 - **הבא בתור (ההמלצה):** #58 הקרבות הראשונים (הצעות עם תמונות לבחירה שלך), ועובד אחד על התיקונים הקטנים (#59,
   #62–#64, #45).
 - **מחכה להחלטה שלך:** #58, #13, #18, #14, #19, #15, #16, #17, #33, #21 (פירוט ב־OPEN-TASKS.he.md).
 - **הסוכן המקומי:** הוראה 72 (המתקין מ־GitHub) ו־73 (לבדוק את v170 אצלך) ממתינות לתשובה.
 
 ## 1. Where things stand
-- **Branch:** `ccr-c1c2c4b9-dep6ed` (push only there). Clean and pushed. **The branch head is what is published**:
-  there is no unapproved work on it.
+- **Branch:** `ccr-c1c2c4b9-dep6ed` (push only there). Clean and pushed. **The branch head is ahead of v170** with work awaiting the user's pick:
+  #65 wave 4 gaps (`WAVE4.md`), the small fixes (`SMALLFIX-26-11.md`, sheet `captures/smallfix/sheet.png`), the
+  dialogue-check duplicate-key guard. #58 (`FIGHTS58.md`) is still with its worker.
 - **Published:** **v170**, artifact version **`1795635920-1400`** = the next `base_version`.
   - Slug `6f31d0d2-efe4-4413-a370-7d95a7f5785b`.
   - URL https://claude.ai/artifact/EjPMQXPwbmre2kDevMC4tA.
