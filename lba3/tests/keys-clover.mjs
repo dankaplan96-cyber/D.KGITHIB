@@ -111,7 +111,7 @@ if (ONLY.includes('B')) {
   const b6 = await ev((N) => { toCitadel(-29.0, -86.1, Math.PI / 2); const u = P.use(N.x, N.z, { kind: 'kc_lock', near: 1.0, match: 2.2 }); P.settle(); return { u: u.r, door: !!game.flags.kc_door_fort, ...num(), hud: hud(), doorIn: !!doorTo('kc_tunnel') }; }, N);
   const b6l = await said();
   check('B: the lock with the key (INPUT E): the small key fits, the gate opens, the key spent (0 held, the HUD\'s key hidden), the passage a door now', b6.u === 'used' && b6.door && b6.keys === 0 && !b6.hud.shown && b6.doorIn && has(b6l, /small key fits/), { b6, b6l });
-  await shot('kc-03-passage-open');
+  await shot('kc-03-unlocked-straight-in');   // (the lock opened, he stands in the open door: straight in, as LBA's doors)
   const b7 = await ev(() => walkIn('kc_tunnel', 0, -1, 1.3));   // (from the landing before the mouth)
   check('B: in by the passage\'s mouth (INPUT): FunFrock\'s old passage', b7.room === 'kc_tunnel', b7);
   await shot('kc-04-tunnel');
