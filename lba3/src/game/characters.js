@@ -2183,6 +2183,11 @@ const ZH_TW = { ax: 0.15192, a: [0.13867, 0.15100], ang: [-155.41, -65.41], off:
 const ZH_EGG = {
   tall: { c: [0.015, -0.086], tip: 8, up: 0.15, down: 0.115, x: 0.1, z: 0.096, zb: 0.1, taper: 0.16, tp: 2 },
   egg: { c: [0.02, -0.086], tip: 6, up: 0.17, down: 0.115, x: 0.096, z: 0.094, zb: 0.096, taper: 0.24, tp: 2 },
+  // ZOE-HEAD-4 (P131): the same form fitted to LBA2's in-game Zoé (lba2remake's render of the original data; looked at and
+  // measured only, nothing of it stored): her cranium scaled to our standing height and set at our eyes and forehead,
+  // sampled over the part of the head the reshape moves (rms 4.7 mm). An almond lying back: its long axis tipped 64° from
+  // straight up, reaching 16.5 cm back and up from a centre 12 cm behind the eyes, narrowing a little toward that end
+  almond: { c: [0.0071, -0.1219], tip: 64.4, up: 0.1651, down: 0.0965, x: 0.1042, z: 0.089, zb: 0.1523, taper: 0.1061, tp: 2 },
 };
 const ZH_CHIN = { L: 0.02, pt: 0.3, fw: 0.6 };
 const ZOE_HEADS = {
@@ -2201,6 +2206,15 @@ const ZOE_HEADS = {
   'twin-head': { twin: { g: 1, nose: 'hers' } },
   'twin-head-s': { twin: { g: 0.92, nose: 'hers' } },
   'twin-head-nose': { twin: { g: 1, nose: 'his' } },
+  // ZOE-HEAD-4 (P131, the user 25.11: "still very strange … maybe more like an almond"; "check LBA2's model of Zoé"):
+  // LBA2's head is as wide as hers and 8 % taller, but 39 % deeper — a long almond lying back from the face, its far end
+  // the back-top of the head, where LBA2's ponytail springs. almond: that cranium (ZH_EGG.almond), the tie on its far end
+  // (`tie`° past the long axis); almond-s: half of the way there from today's head (mix: each point a share `a` of the way
+  // from where today's `twinsen` puts it); almond-chin: almond + LBA2's longer face (its chin 2 cm lower under the eyes
+  // than hers: ZH_CHIN, as ZOE-HEAD-2's tall-long)
+  almond: { egg: ZH_EGG.almond, tie: 0 },
+  'almond-s': { egg: ZH_EGG.almond, tie: 0, mix: { of: { k: 0.71, kx: 0.69 }, a: 0.5 } },
+  'almond-chin': { egg: ZH_EGG.almond, tie: 0, chin: ZH_CHIN },
 };
 export const ZOE_HEAD = (() => {
   let s = '';
@@ -2242,7 +2256,7 @@ function zhChin(eye, C) {
 function zoeHeadShape(eye, S) {
   const k = S.k || 0.71, c = S.egg ? [0, eye[1] + S.egg.c[0], eye[2] + S.egg.c[1]] : [0, eye[1] + k * ZH_TW.off[0], eye[2] + k * ZH_TW.off[1] + (S.dz || 0)];
   const e = ZH_TW.ang.map((g) => [Math.cos((g * Math.PI) / 180), Math.sin((g * Math.PI) / 180)]), a = ZH_TW.a.map((x) => x * k), ax = ZH_TW.ax * (S.kx || 0.69);
-  const chin = S.chin && zhChin(eye, S.chin);
+  const chin = S.chin && zhChin(eye, S.chin), other = S.mix && zoeHeadShape(eye, S.mix.of);
   const f = (p0) => {
     const pc = chin && chin(p0), p = pc || p0;
     const th = (Math.atan2(Math.abs(p[0]), p[2] + 0.025) * 180) / Math.PI, w = sstep(zhdLerp(th, 1), zhdLerp(th, 2), p[1]);
@@ -2256,8 +2270,11 @@ function zoeHeadShape(eye, S) {
       const h = Math.min(1, Math.max(0, 0.5 + (0.5 * (rn - rt)) / ZHD_NECK.k));
       rt = Math.min(rt * (1 - h) + rn * h + ZHD_NECK.k * h * (1 - h), Math.max(r, rt));
     }
-    const rr = r + w * (rt - r);
-    return c.map((x, i) => x + u[i] * rr);
+    const rr = r + w * (rt - r), q = c.map((x, i) => x + u[i] * rr);
+    if (!other) return q;
+    // (ZOE-HEAD-4 almond-s: the point a share `mix.a` of the way from where today's head puts it to where this one does)
+    const q0 = other(p0);
+    return q0 ? q0.map((x, i) => x + S.mix.a * (q[i] - x)) : q;
   };
   f.c = c;
   if (S.tie != null) { const t = ((S.egg.tip + S.tie) * Math.PI) / 180; f.tie = [0, Math.cos(t), -Math.sin(t)]; }
