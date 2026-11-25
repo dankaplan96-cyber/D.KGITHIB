@@ -256,7 +256,7 @@ function buildLanding(scene, physics) {
   B.put(7.4, -5.8, 0.4, (kk) => barrel(kk, { pal: 'dark' }));
   B.put(-0.2, 5.6, 0.3, (kk) => oreCart(kk, false));
   for (const x of [-1.0, 3.2, 7.0]) k.at(x, 0, -6.75, 0, () => timberSet(k, 2.0, 3.2));
-  for (const z of [-1.0]) k.at(-8.75, 0, z, Math.PI / 2, () => timberSet(k, 2.0, 3.2));
+  for (const z of [-1.0]) k.at(-8.4, 0, z, Math.PI / 2, () => timberSet(k, 2.0, 3.2));   // (OVERLAP-SWEEP: clear of the wall's rock)
   // rails from the cage to the tunnel
   for (const sx of [-0.45, 0.45]) k.add(rbox(0.06, 0.08, 8.0, 0.01), rust(), -6.0 + sx, 0.04, 0.4 + 0, 0);
   for (let i = 0; i < 10; i++) k.add(rbox(1.3, 0.06, 0.18, 0.01), plank(), -6.0, 0.02, -2.2 + i * 0.6 + 0.6);
@@ -361,13 +361,14 @@ function buildGallery(scene, physics) {
   bk.add(plane(3.4, 1.5), bulkTex, 0.1, 1.6, 0, Math.PI / 2);
   bk.add(plane(2.6, 1.15), bulkTex, -0.33, 1.6, 0.1, -Math.PI / 2);
   bk.flush();
-  const rubble = new THREE.Group(); rubble.position.set(BULK_X - 1.2, 0, 0); B.group.add(rubble);
-  { const rk2 = new (k.constructor)(rubble); for (let i = 0; i < 14; i++) rk2.add(rockGeo(i % 16), rock(), (hash(i, 2, 4) - 0.5) * 1.6, 0.2 + hash(i, 3, 4) * 1.6, -5 + i * 0.75, hash(i, 4, 4) * 6, { sx: 0.6 + hash(i, 5, 4) * 0.5, sy: 0.5 + hash(i, 6, 4) * 0.6, sz: 0.6 }); rk2.flush(); }
+  // (OVERLAP-SWEEP: the packed rubble kept between the boards' posts and the incline's first step)
+  const rubble = new THREE.Group(); rubble.position.set(BULK_X - 1.0, 0, 0); B.group.add(rubble);
+  { const rk2 = new (k.constructor)(rubble); for (let i = 0; i < 16; i++) rk2.add(rockGeo(i % 16), rock(), (hash(i, 2, 4) - 0.5) * 0.2, 0, -5.2 + i * 0.68, hash(i, 4, 4) * 6, { sx: 0.3 + hash(i, 5, 4) * 0.1, sy: 0.8 + hash(i, 6, 4) * 0.6, sz: 0.42 }); rk2.flush(); }
   const wedges = [], wedgeMesh = [];
   for (const z of [-2.6, 2.4]) {
     const wg = new THREE.Group(); wg.position.set(BULK_X + 0.55, 0, z); B.group.add(wg);
     const wm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.32, 0.9, 3, 1).rotateZ(Math.PI / 2).rotateX(Math.PI / 6), MAT.wood('honey'));
-    wm.position.set(0.25, 0.22, 0); wm.castShadow = true; wg.add(wm);
+    wm.position.set(0.25, 0.14, 0); wm.castShadow = true; wg.add(wm);   // (OVERLAP-SWEEP: its foot on the floor)
     wedges.push({ ...B.world(BULK_X + 0.7, z), y: 0.25 }); wedgeMesh.push(wg);
   }
   const bulkCol = B.col(BULK_X, 0, 0.35, D / 2, 3.6, { noStand: true });
