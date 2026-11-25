@@ -188,7 +188,7 @@ if (ONLY.includes('T')) {
   const t6 = await ev(() => { goRegion('citadel', -60, -20, Math.PI); const S = W5.tins[1]; goRegion('citadel', S.x + 3, S.z + 3, Math.atan2(-3, -3)); const r = J.hop(S.x, S.z, { t: 4, top: S.top }); P.tap('KeyE', 0.1); let k = 0; while (game.hero.actT > 0 && k++ < 60) game.step(1 / 30); P.settle(); return { y: r.y, top: r2(S.top), got: !!w5().w5t_1, n: W().tins() }; });
   const r1d = await rule(1);
   check('T: Citadel\'s stack under the Whispering Cliffs: up with the pack (INPUT), the tin (E): two of three', Math.abs(t6.y - t6.top) < 0.1 && t6.got && t6.n === 2, t6);
-  if (SHOTS) { await ev(() => { const S = W5.tins[1]; P.go(S.x + 3.0, S.z + 3.0, { tol: 0.5 }); P.face(S.x, S.z); P.settle(); }); await pair('wave5-05-tin-citadel', hideW5); }
+  if (SHOTS) { await ev(() => { const S = W5.tins[1]; P.go(S.x - 2.6, S.z + 3.4, { tol: 0.5 }); P.face(S.x, S.z); P.settle(); }); await pair('wave5-05-tin-citadel', hideW5); }
   iso('to the Hamalayi by the travel network\'s own move');
   const t7 = await ev(() => { game.regions.ensure('hamalayi', 'test'); const S = W5.tins[3]; goRegion('hamalayi', S.x + 3, S.z + 3, Math.atan2(-3, -3)); const r = J.hop(S.x, S.z, { t: 4, top: S.top }); P.tap('KeyE', 0.1); let k = 0; while (game.hero.actT > 0 && k++ < 60) game.step(1 / 30); P.settle(); return { y: r.y, top: r2(S.top), got: !!w5().w5t_3, n: W().tins() }; });
   const t7l = await said();
@@ -205,7 +205,7 @@ if (ONLY.includes('N')) {
   const n1 = await ev(() => { goRegion('citadel', -99.5, 31.5, -Math.PI / 2); const k = P.talk('nell'); return { k: k.r, ask: !!w5().w5n_ask, shop: game.state === 'shop' }; });
   const n1l = await said();
   check('N: Nell (TALK, INPUT): her own line, then the hook — "the right part and I\'ll tune any of your gadgets", the list chalked on her bench', n1.k === 'talked' && n1.ask && !n1.shop && has(n1l, /tune any of your gadgets/) && has(n1l, /chalked on my bench/), { n1, n1l });
-  if (SHOTS) { await ev(() => { const L = W5.list; P.go(L.x + 2.0, L.z + 2.2, { tol: 0.4 }); P.face(L.x, L.z); P.settle(); }); await pair('wave5-07-nell-list', hideW5); }
+  if (SHOTS) { await ev(() => { const L = W5.list; P.go(L.x + 1.3, L.z + 1.6, { tol: 0.4 }); P.face(L.x, L.z); P.settle(); }); await pair('wave5-07-nell-list', hideW5); }
   const n2 = await ev(() => { const L = W5.list; const u = P.use(L.x, L.z, { kind: 'w5n_list', near: 1.0, match: 1.6 }); return { u: u.r, list: !!w5().w5n_list }; });
   const n2l = await said();
   check('N: the chalk list (INPUT, E): a line for each tool he owns — the lance (Pello, the Orchard, 15), the flask (Tashi, Lhar, 20), the pack (Baldino\'s tins, 25)', n2.u === 'used' && n2.list && has(n2l, /PUMP LANCE/) && has(n2l, /HEAT FLASK/) && has(n2l, /HOP-PACK/), { n2, n2l });
@@ -268,7 +268,7 @@ if (ONLY.includes('C')) {
   const c7 = await ev(() => { const C = W5.cistern, h = game.hero, c0 = h.coins; const u1 = P.use(C.doorAt.x, C.doorAt.z, { kind: 'w5c_store', near: 0.8, match: 1.4 }); const c1 = h.coins - c0; const mp0 = h.mp; const u2 = P.use(C.doorAt.x, C.doorAt.z, { kind: 'w5c_store', near: 0.8, match: 1.4 }); const mp1 = h.mp; const u3 = P.use(C.doorAt.x, C.doorAt.z, { kind: 'w5c_store', near: 0.8, match: 1.4 }); return { u: [u1.r, u2.r, u3.r], coins: c1, coinsAll: h.coins - c0, mp0, mp1, max: h.mpMax }; });
   const c7l = await said();
   check('C: the store (E): seed jars, the tea urn on its warm stone, 20 kashes in the bowl, once; the tea (E): his magic full; again, full already: his line, nothing more', c7.u.every((u) => u === 'used') && c7.coins === 20 && c7.coinsAll === 20 && c7.mp0 === 0 && c7.mp1 === c7.max && has(c7l, /seed store/) && has(c7l, /Butter tea/) && has(c7l, /full already/), { c7, c7l });
-  const c8 = await ev(() => { const k1 = P.talk('hl_monk'); const l1 = window._said.slice(); window._said.length = 0; const k2 = P.talk('hl_monk'); return { k1: k1.r, l1, lore: !!w5().w5c_lore }; });
+  const c8 = await ev(() => { P.enter('ham_hall'); game.story.refreshCast(); game.step(0.3); P.settle(); const k1 = P.talk('hl_monk'); const l1 = window._said.slice(); window._said.length = 0; const k2 = P.talk('hl_monk'); return { k1: k1.r, l1, lore: !!w5().w5c_lore }; });
   const c8l = await said();
   check('C: Tenpa (TALK): the first keepers sat on the vent to keep the seed dry; the tea is for whoever passes; once (again: his own line only)', c8.lore && has(c8.l1, /first keepers/) && !has(c8l, /first keepers/), { c8, c8l });
 }
@@ -334,7 +334,7 @@ if (ONLY.includes('V')) {
   iso('Ilka\'s readings done before chapter 9\'s vote (w5b_1..3, w5b_done set by flags)');
   const v1 = await ev(() => { Object.assign(game.flags, { w5b_ask: true, w5b_1: 'fork', w5b_2: 'flag', w5b_3: 'fork', w5b_done: 'ilka' }); game.story.applyFlags(); if (game.room?.id === 'archive') P.exitTo('archive-out'); const r = P.exitTo('up-council'); let t = 0; while (game.state !== 'play' && t < 300) { if (game.state === 'dialog') P.tap('KeyE', 0.12); else game.step(0.1); t += 0.2; } P.settle(); return { r: r?.r ?? r, room: game.room?.id, vote: !!game.flags.c9_vote, ch: game.flags.chapterKey, state: game.state }; });
   const v1l = await said();
-  check('V: chapter 9, the plans in hand, into the council chamber (INPUT): Dallan\'s proof scene adds "three stakes\' worth of warm ground", Brum says "I vote yes"; the vote taken as before and the chapter goes on', v1.vote && has(v1l, /three stakes' worth/) && has(v1l, /I vote yes/) && has(v1l, /reverse the bore|ordered/), { v1, v1l: v1l.slice(-12) });
+  check('V: chapter 9, the plans in hand, into the council chamber (INPUT): Dallan\'s proof scene adds "three stakes\' worth of warm ground", Brum says "I vote yes"; then the scene\'s own lines and the vote as before (this save is on the stop-the-bore thread: the stop at the platform comes next)', v1.vote && has(v1l, /three stakes.{1,2}worth/) && has(v1l, /I vote yes/) && v1l.findIndex((l) => /I vote yes/.test(l)) < v1l.length - 1, { v1, mine: v1l.filter((l) => /stakes|vote yes|reverse/.test(l)), n: v1l.length });
   await browser.close();
 }
 done();

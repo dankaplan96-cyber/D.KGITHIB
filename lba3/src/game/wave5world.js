@@ -41,12 +41,12 @@ const chalkTex = () => M('w5-chalktex', () => canvasTex(256, 192, (x, W, H) => {
 export function buildChalkList(parent, x, y, z, ry) {
   if (W5.list) return W5.list;
   const grp = holder(parent, x, y, z, ry, 'wave5 list'), k = new Kit(grp), wood = MAT.wood('dark');
-  for (const s of [-1, 1]) k.add(rbox(0.06, 1.05, 0.06, 0.01), wood, s * 0.3, 0.52, -0.05, 0, { rx: 0.12 });
-  k.add(rbox(0.04, 0.9, 0.04, 0.01), wood, 0, 0.45, 0.22, 0, { rx: -0.35 });
-  k.add(rbox(0.72, 0.56, 0.04, 0.01), wood, 0, 0.88, -0.02, 0, { rx: 0.12 });
+  for (const s of [-1, 1]) k.add(rbox(0.06, 1.3, 0.06, 0.01), wood, s * 0.42, 0.65, -0.05, 0, { rx: 0.12 });
+  k.add(rbox(0.04, 1.1, 0.04, 0.01), wood, 0, 0.55, 0.26, 0, { rx: -0.35 });
+  k.add(rbox(0.98, 0.74, 0.04, 0.01), wood, 0, 1.05, -0.02, 0, { rx: 0.12 });
   k.flush();
-  const face = new THREE.Mesh(plane(0.64, 0.48), new THREE.MeshStandardMaterial({ map: chalkTex(), roughness: 0.95 }));
-  face.position.set(0, 0.88, 0.005); face.rotation.x = -0.12; grp.add(face);
+  const face = new THREE.Mesh(plane(0.9, 0.66), new THREE.MeshStandardMaterial({ map: chalkTex(), roughness: 0.95 }));
+  face.position.set(0, 1.05, 0.005); face.rotation.x = -0.12; grp.add(face);
   W5.list = { grp, x, z, y };
   return W5.list;
 }
