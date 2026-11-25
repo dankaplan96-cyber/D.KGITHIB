@@ -280,7 +280,8 @@ export class Wave4 extends ChapterBase {
       case 'kn_mother': case 'il_mila': return this.mila(npc, c);
       case 'kn_kid':
         if (!f.w4l_given || f.w4l_temAfter) return false;
-        return c(['w4l_tem_after'], () => { f.w4l_temAfter = true; });
+        f.w4l_temAfter = true;   // (before the line: said once, then his own lines again; a remark over his head would never call back)
+        return c(['w4l_tem_after']);
       // ---- H-11
       case 'fenn':
         if (!this.isleOpen() || f.w4r_fenn || f.w4r_case) return false;
@@ -457,7 +458,7 @@ export class Wave4 extends ChapterBase {
     const p = pat || LAMP.pats[Math.floor(Math.random() * LAMP.pats.length)];
     this.lamp = { pat: p, t: 0, ph: 'watch', seq: this.lampSeq(p) };
     g.setState('cutscene'); g.cutscene = (dt) => this.lampStep(dt);
-    const b = PIER.boat, pos = new THREE.Vector3(b.x + 3.4, 2.4, b.z - 4.6), look = new THREE.Vector3(b.x - 0.3, 0.7, b.z + 2.2);   // (from over the basin: the boat near, Arthur on the pier behind it)
+    const b = PIER.boat, pos = new THREE.Vector3(b.x - 1.5, 2.0, b.z - 5.0), look = new THREE.Vector3(b.x, 0.5, b.z + 3.0);   // (from over the basin: the boat near, Arthur on the pier behind it)
     g.camRig.override = { pos, look }; g.camera.position.copy(pos); g.camRig.look?.copy?.(look); g.camera.lookAt(look);
     this.lampStep(0);
   }

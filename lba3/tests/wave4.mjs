@@ -144,7 +144,7 @@ if (ONLY.includes('B')) {
   const b2 = await ev(() => { const S = W4.sack; const u = P.use(S.x, S.z, { kind: 'w4l_sack', near: 1.0, match: 2 }); return { u: u.r }; });
   const b2l = await said();
   check('B: the mail sack by the customs booth (INPUT, E): CARGO, UNDECLARED; the top letter "To Mila, Knartas"', b2.u === 'used' && has(b2l, /To Mila, Knartas/), { b2, b2l });
-  await ev(() => { const S = W4.sack; P.go(S.x + 2.2, S.z + 3.2, { tol: 0.5 }); P.face(S.x, S.z); P.settle(); });
+  await ev(() => { const S = W4.sack; P.go(S.x + 3.2, S.z + 1.0, { tol: 0.5 }); P.face(S.x, S.z); P.settle(); });
   await pair('wave4-05-customs-sack', (h) => W4.sack.setOn(!h));
   // Odile: her crate may still be open (her own story): then she asks which, and "The letters" is picked
   const odile = () => ev(() => { const k = P.talk('odile'); let title = document.querySelector('#shop h2')?.textContent || ''; let which = null; if (game.state === 'shop' && /Officer Odile/.test(title)) { which = P.menuPick(1).r; P.settle(); title = document.querySelector('#shop h2')?.textContent || ''; } return { k: k.r, which, title, state: game.state, items: [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span').textContent) }; });
@@ -162,7 +162,7 @@ if (ONLY.includes('B')) {
   check('B: Knartas: Mila (TALK, INPUT): the sack handed over — "Twelve weeks of them"; a clover leaf and 15 kashes (30 kashes at nine leaves); her letter for Tellem; the sack out of the pockets', b5.k === 'talked' && b5.given && !b5.sack && b5.reply && (b5.at9 ? b5.coins === 30 : b5.coins === 15 && b5.clovers === 1) && has(b5l, /Twelve weeks/), { b5, b5l });
   const b6 = await ev(() => { const k = P.talk('kn_kid'); return { k: k.r, remark: !!k.remark, over: game.remarks?.el?.textContent || '', done: !!game.flags.w4l_temAfter }; });
   const b6l = await said();
-  check('B: Tem (TALK): his mother reads them out loud, even the soup ones (a box, or his one line over his head: P116)', b6.k === 'talked' && (has(b6l, /soup ones/) || /soup ones/.test(b6.over)), { b6, b6l });
+  check('B: Tem (TALK): his mother reads them out loud, even the soup ones (once: then his own lines again)', b6.k === 'talked' && b6.done && (has(b6l, /soup ones/) || /soup ones/.test(b6.over)), { b6, b6l });
   iso('back to Citadel by the travel network: put west of the house');
   const b7 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); P.enter('asylum'); const k = P.talk('hs_worker2'); return { k: k.r, given: !!game.flags.w4l_replyGiven, reply: game.story.items().some((i) => i.id === 'w4l_reply'), j: game.story.journal().find((s) => /Letters home/.test(s.title))?.lines.map((l) => l.done) }; });
   const b7l = await said();
@@ -207,7 +207,7 @@ if (ONLY.includes('D')) {
   const d3 = await ev((pat) => { const G = game; let t = 0; while (G.state !== 'shop' && t < 30) { G.step(0.1); t += 0.1; } const items = [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span').textContent); const wrong = ['LSS', 'SLS', 'SSL'].findIndex((p) => p !== pat); P.menuPick(wrong); t = 0; while (G.state !== 'shop' && t < 40) { if (G.state === 'dialog') P.tap('KeyE', 0.15); else G.step(0.1); t += 0.1; } const pat2 = W().lamp?.pat; const right = ['LSS', 'SLS', 'SSL'].indexOf(pat2); const c0 = G.hero.clovers, k0 = G.hero.coins; P.menuPick(right); P.settle(); return { items, tries: G.flags.w4b_lampTries ?? 0, same: pat2 === pat, lamp: !!G.flags.w4b_lamp, clover: G.hero.clovers - c0, coins: G.hero.coins - k0, boat: r2(aboat().z) }; }, d2.pat);
   const d3l = await said();
   check('D: Arthur (TALK): "Mira says a signal has to be said back"; the boat\'s lamp blinks its signal (a scene); the choice of three: a wrong one — the boat blinks all over, "That wasn\'t what it said", nothing lost; the signal again, the right one: it turns and comes in to the pier; his clover leaf (10 kashes at nine)', d2.st === 'cutscene' && !!d2.pat && d3.items.length === 4 && d3.tries === 1 && d3.same && d3.lamp && (d3.clover === 1 || d3.coins === 10) && d3.boat > 40 && has(d3l, /said back/) && has(d3l, /wasn't what it said/) && has(d3l, /It heard us/), { d2, d3, d3l });
-  const d4 = await ev(() => { const n = P.npc('w4_raph'); const S = W4.seats.home; P.go(S.x + Math.sin(S.a) * 2.2 + 0.6, S.z + Math.cos(S.a) * 2.2, { tol: 0.5 }); P.face(n.pos.x, n.pos.z); P.settle(); return { anim: n.forceAnim }; });
+  const d4 = await ev(() => { const n = P.npc('w4_raph'); const S = W4.seats.home; P.go(S.x + Math.sin(S.a) * 2.6 + 1.4, S.z + Math.cos(S.a) * 2.6, { tol: 0.5 }); P.face(n.pos.x, n.pos.z); P.settle(); return { anim: n.forceAnim }; });
   await shot('wave4-10-lighthouse-raph');
   const d5 = await ev(() => { const k = P.talk('w4_raph'); return { k: k.r }; });
   const d5l = await said();
