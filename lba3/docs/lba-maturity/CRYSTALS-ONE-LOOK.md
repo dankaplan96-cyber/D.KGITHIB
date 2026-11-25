@@ -55,6 +55,7 @@ New in the module, for the other places:
 | 20 | bonuslook.js / actors.js · the singing crystal pickup (Citadel ×5, the mill) | three octahedron spikes, one bright opaque material | three of the well's prisms, cyan shell (emissive 1.0 instead of the cave's 0.4: a pickup must read from the far camera) + core |
 | 21 | actors.js · the golden shard pickup | gold octahedron | the prism, **gold** tint kept (the story's golden light) + core |
 | 22 | itemlook.js · item icons: the kettle crystals, the warm stone, the crystal cell | octahedra | the prism with a glassy shell and a core (the core shows at icon size as a lighter centre line) |
+| 23 | wanniemine.js · the Wannies' deep seam (WAVE6 H-16): the gem veins in the landing's, the gallery's and the Blow's walls | new | `crystalCluster` with `crystalMats('violet' / 'cyan' / 'vein', {rockSet})`; the Blow's seam `warm` while it lives, its shell set to the cyan look once beaten (`WM.blow.setCalm`) |
 | — | actors.js · crystal mites; enemies.js · crystal mite / crawler | creatures' spikes | **left**: part of an enemy's body and its wind-up flare (combat readability); enemies are another worker's |
 | — | underground.js · the machines' receivers (the caves under the island) | orange octahedra on machines | **left**: machine parts showing a state colour, not crystals growing |
 | — | props.js · the planet model's cracked shell | icosphere | **left**: a model's glass shell, not a crystal |

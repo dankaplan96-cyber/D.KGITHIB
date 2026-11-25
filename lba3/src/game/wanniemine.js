@@ -420,7 +420,9 @@ function buildBlow(scene, physics) {
     for (let i = -3; i <= 3; i++) k.add(rbox(0.05, 0.05, Math.sqrt(Math.max(0.05, 0.72 - (i * 0.22) ** 2)) * 2, 0.01), MAT.iron(), x + i * 0.22, 0.06, z);
   }
   // the seam in the back wall: a big vein, warm while the Blow is in it
-  const warm = crystalMats('warm', { rockSet: true }), vio = crystalMats('violet', { rockSet: true });
+  // (the seam's shell its own copy of the warm tint's: setCalm recolours it, and no other place's warm crystals)
+  const W0 = crystalMats('warm', { rockSet: true }), warm = { ...W0, shell: W0.shell.clone() }, vio = crystalMats('violet', { rockSet: true });
+  warm.shell.userData = { ...W0.shell.userData };
   for (const [x, y, s, sd] of [[1.4, 1.6, 0.7, 41], [2.6, 2.8, 0.5, 43], [0.2, 3.0, 0.42, 47], [3.6, 1.2, 0.45, 53]]) gemVein(k, warm, x, y, -D / 2 + 0.6, 0, s, sd);
   gemVein(k, vio, -8.4, 2.4, -3.0, Math.PI / 2, 0.45, 59);
   // what the gas took: an overturned cart, a dropped lamp, broken sets, the deep shift's strongbox in the far corner

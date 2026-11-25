@@ -407,6 +407,7 @@ export class LiftBelow extends ChapterBase {
     const g = this.game, h = g.hero, L = g.rooms.isle_liftdock?.lift; if (!L) return;
     this.ride = { ph: 'down', t: 0, level: 1, L };
     L.setLevel(1, true); L.setLever(true);
+    g.lastSafe = { x: L.front.x, z: L.front.z };
     h.angle = L.front.a + Math.PI; h.vel?.set(0, 0);
     g.audio.play('lever', L.lever); g.audio.play('liftWinch', L.top);
     g.hud.toast('zo_toast_ride', null, 3000);
@@ -429,7 +430,8 @@ export class LiftBelow extends ChapterBase {
     R.t += dt;
     // (in the tower's cage he stands at its front right, clear of the two crates it carries: zislands liftTower)
     if (!R.at && R.L) { const ry = R.L.local?.ry ?? 0, lx = 0.45, lz = 0.8; R.at = { x: R.L.top.x + lx * Math.cos(ry) + lz * Math.sin(ry), z: R.L.top.z - lx * Math.sin(ry) + lz * Math.cos(ry) }; }
-    const pose = (y, anim = 'idle') => { h.pos.set(R.at.x, y, R.at.z); h.vy = 0; h.onGround = true; h.vel?.set(0, 0); h.rig.play(anim); h.rig.update(dt, 0); h.sync(); };
+    // (on the tower he counts as off the ground: a save made on the way is put at the lift's front, Game.snapshot lastSafe)
+    const pose = (y, anim = 'idle') => { h.pos.set(R.at.x, y, R.at.z); h.vy = 0; h.onGround = R.ph === 'arrive'; h.vel?.set(0, 0); h.rig.play(anim); h.rig.update(dt, 0); h.sync(); };
     if (R.ph === 'arrive') {
       const W = WM.landing, k = Math.min(1, R.t / RIDE.arrive), y = RIDE.cageFrom * (1 - k * (2 - k));
       W.setCage(y); R.at = W.cage; pose(0.14 + y);
@@ -465,7 +467,7 @@ export class LiftBelow extends ChapterBase {
       if (R.level >= 1) {
         L.setLevel(1, true); L.setLever(false);
         this.endRide(true);
-        const F = L.front; h.pos.set(F.x, g.physics.groundAt(F.x, F.z, L.top.y + 2), F.z); h.angle = F.a; h.sync();
+        const F = L.front; h.pos.set(F.x, g.physics.groundAt(F.x, F.z, L.top.y + 2), F.z); h.angle = F.a; h.onGround = true; h.sync();
         const vash = this.speaker('ld_op');
         if (vash?.present) this.chain([['ld_op', 'zo_vash_miss']], () => g.save(false)); else g.save(false);
         return true;
