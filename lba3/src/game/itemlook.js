@@ -94,6 +94,17 @@ const LOOKS = {
     put(g, new THREE.BoxGeometry(0.036, 0.02, 0.014), b, 0.022, -0.05);
     return g;
   },
+  // KEYS-CLOVER: a small key (LBA's): a round, filled bow with a hole, a short stout shaft, two square teeth; darker,
+  // older brass than a story key's ring-bowed one
+  kc_key: () => {
+    const g = new THREE.Group(), b = M('#c8923a', { metalness: 0.7, roughness: 0.4 });
+    put(g, new THREE.CylinderGeometry(0.06, 0.06, 0.022, 18), b, 0, 0.1, 0, Math.PI / 2);
+    put(g, new THREE.CylinderGeometry(0.022, 0.022, 0.026, 12), M('#3a2a10', { roughness: 0.8 }), 0, 0.1, 0, Math.PI / 2);
+    put(g, new THREE.CylinderGeometry(0.016, 0.016, 0.16, 10), b, 0, -0.02);
+    put(g, new THREE.BoxGeometry(0.04, 0.026, 0.018), b, 0.024, -0.085);
+    put(g, new THREE.BoxGeometry(0.04, 0.026, 0.018), b, 0.024, -0.045);
+    return g;
+  },
   // a rope ladder, rolled up: the coil, its two cords and the wooden rungs
   rope: () => {
     const g = new THREE.Group(), rope = M('#b08850', { roughness: 0.95 }), wood = M('#8a5a30', { roughness: 0.8 });

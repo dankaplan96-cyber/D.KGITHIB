@@ -2867,7 +2867,7 @@ class Game {
     const own = where === 'citadel' ? SHOP : [];
     const items = () => [...own.map((s) => {
       const it = { ...s };
-      if (s.id === 'clover') it.disabled = h.clovers >= 9;
+      if (s.id === 'clover') it.disabled = h.clovers >= h.cloverMax;
       return it;
     }), ...(this.story.shops?.stock(where) || []), ...(this.story.arsenal?.shopItems(where) || [])];
     this.hud.openShop(items, (it) => {
@@ -3038,7 +3038,7 @@ class Game {
       case 'coin': h.coins += p.value || 1; this.audio.play('coin'); break;
       case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('pickLife'); break;
       case 'flask': h.mp = Math.min(h.mpMax, h.mp + Math.ceil(h.mpMax * 0.3)); this.audio.play('pickMagic'); break;   // (P29, the user 15.11: a flask found filled his magic to the top "straight to the end" — it gives a part, as a heart gives 3 of 10 life; the shop's bought flask and the rests still fill it)
-      case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('pickClover'); break;   // (the ♣ and the counter say it)
+      case 'clover': h.clovers = Math.min(h.cloverMax, h.clovers + 1); this.audio.play('pickClover'); break;   // (the ♣ and the counter say it)
       case 'crystal': {
         const n = this.crystalCount();
         this.applyCrystals(); h.hp = h.maxHp;

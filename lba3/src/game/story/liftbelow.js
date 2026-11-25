@@ -413,7 +413,7 @@ export class LiftBelow extends ChapterBase {
     if (!f.zo_blow) { this.chain([['hero', 'zo_box_gas']]); return true; }
     if (f.zo_box) return true;
     f.zo_box = true; B.setBox(true);
-    const clover = h.clovers < 9, n = BOX.kashes + (clover ? 0 : 15);
+    const clover = h.clovers < h.cloverMax, n = BOX.kashes + (clover ? 0 : 15);
     h.coins += n; if (clover) h.clovers++;
     g.audio.play('chest', B.boxAt); g.audio.play('coin');
     g.hud.toast(clover ? 'zo_toast_box' : 'zo_toast_kashes', { n }); g.hud.stats?.(h);

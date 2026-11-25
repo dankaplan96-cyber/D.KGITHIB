@@ -150,6 +150,8 @@ export class Hero extends Actor {
     this.maxHp = 10; this.hp = 10;
     this.magicLevel = 1; this.mp = 8;
     this.clovers = 2; this.coins = 0;
+    this.cloverMax = 9;   // (KEYS-CLOVER: 9 + the clover boxes found, flags kc_box_*: story/keysclover.js keeps it; every cap site reads it)
+    this.smallKeys = 0;   // (KEYS-CLOVER: the small keys held, from the kc_ flags: story/keysclover.js)
     this.hasKey = false;
     this.hasBall = false; // still in the cupboard at home
     this.shards = [false, false, false];

@@ -52,6 +52,7 @@ import { buildOtrBarRoom } from './otrbar.js';
 import { buildOtrHotelRoom } from './otrhotel.js';
 import { buildCelTempleRoom } from './celtemple.js';
 import { buildWannieMine, WM_AT } from './wanniemine.js';   // (WAVE6 H-16: the Wannies' deep seam under the Platform)
+import { KR_AT, buildKcTunnel, buildKcPump, buildKcGoats, buildKcMill } from './keyrooms.js';   // (KEYS-CLOVER: the rooms behind the small-key doors)
 import { buildTraluCaveRoom } from './tralucave.js';
 import { buildBaggageRoom } from './baggage.js';
 import { buildTavCellarRoom } from './tavcellar.js';
@@ -82,6 +83,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
 for (const [k, v] of Object.entries(HAM_AT)) AT[k] = [v.x, v.z];   // (HAMALAYI-LIFE)
 AT.pumproom = [PUMPROOM_AT.x, PUMPROOM_AT.z];   // (CAMPAIGN-2: the lane's pump room)
 for (const [k, v] of Object.entries(WM_AT)) AT[k] = [v.x, v.z];   // (WAVE6 H-16: the deep seam's three rooms)
+for (const [k, v] of Object.entries(KR_AT)) AT[k] = [v.x, v.z];   // (KEYS-CLOVER: the four rooms behind the small-key doors)
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0], ballastra: [3000, -3000], bl_arches: [3000, -3800], bl_gardens: [3000, -4600] };   // (ballastra, bl_arches, bl_gardens: EXPANSION W-1..W-3)
 const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -152,6 +154,10 @@ function groupDefs() {
   add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
   add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)
   add('wanniemine', ['wm_landing', 'wm_gallery', 'wm_blow'], buildWannieMine);   // (WAVE6 H-16: the deep landing, the deep seam, the Blow)
+  add('kc_tunnel', ['kc_tunnel'], buildKcTunnel);   // (KEYS-CLOVER K1: FunFrock's old passage under the fort)
+  add('kc_pump', ['kc_pump'], buildKcPump);   // (KEYS-CLOVER K2: Otringal's fountain pump house)
+  add('kc_goats', ['kc_goats'], buildKcGoats);   // (KEYS-CLOVER K3: Grandma's old house in Lhar)
+  add('kc_mill', ['kc_mill'], buildKcMill);   // (KEYS-CLOVER K4: Baldino's old mill room on Zeelich)
   for (const n of ISLES) if (hasIsland(n)) add('isle_' + n, ['isle_' + n], (S, P) => ({ ['isle_' + n]: buildIsle(S, P, n) }));
   return G;
 }
