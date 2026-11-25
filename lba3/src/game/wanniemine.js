@@ -438,10 +438,10 @@ function buildBlow(scene, physics) {
   const lid = new THREE.Group(); lid.position.z = -0.31; lidBase.add(lid);
   { const lm = new THREE.Mesh(new THREE.BoxGeometry(0.92, 0.12, 0.62), MAT.wood('dark')); lm.position.set(0, 0.06, 0.31); lm.castShadow = true; lid.add(lm); }
   // the gas: soft amber clouds over the vents and in the corner by the box (thin once the Blow is gone)
-  const gasM = new THREE.MeshBasicMaterial({ color: '#d89a4a', transparent: true, opacity: 0.07, depthWrite: false });
+  const gasM = new THREE.MeshBasicMaterial({ color: '#d89a4a', transparent: true, opacity: 0.05, depthWrite: false });
   gasM.userData.noShadow = true;
   const gas = new THREE.Group(); B.group.add(gas);
-  for (const [x, z, s] of [...VENTS.map(([x, z]) => [x, z, 1.6]), [6.4, -6.0, 2.0], [-1.0, -6.2, 1.8]]) for (let i = 0; i < 2; i++) { const m = new THREE.Mesh(sphere(1, 12, 8), gasM); m.position.set(x + (hash(i, x, 1) - 0.5) * 0.8, 0.5 + i * 0.6, z + (hash(i, z, 2) - 0.5) * 0.8); m.scale.set(s * 0.8, s * 0.4, s * 0.8); gas.add(m); }
+  for (const [x, z, s] of [...VENTS.map(([x, z]) => [x, z, 1.6]), [6.4, -6.0, 2.0], [-1.0, -6.2, 1.8]]) for (let i = 0; i < 2; i++) { const m = new THREE.Mesh(sphere(1, 12, 8), gasM); m.position.set(x + (hash(i, x, 1) - 0.5) * 0.8, 0.5 + i * 0.6, z + (hash(i, z, 2) - 0.5) * 0.8); m.scale.set(s * 0.85, s * 0.22, s * 0.85); gas.add(m); }
   // light: the vents' amber, the vein's warm glow, a weak cold light by the door
   const vl = VENTS.map(([x, z]) => B.light('#ff8a3a', 3.4, 9, x, 1.0, z));
   const veinL = B.light('#ffb060', 2.4, 10, 1.8, 2.4, -6.4);

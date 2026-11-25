@@ -214,8 +214,14 @@ if (ONLY.includes('E')) {
     const hp0 = B.hp; P.face(B.pos.x, B.pos.z); P.tap('KeyF', 0.05); G.step(1.4); P.settle(); return { st: B.state, hp: B.hp, hp0 }; });
   const e4t = await toasts();
   check('E: awake again; the ball thrown at it (INPUT, F) goes straight through the gas: no harm, the hint', e4.hp === e4.hp0 && e4.hp === 3 && e4t.some((s) => /straight through the gas/.test(s)), { e4, e4t });
-  await shot('wave6-12-blow-awake');
-  const e5 = await ev(() => { const G = game, h = G.hero, B = LB().blow; let t = 0, shotWindup = false; h.combat.equip('glove', true); P.release();
+  // (the pictures: its wind-up once the toasts are gone, then a fireball on the glove)
+  await ev(() => { const G = game, h = G.hero, B = LB().blow; for (let t = 0; t < 12 && !(B.state === 'windup' && B.swell > 0.75 && t > 3.6); t += 1 / 30) { G.step(1 / 30); if (h.hp < 5) h.hp = h.maxHp; if (B.state !== 'windup') P.face(B.pos.x, B.pos.z, 0.1); } });
+  await shot('wave6-12-blow-windup');
+  const e5a = await ev(() => { const G = game, h = G.hero, B = LB().blow; h.combat.equip('glove', true); P.release(); const d2 = (p) => Math.hypot(p.x - h.pos.x, p.z - h.pos.z);
+    for (let t = 0; t < 30 && !B.held && !h.dead; t += 1 / 30) { if (h.hp < 5) h.hp = h.maxHp; const inc = B.balls.find((b) => !b.held && !b.back && d2(b.p) < 3.0 && d2(b.p) > 0.8); if (inc && !h.combat.move) P.tap('KeyK', 0.03); else G.step(1 / 30); }
+    G.step(0.2); P.face(B.pos.x, B.pos.z, 0.6); return { held: !!B.held }; });
+  await shot('wave6-13-blow-caught');
+  const e5 = await ev(() => { const G = game, h = G.hero, B = LB().blow; let t = 0; h.combat.equip('glove', true); P.release();
     const d2 = (p) => Math.hypot(p.x - h.pos.x, p.z - h.pos.z);
     while (t < 240 && B.state !== 'gone' && !h.dead) {
       if (h.hp < 5) { h.hp = h.maxHp; }   // (not a test of his life: he is kept standing; burns are counted)
@@ -228,8 +234,8 @@ if (ONLY.includes('E')) {
     for (let i = 0; i < 40 && B.state !== 'gone'; i++) G.step(0.1); P.settle();
     return { t: +t.toFixed(1), st: B.state, beaten: !!G.flags.zo_blow, stats: { ...B.stats }, hp: B.hp, calm: WM.blow.gas.visible === false }; });
   const e5l = await said();
-  check('E: the fight by input: the glove catches its fireballs as they come (K) and throws them back at it (K): three hits, the Blow is gone; the vents calm, the gas thins (zo_blow)', e5.st === 'gone' && e5.beaten && e5.stats.hits === 3 && e5.stats.caught >= 3 && e5.stats.thrown >= 3 && e5.calm && has(e5l, /The vents breathe cool/), { e5, e5l });
-  await shot('wave6-13-blow-beaten');
+  check('E: the fight by input: the glove catches its fireballs as they come (K) and throws them back at it (K): three hits, the Blow is gone; the vents calm, the gas thins (zo_blow)', e5a.held && e5.st === 'gone' && e5.beaten && e5.stats.hits === 3 && e5.stats.caught >= 3 && e5.stats.thrown >= 3 && e5.calm && has(e5l, /The vents breathe cool/), { e5a, e5, e5l });
+  await shot('wave6-14-blow-beaten');
   const e6 = await ev(() => { const G = game, h = G.hero, B = WM.blow; const c0 = h.coins, k0 = h.clovers; const u = P.use(B.box.x, B.box.z, { kind: 'zo_box', near: 0.9 }); return { u: u.r, kashes: h.coins - c0, clovers: h.clovers - k0, box: !!G.flags.zo_box }; });
   check('E: the deep shift\'s strongbox in the corner (E): 40 kashes and a clover leaf', e6.u === 'used' && e6.box && e6.kashes === 40 && e6.clovers === 1, e6);
   const e7 = await ev(() => { const a = toRoom('wm_gallery'); const b = toRoom('wm_landing'); const L = WM.landing.lever; const u = P.use(L.x, L.z, { kind: 'zo_up', near: 0.9 }); for (let i = 0; i < 30 && game.trans; i++) game.step(0.1); P.settle(); return { a: a.room, b: b.room, u: u.r, room: game.room?.id, zo: zo() }; });

@@ -476,9 +476,16 @@ export class LiftBelow extends ChapterBase {
     L.level = L.target = R.level;
     if (R.ph !== 'black') {
       pose(cageY(), R.ph === 'braked' ? 'use' : 'idle');
-      // the ride's shot: from the dock's side of the tower, a little above the cage, going down with it into the gas
-      const fx = L.front.x - L.top.x, fz = L.front.z - L.top.z, fl = Math.hypot(fx, fz) || 1, ux = fx / fl, uz = fz / fl;
-      const pos = new THREE.Vector3(h.pos.x + ux * 6.5 - uz * 3.0, h.pos.y + 3.2, h.pos.z + uz * 6.5 + ux * 3.0), look = new THREE.Vector3(h.pos.x, h.pos.y + 1.0, h.pos.z);
+      // the ride's shot: from out over the gas beyond the dock's nearest edge (the decks would hide the cage from under
+      // them), a little above the cage and going down with it (worked out once: the way off the decks nearest the tower)
+      if (!R.out) {
+        const P = g.physics; let best = null;
+        const sea = (ux, uz, d) => { for (let e = 0; e <= 12; e += 1) if (P.groundAt(L.top.x + ux * (d + e), L.top.z + uz * (d + e), L.top.y + 3) > L.top.y - 6) return false; return true; };   // (open gas from here on for 12 m)
+        for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2, ux = Math.sin(a), uz = Math.cos(a); for (let d = 2; d <= 40; d += 1) { if (sea(ux, uz, d)) { if (!best || d < best.d) best = { d, ux, uz }; break; } } }
+        R.out = best || { d: 8, ux: 0, uz: -1 };
+      }
+      const O = R.out, far = O.d + 5;
+      const pos = new THREE.Vector3(L.top.x + O.ux * far + O.uz * 2.5, h.pos.y + 2.6, L.top.z + O.uz * far - O.ux * 2.5), look = new THREE.Vector3(h.pos.x, h.pos.y + 0.9, h.pos.z);
       if (!this._cam || g.camRig.override !== this._cam) { this._cam = { pos, look }; g.camRig.override = this._cam; } else { this._cam.pos.copy(pos); this._cam.look.copy(look); }
     }
     return true;

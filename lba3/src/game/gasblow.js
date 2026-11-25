@@ -45,11 +45,11 @@ function blowModel() {
     _v.multiplyScalar(1 + n); _v.y *= 0.88; p.setXYZ(i, _v.x, _v.y, _v.z);
   }
   geo.computeVertexNormals();
-  const skin = new THREE.MeshStandardMaterial({ color: '#b8a860', emissive: '#4a2a08', emissiveIntensity: 0.6, roughness: 0.35, transparent: true, opacity: 0.72, depthWrite: false });
+  const skin = new THREE.MeshStandardMaterial({ color: '#d8c47a', emissive: '#7a4a14', emissiveIntensity: 0.9, roughness: 0.35, transparent: true, opacity: 0.86, depthWrite: false });
   skin.userData.noShadow = true;
   const body = new THREE.Mesh(geo, skin); body.renderOrder = 2; g.add(body);
-  const coreM = new THREE.MeshBasicMaterial({ color: '#ff9a3a', transparent: true, opacity: 0.85 });
-  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.48, 2), coreM); core.position.set(0, -0.08, 0.05); g.add(core);
+  const coreM = new THREE.MeshBasicMaterial({ color: '#ff9a3a' });
+  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.55, 2), coreM); core.position.set(0, -0.08, 0.05); core.renderOrder = 1; g.add(core);
   const eyeM = new THREE.MeshBasicMaterial({ color: '#fff2a8' });
   for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 6), eyeM); e.scale.set(1.6, 0.45, 0.6); e.position.set(s * 0.3, 0.22, 0.86); e.rotation.z = s * 0.25; g.add(e); }
   const mouthM = new THREE.MeshBasicMaterial({ color: '#5a2a10' });
@@ -107,7 +107,7 @@ export class Blow {
     M.mouthM.color.setRGB(0.35 + hot * 0.65, 0.16 + hot * 0.78, 0.06 + hot * 0.55);
     M.coreM.color.setRGB(1, 0.55 + hot * 0.4, 0.2 + hot * 0.6);
     M.eyeM.color.set(this.state === 'asleep' ? '#8a7a40' : this.state === 'hurt' ? '#ffffff' : '#fff2a8');
-    M.skin.emissiveIntensity = this.state === 'hurt' ? 0.6 + (Math.sin(tt * 40) > 0 ? 1.2 : 0) : 0.6 + hot * 0.9;
+    M.skin.emissiveIntensity = this.state === 'hurt' ? 0.9 + (Math.sin(tt * 40) > 0 ? 1.2 : 0) : 0.9 + hot * 1.0;
     M.wisps.forEach((w, i) => { const a = tt * (0.6 + i * 0.13) + i; w.position.set(Math.sin(a) * 0.7, -0.9 - (i % 3) * 0.3 + Math.sin(tt * 1.3 + i) * 0.1, Math.cos(a) * 0.7); w.scale.setScalar(0.8 + Math.sin(tt * 2 + i) * 0.25); });
     void dt;
   }
