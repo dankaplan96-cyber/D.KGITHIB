@@ -240,7 +240,7 @@ export class Targeting {
   // what a throw along `aim` means: the lock, an enemy in the cone, or a switch / target in the cone
   // (Aim Assist Off: only a deliberate lock; nothing is picked for you)
   throwTarget(aim) {
-    if (this.lock) return this.lock;
+    if (this.lock && aim?.src !== 'plate') return this.lock;   // (#62: on a throw plate its line wins over the lock)
     const cone = this.cone();
     if (cone <= 0) return null;
     // (an enemy the ball can't get to, behind a chain-link fence, is not offered: the throw would only hit the fence)
@@ -302,17 +302,21 @@ export class Targeting {
     // the soft target is what an attack along the aim would mean right now: for the ball the very target the
     // throw will use (an enemy, a switch, the target), so the marker, the preview and the launch agree
     const ballOut = g.hero.combat?.weapon === 'ball';
-    this.soft = this.lock || this.cone() <= 0 ? null : ballOut ? this.throwTarget(aimDir) : this.pick(aimDir, COMBAT.softRange, this.cone());
-    const t = this.lock || (showSoft ? this.soft : null);
+    // (#62: on a throw plate with a lock held, the marker shows what the ball will go to along the plate's line; the
+    //  lock stays, for a strike and for when he steps off)
+    const plateBall = !!this.lock && ballOut && aimDir?.src === 'plate';
+    this.soft = (this.lock && !plateBall) || this.cone() <= 0 ? null : ballOut ? this.throwTarget(aimDir) : this.pick(aimDir, COMBAT.softRange, this.cone());
+    const t = plateBall ? this.soft : this.lock || (showSoft ? this.soft : null);
+    const locked = !!t && t === this.lock;
     this.marker.visible = !!t;
     this.bar.visible = false;
     if (t) {
       const P = t.pos || t; // (an enemy, or a switch / target point)
       const top = (t.pos ? P.y + (t.markY ?? 1.4) : P.y + 0.45) + Math.sin(g.time * 5) * 0.05;
       this.marker.position.set(P.x, top + 0.35, P.z);
-      this.marker.material.color.set(this.lock ? '#ffd23a' : '#fff4c8');
-      this.marker.material.opacity = this.lock ? 1 : 0.55;
-      if (t.maxHp && t.maxHp < 1e6 && (this.lock || t.recentHitT > 0)) {
+      this.marker.material.color.set(locked ? '#ffd23a' : '#fff4c8');
+      this.marker.material.opacity = locked ? 1 : 0.55;
+      if (t.maxHp && t.maxHp < 1e6 && (locked || t.recentHitT > 0)) {
         this.bar.visible = true; this.bar.position.set(t.pos.x, top + 0.08, t.pos.z);
         if (this.barFor !== t || this.barHp !== t.hp) this.drawBar(t);
       }
@@ -388,13 +392,19 @@ export class HeroCombat {
   // where Twinsen means to attack: the lock, the mouse cursor, the stick, or straight ahead
   aimDir(mvDir) {
     const h = this.hero, T = this.g.targeting;
+    // (AIM-PLATE: standing on a throw plate, lined up by it, a throw goes along the plate's line, in Modern as in Classic;
+    //  not the mouse's point or the camera's way: main.js aimPlate. #62, 25.11: before a held lock too — a player locked
+    //  on the Core's guardian who stepped on a plate threw at the guardian, never along the bank shot's line. The plate's
+    //  line is the ball's only: `melee` carries the lock's way for a strike, a shot, the pulse or a tool (mAim, below))
+    const pl = this.g.aimPlate?.();
+    if (pl) {
+      const out = { x: Math.sin(pl.a), z: Math.cos(pl.a), src: 'plate' };
+      if (T?.lock) { const a = h.angleTo(T.lock); out.melee = { x: Math.sin(a), z: Math.cos(a), src: 'lock' }; }
+      return out;
+    }
     if (T?.lock) { const a = h.angleTo(T.lock); return { x: Math.sin(a), z: Math.cos(a), src: 'lock' }; }
     // Classic (LBA2): Twinsen throws and strikes the way he faces; the arrows turn him (no mouse aim)
     if (this.g.settings?.controls === 'classic') return { x: Math.sin(h.angle), z: Math.cos(h.angle), src: 'facing' };
-    // (AIM-PLATE: standing on a throw plate, lined up by it, a Modern throw goes along the plate's line, as Classic's does;
-    //  not the mouse's point or the camera's way: main.js aimPlate)
-    const pl = this.g.aimPlate?.();
-    if (pl) return { x: Math.sin(pl.a), z: Math.cos(pl.a), src: 'facing' };
     const m = this.g.mouseAim?.();
     if (m) { const dx = m.x - h.pos.x, dz = m.z - h.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) return { x: dx / d, z: dz / d, src: 'mouse' }; }
     // the cursor is still the aim device (on Twinsen himself, or the ray missed): keep the mouse aim it gave last,
@@ -416,6 +426,7 @@ export class HeroCombat {
     const blocked = opts.blocked; // acting, hurt, hiding, behaviour wheel: presses are dropped, not stored
     const aim = this.aimDir(mvDir);
     this.lastAim = aim;
+    const mAim = aim.melee || aim;   // (#62: a strike, a shot, the pulse, a tool keep the lock's way on a throw plate)
 
     // presses go into the buffer
     if (!blocked) {
@@ -474,7 +485,7 @@ export class HeroCombat {
     }
     if (this.holding === 'heavy' && !attackDown) {
       const ready = this.heavyReady; this.holding = null; this.heavyReady = false;
-      if (ready) this.startMove('heavy', aim);
+      if (ready) this.startMove('heavy', mAim);
       return out;
     }
     if (this.buf.peek('attack', this.now)) {
@@ -483,24 +494,24 @@ export class HeroCombat {
         else if (input.pressed('attack')) { this.buf.take('attack', this.now); this.notReady(); }
       } else if (w === 'pulse') {
         this.buf.take('attack', this.now);
-        if (this.pulseCool > 0) this.notReady(); else this.firePulse(aim);
+        if (this.pulseCool > 0) this.notReady(); else this.firePulse(mAim);
       } else if (SHOOT.has(w)) {
         // the blowgun, the laser pistol, the lightning spell (weapons.js): a short planted shot
         this.buf.take('attack', this.now);
         if (this.shotCool > 0) { if (input.pressed('attack')) this.notReady(); }
-        else if (g.weapons?.fire(w, aim)) { const D = g.weapons.def(w); this.shotCool = D.cool; this.pulseT = D.lock; }
+        else if (g.weapons?.fire(w, mAim)) { const D = g.weapons.def(w); this.shotCool = D.cool; this.pulseT = D.lock; }
         else this.notReady();
       } else if (TOOLS.has(w)) {
         // Arthur's pocket set (a squeal), Bram's pump lance (a jet), Ilka's fork (a note), the Esmer line (a cast), the heat
         // flask (a blast): tools.js keeps their cooldowns, the tank and the heat
         this.buf.take('attack', this.now);
         const T = g.gadgets?.tools;
-        if (T?.fire(w, aim)) this.pulseT = w === 'lance' ? 0.3 : 0.35;
+        if (T?.fire(w, mAim)) this.pulseT = w === 'lance' ? 0.3 : 0.35;
         else if (input.pressed('attack')) this.notReady();
       } else {
         this.buf.take('attack', this.now);
         this.pressT = this.now;
-        this.startMove(this.nextCombo(w), aim);
+        this.startMove(this.nextCombo(w), mAim);
       }
     }
     return out;
@@ -598,7 +609,7 @@ export class HeroCombat {
       this.buf.take('attack', this.now);
       this.comboT = COMBAT.comboWindow;
       this.move = null;
-      this.startMove(this.nextCombo(w), this.lastAim || { x: Math.sin(h.angle), z: Math.cos(h.angle), src: 'facing' });
+      this.startMove(this.nextCombo(w), this.lastAim?.melee || this.lastAim || { x: Math.sin(h.angle), z: Math.cos(h.angle), src: 'facing' });
       return;
     }
     // late recovery: walking away cancels the last of it

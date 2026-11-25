@@ -7,8 +7,9 @@
 //   C  the throw plates (the Core's pylons, base-15): on a plate, lined up by it, a Modern throw with the mouse pointing
 //      elsewhere goes along the plate's line and converts its pylon (before: along the mouse); Classic the same; off the
 //      plate the mouse aims as ever; the plate's hint names the arrow
+//      C5 (#62): on a plate with the guardian locked, the ball still goes along the plate's line; the lock is kept
 //   D  the see-through silhouette: off while a talk's shot is up, back in play
-// Pictures: captures/tester-fixes/ (SHOTS=0 none). SERVE=1: this checkout's files without an http.server.
+// ONLY=ABCD runs parts. Pictures: captures/tester-fixes/ (SHOTS=0 none). SERVE=1: this checkout's files without an http.server.
 import { launch, open, menu, checker, URL0 } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -19,12 +20,14 @@ const OUT = fileURLToPath(new URL('../captures/tester-fixes/', import.meta.url))
 const ORIGIN = new URL(URL0).origin;
 const SHOTS = process.env.SHOTS !== '0';
 if (SHOTS) fs.mkdirSync(OUT, { recursive: true });
-let browser, page, context;
+let browser, page, context, r;
 const ev = (f, a) => page.evaluate(f, a);
 const shot = async (n) => { if (!SHOTS) return; try { await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(OUT, n + '.jpg'), type: 'jpeg', quality: 82, timeout: 240000 }); console.log('capture ' + n); } catch (e) { console.log('capture FAILED ' + n + ': ' + e.message.split('\n')[0]); } };
 const save = (name) => { const j = JSON.parse(fs.readFileSync(path.join(FIX, name + '.save.json'), 'utf8')); for (const o of j.origins || []) o.origin = ORIGIN; return j; };
 
+const ONLY = process.env.ONLY || 'ABCD';
 // ---------------------------------------------------------------- A. the pause menu's Benchmark buttons
+if (ONLY.includes('A')) {
 ({ browser, page } = await launch({ width: 1366, height: 768 }));
 await open(page, '?nocine');
 await menu(page, 'new');
@@ -34,7 +37,7 @@ const pauseLook = () => ev(() => {
   const out = { screen: G.screen, shown: tools.filter((b) => b.offsetParent !== null).map((b) => b.dataset.act), stops: G.menuButtons().map((b) => b.dataset.act), dev: document.body.classList.contains('dev') };
   G.act('resume'); return out;
 });
-let r = await pauseLook();
+r = await pauseLook();
 check('A1 the pause menu (no flag): no Benchmark button shown, none among the arrows\' stops; Resume … Save & Quit as before', r.screen === 'pause' && r.shown.length === 0 && !r.stops.some((a) => /^bench/.test(a)) && r.stops[0] === 'resume' && r.stops.includes('quit'), r);
 await shot('a-pause-player');
 await browser.close();
@@ -46,7 +49,9 @@ check('A2 with ?bench: the three Benchmark buttons shown and reachable by the ar
 await shot('a-pause-bench-flag');
 await browser.close();
 
+}
 // ---------------------------------------------------------------- B. Quit Game, clicked the moment it is shown
+if (ONLY.includes('B')) {
 ({ browser, context, page } = await launch({ width: 1366, height: 768 }));
 await context.addInitScript(() => { window.__quits = 0; window.desktop = { quit: () => { window.__quits++; }, fullscreen: () => {}, platform: 'win32', dev: false }; });
 await page.goto(URL0 + '?nocine', { waitUntil: 'commit', timeout: 180000 });
@@ -71,6 +76,7 @@ check('B1 the title\'s buttons are never on the page while the loading screen is
 check('B2 one click on Quit Game the moment it is shown quits, once (the desktop: "a second later one click works")', !!clicked && r.quits === 1 && r.screen === 'title', r);
 await browser.close();
 
+}
 // ---------------------------------------------------------------- C. the throw plates (the Core, base-15)
 async function bootCore() {
   ({ browser, page } = await launch({ width: 1366, height: 768, storageState: save('base-15') }));
@@ -78,29 +84,34 @@ async function bootCore() {
   await ev(() => {
     P.settle();
     window.TP = {
-      plate: () => game.story.cur.plates()[0],
+      plate: (k = 0) => game.story.cur.plates()[k],
       target: (i) => game.room.ballTargets.find((x) => x.pylon === i),
       // stand on the plate, still: it centres him and turns him to its line (chapter3.js); the mouse (Modern) pointed at
       // the screen's top-left corner, far off the plate's line; then the ball key, as a player
-      throwFrom(scheme, { mouse = true, plateOff = false } = {}) {
-        const G = game, h = G.hero, I = G.input, p = TP.plate(), tg = TP.target(p.i);
+      // (#62: lock — the guardian locked (L) just before the throw: the plate's line still wins for the ball; k: which plate)
+      throwFrom(scheme, { mouse = true, plateOff = false, lock = false, k = 0 } = {}) {
+        const G = game, h = G.hero, I = G.input, p = TP.plate(k), tg = TP.target(p.i);
         G.settings.controls = scheme; G.applySettings();
         const x = p.x + (plateOff ? 2.2 : 0), z = p.z;
         h.pos.set(x, G.physics.groundAt(x, z, h.pos.y + 2), z); h.angle = p.a + (plateOff ? 0.5 : 0.35); h.vel?.set?.(0, 0); h.hp = h.maxHp; h.invuln = 5;
         G.step(0.8);
         if (mouse) { const M = I.mouse; M.inside = true; M.x = 40; M.y = 40; M.lastMove = performance.now(); I.lastDevice = 'kbd'; }
         G.ball.state = 'idle';
+        const foe = lock ? G.enemies.find((e) => e.alive && e.present) : null;
+        if (foe) { G.targeting.lock = foe; G.step(1 / 30); }
+        const lockA = foe ? Math.atan2(foe.pos.x - h.pos.x, foe.pos.z - h.pos.z) : null;
         const aim = h.combat.aimDir(null), lined = Math.abs(Math.atan2(Math.sin(h.angle - p.a), Math.cos(h.angle - p.a)));
         const ma = G.mouseAim?.(), mouseA = ma ? Math.atan2(ma.x - h.pos.x, ma.z - h.pos.z) : null;
         P.tap('KeyF', 0.05);
         let launchA = null;
         for (let t = 0; t < 2.2; t += 1 / 30) { G.step(1 / 30); const b = G.ball; if (launchA == null && b.state === 'fly' && b.vel) launchA = Math.atan2(b.vel.x, b.vel.z); if (tg.done) break; }
         const d = (a) => (a == null ? null : +Math.abs(Math.atan2(Math.sin(a - p.a), Math.cos(a - p.a))).toFixed(3));
-        return { scheme, onPlate: !plateOff, lined: +lined.toFixed(3), aimSrc: aim.src, aimOff: d(Math.atan2(aim.x, aim.z)), mouseOff: d(mouseA), launchOff: d(launchA), converted: !!tg.done };
+        return { scheme, onPlate: !plateOff, lined: +lined.toFixed(3), aimSrc: aim.src, aimOff: d(Math.atan2(aim.x, aim.z)), mouseOff: d(mouseA), launchOff: d(launchA), converted: !!tg.done, ...(lock ? { foe: foe?.def?.id || foe?.type || !!foe, lockOff: d(lockA), lockKept: !!foe && G.targeting.lock === foe } : {}) };
       },
     };
   });
 }
+if (ONLY.includes('C')) {
 await bootCore();
 const before = await ev(() => { const keep = game.aimPlate; game.aimPlate = () => null; const o = TP.throwFrom('modern'); game.aimPlate = keep; return o; });
 const off = await ev(() => TP.throwFrom('modern', { plateOff: true }));
@@ -111,13 +122,20 @@ await browser.close();
 await bootCore();
 const classic = await ev(() => TP.throwFrom('classic', { mouse: false }));
 await browser.close();
+// (#62: a fresh boot, the first plate: a pylon converted already changes which plates line him up)
+await bootCore();
+const locked = await ev(() => TP.throwFrom('modern', { lock: true }));
+await browser.close();
 console.log('C before (Modern, the plate rule off):', JSON.stringify(before));
 check('C1 Modern on the Core\'s first plate, the mouse pointing elsewhere: the throw goes along the plate\'s line (within 0.05 rad) and converts its pylon (before: along the mouse, no pylon)', modern.lined < 0.03 && modern.aimOff < 0.05 && modern.converted && !before.converted && before.aimSrc === 'mouse', { before, modern });
 check('C2 Classic on the same plate (a fresh boot): along the plate\'s line, the pylon converted', classic.lined < 0.03 && classic.aimOff < 0.05 && classic.converted, classic);
+check('C5 (#62) Modern on the first plate (a fresh boot) with the guardian locked (L) and the mouse elsewhere: the ball goes along the plate\'s line (not at the lock, ≥ 0.3 rad off it) and converts its pylon; the lock is still held (a strike keeps it)', locked.lined < 0.03 && locked.aimSrc === 'plate' && locked.aimOff < 0.05 && locked.launchOff < 0.1 && locked.lockOff > 0.3 && locked.converted && locked.lockKept, locked);
 check('C3 off the plate (2.2 m aside) the Modern mouse aims as ever', off.aimSrc === 'mouse' && !off.onPlate, off);
 check('C4 the plate\'s hint says how: stand still, throw, the ball goes along its arrow', /still/.test(hint) && /arrow/.test(hint), hint);
 
+}
 // ---------------------------------------------------------------- D. the silhouette in a talk's shot
+if (ONLY.includes('D')) {
 ({ browser, page } = await launch({ width: 1366, height: 768 }));
 await open(page, '?nocine');
 await menu(page, 'new');
@@ -136,4 +154,5 @@ await shot('d-talk-shot-no-silhouette');
 const back = await ev(() => { P.settle(); game.step(0.3); return { state: game.state, sil: game.hero.rig.silhouette?.material.visible }; });
 check('D1 the see-through silhouette is off while a talk\'s shot is up (Zoé spoken to by the key) and back on in play', r.has && r.play0 === true && r.talk.state === 'dialog' && r.talk.sil === false && back.state === 'play' && back.sil === true, { ...r, back });
 await browser.close();
+}
 process.exit(done());
