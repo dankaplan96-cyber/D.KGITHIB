@@ -448,7 +448,9 @@ export class Wave5 extends ChapterBase {
   meleeHit(o) {
     const S = W5.seam, g = this.game, f = this.f;
     if (!S || f.w5s_broke || this.here() !== 'isle_undergas' || !this.seamOpen() || o.hitSet.has(S)) return false;
-    if (!o.inArc(S.front.x, S.front.z, 0.9)) return false;
+    // (the front, or the crack behind it: a step into the swing can bring him right up to the stones, where the front's
+    //  point is at his side and the swing passes it by)
+    if (!o.inArc(S.front.x, S.front.z, 0.9) && !o.inArc(S.crack.x, S.crack.z, 0.9)) return false;
     o.hitSet.add(S);
     if (!o.move?.glove) { g.impact(S.front.x, g.hero.pos.y + 1, S.front.z, 'stone', 'blocked'); g.hud.toast('w5s_thud'); return true; }
     f.w5s_broke = true; S.set(true, false);

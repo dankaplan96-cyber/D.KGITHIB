@@ -196,9 +196,9 @@ if (ONLY.includes('E')) {
   const e7l = await said();
   const e7v = await vis();
   check('E: Pippa (TALK): "Take the cart … then back here"; 10 kashes, no leaf (option A); her goods by her stall beside the chalked crate; no stock at the depot shelter; the pier spot empty; the journal\'s section done', e7.k === 'talked' && e7.done && e7.home && e7.dc === 0 && e7.dk === 10 && e7.j?.every(Boolean) && has(e7l, /then back here/) && e7v.stallStock && e7v.stall && !e7v.shelter && !e7v.crate, { e7, e7l, e7v });
-  const e8 = await ev(() => { const c0 = game.hero.clovers, k0 = game.hero.coins; P.talk('pippa'); P.settle(); P.talk('pippa'); P.settle(); return { dc: game.hero.clovers - c0, dk: game.hero.coins - k0, after: !!game.flags.w7m_piAfter }; });
+  const e8 = await ev(() => { const c0 = game.hero.clovers, k0 = game.hero.coins; P.talk('pippa'); P.settle(); P.talk('pippa'); P.settle(); P.talk('pippa'); P.settle(); return { dc: game.hero.clovers - c0, dk: game.hero.coins - k0, after: !!game.flags.w7m_piAfter }; });
   const e8l = await said();
-  check('E: Pippa twice more (TALK): her after line ("My stock\'s back"), then her own ending line; no second reward (completed once)', e8.after && e8.dc === 0 && e8.dk === 0 && has(e8l, /My stock's back/) && has(e8l, /half price/) && !has(e8l, /Take the cart/), { e8, e8l });
+  check('E: Pippa three times more (TALK): her after line ("My stock\'s back"), wave 8\'s thanks (an apple, once), then her own ending line; no second reward (completed once)', e8.after && e8.dc === 0 && e8.dk === 0 && has(e8l, /My stock's back/) && has(e8l, /half price/) && !has(e8l, /Take the cart/), { e8, e8l });
   const e9 = await ev(() => { const k = P.talk('tim', { run: true }); P.settle(); return { k: k.r, after: !!game.flags.w7m_timAfter, tim: at('tim') }; });
   const e9l = await said();
   check('E: Tim (TALK): they wheeled it all back to the stall (not up to a shelter)', e9.k === 'talked' && e9.after && has(e9l, /back to the stall/) && !has(e9l, /wheeled the blankets up/), { e9, e9l });
