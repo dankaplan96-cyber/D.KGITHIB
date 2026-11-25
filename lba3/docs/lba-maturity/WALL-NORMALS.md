@@ -73,8 +73,10 @@ moves the light 2.5× as much. `?wnscale=` compares (1 = the old weight). Nothin
   trims): its blocks recorded as the generator draws them (each row its own height), a flat face with a soft bevel into
   the joints. **`zrib`** (zeelich.js `ribTex`, Zeelich's corrugated sheds and the Grand Hall's flanks): eight rounded ribs
   to the tile, registered from zeelich.js (`registerWallTexture`, for textures drawn outside makeTextures). Both with the
-  shade's ambient occlusion (the ribs' troughs only a shade darker). **On by default** with the others; `?wallnormals=0`
-  the old look, by name `?wallnormals=stone` / `zrib`.
+  shade's ambient occlusion (the ribs' troughs only a shade darker). **Off by default** (order 70.2, 25.11: Zeelich and
+  the islands weren't in the user's "everything" pick; the dressed stone is Citadel's trims too, so they stay flat with
+  it): `?wallnormals=all` turns them on with the other three, or by name, e.g.
+  `?wallnormals=fortStone,rubbleHouse,rubble,stone,zrib`. Before/after from the play camera in `captures/hw-70/`.
 - Not given relief: Zeelich's stucco (`plasterWall`, smooth by design), the granite (the ground's and cliffs' strata),
   the paving and kerbs.
 - Draw calls (one frame where the save stands, a count): Zeelich (base-05) 103 → 106; Citadel (base-03) 409 → 429 for all
