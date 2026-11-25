@@ -54,7 +54,7 @@ const helpers = () => ev(() => {
   window.tp = (x, z, y = null) => { const G = game, h = G.hero; h.pos.set(x, y ?? G.physics.groundAt(x, z, 60), z); h.onGround = true; h.vy = 0; h.vel?.set(0, 0); G.camRig.snap?.(); G.step(0.2); P.settle(); };
   window.D = () => game.story.depth;
   // (a walker on his round can step away as E is pressed: a player tries again, three times at most)
-  window.talk = (id) => { let r; for (let k = 0; k < 3; k++) { r = P.talk(id); if (r.r === 'talked') break; game.step(1.0); } return r; };
+  window.talk = (id) => { let r; for (let k = 0; k < 4; k++) { r = P.talk(id); if (r.r === 'talked' && (!r.to || r.to === id)) break; game.step(1.0); } return r; };   // (a passer-by's remark is not this talk: Garn walks a round and a bee crossed in front of him after the merge with waves 4/6)
   window.items = () => game.story.items().map((i) => i.id);
   window.waitIdle = (s = 8) => { const G = game, d = D(); for (let t = 0; t < s && (d.ht?.turnT > 0 || d.st?.rollT > 0 || d.climb || G.hero.actT > 0 || G.gadgets.tools.zip || G.gadgets.tools.cord); t += 0.1) { if (G.state !== 'play') P.settle(); G.step(0.1); } P.settle(); };
   window.pick = (flag, s = 6) => { const G = game; for (let i = 0; i < s * 10 && G.flags[flag]; i++) { if (G.state !== 'play') P.settle(); G.step(0.1); const p = G.pickups.list.find((q) => q.owe === flag); if (p && i > 8) P.go(p.pos.x, p.pos.z, { tol: 0.3, maxT: 6 }); } P.settle(); return !G.flags[flag]; };
