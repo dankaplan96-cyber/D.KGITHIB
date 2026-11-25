@@ -1236,6 +1236,9 @@ export function playOpening(story, cut = openingCut()) {
     g.exitRoom({ ...HP(-80, -4), a: 0 }, true, true);
     cine.focus = harbourFocus;
     book.visible = false;
+    // (the user, 25.11, a picture of the title over the pier: "here is Twinsen, that's what I meant": exitRoom stands the
+    //  hero at the harbour, in the shot. He is at home while the camera is at the harbour, as in the film's own cut)
+    put(tw, twSpot.x, twSpot.z, 0, 'tinker');
     play(tw, 'tinker'); look(tw, null);   // (he goes to the lamp under the dip at old 29 s, where the film puts him)
     hold(TB.screwdriver, tw, [0, -0.05, 0.02], [-0.3, 0, Math.PI / 2]);
     tipLocal.set(-0.23, 0.016, 0).applyEuler(sdv.rotation).add(sdv.position); axisLocal.set(-1, 0, 0).applyEuler(sdv.rotation).normalize();
