@@ -1,0 +1,79 @@
+== try 1 ch2 (base-03): hp 10/10 mp 7
+the depot valve at -68.0 -71.4 open false
+[0.2] at -62.6,11.0 hp 10; near: ; prompt ""
+[1.9] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS+KeyA cam -0.01,0.88
+[6.9] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS cam -0.13,0.87
+[10.2] at -55.4,0.3 hp 10; near: ; prompt ""
+[12.0] plan 15 pts, wp 1 → -45.1,-13.8 keys KeyS+KeyA cam -0.13,0.87
+[17.1] plan 17 pts, wp 1 → -50.2,-7.6 keys KeyS+KeyD cam -0.13,0.87
+[20.2] at -46.9,-10.3 hp 10; near: ; prompt ""
+[22.1] plan 17 pts, wp 2 → -38.6,-20.4 keys KeyS+KeyA cam -0.13,0.87
+[27.2] plan 15 pts, wp 1 → -38.5,-20.7 keys KeyS cam -0.13,0.86
+[30.3] at -37.1,-23.9 hp 10; near: ; prompt ""
+[32.2] plan 15 pts, wp 1 → -34.3,-28.3 keys KeyS+KeyA cam -0.13,0.87
+[37.3] plan 15 pts, wp 4 → -41.9,-43.9 keys KeyS+KeyD cam -0.28,0.82
+[40.3] at -37.6,-38.0 hp 10; near: ; prompt ""
+[42.4] plan 10 pts, wp 2 → -43.6,-48.4 keys KeyS+KeyD cam -0.27,0.81
+[47.4] plan 9 pts, wp 1 → -48.0,-53.7 keys KeyS cam 0.28,0.70
+[50.3] at -47.8,-53.0 hp 10; near: drone2 patrol 28.1, guard1 patrol 32.5, drone1 patrol 37.0, gdog1 guard 37.3; prompt ""
+[52.5] plan 7 pts, wp 1 → -62.6,-69.0 keys KeyS+KeyD cam -0.13,0.87
+[57.6] plan 7 pts, wp 1 → -62.8,-71.0 keys KeyS+KeyD cam -0.13,0.87
+[60.4] at -59.3,-56.4 hp 10; near: gdog1 guard 18.3, drone1 patrol 19.1, drone2 patrol 23.9, guard1 patrol 24.7; prompt "E Read"
+[62.6] plan 7 pts, wp 1 → -62.8,-71.0 keys KeyS cam -0.13,0.87
+[67.7] plan 7 pts, wp 1 → -62.7,-72.7 keys KeyS cam -0.13,0.87
+[70.5] at -64.4,-73.3 hp 10; near: drone2 patrol 7.2, gdog1 guard 7.2, guard1 patrol 10.3, drone1 patrol 16.4; prompt "E Read"
+[71.7] go → there
+[77.3] E at the valve; open false
+[77.4] plan 6 pts, wp 1 → -69.8,-73.6 keys KeyS cam 0.88,-0.00
+[77.6] go → stop
+[80.2] go → there
+[83.9] E at the valve; open false
+[83.9] at -66.0,-72.7 hp 10; near: guard1 alerted 1.7, drone2 alerted 6.6, gdog1 warn 9.1, drone1 alerted 13.9; prompt "E Read"
+[83.9] go → threat
+[83.9] fight: hp 10 mp 6; guard1 alerted 1.7m, drone2 alerted 6.6m, gdog1 warn 9.1m, drone1 alerted 13.9m; throws 0
+[86.0] HIT hp 10→9 BOLT, nearest guard:guard1 (recover, 2.4 m)
+[88.4] HIT hp 9→8 BOLT, nearest gdog:gdog1 (chase, 2.6 m)
+[88.9] fight: hp 8 mp 4; gdog1 windup 2.3m, guard1 aim 2.8m, drone2 chase 5.3m, drone1 chase 8.4m; throws 2
+[90.7] HIT hp 8→7 BOLT, nearest guard:guard1 (chase, 2.7 m)
+[94.3] fight: hp 7 mp 0; guard1 chase 3.3m, drone2 chase 3.5m, drone1 chase 5.6m; throws 6
+[95.6] HIT hp 7→6 BOLT, nearest guard:guard1 (chase, 2.6 m)
+[97.9] HIT hp 6→5 BOLT, nearest guard:guard1 (chase, 2.5 m)
+[99.4] fight: hp 5 mp 0; guard1 recover 2.8m, drone2 chase 5.4m, drone1 windup 6.0m; throws 11
+[100.5] HIT hp 5→4 BOLT, nearest guard:guard1 (chase, 2.7 m)
+[103.5] HIT hp 4→3 BOLT, nearest guard:guard1 (chase, 2.9 m)
+[104.8] fight: hp 3 mp 0; drone2 chase 5.5m, drone1 windup 5.9m; throws 19
+[105.8] HIT hp 3→2 BOLT, nearest drone:drone1 (chase, 6.0 m)
+[107.8] HIT hp 2→1  nearest drone:drone2 (chase, 6.0 m)
+[109.0] HIT hp 1→0  nearest drone:drone1 (chase, 6.0 m)
+[109.9] fight: hp 0 mp 0; drone2 chase 6.0m, drone1 chase 6.0m; throws 23
+[112.6] HIT hp 10→9 BOLT, nearest drone:drone2 (chase, 6.0 m)
+[114.0] HIT hp 9→8 BOLT, nearest drone:drone2 (windup, 6.0 m)
+[115.0] HIT hp 8→7 BOLT, nearest drone:drone2 (chase, 6.0 m)
+[115.0] fight: hp 7 mp 6; drone2 chase 6.0m, drone1 windup 6.0m; throws 27
+[116.1] HIT hp 7→6 BOLT, nearest drone:drone2 (windup, 6.0 m)
+[117.4] HIT hp 6→5 BOLT, nearest drone:drone2 (chase, 6.0 m)
+[118.5] HIT hp 5→4 BOLT, nearest drone:drone2 (windup, 6.0 m)
+[119.8] HIT hp 4→3 BOLT, nearest drone:drone2 (chase, 6.0 m)
+[120.1] fight: hp 3 mp 5; drone2 chase 6.0m, drone1 windup 6.0m; throws 29
+[120.9] HIT hp 3→2 BOLT, nearest drone:drone2 (windup, 6.0 m)
+[122.1] HIT hp 2→1 BOLT, nearest drone:drone2 (chase, 5.9 m)
+[123.3] HIT hp 1→0 BOLT, nearest drone:drone2 (windup, 6.0 m)
+[125.3] fight: hp 10 mp 8; drone2 chase 6.0m, drone1 chase 6.0m; throws 33
+[127.1] fight → {"r":"clear","throws":35,"dodges":3}
+[127.2] at -67.0,-69.2 hp 10; near: ; prompt "E Turn"
+[127.2] go → there
+[130.4] E at the valve; open false
+[130.4] go → there
+[133.6] E at the valve; open false
+[133.6] go → there
+[136.9] E at the valve; open false
+[136.9] go → there
+[140.1] E at the valve; open false
+[140.1] at -67.2,-69.5 hp 10; near: ; prompt "E Turn"
+[140.1] go → there
+[143.3] E at the valve; open false
+[143.3] go → there
+[146.5] E at the valve; open false
+[146.5] go → there
+[149.7] E at the valve; open true
+SUMMARY {"try":1,"result":"valve open","hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":149.8,"hits":20,"byKind":{"bolt":18,"drone":2},"enemiesSeen":4,"beaten":3}
