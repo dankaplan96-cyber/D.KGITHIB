@@ -2176,7 +2176,7 @@ const ZH_BAND_BIG = { ...ZH_BAND_BARE, ro: 0.014, rl: 0.019, off: 0.004, lift: 0
 // at the sides, down to the nape behind) and 1 a few centimetres above it, so the face, brows, lashes, earrings, neck
 // and body are not touched and the reshaped skull runs into the kept skin without a step. Behind and below, the target
 // keeps clear of the neck (a soft union with a cylinder round it), so the nape still covers the neck's top.
-// ?zoehead=almond-s (default since P131, 25.11) | twinsen (the default before) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison) | ZOE-HEAD-2's
+// ?zoehead=almond-m (default since P134, 25.11) | almond-s (P131's, v168–v169) | twinsen (the default before) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison) | ZOE-HEAD-2's
 // tall | tall-long | egg (below, ZOE_HEADS). The
 // lock and the tie move with the crown (zoeHair).
 const ZH_TW = { ax: 0.15192, a: [0.13867, 0.15100], ang: [-155.41, -65.41], off: [0.01433, -0.14902] };
@@ -2214,13 +2214,16 @@ const ZOE_HEADS = {
   // than hers: ZH_CHIN, as ZOE-HEAD-2's tall-long)
   almond: { egg: ZH_EGG.almond, tie: 0 },
   'almond-s': { egg: ZH_EGG.almond, tie: 0, mix: { of: { k: 0.71, kx: 0.69 }, a: 0.5 } },
+  // (almond-m: three quarters of the way — the user's pick 25.11 on the desktop: almond-s "too round", the full almond and
+  //  almond-chin "not wow")
+  'almond-m': { egg: ZH_EGG.almond, tie: 0, mix: { of: { k: 0.71, kx: 0.69 }, a: 0.75 } },
   'almond-chin': { egg: ZH_EGG.almond, tie: 0, chin: ZH_CHIN },
 };
 export const ZOE_HEAD = (() => {
   let s = '';
   try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehead')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHead || ''; } catch { /* no storage */ }
   s = String(s).trim().toLowerCase();
-  return s === 'current' || ZOE_HEADS[s] ? s : 'almond-s';   // (P131, the user 25.11: almond-s, beside LBA2's own model; ?zoehead=twinsen is the head before)
+  return s === 'current' || ZOE_HEADS[s] ? s : 'almond-m';   // (P134, the user 25.11 on the desktop: almond-m, three quarters to the almond; ?zoehead=almond-s is v168's, twinsen the head before)
 })();
 // the band the weight rises over (y from, y to, m) by the angle round the head from the front (as the hairline's)
 // (the brows end at 50°, the earrings hang at 100–111° below 1.77 m; behind them it reaches down to the head's underside:
