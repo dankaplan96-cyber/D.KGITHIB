@@ -7,21 +7,21 @@
 //     gives it (then says what the chapter has her say). An older save past that point: on any later talk with her.
 //     Lesson: her old sample niche at the bottom of the dig, beside the warm crack: a crust of warm crystal over a
 //     hollow (a strike cracks it), a sleeping crystal on its ledge (a second strike, once the fork is quiet again,
-//     wakes it as a lamp), her old tin in its light (a clover, or 10 kashes with nine; once). Fights: the dig's mites.
+//     wakes it as a lamp), her old tin in its light (10 kashes; once). Fights: the dig's mites.
 //     Later: the crystal galleries (chapter 11): a slab with a stuck crystal wheel; struck, it turns and the slab sinks
 //     (20 kashes Vesk's crew left; once).
 //   The Esmer line (chapter 3 on, Nara's case on Zeelich's street, 25 kashes; chapter 9 on, her gift after her stamp if
 //     it was never bought). Lesson: the old cloud canal at the island's edge nearest her case: a mooring rock across a
 //     gap of cloud (no walk, no jump, no hop-pack crosses the cloud sea), a cord ring on an arch at each side; from the
-//     rock a cargo crate on a further rock is in the line's reach (it comes to his feet and cracks open: a clover and
-//     12 kashes; once). Later: a ring hung on a davit at the old mill's gallery: up in one pull (the stair-stones stay).
+//     rock a cargo crate on a further rock is in the line's reach (it comes to his feet and cracks open: 22
+//     kashes; once). Later: a ring hung on a davit at the old mill's gallery: up in one pull (the stair-stones stay).
 //     Safety: standing on the mooring rock without the line (an odd save) puts him back on the shore.
 //   The heat flask (chapter 6, The Pass: Tashi, Lhar's smith, built it from Baldino's radioed drawing round a project
 //     heat cell; once Yorna has told of the frozen winch; also in chapter 7). Heat sources: the steam crack by Lhar's
 //     falls, the project heat post once it runs, the monks' brazier in the monastery yard, the glacier vent once open.
 //     Lesson: the frozen winch: heat let out at its ice thaws it (the chapter's own thaw follows: pass.js thawT) — the
 //     other way to the fuse and the kite. Later: a chest frozen into the ice by the monastery yard wall (the brazier
-//     beside it): heat frees it (a clover and 10 kashes; once). Fights: the ice mites at the lift (double damage).
+//     beside it): heat frees it (20 kashes; once). Fights: the ice mites at the lift (double damage).
 // Nothing on the main path needs any of them; each is optional where the old arsenal is.
 import * as THREE from 'three';
 import { crystalMats, crystalGem, addGem, linkedCore, asShell } from '../crystallook.js';
@@ -30,6 +30,8 @@ import { MAT, rbox, cyl, sphere, torus, crate, canvasTex, Kit } from '../props.j
 import { rockGeometry } from '../vegetation.js';
 import { FLASK } from '../tools.js';
 import { WATER_FLOOR } from '../../engine/physics.js';
+// CLOVER-BALANCE option A (the user, 25.11): the cloud-canal crate, Ilka's tin and the frozen chest pay kashes, no clover leaf
+export const KIT2B_KASHES = { crate: 22, dtin: 10, chest: 20 };
 import '../text/kit2b.js';
 
 export const LINE_PRICE = 25;
@@ -397,15 +399,8 @@ export class Kit2b extends ChapterBase {
     const g = this.game, h = g.hero, C = this.canal, p = C.crateG.getWorldPosition(new THREE.Vector3());
     C.crateG.visible = false;
     g.audio.play('break'); g.particles.burst(p.x, p.y + 0.3, p.z, '#8a6430', 22, 3.2);
-    const n = this.luck(12);
-    this.chain([['hero', 'e2b_crate']], () => { if (n === 12) g.hud.toast('toast_clover_found'); g.hud.toast('a_toast_kashes', { n }); g.hud.stats?.(h); g.save(false); });
-  }
-  // a clover and some kashes (with nine clovers already: 10 kashes more instead of the clover); the kashes given
-  luck(kashes) {
-    const h = this.game.hero;
-    if (h.clovers >= h.cloverMax) { h.coins += kashes + 10; return kashes + 10; }
-    h.clovers += 1; h.coins += kashes;
-    return kashes;
+    const n = KIT2B_KASHES.crate; h.coins += n;
+    this.chain([['hero', 'e2b_crate']], () => { g.hud.toast('a_toast_kashes', { n }); g.hud.stats?.(h); g.save(false); });
   }
   // heat to draw within reach (null: none): { x, y, z, what }
   heatNear() {
@@ -451,9 +446,8 @@ export class Kit2b extends ChapterBase {
           if (f.e2b_dtin) return;
           f.e2b_dtin = true; this.applyFlags();
           g.audio.play('chest');
-          const full = h.clovers >= h.cloverMax;
-          if (full) h.coins += 10; else h.clovers = Math.min(h.cloverMax, h.clovers + 1);
-          hero([full ? 'e2b_dtin_kashes' : 'e2b_dtin_clover'], () => { if (full) g.hud.toast('a_toast_kashes', { n: 10 }); else g.hud.toast('toast_clover_found'); g.hud.stats?.(h); g.save(false); });
+          const n = KIT2B_KASHES.dtin; h.coins += n;
+          hero(['e2b_dtin_kashes'], () => { g.hud.toast('a_toast_kashes', { n }); g.hud.stats?.(h); g.save(false); });
         }, 0.3);
         return true;
       }
@@ -489,8 +483,8 @@ export class Kit2b extends ChapterBase {
         h.actAt(H.x, H.z, 'use', 0.8, () => {
           if (f.e2b_chest) return;
           f.e2b_chest = true; this.applyFlags();
-          g.audio.play('chest'); const n = this.luck(10);
-          hero(['e2b_chest_open'], () => { if (n === 10) g.hud.toast('toast_clover_found'); g.hud.toast('a_toast_kashes', { n }); g.hud.stats?.(h); g.save(false); });
+          g.audio.play('chest'); const n = KIT2B_KASHES.chest; h.coins += n;
+          hero(['e2b_chest_open'], () => { g.hud.toast('a_toast_kashes', { n }); g.hud.stats?.(h); g.save(false); });
         }, 0.3);
         return true;
       }

@@ -7,7 +7,7 @@ Object.assign(STR.en, {
   p_sw_lift: 'Lift', p_sw_ease: 'Ease', p_sw_down: 'Go down', p_sw_up: 'Go up',
   it_sw_map: "Arthur's map", itd_sw_map: 'Drawn in crayon: the street, the hatch, a ladder, a big X. "A + L. KEEP OUT. (Not you, Lulu.)"',
   sw_toast_owed: 'The clover from the old chest: in your pocket',
-  sw_toast_owed2: 'The clover from the cave: in your pocket',
+  sw_toast_owed2: '{n} kashes from the cave: in your pocket',
   n_fosse: 'Fosse',
   p_sw_bolt: 'Draw catch', p_sw_unlock: 'Unlock', p_sw_shut: 'Shut',
   it_sw_key: "Bersimon's key", itd_sw_key: 'A small brass key with a star for a bow. For the little room under the town.',
@@ -74,7 +74,7 @@ Object.assign(STR.en, {
 
   // ---- Tralu's cave
   sw_case: "A guitar case. 'RAPH' burned into the lid. The lighthouse keeper never came back for it.",
-  sw_cache1: 'Under the lantern, a tin box. Someone\'s rainy-day stash: a clover, pressed flat.',
+  sw_cache1: 'Under the lantern, a tin box. Someone\'s rainy-day stash: a few kashes.',
 
   // ---- the journal
   sw_j_knock: "Something knocks under the street hatch in the lower town. Arthur has been down there.",

@@ -168,7 +168,7 @@ const w5 = await ev(() => { const G = game, B = G.story.arsenal.boards, h = G.he
   const w = T.wheel(['ArrowDown', 'ArrowLeft']); P.face(B.x, B.z); const c0 = h.coins, k0 = h.clovers; P.tap('KeyK', 0.8); P.settle();
   return { w, broken: !!G.flags.a_boards, coins: h.coins - c0, clovers: h.clovers - k0, gloveShown: !!G.weapons.models.glove?.visible }; });
 check('the weapon wheel (hold G, down-left): the Wannie glove in hand', w5.w === 'glove' && w5.gloveShown, w5);
-check('the glove (K) breaks the boards: a clover and 12 kashes behind them', w5.broken && w5.coins === 12 && w5.clovers === 1, w5);
+check('the glove (K) breaks the boards: 22 kashes behind them, no clover (CLOVER-BALANCE A)', w5.broken && w5.coins === 22 && w5.clovers === 0, w5);
 
 
 // ---- Save & quit → Continue keeps everything

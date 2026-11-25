@@ -170,11 +170,11 @@ const C = await ev(() => game.room.cache);
 await ev((C) => P.use(C.case.x, C.case.z, { near: 0.8, kind: 'swcase' }), C);
 s = await said();
 check('Raph\'s guitar case (INPUT)', has(s, /RAPH/), s);
-const cl0 = await ev(() => game.hero.clovers);
+const [cl0, k0] = await ev(() => [game.hero.clovers, game.hero.coins]);
 await ev((C) => P.use(C.crate.x, C.crate.z, { near: 0.8, kind: 'swcache' }), C);
 s = await said();
-r = await ev(() => { P.wait(1.5); P.grab(6); P.wait(0.5); return { owed: game.flags.sw_oweClover2 || 0, clovers: game.hero.clovers }; });
-check('the cache under the lantern: a clover, picked up (INPUT)', has(s, /clover/) && (await flags()).sw_cache === true && r.owed === 0 && r.clovers === Math.min(9, cl0 + 1), { r, cl0, s });
+r = await ev(() => { P.wait(1.5); P.grab(6); P.wait(0.5); return { owed: game.flags.sw_oweClover2 || 0, clovers: game.hero.clovers, kashes: game.hero.coins }; });
+check('the cache under the lantern: 10 kashes (no clover: CLOVER-BALANCE A), picked up (INPUT)', has(s, /rainy-day stash/) && (await flags()).sw_cache === true && r.owed === 0 && r.clovers === cl0 && r.kashes >= k0 + 10, { r, cl0, k0, s });
 
 // ---------------------------------------------------------------- 8. Save → Continue; an old save
 const before = await flags();

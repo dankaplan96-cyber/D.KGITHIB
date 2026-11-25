@@ -118,12 +118,12 @@ check("Twinsen's cell: in through its broken door by input", cell.go === 'arrive
 check('the look at his marks: his three short lines, then kashes (flag as_cell)', cell.st === 'dialog' && cell.said.some((s) => /Twelve years/.test(s)) && cell.said.some((s) => /pipe is warm/.test(s)) && cell.flag && cell.searched && cell.kashes > 0, cell);
 // (the office's old register gave "Nothing here." from chapter 1 on: the generic search took it. Now in every chapter)
 const reg = await ev(() => {
-  const G = game, s = G.rooms.asylum.searches.find((x) => x.id === 'asylum_register'), h = G.hero, c0 = h.clovers;
+  const G = game, s = G.rooms.asylum.searches.find((x) => x.id === 'asylum_register'), h = G.hero, c0 = h.clovers, k0 = h.coins;
   h.pos.set(s.x + 0.6, G.physics.groundAt(s.x + 0.6, s.z, 30), s.z); h.onGround = true; G.step(0.5);
   G.input.taps.add('KeyE'); G.step(0.1); const said = T.talkAll();
-  return { chapter: G.flags.chapter, said, clover: h.clovers - c0 };
+  return { chapter: G.flags.chapter, said, clover: h.clovers - c0, kashes: h.coins - k0 };
 });
-check('chapter 1: the old register in the office still gives its lines and clover', reg.clover === 1 && reg.said.some((x) => /Cell 2/.test(x)), reg);
+check('chapter 1: the old register in the office still gives its lines and 10 kashes, no clover (CLOVER-BALANCE A)', reg.clover === 0 && reg.kashes === 10 && reg.said.some((x) => /Cell 2/.test(x)), reg);
 check('the find is not offered again; out of the cell by input', cell.again !== 'roomsearch' && cell.back === 'arrived' && cell.outCell[2] < 50, cell);
 
 // ---- 4. the cut-away and no ghost

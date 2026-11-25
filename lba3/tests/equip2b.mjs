@@ -88,7 +88,7 @@ const c3 = await ev(() => { const G = game, h = G.hero, C = T.K().canal, TL = T.
   TL.castCool = 0; P.face(C.K.x, C.K.z); const t0 = TL.stats.things, m1 = TL.stats.missed; P.tap('KeyK', 0.03); T.reel(); P.settle();
   return { ...got, again: TL.stats.things - t0, missed: TL.stats.missed - m1, coins2: h.coins - m0 }; });
 const c3l = await said();
-check('…from the rock, the crate on the further rock (K): it comes along the cord to his feet and cracks open: a clover and 12 kashes, once', c3.flag && c3.things >= 1 && ((c3.clovers === 1 && c3.coins === 12) || (c3.clovers === 0 && c3.coins === 22)) && c3.again === 0 && c3.missed === 1 && c3.coins2 === c3.coins && c3l.some((x) => /cracks open/.test(x)), { c3, c3l });
+check('…from the rock, the crate on the further rock (K): it comes along the cord to his feet and cracks open: 22 kashes (no clover: CLOVER-BALANCE A), once', c3.flag && c3.things >= 1 && c3.clovers === 0 && c3.coins === 22 && c3.again === 0 && c3.missed === 1 && c3.coins2 === c3.coins && c3l.some((x) => /cracks open/.test(x)), { c3, c3l });
 const c4 = await ev(() => { const G = game, h = G.hero, C = T.K().canal, TL = T.TL(); TL.castCool = 0; P.face(C.S.x, C.S.z); P.tap('KeyK', 0.03); T.reel(); P.settle(); return { on: T.K().onLanding(), d: +Math.hypot(h.pos.x - C.S.x, h.pos.z - C.S.z).toFixed(2), ground: h.onGround }; });
 check('…and the ring at the shore reels him back (K)', !c4.on && c4.d < 0.3 && c4.ground, c4);
 // ---- the reel at 10 fps: the route's every step outside anything solid; then an interrupted reel; then the odd save
@@ -149,7 +149,7 @@ await snap('eq2b-2-fork-niche').catch(() => {});
 const f5 = await ev(() => { const G = game, h = G.hero, N = T.K().niche; const k0 = h.clovers, m0 = h.coins; const u = P.use(N.x, N.z, { kind: 'e2b_niche', near: 1.5 }); const got = { clovers: h.clovers - k0, coins: h.coins - m0 };
   P.face(N.x, N.z); G.step(0.2); const again = P.target()?.kind === 'e2b_niche'; return { u: u.r, got, again, flag: !!G.flags.e2b_dtin, journal: G.story.journal().flatMap((j) => j.lines).filter((l) => l.key === 'e2b_j_niche') }; });
 const f5l = await said();
-check('…Ilka\'s old tin (E): a clover (or 10 kashes with nine), once; the journal line done', f5.flag && (f5.got.clovers === 1 || f5.got.coins === 10) && !f5.again && f5.journal[0]?.done && f5l.some((x) => /FOR LUCK/.test(x)), { f5, f5l });
+check('…Ilka\'s old tin (E): 10 kashes (no clover: CLOVER-BALANCE A), once; the journal line done', f5.flag && f5.got.clovers === 0 && f5.got.coins === 10 && !f5.again && f5.journal[0]?.done && f5l.some((x) => /FOR LUCK/.test(x)), { f5, f5l });
 
 // ================================================================ the heat flask (chapter 6, The Pass)
 const h0 = await ev(() => { const r = T.jump('pass', { c5_planned: true, c5_vent: true, c5_glider: true, c5_done: true }); const G = game, f = G.flags; Object.assign(f, { c6_started: true, c6_bridge: true, c6_lhar: true }); G.story.applyFlags(); G.story.refreshCast(); P.settle();
@@ -190,7 +190,7 @@ const h6 = await ev(() => { const r = T.jump('observatory', { c6_started: true, 
   P.face(H.x, H.z); G.step(0.2); const again = P.target()?.kind === 'e2b_chest';
   return { ...r, look, drawn, free, ice, take, got, again, flag: !!G.flags.e2b_chest }; });
 const h6l = await said();
-check('chapter 7, the monastery yard: a chest frozen into the ice (E); heat drawn at the monks\' brazier (E), let out at it (K): the ice runs off; opened (E): a clover and 10 kashes, once', h6.ch === 'observatory' && h6.drawn > 89 && h6.free && !h6.ice && h6.flag && ((h6.got.clovers === 1 && h6.got.coins === 10) || (h6.got.clovers === 0 && h6.got.coins === 20)) && !h6.again && h6l.some((x) => /frozen into the ice/.test(x)) && h6l.some((x) => /ice slumps/.test(x)), { h6, h6l });
+check('chapter 7, the monastery yard: a chest frozen into the ice (E); heat drawn at the monks\' brazier (E), let out at it (K): the ice runs off; opened (E): 20 kashes (no clover: CLOVER-BALANCE A), once', h6.ch === 'observatory' && h6.drawn > 89 && h6.free && !h6.ice && h6.flag && h6.got.clovers === 0 && h6.got.coins === 20 && !h6.again && h6l.some((x) => /frozen into the ice/.test(x)) && h6l.some((x) => /ice slumps/.test(x)), { h6, h6l });
 
 // ================================================================ the fork's later use: the crystal galleries (chapter 11)
 const g1 = await ev(() => { const r = T.jump('shell'); const G = game, h = G.hero; G.regions.ensure('underground', 'test'); G.step(0.2); const W = T.K().wheel;

@@ -67,7 +67,7 @@ export const HE_I18N = {
   fit_res: 'המשחק רץ כאן מתחת ל־50 פריימים בשנייה. נסו רזולוציה אוטומטית בהגדרות.',
   toast_saved: 'המשחק נשמר', toast_save_full: 'האחסון מלא: השמירה האוטומטית נכשלה. מחקו משבצות ישנות ב"טעינת משחק".', toast_save_fail: 'אי אפשר לשמור: אחסון הדפדפן לא זמין.',
   toast_clover: 'עלה תלתן הציל אותך!', toast_save_error: 'לא ניתן לטעון את השמירה. היא נשמרה בצד, ומתחיל משחק חדש.',
-  toast_magic: 'רמת קסם {n}!', toast_nomp: 'אין מספיק קסם: זריקה חלשה', toast_clover_found: 'עלה תלתן', toast_alert: 'זוהית!',
+  toast_magic: 'רמת קסם {n}!', toast_nomp: 'אין מספיק קסם: זריקה חלשה', toast_clover_found: 'עלה תלתן', toast_clover_kashes: '+{n} קאשים: עלי התלתן שלך מלאים', toast_alert: 'זוהית!',
   hint_jump: 'אתלטי ({b}), ואז {k} לקפיצה',
   hint_armour: 'השריון בולע את המכה. החזיקו {b} לזריקה טעונה, או הנחיתו מכה כבדה יותר (בעיטה: ה־{k} השלישי).',
   boss_name: 'הסוהר קרל',
@@ -76,6 +76,7 @@ export const HE_I18N = {
   shop_title: 'הדוכן של פיפה', shop_leave: 'יציאה',
   shop_potion: 'שיקוי לב: בריאות מלאה', shop_flask: 'בקבוק קסם: חצי מהקסם בחזרה', shop_clover: 'עלה תלתן: חיים נוספים',
   shop_max: 'כבר במקסימום.',
+  shop_clover_nine: 'נמכר רק כשיש לך פחות מתשעה עלי תלתן.',
   n_pippa: 'פיפה', n_hero: 'טווינסן',
 
   // LBA3: the title, and the prologue's lines kept in i18n.js

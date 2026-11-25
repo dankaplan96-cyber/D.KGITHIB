@@ -28,7 +28,7 @@
 //      singing (if the winch way), and the people's lines after.
 //   Optional: the Blow, the gas monster in the pocket the project's drill opened (wm_blow): asleep without a glove;
 //   with one it wakes and spits fire; caught with the glove and thrown back, three hits beat it (gasblow.js). The
-//   seam cools; the deep shift's strongbox, lost in the gas: 40 kashes and a clover leaf (kashes when he has nine).
+//   seam cools; the deep shift's strongbox, lost in the gas: 40 kashes and a clover leaf (at the cap, 10 kashes more: actors.js).
 //
 // State (flags zo_; an old save has none: nothing made up, the quest is there as for a new player):
 //   zo_heard, zo_reserved, zo_register, zo_tab (Orla named it), zo_winch (the curtain freed), zo_key ('paid'|'winch'),
@@ -41,6 +41,7 @@
 import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
+import { CLOVER_FULL_KASHES } from '../actors.js';
 import { islePhase } from '../islandlife.js';
 import { BAR } from '../otrbar.js';
 import { HOTEL } from '../otrhotel.js';
@@ -413,8 +414,8 @@ export class LiftBelow extends ChapterBase {
     if (!f.zo_blow) { this.chain([['hero', 'zo_box_gas']]); return true; }
     if (f.zo_box) return true;
     f.zo_box = true; B.setBox(true);
-    const clover = h.clovers < h.cloverMax, n = BOX.kashes + (clover ? 0 : 15);
-    h.coins += n; if (clover) h.clovers++;
+    const clover = h.gainClover(), n = BOX.kashes + (clover ? 0 : CLOVER_FULL_KASHES);   // (the one clover rule: actors.js)
+    h.coins += BOX.kashes;
     g.audio.play('chest', B.boxAt); g.audio.play('coin');
     g.hud.toast(clover ? 'zo_toast_box' : 'zo_toast_kashes', { n }); g.hud.stats?.(h);
     this.chain([['hero', 'zo_box_open']], () => g.save(false));

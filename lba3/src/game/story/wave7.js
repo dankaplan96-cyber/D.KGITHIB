@@ -18,7 +18,7 @@
 //      unbolted, opens the back passage behind the house (it stays open: a way from the sea wall stair to the square).
 //   5. The lift: the key off the clamp; Hoist, then Swing over and lower (swinging first only heels the barge; it can be
 //      lowered back). The crate on the pier.
-//   6. Pippa: Tim and Lulu take the cart; a clover leaf (kashes at nine). The shelter's doorway stocked with blankets
+//   6. Pippa: Tim and Lulu take the cart; a clover leaf (at the cap, the one clover rule's 10 kashes: actors.js). The shelter's doorway stocked with blankets
 //      and casks; the lift's crate gone from the pier while the shelters are in use; Tim's and Pippa's lines after.
 //   ENDING (the user, 25.11): also open in the ending's free play (after the dinner) for a player who has not finished
 //   it. The town is home: the lift still holds the crate; Pippa wants her stock back for her stall (her lines, Tim's,
@@ -47,7 +47,7 @@ import '../text/wave7.js';
 export const MD_KEYS = ['evacuation', 'council', 'throttle', 'ballastra', 'balances', 'survey', 'network'];
 // the chapters in which the town still waits in the shelters (evacuation.js applyFlags: its props shown)
 export const SHELTER_KEYS = [...MD_KEYS, 'shell', 'core'];
-export const PAY = { clover: 1, at9: 15 };
+export const PAY = { clover: 1 };   // (at the cap: the one clover rule's kashes, actors.js)
 export const LIFT = { rest: 0.2, up: 0.45, pier: 1.0, tUp: 2.4, tSwing: 3.6 };
 // the depot shelter's frame, as evacuation.js builds it (DEPOT door, its wheel 1.7 m west, turned 1.4)
 const DEPOT = { x: -90, z: -72, ry: 1.4 };
@@ -346,9 +346,8 @@ export class Wave7 extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     f.w7m_done = true;
     if (this.ck === 'home') f.w7m_home = true;   // (the ending: to her stall)
-    const clover = h.clovers < 9;
-    if (clover) { h.clovers++; g.hud.toast('w7m_toast_clover'); } else { h.coins += PAY.at9; g.hud.toast('w7m_toast_kashes', { n: PAY.at9 }); }
-    g.audio.play('coin'); g.hud.stats?.(h);
+    this.giveClover('w7m_toast_clover');
+    g.audio.play('coin');
     this.applyWorld(); g.save(false);
   }
   lumi(npc, c) {

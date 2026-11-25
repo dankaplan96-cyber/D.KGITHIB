@@ -142,7 +142,7 @@ check('with the pack (F2, run, Space held): he lifts off, lands on the deck', Ma
 check('the pack\'s flight: lit once the jump stops rising (not at once), the gauge shown, the "jet" pose', s2.r.firstLit > 0.15 && s2.r.hud > 5, s2.r);
 const s3 = await ev(() => { const G = game, h = G.hero; const c0 = h.coins, k0 = h.clovers; P.tap('KeyE', 0.1); G.step(0.8); P.settle(); const got = { coins: h.coins - c0, clovers: h.clovers - k0, flag: G.flags.a_jetTin, tin: G.story.arsenal.step.tin.visible }; const again = P.target()?.kind || null; return { got, again }; });
 const l3 = await said();
-check('the tin on the deck (Take): a clover and 10 kashes, once', s3.got.coins === 10 && s3.got.clovers === 1 && s3.got.flag && !s3.got.tin && s3.again !== 'a_jettin' && l3.some((l) => /IT WORKS/.test(l)), { s3, l3 });
+check('the tin on the deck (Take): 20 kashes, no clover (CLOVER-BALANCE A), once', s3.got.coins === 20 && s3.got.clovers === 0 && s3.got.flag && !s3.got.tin && s3.again !== 'a_jettin' && l3.some((l) => /IT WORKS/.test(l)), { s3, l3 });
 const j1 = await ev(() => { const G = game; return G.story.journal().flatMap((c) => c.lines).filter((l) => /a_j_jet/.test(l.key)); });
 check('the journal: the pack and the test step, both done', j1.length === 2 && j1.every((l) => l.done), j1);
 

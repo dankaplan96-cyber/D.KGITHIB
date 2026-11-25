@@ -262,12 +262,12 @@ check('Under Celebration: the gas-works foreman points to the old mine and its d
 // the Platform: the chapel bell's clapper
 const pf = await ev(() => {
   const G = game, f = G.flags, h = G.hero; heroTo('isle_platform');
-  const cl0 = h.clovers; P.talk('pf_chaplain'); const ask = !!f.pp_bellAsk;
+  const cl0 = h.clovers, k0 = h.coins; P.talk('pf_chaplain'); const ask = !!f.pp_bellAsk;
   const T = IL.ISLE_THINGS.platform.clapper; const u = P.use(T.x, T.z, { kind: 'ip_clapper' }); P.settle();
   const took = !!f.pp_clapper; P.talk('pf_chaplain'); P.settle();
-  return { ask, use: u.r, took, bell: !!f.pp_bell, clovers: h.clovers - cl0 };
+  return { ask, use: u.r, took, bell: !!f.pp_bell, clovers: h.clovers - cl0, kashes: h.coins - k0 };
 });
-check('the Platform: Father Umber asks for the clapper; taken by the ore cart and brought back (INPUT): a clover', pf.ask && pf.took && pf.bell && pf.clovers === 1, pf);
+check('the Platform: Father Umber asks for the clapper; taken by the ore cart and brought back (INPUT): 10 kashes, no clover (CLOVER-BALANCE A)', pf.ask && pf.took && pf.bell && pf.clovers === 0 && pf.kashes === 10, pf);
 
 // the Old Watch: the telescope shows the Orchard's lost crate
 const ow = await ev(() => {
@@ -289,11 +289,11 @@ const kn = await ev(() => {
   heroTo('isle_liftdock'); P.talk('ld_crane'); out.manifest = !!f.pp_manifest;
   heroTo('isle_otringal'); const e = P.enter('otrbar'); out.bar = G.room?.id;
   const c0 = h.coins; P.talk('ot_boss'); out.shop = G.state; P.menuPick(0); P.settle(); out.paid = c0 - h.coins; out.lens = !!f.pp_lens;
-  heroTo('isle_knartas'); const cl0 = h.clovers; P.use(L.prompt.x, L.prompt.z, { kind: 'ip_light' }); P.settle();
-  out.light = !!f.pp_light; out.clovers = h.clovers - cl0; void e;
+  heroTo('isle_knartas'); const cl0 = h.clovers, k1 = h.coins; P.use(L.prompt.x, L.prompt.z, { kind: 'ip_light' }); P.settle();
+  out.light = !!f.pp_light; out.clovers = h.clovers - cl0; out.kashes = h.coins - k1; void e;
   return out;
 });
-check('Knartas (chapter 9, INPUT): Quill asks; the Lift Dock\'s manifest; Madam Orla sells the lens for 8; fitted, the light shines and gives a clover', kn.quill && kn.darkStill && kn.manifest && kn.bar === 'otrbar' && kn.shop === 'shop' && kn.paid === 8 && kn.lens && kn.light && kn.clovers === 1, kn);
+check('Knartas (chapter 9, INPUT): Quill asks; the Lift Dock\'s manifest; Madam Orla sells the lens for 8; fitted, the light shines and gives 15 kashes, no clover (CLOVER-BALANCE A)', kn.quill && kn.darkStill && kn.manifest && kn.bar === 'otrbar' && kn.shop === 'shop' && kn.paid === 8 && kn.lens && kn.light && kn.clovers === 0 && kn.kashes === 15, kn);
 
 // ---------------------------------------------------------------- save and reload
 const before = await ev(() => { heroTo('isle_knartas'); game.save(false); return { pp: Object.keys(game.flags).filter((k) => k.startsWith('pp_')).sort(), keys: Object.keys(game.flags) }; });

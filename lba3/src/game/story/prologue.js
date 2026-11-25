@@ -18,6 +18,8 @@ import { pierOff, pierAng } from '../island.js';
 import { t, STR } from '../i18n.js';
 const hasStr = (k) => STR.en[k] !== undefined;
 import { ChapterBase } from './base.js';
+// the asylum register's find (CLOVER-BALANCE option A, the user, 25.11: kashes in place of a clover leaf)
+export const REGISTER_KASHES = 10;
 import { playOpening } from './opening.js';
 import { lba1EnemyDefs } from '../lba1places.js';
 import { mergeStatic } from '../../engine/merge.js';
@@ -456,7 +458,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     if (it.spot.id === 'asylum_register') {
       g.searched.push(it.spot.id); g.audio.play('search');
-      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(h.cloverMax, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
+      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.coins += REGISTER_KASHES; g.audio.play('coin'); g.hud.toast('a_toast_kashes', { n: REGISTER_KASHES }); g.hud.stats?.(h); g.save(false); });   // (CLOVER-BALANCE option A: kashes, no longer a clover leaf)
       return true;
     }
     if (it.spot.id === 'as_cell') {

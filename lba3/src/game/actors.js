@@ -138,6 +138,12 @@ const _footM = { x: 0, z: 0 };   // (Hero.footOfSlope's answer)
 const SLIDE_POSE = 0.07;   // s of sliding before the fall pose shows (Hero.update)
 
 // ------------------------------------------------------------------ hero
+// CLOVER-BALANCE option A (the user's pick, 25.11; docs/lba-maturity/CLOVER-BALANCE.md): one clover rule for the whole
+// game, read here and nowhere else. The cap is hero.cloverMax: CLOVER_BASE and one for each clover box found
+// (story/keysclover.js keeps it). A reward that would give a leaf at the cap pays CLOVER_FULL_KASHES instead
+// (hero.gainClover); a leaf lying on the ground stays there while he is full, as a heart does at full life
+// (Game.canTake); the shops sell a leaf only while he holds fewer than SHOP_CLOVER_BELOW (hero.shopClover).
+export const CLOVER_BASE = 9, CLOVER_FULL_KASHES = 10, SHOP_CLOVER_BELOW = 9;
 // STEER-HOLD: how long (s) a move must be held to take over from the game's few steps (walkTo) to a use
 const STEER_TAKE = 0.22;
 export class Hero extends Actor {
@@ -150,7 +156,7 @@ export class Hero extends Actor {
     this.maxHp = 10; this.hp = 10;
     this.magicLevel = 1; this.mp = 8;
     this.clovers = 2; this.coins = 0;
-    this.cloverMax = 9;   // (KEYS-CLOVER: 9 + the clover boxes found, flags kc_box_*: story/keysclover.js keeps it; every cap site reads it)
+    this.cloverMax = CLOVER_BASE;   // (KEYS-CLOVER: 9 + the clover boxes found, flags kc_box_*: story/keysclover.js keeps it; every cap site asks cloverFull/gainClover)
     this.smallKeys = 0;   // (KEYS-CLOVER: the small keys held, from the kc_ flags: story/keysclover.js)
     this.hasKey = false;
     this.hasBall = false; // still in the cupboard at home
@@ -171,6 +177,13 @@ export class Hero extends Actor {
     this.prevPos = this.pos.clone();
   }
   get mpMax() { return 6 + this.magicLevel * 2; }
+  // the clover rule (CLOVER_BASE above): full at the cap; a reward's leaf, or its kashes at the cap (true: a leaf given)
+  cloverFull() { return this.clovers >= this.cloverMax; }
+  gainClover() {
+    if (this.cloverFull()) { this.coins += CLOVER_FULL_KASHES; return false; }
+    this.clovers++; return true;
+  }
+  shopClover() { return this.clovers < SHOP_CLOVER_BELOW && !this.cloverFull(); }
   // (ANIM-POLISH-2: the body drawn visY above where he stands while it catches up with a stair tread or a kerb: update)
   sync() {
     super.sync();

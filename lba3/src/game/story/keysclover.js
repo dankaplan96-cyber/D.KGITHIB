@@ -39,11 +39,12 @@ import { ChapterBase } from './base.js';
 import { OLD_DOORS } from '../island.js';
 import { KR, KR_ROOMS, smallKey, powderChest, barGate, highJet, cloverBox } from '../keyrooms.js';
 import { Kit } from '../props.js';
+import { CLOVER_BASE } from '../actors.js';
 import '../text/keysclover.js';
 
 export const DOORS = ['fort', 'pump', 'goat', 'mill'];
 export const BOXES = ['fort', 'pump', 'goat', 'mask'];
-export const CLOVER_BASE = 9;
+export { CLOVER_BASE };   // (the clover rule's numbers live with the hero: actors.js)
 export const MILL_KASHES = 50;
 // the clover cap from a set of flags: 9 and one for each box found (13 at most)
 export const cloverCap = (f) => CLOVER_BASE + BOXES.reduce((n, b) => n + (f?.['kc_box_' + b] ? 1 : 0), 0);
@@ -384,7 +385,7 @@ export class KeysClover extends ChapterBase {
     f['kc_box_' + b] = true;
     this.sync();
     // (the cap rises first, then the leaf inside fills it)
-    h.clovers = Math.min(h.cloverMax, h.clovers + 1);
+    h.gainClover();
     g.audio.play('chest', h.pos); g.audio.play('pickClover');
     this.applyWorld();
     g.hud.toast('toast_kc_box', { n: h.cloverMax }, 3200); g.hud.stats?.(h);

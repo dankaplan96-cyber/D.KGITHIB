@@ -157,9 +157,9 @@ if (ONLY.includes('B')) {
   const b4l = await said();
   check('B: Odile again, the form: "Knartas" (a pick): stamped, "you are the post now"; the MAIL SACK received (the found box; in the pockets), gone from beside the booth', b4.k === 'talked' && b4p.sack && b4p.item && has(b4l, /you are the post now/), { b4, b4p, b4l });
   iso('to Knartas by the travel network (spaceship and shuttle: travel.mjs): put on its pad');
-  const b5 = await ev(() => { toIsle('knartas'); const h = game.hero, c0 = h.coins, l0 = h.clovers; const k = P.talk('kn_mother'); return { k: k.r, given: !!game.flags.w4l_given, coins: h.coins - c0, clovers: h.clovers - l0, at9: l0 >= 9, reply: game.story.items().some((i) => i.id === 'w4l_reply'), sack: game.story.items().some((i) => i.id === 'w4l_sack') }; });
+  const b5 = await ev(() => { toIsle('knartas'); const h = game.hero, c0 = h.coins, l0 = h.clovers; const k = P.talk('kn_mother'); return { k: k.r, given: !!game.flags.w4l_given, coins: h.coins - c0, clovers: h.clovers - l0, atCap: l0 >= h.cloverMax, reply: game.story.items().some((i) => i.id === 'w4l_reply'), sack: game.story.items().some((i) => i.id === 'w4l_sack') }; });
   const b5l = await said();
-  check('B: Knartas: Mila (TALK, INPUT): the sack handed over — "Twelve weeks of them"; a clover leaf and 15 kashes (30 kashes at nine leaves); her letter for Tellem; the sack out of the pockets', b5.k === 'talked' && b5.given && !b5.sack && b5.reply && (b5.at9 ? b5.coins === 30 : b5.coins === 15 && b5.clovers === 1) && has(b5l, /Twelve weeks/), { b5, b5l });
+  check('B: Knartas: Mila (TALK, INPUT): the sack handed over — "Twelve weeks of them"; a clover leaf and 15 kashes (at the cap, 25: the one clover rule); her letter for Tellem; the sack out of the pockets', b5.k === 'talked' && b5.given && !b5.sack && b5.reply && (b5.atCap ? b5.coins === 25 : b5.coins === 15 && b5.clovers === 1) && has(b5l, /Twelve weeks/), { b5, b5l });
   const b6 = await ev(() => { const k = P.talk('kn_kid'); return { k: k.r, remark: !!k.remark, over: game.remarks?.el?.textContent || '', done: !!game.flags.w4l_temAfter }; });
   const b6l = await said();
   check('B: Tem (TALK): his mother reads them out loud, even the soup ones (once: then his own lines again)', b6.k === 'talked' && b6.done && (has(b6l, /soup ones/) || /soup ones/.test(b6.over)), { b6, b6l });

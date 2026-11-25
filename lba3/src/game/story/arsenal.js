@@ -14,11 +14,11 @@
 //   The dark places (the lantern shows them): a gap in the old foundations of the house cellar (6 darts, 8 kashes;
 //     from chapter 2), the old Wannie mine on Under Celebration (the Wannie glove; the shuttle from chapter 4), a hollow
 //     boulder in the crystal galleries (a clover; chapter 11). (The well cave closes after chapter 1: hot water.)
-//   The cellar's old coal chute, boarded up: only the glove breaks the boards (a clover, 12 kashes).
+//   The cellar's old coal chute, boarded up: only the glove breaks the boards (22 kashes).
 //   Baldino's hop-pack (EQ-1, src/game/jetpack.js), chapter 10 and after: on its peg by his workshop door. After his
 //     chapter 10 briefing he points it out; with him there he explains it, otherwise a label on the strap does. Its
 //     first task is his test step on Zeelich's street (a timber platform one storey high, out of a jump's reach, a tin
-//     on top: a clover and 10 kashes, once); later it shortens the old mill's climb (chapter 10) and the island hops.
+//     on top: 20 kashes, once); later it shortens the old mill's climb (chapter 10) and the island hops.
 // Harder hitters come later: the laser at chapter 3 costs 30 kashes and magic or cells; the glove and the lightning
 // from chapter 4; the Blowtron from chapter 6. Nothing on the main path needs any of them.
 import * as THREE from 'three';
@@ -32,6 +32,8 @@ import { ARMS } from '../weapons.js';
 import { jetpackModel } from '../jetpack.js';
 import { LINE_PRICE } from './kit2b.js';
 import { rockGeometry } from '../vegetation.js';
+// the coal chute's purse and the test step's tin (CLOVER-BALANCE option A, the user, 25.11: kashes in place of a clover leaf)
+export const A_KASHES = { chute: 22, jetTin: 20 };
 import '../text/arsenal.js';
 
 export const PRICE = { blowgun: 15, darts: 4, penguin: 4, lantern: 10, laser: 30, cell: 5, blowtron: 35, ward: 20 };
@@ -136,7 +138,7 @@ export class Arsenal extends ChapterBase {
       const clover = new THREE.Group(); clover.position.set(0, 0.5, 0.42); grp.add(clover);
       for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2 + 0.78; const l = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), MAT.flat('#5fe36a', 0.5)); l.position.set(Math.cos(a) * 0.06, Math.sin(a) * 0.06, 0); clover.add(l); }
       GL.colliders?.push?.(g.physics.add({ type: 'cyl', x: GL.center.x + at.x, z: GL.center.z + at.z - 0.3, r: 0.95, top: at.y + 1.3, noStand: true }));
-      this.nooks.push({ id: 'gal', room: 'c3gallery', show: clover, ...pick(world(GL, grp)), give: () => { const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1); g.hud.toast('toast_clover_found'); } });
+      this.nooks.push({ id: 'gal', room: 'c3gallery', show: clover, ...pick(world(GL, grp)), give: () => { this.giveClover(); } });
     }
     // ---- Baldino's hop-pack on its peg post by the workshop door (EQ-1)
     const WS = R.workshop;
@@ -421,9 +423,9 @@ export class Arsenal extends ChapterBase {
         g.hero.actAt(S.x, S.z, 'use', 0.6, () => {
           if (f.a_jetTin) return;
           f.a_jetTin = true; S.tin.visible = false;
-          const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1); h.coins += 10;
+          const h = g.hero; h.coins += A_KASHES.jetTin;   // (CLOVER-BALANCE option A: kashes, no longer a clover leaf)
           g.audio.play('chest');
-          hero(['a_jet_tin'], () => { g.hud.toast('a_toast_kashes', { n: 10 }); g.save(false); });
+          hero(['a_jet_tin'], () => { g.hud.toast('a_toast_kashes', { n: A_KASHES.jetTin }); g.save(false); });
         }, 0.3);
         return true;
       }
@@ -442,8 +444,8 @@ export class Arsenal extends ChapterBase {
     if (!o.move.glove) { g.impact(B.x, g.hero.pos.y + 1, B.z, 'wood', 'blocked'); g.hud.toast('a_boards_thud'); return true; }
     f.a_boards = true; B.boards.visible = false;
     g.audio.play('break'); g.particles.burst(B.x, g.hero.pos.y + 0.9, B.z, '#8a6430', 26, 4); g.camRig.shake(0.25);
-    const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1); h.coins += 12;
-    this.chain([['hero', 'a_boards_cache']], () => { g.hud.toast('a_toast_kashes', { n: 12 }); g.save(false); });
+    const h = g.hero; h.coins += A_KASHES.chute;   // (CLOVER-BALANCE option A: kashes, no longer a clover leaf)
+    this.chain([['hero', 'a_boards_cache']], () => { g.hud.toast('a_toast_kashes', { n: A_KASHES.chute }); g.save(false); });
     return true;
   }
 

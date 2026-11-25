@@ -343,7 +343,7 @@ const rooms = await ev(() => {
   return { ids, t1, t2, once: G.giverOnce(stump), s1, s2: G.giverTaken(stump) };
 });
 check('the house keeps its givers, and they refill on the next visit too', rooms.ids.length >= 4 && rooms.t1 && !rooms.t2, rooms);
-check('the clover stump\'s record survives a region change (gives once ever)', rooms.once && rooms.s1 && rooms.s2, rooms);
+check('the stump\'s record (10 kashes since CLOVER-BALANCE A) survives a region change (gives once ever)', rooms.once && rooms.s1 && rooms.s2, rooms);
 // a save in the middle of a visit: loaded, the visit goes on (searched stays searched); an older save's keys of
 // other areas (and the old per-container record) are dropped
 const saved = await ev(() => {

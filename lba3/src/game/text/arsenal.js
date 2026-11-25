@@ -68,7 +68,7 @@ Object.assign(STR.en, {
   a_adit_sign: 'WANNIE WORKS. CLOSED. (Someone has added: "DARK. BRING A LAMP.")',
   a_boards: 'The old coal chute, boarded up before we moved in. The boards are nailed tight. A punch might do it. A big one.',
   a_boards_thud: 'Thud. The boards don\'t care.',
-  a_boards_cache: "Behind the boards, in the old chute: somebody's purse of kashes, and a clover.",
+  a_boards_cache: "Behind the boards, in the old chute: somebody's purse of kashes.",
 
   // ---- Baldino's hop-pack (EQ-1, src/game/jetpack.js)
   it_jetpack: 'Hop-Pack', it_worn: 'worn',
@@ -81,7 +81,7 @@ Object.assign(STR.en, {
   a_jet_b3: 'Makes it look finished. In athletic mode, jump and keep holding. Try my test step outside.',
   a_jet_note: 'A label on the strap, in Baldino\'s hand: TWINSEN. JUMP AND HOLD. ONE STOREY ONLY. TRY THE TEST STEP. - B.',
   a_jet_sign: 'BALDINO\'S TEST STEP. No ladder. That is the test.',
-  a_jet_tin: 'A tin on the deck, with a note: IT WORKS! Inside, a clover and ten kashes.',
+  a_jet_tin: 'A tin on the deck, with a note: IT WORKS! Inside, twenty kashes.',
   a_toast_jethow: 'Hop-pack: in Athletic mode, jump and hold {k}',
   a_toast_jeton: 'Hop-pack on', a_toast_jetoff: 'Hop-pack off',
   a_toast_jetroof: 'The hop-pack needs open sky',

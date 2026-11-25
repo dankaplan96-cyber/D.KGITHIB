@@ -181,7 +181,7 @@ Object.assign(STR.en, {
   dx_far_crate2: 'Under the straw, fifteen kashes in a twist of paper. A barge crew\'s tip jar, by the look of it.',
   dx_far_crate_after: 'The barge crate. Lenses, straw, no kashes.',
   dx_far_locker1: "A dock worker's locker. A note inside: \"Out with the barges. If you got here without one, you're Esmer or mad.\"",
-  dx_far_locker2: '"Take the clover. Leave the boots." Fair enough.',
+  dx_far_locker2: '"Take the kashes. Leave the boots." Fair enough.',
   dx_far_locker_after: 'The boots are still there. I am leaving the boots.',
   dx_far_honey: 'Royal honey from the hive\'s pot. One spoonful and I feel brand new.',
   dx_far_honey_again: 'Another spoonful of royal honey. Brand new again.',

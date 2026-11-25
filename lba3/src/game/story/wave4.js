@@ -37,6 +37,7 @@
 import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
+import { CLOVER_FULL_KASHES } from '../actors.js';
 import { islePhase } from '../islandlife.js';
 import { W4, buildPondBoats, buildHarbourBits, buildPostcard, buildRaphSeat } from '../wave4world.js';
 import { TAVERN_PLAN } from '../tavern.js';
@@ -45,7 +46,7 @@ import '../text/wave4.js';
 
 export const BOAT_KEYS = ['project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'home'];
 export const LETTER_HOOK = ['dig', 'steam', 'pass', 'observatory', 'evacuation', 'council'];
-export const PAY = { lulu: 10, mila: 15, raph: 20, arthurAt9: 10, milaAt9: 15 };
+export const PAY = { lulu: 10, mila: 15, raph: 20 };   // (Mila's and Arthur's leaf at the cap: the one clover rule, actors.js)
 export const RACE = { lulu: 0.42, win: 0.47, len: 2.2, hold: 1.4 };
 // the ending's signals: L long, S short (s on); the gaps between
 export const LAMP = { L: 0.95, S: 0.3, gap: 0.4, rest: 1.3, reps: 2, pats: ['LSS', 'SLS', 'SSL'] };
@@ -345,8 +346,8 @@ export class Wave4 extends ChapterBase {
     if (f.w4l_sack && !f.w4l_given) {
       return c(['w4l_mila_give', 'w4l_mila_give2', 'w4l_mila_gift'], () => {
         f.w4l_given = true; f.w4l_reply = true;
-        const clover = h.clovers < 9, n = PAY.mila + (clover ? 0 : PAY.milaAt9);
-        h.coins += n; if (clover) h.clovers++;
+        const clover = h.gainClover(), n = PAY.mila + (clover ? 0 : CLOVER_FULL_KASHES);   // (at the cap: its kashes too)
+        h.coins += PAY.mila;
         g.audio.play('coin'); g.hud.toast(clover ? 'w4l_toast_gift' : 'w4l_toast_kashes', { n }); g.hud.stats?.(h);
         g.found('leaflet', 'it_w4l_reply', () => g.save(false));
       });
@@ -507,9 +508,8 @@ export class Wave4 extends ChapterBase {
     this.endLamp(false);
     f.w4b_lamp = true;
     this.chain([['arthur', 'w4b_ar_lampyes'], ['arthur', 'w4b_ar_lampgift']], () => {
-      const clover = h.clovers < 9;
-      if (clover) { h.clovers++; g.hud.toast('w4b_toast_clover'); } else { h.coins += PAY.arthurAt9; g.hud.toast('w4b_toast_kashes', { n: PAY.arthurAt9 }); }
-      g.audio.play('coin'); g.hud.stats?.(h);
+      this.giveClover('w4b_toast_clover');
+      g.audio.play('coin');
       this.story.refreshCast(); this.applyWorld(); g.save(false);
     });
   }
