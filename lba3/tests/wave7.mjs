@@ -61,11 +61,12 @@ const boot = async (fixture) => {
   await open(page, '?nocine'); await menu(page, 'continue'); await ev(() => { for (let i = 0; i < 40; i++) game.step(0.05); P.settle(); });
   await helpers(); await said();
 };
-const reboot = async () => {
+// (cont: Save & quit lands on the title, Continue is pressed as a player would; Retry plays on by itself)
+const reboot = async (cont) => {
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 900000 });
   await ev(() => { game.testFreeze = true; });
   await page.addScriptTag({ path: HARNESS });
-  if (await ev(() => game.state === 'title')) await menu(page, 'continue');
+  if (cont) await menu(page, 'continue');
   await ev(() => { for (let i = 0; i < 60 && game.state !== 'play'; i++) game.step(0.1); for (let i = 0; i < 20; i++) game.step(0.05); P.settle(); });
   await helpers(); await said();
 };
@@ -73,7 +74,7 @@ const saveQuit = async () => {
   await ev(() => { P.release(); P.settle(); P.tap('Escape', 0.1); });
   const reloaded = page.waitForEvent('load', { timeout: 600000 });
   await page.click('#pause [data-act="quit"]', { timeout: 60000, noWaitAfter: true });
-  await reloaded; await reboot();
+  await reloaded; await reboot(true);
 };
 
 // ================================================================ A · H-17 Missing Deliveries
@@ -127,7 +128,7 @@ if (ONLY.includes('A')) {
   await pair('wave7-05-back-door', (h) => { W7.backDoor.group.visible = !h; });
   iso('a death in the baggage claim (damage to 0, no clover leaf: nothing there hurts him), then Retry');
   const a13 = await ev(() => { const G = game, h = G.hero; P.enter('baggage'); h.clovers = 0; h.hp = 1; h.invuln = 0; h.damage(5, null); let k = 0; while (k < 80 && G.state !== 'gameover') { G.step(0.1); k++; } return { dead: h.dead, state: G.state }; });
-  { const reloaded = page.waitForEvent('load', { timeout: 600000 }); await page.click('#gameover [data-act="retry"]', { timeout: 60000, noWaitAfter: true }); await reloaded; await reboot(); }
+  { const reloaded = page.waitForEvent('load', { timeout: 600000 }); await page.click('#gameover [data-act="retry"]', { timeout: 60000, noWaitAfter: true }); await reloaded; await reboot(false); }
   const a14 = await ev(() => ({ state: game.state, room: game.room?.id, hp: game.hero.hp, max: game.hero.maxHp, w7: w7(), sh: W7.store?.u, back: game.room?.exits?.some((e) => e.to === 'w7-back-out') }));
   check('A: Game Over, Retry: back in the baggage claim with full life; the store open, the key carried, the back door open (all kept)', a13.dead && a13.state === 'gameover' && a14.room === 'baggage' && a14.hp === a14.max && a14.w7.w7m_store && a14.w7.w7m_key && a14.w7.w7m_back && a14.sh === 1 && a14.back, { a13, a14 });
   const a15 = await ev(() => { const r = ctrl(); const m = items(); const p = pick('Swing'); P.settle(); return { r, m, p, hoist: !!game.flags.w7m_hoist, unclamp: !!game.flags.w7m_unclamp, y: r2(W7.lift.crateA().y) }; });

@@ -37,7 +37,7 @@ Object.assign(STR.en, {
   w7m_m_what: 'What is in the crates?', w7m_m_drill: 'Drill parts', w7m_m_blank: 'Blankets and water casks', w7m_m_oil: 'Lamp oil and rope', w7m_m_later: 'Not now',
   w7m_os_wrong: "That's what you'd put on a list. What would Pippa chalk on a crate?",
   w7m_os_right: "Blankets don't drill. Then they were never the station's.",
-  w7m_os_2: "The goods and the lift's key are in the back store, downstairs. The store opens off the old conveyor's lever. It sticks. FunFrock built it, and it only listens to a kick.",
+  w7m_os_2: "The goods and the lift's key are in the back store, downstairs. It opens off the old conveyor's lever, and that only listens to a kick.",
   w7m_os_wait: 'The back store, downstairs. The lever only listens to a kick.',
   w7m_os_after: 'Back passage open, store empty. First quiet week I\'ve had.',
   // the back store
