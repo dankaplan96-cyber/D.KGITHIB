@@ -173,6 +173,13 @@ if (process.argv.includes('--he')) for (const r of heRows) console.log('  he  ' 
 else if (heMissing) console.log(`  HE-TEXT warning: ${heMissing} English key(s) with no Hebrew (run with --he for the count per file)`);
 if (list || warns.length < 40) for (const w of warns) console.log('  warn  ' + w);
 else console.log(`  ${warns.length} warnings (long lines, duplicates): run with --list to see them`);
+// (25.11: a key set twice in one file — the object keeps the last, so the first line never shows: Lulu's and Arthur's
+//  toasts shared one, Pippa's lost her name. A source scan, since the module's object can't show it)
+for (const dir of ['text', 'text/he']) for (const f of readdirSync(join(GAME, dir)).sort()) {
+  if (!f.endsWith('.js')) continue;
+  const seen = new Set();
+  for (const m of readFileSync(join(GAME, dir, f), 'utf8').matchAll(/^  ([A-Za-z0-9_]+):/gm)) { if (seen.has(m[1])) errors.push(`${dir}/${f}: the key ${m[1]} is set twice (the first line is lost)`); seen.add(m[1]); }
+}
 for (const e of errors) console.log('  FAIL  ' + e);
 console.log(errors.length ? `dialogue-check: ${errors.length} error(s)` : 'dialogue-check: PASS');
 process.exit(errors.length ? 1 : 0);
