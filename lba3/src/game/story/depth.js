@@ -111,7 +111,7 @@ const FAR_PAY = 15;
 const FARS = [
   { id: 'yard', room: 'isle_otringal', near: { x: 1917.6, z: 1844.7 }, nPost: { x: 1918.3, z: 1846.5 }, rock: { x: 1927.5, z: 1844.0, y: 4.0 }, seed: 31, far: { x: 1937.6, z: 1844.2 }, fPost: { x: 1937.4, z: 1842.4 }, thing: { x: 1937.8, z: 1848.6 }, thingRy: 0.3, kind: 'crate', flag: 'dx_far_crate', read: ['dx_far_crate1', 'dx_far_crate2'], after: 'dx_far_crate_after', zone: 3.0 },
   { id: 'quay', room: 'isle_otringal', near: { x: 1879.0, z: 1851.0 }, nPost: { x: 1878.4, z: 1849.5 }, rock: { x: 1867.5, z: 1852.0, y: 3.8 }, seed: 43, far: { x: 1855.4, z: 1855.6, top: 4 }, fPost: { x: 1854.7, z: 1856.3, top: 4 }, fTall: 1.2, thing: { x: 1854.6, z: 1850.6, top: 4 }, thingRy: Math.PI / 2, kind: 'locker', flag: 'dx_far_locker', read: ['dx_far_locker1', 'dx_far_locker2'], after: 'dx_far_locker_after', zone: 3.0 },
-  { id: 'honey', room: 'isle_mosquibee', near: { x: 2567.5, z: 1828.4 }, nPost: { x: 2568.2, z: 1830.3 }, mid: { x: 2560.5, z: 1828.25 }, far: { x: 2549.0, z: 1825.0 }, fPost: { x: 2550.4, z: 1823.9 }, thing: { x: 2549.4, z: 1822.6 }, kind: 'honey', zone: 3.0, color: '#e8a830' },
+  { id: 'honey', room: 'isle_mosquibee', near: { x: 2567.5, z: 1828.4 }, nPost: { x: 2568.2, z: 1830.3 }, mid: { x: 2560.5, z: 1828.25 }, archLift: 0.6, far: { x: 2548.6, z: 1824.6 }, fPost: { x: 2550.4, z: 1823.9 }, thing: { x: 2549.4, z: 1822.6 }, kind: 'honey', zone: 3.0, color: '#e8a830' },
 ];
 // HAM-4: the gorge's ice arch (the Hamalayi's frame): the rock stack in the meltwater (its top), the arch's foot on the
 // north bank, where the look is (the bank by the tree bridge's north end), the road crew's kashes
@@ -1430,11 +1430,12 @@ export class Depth extends ChapterBase {
         P.add({ type: 'cyl', x: M.x, z: M.z, r: 1.55, top: M.y });
       }
       // the arch across the way, its ring over the deck's middle (above his head)
-      for (const s of [-1.05, 1.05]) { const x = M.x + dz * s, z = M.z - dx * s; k.add(cyl(0.07, 0.09, 2.8, 8), lilac, x, M.y + 1.4, z); k.add(sphere(0.1, 10, 8), brass, x, M.y + 2.88, z); P.add({ type: 'cyl', x, z, r: 0.1, top: M.y + 2.9, noStand: true, seeThrough: true }); }
-      k.add(rbox(2.3, 0.16, 0.2, 0.04), white, M.x, M.y + 2.75, M.z, face + Math.PI / 2);
-      k.add(cyl(0.012, 0.012, 0.2, 5), brass, M.x, M.y + 2.58, M.z);
-      k.add(torus(0.17, 0.028, 6, 18), brass, M.x, M.y + 2.32, M.z, face);
-      C.M = M; C.mRing = { x: M.x, y: M.y + 2.32, z: M.z };
+      const al = def.archLift || 0, ph = 2.8 + al;   // (a taller arch where the ring must be seen from lower ground)
+      for (const s of [-1.05, 1.05]) { const x = M.x + dz * s, z = M.z - dx * s; k.add(cyl(0.07, 0.09, ph, 8), lilac, x, M.y + ph / 2, z); k.add(sphere(0.1, 10, 8), brass, x, M.y + ph + 0.08, z); P.add({ type: 'cyl', x, z, r: 0.1, top: M.y + ph + 0.1, noStand: true, seeThrough: true }); }
+      k.add(rbox(2.3, 0.16, 0.2, 0.04), white, M.x, M.y + 2.75 + al, M.z, face + Math.PI / 2);
+      k.add(cyl(0.012, 0.012, 0.2, 5), brass, M.x, M.y + 2.58 + al, M.z);
+      k.add(torus(0.17, 0.028, 6, 18), brass, M.x, M.y + 2.32 + al, M.z, face);
+      C.M = M; C.mRing = { x: M.x, y: M.y + 2.32 + al, z: M.z };
     }
     // what waits on the far side: a crate, a locker, a honey pot (by the far davit)
     const at = def.thing, ty = gy(at), tg = new THREE.Group(); tg.position.set(at.x - gp.x, ty - gp.y, at.z - gp.z); tg.rotation.y = def.thingRy || 0; R.group.add(tg);
