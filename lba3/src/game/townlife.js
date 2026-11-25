@@ -177,7 +177,8 @@ export function buildTownLife(root, physics, W) {
     k.add(lathe([[r - 0.05, 0], [r + 0.25, 0], [r + 0.25, 0.22], [r - 0.05, 0.22]], 24), MAT.stone('grey', 1), x, y, z);
     const pond = new THREE.Mesh(new THREE.CircleGeometry(r - 0.05, 24), new THREE.MeshStandardMaterial({ color: '#5aa0c8', roughness: 0.08, metalness: 0.1 }));
     pond.rotation.x = -Math.PI / 2; pond.position.set(x, y + 0.14, z); g.add(pond);
-    k.at(x + 0.4, y + 0.14, z - 0.2, 0.6, () => P.toyBoat(k));
+    // (WAVE4 H-9: the toy boat its own group, so Arthur's boat of story/wave4.js takes its place: wave4world.js)
+    { const tb = new THREE.Group(); tb.name = 'toy boat'; g.add(tb); const tk = new Kit(tb); tk.at(x + 0.4, y + 0.14, z - 0.2, 0.6, () => P.toyBoat(tk)); tk.flush(); L.toyBoat = tb; }
     physics.add({ type: 'cyl', x, z, r: r + 0.2, top: y + 0.6, noStand: true });
     L.pond = { x, z }; L.beds = BEDS.map(([bx, bz]) => ({ x: x + bx, z: z + bz }));
     // the boat box: Arthur's, by the pond (paint, string, a spare sail — and Twinsen's pliers)
