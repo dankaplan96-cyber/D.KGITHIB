@@ -13,7 +13,8 @@
 //           surveyor's satchel and a red rag on a stick
 //   slate   (Citadel) a slate on two legs by the Weather Wizard's tent door: WEATHER WIZARD. QUIET, PLEASE. WALK IN.
 //           TALK PLAINLY.
-//   papers  (Otringal's market) a stack of news sheets under a stone at one end of an unattended stall's counter
+//   papers  (Otringal's market) a stack of news sheets under a stone at one end of an unattended stall's counter, the
+//           day's bill (CLOUD CRIER · NEWS) tied to the stall's post beside it
 import * as THREE from 'three';
 import { MAT, M, rbox, cyl, sphere, canvasTex, plane, Kit } from './props.js';
 import { rockGeometry } from './vegetation.js';
@@ -30,11 +31,31 @@ function holder(parent, x, y, z, ry = 0, name = 'wave8') {
 // local (lx, lz) round (x, z) turned by ry → world
 export const turn = (x, z, ry, lx, lz) => ({ x: x + lx * Math.cos(ry) + lz * Math.sin(ry), z: z - lx * Math.sin(ry) + lz * Math.cos(ry) });
 
-const slateTex = (key, lines, { w = 256, h = 192, font = 'bold 26px sans-serif', dy = 46 } = {}) => M('w8-' + key, () => canvasTex(w, h, (x, W, H) => {
-  x.fillStyle = '#2c3430'; x.fillRect(0, 0, W, H);
-  x.strokeStyle = '#6a5034'; x.lineWidth = 12; x.strokeRect(0, 0, W, H);
-  x.fillStyle = 'rgba(240,236,224,0.9)'; x.font = font; x.textAlign = 'center';
-  lines.forEach((l, i) => x.fillText(l, W / 2, 50 + i * dy));
+// (#64, 25.11: the lettering reads at the Far play camera: twice the canvas, each line as large as fits the board's width,
+//  the name in white chalk and the request in yellow; a line is [text, px, colour])
+const slateTex = (key, lines, { w = 512, h = 352 } = {}) => M('w8-' + key, () => canvasTex(w, h, (x, W, H) => {
+  x.fillStyle = '#26302c'; x.fillRect(0, 0, W, H);
+  x.strokeStyle = '#6a5034'; x.lineWidth = 20; x.strokeRect(0, 0, W, H);
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  let y = (H - lines.reduce((a, l) => a + l[1] * 1.12, 0)) / 2;
+  for (const [l, px, col] of lines) {
+    x.font = `bold ${px}px sans-serif`;
+    const fp = Math.floor(px * Math.min(1, (W - 44) / x.measureText(l).width));
+    x.font = `bold ${fp}px sans-serif`; x.fillStyle = col;
+    y += px * 0.56; x.fillText(l, W / 2, y); y += px * 0.56;
+  }
+}));
+// (#64) the news bill on Otringal's stall: the paper's masthead, a rule, NEWS as large as the sheet takes, a red band
+// and a few lines of print under it
+const newsBill = () => M('w8-bill', () => canvasTex(256, 352, (x, W, H) => {
+  x.fillStyle = '#f6f1e4'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#1e1c1a'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = 'bold 34px serif'; x.fillText('CLOUD CRIER', W / 2, 32, W - 20);
+  x.fillRect(12, 58, W - 24, 5);
+  x.font = 'bold 92px sans-serif'; x.fillText('NEWS', W / 2, 128, W - 20);
+  x.fillStyle = '#c8302a'; x.fillRect(12, 184, W - 24, 26);
+  x.fillStyle = '#8a8478';
+  for (let r = 0; r < 7; r++) x.fillRect(18, 228 + r * 16, W - 36 - (r === 6 ? 90 : 0), 8);
 }));
 // the bricked arch's infill: courses of brick, the mortar cracked across in a jagged line
 const brickTex = () => M('w8-bricks', () => canvasTex(256, 256, (x, W, H) => {
@@ -119,6 +140,39 @@ export function buildHatch(parent, physics, x, y, z, ry) {
 // Local frame (the arch): origin on the ground at the arch's foot, its face toward +z (the arch stands against the cliff
 // at -z). 1.3 m wide opening, 2.1 m high; the piers 0.35 wide. The grate: origin on the shelf's ground, flush.
 export const ARCH = { w: 1.3, h: 2.1, pier: 0.35, d: 0.6 };
+// #64 (25.11): the arch faces the frozen stream across a 2 m ledge, and the bank from the ice up to that ledge was a
+// 1.5-2.4 m scramble (walked straight at the arch, he stopped at the bank's foot; the planner found a way up a metre
+// to the side after two tries). Old stone steps now go down the bank from the ledge to the ice, in line with the arch:
+// the bank from its top edge (where it drops under the ledge) to the ice is cut into steps of equal depth, as many as
+// keep each riser near STEPS.rise (under the walk's 0.55 m step); each step a solid stone whose top stands 5 cm over the
+// highest ground of its footprint (never under the bank) and whose foot is set under the lowest. In the arch's frame
+// (+z out). Returns their group and colliders.
+const STEPS = { w: 1.3, rise: 0.24, from: 2.0, to: 7.0 };   // (risers of 0.24 m at most, as the isles' flights: zislands.js S.flights)
+function bankSteps(parent, physics, foot, wf, stone) {
+  const grp = new THREE.Group(); grp.name = 'wave8 arch steps'; parent.add(grp);
+  const T = physics.terrain, S = STEPS, k = new Kit(grp), out = [];
+  const span = (lz, d) => { let lo = Infinity, hi = -Infinity; for (const lx of [-S.w / 2, 0, S.w / 2]) for (const dz of [-d / 2, 0, d / 2]) { const p = wf(lx, lz + dz), h = T.heightAt(p.x, p.z); lo = Math.min(lo, h); hi = Math.max(hi, h); } return { lo, hi }; };
+  let ice = Infinity; for (let lz = S.from; lz <= S.to; lz += 0.1) ice = Math.min(ice, span(lz, 0).lo);
+  let z0 = null, z1 = null;
+  for (let lz = S.from; lz <= S.to && z1 == null; lz += 0.05) { const h = span(lz, 0).hi; if (z0 == null && h < foot.y - 0.1) z0 = lz; else if (z0 != null && h <= ice + 0.1) z1 = lz; }
+  if (z0 == null || z1 == null) return { grp, cols: out };
+  const n = Math.max(2, Math.ceil((foot.y - ice) / S.rise)), d = (z1 - z0) / n;
+  // (each tread overlaps the next by 7 cm, the top one reaches 0.4 m back onto the ledge and the lowest 0.35 m out onto
+  //  the ice: the ground under his feet is a step all the way, never the steep bank between two — actors.js footOfSlope
+  //  stops a walk up into a steep face)
+  // (the tops an even stair from the ledge's own height, 3 cm over it, down to one riser over the ice; a tread whose bank
+  //  stands higher sits 5 cm over the bank)
+  const top0 = span(z0 - 0.2 + 0.05, 0.5).hi + 0.03, r = (top0 - ice) / n, T0 = [];
+  for (let j = 0; j < n; j++) { const lz = z0 + (j + 0.5) * d; T0.push({ lz, top: Math.max(top0 - j * r, span(lz, d + 0.12).hi + 0.05) }); }
+  T0.forEach(({ lz, top }, j) => {
+    const back = j === 0 ? 0.4 : 0, front = j === T0.length - 1 ? 0.35 : 0, dd = d + 0.12 + back + front, cz = lz + (front - back) / 2;
+    const g = span(cz, dd), t = j === 0 ? Math.max(top, g.hi + 0.03) : top, bot = g.lo - 0.15, h = t - bot, p = wf(0, cz);   // (the top one over its ledge part)
+    k.add(rbox(S.w - (j % 2) * 0.06, h, dd, 0.03), stone, (j % 2 ? 0.03 : -0.03), t - h / 2 - foot.y, cz, ((j % 3) - 1) * 0.03);
+    out.push(physics.add({ type: 'box', x: p.x, z: p.z, hw: S.w / 2, hd: dd / 2, rot: foot.ry, top: t, stair: true }));   // (stair: the height under his feet decides, as the game's stairs)
+  });
+  k.flush();
+  return { grp, cols: out };
+}
 export function buildArch(parent, physics, foot, top) {
   if (W8.arch) return W8.arch;
   const A = ARCH, ry = foot.ry;
@@ -132,7 +186,9 @@ export function buildArch(parent, physics, foot, top) {
   for (let i = 0; i < 2; i++) k.add(rbox(A.w - 0.04, 0.18, 0.28, 0.02), stone, 0, 0.09 + i * 0.18, -A.d + 0.2 + (1 - i) * 0.28);
   k.flush();
   // the bricked infill (cracked), and the heap it makes once kicked in
-  const wall = new THREE.Mesh(rbox(A.w, A.h, 0.2, 0.01), MAT.map(brickTex(), 0.95)); wall.position.set(0, A.h / 2, -0.14); wall.castShadow = true; grp.add(wall);
+  // (#64: a plain box, 0 rounding: its faces carry the texture whole; a rounded rbox's UVs are in metres and showed a
+  //  corner of it)
+  const wall = new THREE.Mesh(rbox(A.w, A.h, 0.2, 0), MAT.map(brickTex(), 0.95)); wall.position.set(0, A.h / 2, -0.14); wall.castShadow = true; grp.add(wall);
   const heap = new THREE.Group(); heap.name = 'wave8 heap'; grp.add(heap);
   const hk = new Kit(heap), brick = MAT.flat('#a88a74', 0.95);
   for (let i = 0; i < 14; i++) { const a = i * 2.39, r = 0.12 + (i % 5) * 0.09; hk.add(rbox(0.22, 0.08, 0.11, 0.01), brick, Math.sin(a) * r * 1.6, 0.04 + (i % 3) * 0.06, 0.25 + Math.cos(a) * r * 0.7, a); }
@@ -142,6 +198,7 @@ export function buildArch(parent, physics, foot, top) {
   const wf = (lx, lz) => turn(foot.x, foot.z, ry, lx, lz);
   for (const s of [-1, 1]) { const p = wf(s * (hw + A.pier / 2), -A.d / 2); physics.add({ type: 'box', ...p, hw: A.pier / 2, hd: A.d / 2, rot: ry, top: foot.y + A.h + 0.36, noStand: true }); }
   const plug = physics.add({ type: 'box', ...wf(0, -A.d / 2), hw: hw, hd: A.d / 2, rot: ry, top: foot.y + A.h, noStand: true });
+  const steps = bankSteps(grp, physics, foot, wf, stone);
   // the grate on the shelf above
   const gg = holder(parent, top.x, top.y, top.z, top.ry, 'wave8 grate'), gk = new Kit(gg), iron = MAT.iron();
   gk.add(rbox(1.0, 0.03, 0.8, 0.01), MAT.flat('#0d0c0b', 1), 0, 0.005, 0);
@@ -154,7 +211,7 @@ export function buildArch(parent, physics, foot, top) {
   for (const s of [-1, 1]) bk.add(rbox(1.0, 0.03, 0.04, 0.005), rust, 0, 0.05, s * 0.3);
   bk.flush();
   const S = {
-    grp, gg, wall, heap, bars, plug, foot, top,
+    grp, gg, wall, heap, bars, plug, foot, top, steps,
     door: wf(0, 0.55), up: { ...wf(0, 1.2), a: ry },   // the doorway's prompt spot; where he stands back down at the foot
     grate: { x: top.x, z: top.z }, out: { ...turn(top.x, top.z, top.ry, 0, 1.2), a: top.ry },   // where he comes out above
     setOpen(on) { wall.visible = !on; heap.visible = !!on; plug.enabled = !on; },
@@ -204,12 +261,18 @@ export function buildLedge(parent, physics, x, y, z, ry, { color = '#b89474', se
 export function buildSlate(parent, x, y, z, ry) {
   if (W8.slate) return W8.slate;
   const grp = holder(parent, x, y, z, ry, 'wave8 slate'), k = new Kit(grp), wood = MAT.wood('dark');
-  for (const s of [-1, 1]) k.add(rbox(0.06, 1.2, 0.06, 0.01), wood, s * 0.36, 0.6, -0.05, 0, { rx: 0.12 });
-  k.add(rbox(0.04, 1.0, 0.04, 0.01), wood, 0, 0.5, 0.24, 0, { rx: -0.35 });
-  k.add(rbox(0.84, 0.64, 0.04, 0.01), wood, 0, 0.98, -0.02, 0, { rx: 0.12 });
+  // (#64, 25.11: the board leaned toward the reader (rx +0.12) while its lettered face leaned away (-0.12), so the face's
+  //  top half was inside the board and only WALK IN. TALK PLAINLY. showed, with the prop leg standing in front of it.
+  //  Now board, face and front legs lean back together (LEAN), the prop leg behind; the board 0.84 x 0.64 -> 0.98 x 0.72
+  //  and its face 0.76 x 0.56 -> 0.9 x 0.62, a larger lettering)
+  const LEAN = 0.2, BY = 0.98, BZ = -0.02;
+  for (const s of [-1, 1]) k.add(rbox(0.06, 1.2, 0.06, 0.01), wood, s * 0.43, 0.6, 0.0, 0, { rx: -LEAN });
+  k.add(rbox(0.04, 1.0, 0.04, 0.01), wood, 0, 0.5, -0.23, 0, { rx: 0.35 });
+  k.add(rbox(0.98, 0.72, 0.04, 0.01), wood, 0, BY, BZ, 0, { rx: -LEAN });
   k.flush();
-  const face = new THREE.Mesh(plane(0.76, 0.56), MAT.map(slateTex('slate', ['WEATHER WIZARD', 'QUIET, PLEASE', 'WALK IN.', 'TALK PLAINLY.'], { dy: 38, font: 'bold 24px sans-serif' }), 0.95));
-  face.position.set(0, 0.98, 0.005); face.rotation.x = -0.12; grp.add(face);
+  const face = new THREE.Mesh(plane(0.9, 0.62), MAT.map(slateTex('slate', [['WEATHER WIZARD', 66, '#f6f3ea'], ['QUIET, PLEASE', 74, '#ffe27a'], ['WALK IN · TALK PLAINLY', 44, '#f6f3ea']]), 0.95));
+  // (on the board's front, 5 mm out along its normal)
+  face.position.set(0, BY + 0.025 * Math.sin(LEAN), BZ + 0.025 * Math.cos(LEAN)); face.rotation.x = -LEAN; grp.add(face);
   W8.slate = { grp, x, z, y };
   return W8.slate;
 }
@@ -224,7 +287,15 @@ export function buildPapers(parent, x, y, z, ry) {
   for (let i = 0; i < 6; i++) k.add(rbox(0.26, 0.008, 0.19, 0.002), paper, 1.35 + (i % 2) * 0.008, 0.94 + i * 0.008, 0.55, (i % 3) * 0.04);
   k.add(rbox(0.16, 0.004, 0.03, 0.001), ink, 1.35, 0.94 + 6 * 0.008 + 0.002, 0.49, 0.08);
   k.add(sphere(0.05, 7, 5), MAT.stone('grey', 1), 1.38, 0.94 + 6 * 0.008 + 0.035, 0.57, 0, { sy: 0.7 });
+  // (#64, 25.11: the flat stack read as a white fleck from the Far camera, 20 m off. As a news seller does, the day's
+  //  bill hangs on the stall's front post by the stack, at eye height, to the customers: CLOUD CRIER, NEWS in big type,
+  //  on a thin board tied to the post's front face (x 1.5, z 0.8; the post 12 cm square), the paper 3 mm before it)
+  const BW = 0.42, BH = 0.58, BYc = 1.5, BZ = 0.8 + 0.06 + 0.0075;
+  k.add(rbox(BW + 0.02, BH + 0.02, 0.015, 0.003), MAT.wood('dark'), 1.5, BYc, BZ);
+  for (const dy of [-0.2, 0.2]) k.add(rbox(0.14, 0.012, 0.14, 0.004), MAT.flat('#6a5a44', 0.9), 1.5, BYc + dy, 0.8);   // (the cords round the post)
   k.flush();
+  const bill = new THREE.Mesh(plane(BW, BH), MAT.map(newsBill(), 0.9));
+  bill.position.set(1.5, BYc, BZ + 0.0075 + 0.003); grp.add(bill);
   W8.papers = { grp, x, z };
   return W8.papers;
 }

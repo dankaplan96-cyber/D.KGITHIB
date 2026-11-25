@@ -203,7 +203,7 @@ if (ONLY.includes('E')) {
   const e9l = await said();
   check('E: Tim (TALK): they wheeled it all back to the stall (not up to a shelter)', e9.k === 'talked' && e9.after && has(e9l, /back to the stall/) && !has(e9l, /wheeled the blankets up/), { e9, e9l });
   await page.addScriptTag({ path: SWEEP }); await ev(() => SW.init());
-  const e10 = await ev(() => { const keep = (r) => { const all = [...(r.interp || []), ...(r.zf || []), ...(r.floats || []), ...(r.sunk || []), ...(r.buried || []), ...(r.decals || []), ...(r.rockCut || [])]; return all.filter((x) => /wave7/.test(JSON.stringify(x))).map((x) => JSON.stringify(x).slice(0, 300)); }; const p = W7.stallStock.at; const out = keep(SW.scan({ bounds: { x0: p.x - 3, x1: p.x + 3, z0: p.z - 3, z1: p.z + 3 } }, { step: 0.2 })); SW.free(); return out; });
+  const e10 = await ev(async () => { const keep = (r) => { const all = [...(r.interp || []), ...(r.zf || []), ...(r.floats || []), ...(r.sunk || []), ...(r.buried || []), ...(r.decals || []), ...(r.rockCut || [])]; return all.filter((x) => /wave7/.test(JSON.stringify(x))).map((x) => JSON.stringify(x).slice(0, 300)); }; const p = W7.stallStock.at; const out = keep(await SW.scan({ bounds: { x0: p.x - 3, x1: p.x + 3, z0: p.z - 3, z1: p.z + 3 } }, { step: 0.2 })); SW.free(); return out; });
   check('E: Pippa\'s stall with her goods and the chalked crate (the ending\'s piece), scanned (overlap sweep library): no finding names a wave-7 piece', e10.length === 0, e10);
 }
 
@@ -220,12 +220,12 @@ if (ONLY.includes('S')) {
     const keep = (r) => { const all = [...(r.interp || []), ...(r.zf || []), ...(r.floats || []), ...(r.sunk || []), ...(r.buried || []), ...(r.decals || []), ...(r.rockCut || [])]; return all.filter((x) => /wave7/.test(JSON.stringify(x))).map((x) => JSON.stringify(x).slice(0, 300)); };
     const box = (x, z, r) => ({ bounds: { x0: x - r, x1: x + r, z0: z - r, z1: z + r } });
     const L = W7.lift.crateA(), St = W7.stall.at, D = W7.backDoor.door, K = W7.stock.at;
-    out.lift = keep(SW.scan(box(L.x, L.z, 3), { step: 0.2 })); SW.free();
-    out.stall = keep(SW.scan(box(St.x, St.z, 2.5), { step: 0.2 })); SW.free();
-    out.back = keep(SW.scan(box(D.x, D.z, 2.5), { step: 0.2 })); SW.free();
-    out.stock = keep(SW.scan(box(K.x, K.z, 3), { step: 0.2 })); SW.free();
+    out.lift = keep(await SW.scan(box(L.x, L.z, 3), { step: 0.2 })); SW.free();
+    out.stall = keep(await SW.scan(box(St.x, St.z, 2.5), { step: 0.2 })); SW.free();
+    out.back = keep(await SW.scan(box(D.x, D.z, 2.5), { step: 0.2 })); SW.free();
+    out.stock = keep(await SW.scan(box(K.x, K.z, 3), { step: 0.2 })); SW.free();
     G.regions.ensure('baggage', 'test'); G.enterRoom('baggage', null, true); P.settle(); G.step(0.2);
-    out.store = keep(SW.scan({ room: 'baggage' }, { step: 0.2 })); SW.free();
+    out.store = keep(await SW.scan({ room: 'baggage' }, { step: 0.2 })); SW.free();
     return out;
   });
   check('S: the pieces shown only in a state — the lift\'s stencils, the stall\'s crate, the back door open, the shelter\'s stock, the baggage claim with its store open — scanned (overlap sweep library): no finding names a wave-7 piece', Object.values(s1).every((a) => a.length === 0), s1);

@@ -198,7 +198,7 @@ export class Kit2b extends ChapterBase {
     const tex = canvasTex(256, 128, (x, W, H) => { x.fillStyle = '#f2ece6'; x.fillRect(0, 0, W, H); x.strokeStyle = '#9a7ab8'; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, H - 8); x.fillStyle = '#3a2a4a'; x.textAlign = 'center'; x.font = 'bold 36px sans-serif'; x.fillText('CLOUD CANAL', W / 2, 56); x.font = 'bold 22px sans-serif'; x.fillText('RINGS STILL HOLD', W / 2, 96); });
     const sg = at(re - 2.2, 1.9);
     k.add(cyl(0.035, 0.035, 1.3, 6), MAT.wood('dark'), sg.x, y + 0.65, sg.z);
-    k.add(rbox(0.72, 0.36, 0.03, 0.01), MAT.map(tex, 0.9), sg.x, y + 1.2, sg.z, face + Math.PI);
+    k.add(rbox(0.72, 0.36, 0.03, 0), MAT.map(tex, 0.9), sg.x, y + 1.2, sg.z, face + Math.PI);   // (#64: a plain box: each face carries the whole texture; a rounded rbox's UVs are metres)
     k.flush();
     P.add({ type: 'cyl', x: sg.x, z: sg.z, r: 0.08, top: y + 1.4, noStand: true, seeThrough: true });
     P.add({ type: 'cyl', x: L.x, z: L.z, r: 1.55, top: y });   // (the deck: firm ground, the cloud all round it)
