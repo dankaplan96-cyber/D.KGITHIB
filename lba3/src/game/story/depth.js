@@ -1456,7 +1456,7 @@ export class Depth extends ChapterBase {
   farSide(C) {
     const h = this.game.hero.pos, near = (p, r, dy) => Math.hypot(h.x - p.x, h.z - p.z) < r && Math.abs(h.y - p.y) < dy;
     if (C.M && near(C.M, 1.8, 0.8)) return 'M';
-    if (near(C.F, C.def.zone, 2.0)) return 'F';
+    if (near(C.F, C.def.zone + 3, 2.0)) return 'F';   // (anywhere on the far patch near its landing)
     if (near(C.N, C.def.zone, 2.0)) return 'N';
     return null;
   }
