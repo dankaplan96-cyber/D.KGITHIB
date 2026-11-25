@@ -77,12 +77,18 @@ function arrWeights(A) {
 // ------------------------------------------------------------------------------------------------ shader text
 const PARS = /* glsl */`
 float dlCav = 1.0;
+// (three's perturbNormalArb, guarded: a degenerate pixel — no screen-space change of position, a face seen edge-on —
+//  keeps its normal; a NaN there spread over the whole picture through High's bloom)
 vec3 dlPerturb( vec3 surf_pos, vec3 surf_norm, vec2 dHdxy, float faceDir ) {
-  vec3 sx = normalize( dFdx( surf_pos ) ), sy = normalize( dFdy( surf_pos ) );
+  vec3 dx = dFdx( surf_pos ), dy = dFdy( surf_pos );
+  if ( dot( dx, dx ) < 1e-14 || dot( dy, dy ) < 1e-14 ) return surf_norm;
+  vec3 sx = normalize( dx ), sy = normalize( dy );
   vec3 r1 = cross( sy, surf_norm ), r2 = cross( surf_norm, sx );
   float det = dot( sx, r1 ) * faceDir;
   vec3 g = sign( det ) * ( dHdxy.x * r1 + dHdxy.y * r2 );
-  return normalize( abs( det ) * surf_norm - g );
+  vec3 n = abs( det ) * surf_norm - g;
+  float l = dot( n, n );
+  return l > 1e-10 && ! any( isnan( n ) ) ? n * inversesqrt( l ) : surf_norm;
 }
 float dlH( vec4 c ) { return sqrt( dot( c.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ); }
 `;
@@ -108,6 +114,7 @@ const relief = (S, uv, w) => /* glsl */`
     normal = dlW > 0.0 ? dlNb : normal;
     float hm = dlH( ${S('dlUv', true)} );
     dlCav = clamp( 1.0 - 1.6 * dlW * max( hm - h0, 0.0 ) / max( hm, 0.08 ), 0.55, 1.0 );
+    if ( isnan( dlCav ) ) dlCav = 1.0;
   }
 `;
 const AFTER_AO = (contact, rim) => /* glsl */`
