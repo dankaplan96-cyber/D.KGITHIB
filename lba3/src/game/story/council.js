@@ -248,6 +248,9 @@ export class Council extends ChapterBase {
       this.busy = false; f.c9_heard = true; g.updateObjective(); g.save(false);
     });
   }
+  // (WAVE5 H-14, story/wave5.js: Ilka's three warm-ground readings, taken before the vote: Dallan adds them and Brum says
+  //  his vote out loud; the vote itself is unchanged)
+  breathLines() { return this.f.w5b_done ? [['dallan', 'w5b_c9_dallan'], ['councilC', 'w5b_c9_brum']] : []; }
   // the second: the plans, Dallan with Ilka's proof, the vote
   verdict() {
     const g = this.game, f = this.f;
@@ -259,13 +262,13 @@ export class Council extends ChapterBase {
       const V = this.thread.verdictLines();
       this.chain(V.proof, () => {
         f.c9_dallan = true; this.story.refreshCast({ walk: true }); g.audio.play('door');
-        this.chain([['dallan', 'c9_dallan_1'], ['hero', 'c9_tw_d1'], ['dallan', 'c9_dallan_2'], ['dallan', 'c9_dallan_3'], ...V.end], () => { this.busy = false; this.thread.voted(); });
+        this.chain([['dallan', 'c9_dallan_1'], ['hero', 'c9_tw_d1'], ['dallan', 'c9_dallan_2'], ['dallan', 'c9_dallan_3'], ...this.breathLines(), ...V.end], () => { this.busy = false; this.thread.voted(); });
       });
       return;
     }
     this.chain([['hero', 'c9_tw_plans'], ['councilB', 'c9_councilB_2'], ['councilC', 'c9_councilC_2']], () => {
       f.c9_dallan = true; this.story.refreshCast({ walk: true }); g.audio.play('door');
-      this.chain([['dallan', 'c9_dallan_1'], ['hero', 'c9_tw_d1'], ['dallan', 'c9_dallan_2'], ['dallan', 'c9_dallan_3'], ['councilC', 'c9_councilC_3'], ['chair', 'c9_chair_3']], () => {
+      this.chain([['dallan', 'c9_dallan_1'], ['hero', 'c9_tw_d1'], ['dallan', 'c9_dallan_2'], ['dallan', 'c9_dallan_3'], ...this.breathLines(), ['councilC', 'c9_councilC_3'], ['chair', 'c9_chair_3']], () => {
         g.audio.cue?.('revelation');
         this.chain([['chair', 'c9_chair_4'], ['baldino', 'c9_bal_c2'], ['baldino', 'c9_bal_c3'], ['hero', 'c9_tw_c3']], () => {
           g.audio.endCue?.(); this.busy = false;

@@ -1010,6 +1010,17 @@ export class HUD {
       if (id === region) { ctx.strokeStyle = '#7ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p[0], p[1], 7 + Math.sin(time * 5) * 2, 0, Math.PI * 2); ctx.stroke(); }
       if (id === region || (S >= 120 * (this.holo.width / (this._holoCss || this.holo.width)) && planet === 'twinsun')) { ctx.fillStyle = '#e8fbff'; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 3; const ly = p[1] + (PLANET_POS[id][1] < 0 ? -10 : 11); const tx = t(SHORT_NAME(id)); ctx.strokeText(tx, p[0], ly); ctx.fillText(tx, p[0], ly); }
     }
+    // (WAVE5 H-14: Ilka's warm-ground map, once copied: a violet ring round each place where a singing crystal still hums)
+    const hums = g.story?.depth?.w5?.humRegions?.();
+    if (hums?.size) {
+      let any = false;
+      for (const id of PLANETS[planet]) {
+        const p = at(id); if (!p || !hums.has(id)) continue;
+        any = true; ctx.strokeStyle = '#d090ff'; ctx.lineWidth = 2; ctx.setLineDash([3, 2]);
+        ctx.beginPath(); ctx.arc(p[0], p[1], 10 + (time ? Math.sin(time * 3) * 1.5 : 0), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      }
+      if (any) { ctx.fillStyle = '#e0b8ff'; ctx.font = `600 ${fs}px Rubik, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom'; ctx.fillText('◌ ' + t('map_hums'), 8, S - 6); ctx.textBaseline = 'middle'; }
+    }
     ctx.fillStyle = '#f0c040'; ctx.font = `700 ${fs + 2}px Rubik, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.fillText(t('map_' + planet).toUpperCase(), 8, 12);
     ctx.textBaseline = 'alphabetic';
     ctx.restore();
