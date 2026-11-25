@@ -19,6 +19,7 @@ import { blowgunModel, pistolModel, gloveModel, pulseModel } from './weapons.js'
 import { penguinModel, lanternModel } from './gadgets.js';
 import { jetpackModel } from './jetpack.js';
 import { pocketSetModel, lanceModel, forkModel, lineModel, flaskModel } from './tools.js';
+import { clockModel } from './francosworld.js';
 import { paintIcon } from './inventory.js';
 
 export const TURN = { inventory: (Math.PI * 2) / 4.096, found: (Math.PI * 2) / 2.048 };   // rad/s
@@ -282,6 +283,7 @@ const LOOKS = {
     put(g, new THREE.CylinderGeometry(0.03, 0.03, 0.004, 14), M('#3a5ab0', { roughness: 0.7 }), 0.02, 0.087, -0.05);
     return g;
   },
+  clock: () => clockModel(1),   // (H-15: the Francos' Great Waker, francosworld.js)
   radio: () => {
     const g = new THREE.Group();
     put(g, new THREE.BoxGeometry(0.26, 0.17, 0.1), M('#8a3a2a', { roughness: 0.6 }));

@@ -130,6 +130,7 @@ export class Kit2 extends ChapterBase {
     if (this.tin && !this.f.e2_tin) out.push({ id: 'tin', room: 'cellar', x: this.tin.x, y: this.tin.y, z: this.tin.z });
     out.push(...(this.story.hostel?.hums() || []));   // (ASYLUM-2: the humming crate in Vesk's store, story/hostel.js)
     out.push(...(this.story.depth?.hums() || []));    // (DES-1: the drift where the figures look, story/depth.js)
+    out.push(...(this.story.fr?.hums() || []));       // (H-15: the Francos' Great Waker on Knartas, story/francos.js)
     return out;
   }
   journal() {

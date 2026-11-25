@@ -48,7 +48,7 @@ const SND = {
   hurt: { pri: 3, gap: 0.12, vary: [0.03, 1] }, die: { pri: 3, gap: 0.5, vary: FIXED }, dodged: { gap: 0.25, vary: FIXED },
   coin: { gap: 0.025, vary: [0, 0.5] }, pickLife: { pri: 3, gap: 0.1, vary: FIXED }, pickMagic: { pri: 3, gap: 0.1, vary: FIXED },
   pickClover: { pri: 3, gap: 0.2, vary: FIXED }, revive: { pri: 3, gap: 1, vary: FIXED }, heal: { pri: 3, gap: 0.15, vary: FIXED }, bonus: { pri: 1, gap: 0.06, vary: [0.03, 1] },
-  chest: { pri: 3, gap: 0.3, vary: FIXED }, shard: { pri: 3, gap: 0.3, vary: FIXED }, found: { pri: 3, gap: 0.5, vary: FIXED }, victory: { pri: 3, gap: 1, vary: FIXED },
+  chest: { pri: 3, gap: 0.3, vary: FIXED }, shard: { pri: 3, gap: 0.3, vary: FIXED }, found: { pri: 3, gap: 0.5, vary: FIXED }, victory: { pri: 3, gap: 1, vary: FIXED }, alarmBell: { pri: 3, gap: 1.5, vary: FIXED },
   rummage: { gap: 0.2, vary: [0.04, 1] }, search: { pri: 3, gap: 0.3, vary: [0.02, 0.5] }, searchEmpty: { pri: 3, gap: 0.3, vary: [0.02, 0.5] },
   doorIn: { pri: 3, gap: 0.5, vary: [0.02, 0.5] }, door: { pri: 3, gap: 0.5, vary: FIXED }, doorLocked: { pri: 3, gap: 0.3, vary: [0.02, 0.5] },
   lever: { pri: 3, gap: 0.2, vary: [0.02, 0.5] }, valve: { pri: 3, gap: 0.2, vary: [0.02, 0.5] }, valveShut: { pri: 3, gap: 0.2, vary: [0.02, 0.5] },
@@ -738,6 +738,8 @@ export class AudioEngine {
         this._burst({ dur: 0.6, vol: 0.018, f: 2500, f1: 4500, type: 'bandpass', q: 4, at: 0.24 });
         break;
       }
+      // (H-15: the Francos' Great Waker, a tin alarm clock: its hammer between two small bells, quick, a second and a half)
+      case 'alarmBell': for (let i = 0; i < 26; i++) this._bell(i % 2 ? 2093 : 1865, i * 0.055, 0.08, 0.045); break;
       case 'victory': [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this._bell(f, i * 0.14, 0.5, 0.085)); break;
       // ---- searching: a rummage (cause), then the outcome: something there (a little 'pop'), or nothing (two soft
       // falling notes, a shrug); rummage alone: a hop into a bin or planter (its bonus pops out with 'bonus')

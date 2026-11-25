@@ -58,6 +58,12 @@ const KNOWN = [
   // rocks: set into the ground by design (a rock's foot is buried, its top shows: scatter in vegetation.js / world.js)
   ['*', 'c', ROCKS, null, 0, 'by design: rocks are set into the ground (their foot buried), not standing pieces', 'sunk'],   // (P121: a floating rock is not)
   ['*', 'd', ROCKS, null, 0, 'by design: a rock\'s flat facet under the ground beside its top: set into the ground'],
+  // H-15 (FRANCOS.md): the diggers' heaps of dug earth on Knartas's slope (a filled hole's low mound, a hole's spoil) rise
+  // out of the ground as the rocks do: their foot is in it by design (their own group, 'francos dig earth': the seat, the
+  // spades, the box and the shrine are not matched)
+  ['isle_knartas', 'c', /francos dig earth/, [2253, 1806], 12, 'by design: a heap of dug earth (a filled hole, a spoil heap) rises out of the ground, its foot in it', 'sunk'],
+  ['isle_knartas', 'd', /francos dig earth/, [2253, 1806], 12, 'by design: a heap of dug earth (a filled hole, a spoil heap) rises out of the ground, its foot in it'],
+  ['isle_knartas', 'e', /francos dig earth/, [2253, 1806], 12, 'by design: a heap of dug earth on the grass (not paving): its foot in the ground'],
   ['*', 'c', /gull|bird/i, null, 0, 'not a placed piece: birds perched or flying (they move between frames)'],
   ['*', 'c', /foam|ripple/i, null, 0, 'by design: foam and ripples lie on the water\'s surface'],
   ['*', 'c', /over [^|]*(cloud sea|water)/, null, 0, 'by design: piles and posts end in the cloud sea or the water (nothing under them is seen)'],
