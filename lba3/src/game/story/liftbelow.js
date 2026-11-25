@@ -129,7 +129,17 @@ export class LiftBelow extends ChapterBase {
     const L = this.built('wm_landing') && WM.landing;
     if (L && !this.ride) { L.setCage(0); L.setLever(false); }
     const B = this.built('wm_blow') && WM.blow;
-    if (B) { B.setCalm(!!f.zo_blow); B.setBox(!!f.zo_box); if (!this.blow) { this.blow = new Blow(this.game, this.built('wm_blow'), B); this.blow.onBeaten = () => this.blowBeaten(); this.blow.onHint = (k) => this.game.hud.toast(k, { k: this.game.hud.key('attack') }, 3200); } if (f.zo_blow) this.blow.calm(); }
+    if (B) {
+      B.setCalm(!!f.zo_blow); B.setBox(!!f.zo_box);
+      if (!this.blow) {
+        const R = this.built('wm_blow');
+        this.blow = new Blow(this.game, R, B); this.blow.onBeaten = () => this.blowBeaten(); this.blow.onHint = (k) => this.game.hud.toast(k, { k: this.game.hud.key('attack') }, 3200);
+        // (a ball target that follows it while it is awake: the ball's aim finds it, and goes through its gas)
+        this._blowT = { x: 0, y: 0, z: 0, r: 1.45, material: 'flesh', result: 'switch', done: true, onHit: (p) => this.blow.puff(p) };
+        R.ballTargets.push(this._blowT);
+      }
+      if (f.zo_blow) this.blow.calm();
+    }
   }
 
   // ================================================================ doors (the Platform's mine mouth)
@@ -251,7 +261,7 @@ export class LiftBelow extends ChapterBase {
       case 'zo_marl':
         if (f.zo_blow) return c(['zo_marl_blowdone']);
         if (f.zo_open) return c(['zo_marl_after', 'zo_marl_blow']);
-        if ((f.zo_gant || 0) >= 2 || f.zo_glove) return c([f.zo_oil ? 'zo_marl_blow' : 'zo_marl_oil']);
+        if ((f.zo_gant || 0) >= 2 || f.zo_glove) return c(f.zo_oil ? ['zo_marl_blow'] : ['zo_marl_oil', 'zo_marl_blow']);
         return c(['zo_marl_0', 'zo_marl_blow']);
     }
     return false;
@@ -517,6 +527,7 @@ export class LiftBelow extends ChapterBase {
     if (!m) this.lastMove = null;
     if (this.catching && m === this.catching && !B.held) { if (B.catchFrom(h)) this.catching = null; }
     B.update(dt);
+    const T = this._blowT; if (T) { T.x = B.pos.x; T.y = B.pos.y; T.z = B.pos.z; T.done = !B.awake || B.state === 'dying'; }
   }
   ballHit(p) {
     if (this.here() === 'wm_blow' && this.blow?.ballHit(p)) return true;
