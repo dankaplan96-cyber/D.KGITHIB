@@ -309,19 +309,19 @@ if (ONLY.includes('O')) {
     for (const k of ['w5t_1', 'w5t_2', 'w5t_3', 'w5c_open', 'w5c_store', 'w5s_broke', 'w5s_gem', 'w5s_sold']) delete f[k];
     f.w5c_fill = 6; game.story.applyFlags();
     goRegion('citadel', -99.5, 31.5, 0);
-    out.list = keep(SW.scan(box(W5.list.x, W5.list.z, 2), { step: 0.2 })); SW.free();
-    out.tin1 = keep(SW.scan(box(W5.tins[1].x, W5.tins[1].z, 2.2), { step: 0.2 })); SW.free();
+    out.list = keep(await SW.scan(box(W5.list.x, W5.list.z, 2), { step: 0.2 })); SW.free();
+    out.tin1 = keep(await SW.scan(box(W5.tins[1].x, W5.tins[1].z, 2.2), { step: 0.2 })); SW.free();
     goRegion('desert');
-    out.tin2 = keep(SW.scan(box(W5.tins[2].x, W5.tins[2].z, 2.2), { step: 0.2 })); SW.free();
-    out.stakes = W5.stakes.map((S) => { const r = keep(SW.scan(box(S.x, S.z, 1), { step: 0.15 })); SW.free(); return r; }).flat();
+    out.tin2 = keep(await SW.scan(box(W5.tins[2].x, W5.tins[2].z, 2.2), { step: 0.2 })); SW.free();
+    out.stakes = []; for (const S of W5.stakes) { out.stakes.push(...keep(await SW.scan(box(S.x, S.z, 1), { step: 0.15 }))); SW.free(); }
     goRegion('hamalayi');
-    out.tin3 = keep(SW.scan(box(W5.tins[3].x, W5.tins[3].z, 2.2), { step: 0.2 })); SW.free();
+    out.tin3 = keep(await SW.scan(box(W5.tins[3].x, W5.tins[3].z, 2.2), { step: 0.2 })); SW.free();
     const C = W5.cistern;
-    out.cistShut = keep(SW.scan(box(C.x, C.z - 0.8, 2.6), { step: 0.15 })); SW.free();
+    out.cistShut = keep(await SW.scan(box(C.x, C.z - 0.8, 2.6), { step: 0.15 })); SW.free();
     f.w5c_open = true; game.story.applyFlags(); game.step(0.1);
-    out.cistOpen = keep(SW.scan(box(C.x, C.z - 0.8, 2.6), { step: 0.15 })); SW.free();
+    out.cistOpen = keep(await SW.scan(box(C.x, C.z - 0.8, 2.6), { step: 0.15 })); SW.free();
     goRegion('isle_undergas');
-    out.seam = keep(SW.scan(box(W5.seam.x, W5.seam.z, 2.4), { step: 0.15 })); SW.free();
+    out.seam = keep(await SW.scan(box(W5.seam.x, W5.seam.z, 2.4), { step: 0.15 })); SW.free();
     return out;
   });
   check('O: the wave\'s pieces in each state they show — Nell\'s list, the three stacks with their tins, the stakes, the cistern shut and open (with its bucket and the trough\'s broken ice), the old frame packed with stones — scanned (overlap sweep library): no finding names a wave-5 piece', Object.values(o1).every((a) => a.length === 0), o1);

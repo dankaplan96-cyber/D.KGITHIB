@@ -207,23 +207,35 @@ export function buildSeam(parent, physics, x, y, z, ry, rockMat) {
 }
 
 // ---------------------------------------------------------------- one of Ilka's survey stakes (Desert Island)
-const stakeTex = (n) => M('w5-stake' + n, () => canvasTex(64, 128, (x, W, H) => {
-  x.fillStyle = '#e8dcc0'; x.fillRect(0, 0, W, H);
-  x.fillStyle = '#c8402a'; x.fillRect(0, 0, W, 18); x.fillRect(0, H - 18, W, 18);
-  x.fillStyle = '#2a1e14'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), W / 2, H / 2);
+// (#64, 25.11: a thin pale post with a 6 cm flag read as a stick from the Far play camera. A surveyor's stake as one is
+//  painted: bright orange bands top and bottom and a broad one under the number, the post 10 -> 13 cm, the canvas twice
+//  as fine, a painted cap with its number on top; the tell-tale a hand broad, in flagging-tape orange that glows a
+//  little (below). The flag hangs where it did)
+const stakeTex = (n) => M('w5-stake' + n, () => canvasTex(128, 256, (x, W, H) => {
+  x.fillStyle = '#f4ecd8'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#ff5a1a'; x.fillRect(0, 0, W, 46); x.fillRect(0, H - 30, W, 30); x.fillRect(0, 168, W, 18);
+  x.fillStyle = '#1e140c'; x.font = 'bold 96px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), W / 2, 110);
+}));
+const stakeCap = (n) => M('w5-stakecap' + n, () => canvasTex(128, 128, (x, W, H) => {
+  x.fillStyle = '#ff5a1a'; x.fillRect(0, 0, W, H);
+  x.fillStyle = '#fff8ea'; x.fillRect(14, 10, W - 28, H - 20);
+  x.fillStyle = '#1e140c'; x.font = 'bold 100px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(n), W / 2, H / 2 + 6);
 }));
 export function buildStake(parent, physics, n, x, y, z) {
   W5.stakes ||= [];
   if (W5.stakes[n - 1]) return W5.stakes[n - 1];
   const grp = holder(parent, x, y, z, 0, 'wave5 stake' + n);
-  const post = new THREE.Mesh(rbox(0.1, 1.25, 0.1, 0.01), new THREE.MeshStandardMaterial({ map: stakeTex(n), roughness: 0.85 }));
+  const post = new THREE.Mesh(rbox(0.13, 1.25, 0.13, 0), new THREE.MeshStandardMaterial({ map: stakeTex(n), roughness: 0.85 }));   // (#64: a plain box: each face carries the whole texture; a rounded rbox's UVs are metres)
   post.position.y = 0.6; post.castShadow = true; grp.add(post);
+  // (#64: its number on a painted cap at the top, 24 cm, the same on its four sides: read from the Far camera)
+  const cap = new THREE.Mesh(rbox(0.24, 0.2, 0.24, 0), new THREE.MeshStandardMaterial({ map: stakeCap(n), roughness: 0.8 }));
+  cap.position.y = 1.31; cap.castShadow = true; grp.add(cap);
   const wire = new THREE.Mesh(cyl(0.008, 0.008, 0.35, 4), MAT.iron()); wire.position.y = 1.4; grp.add(wire);
   // the tell-tale: a strip of red cloth on a pivot at the wire's top (hangs; lifts in a warm breath)
   const piv = new THREE.Group(); piv.position.y = 1.56; grp.add(piv);
-  const flag = new THREE.Mesh(plane(0.06, 0.3), new THREE.MeshStandardMaterial({ color: '#e0402a', roughness: 0.8, side: THREE.DoubleSide }));
-  flag.position.y = -0.15; piv.add(flag);
-  const col = physics.add({ type: 'cyl', x, z, r: 0.1, top: y + 1.3, noStand: true, seeThrough: true });
+  const flag = new THREE.Mesh(plane(0.13, 0.34), new THREE.MeshStandardMaterial({ color: '#ff4a1c', emissive: '#ff4a1c', emissiveIntensity: 0.35, roughness: 0.8, side: THREE.DoubleSide }));
+  flag.position.y = -0.17; piv.add(flag);
+  const col = physics.add({ type: 'cyl', x, z, r: 0.13, top: y + 1.41, noStand: true, seeThrough: true });
   const S = { n, grp, piv, x, z, y, col, lift: 0, t: n * 1.3,
     // the flag: hanging (0) or lifted (1), with a small flutter
     pose(dt) { this.t += dt; const a = this.lift * 1.25 + Math.sin(this.t * (this.lift > 0.1 ? 9 : 2.2)) * (0.05 + this.lift * 0.12); piv.rotation.z = a; } };

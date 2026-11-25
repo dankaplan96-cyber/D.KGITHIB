@@ -249,26 +249,26 @@ if (ONLY.includes('E')) {
 // ================================================================ O · the pieces scanned
 if (ONLY.includes('O')) {
   await page.addScriptTag({ path: SWEEP }); await ev(() => SW.init());
-  const o1 = await ev(() => {
+  const o1 = await ev(async () => {
     const out = {}, f = game.flags;
     const keep = (r) => { const all = [...(r.interp || []), ...(r.zf || []), ...(r.floats || []), ...(r.sunk || []), ...(r.buried || []), ...(r.decals || []), ...(r.rockCut || [])]; return all.filter((x) => /wave8/.test(JSON.stringify(x))).map((x) => JSON.stringify(x).slice(0, 300)); };
     const box = (x, z, r) => ({ bounds: { x0: x - r, x1: x + r, z0: z - r, z1: z + r } });
     for (const k of ['w8c_open', 'w8c_up', 'w8a_done']) delete f[k];
     game.story.applyFlags();
     goRegion('zeelich');
-    out.hatch = keep(SW.scan(box(W8.hatch.x, W8.hatch.z, 2.0), { step: 0.12 })); SW.free();
+    out.hatch = keep(await SW.scan(box(W8.hatch.x, W8.hatch.z, 2.0), { step: 0.12 })); SW.free();
     goRegion('desert');
-    out.ledge = keep(SW.scan(box(W8.ledge.x + 1.8, W8.ledge.z, 3.2), { step: 0.15 })); SW.free();
+    out.ledge = keep(await SW.scan(box(W8.ledge.x + 1.8, W8.ledge.z, 3.2), { step: 0.15 })); SW.free();
     goRegion('hamalayi');
-    out.archShut = keep(SW.scan(box(W8.arch.foot.x, W8.arch.foot.z, 2.2), { step: 0.12 })); SW.free();
-    out.grateShut = keep(SW.scan(box(W8.arch.top.x, W8.arch.top.z, 1.2), { step: 0.1 })); SW.free();
+    out.archShut = keep(await SW.scan(box(W8.arch.foot.x, W8.arch.foot.z + 2.2, 4.4), { step: 0.12 })); SW.free();   // (#64: and its bank steps)
+    out.grateShut = keep(await SW.scan(box(W8.arch.top.x, W8.arch.top.z, 1.2), { step: 0.1 })); SW.free();
     f.w8c_open = true; f.w8c_up = true; game.story.applyFlags(); game.step(0.1);
-    out.archOpen = keep(SW.scan(box(W8.arch.foot.x, W8.arch.foot.z, 2.2), { step: 0.12 })); SW.free();
-    out.grateOpen = keep(SW.scan(box(W8.arch.top.x, W8.arch.top.z, 1.2), { step: 0.1 })); SW.free();
+    out.archOpen = keep(await SW.scan(box(W8.arch.foot.x, W8.arch.foot.z, 2.2), { step: 0.12 })); SW.free();
+    out.grateOpen = keep(await SW.scan(box(W8.arch.top.x, W8.arch.top.z, 1.2), { step: 0.1 })); SW.free();
     goRegion('isle_otringal');
-    out.papers = keep(SW.scan(box(W8.papers.x, W8.papers.z, 2.2), { step: 0.08 })); SW.free();
+    out.papers = keep(await SW.scan(box(W8.papers.x, W8.papers.z, 2.2), { step: 0.08 })); SW.free();
     goRegion('citadel', W8.slate.x + 3, W8.slate.z, 0);
-    out.slate = keep(SW.scan(box(W8.slate.x, W8.slate.z, 1.2), { step: 0.1 })); SW.free();
+    out.slate = keep(await SW.scan(box(W8.slate.x, W8.slate.z, 1.2), { step: 0.1 })); SW.free();
     return out;
   });
   check('O: every wave-8 piece in each state it shows — the hatch and its dog, the ledge and the flat rock, the arch shut and open, the grate shut and open, the news sheets on the stall, the tent\'s slate — scanned (overlap sweep library): no finding names a wave-8 piece', Object.values(o1).every((a) => a.length === 0), o1);

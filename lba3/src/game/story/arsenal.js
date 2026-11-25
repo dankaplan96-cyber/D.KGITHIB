@@ -171,7 +171,7 @@ export class Arsenal extends ChapterBase {
         // the sign at its foot, toward the door
         const signTex = canvasTex(256, 128, (x, W, Hh) => { x.fillStyle = '#e8d8b0'; x.fillRect(0, 0, W, Hh); x.strokeStyle = '#6a4a2a'; x.lineWidth = 6; x.strokeRect(3, 3, W - 6, Hh - 6); x.fillStyle = '#3a2a1a'; x.textAlign = 'center'; x.font = 'bold 34px sans-serif'; x.fillText('TEST STEP', W / 2, 52); x.font = 'bold 22px sans-serif'; x.fillText('NO LADDER. THAT IS', W / 2, 86); x.fillText('THE TEST.   - B.', W / 2, 112); });
         k.add(cyl(0.03, 0.03, 1.3, 6), dark, -0.55, 0.65, 1.15);
-        k.add(rbox(0.7, 0.36, 0.03, 0.01), MAT.map(signTex, 0.9), -0.55, 1.2, 1.17);
+        k.add(rbox(0.7, 0.36, 0.03, 0), MAT.map(signTex, 0.9), -0.55, 1.2, 1.17);   // (#64: a plain box: each face carries the whole texture; a rounded rbox's UVs are metres)
         k.flush();
         const tin = new THREE.Group(); tin.position.set(-0.2, H, 0.15); grp.add(tin);
         const tb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.14, 0.2), MAT.flat('#8a9a9a', 0.45, { metalness: 0.5 })); tb.position.y = 0.07; tin.add(tb);

@@ -812,8 +812,11 @@ class Game {
   }
   crystalSpots() {
     const W = this.world, G = (x, z) => this.physics.groundAt(x, z) + 0.75, mt = this.regions.built('zeelich')?.millTop;
+    // (#59, 25.11: the orchard's crystal moved 12 m from a rock crack on the cliff's edge, (-85, -49.5), where only a
+    //  sliver showed, to the grass between the trees west of the project's yard; the same id, so a save that took it keeps
+    //  it. citydress.js and containers.js keep the same spot clear)
     const out = [
-      { id: 'sc-lighthouse', x: -113, z: 85 }, { id: 'sc-orchard', x: -85, z: -49.5 }, { id: 'sc-pier', x: W.pierEnd.x - 0.6, z: W.pierEnd.z },
+      { id: 'sc-lighthouse', x: -113, z: 85 }, { id: 'sc-orchard', x: -91, z: -60 }, { id: 'sc-pier', x: W.pierEnd.x - 0.6, z: W.pierEnd.z },
       { id: 'sc-east', x: -28, z: 40 }, { id: 'sc-north', x: -45, z: -84 },
     ].map((c) => ({ ...c, y: G(c.x, c.z) }));
     // (the count is six whether or not Zeelich is built yet)
