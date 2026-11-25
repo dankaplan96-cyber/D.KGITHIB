@@ -42,7 +42,7 @@ import { fitAdd, FIT } from './worldfit.js';
 import { roomOcc } from './roomocc.js';
 import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
-import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS, COURT, COURT_ROCKS, courtAt, courtClear } from './desertold.js';
+import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS, COURT, COURT_ROCKS, courtAt, courtClear, schoolDoorwayAt, SCHOOL_DOOR } from './desertold.js';
 import { buildTestStand, buildSteamDrive } from './teststand.js';
 import {
   tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, LodBatch, emblemMaterial, emq, mergeGeos, BATCH,
@@ -240,6 +240,7 @@ function origGround(x, z) {
   return O + ((n ? s / n : O) - O) * smoothstep(6, 2.5, td);
 }
 
+const schoolSill = { y: null, busy: false };   // (the School's sill level, worked out once: heightFn at its door zone)
 function heightFn(x, z) {
   // our places: the old plain with its dunes (long crests across the wind, from the west, with a cross ripple), flat
   // where people live and drive, each place at its own level (keepMix)
@@ -277,6 +278,13 @@ function heightFn(x, z) {
   // Tali's court on the School's back terrace (desertold.js COURT, P83): its yard held level
   const ca = courtAt(x, z);
   if (ca > 0) h += (COURT.g - h) * ca;
+  // the School's doorway (desertold.js SCHOOL_DOORWAY, P113's door-level rule): sand over the chin door's sill is cut
+  // back to it (the sill: the valley floor at LBA2's door zone, where he stands to go in, as desertold.js sets it)
+  const sw = schoolDoorwayAt(x, z);
+  if (sw > 0 && !schoolSill.busy) {
+    if (schoolSill.y == null) { schoolSill.busy = true; schoolSill.y = heightFn(SCHOOL_DOOR.x, SCHOOL_DOOR.z); schoolSill.busy = false; }
+    if (h > schoolSill.y) h -= (h - schoolSill.y) * sw;
+  }
   // near the pier the beach slopes gently down to the deck
   const dd = Math.hypot(x - (DOCK.x + 8), (z - DOCK.z) * 0.8);
   if (dd < 22) h = h + (DOCK.deck + 0.2 + (h - DOCK.deck - 0.2) * smoothstep(4, 22, dd) - h) * (1 - smoothstep(16, 22, dd));
