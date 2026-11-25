@@ -448,6 +448,7 @@ class Game {
       this.earlyCompile = this.renderer.precompile().catch(() => {});
     }
     // the areas (src/game/regions.js): this computer's pace on Citadel sets the loading card's estimates
+    P.bridgeTreads(P.colliders);   // (BRIDGES: Citadel's plank decks walked as one floor; each area's as it is built: regions.js)
     this.regions = new Regions(S, P, (gid, rooms, why) => this.regionBuilt(gid, rooms, why));
     this.regions.afterBuilt = (gid, rooms) => this.regionReady(gid, rooms);
     this.regions.paint = nextPaint;   // (TITLE-LOAD: an area built in steps paints between them: regions.js buildAsync)

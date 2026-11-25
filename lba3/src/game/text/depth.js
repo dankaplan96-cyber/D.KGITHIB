@@ -174,7 +174,6 @@ Object.assign(STR.en, {
   dx_far_look_line: 'A davit with a cord ring, and more rings across the cloud. The line can take me over.',
   dx_far_hint_yard: "The barges' yard. No way over on foot... but further along the railing there's a mooring rock with an Esmer arch.",
   dx_far_hint_quay: 'The west quay. Not on foot. Further along the shore, though, an old mooring rock sits in the cloud. Rings on it.',
-  dx_far_hint_islet: "The honey islet. Its plank bridge is set for Mosquibee strides, not mine. But there's a ring over one of its planks.",
   dx_far_yard_over: "The barges' yard. The cargo store is round the front.",
   dx_far_quay_over: "The west quay. Somebody's house, and a locker by it.",
   dx_far_honey_over: 'The honey islet. It smells wonderful.',
@@ -189,7 +188,7 @@ Object.assign(STR.en, {
   dx_far_honey_empty: "I've had my spoonful. The Mosquibees are watching me.",
   dx_j_far_yard: "Otringal's barges' yard, across the clouds: reached on the Esmer line, by way of a mooring rock.",
   dx_j_far_quay: "Otringal's west quay, across the clouds: reached on the Esmer line, by way of a mooring rock.",
-  dx_j_far_honey: "Mosquibee's honey islet: the line takes me over its plank bridge. Its honey pot puts my life back.",
+  dx_j_far_honey: "Mosquibee's honey islet, over its plank bridge and down the steps. Its honey pot puts my life back.",
 
   // ---- wave 3 · HAM-4: the gorge's ice arch
   dx_arch_look: 'A cord ring frozen into that ice arch over the gorge. Somebody crossed here once.',

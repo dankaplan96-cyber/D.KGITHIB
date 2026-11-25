@@ -671,6 +671,9 @@ const STYLE = {
     // (ISLES-BAR: the hive keepers' hall stands on the ledge 13 m under the meadow's east edge, which nothing reached: a
     //  honey hoist down the cliff, the Mosquibees' own way for the jars)
     hoists: [{ id: 'mb_hoist', tower: [20.3, 9.8, Math.PI], h: 14.5, w: 2.0, head: [17.6, 9.8], foot: [22.5, 9.9] }],
+    // (BRIDGES: the plank bridge to the honey islet ends 3–5 m over the honey room's yard, which was cut down to the room's
+    //  door: a flight of steps from the bridge's south edge, by its last planks but one, down into the yard)
+    flights: [{ a: [-8.51, 21.6], b: [-8.51, 27.25], w: 1.2, deck: true }],
     trees: '#fff0b8', ground: ['#eef2a0', '#f4e890', '#e8d8b0'], pave: 'concrete', paveAt: () => false,
     walls: ['#fff4d8', '#f8e8c0', '#f4f0e0'], domes: [['#d89a30', '#ffe6a8'], ['#c8a020', '#fff0a0']],
     target: { x: 27, z: -6, word: 'HIVES' }, near: 12, far: 30,
@@ -2011,10 +2014,11 @@ function buildIsland0(scene, physics, name, L, at) {
   // ISLES-BAR (S.flights): a flight of dressed steps up a bank too steep to walk, from a (its foot, local x, z) to b (its
   // head), w m wide: risers of at most 0.24 m; each step's collider runs back under the higher ones to the head (no seam;
   // the height under his feet decides, as on the decks' stairs and KNARTAS-LEDGE's door steps). Where the bank's own
-  // ground stands over a step, he walks on the ground (it is gentle enough there: the steps are for the steep part)
+  // ground stands over a step, he walks on the ground (it is gentle enough there: the steps are for the steep part).
+  // F.deck: the head is on a deck (what he stands on there, not the ground: BRIDGES, Mosquibee's plank bridge)
   for (const F of S.flights || []) {
     const [ax, az] = F.a, [bx, bz] = F.b, len = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / len, uz = (bz - az) / len, lx = -uz, lz = ux, hw = F.w / 2;
-    const ya = gy(ax, az), yb = gy(bx, bz) + 0.04, n = Math.ceil((yb - ya) / 0.24), rise = (yb - ya) / n, run = len / n;
+    const ya = gy(ax, az), yb = (F.deck ? physics.groundAt(ox + bx, oz + bz, 60) : gy(bx, bz)) + 0.04, n = Math.ceil((yb - ya) / 0.24), rise = (yb - ya) / n, run = len / n;
     const low = (x, z) => { let m = Infinity; for (const u of [-hw, 0, hw]) m = Math.min(m, gy(x + lx * u, z + lz * u)); return m; };
     for (let i = 0; i < n; i++) {
       const v0 = i * run, v1 = (i + 1) * run, top = ya + (i + 1) * rise, mx = ax + ux * (v0 + v1) / 2, mz = az + uz * (v0 + v1) / 2;
