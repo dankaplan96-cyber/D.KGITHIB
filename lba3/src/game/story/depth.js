@@ -41,6 +41,7 @@ import { islePhase } from '../islandlife.js';
 import { tm } from '../kit.js';
 import { revealBeat } from './revealcam.js';
 import '../text/depth.js';
+import { Wave5 } from './wave5.js';   // (WAVE5 H-12, H-13, H-14: story/wave5.js, asked through this module)
 
 // ---------------------------------------------------------------- ISL-1's layout (the room's frame: ihomes.js IH.frame)
 const GEM_ROOM = roomOf('knartas-28-29');
@@ -120,6 +121,17 @@ const ARCH = { stack: [-15.5, 43.5], top: 5.2, foot: [-15.5, 37.2], look: [-8.5,
 const oweFlag = (id) => 'dx_owe_' + id.replace(/-/g, '_');
 
 export class Depth extends ChapterBase {
+  // WAVE5 (docs/lba-maturity/WAVE5.md): wave 5's quests live in story/wave5.js and are asked through this module's hooks
+  // (this.w5). Three of the director's hooks that do not ask this module (the lance's jet, a melee hit, the journal) are
+  // passed on here, on the director itself: its own answer first, wave 5's after (no line added to index.js).
+  constructor(story) {
+    super(story);
+    this.w5 = new Wave5(story);
+    const S = story, jet = S.jetHit, melee = S.meleeHit, journal = S.journal;
+    S.jetHit = (o) => jet.call(S, o) || this.w5.jetHit(o);
+    S.meleeHit = (o) => melee.call(S, o) || this.w5.meleeHit(o);
+    S.journal = () => [...journal.call(S), ...this.w5.journal()];
+  }
   get RG() { return this.game.regions; }
   able() { const b = this.game.hero.body; return b !== 'zoe' && b !== 'worker'; }
   idx(key) { return this.story.chapters.findIndex((c) => c.key === key); }
@@ -185,7 +197,7 @@ export class Depth extends ChapterBase {
     if (R.hamalayi?.gorge && this.once('arch')) this.buildArch(R.hamalayi);
     this.applyFlags();
   }
-  regionBuilt() { this.applyWorld(); }
+  regionBuilt(ids) { this.applyWorld(); this.w5.regionBuilt(ids); }
   applyFlags() {
     this.settleCrystals();
     this.settleOwed('dx_owe_heat', 'coin', HEAT.pay, 'dx_toast_kashes');
@@ -195,6 +207,7 @@ export class Depth extends ChapterBase {
     this.settleOwed('dx_owe_far_quay', 'clover', 1, 'dx_toast_clover');
     this.settleOwed('dx_owe_arch_clover', 'clover', 1, 'dx_toast_clover');
     this.applyWorld();
+    this.w5.applyFlags();
   }
   applyWorld() {
     this.held = null;
@@ -1591,13 +1604,15 @@ export class Depth extends ChapterBase {
   lineTargets() { const out = []; this.farTargets(out); this.archTargets(out); return out; }
 
   // ================================================================ the director's hooks
-  interactables(consider, dist) { this.gemInteractables(consider, dist); this.wayInteractables(consider, dist); this.packInteractables(consider, dist); this.gazeInteractables(consider, dist); this.srcInteractables(consider, dist); this.heatInteractables(consider, dist); this.storeInteractables(consider, dist); this.goatInteractables(consider, dist); this.farInteractables(consider, dist); this.archInteractables(consider, dist); }
+  interactables(consider, dist) { this.gemInteractables(consider, dist); this.wayInteractables(consider, dist); this.packInteractables(consider, dist); this.gazeInteractables(consider, dist); this.srcInteractables(consider, dist); this.heatInteractables(consider, dist); this.storeInteractables(consider, dist); this.goatInteractables(consider, dist); this.farInteractables(consider, dist); this.archInteractables(consider, dist); this.w5.interactables(consider, dist); }
   interact(it) {
     // (the street's own looks, zeelife.js: a dark post's tag read counts as a clue; the burrow's vent and the store's
     //  shut door are answered here while their quest wants them)
     if (it?.kind === 'zltag' && this.heatWindow()) this.f.dx_heat_tag = true;
     if (it?.kind === 'zlburrow' && this.heatVent()) return true;
     if (it?.kind === 'zhshut' && it.key === 'zh_closed_depot' && this.storeHere()) return this.storeInteract();
+    if (it?.kind === 'dl_read' && it.id === 'survey' && this.w5.canPin()) return this.w5.pin();   // (WAVE5 H-14: the readings pinned to Ilka's board)
+    if (this.w5.interact(it)) return true;
     if (it?.kind === 'ihfar' && this.hasLine() && FARS.some((d) => !d.walk && it.key === 'ih_far_' + d.id)) { const d = FARS.find((q) => it.key === 'ih_far_' + q.id); this.chain([['hero', 'dx_far_hint_' + d.id]]); return true; }
     if (typeof it?.kind !== 'string' || !it.kind.startsWith('dx_')) return false;
     if (it.kind === 'dx_heatcap') return this.heatInteract(it);
@@ -1613,6 +1628,10 @@ export class Depth extends ChapterBase {
   }
   talkFirst(npc) {
     if (this._passing) return false;
+    if (this.w5.talkPre(npc) || this.talkOwn(npc)) return true;
+    return this.w5.talkFirst(npc);   // (WAVE5: after this module's own hooks)
+  }
+  talkOwn(npc) {
     const id = npc?.def?.id;
     if (id === 'il_jaspa') return this.jaspaTalk(npc);
     if (id === 'hl_monk') return this.tenpaTalk(npc);
@@ -1625,12 +1644,12 @@ export class Depth extends ChapterBase {
     if (id === 'weaver') return this.lumiTalk(npc);
     return false;
   }
-  forkHit(o) { return this.gemFork(o) || this.srcFork(o); }
+  forkHit(o) { return this.gemFork(o) || this.srcFork(o) || this.w5.forkHit(o); }
   heatHit(o) { return this.packHeat(o); }
   // the pulse tool (index.js pulseHit): the store's motor
   pulseHit(o) { return this.storePulse(o); }
   // the things that hum, for the pocket set (story/kit2.js hums): the drift, until it is dug
-  hums() { const Z = this.gz; return Z && this.at('dig') && !this.f.dx_gaze_dug ? [{ id: 'dx_drift', room: 'desert', x: Z.x, y: Z.gy + 0.3, z: Z.z }] : []; }
+  hums() { const Z = this.gz; return [...(Z && this.at('dig') && !this.f.dx_gaze_dug ? [{ id: 'dx_drift', room: 'desert', x: Z.x, y: Z.gy + 0.3, z: Z.z }] : []), ...this.w5.hums()]; }   // (WAVE5: the old adit's seam)
   // Brosk's shovel while it is lent (the inventory)
   items() {
     const f = this.f, out = [];
@@ -1638,12 +1657,14 @@ export class Depth extends ChapterBase {
     if (f.dx_heat_spanner && !f.dx_heat_back) out.push({ id: 'spanner', icon: 'pliers' });
     if (f.dx_store_kit && !f.dx_store_given) out.push({ id: 'radkit', icon: 'parcel' });
     if (f.dx_kite === 'torn' || f.dx_kite === 'mended') out.push({ id: f.dx_kite === 'torn' ? 'kite_torn' : 'kite', icon: 'cloth' });
+    out.push(...this.w5.items());   // (WAVE5)
     return out;
   }
   update(dt) {
     this.keepSteer();
     this.gemUpdate(dt); this.wayUpdate(dt); this.packUpdate(dt); this.gazeUpdate(dt); this.srcUpdate(dt);
     this.heatUpdate(dt); this.storeUpdate(dt);
+    this.w5.update(dt);   // (WAVE5)
     if (this._honeyRoom && this.here() !== this._honeyRoom) this._honeyRoom = null;   // (ISL-3: the honey pot again on the next visit)
     this.farWalked();
     const g = this.game, f = this.f;
