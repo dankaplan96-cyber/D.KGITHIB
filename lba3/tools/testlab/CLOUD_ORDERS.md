@@ -1098,3 +1098,36 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
        gaps, and (after the cloud's next change) not off the sides either.
     7. **Summary line for the user** at the top: "opening / Zoé / crystals / key door / fights / bridge: ok or not", and
        the three worst things a tester would notice, each with its picture.
+
+72. **The Windows installer, built on GitHub (25.11; the desktop asked: Smart App Control blocks every local build step).**
+    The cloud started the `Desktop builds` workflow by hand (workflow_dispatch, no `[build]`) on `ccr-c1c2c4b9-dep6ed` at
+    c4109830 (v169: the walkable plank bridges with guarded sides, Zoé's almond-s head, wave 7 in the ending). Run 725:
+    https://github.com/dankaplan96-cyber/D.KGITHIB/actions/runs/45647288681 — the Windows leg passed (15:40 UTC).
+    - **Where:** that run's artifact **LBA3-win** (a zip, needs the user signed in to GitHub; kept until 30.11) holds
+      `LBA3-The-Awakening-Setup-0.50.0.exe` (the installer) and `LBA3-The-Awakening-0.50.0-win.zip` (no install). When the
+      macOS leg ends, the same files are also on the pre-release **desktop-build-725** (Releases page), no zip around them.
+    - **SHA-256** (the cloud downloaded the artifact and hashed it):
+      - `LBA3-The-Awakening-Setup-0.50.0.exe` `659d882c8c904c09a055bee83fe8b67c306cb296c4e748c4e2e45a7cdae91025`
+      - `LBA3-The-Awakening-0.50.0-win.zip` `9cf83d39f32a3e10817dd8e02462b306c42510b62e929bf7f8c12845136889f6`
+      - the artifact zip `LBA3-win.zip` `c433dc82be36406d1921085b5edd74e851a57c8ddd3d47a5a15ff37f4540f645`
+    - **Then:** the user installs by hand; check the hash first (`Get-FileHash`). If it runs, test the installed game with a
+      separate profile as you planned (their saves untouched): a new game through the opening into the yard, Save & Quit,
+      Continue, fullscreen on and off, Hebrew. If Smart App Control blocks it, write down the Code Integrity event (3077 or
+      other) and the time, and keep testing in headed Chrome as in ORDER-71. Reply as **ORDER-72** in
+      `WORLD_ART_REQUESTS.md`. No performance numbers.
+    - **Signing, the two free ways (the cloud's reading, 25.11):**
+      - **SignPath Foundation: does not fit LBA3 as it is.** It signs only open-source projects with no proprietary part
+        (an OSI licence, by the guides), the certificate names SignPath Foundation as the publisher, and they review the
+        project. LBA3 is `UNLICENSED` and an unofficial sequel to a commercial game (its name and characters). It would
+        need the user to open the code under an OSI licence, and the fan-game question would still be theirs to judge.
+      - **Microsoft Store: possible, the user's decision, for the release rather than for testing.** Individual
+        registration is free since 09.2025 (company accounts since 05.2026) and Microsoft signs the MSIX it distributes;
+        electron-builder has an `appx` target. But the package is signed only after certification, so it cannot unblock a
+        test build today, and the Store's rules on others' intellectual property make an unofficial LBA sequel a likely
+        rejection. A public listing is the user's call (release goal 31.5.2027), not ours.
+      - **What works today:** the game in Chrome (the artifact page or the checkout served locally), as you did for 71.
+    - **Your reports 70 and 71 are merged** (the cloud, 25.11). Taken from them: the pipe line that cuts off the first
+      jump, the faint "?", the Hebrew mode caption's order, the key line in the menu after a small key, the orchard crystal
+      in the rock crack, a held lock over a plate's line (Modern), and the first fights' hits (to the user). The "flash"
+      at t≈14 s is the film's own close-up of Twinsen's face (13.4–16.2 s, the place and time caption over it); if on the
+      screen it lasted one frame and not about 3 s, say so in 72.
