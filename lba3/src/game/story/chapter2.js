@@ -23,6 +23,7 @@ import { crossByShip } from '../travelfilm.js';
 import '../text/ch2.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
 import { LiftThread } from './zeelift.js';
+import { f58, DRONE_EARLY, ZGUARD_PAUSE } from '../fight58.js';
 //
 // MILLS (REVIEW-TASKS-19-11 task 5): the brakes have a cost. The plaza fountain and the pumps up to the east terraces run
 // off the same mills (zeelich.js R.fountain: it runs while all three turn). The first brake stops it: a cut-away to the
@@ -53,6 +54,10 @@ const DEPOT_EAR = { glance: 14, look: 1.6, check: 4.0, cool: 6, bored: 2, forget
 // reach (the baton from 1.5 m, 1.3 m and a short step in the strike) and a clear wind-up (0.9 s, with a bark). The fight
 // stays: armour 2, 5 lives, the baton's 2. guards.js GUARD_TUNE: every other guard as it was
 const ZGUARD_TUNE = { close: 1.5, windup: 0.9, windCue: true, lunge: 1.2, strikeR: 1.3, shotMin: 3.0, shotRange: 6.5, tell: 1.0, boltV: 6.5, boltDmg: 0.5, shotCool: 2.8 };
+// (#58 ?fight58=c: a longer pause after his baton strike, so a charged throw back fits; ?fight58=a: the drones of the
+//  first two fights fire slower — fight58.js)
+const zguardTune = () => (f58('c') ? { ...ZGUARD_TUNE, ...ZGUARD_PAUSE } : ZGUARD_TUNE);
+const zdroneTune = () => (f58('a') ? DRONE_EARLY : null);
 
 export class Chapter2 extends ChapterBase {
   get Z() { return this.game.rooms.zeelich; }
@@ -104,16 +109,16 @@ export class Chapter2 extends ChapterBase {
     if (B) {
       const dr = B.drones, k = Math.floor(dr.length / 2), G0 = B.guard, P0 = B.dogPost;
       return [
-        { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, x: dr[0][0], z: dr[0][1], patrol: dr, wp: 1, when },
-        { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, x: dr[k][0], z: dr[k][1], patrol: dr, wp: (k + 1) % dr.length, when },
-        { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: G0[0][0], z: G0[0][1], angle: Math.atan2(G0[1][0] - G0[0][0], G0[1][1] - G0[0][1]), patrol: G0, wp: 1, when, tune: ZGUARD_TUNE },
+        { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, tune: zdroneTune(), x: dr[0][0], z: dr[0][1], patrol: dr, wp: 1, when },
+        { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, tune: zdroneTune(), x: dr[k][0], z: dr[k][1], patrol: dr, wp: (k + 1) % dr.length, when },
+        { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: G0[0][0], z: G0[0][1], angle: Math.atan2(G0[1][0] - G0[0][0], G0[1][1] - G0[0][1]), patrol: G0, wp: 1, when, tune: zguardTune() },
         { id: 'zgdog1', kind: 'gdog', coat: 'brown', group: 'zdepot', x: P0.x, z: P0.z, angle: P0.a, patrol: [[P0.x, P0.z]], wp: 0, when },
       ];
     }
     return [
-      { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
-      { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[h][0], z: D.patrol[h][1], patrol: D.patrol, wp: (h + 1) % n, when },
-      { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when, tune: ZGUARD_TUNE },
+      { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, tune: zdroneTune(), x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
+      { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, tune: zdroneTune(), x: D.patrol[h][0], z: D.patrol[h][1], patrol: D.patrol, wp: (h + 1) % n, when },
+      { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when, tune: zguardTune() },
       { id: 'zgdog1', kind: 'gdog', coat: 'brown', group: 'zdepot', x: D.patrol[h][0], z: D.patrol[h][1], patrol: [...D.patrol].reverse(), wp: (n - h) % n, when },
     ];
   }

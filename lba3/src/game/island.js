@@ -22,6 +22,7 @@ import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
 import { HATCHES } from './sewers.js';
+import { f58, COVER58 } from './fight58.js';
 import { TOWN_FLAT, PROM, PROM_H, PROM_WALLS, PROM_STAIR, PLAZA, LAWN, PIPE_METER, PROM_EDGE } from './citadel-layout.js';
 
 // ================================================================== layout
@@ -2424,6 +2425,12 @@ function buildDepot(W0, root, r) {
   crateStack(W, grp, [[17.6, 53.6, 2], [17.5, 54.8, 1], [17.9, 52.6, 1, 0.8], [11.0, 45.2, 1, 0.9], [12.0, 45.0, 2, 0.8]], r);
   techCrates(W, grp, [[6.0, 58.6, 2, 0.95], [7.2, 58.9, 1, 0.95], [17.6, 56.0, 1, 0.9]], r);
   barrels(W, grp, [[8.4, 44.8], [9.2, 44.7], [8.7, 45.8, true]], r);
+  // (#58 ?fight58=b: a cover stack in the yard, and the barrels on the public path give a heart when searched: fight58.js)
+  if (f58('b')) {
+    crateStack(W, grp, COVER58.citadel.map(([x, z, n]) => [x, z, n, 1]), r);
+    W0.givers.push({ id: 'depot-barrels', ...sh('depot', 8.8, 45.1), r: 1.9, top: 1.0, kinds: ['life'], n: 1 });
+    W0.depotCover = COVER58.citadel.map(([x, z]) => sh('depot', x, z));
+  }
   handcart(W, grp, B, 6.4, 45.7, 0.2, r);
   floodMast(W, B, -0.4, 59.4, 9, 52);
   floodMast(W, B, 18.4, 44.6, 9, 52);
