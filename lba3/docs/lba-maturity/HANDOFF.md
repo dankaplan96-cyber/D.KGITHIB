@@ -16,6 +16,8 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
 - **Branch:** `ccr-c1c2c4b9-dep6ed` (push only there). Clean and pushed. **The branch head is ahead of v170** with work awaiting the user's pick:
   #65 wave 4 gaps (`WAVE4.md`), the small fixes (`SMALLFIX-26-11.md`, sheet `captures/smallfix/sheet.png`), the
   dialogue-check duplicate-key guard. #58 (`FIGHTS58.md`) is still with its worker.
+  Merged-branch tests 26.11 (automated runtime only, SwiftShader): tester-fixes 10/10, wave7 E+S 12/12, wave4 B+D+E
+  20/20, dialogue-check PASS.
 - **Published:** **v170**, artifact version **`1795635920-1400`** = the next `base_version`.
   - Slug `6f31d0d2-efe4-4413-a370-7d95a7f5785b`.
   - URL https://claude.ai/artifact/EjPMQXPwbmre2kDevMC4tA.
