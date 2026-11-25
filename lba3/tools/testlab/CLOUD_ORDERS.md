@@ -1131,3 +1131,10 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
       in the rock crack, a held lock over a plate's line (Modern), and the first fights' hits (to the user). The "flash"
       at t≈14 s is the film's own close-up of Twinsen's face (13.4–16.2 s, the place and time caption over it); if on the
       screen it lasted one frame and not about 3 s, say so in 72.
+
+73. **After v170 (25.11, evening).** Your message about Zoé's head reached the cloud: `almond-m` is the default in v170 (the user's pick; `?zoehead=almond-s` stays for comparison). Build: `ccr-c1c2c4b9-dep6ed` head, `git pull`; play in headed Chrome as in 71 (or the installer of 72 if Smart App Control lets it run), real keys, 1366×768 and fullscreen, sound on. Reply as **ORDER-73** in `WORLD_ART_REQUESTS.md`, pictures in `captures/hw-73/`, push. No performance numbers.
+    1. **The walls' depth (P132, the user's pick "e + f")**: the Citadel fort wall by the harbour steps in shade, from the play camera at High and Medium, and the same with `?depth=none&wallnormals=1` (the look before). Does the relief read on the real GPU? Any shimmer, seams or moiré on the painted joints at a distance?
+    2. **Zoé's head almond-m**: at home and in a talk, front, side, three-quarter.
+    3. **The small fixes from 70**: the Hebrew mode caption (F1–F4) reads from the right; the depot's "?" is clear over the hazard tape; the copper pipe's first jump is no longer cut off by Twinsen's line.
+    4. Only if you reach them with a save: one wave-8 secret (the Weather Wizard's slate on Citadel in Normal) and the news on the square's notice board.
+    5. **Summary line for the user** at the top, and the three worst things a tester would notice, each with its picture.
