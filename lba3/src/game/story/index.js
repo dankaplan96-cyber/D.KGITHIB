@@ -451,7 +451,7 @@ export class Story {
   }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
-  pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
+  pulseHit(o) { return this.cur.pulseHit?.(o) || this.depth.pulseHit(o) || false; }   // (WAVE3: the project store's motor, depth.js)
   jetHit(o) { return this.cur.jetHit?.(o) || this.kit2.jetHit(o); }   // (EQUIP-2a: the pump lance's jet, tools.js)
   // EQUIP-2b (tools.js): the singing fork's note, the heat flask's blast, what the Esmer line can catch here
   // (WAVE2: the fork's note answers everything warm in reach: depth.js is asked as well, not only when nothing else took it —
