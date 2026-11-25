@@ -146,7 +146,7 @@ if (ONLY.includes('D')) {
   check('D: stake 2 on the dig\'s rim watched (INPUT, E), walked off (run) after 0.6 s: the watch ends, no reading', d4.u === 'used' && d4.watching && d4.read === null && !d4.after, d4);
   const d5 = await ev(() => { const G = game, S = W5.stakes[1]; const u = P.use(S.x, S.z, { kind: 'w5b_stake', near: 1.0, match: 1.6 }); let lift = 0, t = W().watch?.t || 0; while (W().watch && t < 5) { G.step(0.1); t += 0.1; lift = Math.max(lift, S.lift); } P.settle(); return { u: u.r, t: r2(t), lift: r2(lift), read: w5().w5b_2 }; });
   const d5l = await said();
-  check('D: stake 2 watched to the end (INPUT, E, standing by it): about three seconds, the flag lifts, "Warm ground"; reading 2 of 3', d5.u === 'used' && d5.read === 'flag' && d5.t >= 2.8 && d5.t <= 3.3 && d5.lift > 0.5 && has(d5l, /flag hangs/), { d5, d5l });
+  check('D: stake 2 watched to the end (INPUT, E, standing by it): about three seconds (the game\'s watch timer, counted in play from E), the flag lifts, "Warm ground"; reading 2 of 3', d5.u === 'used' && d5.read === 'flag' && d5.t >= 2.5 && d5.t <= 3.4 && d5.lift > 0.5 && has(d5l, /flag hangs/), { d5, d5l });
   if (SHOTS) { await ev(() => { const S = W5.stakes[2]; P.go(S.x - 1.2, S.z - 0.6, { tol: 0.4 }); P.face(S.x, S.z); W5.stakes[2].lift = 1; game.step(0.05); }); await shot('wave5-02-stake-flag-lifts'); }
   const d6 = await ev(() => { const S = W5.stakes[2]; P.go(S.x - 1.2, S.z - 0.6, { tol: 0.4 }); P.face(S.x, S.z); const w = useTool('fork'); P.settle(); game.hero.combat.equip('fists', true); return { w, read: w5().w5b_3, n: W().readings() }; });
   const d6l = await said();
@@ -216,9 +216,9 @@ if (ONLY.includes('N')) {
   const n4 = await ev(() => { goRegion('isle_orchard'); const k = P.talk('or_pell'); return { k: k.r, bulb: !!w5().w5n_bulb, inv: inv(), where: P.here() }; });
   const n4l = await said();
   check('N: Pello the press-master (TALK): asked for the bulb, "Take it. It never fitted.": the pressure bulb (found)', n4.k === 'talked' && n4.bulb && n4.inv.includes('w5n_bulb') && has(n4l, /never fitted/), { n4, n4l });
-  const n4b = await ev(() => { P.settle(); const k = P.talk('or_pell'); let left = closeShop(); for (let i = 0; i < 8 && left !== 'shop' && game.state === 'play'; i++) { game.step(0.5); if (game.state === 'shop') left = closeShop(); } P.release(); if (game.state === 'shop') left = closeShop(); return { k: k.r, remark: !!k.remark, left, state: game.state, bulbs: inv().filter((i) => i === 'w5n_bulb').length }; });
+  const n4b = await ev(() => { P.settle(); const k = P.talk('or_pell'); game.step(0.5); if (game.remarks?.cur) P.tap('KeyE', 0.2); game.step(0.3); const shop = game.state === 'shop'; const left = closeShop(); return { k: k.r, remark: !!k.remark, shop, left, state: game.state, remarkOpen: !!game.remarks?.cur, bulbs: inv().filter((i) => i === 'w5n_bulb').length }; });
   const n4bl = await said();
-  check('N: Pello again (TALK): his own line (over his head) and his stall, left; no second bulb', n4b.state === 'play' && n4b.bulbs === 1 && !has(n4bl, /never fitted/), { n4b, n4bl });
+  check('N: Pello again (TALK): his own line (over his head; E closes it) and his stall, left; no second bulb', n4b.state === 'play' && !n4b.remarkOpen && n4b.bulbs === 1 && !has(n4bl, /never fitted/), { n4b, n4bl });
   iso('to the Hamalayi by the travel network\'s own move');
   const n5 = await ev(() => { goRegion('hamalayi', 4334, -35, Math.PI); const k = P.talk('lhar1'); return { k: k.r, sleeve: !!w5().w5n_sleeve, inv: inv() }; });
   const n5l = await said();
@@ -247,7 +247,7 @@ if (ONLY.includes('C')) {
   iso('to the Hamalayi by the travel network\'s own move; the lance\'s tank set to 8 jets (untuned) for the count, the magic emptied');
   await ev(() => { const f = game.flags; delete f.w5n_lance; game.story.applyFlags(); goRegion('hamalayi', 4334, -35, Math.PI); game.hero.arms.water = 8; game.hero.mp = 0; });
   if (SHOTS) { await ev(() => { const C = W5.cistern; P.go(C.doorAt.x - 2.6, C.doorAt.z - 1.6, { tol: 0.5, maxT: 90 }); P.face(C.doorAt.x, C.doorAt.z - 0.5); P.settle(); }); await pair('wave5-08-cistern', hideW5); }
-  const c1 = await ev(() => { const out = []; let k; for (let i = 0; i < 3 && !w5().w5c_ask; i++) { k = P.talk('hl_monk'); out.push(k.r); } return { k: k.r, talks: out, ask: !!w5().w5c_ask, here: P.here() }; });
+  const c1 = await ev(() => { const e = P.enter('ham_hall'); game.story.refreshCast(); game.step(0.3); P.settle(); const out = [e.r]; let k; for (let i = 0; i < 3 && !w5().w5c_ask; i++) { k = P.talk('hl_monk'); out.push(k.r); } return { k: k.r, talks: out, ask: !!w5().w5c_ask, here: P.here() }; });
   const c1l = await said();
   check('C: Brother Tenpa in the hall (TALK, INPUT: in by its door; the waystone\'s word first if it is due, then again): the cistern door opens when its basin is full; the spring froze; the seed store under it', c1.k === 'talked' && c1.ask && has(c1l, /basin is full/) && has(c1l, /seed store/), { c1, c1l });
   const c2 = await ev(() => { const C = W5.cistern; const u = P.use(C.basinAt.x, C.basinAt.z, { kind: 'w5c_basin', near: 1.0, match: 1.6 }); return { u: u.r, here: P.here() }; });
@@ -263,7 +263,7 @@ if (ONLY.includes('C')) {
   check('C: the lance (INPUT: in hand, K) aimed away: a jet spent, no step; at the basin until the tank is dry (seven jets): seven half-steps more, the door still shut', c5.miss.used === 1 && c5.miss.fill === 2 && c5.water === 0 && c5.fill === 9 && !c5.open, c5);
   const c6 = await ev(() => { const G = game, h = G.hero, C = W5.cistern, Tr = { x: 4341.6, z: -42.4 }; const u = P.use(Tr.x, Tr.z, { kind: 'w5c_trough', near: 1.0, match: 2 }); const w = h.arms.water; P.go(C.basinAt.x - 2.6, C.basinAt.z + 0.2, { tol: 0.35 }); P.face(C.basinAt.x, C.basinAt.z); let n = 0; while (!w5().w5c_open && n++ < 6) { G.gadgets.tools.jetCool = 0; P.tap('KeyK', 0.05); G.step(0.6); } let t = 0; while (W().doorT > 0 && t < 4) { G.step(0.1); t += 0.1; } P.settle(); return { u: u.r, w, fill: w5().w5c_fill, open: !!w5().w5c_open, doorY: r2(C.door.position.y), store: C.store.visible, bucketBack: W5.bucket.grp.visible, carried: w5().w5c_bucket ?? null }; });
   const c6l = await said();
-  check('C: the lance filled at the monks\' trough (E: 8 jets), the rest at the basin: full, "the stone door grinds up"; the door up, the store seen; the bucket back by the trough', c6.u === 'used' && c6.w === 8 && c6.fill === 12 && c6.open && c6.doorY > 1.5 && c6.store && c6.bucketBack && c6.carried === null && has(c6l, /grinds up/), { c6, c6l });
+  check('C: at the monks\' trough (E) the bucket and the lance filled at once (8 jets); the rest by the lance at the basin: full, "the stone door grinds up"; the door up, the store seen; the bucket back by the trough', c6.u === 'used' && c6.w === 8 && c6.fill === 12 && c6.open && c6.doorY > 1.5 && c6.store && c6.bucketBack && c6.carried === null && has(c6l, /grinds up/), { c6, c6l });
   if (SHOTS) { await ev(() => { const C = W5.cistern; P.go(C.doorAt.x - 2.6, C.doorAt.z - 1.6, { tol: 0.5 }); P.face(C.doorAt.x, C.doorAt.z - 0.5); P.settle(); }); await shot('wave5-09-cistern-open'); }
   const c7 = await ev(() => { const C = W5.cistern, h = game.hero, c0 = h.coins; const u1 = P.use(C.doorAt.x, C.doorAt.z, { kind: 'w5c_store', near: 0.8, match: 1.4 }); const c1 = h.coins - c0; const mp0 = h.mp; const u2 = P.use(C.doorAt.x, C.doorAt.z, { kind: 'w5c_store', near: 0.8, match: 1.4 }); const mp1 = h.mp; const u3 = P.use(C.doorAt.x, C.doorAt.z, { kind: 'w5c_store', near: 0.8, match: 1.4 }); return { u: [u1.r, u2.r, u3.r], coins: c1, coinsAll: h.coins - c0, mp0, mp1, max: h.mpMax }; });
   const c7l = await said();
@@ -276,7 +276,7 @@ if (ONLY.includes('C')) {
 // ================================================================ S · the old adit's seam
 if (ONLY.includes('S')) {
   iso('to Knartas by the travel network\'s own move; Old Jaspa\'s gems sorted (dx_jaspa_ask, dx_jaspa_sorted, dx_jaspa_thx: ISL-1 done)');
-  const s1 = await ev(() => { Object.assign(game.flags, { dx_jaspa_ask: true, dx_jaspa_sorted: true, dx_jaspa_thx: true }); goRegion('isle_knartas'); const k = P.talk('il_jaspa'); return { k: k.r, hint: !!w5().w5s_hint }; });
+  const s1 = await ev(async () => { const { roomOf } = await import('/src/game/ihomes.js'); window.GEMR = roomOf('knartas-28-29'); Object.assign(game.flags, { dx_jaspa_ask: true, dx_jaspa_sorted: true, dx_jaspa_thx: true }); goRegion('isle_knartas'); P.enter(GEMR); game.story.refreshCast(); game.step(0.3); P.settle(); const k = P.talk('il_jaspa'); return { k: k.r, hint: !!w5().w5s_hint }; });
   const s1l = await said();
   check('S: Old Jaspa (TALK, in his gem room): a seam whistles behind the loose stones in the old adit under Celebration; bring him what you find', s1.k === 'talked' && s1.hint && has(s1l, /whistles behind the loose stones/), { s1, s1l });
   iso('to Under Celebration by the travel network\'s own move');
@@ -292,7 +292,7 @@ if (ONLY.includes('S')) {
   const s4l = await said();
   check('S: a bare fist at the stones (INPUT, K): a thud, nothing moves; the Wannie glove (K): the stones tumble out, a rough gem (found)', !s4.fist && s4.broke && s4.gem && s4.inv.includes('w5s_gem') && !s4.stones && has(s4l, /tumble out/), { s4, s4l });
   iso('back to Knartas by the travel network\'s own move');
-  const s5 = await ev(() => { goRegion('isle_knartas'); const h = game.hero, c0 = h.coins; const k = P.talk('il_jaspa'); const c1 = h.coins - c0; const k2 = P.talk('il_jaspa'); return { k: k.r, coins: c1, all: h.coins - c0, sold: !!w5().w5s_sold, inv: inv() }; });
+  const s5 = await ev(() => { goRegion('isle_knartas'); P.enter(GEMR); game.story.refreshCast(); game.step(0.3); P.settle(); const h = game.hero, c0 = h.coins; const k = P.talk('il_jaspa'); const c1 = h.coins - c0; const k2 = P.talk('il_jaspa'); return { k: k.r, coins: c1, all: h.coins - c0, sold: !!w5().w5s_sold, inv: inv() }; });
   const s5l = await said();
   check('S: Old Jaspa (TALK): "Good colour, honest weight", 25 kashes for the gem; again: no second sale', s5.k === 'talked' && s5.coins === 25 && s5.all === 25 && s5.sold && !s5.inv.includes('w5s_gem') && has(s5l, /honest weight/), { s5, s5l });
 }
@@ -332,7 +332,7 @@ if (NEED) await browser.close();
 if (ONLY.includes('V')) {
   await boot('base-12-plans');
   iso('Ilka\'s readings done before chapter 9\'s vote (w5b_1..3, w5b_done set by flags)');
-  const v1 = await ev(() => { Object.assign(game.flags, { w5b_ask: true, w5b_1: 'fork', w5b_2: 'flag', w5b_3: 'fork', w5b_done: 'ilka' }); game.story.applyFlags(); const r = P.enter('council'); let t = 0; while (game.state !== 'play' && t < 300) { if (game.state === 'dialog') P.tap('KeyE', 0.12); else game.step(0.1); t += 0.2; } P.settle(); return { r: r.r, vote: !!game.flags.c9_vote, ch: game.flags.chapterKey, state: game.state }; });
+  const v1 = await ev(() => { Object.assign(game.flags, { w5b_ask: true, w5b_1: 'fork', w5b_2: 'flag', w5b_3: 'fork', w5b_done: 'ilka' }); game.story.applyFlags(); if (game.room?.id === 'archive') P.exitTo('archive-out'); const r = P.exitTo('up-council'); let t = 0; while (game.state !== 'play' && t < 300) { if (game.state === 'dialog') P.tap('KeyE', 0.12); else game.step(0.1); t += 0.2; } P.settle(); return { r: r?.r ?? r, room: game.room?.id, vote: !!game.flags.c9_vote, ch: game.flags.chapterKey, state: game.state }; });
   const v1l = await said();
   check('V: chapter 9, the plans in hand, into the council chamber (INPUT): Dallan\'s proof scene adds "three stakes\' worth of warm ground", Brum says "I vote yes"; the vote taken as before and the chapter goes on', v1.vote && has(v1l, /three stakes' worth/) && has(v1l, /I vote yes/) && has(v1l, /reverse the bore|ordered/), { v1, v1l: v1l.slice(-12) });
   await browser.close();

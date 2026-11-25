@@ -156,7 +156,12 @@ export class Wave5 extends ChapterBase {
     const P = this.game.physics, T = P.terrain, c = { x: cx, z: cz };
     const y0 = T.heightAt(c.x, c.z);
     const no = (k) => { why[k] = (why[k] || 0) + 1; return null; };
+    // (clear of the ways people come and go: 9 m from a travel point — a glider field, a pad, a pier's stop — and 4 m
+    //  from a door)
+    const reg = S.region, keep = [...Object.values(this.game.travel?.points || {}).filter((p) => p.region === reg).map((p) => [p.x, p.z, 9]),
+      ...(((() => { try { return this.story.doors(); } catch { return []; } })()) || []).filter((d) => (d.region || 'citadel') === reg).map((d) => [d.x, d.z, 4])];
     const ok = (x, z) => {
+      if (keep.some(([px, pz, r]) => Math.hypot(x - px, z - pz) < r)) return no('way');
       const gi = P.groundInfo(x, z, T.heightAt(x, z) + 0.6), g0 = gi.h;
       if (!gi.brick && g0 < -0.35) return no('sea');
       if (Math.abs(g0 - y0) > 2.5) return no('height');
@@ -350,9 +355,11 @@ export class Wave5 extends ChapterBase {
         const T = SPOTS.trough;
         h.actAt?.(T.x, T.z, 'use', 0.6, () => {
           g.particles.burst(T.x, W5.cistern.y + 0.7, T.z - 0.5, '#bfe6ff', 10, 1.4);
+          // (both at once: the bucket if it is empty, the lance's tank if it is not full)
+          const lance = g.gadgets.tools.fill();
+          if (lance) { g.hud.toast('e2_toast_filled', { n: LANCE.tank }); g.hud.weapon?.(h); }
           if (f.w5c_bucket === 'empty') { f.w5c_bucket = 'full'; g.audio.play('gurgle'); say(['w5c_filled']); return; }
-          if (g.gadgets.tools.fill()) { g.hud.toast('e2_toast_filled', { n: LANCE.tank }); g.hud.weapon?.(h); }
-          else say(['w5c_trough']);
+          if (!lance) say(['w5c_trough']);
         }, 0.25);
         return true;
       }
