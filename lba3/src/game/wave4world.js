@@ -102,7 +102,7 @@ export function buildPondBoats(game) {
 
 // ================================================================ the harbour: the flags, the mail sack
 export const FLAGS = [{ x: -116.6, z: 41.3 }, { x: -116.6, z: 44.7 }];
-export const SACK = { x: -112.35, z: 37.75 };
+export const SACK = { x: -108.85, z: 36.9 };
 export function buildHarbourBits(game) {
   if (W4.flags) return;
   const W = game.world, PH = game.physics;
@@ -139,8 +139,8 @@ export function buildPostcard(R, plan) {
   const cx = R.center?.x ?? 0, cz = R.center?.z ?? 0;
   const k = new Kit(g);
   const z = 4.85, wx = cx + plan.LX + 0.035, wy = 1.32;
-  k.add(plane(0.3, 0.2), MAT.map(cardTex(), 0.85), wx, wy, cz + z, Math.PI / 2);
-  k.add(sphere(0.012, 6, 4), MAT.flat('#c8452f', 0.5), wx + 0.006, wy + 0.08, cz + z);
+  k.add(plane(0.42, 0.28), MAT.map(cardTex(), 0.85), wx, wy, cz + z, Math.PI / 2);
+  k.add(sphere(0.014, 6, 4), MAT.flat('#c8452f', 0.5), wx + 0.006, wy + 0.12, cz + z);
   k.flush();
   W4.cardAt = { x: wx, y: wy, z: cz + z };
   W4.card = { x: cx + plan.BARX + 0.95, z: cz + z };   // (read across the counter: where he stands before it)

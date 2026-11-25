@@ -138,7 +138,7 @@ if (ONLY.includes('A')) {
 // ================================================================ B · H-10 the letters filed as cargo
 if (ONLY.includes('B')) {
   iso('to Citadel (outdoors), by the asylum');
-  const b1 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); const k = P.talk('hs_worker2'); return { k: k.r, ask: !!game.flags.w4l_ask, room: game.room?.id }; });
+  const b1 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); const e = P.enter('asylum'); const k = P.talk('hs_worker2'); return { e: e.r, k: k.r, ask: !!game.flags.w4l_ask, room: game.room?.id }; });
   const b1l = await said();
   check('B: Tellem in the hostel (TALK, INPUT: into the asylum): he writes home every week, nothing arrives; the project sends the post with its cargo', b1.k === 'talked' && b1.ask && b1.room === 'asylum' && has(b1l, /Nothing arrives/) && has(b1l, /with its cargo/), { b1, b1l });
   const b2 = await ev(() => { const S = W4.sack; const u = P.use(S.x, S.z, { kind: 'w4l_sack', near: 1.0, match: 2 }); return { u: u.r }; });
@@ -160,11 +160,11 @@ if (ONLY.includes('B')) {
   const b5 = await ev(() => { toIsle('knartas'); const h = game.hero, c0 = h.coins, l0 = h.clovers; const k = P.talk('kn_mother'); return { k: k.r, given: !!game.flags.w4l_given, coins: h.coins - c0, clovers: h.clovers - l0, at9: l0 >= 9, reply: game.story.items().some((i) => i.id === 'w4l_reply'), sack: game.story.items().some((i) => i.id === 'w4l_sack') }; });
   const b5l = await said();
   check('B: Knartas: Mila (TALK, INPUT): the sack handed over — "Twelve weeks of them"; a clover leaf and 15 kashes (30 kashes at nine leaves); her letter for Tellem; the sack out of the pockets', b5.k === 'talked' && b5.given && !b5.sack && b5.reply && (b5.at9 ? b5.coins === 30 : b5.coins === 15 && b5.clovers === 1) && has(b5l, /Twelve weeks/), { b5, b5l });
-  const b6 = await ev(() => { const k = P.talk('kn_kid'); return { k: k.r }; });
+  const b6 = await ev(() => { const k = P.talk('kn_kid'); return { k: k.r, remark: !!k.remark, over: game.remarks?.el?.textContent || '', done: !!game.flags.w4l_temAfter }; });
   const b6l = await said();
-  check('B: Tem (TALK): his mother reads them out loud, even the soup ones', b6.k === 'talked' && has(b6l, /soup ones/), { b6, b6l });
+  check('B: Tem (TALK): his mother reads them out loud, even the soup ones (a box, or his one line over his head: P116)', b6.k === 'talked' && (has(b6l, /soup ones/) || /soup ones/.test(b6.over)), { b6, b6l });
   iso('back to Citadel by the travel network: put west of the house');
-  const b7 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); const k = P.talk('hs_worker2'); return { k: k.r, given: !!game.flags.w4l_replyGiven, reply: game.story.items().some((i) => i.id === 'w4l_reply'), j: game.story.journal().find((s) => /Letters home/.test(s.title))?.lines.map((l) => l.done) }; });
+  const b7 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); P.enter('asylum'); const k = P.talk('hs_worker2'); return { k: k.r, given: !!game.flags.w4l_replyGiven, reply: game.story.items().some((i) => i.id === 'w4l_reply'), j: game.story.journal().find((s) => /Letters home/.test(s.title))?.lines.map((l) => l.done) }; });
   const b7l = await said();
   check('B: Tellem (TALK): Mila\'s letter — "the boy has grown a whole head"; the letter out of the pockets; the journal\'s section all done', b7.k === 'talked' && b7.given && !b7.reply && has(b7l, /grown a whole head/) && b7.j?.every(Boolean), { b7, b7l });
 }
@@ -172,7 +172,7 @@ if (ONLY.includes('B')) {
 // ================================================================ C · H-11 Raph's guitar
 if (ONLY.includes('C')) {
   iso('to Citadel (outdoors), by the square');
-  const c1 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); const k = P.talk('fenn'); return { k: k.r, fenn: !!game.flags.w4r_fenn, room: game.room?.id }; });
+  const c1 = await ev(() => { toCit(-52.5, 82.5, Math.PI / 2); const e = P.enter('tavern'); for (let i = 0; i < 40 && !P.npc('fenn')?.present; i++) game.step(0.5); const k = P.talk('fenn'); return { e: e.r, k: k.r, fenn: !!game.flags.w4r_fenn, room: game.room?.id }; });
   const c1l = await said();
   check('C: the tavern (INPUT: in by its door): Old Fenn (TALK) — Raph kept the lighthouse, went off-world, a postcard pinned behind the bar', c1.k === 'talked' && c1.fenn && c1.room === 'tavern' && has(c1l, /Pinned behind the bar/), { c1, c1l });
   const c2 = await ev(() => { const C = W4.card; const u = P.use(C.x, C.z, { kind: 'w4r_card', near: 0.8, match: 2 }); return { u: u.r, card: !!game.flags.w4r_card }; });
@@ -183,9 +183,9 @@ if (ONLY.includes('C')) {
   const c3l = await said();
   check('C: Tralu\'s cave (INPUT: in by its door): the guitar case "Take" (E): found, in the pockets, gone from the wall', c3.room === 'tralucave' && c3.u === 'used' && c3.case && c3.item && has(c3l, /take it to him on Otringal/), { c3, c3l });
   iso('to Otringal by the travel network: put on its pad');
-  const c4 = await ev(() => { toIsle('otringal'); const k = P.talk('ot_keep'); const r = { k: k.r, sim: !!game.flags.w4r_sim, room: game.room?.id }; return r; });
+  const c4 = await ev(() => { toIsle('otringal'); P.enter('otrbar'); const k = P.talk('ot_keep'); const r = { k: k.r, sim: !!game.flags.w4r_sim, room: game.room?.id, over: game.remarks?.el?.textContent || '' }; return r; });
   const c4l = await said();
-  check('C: Otringal, the harbour bar (INPUT: in by its door): Sim (TALK) — the Twinsunian plays outside by the door; the stage is Lys\'s', c4.k === 'talked' && c4.sim && c4.room === 'otrbar' && has(c4l, /plays outside, by our door/), { c4, c4l });
+  check('C: Otringal, the harbour bar (INPUT: in by its door): Sim (TALK) — the Twinsunian plays outside by the door; the stage is Lys\'s', c4.k === 'talked' && c4.sim && c4.room === 'otrbar' && (has(c4l, /plays outside, by our door/) || /plays outside, by our door/.test(c4.over)), { c4, c4l });
   const c5 = await ev(() => { const e = game.room?.exits?.find((x) => /-out$/.test(x.to)); if (e) P.through(e.x, e.z); P.settle(); const n = P.npc('w4_raph'); const S = W4.seats.otr; P.go(S.x + Math.sin(S.a) * 2.4 + 0.8, S.z + Math.cos(S.a) * 2.4, { tol: 0.4 }); P.face(n.pos.x, n.pos.z); P.settle(); return { room: game.room?.id, raph: at('raph') || at('w4_raph'), anim: n.forceAnim, harp: W4.seats.otr && true }; });
   await pair('wave4-07-otringal-raph', (h) => { for (const o of game.rooms.isle_otringal.group.children) if (o.name === 'wave4 raph otr') o.visible = !h; P.npc('w4_raph').rig.root.visible = !h; });
   const c6 = await ev(() => { const c0 = game.hero.coins; const k = P.talk('w4_raph'); return { k: k.r, found: !!game.flags.w4r_found, coins: game.hero.coins - c0, item: game.story.items().some((i) => i.id === 'w4r_case') }; });

@@ -146,7 +146,7 @@ export class Wave4 extends ChapterBase {
     if (B && P && !this.race && !this.lamp) {
       const A = B.arthur, L = B.lulu;
       // Arthur's boat: on the basin for the ending's signals (after the win), else on the pond where the toy boat was
-      if (this.ck === 'home' && f.w4b_won) { A.setAt(PIER.boat.x, 0.03, PIER.boat.z, Math.PI / 2); A.setMast(true); A.setLamp(false); }
+      if (this.ck === 'home' && f.w4b_won) { A.setAt(PIER.boat.x, 0.03, f.w4b_lamp ? PIER.z - 1.6 : PIER.boat.z, f.w4b_lamp ? -Math.PI / 2 : Math.PI / 2); A.setMast(true); A.setLamp(false); }   // (after the signals: moored by the pier)
       else { A.setAt(P.x + 0.7, P.y, P.z - 0.55, Math.PI + 0.25); A.setMast(false); A.setLamp(false); }
       A.setKeel(!!f.w4b_keel); A.setSail(this.sailAngle(f.w4b_sail)); A.visible(true);
       // Lulu's boat: on the rim beside her while the race is on (the weight under it shows), else she has it with her
@@ -457,7 +457,7 @@ export class Wave4 extends ChapterBase {
     const p = pat || LAMP.pats[Math.floor(Math.random() * LAMP.pats.length)];
     this.lamp = { pat: p, t: 0, ph: 'watch', seq: this.lampSeq(p) };
     g.setState('cutscene'); g.cutscene = (dt) => this.lampStep(dt);
-    const b = PIER.boat, pos = new THREE.Vector3(b.x + 2.6, 3.4, b.z + 5.4), look = new THREE.Vector3(b.x, 0.35, b.z);
+    const b = PIER.boat, pos = new THREE.Vector3(b.x + 3.4, 2.4, b.z - 4.6), look = new THREE.Vector3(b.x - 0.3, 0.7, b.z + 2.2);   // (from over the basin: the boat near, Arthur on the pier behind it)
     g.camRig.override = { pos, look }; g.camera.position.copy(pos); g.camRig.look?.copy?.(look); g.camera.lookAt(look);
     this.lampStep(0);
   }
