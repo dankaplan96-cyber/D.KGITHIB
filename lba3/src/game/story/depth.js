@@ -33,7 +33,8 @@ import { crystalMats, crystalGem, gemGeo } from '../crystallook.js';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { IH, roomOf } from '../ihomes.js';
-import { MAT, rbox, cyl, canvasTex, plane } from '../props.js';
+import { MAT, rbox, cyl, canvasTex, plane, sphere, torus, crate, Kit } from '../props.js';
+import { rockGeometry } from '../vegetation.js';
 import { MM } from '../props-mountain.js';
 import { CRYSTAL_TOTAL, CRYSTAL_QUEST, crystalsIn } from '../crystals.js';
 import { islePhase } from '../islandlife.js';
@@ -102,6 +103,19 @@ const STORE = { x: 21.2, z: 21.3, reach: 1.05, pay: 15 };
 // against the cliff (z found from the rock face, scanning north from z0); each rise 1.05 m (a jump takes 1.33: tests/
 // jumpreach.mjs); the rope from the top ledge to the high rock's lip (z top); the climb's speed (m/s)
 const GOAT = { z0: -21.5, ledges: [[-13.6, 13.0, 0.7], [-15.25, 14.05, 0.68], [-16.9, 15.1, 0.66], [-18.55, 16.15, 0.66], [-20.2, 17.2, 0.66], [-21.85, 18.25, 0.74]], top: -28.4, speed: 2.4 };
+// ISL-3: the three crossings to the doors across the clouds (world; measured 25.11 from the islands' ground: the near
+// shore's railing, the gap, the far patch's railing). near/far: where he stands; nPost/fPost: the davits; rock: an old
+// mooring rock in the gap (its deck's height) or mid: the plank bridge's own middle; thing: what waits on the far side;
+// zone: how near a side he counts as standing on it
+const FAR_PAY = 15;
+const FARS = [
+  { id: 'yard', room: 'isle_otringal', near: { x: 1917.6, z: 1844.7 }, nPost: { x: 1918.3, z: 1846.5 }, rock: { x: 1927.5, z: 1844.0, y: 4.0 }, seed: 31, far: { x: 1937.6, z: 1844.2 }, fPost: { x: 1937.4, z: 1842.4 }, thing: { x: 1937.8, z: 1848.6 }, thingRy: 0.3, kind: 'crate', flag: 'dx_far_crate', read: ['dx_far_crate1', 'dx_far_crate2'], after: 'dx_far_crate_after', zone: 3.0 },
+  { id: 'quay', room: 'isle_otringal', near: { x: 1879.0, z: 1851.0 }, nPost: { x: 1878.4, z: 1849.5 }, rock: { x: 1867.5, z: 1852.0, y: 3.8 }, seed: 43, far: { x: 1855.4, z: 1855.6, top: 4 }, fPost: { x: 1854.7, z: 1856.3, top: 4 }, fTall: 1.2, thing: { x: 1854.6, z: 1850.6, top: 4 }, thingRy: Math.PI / 2, kind: 'locker', flag: 'dx_far_locker', read: ['dx_far_locker1', 'dx_far_locker2'], after: 'dx_far_locker_after', zone: 3.0 },
+  { id: 'honey', room: 'isle_mosquibee', near: { x: 2567.5, z: 1828.4 }, nPost: { x: 2568.2, z: 1830.3 }, mid: { x: 2560.5, z: 1828.25 }, far: { x: 2549.0, z: 1825.0 }, fPost: { x: 2550.4, z: 1823.9 }, thing: { x: 2549.4, z: 1822.6 }, kind: 'honey', zone: 3.0, color: '#e8a830' },
+];
+// HAM-4: the gorge's ice arch (the Hamalayi's frame): the rock stack in the meltwater (its top), the arch's foot on the
+// north bank, where the look is (the bank by the tree bridge's north end), the road crew's kashes
+const ARCH = { stack: [-15.5, 43.5], top: 5.2, foot: [-15.5, 37.2], look: [-8.5, 37.0], pay: 12 };
 // the flag a quest crystal is owed under (sc-jaspa → dx_owe_sc_jaspa)
 const oweFlag = (id) => 'dx_owe_' + id.replace(/-/g, '_');
 
@@ -167,6 +181,8 @@ export class Depth extends ChapterBase {
     if (R.zeelich?.life?.posts && this.once('heat')) this.buildHeat(R.zeelich);
     if (R.zeelich?.life && this.once('store')) this.buildStore(R.zeelich);
     if (R.hamalayi?.kite && this.once('goat')) this.buildGoat(R.hamalayi);
+    for (const d of FARS) if (R[d.room] && this.once('far_' + d.id)) this.buildFar(d.room, d);
+    if (R.hamalayi?.gorge && this.once('arch')) this.buildArch(R.hamalayi);
     this.applyFlags();
   }
   regionBuilt() { this.applyWorld(); }
@@ -174,6 +190,10 @@ export class Depth extends ChapterBase {
     this.settleCrystals();
     this.settleOwed('dx_owe_heat', 'coin', HEAT.pay, 'dx_toast_kashes');
     this.settleOwed('dx_owe_store', 'coin', STORE.pay, 'dx_toast_kashes');
+    this.settleOwed('dx_owe_far_yard', 'coin', FAR_PAY, 'dx_toast_kashes');
+    this.settleOwed('dx_owe_arch', 'coin', ARCH.pay, 'dx_toast_kashes');
+    this.settleOwed('dx_owe_far_quay', 'clover', 1, 'dx_toast_clover');
+    this.settleOwed('dx_owe_arch_clover', 'clover', 1, 'dx_toast_clover');
     this.applyWorld();
   }
   applyWorld() {
@@ -186,6 +206,7 @@ export class Depth extends ChapterBase {
     this.setHeat();
     this.setStore();
     this.setGoat();
+    this.setArch();
   }
 
   // ---------------------------------------------------------------- ISL-1: the bench, the tray, the bins
@@ -1346,18 +1367,234 @@ export class Depth extends ChapterBase {
     return this.after(npc, ['dx_kite_lumi_wait']);
   }
 
+  // ================================================================ ISL-3 + HAM-4: the Esmer line's rings (wave 3, H-8)
+  // The line's rule since its lesson on Zeelich's cloud canal (kit2b.js): a cord ring in reach reels him along a route
+  // checked clear before he leaves. Four places it reopens, each with a ring for the way back:
+  //   ISL-3 · the three doors across the clouds (ihomes.js FAR: the near shore's look said "no way over on foot"): Otringal's
+  //     barges' yard (the cargo store) and west quay (a dock worker's house), each over an old mooring rock in the cloud
+  //     with an Esmer arch (shore davit → rock → the far davit, and back the same way); Mosquibee's honey islet over its
+  //     plank bridge, whose slats are set a Mosquibee's stride apart (a davit at each end). What is over there: the yard's
+  //     barge crate (the project's leftover optics: a read, 15 kashes), the dock worker's locker (his note, a clover), the
+  //     hive's honey pot (a full heal on each visit). The rooms behind the doors were always there (ihomes.js).
+  //   HAM-4 · the gorge below the old gate: an ice arch from a rock stack in the meltwater to the north bank, a cord ring
+  //     frozen into its crown (from the tree bridge or the bank: onto the stack) and one in its foot (back to the bank). On
+  //     the stack the road crew's tool chest: a clover, 12 kashes and their note.
+  // A ring is offered only with the line in hand, from the place it serves (near shore, rock, far patch). State:
+  // dx_far_yard / dx_far_quay / dx_far_honey (crossed), dx_far_crate, dx_far_locker, dx_far_honeyN (pots taken),
+  // dx_arch_seen, dx_arch (crossed), dx_arch_chest; owed dx_owe_far_yard (kashes), dx_owe_far_quay (clover),
+  // dx_owe_arch (kashes), dx_owe_arch_clover.
+  hasLine() { return !!this.game.hero.arms?.line && this.able(); }
+  // a ring the line can catch: hung from a davit (a post and an arm over the gap) or an Esmer arch; its route from where
+  // he stands to `to` (up first, over, down: clear of railings at either edge)
+  ringTarget(id, ring, to, arrived) {
+    return { kind: 'ring', id: 'dx_' + id, x: ring.x, y: ring.y, z: ring.z, arrived,
+      route: (from) => {
+        const P = this.game.physics, dx = to.x - from.x, dz = to.z - from.z, L = Math.hypot(dx, dz) || 1, ux = dx / L, uz = dz / L;
+        // (over whatever stands between: the highest ground or roof along the way, not counting the two ends)
+        let hi = -Infinity; for (let s = 0.9; s < L - 0.9; s += 0.4) { const y = P.groundAt(from.x + ux * s, from.z + uz * s, 60); if (Number.isFinite(y)) hi = Math.max(hi, y); }
+        const top = Math.max(from.y, to.y, hi + 0.2) + 1.5;
+        return [{ x: from.x + ux * 0.05, y: from.y + 1.6, z: from.z + uz * 0.05 }, { x: from.x + ux * Math.min(2.2, L * 0.3), y: top, z: from.z + uz * Math.min(2.2, L * 0.3) }, { x: to.x - ux * Math.min(2.2, L * 0.3), y: top, z: to.z - uz * Math.min(2.2, L * 0.3) }, { x: to.x, y: to.y + 1.2, z: to.z }, { x: to.x, y: to.y, z: to.z }];
+      } };
+  }
+  buildDavit(k, at, toward, y, color, tall = 0) {
+    // a post 2.9 m tall, an arm 1.1 m toward the gap, the brass ring hanging from it (above his head as he leaves)
+    const a = Math.atan2(toward.x - at.x, toward.z - at.z), ux = Math.sin(a), uz = Math.cos(a);
+    const post = MAT.wood('dark'), brass = MAT.brass();
+    const H = 2.9 + tall;
+    k.add(cyl(0.08, 0.1, H, 8), post, at.x, y + H / 2, at.z);
+    k.add(cyl(0.11, 0.11, 0.08, 8), color ? MAT.flat(color, 0.6) : brass, at.x, y + H + 0.02, at.z);
+    k.add(cyl(0.045, 0.045, 1.15, 6), post, at.x + ux * 0.55, y + H - 0.08, at.z + uz * 0.55, a, { rx: Math.PI / 2 });
+    k.add(cyl(0.012, 0.012, 0.22, 5), brass, at.x + ux * 1.1, y + H - 0.2, at.z + uz * 1.1);
+    k.add(torus(0.17, 0.028, 6, 18), brass, at.x + ux * 1.1, y + H - 0.48, at.z + uz * 1.1, a);
+    this.game.physics.add({ type: 'cyl', x: at.x, z: at.z, r: 0.12, top: y + H + 0.05, noStand: true, seeThrough: true });
+    return { x: at.x + ux * 1.1, y: y + H - 0.48, z: at.z + uz * 1.1 };
+  }
+  buildFar(room, def) {
+    const g = this.game, P = g.physics, R = this.game.rooms[room];
+    const root = new THREE.Group(), gp = R.group.position; root.position.set(-gp.x, -gp.y, -gp.z); R.group.add(root);
+    const k = new Kit(root);
+    const gy = (p) => P.groundAt(p.x, p.z, p.top ?? 60);
+    const N = { ...def.near, y: gy(def.near) }, F = { ...def.far, y: gy(def.far) };
+    const C = { id: def.id, room, N, F, def };
+    const mid = def.rock || def.mid;
+    C.nRing = this.buildDavit(k, def.nPost, mid || F, gy(def.nPost), def.color);
+    C.fRing = this.buildDavit(k, def.fPost, mid || N, gy(def.fPost), def.color, def.fTall || 0);
+    if (mid) {
+      // an old mooring rock in the cloud, its paved deck (or the bridge's own middle plank) and an Esmer arch over it (as
+      // the cloud canal's: kit2b.js)
+      const M = { ...mid, y: def.rock ? def.rock.y : gy(mid) }, face = Math.atan2(F.x - N.x, F.z - N.z), dx = Math.sin(face), dz = Math.cos(face);
+      const rockM = MAT.flat('#d8c0d8', 0.92, { vertexColors: true }), white = MAT.flat('#f2ece6', 0.8), lilac = MAT.flat(def.color || '#9a7ab8', 0.55), brass = MAT.brass();
+      if (def.rock) {
+        k.add(rockGeometry(def.seed || 31), rockM, M.x, M.y - 0.75, M.z, face, { sx: 1.9, sy: 1.5, sz: 1.9 });
+        k.add(cyl(1.55, 1.6, 0.18, 18), MAT.stone('grey', 1), M.x, M.y - 0.09, M.z);
+        P.add({ type: 'cyl', x: M.x, z: M.z, r: 1.55, top: M.y });
+      }
+      // the arch across the way, its ring over the deck's middle (above his head)
+      for (const s of [-1.05, 1.05]) { const x = M.x + dz * s, z = M.z - dx * s; k.add(cyl(0.07, 0.09, 2.8, 8), lilac, x, M.y + 1.4, z); k.add(sphere(0.1, 10, 8), brass, x, M.y + 2.88, z); P.add({ type: 'cyl', x, z, r: 0.1, top: M.y + 2.9, noStand: true, seeThrough: true }); }
+      k.add(rbox(2.3, 0.16, 0.2, 0.04), white, M.x, M.y + 2.75, M.z, face + Math.PI / 2);
+      k.add(cyl(0.012, 0.012, 0.2, 5), brass, M.x, M.y + 2.58, M.z);
+      k.add(torus(0.17, 0.028, 6, 18), brass, M.x, M.y + 2.32, M.z, face);
+      C.M = M; C.mRing = { x: M.x, y: M.y + 2.32, z: M.z };
+    }
+    // what waits on the far side: a crate, a locker, a honey pot (by the far davit)
+    const at = def.thing, ty = gy(at), tg = new THREE.Group(); tg.position.set(at.x - gp.x, ty - gp.y, at.z - gp.z); tg.rotation.y = def.thingRy || 0; R.group.add(tg);
+    const tk = new Kit(tg);
+    if (def.kind === 'crate') { crate(tk, 0.6, { pal: 'dark' }); tk.add(rbox(0.4, 0.02, 0.26, 0.01), MAT.flat('#f2e8cc', 0.9), 0.0, 0.62, 0.05); }
+    else if (def.kind === 'locker') { tk.add(rbox(0.6, 1.2, 0.4, 0.03), MAT.flat('#3a6a7a', 0.6, { metalness: 0.3 }), 0, 0.6, 0); tk.add(rbox(0.22, 0.16, 0.01, 0.005), MAT.flat('#f2e8cc', 0.9), 0.05, 0.9, 0.205); tk.add(cyl(0.03, 0.03, 0.05, 8), MAT.brass(), -0.2, 0.62, 0.21, 0, { rx: Math.PI / 2 }); }
+    else { tk.add(cyl(0.3, 0.35, 0.7, 10), MAT.wood('dark'), 0, 0.35, 0); tk.add(cyl(0.2, 0.24, 0.34, 12), MAT.flat('#e8a830', 0.35), 0, 0.88, 0); tk.add(cyl(0.21, 0.21, 0.05, 12), MAT.flat('#f6e8c8', 0.7), 0, 1.06, 0); }
+    tk.flush();
+    P.add({ type: 'cyl', x: at.x, z: at.z, r: def.kind === 'locker' ? 0.42 : 0.38, top: ty + (def.kind === 'locker' ? 1.2 : 0.7), noStand: true });
+    C.thing = { x: at.x, z: at.z, y: ty };
+    k.flush();
+    // where he stands: near shore, rock, far patch (each its ring to the next place)
+    C.toM = C.M && this.ringTarget(def.id + 'M', C.mRing, C.M, () => this.farArrived(C, 'M'));
+    C.toF = this.ringTarget(def.id + 'F', C.fRing, F, () => this.farArrived(C, 'F'));
+    C.toN = this.ringTarget(def.id + 'N', C.nRing, N, () => this.farArrived(C, 'N'));
+    (this.far ||= {})[def.id] = C;
+  }
+  // which side of a crossing he is on (null: nowhere near it)
+  farSide(C) {
+    const h = this.game.hero.pos, near = (p, r, dy) => Math.hypot(h.x - p.x, h.z - p.z) < r && Math.abs(h.y - p.y) < dy;
+    if (C.M && near(C.M, 1.8, 0.8)) return 'M';
+    if (near(C.F, C.def.zone, 2.0)) return 'F';
+    if (near(C.N, C.def.zone, 2.0)) return 'N';
+    return null;
+  }
+  farArrived(C, where) {
+    const f = this.f, g = this.game, key = 'dx_far_' + C.id;
+    if (where === 'F' && !f[key]) { f[key] = true; this.chain([['hero', 'dx_far_' + C.id + '_over']], () => g.save(false)); }
+  }
+  farTargets(out) {
+    if (!this.far || !this.hasLine()) return;
+    for (const C of Object.values(this.far)) {
+      if (this.here() !== C.room) continue;
+      const s = this.farSide(C);
+      if (s === 'N') out.push(C.M ? C.toM : C.toF);
+      else if (s === 'M') out.push(C.toF, C.toN);
+      else if (s === 'F') out.push(C.M ? C.toM : C.toN);
+    }
+  }
+  farInteractables(consider, dist) {
+    if (!this.far || !this.able()) return;
+    const h = this.game.hero;
+    if (h.steer || h.actT > 0 || this._steer) return;
+    for (const C of Object.values(this.far)) {
+      if (this.here() !== C.room) continue;
+      if (Math.abs(h.pos.y - C.thing.y) < 1.5) consider(dist(C.thing.x, C.thing.z), 1.4, { kind: 'dx_farthing', far: C.id, label: C.def.kind === 'honey' ? 'p_drink' : this.f[C.def.flag] ? 'p_look' : 'p_search' });
+      if (Math.abs(h.pos.y - C.N.y) < 1.5) consider(dist(C.def.nPost.x, C.def.nPost.z), 1.3, { kind: 'dx_farlook', far: C.id, label: 'p_look' });
+    }
+  }
+  farInteract(it) {
+    const g = this.game, f = this.f, C = this.far[it.far], h = g.hero;
+    const say = (keys, done) => { this.chain(keys.map((k) => ['hero', k]), () => { done?.(); g.save(false); }); return true; };
+    if (it.kind === 'dx_farlook') return say([this.hasLine() ? 'dx_far_look_line' : 'dx_far_look']);
+    const T = C.thing;
+    h.angle = Math.atan2(T.x - h.pos.x, T.z - h.pos.z);
+    if (C.def.kind === 'honey') {
+      // the hive's honey pot: a full heal, once each visit to the islet (taken again after he has left the area)
+      if (this._honeyRoom === C.room) return say(['dx_far_honey_empty']);
+      h.act('pickup', 0.8, () => { this._honeyRoom = C.room; f.dx_far_honeyN = (f.dx_far_honeyN || 0) + 1; h.hp = h.maxHp; g.audio.play('heal'); g.hud.stats?.(h); say([f.dx_far_honeyN > 1 ? 'dx_far_honey_again' : 'dx_far_honey']); }, 0.4);
+      return true;
+    }
+    if (f[C.def.flag]) return say([C.def.after]);
+    h.act('search', 0.9, () => {
+      f[C.def.flag] = true; g.audio.play('chest');
+      say(C.def.read, () => {
+        if (C.def.kind === 'crate') this.reward('dx_owe_far_yard', 'coin', 1, T.x, T.y + 0.9, T.z + 0.6, { pop: true, value: FAR_PAY });
+        else this.reward('dx_owe_far_quay', 'clover', 1, T.x, T.y + 0.9, T.z + 0.6, { pop: true });
+      });
+    }, 0.45);
+    return true;
+  }
+
+  // ---- HAM-4: the gorge's ice arch
+  buildArch(M) {
+    const g = this.game, P = g.physics, T = P.terrain, o = { x: M.group.position.x, z: M.group.position.z };
+    const root = new THREE.Group(); root.position.set(0, -M.group.position.y, 0); M.group.add(root);
+    const k = new Kit(root), A = ARCH;
+    const S = { x: A.stack[0], z: A.stack[1], y: A.top }, foot = { x: A.foot[0], z: A.foot[1], y: T.heightAt(o.x + A.foot[0], o.z + A.foot[1]) };
+    const floor = T.heightAt(o.x + S.x, o.z + S.z);
+    // the rock stack out of the meltwater, flat-topped (snow on it), sheer: no jump reaches it from the floor or the banks
+    const rockM = MM.stone('#bdb3a3');
+    const h = S.y - floor + 0.4;
+    // (three rough blocks one on another, each turned and set a little off the last: a weathered column, not a pot)
+    for (const [i, f0, f1, sx, sz, ox, oz, ry] of [[0, 0, 0.45, 1.8, 1.6, 0.1, -0.1, 0.4], [1, 0.38, 0.78, 1.5, 1.4, -0.12, 0.08, 1.9], [2, 0.7, 1.0, 1.35, 1.3, 0.05, 0.05, 3.1]]) {
+      const y0 = floor - 0.3 + h * f0, y1 = floor - 0.3 + h * f1;
+      k.add(rockGeometry(37 + i * 5), rockM, S.x + ox, (y0 + y1) / 2, S.z + oz, ry, { sx, sy: (y1 - y0) / 1.7, sz });
+    }
+    k.add(cyl(1.15, 1.25, 0.2, 14), MM.stone('#cfc6b8'), S.x, S.y - 0.1, S.z);
+    k.add(cyl(1.0, 1.0, 0.05, 14), MAT.flat('#f4f8fc', 0.9), S.x + 0.1, S.y + 0.02, S.z);
+    P.add({ type: 'cyl', x: o.x + S.x, z: o.z + S.z, r: 1.15, top: S.y });
+    // the ice arch: from the stack's shoulder up and over to the north bank, the rings frozen into its crown and its foot
+    const pts = [new THREE.Vector3(S.x - 0.6, S.y + 0.2, S.z - 0.5), new THREE.Vector3(S.x - 0.4, S.y + 2.6, S.z - 1.8), new THREE.Vector3((S.x + foot.x) / 2, S.y + 3.0, (S.z + foot.z) / 2 + 0.6), new THREE.Vector3(foot.x, foot.y + 1.8, foot.z + 0.6), new THREE.Vector3(foot.x, foot.y - 0.3, foot.z)];
+    const iceM = new THREE.MeshStandardMaterial({ color: '#c4e6f8', roughness: 0.08, metalness: 0.05, transparent: true, opacity: 0.72, emissive: '#2a6a9a', emissiveIntensity: 0.2, flatShading: true });
+    const arch = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.32, 7), iceM); arch.castShadow = true; root.add(arch);
+    for (const [i, s] of [[1, 0.9], [3, 0.8]]) { const lump = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 0), iceM); lump.position.copy(pts[i]); lump.scale.setScalar(s); root.add(lump); }
+    P.add({ type: 'cyl', x: o.x + foot.x, z: o.z + foot.z, r: 0.5, top: foot.y + 1.6, noStand: true, seeThrough: true });
+    const brass = MAT.brass();
+    const crown = { x: S.x - 0.4, y: S.y + 2.2, z: S.z - 1.4 }, footRing = { x: foot.x, y: foot.y + 1.5, z: foot.z + 0.75 };
+    for (const r of [crown, footRing]) k.add(torus(0.17, 0.03, 6, 18), brass, r.x, r.y, r.z, Math.PI / 2);
+    // the road crew's chest on the stack
+    const ch = new THREE.Group(); ch.position.set(S.x + 0.45, S.y, S.z + 0.35); ch.rotation.y = -0.5; root.add(ch);
+    const box = new THREE.Mesh(rbox(0.7, 0.4, 0.4, 0.03), MAT.flat('#7a3a2a', 0.7)); box.position.y = 0.2; ch.add(box);
+    const lidG = new THREE.Group(); lidG.position.set(0, 0.4, -0.2); ch.add(lidG);
+    const lid = new THREE.Mesh(rbox(0.72, 0.08, 0.42, 0.03), MAT.flat('#8a4a32', 0.7)); lid.position.set(0, 0.04, 0.2); lidG.add(lid);
+    for (const sx of [-0.25, 0.25]) { const band = new THREE.Mesh(rbox(0.05, 0.42, 0.42, 0.01), MAT.flat('#3a3640', 0.5, { metalness: 0.5 })); band.position.set(sx, 0.21, 0); ch.add(band); }
+    k.flush();
+    const W = (p) => ({ x: o.x + p.x, y: p.y, z: o.z + p.z });
+    const stand = W({ x: S.x + 0.2, y: S.y, z: S.z - 0.2 }), bx = foot.x + 1.5, bz = foot.z - 1.2, bank = W({ x: bx, y: T.heightAt(o.x + bx, o.z + bz), z: bz });
+    this.ar = { M, S: W(S), stand, bank, chest: W({ x: S.x + 0.45, y: S.y, z: S.z + 0.35 }), lidG, look: W({ x: A.look[0], y: 0, z: A.look[1] }),
+      toStack: this.ringTarget('arch', W(crown), stand, () => { if (!this.f.dx_arch) { this.f.dx_arch = true; this.chain([['hero', 'dx_arch_over']], () => g.save(false)); } }),
+      toBank: this.ringTarget('archback', W(footRing), bank, null) };
+    this.ar.look.y = T.heightAt(this.ar.look.x, this.ar.look.z);
+  }
+  setArch() { const A = this.ar; if (A) A.lidG.rotation.x = this.f.dx_arch_chest ? -1.9 : 0; }
+  archOpen() { return !!this.ar && this.here() === 'hamalayi' && this.at('pass') && this.able(); }
+  archTargets(out) {
+    const A = this.ar; if (!A || !this.archOpen() || !this.hasLine()) return;
+    const h = this.game.hero.pos;
+    if (Math.hypot(h.x - A.S.x, h.z - A.S.z) < 1.3 && Math.abs(h.y - A.S.y) < 0.8) out.push(A.toBank);
+    else if (Math.hypot(h.x - A.S.x, h.z - A.S.z) < 14 && h.y > A.S.y - 3.5) out.push(A.toStack);
+  }
+  archInteractables(consider, dist) {
+    const A = this.ar; if (!this.archOpen()) return;
+    const h = this.game.hero;
+    if (h.steer || h.actT > 0 || this._steer) return;
+    if (Math.abs(h.pos.y - A.look.y) < 1.5) consider(dist(A.look.x, A.look.z), 2.2, { kind: 'dx_archlook', label: 'p_look' });
+    if (Math.abs(h.pos.y - A.S.y) < 0.8) consider(dist(A.chest.x, A.chest.z), 1.3, { kind: 'dx_archchest', label: this.f.dx_arch_chest ? 'p_look' : 'p_search' });
+  }
+  archInteract(it) {
+    const g = this.game, f = this.f, A = this.ar, h = g.hero;
+    const say = (keys, done) => { this.chain(keys.map((k) => ['hero', k]), () => { done?.(); g.save(false); }); return true; };
+    if (it.kind === 'dx_archlook') { f.dx_arch_seen = true; return say([this.hasLine() ? 'dx_arch_look_line' : 'dx_arch_look']); }
+    if (f.dx_arch_chest) return say(['dx_arch_chest_after']);
+    h.angle = Math.atan2(A.chest.x - h.pos.x, A.chest.z - h.pos.z);
+    h.act('search', 0.9, () => {
+      f.dx_arch_chest = true; this.setArch(); g.audio.play('chest');
+      say(['dx_arch_chest1', 'dx_arch_chest2'], () => {
+        this.reward('dx_owe_arch', 'coin', 1, A.chest.x, A.S.y + 0.9, A.chest.z, { pop: true, value: ARCH.pay });
+        this.reward('dx_owe_arch_clover', 'clover', 1, A.chest.x - 0.3, A.S.y + 0.9, A.chest.z, { pop: true });
+      });
+    }, 0.45);
+    return true;
+  }
+  lineTargets() { const out = []; this.farTargets(out); this.archTargets(out); return out; }
+
   // ================================================================ the director's hooks
-  interactables(consider, dist) { this.gemInteractables(consider, dist); this.wayInteractables(consider, dist); this.packInteractables(consider, dist); this.gazeInteractables(consider, dist); this.srcInteractables(consider, dist); this.heatInteractables(consider, dist); this.storeInteractables(consider, dist); this.goatInteractables(consider, dist); }
+  interactables(consider, dist) { this.gemInteractables(consider, dist); this.wayInteractables(consider, dist); this.packInteractables(consider, dist); this.gazeInteractables(consider, dist); this.srcInteractables(consider, dist); this.heatInteractables(consider, dist); this.storeInteractables(consider, dist); this.goatInteractables(consider, dist); this.farInteractables(consider, dist); this.archInteractables(consider, dist); }
   interact(it) {
     // (the street's own looks, zeelife.js: a dark post's tag read counts as a clue; the burrow's vent and the store's
     //  shut door are answered here while their quest wants them)
     if (it?.kind === 'zltag' && this.heatWindow()) this.f.dx_heat_tag = true;
     if (it?.kind === 'zlburrow' && this.heatVent()) return true;
     if (it?.kind === 'zhshut' && it.key === 'zh_closed_depot' && this.storeHere()) return this.storeInteract();
+    if (it?.kind === 'ihfar' && this.hasLine() && FARS.some((d) => it.key === 'ih_far_' + (d.id === 'honey' ? 'islet' : d.id))) { const d = FARS.find((q) => it.key === 'ih_far_' + (q.id === 'honey' ? 'islet' : q.id)); this.chain([['hero', 'dx_far_hint_' + d.id]]); return true; }
     if (typeof it?.kind !== 'string' || !it.kind.startsWith('dx_')) return false;
     if (it.kind === 'dx_heatcap') return this.heatInteract(it);
     if (it.kind === 'dx_store') return this.storeInteract(it);
     if (it.kind === 'dx_goatring' || it.kind === 'dx_goatdown') return this.goatInteract(it);
+    if (it.kind === 'dx_farthing' || it.kind === 'dx_farlook') return this.farInteract(it);
+    if (it.kind === 'dx_archlook' || it.kind === 'dx_archchest') return this.archInteract(it);
     if (it.kind.startsWith('dx_way')) return this.wayInteract(it);
     if (it.kind === 'dx_pack' || it.kind === 'dx_mirror') return this.packInteract(it);
     if (it.kind === 'dx_fig' || it.kind === 'dx_drift' || it.kind === 'dx_hatch') return this.gazeInteract(it);
@@ -1397,6 +1634,7 @@ export class Depth extends ChapterBase {
     this.keepSteer();
     this.gemUpdate(dt); this.wayUpdate(dt); this.packUpdate(dt); this.gazeUpdate(dt); this.srcUpdate(dt);
     this.heatUpdate(dt); this.storeUpdate(dt);
+    if (this._honeyRoom && this.here() !== this._honeyRoom) this._honeyRoom = null;   // (ISL-3: the honey pot again on the next visit)
     const g = this.game, f = this.f;
     // COL-1: the epilogue's line for all twelve, once dinner is over and he is free
     if (f.dx_crystals12 && !f.dx_c12_home && this.story.cur?.key === 'home' && f.ep_free && g.state === 'play' && !g.trans && !g.cutscene) {
@@ -1424,6 +1662,8 @@ export class Depth extends ChapterBase {
     if (f.dx_store_ledger) out.push({ key: 'dx_j_ledger', done: true });
     if (f.dx_kite) out.push({ key: 'dx_j_kite', done: f.dx_kite === 'given' });
     if (f.dx_goatpath) out.push({ key: 'dx_j_goat', done: !!f.dx_goat_up });
+    for (const d of FARS) if (f['dx_far_' + d.id]) out.push({ key: 'dx_j_far_' + d.id, done: true });
+    if (f.dx_arch_seen || f.dx_arch) out.push({ key: 'dx_j_arch', done: !!f.dx_arch_chest });
     return out;
   }
 }

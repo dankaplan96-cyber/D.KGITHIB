@@ -458,7 +458,7 @@ export class Story {
   //  the galleries' crusted pocket stands within a strike of Ilka's wheel)
   forkHit(o) { const a = this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o); return this.depth.forkHit(o) || a; }
   heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o) || this.depth.heatHit(o); }
-  lineTargets() { return this.kit2b.lineTargets(); }
+  lineTargets() { const a = this.kit2b.lineTargets(), b = this.depth.lineTargets(); return b.length ? [...a, ...b] : a; }   // (WAVE3: the far doors' and the gorge's rings, depth.js)
   ballTargets() { return this.cur.ballTargets(); }
   // (REVIEW-DESERT, the same on Citadel: the plateau's parked glider stood in its field from chapter 1, though the glider
   //  routes to Citadel open only with the evacuation (travel.js edges); before that it is not there — on a change only,
