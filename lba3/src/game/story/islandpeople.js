@@ -179,8 +179,8 @@ export class IslandPeople extends ChapterBase {
         return c([this.from('council') ? 'ip_crane_sold' : 'ip_crane_held']);
       case 'ot_boss': {
         if (!this.from('council') || f.pp_lens) return plain();
-        const price = f.pp_manifest ? IP_PRICE.lensPaper : IP_PRICE.lens;
-        return c([f.pp_manifest ? 'ip_boss_lens_paper' : 'ip_boss_lens'], () => this.sell([{ id: 'lens', key: 'ip_sh_lens', price }], 'ip_sh_boss', (it) => {
+        const price = f.pp_manifest || f.w4r_found ? IP_PRICE.lensPaper : IP_PRICE.lens;   // (WAVE4 H-11: Raph's word, story/wave4.js)
+        return c([f.pp_manifest ? 'ip_boss_lens_paper' : f.w4r_found ? 'w4r_orla_lens' : 'ip_boss_lens'], () => this.sell([{ id: 'lens', key: 'ip_sh_lens', price }], 'ip_sh_boss', (it) => {
           f.pp_lens = true; g.found('lens', 'it_lens', () => g.save(false));
         }));
       }
