@@ -5,7 +5,8 @@
 // Citadel in main.js). This suite, every region built (regions.ensure, a few build groups to a page, as gap-scan.mjs):
 //   1. the sweep (physics only): every gap 3 cm–1.2 m between two floors he can stand on at about one height (≤ 0.55 m
 //      apart) that are laid over something (a deck, a walk, a plank: a collider with its own underside, at most 0.6 m deep,
-//      not a block or a crate solid to the ground), with a drop of 1 m or more under it. Two or more such gaps within 2.5 m of each other (a deck of planks
+//      not a block or a crate solid to the ground), with a drop of 1 m or more under it and no wall standing in it (the LBA1
+//      rooms' floor tiles meet under their walls). Two or more such gaps within 2.5 m of each other (a deck of planks
 //      with holes) FAIL unless listed in KNOWN with the reason it is a real hole; single gaps are listed (two floors side
 //      by side over a drop, not a deck). Every tread: both its ends on a plank at its height (it covers a gap between two
 //      planks and nothing else); an end tread (over the lip of a bank that rises through an end plank): one end on the
@@ -16,12 +17,12 @@
 //   3. Mosquibee's honey islet (the bridge ends 3–5 m over the honey room's yard): from the east bank over the bridge
 //      and down its new steps into the yard (P.go, by input), and back up and over, unhurt.
 // BEFORE=1: the treads off (globalThis.__noTreads), for the A/B: the sweep's open decks and the walks that fail.
-// ONLY=<region id substring>. SERVE=1 answers this checkout's files by request routing. Automated runtime only.
+// ONLY=<region id substrings, comma-separated>. SERVE=1 answers this checkout's files by request routing. Automated runtime only.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 const { check, done } = checker({ info: 'always' });
-const ONLY = process.env.ONLY || '', SHOTS = process.env.SHOTS || '', BEFORE = !!process.env.BEFORE;
+const ONLY = (process.env.ONLY || '').split(',').filter(Boolean), SHOTS = process.env.SHOTS || '', BEFORE = !!process.env.BEFORE;
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const iso = (s) => console.log('ISO  ' + s);
 // open decks that are real holes (none today): { scene, x, z, why }
@@ -68,6 +69,7 @@ const SCAN = () => {
         const tm = (t0 + t1) / 2, mx = c.x + ux * tm, mz = c.z + uz * tm, lo = Math.min(c.top, d.top), hi = Math.max(c.top, d.top);
         const g = Ph.groundAt(mx, mz, hi + 0.05);
         if (g >= lo - 1.0) continue;
+        if (Ph.near(mx, mz).some((q) => Ph.stops(q, lo) && Ph._inside(q, mx, mz))) continue;   // (a wall stands in it: no hole to fall in)
         const desc = (q) => q.type === 'cyl' ? 'cyl r' + q.r.toFixed(2) : 'box ' + (2 * q.hw).toFixed(2) + 'x' + (2 * q.hd).toFixed(2);
         out.push({ scene: sc, x: +mx.toFixed(2), z: +mz.toFixed(2), gap: +gap.toFixed(2), top: +lo.toFixed(2), under: +g.toFixed(2), what: desc(c) + ' | ' + desc(d) });
       }
@@ -129,7 +131,7 @@ iso(`every region built by regions.ensure (${groups.length} build groups, ${batc
 const allOpen = [], allSingle = [], allBridges = [], lone = [], walks = [];
 let regions = 0;
 for (const [bi, B] of batches.entries()) {
-  const want = [...(bi === 0 ? ['citadel'] : []), ...B.flatMap((g) => g.rooms)].filter((id) => !ONLY || id.includes(ONLY));
+  const want = [...(bi === 0 ? ['citadel'] : []), ...B.flatMap((g) => g.rooms)].filter((id) => !ONLY.length || ONLY.some((o) => id.includes(o)));
   if (!want.length) continue;
   regions += want.length;
   const { browser, page } = await page0(1280, 720);
@@ -189,5 +191,5 @@ const openDecks = allOpen.filter((s) => !KNOWN.some((k) => k.scene === s.scene &
 for (const s of allOpen) console.log(`  OPEN DECK ${s.scene} @${s.x},${s.z} top ${s.top}, ${s.n} gaps: ${s.gaps.map((g) => g.gap + ' m (' + g.what + ', under ' + g.under + ')').join('; ')}`);
 check(`the sweep (${regions} regions): no deck of planks left with holes (two or more gaps over a drop within 2.5 m)${BEFORE ? ' [BEFORE]' : ''}`, openDecks.length === 0, openDecks.map((s) => `${s.scene} @${s.x},${s.z} ${s.n} gaps`));
 check('every tread covers a gap between two planks at its height (both ends on a plank), or an end plank\'s bank lip (one end on it, one on the ground)', lone.length === 0, lone);
-check('at least one bridge found (the sweep ran)', allBridges.length > 0 || BEFORE, allBridges.length);
+check('at least one bridge found (the sweep ran)', allBridges.length > 0 || BEFORE || (ONLY.length && !ONLY.some((o) => 'isle_mosquibee'.includes(o))), allBridges.length);
 done();
