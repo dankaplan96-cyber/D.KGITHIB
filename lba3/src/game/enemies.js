@@ -14,6 +14,7 @@ import { KnockOut, koActive } from './death.js';
 import { createGuardianRig, createHaulerRig, createFan, createSlamMarks } from './bossmodels.js';
 import { solveHand, restoreJoints, PALM } from '../engine/handik.js';
 import { NEAR_K, suspect, calm as calmMark, seen as seenMark, draw as drawMark } from './noticemark.js';
+import { f58, LINE_K, LINE_END } from './fight58.js';
 // BEHAVIOUR-MODES (P125): how far the creatures that notice by range alone notice Twinsen in Normal, Athletic and
 // Aggressive (m); Discreet multiplies them by hero.sneak() (0.4 sneaking, 0.25 still), hiding blinds them as before
 const MITE_SEE = 6, SENTRY_SEE = 9, SENTRY_SURE = 6, CRAWLER_SEE = 9;
@@ -437,6 +438,8 @@ function createDroneRig() {
 // (POLISH-AUDIT #3: the two bosses have bodies of their own, bossmodels.js; every other drone is the warden)
 const droneRig = (def) => (def.kind === 'guardian' ? createGuardianRig() : def.model === 'hauler' ? createHaulerRig() : createDroneRig());
 
+// a drone's shot: tell, its wind-up (s, × the difficulty's); cool, its rest after a shot (s, × the difficulty's)
+const DRONE_TUNE = { tell: 0.75, cool: 1.6, lineK: 1, lineEnd: 0.75 };
 export class Drone extends Actor {
   constructor(game, def) {
     super(game, droneRig(def), def.x, def.z, 0.5);
@@ -459,6 +462,10 @@ export class Drone extends Actor {
     // the firing tell: a thin line toward Twinsen that brightens through the wind-up
     this.aimLine = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 4, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5), new THREE.MeshBasicMaterial({ color: '#ff5a3a', transparent: true, opacity: 0, depthWrite: false }));
     this.aimLine.visible = false; game.scene.add(this.aimLine);
+    // (#58: a drone can be told to fire slower by its definition, def.tune — the first two fights under ?fight58=a,
+    //  fight58.js; every other drone keeps DRONE_TUNE. lineK, lineEnd: the aim line's width and how bright it ends)
+    this.tune = { ...DRONE_TUNE, ...(def.tune || {}) };
+    if (f58('a')) { this.tune.lineK = LINE_K; this.tune.lineEnd = LINE_END; }
   }
   get aimY() { return this.hover; }
   get bodyLo() { return this.hover + this.hullLo; }
@@ -579,10 +586,10 @@ export class Drone extends Actor {
       // 0.7 s charge: prongs crackle, eye pulses — the cue to dodge or hide
       face = this.angleTo(hero);
       this.rig.play('windup');
-      const tell = 0.75 * DF.windup;
+      const T = this.tune, tell = T.tell * DF.windup;
       // the aim line: where the shot will go, brightening until it fires
       const L = this.aimLine, from = new THREE.Vector3(this.pos.x, this.pos.y + this.hover - 0.4, this.pos.z), to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
-      L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(1, 1, from.distanceTo(to)); L.material.opacity = 0.15 + 0.6 * Math.min(1, this.stateT / tell);
+      L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(T.lineK, T.lineK, from.distanceTo(to)); L.material.opacity = 0.15 + (T.lineEnd - 0.15) * Math.min(1, this.stateT / tell);
       // no clear shot: give up the attack rather than fire into a wall (or a fence: COMBAT-2)
       if (!this.sees(hero) || !this.clearShot(hero)) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); }
       else if (this.hurtT > 0) { this.state = 'chase'; this.stateT = 0; }
@@ -591,7 +598,7 @@ export class Drone extends Actor {
         const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
         g.bolts.fire(from, to.sub(from).normalize(), 9, 1);
         g.audio.play('zap', this.pos);
-        this.state = 'chase'; this.stateT = 0; this.coolT = 1.6 * DF.cool;
+        this.state = 'chase'; this.stateT = 0; this.coolT = this.tune.cool * DF.cool;
         this.rig.play('fire');
         g.combatDir?.done(this);
       }

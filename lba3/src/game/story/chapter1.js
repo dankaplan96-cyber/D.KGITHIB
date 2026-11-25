@@ -25,6 +25,7 @@ import { crossByShip } from '../travelfilm.js';
 import { revealBeat, solidAt, twoShot } from './revealcam.js';
 import { DepotWatch } from './depotwatch.js';
 import { PumpLine } from './pumpline.js';
+import { f58, DRONE_EARLY } from '../fight58.js';
 import { TERMINAL } from '../terminal.js';
 import '../text/ch1.js';
 const SHIP_HULL = 3.0;   // (the ship's hull radius on the spaceport's pad, spaceport.js hullAt)
@@ -59,8 +60,9 @@ export class Chapter1 extends ChapterBase {
     const when = (f) => this.watch.on(f);
     const n = D.patrol.length;
     return [
-      this.watch.def({ id: 'drone1', kind: 'drone', group: 'depot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when }),
-      this.watch.def({ id: 'drone2', kind: 'drone', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: D.patrol, wp: (Math.floor(n / 2) + 1) % n, when }),
+      // (#58 ?fight58=a: the game's first fight, its drones fire slower: fight58.js)
+      this.watch.def({ id: 'drone1', kind: 'drone', group: 'depot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when, tune: f58('a') ? DRONE_EARLY : null }),
+      this.watch.def({ id: 'drone2', kind: 'drone', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: D.patrol, wp: (Math.floor(n / 2) + 1) % n, when, tune: f58('a') ? DRONE_EARLY : null }),
       // one of Vesk's guards walks the loop the other way (src/game/guards.js)
       this.watch.def({ id: 'guard1', kind: 'guard', group: 'depot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when }),
       // and his guard dog (LBA2's Zeelich guard dog, src/game/guarddog.js) trots the loop ahead of him

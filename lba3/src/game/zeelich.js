@@ -47,6 +47,7 @@ import { buildZeelichLife, zlClear } from './zeelife.js';
 import { roomOcc } from './roomocc.js';
 import { buildCisternRise, liftClear } from './zlift.js';
 import { touch } from './story/reach.js';
+import { f58, COVER58 } from './fight58.js';
 
 export const ZEELICH = { x: 2400, z: 0 };
 const Y0 = 6.0;              // walking level of the island
@@ -2003,6 +2004,7 @@ export function* buildZeelichSteps(scene, physics) {
     }
     // crates, tech crates, barrels, floodlight masts
     techCrates([[5.4, 11.0, 2, 0.9], [6.5, 10.6, 1, 0.8], [17.6, 24.45, 1, 0.9], [11.75, 24.5, 2, 0.85]]);
+    if (f58('b')) techCrates(COVER58.zeelich.map(([x, z, n]) => [x, z, n, 1]));   // (#58 ?fight58=b: a cover stack in the yard: fight58.js)
     const barrel = cached('zbarrel', () => { const pts = []; for (let i = 0; i <= 8; i++) { const k = i / 8; pts.push([0.32 + Math.sin(k * Math.PI) * 0.06, k * 0.95]); } return compose([[lathe(pts, 14, 1)], [new THREE.CircleGeometry(0.33, 14).rotateX(-Math.PI / 2), 0, 0.95, 0]]); });
     for (const [x, z] of [[4.9, 13.0], [5.1, 13.8], [23.0, 10.4], [22.3, 10.2]]) { placeTag('barrel'); B.add(barrel, tm('metal', { color: '#e8b84a', rough: 0.6, metal: 0.3 }), x, Y0, z); col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 0.95, noStand: true, seeThrough: true }); }
     for (const [x, z] of [[4.6, 24.6], [23.4, 9.6]]) {
@@ -2025,7 +2027,7 @@ export function* buildZeelichSteps(scene, physics) {
     // stands in the way, and the one the loose door can call off. (`patrol` stays for the old contract.)
     const loc = (P) => P.map(([x, z]) => [x + ox, z + oz]);
     const beats = { drones: loc([[18.0, 14.6], [20.0, 14.6], [20.0, 20.0], [17.8, 20.2]]), guard: loc([[12.6, 11.4], [14.4, 21.2]]), dogPost: { ...W(21.6, 20.2), a: -Math.PI / 2 } };
-    return { ...W((D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: loc(patrol), beats, locker: W(LK.x, LK.z - 0.75), door: looseDoor };
+    return { ...W((D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: loc(patrol), beats, locker: W(LK.x, LK.z - 0.75), door: looseDoor, cover: f58('b') ? COVER58.zeelich.map(([x, z]) => W(x, z)) : null };
   }
 
   // ================================================================ the drill platform, its gate and shield

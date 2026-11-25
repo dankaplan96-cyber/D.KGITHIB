@@ -17,6 +17,7 @@ import { createCharacter } from './characters.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
 import { NEAR_K, suspect, calm as calmMark, seen as seenMark, draw as drawMark } from './noticemark.js';
+import { f58, LINE_K, LINE_END } from './fight58.js';
 
 function rifleProp() {
   const g = new THREE.Group();
@@ -35,7 +36,9 @@ function rifleProp() {
 // a bark as the baton goes up; lunge: the strike's step (m/s, 0.35 s); strikeR: the strike's reach (m); shotMin..shotRange:
 // where the rifle is used (m); tell: the aim line's time before the shot (s); boltV, boltDmg: the bolt's speed and damage;
 // shotCool: the rest after a shot (s). (The baton's damage stays: 2 for a Grobo, 1 for a Quetch.)
-const GUARD_TUNE = { close: 1.9, windup: 0.55, windCue: false, lunge: 2.2, strikeR: 1.6, shotMin: 0, shotRange: 8, tell: 0.8, boltV: 8, boltDmg: 1, shotCool: 1.8 };
+// (#58: recover, the baton held down after a strike (s); strikeCool, the wait after it before the next wind-up (s);
+//  lineK, lineEnd: the aim line's width and how bright it ends — fight58.js)
+const GUARD_TUNE = { close: 1.9, windup: 0.55, windCue: false, lunge: 2.2, strikeR: 1.6, shotMin: 0, shotRange: 8, tell: 0.8, boltV: 8, boltDmg: 1, shotCool: 1.8, recover: 0.9, strikeCool: 1.2, lineK: 1, lineEnd: 0.75 };
 export class Guard extends Actor {
   constructor(game, def) {
     // (kind 'fclone': one of LBA1's fat FunFrock troopers, bodies 18–20, reactivated by the project — the Grobo
@@ -56,6 +59,7 @@ export class Guard extends Actor {
     // (TESTER-FIXES item 9, the user's pick 24.11: a guard can be told to fight softer by its definition, def.tune; every
     //  other guard keeps GUARD_TUNE, the values it always had. Today only the Zeelich depot's Grobo guard: chapter2.js)
     this.tune = { ...GUARD_TUNE, ...(def.tune || {}) };
+    if (f58('a')) { this.tune.lineK = LINE_K; this.tune.lineEnd = LINE_END; }
     this.bodyR = contactRadius(fat ? 'fclone' : grobo ? 'vguardG' : 'vguard', this.rig.root.scale.x);   // (SOLID-ENEMY: the race's girth, as a resident's)
     this.rifle = rifleProp();
     const hand = this.rig.j?.armR?.hand;
@@ -237,20 +241,20 @@ export class Guard extends Actor {
         const tell = this.tune.tell * DF.windup;
         const from = new THREE.Vector3(this.pos.x + Math.sin(this.angle) * 0.6, this.pos.y + 1.35, this.pos.z + Math.cos(this.angle) * 0.6);
         const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
-        const L = this.aimLine; L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(1, 1, from.distanceTo(to)); L.material.opacity = 0.15 + 0.6 * Math.min(1, this.stateT / tell);
+        const L = this.aimLine, T = this.tune; L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(T.lineK, T.lineK, from.distanceTo(to)); L.material.opacity = 0.15 + (T.lineEnd - 0.15) * Math.min(1, this.stateT / tell);
         this.rifle.userData.glow.emissiveIntensity = 1.6 + 2.5 * Math.min(1, this.stateT / tell);
         if (!this.sees(hero) || this.jamT > 0 || !this.clearShot(hero)) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); break; }
         if (this.stateT > tell) {
           g.bolts.fire(from, to.sub(from).normalize(), this.tune.boltV, this.tune.boltDmg);
           g.audio.play('zap', this.pos);
           this.rifle.userData.glow.emissiveIntensity = 1.6;
-          this.state = 'recover'; this.stateT = 0; this.coolT = this.tune.shotCool * DF.cool; g.combatDir?.done(this);
+          this.state = 'recover'; this.stateT = 0; this.afterStrike = false; this.coolT = this.tune.shotCool * DF.cool; g.combatDir?.done(this);
         }
         break;
       }
-      case 'recover':   // the opening: the rifle lowered, the guard steadies
+      case 'recover':   // the opening: the rifle lowered, the guard steadies (after the baton: tune.recover)
         anim = 'idle';
-        if (this.stateT > 0.9) { this.state = 'chase'; this.stateT = 0; }
+        if (this.stateT > (this.afterStrike ? this.tune.recover : 0.9)) { this.state = 'chase'; this.stateT = 0; this.afterStrike = false; }
         break;
       case 'windup':   // the baton goes up (the tell)
         face = this.angleTo(hero); anim = 'heavyCharge';
@@ -259,7 +263,7 @@ export class Guard extends Actor {
       case 'strike':
         anim = 'heavy'; sp = this.tune.lunge;
         if (!this.hitDone && this.stateT > 0.12 && d < this.tune.strikeR && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(this.grobo ? 2 : 1, this.pos, true); g.audio.play('punch', this.pos); }
-        if (this.stateT > 0.35) { this.state = 'recover'; this.stateT = 0; this.coolT = 1.2 * DF.cool; g.combatDir?.done(this); }
+        if (this.stateT > 0.35) { this.state = 'recover'; this.stateT = 0; this.afterStrike = true; this.coolT = this.tune.strikeCool * DF.cool; g.combatDir?.done(this); }
         break;
       case 'hurt':
         anim = this.react === 'turn' ? 'turnL' : 'hurt';
