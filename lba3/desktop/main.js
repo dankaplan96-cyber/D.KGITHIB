@@ -93,6 +93,7 @@ function onBattery() {
 app.whenReady().then(() => {
   protocol.handle('app', serve);
   ipcMain.on('lba3:power-now', (e) => { e.returnValue = onBattery(); });
+  ipcMain.on('lba3:dev', (e) => { e.returnValue = !app.isPackaged || !!process.env.LBA3_DEVTOOLS; });   // (the Benchmark tools: preload.js dev)
   const power = (v) => { for (const w of BrowserWindow.getAllWindows()) w.webContents.send('lba3:power', v); };
   powerMonitor.on('on-battery', () => power(true));
   powerMonitor.on('on-ac', () => power(false));

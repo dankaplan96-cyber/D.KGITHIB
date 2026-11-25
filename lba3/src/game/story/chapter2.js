@@ -47,6 +47,13 @@ const SOLUTION = [0, 1, 2];
 const DEPOT_GUST = { first: 6, every: [17, 23, 19], near: 36, w: 2.4 };   // s of game time; m from the depot's middle; the swing (rad/s)
 const DEPOT_EAR = { glance: 14, look: 1.6, check: 4.0, cool: 6, bored: 2, forget: 60, glanceBored: 1.2 };   // m; s; checks
 
+// TESTER-FIXES item 9 (the user's pick, 24.11; the desktop's real-key fights, WORLD_ART_REQUESTS 68.3: all five won, but with
+// 1-3 deaths each, the Grobo guard most of the damage, 1-8 m): this depot's Grobo guard fights softer — less damage from a
+// distance (the rifle only from 3-6.5 m, half a life a bolt, a slower bolt and a longer rest between shots), a shorter
+// reach (the baton from 1.5 m, 1.3 m and a short step in the strike) and a clear wind-up (0.9 s, with a bark). The fight
+// stays: armour 2, 5 lives, the baton's 2. guards.js GUARD_TUNE: every other guard as it was
+const ZGUARD_TUNE = { close: 1.5, windup: 0.9, windCue: true, lunge: 1.2, strikeR: 1.3, shotMin: 3.0, shotRange: 6.5, tell: 1.0, boltV: 6.5, boltDmg: 0.5, shotCool: 2.8 };
+
 export class Chapter2 extends ChapterBase {
   get Z() { return this.game.rooms.zeelich; }
   get lift() { return (this._lift ||= new LiftThread(this)); }   // CAMPAIGN-3: the cistern lift and Irsa's bench (zeelift.js)
@@ -99,14 +106,14 @@ export class Chapter2 extends ChapterBase {
       return [
         { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, x: dr[0][0], z: dr[0][1], patrol: dr, wp: 1, when },
         { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, x: dr[k][0], z: dr[k][1], patrol: dr, wp: (k + 1) % dr.length, when },
-        { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: G0[0][0], z: G0[0][1], angle: Math.atan2(G0[1][0] - G0[0][0], G0[1][1] - G0[0][1]), patrol: G0, wp: 1, when },
+        { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: G0[0][0], z: G0[0][1], angle: Math.atan2(G0[1][0] - G0[0][0], G0[1][1] - G0[0][1]), patrol: G0, wp: 1, when, tune: ZGUARD_TUNE },
         { id: 'zgdog1', kind: 'gdog', coat: 'brown', group: 'zdepot', x: P0.x, z: P0.z, angle: P0.a, patrol: [[P0.x, P0.z]], wp: 0, when },
       ];
     }
     return [
       { id: 'zdrone1', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
       { id: 'zdrone2', kind: 'drone', group: 'zdepot', hp: 2, x: D.patrol[h][0], z: D.patrol[h][1], patrol: D.patrol, wp: (h + 1) % n, when },
-      { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when },
+      { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when, tune: ZGUARD_TUNE },
       { id: 'zgdog1', kind: 'gdog', coat: 'brown', group: 'zdepot', x: D.patrol[h][0], z: D.patrol[h][1], patrol: [...D.patrol].reverse(), wp: (n - h) % n, when },
     ];
   }

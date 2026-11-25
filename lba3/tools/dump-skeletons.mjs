@@ -3,10 +3,12 @@ import fs from 'node:fs';
 // usage: node tools/dump-skeletons.mjs > skeletons.json                      (every look; server on :8123)
 //        node tools/dump-skeletons.mjs baldino art/characters/skeletons.json  (one look, merged into the file; SRC-2)
 //        GAME_URL=http://127.0.0.1:8199/ … (another server)
+//        SERVE=1 …  (this checkout's files by the browser's request routing, tests/lib/serve.mjs: no server needed; P127)
 const URL0 = process.env.GAME_URL || 'http://localhost:8123/';
 const [ONLY, FILE] = process.argv.slice(2);
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const p = await b.newPage();
+if (process.env.SERVE) await (await import('../tests/lib/serve.mjs')).serveLocal(p, URL0);
 await p.goto(URL0 + 'lookdev.html?c=twinsen&views=0&labels=0&props=0', { timeout: 180000 });
 await p.waitForFunction(() => window.lookdev, null, { timeout: 180000 });
 const r = await p.evaluate(async (only) => {

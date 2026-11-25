@@ -24,6 +24,7 @@
 // match them to the original's landmarks (tools/worldscore/landmarks.json). All geometry goes into the island's one
 // draw batch per material (desert.js B), so the island's draw calls grow only by the few new materials.
 import * as THREE from 'three';
+import { crystalGem, linkedCore, asShell } from './crystallook.js';
 import { tm, pm, ctex, bbox, cyl, lathe, tube, cached, frame, scaleUV, TILE } from './kit.js';
 import { fitAdd } from './worldfit.js';
 import { roomOcc, occCollider } from './roomocc.js';
@@ -36,6 +37,13 @@ import { rng, smoothstep } from '../engine/math.js';
 //  School moves there, facing south down the valley; the mask (body 43) by the pool stays, a mask without a door)
 export const SCHOOL_SITE = { x: 4.1, z: 2.9, ry: Math.PI, w: 6.69, d: 3.34, h: 8.64 };
 export const SCHOOL_DOOR = { x: 4.1, z: -0.2 };                    // where he stands to go in: LBA2's own door zone for scene 28 (decoded)
+// (P113's door-level rule, the School's mask: the ground before a door is level with its sill. The valley's floor before
+//  the chin door is (1.2–3.6 m out), but a tongue of the hollow's east bank spilled into the doorway's west half, 0.2–0.5 m
+//  over the sill 0.3–0.9 m out (worldfit: "door sill under the ground by 0.25 m"; the step's corner under the sand).
+//  As every house's floor is levelled before its door (world.js houseFlats), the sand is cut back to the sill level over
+//  the door's surround and 1.8 m out (never lower: desert.js heightFn); the mask is not moved)
+const SCHOOL_DOORWAY = { x0: 2.8, x1: 5.4, z0: -0.6, z1: 1.6 };
+export function schoolDoorwayAt(x, z) { return rectW(SCHOOL_DOORWAY, x, z, 0.6); }
 const MASK_SITE = { x: -69.1, z: -72.7, ry: Math.PI / 2, w: 6.69, d: 3.34, h: 8.64 };   // (the mask by the pool: the School's place until 15.11)
 const HALL = { x: -67.8, z: -61.7, w: 10.19, d: 7.02, top: 6.69 };  // (body 48; its top 6.69 m over the pool's floor)
 const POOL = { x0: -78.5, x1: -50.6, z0: -66.0, z1: -50.5 };       // the sunken pool (the original's 0 m hollow) the hall stands in; its rim walk runs round it
@@ -313,8 +321,9 @@ export function buildOldPlaces(C) {
       {
         const lx = Hh.x + 1.75, lz = dz0 - 0.32, ly = sill + 2.55;
         B.add(bbox(0.08, 0.08, 0.42, 0, 1), M.iron, lx, ly - 0.32, dz0 - 0.2);
-        const mat = new THREE.MeshStandardMaterial({ color: '#9fb0bc', roughness: 0.35, emissive: '#22303a', emissiveIntensity: 0.5 });
-        const gem = new THREE.Mesh(cached('pp-crystal', () => new THREE.OctahedronGeometry(0.2, 0).scale(1, 1.7, 1)), mat);
+        // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a translucent shell over a core that wakes with it: crystallook.js)
+        const mat = asShell(new THREE.MeshStandardMaterial({ color: '#9fb0bc', roughness: 0.35, emissive: '#22303a', emissiveIntensity: 0.5 }), 0.84);
+        const gem = crystalGem(mat, linkedCore(mat), { v: 0, hs: 0.34, rr: 0.14 });
         gem.position.set(lx, ly, lz); C.group?.add(gem);
         R.studyLamp = { ...W(lx, lz), y: ly, mesh: gem,
           wake(on) { mat.color.set(on ? '#e8fcff' : '#9fb0bc'); mat.emissive.set(on ? '#7fd8ff' : '#22303a'); mat.emissiveIntensity = on ? 1.8 : 0.5; } };

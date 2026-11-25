@@ -10,9 +10,9 @@ Object.assign(STR.en, {
   op_cap_lore: "Sendell, Twinsun's goddess, chose Twinsen to stop FunFrock.",
   op_cap_lore_sub: 'FunFrock is dead. His clones never got the message.',
   // (LBA3-RUN: the originals over Twinsen's notebook, a line a page, for a newcomer; LBA1, then LBA2. The notebook cut's;
-  //  the classic cut keeps P83 / S-7's two lines above)
-  op_nb_1: 'FunFrock ruled Twinsun with clones and teleporters.',
-  op_nb_2: 'Twinsen stood up to him and set Twinsun free.',
+  //  the classic cut keeps P83 / S-7's two lines above. P127: Arthur reads them aloud, from his dad's notebook)
+  op_nb_1: "Dad's notebook. FunFrock ruled Twinsun with clones and teleporters.",
+  op_nb_2: 'My dad, Twinsen, stood up to him and set Twinsun free.',
   op_nb_3: 'Later, lightning struck his Dino-Fly.',
   op_nb_4: "He rescued Twinsun's children from Zeelich.",
   // the harbour: the Joint Project's lift

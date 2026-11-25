@@ -24,6 +24,7 @@
         <span id="clovers" class="ctr"><svg viewBox="0 0 24 24"><path d="M12 11.5Q12.6 17 16.5 21.5" fill="none" stroke="#14501d" stroke-width="2"/><g fill="#5fe36a" stroke="#14501d" stroke-width="1.1" transform="translate(12 11)"><path transform="rotate(45)" d="M0 0C-3.6-1.6-5.6-4.6-4-6.9C-2.7-8.6-.8-8.1 0-6.6C.8-8.1 2.7-8.6 4-6.9C5.6-4.6 3.6-1.6 0 0Z"/><path transform="rotate(135)" d="M0 0C-3.6-1.6-5.6-4.6-4-6.9C-2.7-8.6-.8-8.1 0-6.6C.8-8.1 2.7-8.6 4-6.9C5.6-4.6 3.6-1.6 0 0Z"/><path transform="rotate(225)" d="M0 0C-3.6-1.6-5.6-4.6-4-6.9C-2.7-8.6-.8-8.1 0-6.6C.8-8.1 2.7-8.6 4-6.9C5.6-4.6 3.6-1.6 0 0Z"/><path transform="rotate(315)" d="M0 0C-3.6-1.6-5.6-4.6-4-6.9C-2.7-8.6-.8-8.1 0-6.6C.8-8.1 2.7-8.6 4-6.9C5.6-4.6 3.6-1.6 0 0Z"/></g></svg><b>0</b></span>
         <span id="coins" class="ctr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#ffd23a" stroke="#8a5a00" stroke-width="1.5"/><circle cx="12" cy="12" r="6.2" fill="none" stroke="#c88a00" stroke-width="1.4"/><ellipse cx="9" cy="8.4" rx="2.6" ry="1.5" fill="#fff6c0" opacity="0.85"/></svg><b>0</b></span>
         <span id="keyicon" class="ctr hidden"><svg viewBox="0 0 24 24"><circle cx="7" cy="12" r="4.5" fill="none" stroke="#e6c25a" stroke-width="2.5"/><path d="M11 12 H22 M18 12 V16 M21 12 V15" stroke="#e6c25a" stroke-width="2.5"/></svg></span>
+        <span id="smallkeys" class="ctr hidden"><svg viewBox="0 0 24 24"><circle cx="7.5" cy="12" r="5" fill="#c8923a" stroke="#5a3a10" stroke-width="1.3"/><circle cx="7.5" cy="12" r="1.9" fill="#3a2a10"/><path d="M12.3 10.6 H21.5 V13.4 H12.3 Z M16.5 13.4 V17 H18.6 V13.4 M19.6 13.4 V15.8 H21.5 V13.4" fill="#e0b050" stroke="#5a3a10" stroke-width="1"/></svg><b>0</b></span>
       </div>
       <div id="shards"><i></i><i></i><i></i></div>
     </div>
@@ -75,7 +76,10 @@
   </div>
 
   <!-- ===== screens ===== -->
-  <div id="title" class="screen">
+  <!-- (TESTER-FIXES: the title is hidden until the game shows it — main.js showScreen('title') — so its buttons are never on
+       the page, under the loading screen, before they answer; the desktop app's Quit Game is there from the first frame) -->
+  <script>if (window.desktop) document.body.classList.add('desktop');</script>
+  <div id="title" class="screen hidden">
     <div class="logo">
       <div class="logo-top">LBA 3</div>
       <div class="logo-bottom" data-i18n="logo_sub"></div>
@@ -112,7 +116,7 @@
       <button data-act="settings" data-i18n="settings"></button>
       <button data-act="controls" data-i18n="controls"></button>
       <button data-act="quit" data-i18n="save_quit"></button>
-      <div class="tools"><button data-act="bench" data-i18n="bench"></button><button data-act="benchauto" data-i18n="bench_auto"></button><button data-act="benchfps" data-i18n="bench_fps"></button></div>
+      <div class="tools dev-only"><button data-act="bench" data-i18n="bench"></button><button data-act="benchauto" data-i18n="bench_auto"></button><button data-act="benchfps" data-i18n="bench_fps"></button></div>
     </div>
     <p id="pause-msg" class="menu-msg" role="status" aria-live="polite"></p>
   </div>

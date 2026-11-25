@@ -31,6 +31,7 @@
 //     hum: { setOn(b) }   the humming crate's faint shimmer (on at the start)
 //   }
 import * as THREE from 'three';
+import { crystalMats, addCrystal } from './crystallook.js';
 import { Kit, MAT, rbox, plane, cyl, sphere, lathe, slab, canvasTex, pottedPlant, locker, rug, stove, dresser, table, bench, floorLamp, pot, kettle, plate,
   ledger, papers, bookStack, deskLamp, officeChair, noticeBoard, wallClock, filingCabinet, crate, chest, desk, coatStand, bookcase, jar, barrel } from './props.js';
 import { tileTex, cm, latticeM } from './props-esmer.js';
@@ -268,7 +269,8 @@ function zcrate(k, { s = 0.72, open = false } = {}) {
   for (const y of [0.04, s - 0.04]) for (const sz of [-1, 1]) k.add(rbox(s, 0.06, 0.05, 0.01), md, 0, y, sz * (s / 2 - 0.025));
   k.add(plane(s * 0.86, s * 0.86), stampM(), 0, s / 2, s / 2 + 0.006);
   k.add(plane(s * 0.86, s * 0.86), stampM(), s / 2 + 0.006, s / 2, 0, HALF);
-  if (open) for (let i = 0; i < 5; i++) k.add(lathe([[0, 0], [0.05, 0.05], [0.04, 0.16], [0, 0.22]], 5), warmGlow(), -0.18 + (i % 3) * 0.18, s - 0.12, -0.12 + Math.floor(i / 3) * 0.22, i, { rz: (i - 2) * 0.2 });
+  // (CRYSTALS-ONE-LOOK: the well's faceted crystals, shell + core, the project's warm tint: crystallook.js)
+  if (open) for (let i = 0; i < 5; i++) addCrystal(k, crystalMats('warm'), -0.18 + (i % 3) * 0.18, s - 0.12, -0.12 + Math.floor(i / 3) * 0.22, i, { rz: (i - 2) * 0.2, sx: 0.055, sy: 0.22, sz: 0.055 }, i);
   return { hw: s / 2, hd: s / 2, top: s };
 }
 // a sack of grain (faces +z): a soft lump, its neck tied

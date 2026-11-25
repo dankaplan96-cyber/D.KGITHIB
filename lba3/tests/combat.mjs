@@ -5,8 +5,10 @@
 // the ball switch, weapon save/load, dodge distance at 30 / 60 / 120 fps and by direction (LBA2's), and the ball's LBA2 rules (magic, bounces, fetch).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
+import { serveLocal } from './lib/serve.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+if (process.env.SERVE) await serveLocal(page);   // (SERVE=1: this checkout's files without an http.server, as tests/opening.mjs)
 const errs = watch(page);
 const ev = (f, a) => page.evaluate(f, a);
 const { check, done } = checker({ info: 'always' });

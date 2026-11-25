@@ -22,6 +22,7 @@ const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
   await page.evaluate(() => { game.testFreeze = true; });
+  await page.addScriptTag({ path: new URL('./lib/player.js', import.meta.url).pathname });   // (window.P: P.coreFeed for H-2's boxes)
   if (mode) await page.click(`[data-act="${mode}"]`, { timeout: 180000 });
   await ev(() => {
     const G = window.game; G.testFreeze = true;
@@ -50,6 +51,12 @@ const boot = async (mode) => {
         return tg.done ? 'forced' : 'FAILED';
       },
       f() { return { ...G.flags }; },
+      // EXPANSION WAVE 1 (H-1): a relay bracket by input: stand in front of it (a post: on its room side; the catwalk's arm:
+      //  behind it on the catwalk), face it, E when its prompt is up; what the lamps say
+      bracket(id) { const RL = G.story._rl, m = RL.marks[id]; if (!m) return 'no bracket ' + id; const sx = m.b.post ? m.x + 0.75 : m.x, sz = m.b.post ? m.z + 0.35 : m.z - 0.7;
+        T.tp(sx, sz, 0, m.y); G.hero.angle = Math.atan2(m.x - G.hero.pos.x, m.z - G.hero.pos.z); G.step(0.3); const k = G.findInteractable()?.kind;
+        if (k !== 'rl_set' && k !== 'rl_take') return 'prompt ' + k; T.tap('KeyE'); G.step(1.2); T.talkAll(); const L = m.relay.visible ? m.lamps.map((l) => l.m.color.getHexString() === '3cff6a' ? 'G' : 'R').join('') : '-';
+        return { kind: k, at: G.flags.dx_relay_at ?? '', lamps: L, hand: RL.hand() }; },
       obj() { return document.querySelector('#pause-objective')?.textContent || ''; },
     };
   });
@@ -63,7 +70,7 @@ await ev(() => { const G = game; Object.assign(G.flags, { c2_plan: true, c2_plan
   G.story.cur.toShell?.(); G.step(1.5); T.talkAll(); G.step(0.5); T.talkAll();
   // chapters between Zeelich and the shell (Desert Island, …) have their own tests: skip to the shell
   for (let i = 0; i < 12 && G.story.cur.key !== 'shell'; i++) { G.story.nextChapter(); G.step(0.5); T.talkAll(); } });
-is('chapter 15 (shell; 11 on the base campaign) starts in the shaft, in play, an objective set', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj()]), (v) => v[0] === 14 && v[1] === true && v[2] === 'c3shaft' && v[3] === 'play' && v[4].length > 0);
+is('chapter 15 (shell; 11 on the base campaign) starts in the shaft, in play, an objective set; Baldino\'s two relays in his hands (H-1)', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj(), game.flags.dx_relay_v, game.flags.dx_relay_told, game.story._rl.hand()]), (v) => v[0] === 14 && v[1] === true && v[2] === 'c3shaft' && v[3] === 'play' && v[4].length > 0 && v[5] === 1 && v[6] === true && v[7] === 2);
 await shot('C3-00-shaft.png');
 // SHAFT-CITADEL: the shaft's top is the bore in Citadel's station, not Zeelich's platform: the lift comes up in the station's
 // yard beside the collar (the blast doors open since the network's code), and the collar takes him back down
@@ -81,6 +88,7 @@ is('the machinery: steam out of all four vents over the catwalk; near the stair 
   for (let i = 0; i < 400 && !f.sh_knock; i++) { G.step(0.1); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [st, f.sh_knock, D.vents.map((v) => v.latched).join()]; }),
   (v) => v[0] === 'false,false,false,false' && v[1] === true && v[2] === 'false,false,true,true');
 await shot('C3-01-deep.png');
+is('H-1: the bracket by the way in: a relay set (E) shows a green lamp for the tunnel and a red one for the shutter; the objective asks for a relay that sees both doors', await ev(() => [T.bracket('D1'), /both doors/.test(T.obj())]), (v) => v[0].kind === 'rl_set' && v[0].at === 'D1' && v[0].lamps === 'GR' && v[0].hand === 1 && v[1]);
 is('the cooling diagram read', await ev(() => { const D = game.room; T.useAt(D.diagram.x, D.diagram.z); return [game.flags.c3_diagram, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 // (PUZZLES P-C phase 2, 21.11: changed on purpose. The drain (B) is found open; both feeds open with it running starve
 //  the drill's drive; shutting it closes the loop: the drive keeps turning and the exchanger cools)
@@ -100,11 +108,15 @@ is('the machinery cooled, an objective set', await ev(() => [game.flags.c3_coole
 await shot('C3-02-cooled.png');
 
 // the galleries (CAMPAIGN-9: the shutter starts down as he reaches it; her crystal holds it)
-is('at the shutter: it comes down and her crystal holds it open; on to the crystal galleries (still in the doorway once the line is read)', await ev(() => { let r = T.exit('c3-gallery'); const held = !!game.flags.sh_held; for (let i = 0; i < 60 && game.room?.id !== 'c3gallery'; i++) { game.step(0.1); T.talkAll(); } return [held, game.room?.id]; }), (v) => v[0] && v[1] === 'c3gallery');
+// (H-1: the shutter is the hall's far door: it waits for a relay that sees both doors; the catwalk's east post does)
+is('at the shutter: it comes down and her crystal holds it open; the relay by the way in is blind to it: he stays (said)', await ev(() => { T.exit('c3-gallery'); const held = !!game.flags.sh_held; for (let i = 0; i < 30; i++) { game.step(0.1); T.talkAll(); } const e = game.room.exits.find((x) => x.to === 'c3-gallery'); T.tp(e.x, e.z + 2.0); T.exit('c3-gallery'); return [held, game.room?.id, game.flags.dx_relay_deep ?? null]; }), (v) => v[0] && v[1] === 'c3deep' && v[2] === null);
+is('H-1: the relay taken off the blind bracket (E) and set on the catwalk\'s east post: both lamps green, Baldino hears the hall; the second relay on the blind bracket as a spare', await ev(() => { const a = T.bracket('D1'); const b = T.bracket('D2'); const c = T.bracket('D1'); return [a.kind, a.hand, b.kind, b.lamps, c.lamps, c.at]; }), (v) => v[0] === 'rl_take' && v[1] === 2 && v[2] === 'rl_set' && v[3] === 'GG' && v[4] === 'GR' && v[5] === 'D2,D1');
+is('through the shutter to the crystal galleries: the hall\'s relay set, the spare taken along', await ev(() => { const e = game.room.exits.find((x) => x.to === 'c3-gallery'); T.tp(e.x, e.z + 2.0); T.exit('c3-gallery'); for (let i = 0; i < 60 && game.room?.id !== 'c3gallery'; i++) { game.step(0.1); T.talkAll(); } return [game.room?.id, game.flags.dx_relay_deep, game.flags.dx_relay_at, game.story._rl.hand()]; }), (v) => v[0] === 'c3gallery' && v[1] === true && v[2] === 'D2' && v[3] === 1);
 await shot('C3-03-gallery.png');
 is('the first two pillars hit', await ev(() => game.room.ballTargets.filter((x) => x.pillar != null && !x.node).map((tg) => T.hit(tg))), (v) => v.length === 2 && v.every((x) => x !== 'FAILED'));
 is('the third heart faces the far side: from the middle stone\'s plate (it lines him up), the throw comes off the survey mirror onto it', await ev(() => { const G = game, R = G.room, S = R.stonePlate, h = G.hero, tg = R.ballTargets.find((x) => x.pillar === 2);
   G.step(2); T.talkAll(); T.tp(S.x + 0.15, S.z - 0.1, 0, 3.0); h.hp = h.maxHp; G.step(0.8); T.talkAll(); G.step(0.6); const a = h.angle; G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(2.0); T.talkAll(); return { a: +a.toFixed(2), up: S.up(), done: tg.done, node: !!tg.node }; }), (v) => v.up && v.node && Math.abs(v.a - Math.PI / 2) < 0.05 && v.done);
+is('H-1: the start shelf\'s bracket by the crates: green for the tunnel, red for the old arch (a pillar in the way); taken back', await ev(() => { const a = T.bracket('G1'); const b = T.bracket('G1'); return [a.kind, a.lamps, b.kind, b.hand]; }), (v) => v[0] === 'rl_set' && v[1] === 'GR' && v[2] === 'rl_take' && v[3] === 1);
 is('the stones raised, an objective set', await ev(() => [game.flags.c3_pillar0, game.flags.c3_pillar1, game.flags.c3_pillar2, T.obj()]), (v) => v[0] && v[1] && v[2] && v[3].length > 0);
 await shot('C3-04-stones.png');
 
@@ -113,10 +125,12 @@ const before = await ev(() => { game.save(false); return JSON.stringify(['c3_coo
 await boot('continue');
 const after = await ev(() => { T.talkAll(); return JSON.stringify(['c3_cooled', 'c3_ladder', 'c3_pillar0', 'c3_pillar1', 'c3_pillar2'].map((k) => !!game.flags[k])); });
 is('save → Continue: the shell progress survives, back in the galleries', [before === after, after, ...await ev(() => [game.room?.id, game.flags.chapter, T.obj()])], (v) => v[0] && v[2] === 'c3gallery' && v[3] === 14);
+is('H-1 after Continue: the machinery\'s relay still set on the catwalk post (both lamps green), one relay in hand', await ev(() => { const RL = game.story._rl, m = RL.marks.D2; return [game.flags.dx_relay_deep, game.flags.dx_relay_at, !!m?.relay.visible, m?.lamps.map((l) => l.m.color.getHexString()).join(), RL.hand()]; }), (v) => v[0] === true && v[1] === 'D2' && v[2] && v[3] === '3cff6a,3cff6a' && v[4] === 1);
+is('H-1: the far shelf by the old arch: a relay set there sees the tunnel and the arch (both green)', await ev(() => { T.talkAll(); const r = T.bracket('G3'); return [r.kind, r.lamps, r.at]; }), (v) => v[0] === 'rl_set' && v[1] === 'GG' && v[2] === 'D2,G3');
 
 // Sendell
 is('on to Sendell', await ev(() => { if (game.room?.id !== 'c3gallery') T.exit('c3-gallery'); return T.exit('c3-sendell'); }), (v) => v === 'c3sendell');
-is("the arch he came in by grows shut behind him first; then Sendell's words (why), the checkpoint, the core objective", await ev(() => { for (let i = 0; i < 40 && !game.flags.c3_sendell; i++) { game.step(0.1); T.talkAll(); } T.talkAll(); return [game.flags.sh_shut, !!game.room.seal?.shut, game.flags.c3_sendell, game.hero.hp === game.hero.maxHp, T.obj()]; }), (v) => v[0] === true && v[1] && v[2] === true && v[3] && v[4].length > 0);
+is("the arch he came in by grows shut behind him first; then Sendell's words (why), the checkpoint, the core objective; the galleries' relay set (H-1)", await ev(() => { for (let i = 0; i < 40 && !game.flags.c3_sendell; i++) { game.step(0.1); T.talkAll(); } T.talkAll(); return [game.flags.sh_shut, !!game.room.seal?.shut, game.flags.c3_sendell, game.hero.hp === game.hero.maxHp, T.obj(), game.flags.dx_relay_gal]; }), (v) => v[0] === true && v[1] && v[2] === true && v[3] && v[4].length > 0 && v[5] === true);
 is('the way back is shut (her crystal across the arch)', await ev(() => { T.exit('c3-gallery'); T.talkAll(); return game.room?.id; }), (v) => v === 'c3sendell');
 await shot('C3-05-sendell.png');
 
@@ -145,9 +159,14 @@ const plateShots = await ev(() => game.story.cur.plates().map((p) => {
     G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.6); T.talkAll();
     if (k === 0) first = !!tg.done;
   }
-  return { first, last: tg.done ? 'bank shot' : T.hit(tg) };
+  const last = tg.done ? 'bank shot' : T.hit(tg);
+  // (H-2: the bank shot opens the pylon; the guardian is down while it is open; its box, by input — P.coreFeed)
+  T.talkAll(); const gd = G.story.cur.guardian, open = G.flags.c3_prime, down = gd?.state; G.step(3); const still = gd?.state;
+  const feed = P.coreFeed(); T.talkAll();
+  return { first, last, open, down, still, feed: feed.done, held: !!G.flags['c3_pylon' + p.i] };
 }));
 is('the three pylons converted', plateShots.map((x) => x.last), (v) => v.length === 3 && v.every((x) => x !== 'FAILED'));
+is('H-2: each bank shot opens its pylon, the guardian stays down while it is open; its box fed by input, the pylon holds', plateShots, (v) => v.every((x, i) => x.open === i && x.down === 'stunned' && x.still === 'stunned' && x.feed && x.held));
 is("each plate's first bank shot, thrown from its centre, hits its pylon", plateShots.map((x) => x.first), (v) => v.length === 3 && v.every((x) => x === true));
 // CHAPTER-BALANCE: the overload first needs the bore's bleed valve on the deck ring; no coil until it is turned
 is('the overload: no coil yet, the objective names the bleed valve', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj(), !!game.room.bleed]; }), (v) => v[0] === true && v[1] === false && /bleed/i.test(v[2]) && v[3]);

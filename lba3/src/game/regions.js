@@ -51,6 +51,8 @@ import { buildTerminalRoom } from './terminal.js';
 import { buildOtrBarRoom } from './otrbar.js';
 import { buildOtrHotelRoom } from './otrhotel.js';
 import { buildCelTempleRoom } from './celtemple.js';
+import { buildWannieMine, WM_AT } from './wanniemine.js';   // (WAVE6 H-16: the Wannies' deep seam under the Platform)
+import { KR_AT, buildKcTunnel, buildKcPump, buildKcGoats, buildKcMill } from './keyrooms.js';   // (KEYS-CLOVER: the rooms behind the small-key doors)
 import { buildTraluCaveRoom } from './tralucave.js';
 import { buildBaggageRoom } from './baggage.js';
 import { buildTavCellarRoom } from './tavcellar.js';
@@ -66,7 +68,7 @@ const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, w
   zeelich: 800, underground: 400, desert: 700, condenser: 30, butemple: 30, wtent: 20, school: 30, asylum: 150, bumaze: 170,
   hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, tralucave: 120, terminal: 90, zterminal: 90, otrbar: 120, otrhotel: 120, celtemple: 120, zh_pelleck: 70, zh_nara: 70, zh_oku: 70, zh_bakery: 70, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
   isle_celebration: 160, isle_undergas: 320, isle_platform: 180, isle_liftdock: 120,
-  isle_orchard: 230, isle_oldwatch: 90, isle: 250, ballastra: 420, bl_arches: 520, bl_gardens: 520 };   // (bl_arches: EXPANSION W-2; bl_gardens: W-3)
+  isle_orchard: 230, isle_oldwatch: 90, isle: 250, wanniemine: 260, ballastra: 420, bl_arches: 520, bl_gardens: 520 };   // (bl_arches: EXPANSION W-2; bl_gardens: W-3)
 // Where each room stands (its group's origin; an interior's centre where it differs), known before it is built: for
 // data-only questions such as "which scene is this point in" (regions.sceneOf; the tests' harness). Checked against
 // the built room in regions.buildGroup (a mismatch is a console warning).
@@ -80,6 +82,8 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
   bl_tunnel: [3800, -4600], bl_kiln: [3900, -4600], bl_house: [4000, -4600], bl_cradles: [4100, -3800] };   // (bl_house, bl_cradles: EXP-3)   // (bl_tunnel, bl_kiln: EXPANSION W-3's rooms)
 for (const [k, v] of Object.entries(HAM_AT)) AT[k] = [v.x, v.z];   // (HAMALAYI-LIFE)
 AT.pumproom = [PUMPROOM_AT.x, PUMPROOM_AT.z];   // (CAMPAIGN-2: the lane's pump room)
+for (const [k, v] of Object.entries(WM_AT)) AT[k] = [v.x, v.z];   // (WAVE6 H-16: the deep seam's three rooms)
+for (const [k, v] of Object.entries(KR_AT)) AT[k] = [v.x, v.z];   // (KEYS-CLOVER: the four rooms behind the small-key doors)
 const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0], ballastra: [3000, -3000], bl_arches: [3000, -3800], bl_gardens: [3000, -4600] };   // (ballastra, bl_arches, bl_gardens: EXPANSION W-1..W-3)
 const isleAt = (id) => { const i = ISLES.includes(id.slice(5)) ? SLOTS.indexOf(id.slice(5)) : -1; return i >= 0 ? [1900 + i * 330, 1800] : null; };
 export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
@@ -149,6 +153,11 @@ function groupDefs() {
   add('otrbar', ['otrbar'], buildOtrBarRoom);   // (ZEELICH-1: Otringal's harbour bar, after LBA2's scene 136)
   add('otrhotel', ['otrhotel'], buildOtrHotelRoom);   // (ZEELICH-1: the Imperial Hotel's lobby at Otringal, after LBA2's scene 81)
   add('celtemple', ['celtemple'], buildCelTempleRoom);   // (ZEELICH-1: the Temple of the Dark Monk under Celebration's summit, after LBA2's scene 93)
+  add('wanniemine', ['wm_landing', 'wm_gallery', 'wm_blow'], buildWannieMine);   // (WAVE6 H-16: the deep landing, the deep seam, the Blow)
+  add('kc_tunnel', ['kc_tunnel'], buildKcTunnel);   // (KEYS-CLOVER K1: FunFrock's old passage under the fort)
+  add('kc_pump', ['kc_pump'], buildKcPump);   // (KEYS-CLOVER K2: Otringal's fountain pump house)
+  add('kc_goats', ['kc_goats'], buildKcGoats);   // (KEYS-CLOVER K3: Grandma's old house in Lhar)
+  add('kc_mill', ['kc_mill'], buildKcMill);   // (KEYS-CLOVER K4: Baldino's old mill room on Zeelich)
   for (const n of ISLES) if (hasIsland(n)) add('isle_' + n, ['isle_' + n], (S, P) => ({ ['isle_' + n]: buildIsle(S, P, n) }));
   return G;
 }
@@ -261,7 +270,9 @@ export class Regions {
     Object.assign(this.rooms_, rooms);
     // (ROCKS-MASONRY: no rock left cut by what the area built after it — a machine, a crate, a deck, a floor; P121's rule
     //  for every area: rocksettle.js rocksOutOfBuilt)
-    { const cols = this.P.colliders.slice(G.c0 ?? 0); for (const [id, R] of Object.entries(rooms)) if (R?.group) R.rocksMasonry = rocksOutOfBuilt(R.group, { colliders: cols, area: id }); }
+    { const cols = this.P.colliders.slice(G.c0 ?? 0); for (const [id, R] of Object.entries(rooms)) if (R?.group) R.rocksMasonry = rocksOutOfBuilt(R.group, { colliders: cols, area: id });
+      // (BRIDGES: a deck of separate planks is walked as one floor, in every area: physics.js bridgeTreads)
+      G.treads = this.P.bridgeTreads(cols).length; }
     for (const [id, R] of Object.entries(rooms)) { const c = this.centreOf(id), r = R.center || R.group?.position; if (c && r && Math.hypot(c.x - r.x, c.z - r.z) > 0.5) console.warn('regions.js AT is out of date for', id, [r.x, r.z]); }
     G.ms = Math.round(busy); G.state = 'ready'; G.why = why; G.phase = this.phase;
     if (why === 'access' && this.phase === 'play') {

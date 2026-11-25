@@ -82,7 +82,7 @@ export class ChapterBase {
     delete this.f[flag];
     const h = g.hero;
     if (type === 'coin') h.coins += n * value;
-    else if (type === 'clover') h.clovers = Math.min(9, h.clovers + n);
+    else if (type === 'clover') h.clovers = Math.min(h.cloverMax, h.clovers + n);
     if (toastKey) g.hud.toast(toastKey, { n: n * value });
     return true;
   }

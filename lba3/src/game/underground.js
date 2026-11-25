@@ -35,6 +35,7 @@
 //   c3shaft     R.crew {guard:{x,z,a}}            c3deep  R.hoist {x,z, open, setOpen(b)}, R.crew {tolli:[stops]}
 //   c3core      R.crew {sala:{x,z,a}}: the shield crew's reader at the console's end once Vesk is gone
 import * as THREE from 'three';
+import { crystalGeo as cryGeo, crystalMats, addCrystal, gemGeo } from './crystallook.js';
 import { RoomBuilder, glowSprite, twoSided, sag } from './interiors.js';
 import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, canvasTex } from './props.js';
 import * as P from './props.js';
@@ -117,10 +118,11 @@ export const floorTex = (base, alt, key) => M('ugfloortex' + key, () => tiled(ca
 })));
 const floorMat = (base, alt, key) => M('ugfloor' + key, () => stdM({ map: floorTex(base, alt, key), roughness: 0.9 }, 4));
 
-// --- crystals: hexagonal prisms with a pointed tip (same species as the well's)
-const crystalGeo = (sides = 6) => cached('cry' + sides, () => { const g = new THREE.LatheGeometry([[0.001, -0.05], [0.8, 0], [1, 0.12], [1, 0.72], [0.001, 1]].map(([a, b]) => new THREE.Vector2(a, b)), sides); return g.toNonIndexed(); });
-const crystalMat = (c, e, k, op = 0.9) => M(`ugcry${c}${e}${k}${op}`, () => stdM({ color: c, emissive: e, emissiveIntensity: k, roughness: 0.12, metalness: 0.1, transparent: op < 1, opacity: op, flatShading: true }, 0, { noShadow: true, rockSet: true }));   // (rockSet: crystals grow out of the rock: rocksettle.js rocksOutOfBuilt)
-const CYAN = () => crystalMat('#aef6ff', '#1ab8e8', 0.9), VIOLET = () => crystalMat('#e0c0ff', '#8a3aef', 0.8), DIM = () => crystalMat('#7a8aa8', '#203a5a', 0.35, 1);
+// --- crystals: the well's species (CRYSTALS-ONE-LOOK: src/game/crystallook.js — the faceted prism, a translucent shell
+// over a glowing core, the well's cyan / violet / asleep palette; one shell per tint + one shared core per Kit)
+// (rockSet: crystals grow out of the rock: rocksettle.js rocksOutOfBuilt)
+const crystalGeo = (v = 0) => cryGeo(v);
+const CYAN = () => crystalMats('cyan', { rockSet: true }), VIOLET = () => crystalMats('violet', { rockSet: true }), DIM = () => crystalMats('dim', { rockSet: true });
 // cluster of crystals growing from (0,0,0) out along +y (tilt it with the kit), seed-stable
 function crystals(k, n, s, seed, mats, spread = 0.5) {
   const r = rng(seed * 97 + 3);
@@ -128,7 +130,7 @@ function crystals(k, n, s, seed, mats, spread = 0.5) {
     const big = i === 0, a = r() * Math.PI * 2, d = big ? 0 : (0.15 + r() * spread) * s;
     const h = s * (big ? 1.6 + r() * 0.6 : 0.6 + r() * 0.9), rad = s * (big ? 0.24 : 0.1 + r() * 0.1);
     const m = mats[i % mats.length];
-    k.add(crystalGeo(), m, Math.cos(a) * d, -0.05 * s, Math.sin(a) * d, r() * 3, { rx: Math.cos(a) * (big ? 0.15 : 0.35 + r() * 0.4), rz: -Math.sin(a) * (big ? 0.15 : 0.35 + r() * 0.4), sx: rad, sy: h, sz: rad });
+    addCrystal(k, m, Math.cos(a) * d, -0.05 * s, Math.sin(a) * d, r() * 3, { rx: Math.cos(a) * (big ? 0.15 : 0.35 + r() * 0.4), rz: -Math.sin(a) * (big ? 0.15 : 0.35 + r() * 0.4), sx: rad, sy: h, sz: rad }, seed + i);
   }
 }
 
@@ -408,8 +410,8 @@ function herCrystal(parent, spots, seed) {
   const g = new THREE.Group(); parent.add(g);
   const ck = new Kit(g), r = rng(seed);
   for (const [x, z, h, s] of spots) {
-    ck.add(crystalGeo(), VIOLET(), x, 0, z, r() * 6, { sx: 0.32 * s, sy: h, sz: 0.32 * s, rx: (r() - 0.5) * 0.2, rz: (r() - 0.5) * 0.2 });
-    for (let j = 0; j < 3; j++) { const a = r() * 6.3, d = 0.18 * s; ck.add(crystalGeo(), VIOLET(), x + Math.cos(a) * d, 0, z + Math.sin(a) * d, r() * 6, { sx: 0.16 * s, sy: h * (0.35 + r() * 0.35), sz: 0.16 * s, rx: Math.cos(a) * 0.3, rz: -Math.sin(a) * 0.3 }); }
+    addCrystal(ck, VIOLET(), x, 0, z, r() * 6, { sx: 0.32 * s, sy: h, sz: 0.32 * s, rx: (r() - 0.5) * 0.2, rz: (r() - 0.5) * 0.2 }, 0);
+    for (let j = 0; j < 3; j++) { const a = r() * 6.3, d = 0.18 * s; addCrystal(ck, VIOLET(), x + Math.cos(a) * d, 0, z + Math.sin(a) * d, r() * 6, { sx: 0.16 * s, sy: h * (0.35 + r() * 0.35), sz: 0.16 * s, rx: Math.cos(a) * 0.3, rz: -Math.sin(a) * 0.3 }, j + 1); }
   }
   ck.flush();
   g.traverse((o) => { if (o.isMesh) o.castShadow = false; });
@@ -1328,11 +1330,11 @@ function buildGallery(scene, physics) {
     const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true, rockSet: true });
     const r = rng(300 + i);
     pk.add(rockGeo(200 + i), rockD, p.x, CY, p.z, i, { sx: 1.6 * p.s, sy: 1.1, sz: 1.5 * p.s });
-    pk.add(crystalGeo(), body, p.x, CY, p.z, i, { sx: 0.75 * p.s, sy: p.h, sz: 0.75 * p.s, rx: 0.05, rz: -0.06 });
-    for (let j = 0; j < 7; j++) { const a = (j / 7) * Math.PI * 2 + r(), d = 0.5 + r() * 0.5; pk.add(crystalGeo(), body, p.x + Math.cos(a) * d * p.s, CY, p.z + Math.sin(a) * d * p.s, r() * 3, { sx: (0.25 + r() * 0.2) * p.s, sy: p.h * (0.3 + r() * 0.45), sz: (0.25 + r() * 0.2) * p.s, rx: Math.cos(a) * 0.25, rz: -Math.sin(a) * 0.25 }); }
+    pk.add(crystalGeo(i), body, p.x, CY, p.z, i, { sx: 0.75 * p.s, sy: p.h, sz: 0.75 * p.s, rx: 0.05, rz: -0.06 });
+    for (let j = 0; j < 7; j++) { const a = (j / 7) * Math.PI * 2 + r(), d = 0.5 + r() * 0.5; pk.add(crystalGeo(j + 1), body, p.x + Math.cos(a) * d * p.s, CY, p.z + Math.sin(a) * d * p.s, r() * 3, { sx: (0.25 + r() * 0.2) * p.s, sy: p.h * (0.3 + r() * 0.45), sz: (0.25 + r() * 0.2) * p.s, rx: Math.cos(a) * 0.25, rz: -Math.sin(a) * 0.25 }); }
     // the heart: a fat crystal set into the pillar's face toward the start shelf, at shelf height
     const fc = p.face || -1, hx = p.x + fc * (p.face ? 0.8 : 0.75) * p.s, hy = DY + 1.6, hz = p.z;
-    pk.add(new THREE.OctahedronGeometry(0.55, 0), heart, hx, hy, hz, 0.4, { sy: 1.5 });
+    pk.add(gemGeo(2, 0.55, 0.42), heart, hx, hy, hz, 0.4, { sy: 1.5 });   // (CRYSTALS-ONE-LOOK: the faceted prism, where an octahedron was)
     pk.flush();
     const light = B.light('#7af0ff', 0, 9, hx + fc * 0.8, hy + 0.5, hz);
     light.userData.base = 0.0;
@@ -1622,7 +1624,7 @@ function buildSendell(scene, physics) {
   // old crystal lamps in the wall: small blue crystals in carved cups
   for (const ph of [Math.PI * 1.17, Math.PI * 1.34, Math.PI * 1.5, Math.PI * 0.98]) {
     const [x, z] = polar(ph, Rr - 0.2);
-    k.at(x, 2.55, z, ph + Math.PI, () => { k.add(lathe([[0.001, -0.12], [0.16, -0.08], [0.2, 0.06], [0.17, 0.08], [0.001, 0.0]], 12), paleS, 0, 0, 0.1); crystals(k, 3, 0.16, 700 + Math.round(ph * 10), [crystalMat('#cfe8ff', '#4a90ff', 1.4)], 0.3); });
+    k.at(x, 2.55, z, ph + Math.PI, () => { k.add(lathe([[0.001, -0.12], [0.16, -0.08], [0.2, 0.06], [0.17, 0.08], [0.001, 0.0]], 12), paleS, 0, 0, 0.1); crystals(k, 3, 0.16, 700 + Math.round(ph * 10), [crystalMats('pale', { rockSet: true })], 0.3); });
     const [lx, lz] = polar(ph, Rr - 0.9); B.light('#7ab0ff', 1.6, 3.5, lx, 2.6, lz);
   }
 

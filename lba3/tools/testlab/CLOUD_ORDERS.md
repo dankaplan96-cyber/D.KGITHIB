@@ -1074,3 +1074,27 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     3. **The first fights again, after the cloud's fixes land** (watch for the commit "TESTER-FIXES merged"): the Core's
        three pylons in **Modern** controls (report only to the cloud, late-game), and the Zeelich depot once more as in
        68.3. Same logs as 68.3.
+
+71. **After v168 (25.11). Do this before 70 if 70 is still open; 70's step 3 (the first fights in Modern) folds in here.**
+    Build: the cloud's `ccr-c1c2c4b9-dep6ed` head; `git pull` first. Build the Windows installer as in 69 and install over the
+    old one. Reply in `WORLD_ART_REQUESTS.md` as **ORDER-71**, pictures in `captures/hw-71/`, push. No frame-time or
+    performance numbers. Play as a player, real keys and mouse, with sound, 1366×768 and fullscreen.
+    1. **The opening** (P130): watch it whole once. Twinsen must NOT stand on the pier under the title (he is at home
+       until the film goes home). Arthur reads the notebook (his name on the subtitle). The crew wear orange overalls and
+       a lime vest. Picture the title over the pier.
+    2. **Zoé's new head** (P131, `almond-s`): at home, in a talk with her and from the play camera; front, side and
+       talking. Say if it reads right on the real GPU (no holes, no flicker on the back of the skull, the ponytail and tie
+       sit on the head). `?zoehead=twinsen` is the old one if you want a side-by-side (dev page only).
+    3. **The crystals** (P128): the well cave in chapter 1 and the singing crystal on Citadel: a clear shell with a glowing
+       core, no z-fighting or sparkle on the real GPU.
+    4. **Small keys and clover boxes** (KEYS-CLOVER.md): in chapters 1–2 find the POWDER chest in the fort yard, take the
+       key (the brass key with its count shows by the kashes), open FunFrock's old passage, take the clover box (the cap
+       reads 10 in the behaviour menu), draw the bolt by the ladder and come back up through the yard trapdoor. Save &
+       quit with the key held, Continue: still held.
+    5. **The first fights in Modern controls** (70.3): the chapter 2 depot fight and the Zeelich depot (the softer Grobo
+       guard, v162): health in and out, deaths, tries.
+    6. **Plank bridge** (BRIDGES.md), only if you have a save on Zeelich's islands from chapter 3 on, or reach it: walk
+       Mosquibee's plank bridge to the honey islet and back, and down the new stone steps; you must not fall through the
+       gaps, and (after the cloud's next change) not off the sides either.
+    7. **Summary line for the user** at the top: "opening / Zoé / crystals / key door / fights / bridge: ok or not", and
+       the three worst things a tester would notice, each with its picture.

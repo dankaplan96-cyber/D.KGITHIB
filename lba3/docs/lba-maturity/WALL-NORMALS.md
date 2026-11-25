@@ -63,3 +63,7 @@ at the shop house (−33.75, −1.5) — geometry this change does not touch (wi
 The three stone textures get the normal map and the shade's ambient occlusion by default; `?wallnormals=0` is the old
 look. Tests with it on: overlap-sweep, occluders, citadel-structures PASS; worldfit the same one visual FAIL as with it
 off (the shop house's door sill, −33.75, −1.5, 0.24 m under the ground: geometry, not this change).
+
+## The weight in the material (the user, 24.11: "don't touch the normal map, it's good; just make it weigh more in the material")
+The map is drawn exactly as before (`wnstr` stays 1). The material's `normalScale` is now **2.5** (was 1): the same map
+moves the light 2.5× as much. `?wnscale=` compares (1 = the old weight). Nothing else changes: no draw more, no new texture.

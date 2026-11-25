@@ -2971,7 +2971,7 @@ export const ISLET = { dome: { x: -159.7, z: -10.0, r: 9.55, h: 12.9 }, figure: 
 // back into the slope the vault runs; the trapdoor in the fort's yard (its middle)
 export const OLD_DOORS = {
   plateau: { x: -80.7, z: -82.0, ry: Math.PI, back: 3.0, y: 12.94, balcony: true },   // (CAVE-STAIR: y, the sill where the ground set it before the bank under the landing was cut; balcony: PLATEAU_STAIR)
-  passageN: { x: -25.9, z: -84.6, ry: Math.PI, back: 4.6, bars: true },
+  passageN: { x: -25.9, z: -84.6, ry: Math.PI, back: 4.6, bars: 'kc' },   // (KEYS-CLOVER: its bars a gate of their own with a small lock, story/keysclover.js keyrooms.js barGate)
   passageS: { x: -27.8, z: -61.6, ry: Math.PI / 2 },   // (3.6 m west of the original's: off the yard's deck-plate walk)
 };
 // (the shut doors' spots: the place before each door, for the interaction and tools/worldscore)
@@ -3040,7 +3040,7 @@ function tunnelMouth(W, root, id, o) {
   { const [lx, lz] = f(0, 0.005); B.add(extrude(leaf, 0.08, TILE.wood), woodM, lx, y, lz, 0, o.ry, 0); }
   for (const hy of [0.5, 1.5]) { const [bx, bz] = f(0, 0.1); B.add(bbox(dw - 0.08, 0.07, 0.03, 0.01, 1), ironM, bx, y + hy, bz, 0, o.ry, 0); }
   { const [rx2, rz2] = f(0.3, 0.12); B.add(cached('w80-ring', () => new THREE.TorusGeometry(0.1, 0.02, 4, 10)), ironM, rx2, y + 1.05, rz2, 0, o.ry, 0); }
-  if (o.bars) {
+  if (o.bars === true) {
     for (let i = -2; i <= 2; i++) { const [bx, bz] = f(i * 0.26, 0.2); B.add(cyl(0.03, 0.03, dh + 0.1, 5), ironM, bx, y + (dh + 0.1) / 2, bz); }
     for (const hy of [0.6, 1.6]) { const [bx, bz] = f(0, 0.2); B.add(bbox(dw + 0.1, 0.06, 0.05, 0.01, 1), ironM, bx, y + hy, bz, 0, o.ry, 0); }
   }
