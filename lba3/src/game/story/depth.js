@@ -1423,12 +1423,12 @@ export class Depth extends ChapterBase {
       // an old mooring rock in the cloud, its paved deck (or the bridge's own middle plank) and an Esmer arch over it (as
       // the cloud canal's: kit2b.js)
       const M = { ...mid, y: def.rock ? def.rock.y : gy(mid) }, face = Math.atan2(F.x - N.x, F.z - N.z), dx = Math.sin(face), dz = Math.cos(face);
-      // (the deck is laid into the rock by design: its material marked as set, rocksettle.js and tests/overlap-sweep.mjs (g))
-      const rockM = MAT.flat('#d8c0d8', 0.92, { vertexColors: true }).clone(); rockM.userData = { ...rockM.userData, rockSet: true }; delete rockM.userData.vcKey;
+      const rockM = MAT.flat('#d8c0d8', 0.92, { vertexColors: true });
       const white = MAT.flat('#f2ece6', 0.8), lilac = MAT.flat(def.color || '#9a7ab8', 0.55), brass = MAT.brass();
       if (def.rock) {
         k.add(rockGeometry(def.seed || 31), rockM, M.x, M.y - 0.75, M.z, face, { sx: 1.9, sy: 1.5, sz: 1.9 });
-        k.add(cyl(1.55, 1.6, 0.18, 18), MAT.stone('grey', 1), M.x, M.y - 0.09, M.z);
+        const deckM = MAT.stone('grey', 1).clone(); deckM.userData = { ...deckM.userData, rockSet: true }; delete deckM.userData.vcKey;   // (the deck laid into its rock: marked, overlap-sweep (g))
+        k.add(cyl(1.55, 1.6, 0.18, 18), deckM, M.x, M.y - 0.09, M.z);
         P.add({ type: 'cyl', x: M.x, z: M.z, r: 1.55, top: M.y });
       }
       // the arch across the way, its ring over the deck's middle (above his head)
