@@ -194,7 +194,7 @@ function openInto(B, kind, fp, x, y, z, ry, opts) {
 
 // Citadel's NPC places (as citydress.js keeps them clear) and the crystals (main.js crystalSpots)
 const NPC_SPOTS = [[-39.6, -2.4], [-40.8, -1.1], [-46.2, -0.9], [-118, 45.2], [-49, 4], [-47.7, 4], [-35.5, -11.5], [-40, 6], [-34, -7.5], [-50, 30], [-30, 45], [-60, 55], [-29.3, 75.3]];
-const CRYSTALS = [[-113, 85], [-28, 40], [-45, -84], [-85, -49.5]];
+const CRYSTALS = [[-113, 85], [-28, 40], [-45, -84], [-91, -60]];
 
 // is there room for a piece of radius r at (x, z), and somewhere beside it to stand and hop?
 function roomFor(physics, x, z, r, ground, why) {

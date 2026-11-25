@@ -42,7 +42,7 @@ export function buildCityDressing(root, physics, W) {
     ...(W.houses || []).filter((h) => h.door).flatMap((h) => { const d = h.door, ry = h.ry ?? Math.atan2(d.x - h.x, d.z - h.z); return [[d.x, d.z, 1.2], [d.x + Math.sin(ry) * 1.6, d.z + Math.cos(ry) * 1.6, 1.3]]; }),
     ...(W.signs || []).map((s) => [s.x, s.z, 1.4]),
     ...(W.givers || []).map((v) => [v.x, v.z, (v.r || 1.5) + 0.6]),
-    [-113, 85, 2], [-28, 40, 2.2], [-45, -84, 2], [-85, -49.5, 2],   // crystals (main.js crystalSpots)
+    [-113, 85, 2], [-28, 40, 2.2], [-45, -84, 2], [-91, -60, 2],   // crystals (main.js crystalSpots)
     ...(W.pierEnd ? [[W.pierEnd.x, W.pierEnd.z, 2.5]] : []),
   ];
   const spots = [];   // NPCs' places (filled in by addNpcSpots once the cast exists: see below)
