@@ -179,3 +179,6 @@ frame of loose stones beside the adit under Celebration (before/after) · 11 the
 המפה שלה מסמנת בהולומפה איפה עוד מזמזם גביש שר, ובפרק 9 דאלן מוסיף את המספרים וברום מצביע בקול. אין עלה תלתן בשום מקום
 בגל הזה. דגלים חדשים בלבד (w5), שמירות ישנות נטענות. התוצאות: ריצה אוטומטית בלבד (SwiftShader). התמונות ב־captures/wave5
 ממתינות לבחירת המשתמש.
+
+## The user's picks (25.11)
+All kept and to publish: the pieces as built; Citadel's stack below the Whispering Cliffs at the depot yard's edge; the tuned hop-pack 3.0 s; the seam from chapter 4; the tea urn in place of the jar and clover.
