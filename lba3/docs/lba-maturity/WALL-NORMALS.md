@@ -67,3 +67,28 @@ off (the shop house's door sill, −33.75, −1.5, 0.24 m under the ground: geom
 ## The weight in the material (the user, 24.11: "don't touch the normal map, it's good; just make it weigh more in the material")
 The map is drawn exactly as before (`wnstr` stays 1). The material's `normalScale` is now **2.5** (was 1): the same map
 moves the light 2.5× as much. `?wnscale=` compares (1 = the old weight). Nothing else changes: no draw more, no new texture.
+
+## Zeelich (the user's pick, 24.11): the dressed stone and the corrugated sheet
+- **`stone`** (textures.js, the dressed stone of plinths, quoins, sills, surrounds, stair bases — Zeelich's and Citadel's
+  trims): its blocks recorded as the generator draws them (each row its own height), a flat face with a soft bevel into
+  the joints. **`zrib`** (zeelich.js `ribTex`, Zeelich's corrugated sheds and the Grand Hall's flanks): eight rounded ribs
+  to the tile, registered from zeelich.js (`registerWallTexture`, for textures drawn outside makeTextures). Both with the
+  shade's ambient occlusion (the ribs' troughs only a shade darker). **Off by default** (order 70.2, 25.11: Zeelich and
+  the islands weren't in the user's "everything" pick; the dressed stone is Citadel's trims too, so they stay flat with
+  it): `?wallnormals=all` turns them on with the other three, or by name, e.g.
+  `?wallnormals=fortStone,rubbleHouse,rubble,stone,zrib`. Before/after from the play camera in `captures/hw-70/`.
+- Not given relief: Zeelich's stucco (`plasterWall`, smooth by design), the granite (the ground's and cliffs' strata),
+  the paving and kerbs.
+- Draw calls (one frame where the save stands, a count): Zeelich (base-05) 103 → 106; Citadel (base-03) 409 → 429 for all
+  the wall types together (the stone ~10 of them: it is on many small trims).
+- The look: the stone's bevels read clearly where light reaches (Zeelich's stair bases, the walkway's stone strip),
+  softly on Citadel's kerbs, the well and the planters (`citadel-stone-before-after.jpg`); the corrugated sheet gains a
+  little relief in sun, little in shade. Zeelich's pictures are on the desktop (past chapter 2). Tests not run again
+  (materials only, as before).
+
+## The islands (24.11)
+- Desert Island's, the Hamalayi's and the isles' walls are built of `stone`, `fortStone` and stucco: they have the relief
+  already. Looked at on Desert Island (base-06; pictures on the desktop): the dressed stone's joints read too dark and
+  heavy against the desert's bright walls, so the dressed stone is now gentler — its relief 6.0 (was 8.0) and its joints'
+  shade 0.7 (was 0.58) — close to the game's look; the mean brightness of a sunlit wall within −1 to −4 % of off. Draws on
+  Desert Island the same (116 → 116). Citadel's stone picture redone with it.

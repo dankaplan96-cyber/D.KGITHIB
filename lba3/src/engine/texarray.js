@@ -13,6 +13,7 @@
 // An array grows when an area brings a new texture (built in that area's batch build, behind the scene change's black):
 // its data are copied into a new array and the twins are pointed at it.
 import * as THREE from 'three';
+import { dlHook } from './depthlook.js';
 
 export const TEXARRAY = { on: !(typeof location !== 'undefined' && /[?&]notexarray/.test(location.search)), init: null };
 export const WHITE = 0;  // (layer 0 of every array: white, for plain-colour pieces: colour × 1)
@@ -126,6 +127,7 @@ export function arrayTwinOf(m, key = '256x256|4') {
         .replace('#include <map_fragment>', '#include <map_fragment>\n\tdiffuseColor *= texture( mapArr, vArr );')
         .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = vRM.x;')
         .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = vRM.y;');
+      dlHook(sh, t, A);   // (DEPTH-LOOK: ?depth=, off by default: nothing)
     };
     t.customProgramCacheKey = () => 'merged-arr';
     TWINS.set(k, t);

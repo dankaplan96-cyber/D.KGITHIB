@@ -1,6 +1,7 @@
 // Heightfield terrain. Gameplay height queries interpolate the exact same
 // triangles that are rendered, so feet never float or sink.
 import * as THREE from 'three';
+import { dlHook } from './depthlook.js';
 
 // SHADE-COST: the terrain shader's switches. The game runs with the defaults; the others exist for the benchmark's GPU
 // lines (benchgpu.js: each prices one of them on the laptop) and the probes' pixel A/B. A change compiles another program
@@ -361,6 +362,7 @@ export class Terrain {
       sh.fragmentShader = S.fpre + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n' + S.frag);
       if (S.light) sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_begin>', S.light);
       if (S.out) sh.fragmentShader = sh.fragmentShader.replace('vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;', S.out);
+      dlHook(sh, mat);   // (DEPTH-LOOK: ?depth=, off by default: nothing)
     };
     mat.customProgramCacheKey = () => shadeKey(TERRAIN_SHADE);
     MATS.add(mat); mat.addEventListener('dispose', () => MATS.delete(mat));

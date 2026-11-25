@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { lerp } from './math.js';
 import { textures } from './textures.js';
+import { DL } from './depthlook.js';
 
 const WATER_VS = `
 uniform float uTime, uStorm, uWaveAmp;
@@ -440,6 +441,7 @@ export class Environment {
       }
       this.scene.background = this.fog.color;
       this.rain.visible = false;
+      DL.applyLight(this);   // (DEPTH-LOOK ?depth=light; off: nothing)
       return;
     }
     // WEATHER-1: the rain's opacity from the storm or the weather's rain, whichever is more; a light rain draws a share
@@ -462,5 +464,6 @@ export class Environment {
       }
       this.rain.geometry.attributes.position.needsUpdate = true;
     }
+    DL.applyLight(this);   // (DEPTH-LOOK ?depth=light; off: nothing)
   }
 }

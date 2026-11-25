@@ -4,6 +4,7 @@
 import { seedRandom, randomSeed } from './engine/seed.js';   // (first: ?seed=N seeds Math.random before anything uses it)
 import * as THREE from 'three';
 import { Renderer } from './engine/renderer.js';
+import { DL } from './engine/depthlook.js';   // (DEPTH-LOOK: ?depth= candidates, off by default)
 import { loadBake } from './engine/sculpt.js';
 import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
@@ -3450,6 +3451,7 @@ class Game {
     this.audio.setStorm(this.storm, Math.max(this.storm, W?.rainSnd ?? 0), Math.max(this.storm, W?.windSnd ?? 0));
     const focus = this.cine?.focus || this.hero.pos;
     this.env.update(dt, this.camera, this.state === 'title' ? (this._origin ??= new THREE.Vector3()) : focus);
+    if (DL.contact) { DL.focus.copy(this.state === 'title' ? (this._origin ??= new THREE.Vector3()) : focus); DL.area = this.room?.id || 'citadel'; }   // (DEPTH-LOOK)
     // (TITLE-LOAD: the title's own fog end, a visible option: off unless TITLE_VIEW.far is set)
     if (TITLE_VIEW.far > 0 && (this.state === 'title' || this.state === 'loading') && !this.room) this.scene.fog.far = Math.min(this.scene.fog.far, TITLE_VIEW.far);
     // (RENDER-INV: detail levels and the lamps' lights serve the picture only: once per displayed frame, not per catch-up step)
