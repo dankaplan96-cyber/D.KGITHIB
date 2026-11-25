@@ -58,7 +58,6 @@ Object.assign(STR.en, {
   w7m_pi_after: "Blankets in every corner of the shelter. And Osk keeps the back passage open now. Says it's quicker to the square.",
   w7m_tim_after: 'We wheeled the blankets up ourselves. Lulu rode on top the whole way.',
   w7m_toast_clover: 'A clover leaf',
-  w7m_toast_kashes: '{n} kashes',
   w7m_j_title: 'Missing deliveries',
   w7m_j_hook: "Pippa's second cart for the shelter never came",
   w7m_j_labels: "Find her crates: SHELTER in her chalk",
