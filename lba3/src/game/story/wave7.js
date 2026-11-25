@@ -20,6 +20,12 @@
 //      lowered back). The crate on the pier.
 //   6. Pippa: Tim and Lulu take the cart; a clover leaf (kashes at nine). The shelter's doorway stocked with blankets
 //      and casks; the lift's crate gone from the pier while the shelters are in use; Tim's and Pippa's lines after.
+//   ENDING (the user, 25.11): also open in the ending's free play (after the dinner) for a player who has not finished
+//   it. The town is home: the lift still holds the crate; Pippa wants her stock back for her stall (her lines, Tim's,
+//   the crate's last look, Twinsen's word to Osk and the journal's first line have an ending version that does not
+//   speak of the shelters waiting). Delivered then (w7m_home), it shows by her stall (blankets and casks beside her
+//   chalked crate), never at the depot shelter; the pier spot is empty. A player who finished it in chapters 8–14 sees
+//   the ending as before (the window stays shut for him).
 // H-18 · Dallan's Debt (chapter 14 after the bore's relay, and the ending's free play; Kesh)
 //   1. Lumi's shade tore when the vent blew. Asked what she needs (not "Dallan should pay"): canvas, two poles, the top
 //      ring back on its hook. 2. Dallan (at the bore, or in Kesh): "I can carry it." "No. I'll carry it." He is at the
@@ -28,12 +34,12 @@
 //
 // State (flags, new only; an old save has none: nothing is made up):
 //   w7m_hook, w7m_labels, w7m_tag, w7m_ledger, w7m_claim, w7m_wrong (n), w7m_free, w7m_store, w7m_key, w7m_back,
-//   w7m_unclamp, w7m_hoist, w7m_lift, w7m_done, w7m_piAfter, w7m_timAfter, w7m_osAfter;
-//   w7d_paid (asked the wrong way once), w7d_need, w7d_dallan, w7d_up, w7d_luAfter, w7d_daAfter.
+//   w7m_unclamp, w7m_hoist, w7m_lift, w7m_done, w7m_piAfter, w7m_timAfter, w7m_osAfter, w7m_home (delivered in the
+//   ending: to Pippa's stall); w7d_paid (asked the wrong way once), w7d_need, w7d_dallan, w7d_up, w7d_luAfter, w7d_daAfter.
 //   A lift or shutter moving is not saved: a load stands each where its flags put it.
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
-import { W7, buildLiftBits, buildStallCrate, buildBackStore, buildBackDoor, buildShelterStock, buildShade } from '../wave7world.js';
+import { W7, buildLiftBits, buildStallCrate, buildStallStock, buildBackStore, buildBackDoor, buildShelterStock, buildShade } from '../wave7world.js';
 import { BAGGAGE_PLAN } from '../baggage.js';
 import { shelterFrame, centreForWheel } from './shelters.js';
 import '../text/wave7.js';
@@ -57,8 +63,12 @@ export class Wave7 extends ChapterBase {
   able() { const b = this.game.hero.body; return !b || b === 'twinsen'; }
   busy() { return !!this.anim; }
   pending(id) { return !!this.story.cur?.pendingTalk?.(id); }
-  // H-17's window: from Pippa's supplies (chapter 8) until the network ends
-  mdOpen() { const f = this.f, k = this.ck; return MD_KEYS.includes(k) && (k !== 'evacuation' || !!f.c8_pippa); }
+  // H-17's window: from Pippa's supplies (chapter 8) until the network ends; and the ending's free play (homeOpen)
+  mdOpen() { const f = this.f, k = this.ck; return (MD_KEYS.includes(k) && (k !== 'evacuation' || !!f.c8_pippa)) || this.homeOpen(); }
+  // the ending's free play, after the dinner: open unless it was finished before the ending (that player sees no change)
+  homeOpen() { const f = this.f; return this.ck === 'home' && !!f.ep_dinner && (!f.w7m_done || !!f.w7m_home); }
+  // (the ending's version of a line: the town is home, the shelters are shut)
+  hk(key) { return this.ck === 'home' ? key + 'h' : key; }
   mdActive() { return this.mdOpen() && !this.f.w7m_done; }
   // H-18's window: the shade torn by the bore's vent (chapter 14, the relay held) until it is up again
   shadeTorn() { const f = this.f, k = this.ck; return DALLAN_KEYS.includes(k) && (k !== 'network' || !!f.c10_bore) && !f.w7d_up; }
@@ -80,7 +90,7 @@ export class Wave7 extends ChapterBase {
   ensure() {
     const g = this.game;
     if (g.world?.cargoLift) buildLiftBits(g);
-    if (g.world?.stall) buildStallCrate(g);
+    if (g.world?.stall) { buildStallCrate(g); buildStallStock(g); }
     if (g.world?.houses) buildBackDoor(g);
     if (g.world?.root && !W7.stock) buildShelterStock(g, DEPOT_F);
     const B = this.built('baggage'); if (B && !W7.store) buildBackStore(B, BAGGAGE_PLAN, g.physics);
@@ -98,6 +108,7 @@ export class Wave7 extends ChapterBase {
     const f = this.f;
     if (f.w7m_wrong != null && !(Number.isInteger(f.w7m_wrong) && f.w7m_wrong >= 0)) delete f.w7m_wrong;
     // (each step implies the ones before it)
+    if (f.w7m_home) f.w7m_done = true;
     if (f.w7m_done) f.w7m_lift = true;
     if (f.w7m_lift) { f.w7m_hoist = true; f.w7m_unclamp = true; }
     if (f.w7m_unclamp) f.w7m_key = true;
@@ -123,7 +134,11 @@ export class Wave7 extends ChapterBase {
         L.pose(1); Lb.setOn(false); Lb.setPin(false); Lb.setCrate(!(open && f.w7m_done)); this.posed = false;
       }
     }
-    W7.stall?.setOn(A);
+    // (delivered in the ending: the goods by her stall, beside her chalked crate; the depot shelter's stock only while
+    //  the shelters are in use)
+    const homeDone = this.ck === 'home' && !!f.w7m_home;
+    W7.stall?.setOn(A || homeDone);
+    W7.stallStock?.setOn(homeDone);
     W7.stock?.setOn(!!f.w7m_done && SHELTER_KEYS.includes(this.ck));
     const S = W7.store;
     if (S && !this.anim) {
@@ -185,7 +200,7 @@ export class Wave7 extends ChapterBase {
           // the crates under the hook (the compare: chalk under one stencil, nothing under the other), then the clamp's tag
           const lines = [];
           if (!f.w7m_hook) lines.push('w7m_crA_0', 'w7m_crB');
-          else if (!f.w7m_labels) { lines.push('w7m_crA_1', 'w7m_crB', 'w7m_crA_2'); f.w7m_labels = true; g.audio.play('paper'); }
+          else if (!f.w7m_labels) { lines.push('w7m_crA_1', 'w7m_crB', this.hk('w7m_crA_2')); f.w7m_labels = true; g.audio.play('paper'); }
           lines.push(f.w7m_tag ? 'w7m_tag_again' : 'w7m_tag');
           f.w7m_tag = true;
           return say(lines, () => g.save(false));
@@ -288,15 +303,15 @@ export class Wave7 extends ChapterBase {
       // ---- H-17
       case 'pippa': {
         if (!this.mdOpen() || this.pending('pippa')) return false;
-        if (!f.w7m_hook) return c(['w7m_pi_hook1', 'w7m_pi_hook2', ['hero', 'w7m_tw_hook']], () => { f.w7m_hook = true; g.save(false); this.applyWorld(); });
-        if (f.w7m_lift && !f.w7m_done) return c(['w7m_pi_done1', 'w7m_pi_done2'], () => this.deliver());
-        if (f.w7m_done && !f.w7m_piAfter) return c(['w7m_pi_after'], () => { f.w7m_piAfter = true; });
+        if (!f.w7m_hook) return c([this.hk('w7m_pi_hook1'), 'w7m_pi_hook2', ['hero', 'w7m_tw_hook']], () => { f.w7m_hook = true; g.save(false); this.applyWorld(); });
+        if (f.w7m_lift && !f.w7m_done) return c([this.hk('w7m_pi_done1'), 'w7m_pi_done2'], () => this.deliver());
+        if (f.w7m_done && !f.w7m_piAfter) return c([this.hk('w7m_pi_after')], () => { f.w7m_piAfter = true; });
         return false;
       }
       case 'tim': {
         if (this.pending('tim') || (f.c8_gap && !f.c8_depot)) return false;
-        if (this.mdOpen() && !f.w7m_hook) return c(['w7m_tim_hook', ['hero', 'w7m_tw_hook']], () => { f.w7m_hook = true; g.save(false); this.applyWorld(); });
-        if (f.w7m_done && !f.w7m_timAfter && SHELTER_KEYS.includes(this.ck)) return c(['w7m_tim_after'], () => { f.w7m_timAfter = true; });
+        if (this.mdOpen() && !f.w7m_hook) return c([this.hk('w7m_tim_hook'), ['hero', 'w7m_tw_hook']], () => { f.w7m_hook = true; g.save(false); this.applyWorld(); });
+        if (f.w7m_done && !f.w7m_timAfter && (SHELTER_KEYS.includes(this.ck) || (this.ck === 'home' && f.w7m_home))) return c([this.hk('w7m_tim_after')], () => { f.w7m_timAfter = true; });
         return false;
       }
       case 'odile':
@@ -315,7 +330,7 @@ export class Wave7 extends ChapterBase {
     if (!this.mdActive() || !f.w7m_hook) return false;
     if (f.w7m_claim) { if (f.w7m_store) return false; return c(['w7m_os_wait']); }
     npc.engage?.();
-    this.chain([['hero', 'w7m_tw_osk'], ['osk', 'w7m_os_1']], () => { npc.release?.(); this.claimMenu(); });
+    this.chain([['hero', this.hk('w7m_tw_osk')], ['osk', 'w7m_os_1']], () => { npc.release?.(); this.claimMenu(); });
     return true;
   }
   claimMenu() {
@@ -330,6 +345,7 @@ export class Wave7 extends ChapterBase {
   deliver() {
     const g = this.game, f = this.f, h = g.hero;
     f.w7m_done = true;
+    if (this.ck === 'home') f.w7m_home = true;   // (the ending: to her stall)
     const clover = h.clovers < 9;
     if (clover) { h.clovers++; g.hud.toast('w7m_toast_clover'); } else { h.coins += PAY.at9; g.hud.toast('w7m_toast_kashes', { n: PAY.at9 }); }
     g.audio.play('coin'); g.hud.stats?.(h);
@@ -366,7 +382,7 @@ export class Wave7 extends ChapterBase {
   // ================================================================ each frame: the lift, the shutter, the bales
   update(dt) {
     // (a new chapter, Pippa's supplies, the bore's relay held: the pieces follow; nothing else changes them meanwhile)
-    const f = this.f, sig = `${this.ck}|${!!f.c8_pippa}|${!!f.c10_bore}`;
+    const f = this.f, sig = `${this.ck}|${!!f.c8_pippa}|${!!f.c10_bore}|${!!f.ep_dinner}`;
     if (sig !== this._sig) { this._sig = sig; if (!this.anim) { this.applyWorld(); if (f.w7d_dallan) this.story.refreshCast(); } }
     const A = this.anim; if (!A) return;
     A.t += dt;
@@ -382,7 +398,7 @@ export class Wave7 extends ChapterBase {
   journal() {
     const f = this.f, out = [];
     if (f.w7m_hook && (this.mdOpen() || f.w7m_done)) {
-      const L = [{ key: 'w7m_j_hook', done: !!f.w7m_done }, { key: 'w7m_j_labels', done: !!f.w7m_labels || !!f.w7m_lift }];
+      const L = [{ key: this.homeOpen() ? 'w7m_j_hookh' : 'w7m_j_hook', done: !!f.w7m_done }, { key: 'w7m_j_labels', done: !!f.w7m_labels || !!f.w7m_lift }];
       if (f.w7m_tag || f.w7m_claim) L.push({ key: 'w7m_j_key', done: !!f.w7m_key });
       if (f.w7m_key) L.push({ key: 'w7m_j_lift', done: !!f.w7m_lift });
       if (f.w7m_lift) L.push({ key: 'w7m_j_done', done: !!f.w7m_done });

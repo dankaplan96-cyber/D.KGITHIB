@@ -65,6 +65,15 @@ Object.assign(STR.en, {
   w7m_j_lift: 'Lower the crate onto the pier',
   w7m_j_done: 'Tell Pippa',
   it_w7m_key: "The cargo lift's key",
+  // the ending's free play (the town is home; the crate is still on the lift): her stock, back to her stall
+  w7m_pi_hook1h: "My second cart never came. Blankets and water casks, from when we all went up to the shelters. That's my stock, and my stall's half bare.",
+  w7m_tim_hookh: "Pippa's still cross about her second cart. Blankets and water casks. It never came.",
+  w7m_crA_2h: "Somebody painted the project's word over hers. This one is Pippa's.",
+  w7m_tw_oskh: "Pippa's goods, stencilled STATION over her chalk. The lift's key is here?",
+  w7m_pi_done1h: "On the pier? And the blankets in the back store? Tim! Lulu! Take the cart. The pier, the baggage claim, then back here.",
+  w7m_pi_afterh: "My stock's back. Blankets, in this heat. The casks will sell, though.",
+  w7m_tim_afterh: 'We wheeled it all back to the stall. Lulu rode on top the whole way.',
+  w7m_j_hookh: "Pippa's second cart never came",
 
   // ================================================================ H-18 · Dallan's Debt
   w7d_lu_0: 'The vent blew, and the shade went with it. Three years of sun on this loom.',
