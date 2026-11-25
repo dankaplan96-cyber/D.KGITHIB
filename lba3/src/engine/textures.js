@@ -743,8 +743,12 @@ export const WALLNORM = {
   // (the user, 23.11, shown the pairs: "everything" — ON by default for the three: the fort's stone, the houses' rubble
   //  and the rubble (the harbour shed, the lighthouse's foot, Ballastra's piers). `?wallnormals=0`: off, as before;
   //  by name, `?wallnormals=fortStone` etc., only those)
-  names: (() => { const ALL = ['fortStone', 'rubbleHouse', 'rubble', 'stone', 'zrib'];
-    if (!WN_ARG || WN_ARG[1] === '1' || WN_ARG[1] === 'all') return new Set(ALL);
+  // (on by default: the fort's, the houses' and the rubble walls, the user's pick of 23.11; Zeelich's and the islands'
+  //  dressed stone `stone` and Zeelich's corrugated sheet `zrib` are off until the user picks them (order 70.2):
+  //  `?wallnormals=all` or by name, `?wallnormals=fortStone,rubbleHouse,rubble,stone,zrib`)
+  names: (() => { const ON = ['fortStone', 'rubbleHouse', 'rubble'], ALL = [...ON, 'stone', 'zrib'];
+    if (!WN_ARG || WN_ARG[1] === '1') return new Set(ON);
+    if (WN_ARG[1] === 'all') return new Set(ALL);
     return WN_ARG[1] === '0' ? new Set() : new Set(WN_ARG[1].split(',')); })(),
   str: (typeof location !== 'undefined' && +(/[?&]wnstr=([\d.]+)/.exec(location.search) || [])[1]) || 1,
   // (the joints' ambient occlusion with it — the shade's relief —, `?wnao=0` off, `?wnao=0.5` half)
