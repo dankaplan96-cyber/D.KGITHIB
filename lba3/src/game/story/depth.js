@@ -100,9 +100,9 @@ const SRC_HUM_R = 7, SRC_LIT_R = 4.5;
 const HEAT = { dx: 0.85, dz: 1.15, pay: 12 };
 const STORE = { x: 21.2, z: 21.3, reach: 1.05, pay: 15 };
 // HAM-2: the goats' way (the Hamalayi's own frame): six rock ledges west of Lhar's icefall spur, each [x, top, r], set
-// against the cliff (z found from the rock face, scanning north from z0); each rise 1.05 m (a jump takes 1.33: tests/
+// against the cliff (z found from the rock face, scanning north from z0, `out` × r in front of it); each rise 1.0 m (a jump takes 1.33: tests/
 // jumpreach.mjs); the rope from the top ledge to the high rock's lip (z top); the climb's speed (m/s)
-const GOAT = { z0: -21.5, ledges: [[-13.6, 13.0, 0.7], [-15.25, 14.05, 0.68], [-16.9, 15.1, 0.66], [-18.55, 16.15, 0.66], [-20.2, 17.2, 0.66], [-21.85, 18.25, 0.74]], top: -28.4, speed: 2.4 };
+const GOAT = { z0: -21.5, out: 1.1, ledges: [[-13.6, 13.0, 0.76], [-15.1, 14.0, 0.76], [-16.6, 15.0, 0.76], [-18.1, 16.0, 0.76], [-19.6, 17.0, 0.76], [-21.1, 18.0, 0.8]], top: -28.4, speed: 2.4 };
 // ISL-3: the three crossings to the doors across the clouds (world; measured 25.11 from the islands' ground: the near
 // shore's railing, the gap, the far patch's railing). near/far: where he stands; nPost/fPost: the davits; rock: an old
 // mooring rock in the gap (its deck's height) or mid: the plank bridge's own middle; thing: what waits on the far side;
@@ -1251,7 +1251,7 @@ export class Depth extends ChapterBase {
     // (each ledge set against the face: its middle r × 0.85 out from where the rock rises past its top)
     const faceZ = (wx, y) => { for (let z = o.z + GOAT.z0; z > o.z + GOAT.z0 - 8; z -= 0.05) if (T.heightAt(wx, z) > y) return z; return o.z + GOAT.z0 - 8; };
     GOAT.ledges.forEach(([lx, top, r], i) => {
-      const lz = faceZ(o.x + lx, top - 0.3) + r * 0.85 - o.z, p = W(lx, lz);
+      const lz = faceZ(o.x + lx, top - 0.3) + r * GOAT.out - o.z, p = W(lx, lz);
       const m = new THREE.Mesh(geo, rockM); m.scale.set(r * 1.15, 1.25, r * 1.05); m.position.set(lx, top - 0.55 * 1.25, lz); m.rotation.y = i * 1.3; m.castShadow = true; m.receiveShadow = true; grp.add(m);
       // (a skirt down to the ground under it, so the step reads as rock grown out of the face, not floating)
       const foot = T.heightAt(p.x, p.z), hgt = top - 1.2 - foot;

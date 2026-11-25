@@ -7,6 +7,7 @@
 //   2. Zeelich, the old mill: up its stair-stones to the gallery (chapter 3's cog, chapter 10's relay)
 //   3. the deep installation's galleries: across the chasm on the three sets of stepping stones
 //   4. built against a jump: the test step's deck (2.35 m) and the depot's fence (2.4 m) are not reached
+//   5. WAVE3: up the goats' six ledges by Lhar's icefall; not onto the high rock's lip or the gorge's rock stack by a jump
 import { launch, open, menu, checker } from './lib/boot.mjs';
 const { check, done } = checker({ info: 'always' });
 const { browser, page } = await launch();
@@ -91,5 +92,25 @@ const against = await ev(() => {
   return out;
 });
 check('built against a jump: the test step\'s deck (2.35 m) is not reached, nor over the depot\'s fence (≥ 2.3 m)', (!against.step || !against.step.on) && (!against.fence || !against.fence.inside), against);
+
+// ---------------------------------------------------------------- 5. WAVE3 (H-7, H-8: story/depth.js)
+// the goats' way by Lhar's icefall: up its six ledges by jumps (each rise 1.0 m); built against a jump: from the top
+// ledge the high rock's lip (the rope's climb, after chapter 7) and, in the gorge, the ice arch's rock stack from the bank
+iso('the Hamalayi (entered by the room switch), at the foot of the goats\' ledges by Lhar\'s icefall');
+const goat = await ev(() => {
+  const G = game, h = G.hero, PH = G.physics;
+  G.enterRoom('hamalayi', null, true); P.settle(); G.step(0.3);
+  const D = G.story.depth, L = D.gt?.ledges; if (!L) return { none: true };
+  h.pos.set(L[0].x + 1.2, PH.groundAt(L[0].x + 1.2, L[0].z + 2.2, 40), L[0].z + 2.2); G.step(0.3); P.settle();
+  const climb = (L) => { const h = game.hero, ys = []; let fell = 0; const on = () => L.findIndex((q) => Math.abs(h.pos.y - q.y) < 0.3 && Math.hypot(h.pos.x - q.x, h.pos.z - q.z) < q.r + 0.1); for (let att = 0; att < 4; att++) { let i = on(); while (i < L.length - 1) { const s = L[i + 1], prev = i >= 0 ? L[i] : null; if (prev) { const dl = Math.hypot(s.x - prev.x, s.z - prev.z), e = Math.max(0, prev.r - 0.35); P.go(prev.x + (s.x - prev.x) / dl * e, prev.z + (s.z - prev.z) / dl * e, { tol: 0.12, maxT: 3 }); } const y = P.hopTo(s.x, s.z, s.y, { walk: !prev }); ys.push(+y.toFixed(2)); if (Math.abs(y - s.y) > 0.3) { fell++; break; } i++; } if (on() === L.length - 1) break; } return { ys, fell, top: on() === L.length - 1 }; }; const cl = climb(L), ys = cl.ys;
+  const top = L[L.length - 1], lip = D.gt.top;
+  const yl = P.hopTo(lip.x, lip.z, lip.y, { walk: false });
+  // the gorge's stack: a running jump at it from the north bank
+  const A = D.ar; let stack = null;
+  if (A) { h.pos.set(A.S.x, PH.groundAt(A.S.x, A.S.z - 6, 20), A.S.z - 6); G.step(0.3); P.settle(); const y = P.hopTo(A.S.x, A.S.z, A.S.y, { walk: false, from: 4 }); stack = { top: A.S.y, landed: y, on: Math.abs(y - A.S.y) < 0.3 }; }
+  return { tops: L.map((s) => s.y), ys, up: cl.top, fell: cl.fell, lip: { y: +lip.y.toFixed(2), landed: yl, on: Math.abs(yl - lip.y) < 0.4 }, stack };
+});
+check('the goats\' way (H-7): up all six ledges by Athletic jumps', goat.none || goat.up, goat);
+check('built against a jump (H-7, H-8): the high rock\'s lip from the top ledge (the rope\'s job), the gorge\'s rock stack from its bank (the line\'s)', goat.none || (!goat.lip.on && !(goat.stack && goat.stack.on)), goat);
 done();
 await browser.close();

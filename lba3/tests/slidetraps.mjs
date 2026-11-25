@@ -11,7 +11,8 @@
 // Plus the known traps: the Hamalayi rock at the outer peak ring's foot (4226.7, 3.3, 85.2), approached from the face
 // above it, and the top of Citadel's east flight (x −28.9, z −46.3…−45.2; closed by geometry in CLIMB-21: a check that
 // nothing regresses there).
-// env: MAXPER=<n> spots per region (default 70, spread over the region by a fixed stride); SHOW=1 lists every spot.
+// env: MAXPER=<n> spots per region (default 70, spread over the region by a fixed stride); SHOW=1 lists every spot;
+// ALWAYS='x0,z0,x1,z1;…' takes every scanned spot inside those boxes as well (WAVE3: the goats' ledges, the gorge's stack).
 import { launch, open, menu, checker } from './lib/boot.mjs';
 const { check, done } = checker({ info: 'always' });
 const { browser, page } = await launch();
@@ -20,6 +21,7 @@ await open(page, '?nocine');
 await menu(page, 'new');
 await ev(() => { P.settle(); game.setState('play'); game.step(0.3); });
 const MAXPER = +(process.env.MAXPER || 70);
+const ALWAYS = (process.env.ALWAYS || '').split(';').filter(Boolean).map((b) => b.split(',').map(Number));
 
 const REGIONS = [
   { id: 'citadel', band: [-400, 400], known: [[-28.9, -46.3], [-28.9, -45.8], [-28.9, -45.2], [-29.4, -45.8], [-28.4, -45.8]] },
@@ -28,7 +30,7 @@ const REGIONS = [
 ];
 
 // the spots of one region: [x, z, why]
-const spots = (R) => ev(({ id, band, known, MAXPER }) => {
+const spots = (R) => ev(({ id, band, known, MAXPER, ALWAYS }) => {
   const G = game, PH = G.physics, T = PH.terrain;
   if (id === 'citadel') { if (G.room) G.exitRoom({ x: -42, z: -2, a: 0 }, true, true); }
   else G.enterRoom(id, null, true, true);
@@ -56,8 +58,10 @@ const spots = (R) => ev(({ id, band, known, MAXPER }) => {
   }
   // a fixed stride over the list (the same spots every run), the known traps always in
   const k = Math.max(1, Math.ceil(out.length / MAXPER)), pick = out.filter((_, i) => i % k === 0).slice(0, MAXPER);
-  return { total: out.length, list: [...known.map(([x, z]) => [x, z, 'known']), ...pick] };
-}, { ...R, MAXPER });
+  // (ALWAYS='x0,z0,x1,z1;…': every scanned spot inside these boxes is taken as well, past the stride: a new build checked whole)
+  const extra = ALWAYS.length ? out.filter((q) => !pick.includes(q) && ALWAYS.some(([x0, z0, x1, z1]) => q[0] >= x0 && q[0] <= x1 && q[1] >= z0 && q[1] <= z1)).map((q) => [q[0], q[1], 'always']) : [];
+  return { total: out.length, list: [...known.map(([x, z]) => [x, z, 'known']), ...pick, ...extra] };
+}, { ...R, MAXPER, ALWAYS });
 
 const run = (id, list) => ev(({ id, list }) => {
   const G = game, h = G.hero, PH = G.physics;
