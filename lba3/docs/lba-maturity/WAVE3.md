@@ -72,7 +72,7 @@ kashes), `dx_owe_far_quay` (clover), `dx_owe_arch` (12 kashes), `dx_owe_arch_clo
 | `tests/slidetraps.mjs` | `ALWAYS='x0,z0,x1,z1;…'`: every scanned spot inside those boxes is taken, past the stride |
 | `tests/lib/boot.mjs` | the merge's duplicate `serveLocal` import and SERVE line removed (every suite failed to load; the coordinator made the same fix on origin) |
 | `tools/wave3-shots.mjs`, `tools/wave3-sheet.py` (new) | the before/after pictures and their sheet |
-| `docs/lba-maturity/DEPTH-PLAN.md`, `CONTENT-15H.md` | Built rows / marks |
+| `docs/lba-maturity/DEPTH-PLAN.md`, `CONTENT-15H.md`, `OPEN-TASKS.he.md` | Built rows / marks; row 41 for the user |
 | `captures/wave3/` | the pictures |
 
 Not touched: zeelife.js, zeelich.js, hamalayi.js, kesh.js, ihomes.js, kit2b.js, tools.js, the physics, any chapter file.
