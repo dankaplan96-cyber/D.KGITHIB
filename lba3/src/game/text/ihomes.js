@@ -10,7 +10,6 @@ Object.assign(STR.en, {
   // ---- the doors across the clouds (no way over on foot: a look from the near shore)
   ih_far_yard: "The barges' yard, across the clouds. The cargo store is over there, but only the barges cross. No way over on foot.",
   ih_far_quay: "The west quay, across the clouds. A dock worker's house stands there. The crews come by barge; I can't walk it.",
-  ih_far_islet: "The honey room is on that islet, across the clouds. The Mosquibees fly over. I can't.",
 
   // ---- the keepers
   n_ih_ossa: 'Ossa', n_ih_liwa: 'Liwa', n_ih_dobb: 'Dobb', n_ih_brem: 'Brem', n_ih_gorrin: 'Gorrin', n_ih_tesk: 'Clerk Tesk',

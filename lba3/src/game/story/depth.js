@@ -103,15 +103,15 @@ const STORE = { x: 21.2, z: 21.3, reach: 1.05, pay: 15 };
 // against the cliff (z found from the rock face, scanning north from z0, `out` × r in front of it); each rise 1.0 m (a jump takes 1.33: tests/
 // jumpreach.mjs); the rope from the top ledge to the high rock's lip (z top); the climb's speed (m/s)
 const GOAT = { z0: -21.5, out: 1.1, ledges: [[-13.6, 13.0, 0.76], [-15.1, 14.0, 0.76], [-16.6, 15.0, 0.76], [-18.1, 16.0, 0.76], [-19.6, 17.0, 0.76], [-21.1, 18.0, 0.8]], top: -28.4, speed: 2.4 };
-// ISL-3: the three crossings to the doors across the clouds (world; measured 25.11 from the islands' ground: the near
-// shore's railing, the gap, the far patch's railing). near/far: where he stands; nPost/fPost: the davits; rock: an old
-// mooring rock in the gap (its deck's height) or mid: the plank bridge's own middle; thing: what waits on the far side;
-// zone: how near a side he counts as standing on it
+// ISL-3: the doors across the clouds (world; measured 25.11 from the islands' ground: the near shore's railing, the gap,
+// the far patch's railing). near/far: where he stands; nPost/fPost: the davits; rock: an old mooring rock in the gap (its
+// deck's height); thing: what waits on the far side; zone: how near a side he counts as standing on it. walk: reached on
+// foot (Mosquibee's honey islet, over its plank bridge since BRIDGES: physics.js bridgeTreads): no davits, no rings
 const FAR_PAY = 15;
 const FARS = [
   { id: 'yard', room: 'isle_otringal', near: { x: 1917.6, z: 1844.7 }, nPost: { x: 1918.3, z: 1846.5 }, rock: { x: 1927.5, z: 1844.0, y: 4.0 }, seed: 31, far: { x: 1937.6, z: 1844.2 }, fPost: { x: 1937.4, z: 1842.4 }, thing: { x: 1937.8, z: 1848.6 }, thingRy: 0.3, kind: 'crate', flag: 'dx_far_crate', read: ['dx_far_crate1', 'dx_far_crate2'], after: 'dx_far_crate_after', zone: 3.0 },
   { id: 'quay', room: 'isle_otringal', near: { x: 1879.0, z: 1851.0 }, nPost: { x: 1878.4, z: 1849.5 }, rock: { x: 1867.5, z: 1852.0, y: 3.8 }, seed: 43, far: { x: 1855.4, z: 1855.6, top: 4 }, fPost: { x: 1854.7, z: 1856.3, top: 4 }, fTall: 1.2, thing: { x: 1854.6, z: 1850.6, top: 4 }, thingRy: Math.PI / 2, kind: 'locker', flag: 'dx_far_locker', read: ['dx_far_locker1', 'dx_far_locker2'], after: 'dx_far_locker_after', zone: 3.0 },
-  { id: 'honey', room: 'isle_mosquibee', near: { x: 2567.5, z: 1828.4 }, nPost: { x: 2569.8, z: 1829.6 }, mid: { x: 2556.97, z: 1828.38 }, archLift: 1.2, far: { x: 2547.5, z: 1823.0 }, fPost: { x: 2546.6, z: 1822.2 }, thing: { x: 2549.4, z: 1822.6 }, kind: 'honey', zone: 3.0, color: '#e8a830' },
+  { id: 'honey', room: 'isle_mosquibee', walk: true, near: { x: 2567.5, z: 1828.4 }, far: { x: 2547.5, z: 1823.0 }, thing: { x: 2549.4, z: 1822.6 }, kind: 'honey', zone: 3.0 },
 ];
 // HAM-4: the gorge's ice arch (the Hamalayi's frame): the rock stack in the meltwater (its top), the arch's foot on the
 // north bank, where the look is (the bank by the tree bridge's north end), the road crew's kashes
@@ -1372,8 +1372,8 @@ export class Depth extends ChapterBase {
   // checked clear before he leaves. Four places it reopens, each with a ring for the way back:
   //   ISL-3 · the three doors across the clouds (ihomes.js FAR: the near shore's look said "no way over on foot"): Otringal's
   //     barges' yard (the cargo store) and west quay (a dock worker's house), each over an old mooring rock in the cloud
-  //     with an Esmer arch (shore davit → rock → the far davit, and back the same way); Mosquibee's honey islet over its
-  //     plank bridge, whose slats are set a Mosquibee's stride apart (a davit at each end). What is over there: the yard's
+  //     with an Esmer arch (shore davit → rock → the far davit, and back the same way). Mosquibee's honey islet is walked
+  //     to over its plank bridge (BRIDGES: no ring there; its arrival is seen on foot, farUpdate). What is over there: the yard's
   //     barge crate (the project's leftover optics: a read, 15 kashes), the dock worker's locker (his note, a clover), the
   //     hive's honey pot (a full heal on each visit). The rooms behind the doors were always there (ihomes.js).
   //   HAM-4 · the gorge below the old gate: an ice arch from a rock stack in the meltwater to the north bank, a cord ring
@@ -1416,23 +1416,22 @@ export class Depth extends ChapterBase {
     const gy = (p) => P.groundAt(p.x, p.z, p.top ?? 60);
     const N = { ...def.near, y: gy(def.near) }, F = { ...def.far, y: gy(def.far) };
     const C = { id: def.id, room, N, F, def };
-    const mid = def.rock || def.mid;
-    C.nRing = this.buildDavit(k, def.nPost, mid || F, gy(def.nPost), def.color);
-    C.fRing = this.buildDavit(k, def.fPost, mid || N, gy(def.fPost), def.color, def.fTall || 0);
+    const mid = def.rock;
+    if (!def.walk) {
+      C.nRing = this.buildDavit(k, def.nPost, mid || F, gy(def.nPost), def.color);
+      C.fRing = this.buildDavit(k, def.fPost, mid || N, gy(def.fPost), def.color, def.fTall || 0);
+    }
     if (mid) {
-      // an old mooring rock in the cloud, its paved deck (or the bridge's own middle plank) and an Esmer arch over it (as
-      // the cloud canal's: kit2b.js)
-      const M = { ...mid, y: def.rock ? def.rock.y : gy(mid) }, face = Math.atan2(F.x - N.x, F.z - N.z), dx = Math.sin(face), dz = Math.cos(face);
+      // an old mooring rock in the cloud, its paved deck and an Esmer arch over it (as the cloud canal's: kit2b.js)
+      const M = { ...mid, y: def.rock.y }, face = Math.atan2(F.x - N.x, F.z - N.z), dx = Math.sin(face), dz = Math.cos(face);
       const rockM = MAT.flat('#d8c0d8', 0.92, { vertexColors: true });
       const white = MAT.flat('#f2ece6', 0.8), lilac = MAT.flat(def.color || '#9a7ab8', 0.55), brass = MAT.brass();
-      if (def.rock) {
-        k.add(rockGeometry(def.seed || 31), rockM, M.x, M.y - 0.75, M.z, face, { sx: 1.9, sy: 1.5, sz: 1.9 });
-        const deckM = MAT.stone('grey', 1).clone(); deckM.userData = { ...deckM.userData, rockSet: true }; delete deckM.userData.vcKey;   // (the deck laid into its rock: marked, overlap-sweep (g))
-        k.add(cyl(1.55, 1.6, 0.18, 18), deckM, M.x, M.y - 0.09, M.z);
-        P.add({ type: 'cyl', x: M.x, z: M.z, r: 1.55, top: M.y });
-      }
+      k.add(rockGeometry(def.seed || 31), rockM, M.x, M.y - 0.75, M.z, face, { sx: 1.9, sy: 1.5, sz: 1.9 });
+      const deckM = MAT.stone('grey', 1).clone(); deckM.userData = { ...deckM.userData, rockSet: true }; delete deckM.userData.vcKey;   // (the deck laid into its rock: marked, overlap-sweep (g))
+      k.add(cyl(1.55, 1.6, 0.18, 18), deckM, M.x, M.y - 0.09, M.z);
+      P.add({ type: 'cyl', x: M.x, z: M.z, r: 1.55, top: M.y });
       // the arch across the way, its ring over the deck's middle (above his head)
-      const al = def.archLift || 0, ph = 2.8 + al;   // (a taller arch where the ring must be seen from lower ground)
+      const al = 0, ph = 2.8 + al;
       for (const s of [-1.05, 1.05]) { const x = M.x + dz * s, z = M.z - dx * s; k.add(cyl(0.07, 0.09, ph, 8), lilac, x, M.y + ph / 2, z); k.add(sphere(0.1, 10, 8), brass, x, M.y + ph + 0.08, z); P.add({ type: 'cyl', x, z, r: 0.1, top: M.y + ph + 0.1, noStand: true, seeThrough: true }); }
       k.add(rbox(2.3, 0.16, 0.2, 0.04), white, M.x, M.y + 2.75 + al, M.z, face + Math.PI / 2);
       k.add(cyl(0.012, 0.012, 0.2, 5), brass, M.x, M.y + 2.58 + al, M.z);
@@ -1450,9 +1449,11 @@ export class Depth extends ChapterBase {
     C.thing = { x: at.x, z: at.z, y: ty };
     k.flush();
     // where he stands: near shore, rock, far patch (each its ring to the next place)
-    C.toM = C.M && this.ringTarget(def.id + 'M', C.mRing, C.M, () => this.farArrived(C, 'M'));
-    C.toF = this.ringTarget(def.id + 'F', C.fRing, F, () => this.farArrived(C, 'F'));
-    C.toN = this.ringTarget(def.id + 'N', C.nRing, N, () => this.farArrived(C, 'N'));
+    if (!def.walk) {
+      C.toM = C.M && this.ringTarget(def.id + 'M', C.mRing, C.M, () => this.farArrived(C, 'M'));
+      C.toF = this.ringTarget(def.id + 'F', C.fRing, F, () => this.farArrived(C, 'F'));
+      C.toN = this.ringTarget(def.id + 'N', C.nRing, N, () => this.farArrived(C, 'N'));
+    }
     (this.far ||= {})[def.id] = C;
   }
   // which side of a crossing he is on (null: nowhere near it)
@@ -1467,10 +1468,16 @@ export class Depth extends ChapterBase {
     const f = this.f, g = this.game, key = 'dx_far_' + C.id;
     if (where === 'F' && !f[key]) { f[key] = true; this.chain([['hero', 'dx_far_' + C.id + '_over']], () => g.save(false)); }
   }
+  // a crossing walked on foot (the honey islet over its plank bridge): its arrival, the first time he stands on the far side
+  farWalked() {
+    const C = this.far?.honey;
+    if (!C || this.f.dx_far_honey || this.here() !== C.room || !this.able() || this.game.state !== 'play' || this.game.trans || this.game.cutscene) return;
+    if (this.farSide(C) === 'F') this.farArrived(C, 'F');
+  }
   farTargets(out) {
     if (!this.far || !this.hasLine()) return;
     for (const C of Object.values(this.far)) {
-      if (this.here() !== C.room) continue;
+      if (this.here() !== C.room || C.def.walk) continue;
       const s = this.farSide(C);
       if (s === 'N') out.push(C.M ? C.toM : C.toF);
       else if (s === 'M') out.push(C.toF, C.toN);
@@ -1484,7 +1491,7 @@ export class Depth extends ChapterBase {
     for (const C of Object.values(this.far)) {
       if (this.here() !== C.room) continue;
       if (Math.abs(h.pos.y - C.thing.y) < 1.5) consider(dist(C.thing.x, C.thing.z), 1.4, { kind: 'dx_farthing', far: C.id, label: C.def.kind === 'honey' ? 'p_drink' : this.f[C.def.flag] ? 'p_look' : 'p_search' });
-      if (Math.abs(h.pos.y - C.N.y) < 1.5) consider(dist(C.def.nPost.x, C.def.nPost.z), 1.3, { kind: 'dx_farlook', far: C.id, label: 'p_look' });
+      if (!C.def.walk && Math.abs(h.pos.y - C.N.y) < 1.5) consider(dist(C.def.nPost.x, C.def.nPost.z), 1.3, { kind: 'dx_farlook', far: C.id, label: 'p_look' });
     }
   }
   farInteract(it) {
@@ -1591,7 +1598,7 @@ export class Depth extends ChapterBase {
     if (it?.kind === 'zltag' && this.heatWindow()) this.f.dx_heat_tag = true;
     if (it?.kind === 'zlburrow' && this.heatVent()) return true;
     if (it?.kind === 'zhshut' && it.key === 'zh_closed_depot' && this.storeHere()) return this.storeInteract();
-    if (it?.kind === 'ihfar' && this.hasLine() && FARS.some((d) => it.key === 'ih_far_' + (d.id === 'honey' ? 'islet' : d.id))) { const d = FARS.find((q) => it.key === 'ih_far_' + (q.id === 'honey' ? 'islet' : q.id)); this.chain([['hero', 'dx_far_hint_' + d.id]]); return true; }
+    if (it?.kind === 'ihfar' && this.hasLine() && FARS.some((d) => !d.walk && it.key === 'ih_far_' + d.id)) { const d = FARS.find((q) => it.key === 'ih_far_' + q.id); this.chain([['hero', 'dx_far_hint_' + d.id]]); return true; }
     if (typeof it?.kind !== 'string' || !it.kind.startsWith('dx_')) return false;
     if (it.kind === 'dx_heatcap') return this.heatInteract(it);
     if (it.kind === 'dx_store') return this.storeInteract(it);
@@ -1638,6 +1645,7 @@ export class Depth extends ChapterBase {
     this.gemUpdate(dt); this.wayUpdate(dt); this.packUpdate(dt); this.gazeUpdate(dt); this.srcUpdate(dt);
     this.heatUpdate(dt); this.storeUpdate(dt);
     if (this._honeyRoom && this.here() !== this._honeyRoom) this._honeyRoom = null;   // (ISL-3: the honey pot again on the next visit)
+    this.farWalked();
     const g = this.game, f = this.f;
     // COL-1: the epilogue's line for all twelve, once dinner is over and he is free
     if (f.dx_crystals12 && !f.dx_c12_home && this.story.cur?.key === 'home' && f.ep_free && g.state === 'play' && !g.trans && !g.cutscene) {
