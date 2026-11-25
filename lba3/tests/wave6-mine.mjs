@@ -12,8 +12,10 @@
 //      then, from a fresh state (ISO), the PAY way: Orla (TALK), the tab paid at the counter (a pick): the key, 40 kashes less
 //   C  the ride: the key in the lever (E); the motor coughs and he does NOT brake: the catch, wound back up to the dock,
 //      Vash's line (a recoverable failure); again, the brake on the cough (E): eased down into the deep landing
-//   D  the deep seam: Gant (TALK) keeps the project's rule, "Not now" (a pick) and he sits; again, Sorrel's bill shown:
-//      the turn, the Wannie GLOVE (the found box); Marl; the oil jar (E); into the gallery (INPUT); the boards' look in the
+//   D  the deep seam: Gant (TALK) keeps the project's rule and names the Dark Monk's temple, "Not now" (a pick) and he
+//      sits; again, Sorrel's bill shown (a pick): a cheat, but no decision yet (the second round); Celebration: the
+//      temple by its portal (INPUT), the Wannies' carving under the prophecy (E), the region read there; back at the
+//      landing, the carving told (a pick): the turn, the Wannie GLOVE (the found box); Marl; the oil jar (E); into the gallery (INPUT); the boards' look in the
 //      dark; the three lamp posts lit (E); Save & quit → Continue in the gallery: the lamps kept; a bare fist at a wedge
 //      (K) does nothing; the glove (K) knocks both wedges: the boards slide into the sump; up the incline and out of the
 //      old mouth (INPUT): the shift is home (Tull at his mother's, Gant at the mouth; their lines); back in through the
@@ -21,7 +23,8 @@
 //   E  the Blow: in by its way (INPUT); a DEATH (ISO: 2 life, no clover leaf, no catch): Game Over → Retry: back at the
 //      room's door with full life, the Blow asleep and whole; the ball through its gas (F: no harm); the fight by input:
 //      the glove catches its fireballs (K) and throws them back (K) — three hits — beaten; the vents calm; the strongbox
-//      (E): 40 kashes and a clover; the ride back up from the landing (E) to the Lift Dock (the lift runs both ways)
+//      (E): 40 kashes and a clover; the catch's reach (1.8 m: a fireball 2.2 m in front is not caught, 1.6 m is);
+//      the ride back up from the landing (E) to the Lift Dock (the lift runs both ways)
 // ISO (logged): the shuttle rides between the islands are travel.mjs's (here: put on the island's pad); the bar's and
 // the hotel's doors are walked in from 2.2 m before their sill. ONLY=A..E for a part (the state before it is set by its
 // flags, logged). SHOTS=dir writes the pictures (the play camera; WAVE6.md lists them). SERVE=1 answers this checkout's
@@ -48,6 +51,8 @@ const helpers = () => ev(async () => {
   const WMm = await import('/src/game/wanniemine.js'); window.WM = WMm.WM;
   const OB = await import('/src/game/otrbar.js'); window.BAR = OB.BAR;
   window.LB = () => game.story.lb;
+  const TR = await import('/src/game/travel.js'); window.regionOf = () => TR.regionOf(game);
+  const CT = await import('/src/game/celtemple.js'); window.TEMPLE = CT.TEMPLE;
   window.zo = () => Object.fromEntries(Object.entries(game.flags).filter(([k]) => k.startsWith('zo_')));
   window.toIsle = (n) => { const G = game, reg = 'isle_' + n; G.regions.ensure(reg, 'test'); const R = G.rooms[reg]; G.enterRoom(reg, R.spawn, true); P.settle(); G.story.refreshCast(); G.step(0.3); return R; };
   window.before = (x, z, fx, fz, d = 2.2) => { const G = game, h = G.hero, l = Math.hypot(fx, fz) || 1; const sx = x + fx / l * d, sz = z + fz / l * d; h.pos.set(sx, G.physics.groundAt(sx, sz, h.pos.y + 8), sz); h.angle = Math.atan2(x - sx, z - sz); h.onGround = true; h.vy = 0; G.camRig.snap(); G.step(0.3); P.settle(); };
@@ -118,8 +123,8 @@ if (ONLY.includes('B')) {
   const b3 = await ev(() => { const k = P.talk('zo_explorer'); return { k: k.r }; });
   const b3l = await said();
   check('B: the Imperial Hotel by its door (INPUT): the register (E) — SORREL, project buyer, account at the harbour bar; Old Haskel (TALK) — the cage\'s motor coughs in the gas, brake on the cough', b2.room === 'otrhotel' && b2b.u === 'used' && b2b.reg && has(b2l, /SORREL, project buyer/) && b3.k === 'talked' && has(b3l, /Brake on the cough/), { b2, b2b, b3, b2l, b3l });
-  const b4 = await ev(() => { outOf(); const r = walkIn('otrbar'); const lys = P.npc('zo_singer'); return { ...r, lys: !!lys?.present, onStage: lys ? +lys.pos.y.toFixed(2) : null, coins: game.hero.coins, curtain: +BAR.stage.x.toFixed(1) }; });
-  check('B: the harbour bar by its door (INPUT): Lys stands on the stage (0.9 m up), the curtains drawn', b4.room === 'otrbar' && b4.lys && b4.onStage > 0.8, b4);
+  const b4 = await ev(() => { outOf(); const r = walkIn('otrbar'); const lys = P.npc('zo_singer'); return { ...r, lys: !!lys?.present, onStage: lys ? +lys.pos.y.toFixed(2) : null, coins: game.hero.coins, curtain: +BAR.stage.x.toFixed(1), region: regionOf() }; });
+  check('B: the harbour bar by its door (INPUT): Lys stands on the stage (0.9 m up), the curtains drawn; the map\'s region inside is Otringal (was \'citadel\')', b4.room === 'otrbar' && b4.lys && b4.onStage > 0.8 && b4.region === 'isle_otringal', b4);
   await shot('wave6-04-bar-curtain-shut');
   const b5 = await ev(() => { const k = P.talk('ot_boss'); const st0 = game.state; const shop = !!document.querySelector('#shop:not(.hidden)'); P.tap('Escape', 0.1); P.settle(); return { k: k.r, st0, shop, tab: !!game.flags.zo_tab, key: game.flags.zo_key ?? null, coins: game.hero.coins }; });
   const b5l = await said();
@@ -157,10 +162,18 @@ if (ONLY.includes('D')) {
   if (!ONLY.includes('C')) { iso('D alone: down at the landing (flags)'); await ev(() => { setFlags({ zo_heard: true, zo_reserved: true, zo_tab: true, zo_key: 'paid', zo_down: true }); game.regions.ensure('wm_landing', 'test'); game.enterRoom('wm_landing', null, true); P.settle(); game.story.refreshCast(); }); }
   const d1 = await ev(() => { const k = P.talk('zo_gant'); const menu = game.state === 'shop'; const pick = P.menuPick(1); P.settle(); return { k: k.r, menu, pick: pick.r, gant: game.flags.zo_gant ?? 0, glove: !!game.hero.arms.glove }; });
   const d1l = await said();
-  check('D: Gant (TALK): the deep shift; the plate says ore only, a Wannie in the cage and the week is docked; the incline boarded, their rule; a choice: "Not now" — "Then we sit"', d1.k === 'talked' && d1.menu && d1.gant === 1 && !d1.glove && has(d1l, /ore only/) && has(d1l, /Then we sit/), { d1, d1l });
-  const d2 = await ev(() => { const k = P.talk('zo_gant'); const pick = P.menuPick(0); for (let i = 0; i < 12; i++) { P.settle(); game.step(0.5); } return { k: k.r, pick: pick.r, gant: game.flags.zo_gant ?? 0, glove: !!game.hero.arms.glove, how: game.flags.zo_glove }; });
+  check('D: Gant (TALK): the deep shift; the plate says ore only, a Wannie in the cage and the week is docked; the incline boarded, their rule; their paper, and the old ones\' carving in the Dark Monk\'s temple on Celebration; a choice: "Not now" — "Then we sit"', d1.k === 'talked' && d1.menu && d1.gant === 1 && !d1.glove && has(d1l, /ore only/) && has(d1l, /Dark Monk's temple on Celebration/) && has(d1l, /Then we sit/), { d1, d1l });
+  const d2a = await ev(() => { const k = P.talk('zo_gant'); const pick = P.menuPick(0); for (let i = 0; i < 12; i++) { P.settle(); game.step(0.5); } return { k: k.r, pick: pick.r, gant: game.flags.zo_gant ?? 0, glove: !!game.hero.arms.glove, bill: !!game.flags.zo_billShown, menu: game.state === 'shop', jr: game.story.lb.journal().map((j) => j.key) }; });
+  const d2al = await said();
+  check('D: Gant again, Sorrel\'s bill shown (a pick): "Forty kashes. While Marl rationed the lamp oil" — a cheat, but their paper still says the seam is theirs: no decision, no glove; he sends him to the temple; the journal lists the bill and the carving', d2a.gant === 1 && !d2a.glove && d2a.bill && !d2a.menu && has(d2al, /While Marl rationed/) && has(d2al, /A cheat, then/) && has(d2al, /Go and see what the old ones carved/) && d2a.jr.includes('zo_j_murals'), { d2a, d2al });
+  iso('the shuttle to Celebration: put on its pad; before the temple\'s portal on the plaza (2.2 m), walked in');
+  const d2b = await ev(() => { toIsle('celebration'); const d = game.story.doors().find((q) => q.room === 'celtemple'); before(d.x, d.z, 0, 1, 2.2); const t = P.through(d.x, d.z); P.settle(); game.step(0.5); const F = TEMPLE.frieze; const u = P.use(F.look.x, F.z, { kind: 'zo_murals', near: 1.2, match: 2.6 }); return { t: t.r, room: game.room?.id, region: regionOf(), u: u.r, seen: !!game.flags.zo_murals }; });
+  const d2bl = await said();
+  check('D: the Temple of the Dark Monk by its portal (INPUT): the map\'s region inside is Celebration (was \'citadel\'); the Wannies\' carving under the prophecy (E): the seam, the gas, their own incline, a Wannie hand over the mouth', d2b.room === 'celtemple' && d2b.region === 'isle_celebration' && d2b.u === 'used' && d2b.seen && has(d2bl, /older carving/) && has(d2bl, /Wannie hand/), { d2b, d2bl });
+  iso('back down at the deep landing (the ride is C\'s): put at the cage');
+  const d2 = await ev(() => { const G = game; outOf(); G.regions.ensure('wm_landing', 'test'); G.enterRoom('wm_landing', null, true); P.settle(); G.story.refreshCast(); const k = P.talk('zo_gant'); const items = [...document.querySelectorAll('#shop .item, #shop li, #shop button')].map((e) => e.textContent).join(' | '); const pick = P.menuPick(0); for (let i = 0; i < 12; i++) { P.settle(); G.step(0.5); } return { k: k.r, pick: pick.r, items, gant: G.flags.zo_gant ?? 0, glove: !!G.hero.arms.glove, how: G.flags.zo_glove }; });
   const d2l = await said();
-  check('D: Gant again, Sorrel\'s bill shown (a pick): "Forty kashes. While Marl rationed the lamp oil" — their rule holds nobody; the two wedges; his WANNIE GLOVE given (the found box)', d2.gant === 2 && d2.glove && d2.how === 'given' && has(d2l, /While Marl rationed/) && has(d2l, /Take my glove/) && has(d2l, /Light the posts as you go/), { d2, d2l });
+  check('D: Gant again, the temple\'s carving told (a pick): "The seam was ours before their paper" — their rule holds nobody; the two wedges; his WANNIE GLOVE given (the found box)', d2.gant === 2 && d2.glove && d2.how === 'given' && has(d2l, /ours before their paper/) && has(d2l, /Take my glove/) && has(d2l, /Light the posts as you go/), { d2, d2l });
   const d3 = await ev(() => { const k = P.talk('zo_marl'); const O = WM.landing.oil; const u = P.use(O.x, O.z, { kind: 'zo_oil', near: 0.9 }); return { k: k.r, u: u.r, oil: !!game.flags.zo_oil }; });
   const d3l = await said();
   check('D: Marl (TALK): the oil jar by the rack, and the Blow — only its own fire hurts it, catch it in a glove; the jar (E): lamp oil for three posts', d3.k === 'talked' && d3.u === 'used' && d3.oil && has(d3l, /Only its own fire hurts it/) && has(d3l, /Enough for three posts/), { d3, d3l });
@@ -238,6 +251,11 @@ if (ONLY.includes('E')) {
   await shot('wave6-14-blow-beaten');
   const e6 = await ev(() => { const G = game, h = G.hero, B = WM.blow; const c0 = h.coins, k0 = h.clovers; const u = P.use(B.box.x, B.box.z, { kind: 'zo_box', near: 0.9 }); return { u: u.r, kashes: h.coins - c0, clovers: h.clovers - k0, box: !!G.flags.zo_box }; });
   check('E: the deep shift\'s strongbox in the corner (E): 40 kashes and a clover leaf', e6.u === 'used' && e6.box && e6.kashes === 40 && e6.clovers === 1, e6);
+  // (second round: the catch's reach, 1.8 m in front of him; its own fight is done, so a Blow woken for the measure)
+  const e6b = await ev(async () => { const GB = await import('/src/game/gasblow.js'); const h = game.hero, B = LB().blow; B.reset(); B.state = 'hover'; B.spit(); const b = B.balls[B.balls.length - 1];
+    const at = (d) => { b.held = false; b.p.set(h.pos.x + Math.sin(h.angle) * d, h.pos.y + 1.0, h.pos.z + Math.cos(h.angle) * d); return B.catchFrom(h); };
+    const r = { reach: GB.BLOW.catchReach, at22: at(2.2), at16: at(1.6) }; B.calm(); return r; });
+  check('E: the catch\'s reach (the user, 25.11): a glove punch takes a fireball 1.6 m in front of him, not one 2.2 m away (1.8 m)', e6b.reach === 1.8 && e6b.at22 === false && e6b.at16 === true, e6b);
   const e7 = await ev(() => { const a = toRoom('wm_gallery'); const b = toRoom('wm_landing'); const L = WM.landing.lever; const u = P.use(L.x, L.z, { kind: 'zo_up', near: 0.9 }); for (let i = 0; i < 30 && game.trans; i++) game.step(0.1); P.settle(); return { a: a.room, b: b.room, u: u.r, room: game.room?.id, zo: zo() }; });
   check('E: back through the gallery to the landing (INPUT) and up in the cage (E): at the Lift Dock (the lift runs both ways)', e7.a === 'wm_gallery' && e7.b === 'wm_landing' && e7.u === 'used' && e7.room === 'isle_liftdock', e7);
   const e8 = await ev(() => { const k = P.talk('ld_op'); return { k: k.r }; });

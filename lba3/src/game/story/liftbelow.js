@@ -13,9 +13,13 @@
 //      curtain winch with the ball (high on the frame): the show pays the tab. Either way: the key and Sorrel's bill.
 //   4. The Lift Dock: the key in the lever; the ride down into the gas. The motor coughs: brake (E) in time and the cage
 //      eases down to the deep landing; too late and the safety catch stops it and Vash winds it back up (try again).
-//   5. The deep landing: Gant, the ganger, keeps the project's rule out of fear (ore only, the incline boarded). Show
-//      him Sorrel's bill (a choice): he decides for the shift, and gives Twinsen his Wannie glove (or, if he has the
-//      adit's glove already, says so). Marl's oil jar: the gallery's three lamp posts lit, the seam glitters.
+//   5. The deep landing: Gant, the ganger, keeps the project's rule out of fear (ore only, the incline boarded; their
+//      paper says the seam is the project's). His grandmother said the old ones carved the seam into the Dark Monk's
+//      temple on Celebration. Two things to tell him (menu choices, either order): Sorrel's bill (the project's own man
+//      breaks its rule) and the Wannies' carving under the prophecy in the temple (WAVE6 second round: the seam was
+//      theirs before any paper). After both he decides for the shift, and gives Twinsen his Wannie glove (or, if he has
+//      the adit's glove already, says so). Until then the wedges wait for his word. Marl's oil jar: the gallery's three
+//      lamp posts lit, the seam glitters.
 //   6. The deep seam: the project's boards across the old incline, held by two wedges; the glove knocks them out (the
 //      lamp by the boards lit first: in the dark nothing shows what holds them); it all slides into the sump. Up the
 //      incline and out of the old mouth onto the Platform: the shortcut both ways from then on.
@@ -30,7 +34,9 @@
 //   zo_heard, zo_reserved, zo_register, zo_tab (Orla named it), zo_winch (the curtain freed), zo_key ('paid'|'winch'),
 //   zo_miss (brake misses), zo_down (reached the landing), zo_gant (1 told, 2 decided), zo_glove ('given'|'own'),
 //   zo_oil, zo_lamps (bits 1|2|4), zo_wedges (bits 1|2), zo_open (the boards down), zo_done (the shift home),
-//   zo_paid (Gant's whip-round to a player who had the glove), zo_blow (the Blow beaten), zo_box (its strongbox).
+//   zo_paid (Gant's whip-round to a player who had the glove), zo_blow (the Blow beaten), zo_box (its strongbox);
+//   second round: zo_temple (Gant named the temple), zo_murals (the carving seen), zo_billShown, zo_muralsTold (told
+//   Gant each). A save past Gant's decision (zo_gant 2) needs none of them.
 //   A ride, a fall of the boards or a fight under way is not saved: a load puts him at the dock / the room's door.
 import * as THREE from 'three';
 import { t } from '../i18n.js';
@@ -39,6 +45,7 @@ import { islePhase } from '../islandlife.js';
 import { BAR } from '../otrbar.js';
 import { HOTEL } from '../otrhotel.js';
 import { WM, WM_AT, wannieMineDoors, wannieMineExit, setMineMouth } from '../wanniemine.js';
+import { TEMPLE } from '../celtemple.js';
 import { Blow } from '../gasblow.js';
 import '../text/liftbelow.js';
 
@@ -173,6 +180,7 @@ export class LiftBelow extends ChapterBase {
       consider(dist(L.lever.x, L.lever.z), 1.4, { kind: 'zo_lever', x: L.lever.x, z: L.lever.z, label: f.zo_key ? 'p_zo_ride' : 'p_read' });
       return;
     }
+    if (here === 'celtemple' && TEMPLE.frieze) { const F = TEMPLE.frieze; consider(dist(F.look.x, F.z), 2.4, { kind: 'zo_murals', x: F.look.x, z: F.z, label: 'p_look' }); return; }
     if (here === 'otrhotel' && HOTEL.register) { const r = HOTEL.register; consider(dist(r.x, r.z), r.r + 0.3, { kind: 'zo_register', x: r.x, z: r.z, label: 'p_read' }); return; }
     if (here === 'wm_landing' && WM.landing) {
       const L = WM.landing;
@@ -203,6 +211,11 @@ export class LiftBelow extends ChapterBase {
       case 'zo_register': f.zo_register = true; f.zo_heard = true; g.audio.play('paper'); this.chain([['hero', 'zo_register']], () => g.save(false)); return true;
       case 'zo_up': return this.rideUp();
       case 'zo_crates': this.chain([['hero', 'zo_crates']]); return true;
+      case 'zo_murals': {
+        const first = !f.zo_murals; f.zo_murals = true; g.audio.play('paper');
+        this.chain(first ? [['hero', 'zo_murals_1'], ['hero', 'zo_murals_2']] : [['hero', 'zo_murals_after']], () => g.save(false));
+        return true;
+      }
       case 'zo_oil': f.zo_oil = true; g.audio.play('tFill'); this.chain([['hero', 'zo_oil_take']], () => g.save(false)); return true;
       case 'zo_post': return this.lightPost(it.i);
       case 'zo_bulk': this.chain([['hero', bit(f, 'zo_lamps', 2) ? 'zo_bulk_look' : 'zo_bulk_dark']]); return true;
@@ -311,19 +324,34 @@ export class LiftBelow extends ChapterBase {
     }
     if (f.zo_open) return c(['zo_gant_open']);
     if ((f.zo_gant || 0) >= 2) return c(['zo_gant_wait']);
-    const ask = () => g.openMenu('zo_m_title', [{ key: 'zo_m_bill', id: 'bill' }, { key: 'zo_m_leave', id: 'leave' }], (o) => {
-      if (o.id !== 'bill') { this.chain([['zo_gant', 'zo_gant_leave']]); return; }
-      this.chain([['hero', 'zo_gant_bill'], ['zo_gant', 'zo_gant_turn'], ['zo_gant', 'zo_gant_turn2']], () => {
-        f.zo_gant = 2;
-        const own = !!g.hero.arms?.glove;
-        f.zo_glove = own ? 'own' : 'given';
-        const after = () => this.chain([['zo_gant', 'zo_gant_lamps']], () => g.save(false));
-        if (own) this.chain([['zo_gant', 'zo_gant_glove_own']], after);
-        else this.chain([['zo_gant', 'zo_gant_glove']], () => this.story.arsenal.gain('glove', 'it_glove', () => { g.hud.toast('zo_toast_glove', { k: g.hud.key('attack'), w: g.hud.key('weapons') }, 4200); after(); }));
-      });
+    // (second round) he decides only after both: Sorrel's bill shown and the temple's carving told (either order; a menu
+    // each time, offering what is left; "Not now" always)
+    const decide = () => this.chain([['zo_gant', 'zo_gant_turn2']], () => {
+      f.zo_gant = 2;
+      const own = !!g.hero.arms?.glove;
+      f.zo_glove = own ? 'own' : 'given';
+      const after = () => this.chain([['zo_gant', 'zo_gant_lamps']], () => g.save(false));
+      if (own) this.chain([['zo_gant', 'zo_gant_glove_own']], after);
+      else this.chain([['zo_gant', 'zo_gant_glove']], () => this.story.arsenal.gain('glove', 'it_glove', () => { g.hud.toast('zo_toast_glove', { r: g.hud.key('swap'), k: g.hud.key('attack'), w: g.hud.key('weapons') }, 4200); after(); }));
     });
-    if (!f.zo_gant) return c(['zo_gant_1', 'zo_gant_2', 'zo_gant_3'], () => { f.zo_gant = 1; g.save(false); ask(); });
-    return c(['zo_gant_3'], ask);
+    const ask = () => {
+      const items = [...(f.zo_billShown ? [] : [{ key: 'zo_m_bill', id: 'bill' }]), ...(f.zo_murals && !f.zo_muralsTold ? [{ key: 'zo_m_murals', id: 'murals' }] : []), { key: 'zo_m_leave', id: 'leave' }];
+      if (items.length === 1) { this.chain([['zo_gant', 'zo_gant_temple']], () => g.save(false)); return; }   // (the bill shown, the carving not seen yet)
+      g.openMenu('zo_m_title', items, (o) => {
+        if (o.id === 'bill') {
+          f.zo_billShown = true;
+          return this.chain([['hero', 'zo_gant_bill'], ['zo_gant', 'zo_gant_turn']], () => { if (f.zo_muralsTold) decide(); else this.chain([['zo_gant', 'zo_gant_billhalf']], () => { g.save(false); ask(); }); });
+        }
+        if (o.id === 'murals') {
+          f.zo_muralsTold = true;
+          return this.chain([['hero', 'zo_gant_murals'], ['zo_gant', 'zo_gant_muralturn']], () => { if (f.zo_billShown) decide(); else this.chain([['zo_gant', 'zo_gant_muralhalf']], () => { g.save(false); ask(); }); });
+        }
+        this.chain([['zo_gant', 'zo_gant_leave']], () => g.save(false));
+      });
+    };
+    if (!f.zo_gant) return c(['zo_gant_1', 'zo_gant_2', 'zo_gant_3', 'zo_gant_4'], () => { f.zo_gant = 1; f.zo_temple = true; g.save(false); ask(); });
+    if (!f.zo_temple) return c(['zo_gant_3', 'zo_gant_4'], () => { f.zo_temple = true; g.save(false); ask(); });   // (a save from before the second round)
+    return c([f.zo_billShown || f.zo_muralsTold ? 'zo_gant_still' : 'zo_gant_3'], ask);
   }
 
   // ---------------------------------------------------------------- the lamps, the boards, the box
@@ -347,6 +375,8 @@ export class LiftBelow extends ChapterBase {
         if (bit(f, 'zo_wedges', i) || !inArc(w.x, w.z, 0.45)) return;
         any = true;
         if (!bit(f, 'zo_lamps', 2)) { g.impact?.(w.x, 0.3, w.z, 'wood', 'blocked'); g.hud.toast('zo_wedge_dark'); return; }
+        // (second round: the deep shift's own boards come down on Gant's word; a save with a wedge out already goes on)
+        if ((f.zo_gant || 0) < 2 && !f.zo_wedges) { g.impact?.(w.x, 0.3, w.z, 'wood', 'blocked'); g.hud.toast('zo_wedge_gant'); return; }
         if (!move.glove) { g.impact?.(w.x, 0.3, w.z, 'wood', 'blocked'); g.hud.toast('zo_wedge_solid'); return; }
         f.zo_wedges = (f.zo_wedges || 0) | (1 << i);
         G.setWedge(i, true);
@@ -560,6 +590,7 @@ export class LiftBelow extends ChapterBase {
       out.push({ key: 'zo_j_key', done: !!f.zo_key });
       if (f.zo_key) out.push({ key: 'zo_j_down', done: !!f.zo_down });
       if (f.zo_down) out.push({ key: 'zo_j_gant', done: (f.zo_gant || 0) >= 2 || !!f.zo_open });
+      if (f.zo_temple && (f.zo_gant || 0) < 2 && !f.zo_open) { out.push({ key: 'zo_j_bill', done: !!f.zo_billShown }); out.push({ key: 'zo_j_murals', done: !!f.zo_muralsTold }); }
       if ((f.zo_gant || 0) >= 2 || f.zo_down) out.push({ key: 'zo_j_way', done: !!f.zo_open });
     }
     if (f.zo_down || f.zo_blow) out.push({ key: 'zo_j_blow', done: !!f.zo_blow });

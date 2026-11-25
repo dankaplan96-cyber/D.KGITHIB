@@ -20,6 +20,7 @@
 //   TEMPLE (filled when the hall is built):
 //     murals [{x, z, a, look: {x, y, z}}] (4 reading spots, each with the panel's centre to look at)
 //     lectern {x, z, r}        sealDoor { x, z, open, setOpen(b, instant) }
+//     frieze {x, z, look: {x, y, z}}   the Wannies' carving under the prophecy (WAVE6 second round: story/liftbelow.js)
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex } from './props.js';
@@ -38,6 +39,44 @@ const muralTex = (i) => canvasTex(256, 320, (x, W, H) => {
   x.fillStyle = '#4a4a50'; for (let r = 0; r < 9; r++) for (let c = 0; c < 6; c++) if ((r * 7 + c * 3 + i) % 5) x.fillRect(36 + c * 31, 36 + r * 16, 22, 6);
   const g = x.createRadialGradient(W / 2, 250, 4, W / 2, 250, 34); g.addColorStop(0, '#bff4f0'); g.addColorStop(1, '#2a9a9a');
   x.fillStyle = g; x.beginPath(); x.arc(W / 2, 250, 32, 0, 7); x.fill(); x.strokeStyle = '#1a3a3a'; x.lineWidth = 4; x.stroke();
+});
+// WAVE6 second round: the Wannies' carving under the prophecy (story/liftbelow.js reads it). Four scenes in one band,
+// ochre stone with the figures cut dark: the miners at the seam by lamplight; the gas that spits fire, caught in a
+// miner's glove; the line of Wannies carrying gems up their own incline; a Wannie hand over the mine's mouth.
+const friezeTex = () => canvasTex(1024, 160, (x, W, H) => {
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#c8a070'); g.addColorStop(1, '#a8804e');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.strokeStyle = '#5a3a1e'; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, H - 8);
+  for (let i = 1; i < 4; i++) { x.fillStyle = '#6a4a2a'; x.fillRect(i * W / 4 - 3, 8, 6, H - 16); }
+  const ink = '#3a2412', gem = (cx, cy, c, s = 9) => { x.fillStyle = c; x.beginPath(); x.moveTo(cx, cy - s); x.lineTo(cx + s * 0.7, cy); x.lineTo(cx, cy + s); x.lineTo(cx - s * 0.7, cy); x.fill(); };
+  // a Wannie: a round body, a long snout, two short legs (facing right; f -1 faces left)
+  const wannie = (cx, cy, s = 1, f = 1) => {
+    x.fillStyle = ink; x.beginPath(); x.ellipse(cx, cy, 15 * s, 19 * s, 0, 0, 7); x.fill();
+    x.beginPath(); x.ellipse(cx + f * 15 * s, cy - 8 * s, 12 * s, 6 * s, f * 0.2, 0, 7); x.fill();
+    x.fillRect(cx - 9 * s, cy + 16 * s, 6 * s, 12 * s); x.fillRect(cx + 3 * s, cy + 16 * s, 6 * s, 12 * s);
+  };
+  // 1 the seam by lamplight
+  { const o = 0; x.fillStyle = '#6a4a2a'; x.fillRect(o + 14, 14, W / 4 - 28, 26);
+    gem(o + 60, 60, '#7ad8e8'); gem(o + 150, 52, '#b08ae8'); gem(o + 205, 70, '#7ad8e8');
+    wannie(o + 70, 108, 1, 1); x.strokeStyle = ink; x.lineWidth = 6; x.beginPath(); x.moveTo(o + 90, 96); x.lineTo(o + 118, 66); x.stroke(); x.beginPath(); x.moveTo(o + 106, 60); x.lineTo(o + 128, 74); x.stroke();
+    wannie(o + 190, 112, 0.9, -1);
+    x.fillStyle = '#ffd890'; x.beginPath(); x.arc(o + 140, 34, 9, 0, 7); x.fill(); x.strokeStyle = ink; x.lineWidth = 3; x.beginPath(); x.moveTo(o + 140, 14); x.lineTo(o + 140, 25); x.stroke(); }
+  // 2 the gas, its fire caught in a glove
+  { const o = W / 4; x.fillStyle = '#e8d098'; x.beginPath(); x.ellipse(o + 80, 72, 46, 40, 0, 0, 7); x.fill(); x.strokeStyle = ink; x.lineWidth = 4; x.stroke();
+    x.fillStyle = ink; x.fillRect(o + 62, 60, 12, 4); x.fillRect(o + 88, 60, 12, 4); x.beginPath(); x.arc(o + 82, 86, 8, 0, 7); x.fill();
+    x.fillStyle = '#e8702a'; x.beginPath(); x.arc(o + 150, 84, 11, 0, 7); x.fill(); x.fillStyle = '#ffd890'; x.beginPath(); x.arc(o + 150, 84, 5, 0, 7); x.fill();
+    wannie(o + 205, 106, 1, -1); x.fillStyle = '#8a4a2a'; x.beginPath(); x.arc(o + 172, 92, 12, 0, 7); x.fill(); x.strokeStyle = ink; x.lineWidth = 3; x.stroke(); }
+  // 3 up their own incline with the gems
+  { const o = W / 2; x.fillStyle = '#6a4a2a'; x.beginPath(); x.moveTo(o + 14, 146); x.lineTo(o + W / 4 - 14, 40); x.lineTo(o + W / 4 - 14, 146); x.fill();
+    x.fillStyle = '#ffe8a8'; x.beginPath(); x.arc(o + W / 4 - 34, 26, 14, 0, 7); x.fill();
+    for (let i = 0; i < 3; i++) { const cx = o + 50 + i * 62, cy = 128 - i * 26; wannie(cx, cy - 16, 0.75, 1); gem(cx, cy - 46, i === 1 ? '#b08ae8' : '#7ad8e8', 8); } }
+  // 4 a Wannie hand over the mine's mouth: theirs
+  { const o = W * 0.75; x.fillStyle = '#6a4a2a'; x.beginPath(); x.moveTo(o + 20, 146); x.quadraticCurveTo(o + 128, 10, o + 236, 146); x.fill();
+    x.fillStyle = '#1e140a'; x.beginPath(); x.arc(o + 128, 146, 34, Math.PI, 0); x.fill();
+    x.fillStyle = '#e8c890'; x.beginPath(); x.ellipse(o + 128, 70, 22, 24, 0, 0, 7); x.fill();
+    for (let i = 0; i < 4; i++) { x.beginPath(); x.ellipse(o + 107 + i * 14, 40, 6, 13, (i - 1.5) * 0.15, 0, 7); x.fill(); }
+    x.beginPath(); x.ellipse(o + 150, 72, 6, 12, -0.9, 0, 7); x.fill();
+    gem(o + 60, 120, '#7ad8e8', 7); gem(o + 196, 120, '#b08ae8', 7); }
 });
 // a column of carved stone with four dark globes in gold clasps round its middle
 function globeColumn(k, h = 3.6) {
@@ -89,6 +128,11 @@ export function buildCelTempleRoom(scene, physics) {
     k.add(plane(1.36, 1.76), MAT.map(muralTex(i), 0.7), x, 2.9, BZ + 0.15);
     murals.push({ x: B.cx + x, z: B.cz + BZ + 2.0, a: Math.PI, look: { x: B.cx + x, y: 2.9, z: B.cz + BZ + 0.15 } });
   }
+  // the Wannies' carving: a band of ochre stone under the prophecy, above the bench (its reading spot before the bench)
+  const FX = 1.5, FY = 1.42, FW = 6.8, FH = FW * 160 / 1024;
+  k.add(rbox(FW + 0.16, FH + 0.14, 0.1, 0.02), MAT.paint('#5a3a1e', 0.6), FX, FY, BZ + 0.06);
+  k.add(plane(FW, FH), MAT.map(friezeTex(), 0.75), FX, FY, BZ + 0.12);
+  const frieze = { x: B.cx + FX - 1.6, z: B.cz + BZ + 1.75, look: { x: B.cx + FX, y: FY, z: B.cz + BZ + 0.12 } };
   const LECX = 1.5, LECZ = BZ + 2.6;
   B.put(LECX, LECZ, Math.PI, (kk) => { kk.add(cyl(0.08, 0.12, 1.0, 8), MAT.paint('#2a2c30', 0.5), 0, 0.5, 0); kk.add(rbox(0.6, 0.05, 0.45, 0.02), MAT.wood('dark'), 0, 1.05, 0, 0, { rx: -0.35 }); kk.add(rbox(0.5, 0.02, 0.36, 0.01), MAT.paper('#f2ead6', '#3a2a1a', 'leaf'), 0, 1.09, 0.02, 0, { rx: -0.35 }); return { r: 0.3, top: 1.15 }; });
 
@@ -122,7 +166,7 @@ export function buildCelTempleRoom(scene, physics) {
 
   B.light('#ff8a5a', 3.5, 12, 0, 1.6, 0.4); B.light('#ff6a3a', 2.5, 9, LX + 1.6, 1.2, -2.8); B.light('#d8e4ff', 4, 16, 0, 5.0, -2.0); B.light('#ffb080', 2, 8, W / 2 - 1.8, 1.2, -1.0);
 
-  Object.assign(TEMPLE, { murals, lectern: { x: B.cx + LECX, z: B.cz + LECZ + 0.7, r: 1.0 }, sealDoor: seal });
+  Object.assign(TEMPLE, { murals, frieze, lectern: { x: B.cx + LECX, z: B.cz + LECZ + 0.7, r: 1.0 }, sealDoor: seal });
   R.templeMurals = murals;
   return { celtemple: B.finish() };
 }

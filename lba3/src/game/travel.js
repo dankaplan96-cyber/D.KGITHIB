@@ -41,6 +41,9 @@ const INSIDE = { workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', arch
 INSIDE.ham_hall = 'hamalayi';   // (HAMALAYI-LIFE: the monastery's hall, hamrooms.js)
 Object.assign(INSIDE, { wm_landing: 'isle_platform', wm_gallery: 'isle_platform', wm_blow: 'isle_platform' });   // (WAVE6 H-16: the deep seam, under the Platform)
 Object.assign(INSIDE, { bl_shed: 'ballastra', bl_oren: 'bl_arches', bl_mags: 'bl_arches', bl_pump: 'bl_arches', bl_tunnel: 'bl_gardens', bl_kiln: 'bl_gardens' });   // (EXP-2: Ballastra's rooms)
+// (WAVE6 second round: every interior whose door stands outside Citadel answers its own region, not 'citadel': Otringal's
+//  bar and hotel, the Dark Monk's temple on Celebration, Zeelich's homes, EXP-3's two Ballastra rooms)
+Object.assign(INSIDE, { otrbar: 'isle_otringal', otrhotel: 'isle_otringal', celtemple: 'isle_celebration', zh_pelleck: 'zeelich', zh_nara: 'zeelich', zh_oku: 'zeelich', zh_bakery: 'zeelich', bl_cradles: 'bl_arches', bl_house: 'bl_gardens' });
 let lastOut = 'citadel', lastPos = null;
 export function regionOf(game) {
   const R = game.room;

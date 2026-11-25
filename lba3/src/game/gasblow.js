@@ -7,7 +7,8 @@
 //   - the wind-up: it swells, its mouth goes orange then white, a rising hiss (1.4 / 1.2 / 1.0 s by phase);
 //   - it spits a slow fireball at where he stands (6 / 6.8 / 7.5 m/s; 1, then 2, then 3 a volley, 0.9 s apart);
 //     a fireball that reaches him burns 2 life (a dodge's window or his blink after a hit lets it pass);
-//   - a punch with the Wannie glove as one comes in (from 2.6 m in front of him, the whole punch long) catches it: it
+//   - a punch with the Wannie glove as one comes in (within 1.8 m in front of him, the whole punch long; 2.6 m before the
+//     user's second round, 25.11) catches it: it
 //     sits burning on the glove; the next glove punch throws it back, toward the Blow when he faces it roughly
 //     (±60°), else straight ahead; held over 5 s it gutters out (no harm);
 //   - each of its own fireballs that reaches it is a hit: it sags, flickers and drifts to another vent (3 hits);
@@ -25,12 +26,14 @@
 //   stats {spat, caught, thrown, hits, burns}, onBeaten, onHint(key)
 import * as THREE from 'three';
 import { angleDiff, dampAngle } from '../engine/math.js';
+import { M, canvasTex } from './props.js';
+import { glowSprite } from './interiors.js';
 
 export const BLOW = {
   hp: 3, hover: 2.5, r: 1.05,
   windup: [1.4, 1.2, 1.0], speed: [6.0, 6.8, 7.5], volley: [1, 2, 3], gap: 0.9, cool: [2.2, 1.8, 1.5],
   burn: 2, ballR: 0.28, life: 4.5,
-  catchReach: 2.6, catchArc: 1.25, throwSpeed: 13, throwArc: 1.05, holdMax: 5,
+  catchReach: 1.8, catchArc: 1.25, throwSpeed: 13, throwArc: 1.05, holdMax: 5,
   hurt: 1.8, drift: 1.4, wakeT: 1.8,
 };
 const _v = new THREE.Vector3();
@@ -45,7 +48,9 @@ function blowModel() {
     _v.multiplyScalar(1 + n); _v.y *= 0.88; p.setXYZ(i, _v.x, _v.y, _v.z);
   }
   geo.computeVertexNormals();
-  const skin = new THREE.MeshStandardMaterial({ color: '#d8c47a', emissive: '#7a4a14', emissiveIntensity: 0.9, roughness: 0.35, transparent: true, opacity: 0.86, depthWrite: false });
+  // (WAVE6 second round, the user: "make the Blow read clearly, in every phase": a brighter, more solid bag that lights
+  //  itself, and a warm halo round it; its light on the floor is the pool under it, Blow.place)
+  const skin = new THREE.MeshStandardMaterial({ color: '#f2dc98', emissive: '#d0802a', emissiveIntensity: 1.3, roughness: 0.35, transparent: true, opacity: 0.94, depthWrite: false });
   skin.userData.noShadow = true;
   const body = new THREE.Mesh(geo, skin); body.renderOrder = 2; g.add(body);
   const coreM = new THREE.MeshBasicMaterial({ color: '#ff9a3a' });
@@ -58,7 +63,15 @@ function blowModel() {
   const wispM = new THREE.MeshBasicMaterial({ color: '#d8b878', transparent: true, opacity: 0.3, depthWrite: false });
   const wisps = [];
   for (let i = 0; i < 6; i++) { const w = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), wispM); g.add(w); wisps.push(w); }
-  return { g, body, skin, core, coreM, mouth, mouthM, eyeM, wisps, wispM };
+  const halo = glowSprite('#ffb060', 4.6, 0.5); halo.material.userData.noShadow = true; halo.renderOrder = 1; g.add(halo);
+  return { g, body, skin, core, coreM, mouth, mouthM, eyeM, wisps, wispM, halo };
+}
+// its light on the floor: a soft warm pool under it (unlit and additive: no lamp, no shadow)
+const poolTex = () => M('blowPoolTex', () => canvasTex(128, 128, (x, W) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.45, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, W, W); }));
+function floorPool() {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: poolTex(), color: '#ff9a40', transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.renderOrder = 1; m.material.userData.noShadow = true;
+  return m;
 }
 // a fireball: a hot core and a soft halo
 let FB = null;
@@ -75,6 +88,7 @@ export class Blow {
     this.game = game; this.R = R; this.H = H;
     this.o = R.group.position;   // (its meshes live in the room's group: hidden with it)
     this.m = blowModel(); R.group.add(this.m.g);
+    this.pool = floorPool(); R.group.add(this.pool);
     this.balls = [];
     this.stats = { spat: 0, caught: 0, thrown: 0, hits: 0, burns: 0 };
     this.onBeaten = null; this.onHint = null;
@@ -92,9 +106,9 @@ export class Blow {
     const v = this.H.vents[0];
     this.pos = new THREE.Vector3(v.x, 0.6, v.z); this.from = this.pos.clone(); this.to = this.pos.clone();
     this.face = Math.PI / 2; this.swell = 0;
-    this.m.g.visible = true; this.place(0);
+    this.m.g.visible = true; this.pool.visible = true; this.place(0);
   }
-  calm() { this.reset(); this.state = 'gone'; this.m.g.visible = false; }
+  calm() { this.reset(); this.state = 'gone'; this.m.g.visible = false; this.pool.visible = false; }
   wake() { if (this.state !== 'asleep') return; this.state = 'wake'; this.t = 0; this.from.copy(this.pos); this.to.set(this.pos.x, BLOW.hover, this.pos.z); this.game.audio.play('diveRise', this.pos); this.game.camRig?.shake?.(0.3); }
   // its look this frame
   place(dt) {
@@ -107,7 +121,14 @@ export class Blow {
     M.mouthM.color.setRGB(0.35 + hot * 0.65, 0.16 + hot * 0.78, 0.06 + hot * 0.55);
     M.coreM.color.setRGB(1, 0.55 + hot * 0.4, 0.2 + hot * 0.6);
     M.eyeM.color.set(this.state === 'asleep' ? '#8a7a40' : this.state === 'hurt' ? '#ffffff' : '#fff2a8');
-    M.skin.emissiveIntensity = this.state === 'hurt' ? 0.9 + (Math.sin(tt * 40) > 0 ? 1.2 : 0) : 0.9 + hot * 1.0;
+    const flick = this.state === 'hurt' && Math.sin(tt * 40) > 0;
+    M.skin.emissiveIntensity = this.state === 'hurt' ? 1.3 + (flick ? 1.2 : 0) : (this.state === 'asleep' ? 1.0 : 1.3) + hot * 1.0;
+    M.halo.material.opacity = (this.state === 'asleep' ? 0.32 : 0.5) + hot * 0.4 + (flick ? 0.3 : 0);
+    M.halo.material.color.setRGB(1, 0.62 + hot * 0.3, 0.3 + hot * 0.45);
+    // the pool under it: wider and fainter the higher it hangs
+    const P = this.pool, up = Math.max(0, this.pos.y - 0.3), ps = (this.state === 'asleep' ? 2.6 : 3.4) + up * 0.5;
+    P.position.set(this.pos.x - this.o.x, 0.04, this.pos.z - this.o.z); P.scale.set(ps, ps, 1);
+    P.material.opacity = Math.min(0.55, (0.5 + hot * 0.3) / (1 + up * 0.18)) * (this.state === 'dying' ? Math.max(0, 1 - this.t / 2) : 1);
     M.wisps.forEach((w, i) => { const a = tt * (0.6 + i * 0.13) + i; w.position.set(Math.sin(a) * 0.7, -0.9 - (i % 3) * 0.3 + Math.sin(tt * 1.3 + i) * 0.1, Math.cos(a) * 0.7); w.scale.setScalar(0.8 + Math.sin(tt * 2 + i) * 0.25); });
     void dt;
   }
@@ -264,7 +285,7 @@ export class Blow {
       case 'dying':
         this.pos.y = Math.max(0.3, this.pos.y - dt * 0.8);
         if (Math.random() < dt * 30) g.particles?.burst(this.pos.x + (Math.random() - 0.5), this.pos.y, this.pos.z + (Math.random() - 0.5), Math.random() < 0.5 ? '#d8c890' : '#ffb060', 2, 3);
-        if (this.t >= 2) { this.state = 'gone'; this.m.g.visible = false; for (const b of [...this.balls]) this.pop(b, '#a08060', 4); this.onBeaten?.(); }
+        if (this.t >= 2) { this.state = 'gone'; this.m.g.visible = false; this.pool.visible = false; for (const b of [...this.balls]) this.pop(b, '#a08060', 4); this.onBeaten?.(); }
         break;
     }
     this.stepBalls(dt);
