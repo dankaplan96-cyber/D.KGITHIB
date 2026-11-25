@@ -6,7 +6,7 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
 ## תקציר בעברית (למשתמש)
 - **פורסם:** v170 (25.11). כל מה שאישרת היום בפנים: העומק בקירות (e + f), הראש של זואי almond-m, החפירה של הפרנקוס,
   גלים 5 ו־8, איזון התלתן (אפשרות א, גם מילה/ארתור/פיפה בקאש), והתיקונים הקטנים מדוח 70.
-- **בלילה (26.11):** נבנו בענף ולא פורסמו: פערי גל 4 (#65) והתיקונים הקטנים (#59, #62, #64, #45; דף `captures/smallfix/sheet.png`). #63 לא נמצא. #58 הקרבות עדיין בעבודה. שום דבר לא יפורסם בלי הבחירה שלך.
+- **בלילה (26.11):** נבנו בענף ולא פורסמו: פערי גל 4 (#65), התיקונים הקטנים (#59, #62, #64, #45; דף `captures/smallfix/sheet.png`) והצעות לקרבות הראשונים (#58, כבויות מאחורי מתג; דף `captures/fights58/sheet.png`, ההמלצה א + ג). #63 לא נמצא. אין עובדים פעילים. שום דבר לא יפורסם בלי הבחירה שלך.
 - **הבא בתור (ההמלצה):** #58 הקרבות הראשונים (הצעות עם תמונות לבחירה שלך), ועובד אחד על התיקונים הקטנים (#59,
   #62–#64, #45).
 - **מחכה להחלטה שלך:** #58, #13, #18, #14, #19, #15, #16, #17, #33, #21 (פירוט ב־OPEN-TASKS.he.md).
@@ -15,7 +15,9 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
 ## 1. Where things stand
 - **Branch:** `ccr-c1c2c4b9-dep6ed` (push only there). Clean and pushed. **The branch head is ahead of v170** with work awaiting the user's pick:
   #65 wave 4 gaps (`WAVE4.md`), the small fixes (`SMALLFIX-26-11.md`, sheet `captures/smallfix/sheet.png`), the
-  dialogue-check duplicate-key guard. #58 (`FIGHTS58.md`) is still with its worker.
+  dialogue-check duplicate-key guard. #58 (`FIGHTS58.md`, sheet `captures/fights58/sheet.png`): diagnosis + candidates a/b/c behind `?fight58=`, all
+  off by default; recommended a + c; the user picks. CLOUD_ORDERS 74 asks the local agent to replay 71 with a,c.
+  The test bot's dodge (`tests/lib/player.js P.meleeThreat`) now reads a guard's own wind-up (0.9 s at Zeelich).
   Merged-branch tests 26.11 (automated runtime only, SwiftShader): tester-fixes 10/10, wave7 E+S 12/12, wave4 B+D+E
   20/20, dialogue-check PASS.
 - **Published:** **v170**, artifact version **`1795635920-1400`** = the next `base_version`.

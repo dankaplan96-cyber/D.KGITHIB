@@ -1138,3 +1138,8 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
     3. **The small fixes from 70**: the Hebrew mode caption (F1–F4) reads from the right; the depot's "?" is clear over the hazard tape; the copper pipe's first jump is no longer cut off by Twinsen's line.
     4. Only if you reach them with a save: one wave-8 secret (the Weather Wizard's slate on Citadel in Normal) and the news on the square's notice board.
     5. **Summary line for the user** at the top, and the three worst things a tester would notice, each with its picture.
+
+74. **#58 the first fights, candidates on real keys (26.11, night).** Build: `ccr-c1c2c4b9-dep6ed` head, `git pull`; headed Chrome as in 71, real keys, 1366×768, sound on. The cloud's diagnosis (`docs/lba-maturity/FIGHTS58.md`): in both depots nearly all hits are the two drones' bolts (a thin, faint aim line and the same `zap` for aiming and firing); in the Zeelich depot the Grobo guard leaves about 1.1 s between getting up and his next blow. Replay ORDER-71's two fights (the chapter 2 Citadel depot, the Zeelich depot), three runs each, in Modern and Classic:
+    1. as today (no switch);
+    2. with `?fight58=a,c` (a: a wider, brighter aim line in every chapter, and in the two depots the drones aim 1.1 s and rest 2.6 s; c: the Zeelich guard holds the baton down 1.7 s after a strike).
+    For each run: hits taken and by what (drone bolt / guard baton / rifle), clovers lost, time to clear. Does the wider line read on the real screen? Does a + c feel too easy? Pictures in `captures/hw-74/` (the aim line at the end of its wind-up, today vs a). Reply as **ORDER-74** in `WORLD_ART_REQUESTS.md`, push. No performance numbers.

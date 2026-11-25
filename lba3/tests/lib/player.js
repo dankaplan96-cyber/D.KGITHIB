@@ -523,7 +523,9 @@
       if (e.state === 'slide') { if (d < 2.4 && !e.bit) return e; continue; }
       const T = TELL[e.def?.kind] || (e.slamR ? TELL.crawler : null);
       if (!T) continue;
-      if (d < T[1] && e.stateT > T[0] * k - 0.09) return e;
+      // (a guard's own tune wins over the table: the Zeelich guard winds up 0.9 s since v162, not 0.55 — #58)
+      const w0 = (e.state === 'windup' && e.tune?.windup) || T[0];
+      if (d < T[1] && e.stateT > w0 * k - 0.09) return e;
     }
     return null;
   };
