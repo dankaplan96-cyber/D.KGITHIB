@@ -227,7 +227,7 @@ export function dlBake(renderer, scene, area) {
   for (const o of hid) o.visible = false;
   const sm = renderer.shadowMap.enabled, rt0 = renderer.getRenderTarget(), cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha();
   const ov = scene.overrideMaterial, bg = scene.background, fog = scene.fog;
-  const t0 = performance.now();
+  const t0 = performance.now(), c0 = renderer.info.render.calls;
   try {
     renderer.shadowMap.enabled = false; scene.overrideMaterial = MAT; scene.background = null; scene.fog = null;
     renderer.setRenderTarget(RT); renderer.setClearColor(0xffff00, 1); renderer.clear(true, true, false);
@@ -237,7 +237,7 @@ export function dlBake(renderer, scene, area) {
     scene.overrideMaterial = ov; scene.background = bg; scene.fog = fog;
     for (const o of hid) o.visible = true;
   }
-  DL.bakeMs = performance.now() - t0; DL.bakes++; DL.bakeHidden = hid.length;
+  DL.bakeMs = performance.now() - t0; DL.bakes++; DL.bakeHidden = hid.length; DL.bakeCalls = renderer.info.autoReset ? renderer.info.render.calls : renderer.info.render.calls - c0;   // (the bake's draws)
   TOP.tex.value = RT.texture; TOP.box.value.set(cx - SIZE / 2, cz + SIZE / 2, 1 / SIZE, 0); TOP.y.value.set(top, RANGE, 0.45 * DL.aoK);
   DL.lastBake = { area, x: f.x, z: f.z, y: f.y };
 }
