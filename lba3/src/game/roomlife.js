@@ -27,7 +27,7 @@
 //                 taking cases off the arrivals deck to the gate
 //    The tavern's cellar is a store: nobody lives there (Luc's lines mention it).
 //    The town's states: before the water (chapter 1, chapter 2 until the valves), with it, and the evacuation
-//    (chapter 8), when the rooms empty except for Luc and Mr Bazoo packing (story/interiors.js: place).
+//    (chapter 8), when the rooms empty except for Luc and Mr Bazoo packing and Osk at his held goods (story/interiors.js: place; WAVE7).
 // 2. The spaceports' people (outdoors, the same manager: a resident of a place, simulated in full only near the hero).
 //    SPACEPORT-1 moved the staff and the waiting passengers into the terminals (above); on the decks:
 //    Citadel Spaceport (spaceport.js): chapters 1–3, passenger flights grounded by the project — a stranded traveller on
@@ -267,7 +267,7 @@ export const ROOMS = {
     // (the upper level, BG.UY up, from the back wall to its edge; the front hall below it)
     floors: [{ ...hall(BG, BG.UY), z1: BG.UZ1 - 0.05 }, { ...hall(BG), z0: BG.UZ1 + 0.05 }],
     people: [
-      { id: 'osk', char: 'dallan', tint: '#f0eee0', color: '#c8c090', speed: 0.9, start: 0, stops: [
+      { id: 'osk', char: 'dallan', tint: '#f0eee0', color: '#c8c090', speed: 0.9, start: 0, stays: true, stops: [   // (WAVE7 H-17: he stays in the evacuation, signing for held goods: story/wave7.js)
         D('osk_table', BG.spot.x, BG.spot.z, BG.spot.a, 'browse', [14, 20], { spot: 'clerk' }),   // (the spot: papers at the office table)
         D('osk_belt', BG.belt.x + 0.2, BG.belt.z + BG.belt.hd + 0.6, Math.PI, 'reach', [6, 9], { carry: 'crate' }),   // (a parcel off the belt)
         D('osk_crates', bgCrates.x - 0.8, bgCrates.z, Math.PI / 2, 'put', [5, 7], { carry: null }),
