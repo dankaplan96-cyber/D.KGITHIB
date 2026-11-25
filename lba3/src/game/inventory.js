@@ -215,7 +215,7 @@ export class Inventory {
   }
   // the counters: one small strip, each still selectable for its name and line
   counters() {
-    const g = this.game, h = g.hero, out = [{ id: 'kashes', icon: 'coin', n: h.coins | 0 }, { id: 'clovers', icon: 'clover', n: h.clovers | 0 }];
+    const g = this.game, h = g.hero, out = [{ id: 'kashes', icon: 'coin', n: h.coins | 0 }, { id: 'clovers', icon: 'clover', n: h.cloverMax > 9 ? `${h.clovers | 0} / ${h.cloverMax}` : h.clovers | 0 }];   // (KEYS-CLOVER: with a clover box found, the leaves out of the cap: "7 / 11")
     const nc = g.crystalCount?.() || 0;
     if (nc) out.push({ id: 'crystals', icon: 'crystal', n: nc });
     return out;

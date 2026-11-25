@@ -33,7 +33,11 @@ export const BAGGAGE_PLAN = (() => {
     belt: { x: 1.4 * FX, z: BZ + 0.8, hw: 2.0, hd: 0.5 },          // (the luggage belt along the claim hall's back wall)
     desk, spot: { x: desk.x, z: desk.z - 0.9, a: 0 },              // (the office table; the clerk's spot behind it)
     stool: { x: 0.5 * FX, z: -0.8 * FZ },
-    crates: [[3.2, -3.4], [3.2, -2.5]].map(([x, z]) => ({ x: x * FX, z: z * FZ, s: 0.7 })) };   // (by the office's right wall)
+    crates: [[3.2, -3.4], [3.2, -2.5]].map(([x, z]) => ({ x: x * FX, z: z * FZ, s: 0.7 })),   // (by the office's right wall)
+    // WAVE7 H-17 (story/wave7.js, wave7world.js): the back store, a wire cage against the left wall of the front hall
+    // between the stair's foot and the front door, with the back door through that wall (the back passage out behind
+    // the house) and a roller shutter on its hall side; the cage itself is wave7world.js's (the room's frame, metres)
+    store: { x0: -W / 2, x1: -W / 2 + 2.0, z0: 6.1, z1: 9.0, door: { z: 7.55, w: 1.1, h: 2.2 }, sh0: 7.05, sh1: 8.65 } };   // (clear of the stair's foot, 4.75)
 })();
 
 const RED = () => MAT.paint('#b0302c', 0.45), TEAL = () => MAT.paint('#2f6f74', 0.5), METAL = () => MAT.paint('#cfcdd6', 0.35), DARK = () => MAT.paint('#7c7a86', 0.4);
@@ -79,7 +83,8 @@ export function buildBaggageRoom(scene, physics) {
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4), floor = MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 6);
   const { LX, BZ, UY, UZ1, DOORZ } = P;
   B.shell({ floor, slab: rough, body: stone, low: stone, rail: MAT.iron(), cap, H, t: 0.55, dado: 1.0, rimH: 0.45, rimMat: rough, W, D,
-    left: [{ at: DOORZ, w: 1.4, h: 2.5, y0: 0, kind: 'door' }, { kind: 'window', at: -8.4 * FZ, w: 0.8, h: 0.9, y0: UY + 1.1 }] });
+    left: [{ at: DOORZ, w: 1.4, h: 2.5, y0: 0, kind: 'door' }, { kind: 'window', at: -8.4 * FZ, w: 0.8, h: 0.9, y0: UY + 1.1 },
+      { at: P.store.door.z, w: P.store.door.w, h: P.store.door.h, y0: 0, kind: 'door' }] });   // (WAVE7: the back store's back door; its leaf is wave7world.js's)
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'baggage-out' });
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
 
@@ -126,7 +131,8 @@ export function buildBaggageRoom(scene, physics) {
   for (const c of P.crates) B.put(c.x, c.z, 0, (kk) => crate(kk, c.s), { y: UY });
   R.npcSpots = { clerk: { x: B.cx + P.spot.x, z: B.cz + P.spot.z, a: P.spot.a } };
   // --- the front hall: barrels, a small railed platform with a lamp, the black arrows on the floor, the notice board
-  for (const [x, z] of [[-2.7, 5.4], [-2.0, 5.9]]) B.put(x * FX, z * FZ, 0, (kk) => drum(kk));
+  // (WAVE7: the two drums stood where the back store's cage is now: by the front rim, right of the porter's cart)
+  for (const [x, z] of [[2.55, 11.4], [3.3, 11.55]]) B.put(x, z, 0, (kk) => drum(kk));
   const PX = 2.5 * FX, PZ = 4.2 * FZ;
   k.add(rbox(2.6, 0.9, 2.6, 0.02), stone, PX, 0.45, PZ); k.add(rbox(2.64, 0.08, 2.64, 0.02), cap, PX, 0.88, PZ);
   B.col(PX, PZ, 1.3, 1.3, 0.9);
@@ -152,7 +158,7 @@ export function buildBaggageRoom(scene, physics) {
   B.put(W / 2 - 0.55, 7.4, 0.2, (kk) => boxStack(kk, { n: 3, seed: 15, w: 0.6 }));
   B.put(W / 2 - 0.6, 10.6, -0.3, (kk) => boxStack(kk, { n: 2, seed: 16, w: 0.65 }));
   B.put(0.9, 4.3, 0.5, (kk) => sackPile(kk, { seed: 11 }));
-  k.at(LX + 0.04, 2.2, 7.5, Math.PI / 2, () => hanging(k, { w: 1.0, h: 1.2, bands: ['#b0302c', '#e8dcc0', '#2f6f74', '#e8dcc0', '#b0302c'] }));
+  k.at(LX + 0.04, 2.2, 11.3, Math.PI / 2, () => hanging(k, { w: 1.0, h: 1.2, bands: ['#b0302c', '#e8dcc0', '#2f6f74', '#e8dcc0', '#b0302c'] }));   // (WAVE7: past the front door; the back door is where it hung)
   B.light('#ffe8c8', 5.5, 15, 0.5, UY + 3.0, -7.0 * FZ); B.light('#ffe8c8', 5, 14, 0.5, UY + 3.0, -1.5 * FZ); B.light('#ffe8c8', 5.5, 15, 0.0, 3.8, 6.0 * FZ);
   return { baggage: B.finish() };
 }

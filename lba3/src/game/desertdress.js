@@ -15,6 +15,7 @@
 // tents, barrels, drums, the table, the bench and the pipe rack block (things you walk round); the rug, tarps,
 // lanterns and tools do not.
 import * as THREE from 'three';
+import { crystalMats, gemGeo } from './crystallook.js';
 import { Plume } from '../engine/softfx.js';
 import { ctex, cached, bbox, cyl, lathe, Batch, rod, frame, tint } from './kit.js';
 
@@ -125,7 +126,6 @@ const barrelGeo = cached('bar', () => lathe([[0.0, 0], [0.29, 0], [0.34, 0.16], 
 const potGeo = cached('pot', () => lathe([[0.0, 0], [0.16, 0.02], [0.22, 0.14], [0.22, 0.3], [0.2, 0.31], [0.0, 0.28]], 12, 0));
 const flameGeo = cached('flame', () => new THREE.ConeGeometry(0.2, 0.62, 6).translate(0, 0.31, 0));
 const rockG = cached('hearthStone', () => bbox(0.26, 0.17, 0.2, 0.04, 1));
-const octG = cached('sample', () => new THREE.OctahedronGeometry(1, 0).scale(0.45, 1, 0.45));
 const tarpGeo = (w, d, hb, hf) => cached(`tarp${w},${d},${hb},${hf}`, () => {   // sagging, high at the back (z -), low at the front
   const NU = 6, NV = 5, pos = [], uv = [], idx = [];
   for (let j = 0; j <= NV; j++) for (let i = 0; i <= NU; i++) {
@@ -292,9 +292,10 @@ function kit({ group, H, col, ox, oz, updaters, y0 }) {
     },
     sampleTray(x, y, z, ry = 0) {
       K.add(bbox(0.5, 0.04, 0.3, 0.01, 1), wood, x, y + 0.02, z, 0, ry, 0);
-      const cm = cached('sampleM', () => new THREE.MeshStandardMaterial({ color: '#bfe8ff', roughness: 0.2, emissive: '#3aa8d8', emissiveIntensity: 0.8, flatShading: true }));
+      const cm = crystalMats('cyan');
       const f = frame(x, z, ry);
-      for (const [lx, lz, s] of [[-0.14, 0, 0.09], [0.0, 0.05, 0.12], [0.14, -0.04, 0.08]]) { const [qx, qz] = f(lx, lz); K.add(octG, cm, qx, y + 0.04 + s, qz, 0, lx * 8, 0.2, s, s, s); }
+      // (CRYSTALS-ONE-LOOK: the well's faceted crystals, shell + core: crystallook.js)
+      for (const [lx, lz, s] of [[-0.14, 0, 0.09], [0.0, 0.05, 0.12], [0.14, -0.04, 0.08]]) { const [qx, qz] = f(lx, lz), v = Math.round(lx * 50); K.add(gemGeo(v, 1, 0.34), cm.shell, qx, y + 0.04 + s, qz, 0, lx * 8, 0.2, s, s, s); K.add(gemGeo(v, 1, 0.34, true, cm.shell.userData.coreTint), cm.core, qx, y + 0.04 + s, qz, 0, lx * 8, 0.2, s, s, s); }
     },
     tick(dt, t) { for (const m of flames) { const k = m.userData.k, f = 1 + 0.18 * Math.sin(t * (9 + k * 4) + k * 2) + 0.1 * Math.sin(t * 17 + k); m.scale.y = f * (k ? 0.75 : 1); m.rotation.y = t * 1.5; } },
   };

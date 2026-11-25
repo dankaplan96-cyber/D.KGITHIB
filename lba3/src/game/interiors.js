@@ -9,6 +9,7 @@ import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, soft, 
 import * as P from './props.js';
 import { dressHomeLife } from './homelife.js';
 import { mergeStatic } from '../engine/merge.js';
+import { crystalShell, crystalCore, growCrystal, crystalCluster } from './crystallook.js';
 import { dressWorkshop } from './workshoplife.js';
 import { windowViewMaterial, windowViewPlane, viewPlaneGeo, TILES as VIEW_TILES } from './windowviews.js';
 
@@ -994,60 +995,8 @@ export function blueRocks() {
     bounds: { min: [-0.6, -0.1, -0.6], max: [0.6, 0.65, 0.6] }, cell: 0.025,
   });
 }
-// ---- faceted crystal (WELL-POLISH): a six-sided prism with a pointed cap, flat-shaded (every facet its own normal),
-// unit radius and height (the base ring at y 0, the cap's apex at y 1). Four shapes (a straight point, two cut at an
-// angle, a stubby one); scaled per crystal. Non-indexed, so Kit merges them into one draw call per material.
-const _crystalGeos = [];
-function crystalGeo(v = 0) {
-  v = ((v % 4) + 4) % 4;
-  if (_crystalGeos[v]) return _crystalGeos[v];
-  const h = (n) => { const s = Math.sin((v + 1) * 12.9898 + n * 78.233) * 43758.5453; return s - Math.floor(s); };
-  const N = 6, shoulder = [0.66, 0.74, 0.7, 0.82][v], apexX = [0, 0.32, -0.25, 0.08][v], apexZ = [0, 0.1, 0.22, -0.12][v];
-  const bot = [], top = [];
-  for (let i = 0; i < N; i++) {
-    const a = (i / N) * Math.PI * 2 + (h(i) - 0.5) * 0.26, r = 0.86 + h(i + 9) * 0.14;
-    bot.push([Math.cos(a) * r, 0, Math.sin(a) * r]);
-    top.push([Math.cos(a) * r * 0.9, shoulder + (h(i + 3) - 0.5) * 0.06, Math.sin(a) * r * 0.9]);
-  }
-  const apex = [apexX, 1, apexZ], pos = [];
-  const tri = (a, b, c) => {
-    const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
-    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
-    const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3 - 0.45, cz = (a[2] + b[2] + c[2]) / 3;
-    if (nx * cx + ny * cy + nz * cz < 0) [b, c] = [c, b]; // (outward)
-    pos.push(...a, ...b, ...c);
-  };
-  for (let i = 0; i < N; i++) {
-    const j = (i + 1) % N;
-    tri(bot[i], bot[j], top[j]); tri(bot[i], top[j], top[i]); // the side
-    tri(top[i], top[j], apex);                                // the cap
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.computeVertexNormals(); // (non-indexed: one normal per facet)
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array((pos.length / 3) * 2), 2));
-  return (_crystalGeos[v] = g);
-}
-// the two materials of a crystal: a translucent faceted shell (the existing lit, transparent standard material, so no
-// new shader) and an opaque emissive core inside it, which is the "inner glow" (unlit basic, brightened and pulsed per frame)
-const crystalShell = (c, e, kk = 0.4, op = 0.72) => { const m = new THREE.MeshStandardMaterial({ color: c, emissive: e, emissiveIntensity: kk, roughness: 0.1, metalness: 0.2, transparent: true, opacity: op, depthWrite: false }); m.userData.noShadow = true; return m; };
-const crystalCore = (c) => { const m = new THREE.MeshBasicMaterial({ color: c }); m.userData.noShadow = true; m.userData.base = new THREE.Color(c); return m; };
-// one crystal: its shell and the core inside it, rooted at (x, y, z), leaning `tilt` towards the heading `yaw`
-function growCrystal(k, shell, core, x, y, z, yaw, tilt, h, r, v, tips) {
-  k.add(crystalGeo(v), shell, x, y, z, yaw, { rx: tilt, sx: r, sy: h, sz: r });
-  k.add(crystalGeo(v + 1), core, x, y, z, yaw, { rx: tilt, sx: r * 0.5, sy: h * 0.84, sz: r * 0.5 });
-  if (tips && h > 0.7) tips.push([x + Math.sin(tilt) * Math.sin(yaw) * h, y + Math.cos(tilt) * h, z + Math.sin(tilt) * Math.cos(yaw) * h]);
-}
-// a cluster: a tall one in the middle, shorter ones fanned round it. `heading` is where it leans (towards the room),
-// `spread` how far the others fan round that heading (π: all round, for a floor cluster).
-function crystalCluster(k, shell, core, x, y, z, { n = 6, s = 1, heading = 0, spread = Math.PI, lean = 0.22, seed = 0, tips } = {}) {
-  const h = (i) => { const q = Math.sin((seed + 1) * 4.37 + i * 91.7) * 43758.5453; return q - Math.floor(q); };
-  growCrystal(k, shell, core, x, y, z, heading, lean * 0.6, s * (1.25 + h(0) * 0.35), s * 0.27, seed, tips);
-  for (let i = 1; i < n; i++) {
-    const a = heading + (h(i) * 2 - 1) * spread, d = s * (0.18 + h(i + 20) * 0.3), len = s * (0.45 + h(i + 40) * 0.7);
-    growCrystal(k, shell, core, x + Math.sin(a) * d, y - 0.05, z + Math.cos(a) * d, a, lean + 0.12 + h(i + 60) * 0.42, len, s * (0.13 + h(i + 80) * 0.1), seed + i, tips);
-  }
-}
+// (the well's faceted crystals — crystalGeo, crystalShell, crystalCore, growCrystal, crystalCluster — are the whole game's
+//  crystals now: src/game/crystallook.js, CRYSTALS-ONE-LOOK)
 
 function buildWell(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'well', 1100, 0);

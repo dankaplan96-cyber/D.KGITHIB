@@ -186,8 +186,33 @@ check('A12 a story person (not minor) still opens the full talk: the box (or the
 await shot('p116-citadel-story-box');
 await ev(() => { P.settle(); });
 // the rule's other side: a long line or two sentences keep the box
-r = await ev(() => { const S = game.remarks.constructor.short; return { one: S('Lovely day for it.'), ell: S('Well... the pipes again.'), two: S('The water is back. Hot, too!'), three: S('Late. Always late. Why I walk.'), long: S('x'.repeat(81)), twoStrict: S('The water is back. Hot, too!', null, 1), ellStrict: S('Well... the pipes again.', null, 1) }; });
-check('A13 the rule: a line of ≤ 80 characters and ≤ 2 sentences is a remark ("..." ends none); three sentences or over 80 characters keep the box; ?remarks=strict: one sentence', r.one && r.ell && r.two && !r.three && !r.long && !r.twoStrict && r.ellStrict, r);
+r = await ev(() => { const S = game.remarks.constructor.short; return { one: S('Lovely day for it.'), ell: S('Well... the pipes again.'), two: S('The water is back. Hot, too!'), three: S('Late. Always late. Why I walk.'), four: S('Late. Always late. Why I walk. Ask Maro.'), at95: S('x'.repeat(95)), long: S('x'.repeat(96)), twoStrict: S('The water is back. Hot, too!', null, 1), ellStrict: S('Well... the pipes again.', null, 1) }; });
+check('A13 the rule (TESTER-FIXES): a line of ≤ 95 characters and ≤ 3 sentences is a remark ("..." ends none); four sentences or over 95 characters keep the box; ?remarks=strict: one sentence', r.one && r.ell && r.two && r.three && !r.four && r.at95 && !r.long && !r.twoStrict && r.ellStrict, r);
+// TESTER-FIXES (the desktop's 68.1, picture hw-68/18): of four residents by the square only Oda's line went overhead; Brix,
+// Garrick and Dot opened the box. Each of the four spoken to by the key four times (their lines cycle): every time over
+// the head, never the box; and their whole line sets (the _dry/_work/_n lines too) by the rule
+r = await ev(() => {
+  const G = game, R = G.remarks, out = {};
+  for (const id of ['oda', 'brix', 'garrick', 'dot']) {
+    const n = G.npcs.find((x) => x.def.id === id);
+    if (!n?.present) { out[id] = 'absent'; continue; }
+    const got = [];
+    for (let k = 0; k < 4; k++) {
+      if (!OR.front(n)) { got.push('no-prompt'); P.settle(); continue; }
+      OR.press(); got.push(R.cur?.n === n ? 'remark' : (R.log.at(-1)?.why || G.state)); R.close('test'); P.settle();
+    }
+    out[id] = got;
+  }
+  return out;
+});
+const SETS = await ev(async () => {
+  const { t } = await import('./src/game/i18n.js');
+  const S = game.remarks.constructor.short, out = {};
+  for (const id of ['oda', 'brix', 'garrick', 'dot']) { const keys = Object.keys((await import('./src/game/i18n.js')).STR.en).filter((k) => k.startsWith('rs_' + id + '_')); out[id] = keys.filter((k) => /_(dry|\d|work|home)$/.test(k) && !S(t(k))).map((k) => k + ': ' + t(k)); out[id + '_state'] = keys.filter((k) => !/_(dry|\d|work|home)$/.test(k) && !S(t(k))).map((k) => k); }
+  return out;
+});
+check('A15 Oda, Brix, Garrick and Dot by the square (the desktop\'s four): each spoken to four times answers over its head every time (no box), and none of their idle lines (_dry, _0–_2, _work, _home) keeps the box by the rule (the longer story-state lines, _hot/_gone, listed)', Object.values(r).every((v) => Array.isArray(v) && v.every((w) => w === 'remark')) && Object.entries(SETS).every(([k, l]) => /_state$/.test(k) || !l.length), { talks: r, longLines: SETS });
+await shot('p116-citadel-four');
 // the sweep: who is minor here (by module) and every minor resident's generic line set by the rule
 const SW = await ev(() => {
   const by = {};

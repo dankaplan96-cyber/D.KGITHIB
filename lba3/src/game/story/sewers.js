@@ -140,7 +140,7 @@ export class SewerLife extends ChapterBase {
       consider(dist(G.globe.x, G.globe.z), 1.3, { kind: 'swglobe', label: 'p_look' });
     }
     if (R.id === 'tralucave' && R.cache) {
-      consider(dist(R.cache.case.x, R.cache.case.z), 1.2, { kind: 'swcase', label: 'p_look' });
+      if (!f.w4r_card && !f.w4r_case) consider(dist(R.cache.case.x, R.cache.case.z), 1.2, { kind: 'swcase', label: 'p_look' });   // (WAVE4 H-11: once Raph's postcard is read, the case is taken: story/wave4.js)
       if (!f.sw_cache) consider(dist(R.cache.crate.x, R.cache.crate.z), 1.2, { kind: 'swcache', label: 'p_open' });
     }
   }

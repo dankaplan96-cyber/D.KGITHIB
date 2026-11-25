@@ -18,6 +18,9 @@ export const steps = [
     let n = 0; for (; n < 3 && !S.target.done; n++) { P.go(S.plate.x, S.plate.z, { tol: 0.15, maxT: 20, fight: false }); P.release(); G.step(0.8); P.tap('F1'); P.tap('KeyF', 0.05); G.step(2.0); P.settle(); }
     SWAIT(100); return { throws: n, lit: S.lit, bank: G.flags.sh_bank, fail: G.flags.sh_bank ? null : 'test receiver' }; }],
   ['down to the machinery', () => P.exitTo('c3-deep')],
+  // (EXPANSION WAVE 1, H-1: Baldino's relays. The first bracket, by the way in: the tunnel's lamp green, the shutter's red)
+  ['a relay by the way in (H-1)', () => { const G = game, m = G.story._rl?.marks?.D1; if (!m) return { r: 'no relays' }; SWAIT(60); P.use(m.x, m.z, { near: 0.9, kind: 'rl_set' }); SWAIT(60);
+    return { at: G.flags.dx_relay_at ?? null, lamps: m.relay.visible ? m.lamps.map((l) => l.m.color.getHexString()).join() : 'none', fail: /D1/.test(G.flags.dx_relay_at || '') ? null : 'relay D1' }; }],
   ['the cooling diagram', () => { const D = game.room; const r = P.use(D.diagram.x, D.diagram.z); return { ...r, diagram: game.flags.c3_diagram, fail: game.flags.c3_diagram ? null : 'diagram' }; }],
   ['valve A', () => { const v = game.room.valves.find((x) => x.id === 'A'); P.use(v.x, v.z); P.settle(); return { open: v.open }; }],
   ['the ball switch (ladder)', () => { const tg = game.room.ballTargets.find((x) => x.ballSwitch); return { done: P.hitTarget(tg, 3.5, { run: false, maxT: 40 }), ladder: game.flags.c3_ladder, fail: game.flags.c3_ladder ? null : 'ladder' }; }],
@@ -25,13 +28,19 @@ export const steps = [
   // (CAMPAIGN-9: from the stair's foot the damper's answer is in view: it is waited for, as a player who has seen the steam;
   //  up the lowered stair, east along the quiet end of the catwalk to the knocker, two knocks, her reply; then west to valve C)
   ['her answer, the knocker, valve C on the catwalk', () => { const G = game, f = G.flags, v = G.room.valves.find((x) => x.id === 'C'), L = G.room.ladder, K = G.room.knocker, h = G.hero;
-    P.go(L.x, L.z - 0.2, { tol: 0.4 }); const w0 = f.sh_knock ? 0 : SWAIT(300, () => !!f.sh_knock);
-    P.go(L.x, L.z - 5.4, { tol: 0.4 });
+    SWAIT(60); P.go(L.x, L.z - 0.2, { tol: 0.4 }); const w0 = SWAIT(300, () => !!f.sh_knock);   // (her answer may already be talking: wait it out either way)
+    P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 });
     let knocks = 0; for (let k = 0; k < 3 && f.sh_reply !== true && f.sh_reply !== 'past'; k++) { P.use(K.x, K.z, { near: 0.7, kind: 'sh_knock' }); P.tap('KeyE', 0.05); for (let w = 0; w < 60 && (h.steer || h.actT > 0); w++) G.step(0.05); knocks += 2; SWAIT(200, () => !G.story._sh?.msg && !G.story._sh?.busy); SWAIT(120); }
     P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle();
     // (PUZZLES P-C phase 2, changed on purpose: the drain was found open, so both feeds starve the drive; the next step shuts it)
     return { waited: w0, knocks, knock: f.sh_knock ?? null, reply: f.sh_reply ?? null, hp: h.hp, open: v.open, y: +h.pos.y.toFixed(2), starve: f.c3_starve ?? null, fail: f.c3_starve ? null : 'no starve' }; }],
   ['the drive starving: down to the drain (B), shut: the loop closes', () => { const v = game.room.valves.find((x) => x.id === 'B'); P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle(); return { b: v.open, cooled: game.flags.c3_cooled, fail: game.flags.c3_cooled ? null : 'cooling' }; }],
+  // (H-1: the red lamp said the shutter is out of sight from the floor: the relay up to the catwalk's east post)
+  ['the relay to the catwalk post (H-1)', () => { const G = game, RL = G.story._rl; if (!RL?.marks?.D2) return { r: 'no relays' }; const a = RL.marks.D1, b = RL.marks.D2;
+    if (RL.at().includes('D1')) { P.use(a.x, a.z, { near: 0.9, kind: 'rl_take' }); SWAIT(60); }
+    const L = G.room.ladder; P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 });   // (up the stair to the catwalk first: the bracket is over it)
+    P.use(b.x, b.z, { near: 0.9, kind: 'rl_set' }); SWAIT(100); const ok = !!RL.goodHere('c3deep');
+    return { at: G.flags.dx_relay_at ?? null, ok, hand: RL.hand(), fail: ok ? null : 'relay D2' }; }],
   // (CAMPAIGN-9: the shutter starts down as he reaches it and her crystal holds it: the line read, then through)
   ['the galleries (the shutter held)', () => { let r = P.exitTo('c3-gallery'); SWAIT(100); if (game.room?.id !== 'c3gallery') r = P.exitTo('c3-gallery'); return { ...r, held: game.flags.sh_held ?? null, room: game.room?.id, fail: game.room?.id === 'c3gallery' ? null : 'galleries' }; }],
   // (the crew's supply crates: a hop beside one, the heart that comes out; a player who is hurt rummages them — the bot only when
@@ -73,6 +82,9 @@ export const steps = [
     SWAIT(60); return { tries, throws, third: !!f.c3_pillar2, iso, x: +h.pos.x.toFixed(1), fail: far() && f.c3_pillar2 ? null : 'stones' };
   }],
   ['the supply crates (far shelf)', () => ({ r: 'skipped (optional)', hp: game.hero.hp })],
+  // (H-1: on the far shelf, the bracket beside the old arch: both lamps green)
+  ['the relay by the old arch (H-1)', () => { const G = game, RL = G.story._rl, m = RL?.marks?.G3; if (!m) return { r: 'no relays' }; P.use(m.x, m.z, { near: 0.9, kind: 'rl_set' }); SWAIT(100); const ok = !!RL.goodHere('c3gallery');
+    return { at: G.flags.dx_relay_at ?? null, ok, fail: ok ? null : 'relay G3' }; }],
   // (CAMPAIGN-9: the arch behind him grows shut first; then her words, which say why; the checkpoint)
   ['Sendell (the arch shut behind him)', () => { const e = game.room?.exits?.find((x) => x.to === 'c3-sendell'); if (e) P.through(e.x, e.z, { fight: false }); SWAIT(200, () => !!game.flags.c3_sendell); P.settle(); return { shut: game.flags.sh_shut ?? null, sendell: game.flags.c3_sendell, hp: game.hero.hp, fail: game.flags.c3_sendell ? null : 'sendell' }; }],
   // (the door from Sendell's chamber ends chapter 11: chapter 12's card, then Vesk's scene and the fight)

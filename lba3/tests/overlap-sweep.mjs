@@ -27,6 +27,7 @@
 // findings (the game camera near, from above). GAME_URL, BOOT_TIMEOUT as the other tests.
 // Run: BOOT_TIMEOUT=900000 GAME_URL=http://localhost:8123/ node tests/overlap-sweep.mjs   (~25 min quiet; Automated runtime only)
 import { launch, open, menu, checker, report } from './lib/boot.mjs';
+import { serveLocal } from './lib/serve.mjs';   // (SERVE=1: this checkout's files by request routing, no http.server)
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -42,7 +43,7 @@ const BATCHES = [
   ['citadel', 'house', 'well', 'office', 'projoffice', 'control', 'lighttop', 'cellar', 'tavern', 'tavcellar', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse',
     'nellhouse', 'pumproom', 'baggage', 'tralucave', 'terminal', 'sewer', 'sewervault', 'sewerglobe', 'wtent', 'school', 'asylum', 'bumaze', 'arena'],
   ['zeelich', 'workshop', 'upper', 'council', 'archive', 'zterminal', 'zh_*', 'valves', 'otrbar', 'otrhotel', 'celtemple'],
-  ['isle_*', 'ih_*'],
+  ['isle_*', 'ih_*', 'wm_*', 'kc_*'],   // (wm_*: WAVE6 H-16's deep seam under the Platform; kc_*: KEYS-CLOVER's four rooms)
   ['desert', 'condA', 'condB', 'butemple', 'hamalayi', 'obsv', 'ham_*', 'c3shaft', 'c3deep', 'c3gallery', 'c3sendell', 'c3core'],
   ['ballastra', 'bl_shed', 'bl_arches', 'bl_oren', 'bl_mags', 'bl_pump', 'bl_gardens', 'bl_tunnel', 'bl_kiln'],
 ];
@@ -192,7 +193,8 @@ function findingsOf(r) {
 
 // ------------------------------------------------------------------ the ray sweep, per batch
 async function runBatch(list) {
-  const { browser, page } = await launch({ width: 960, height: 540 });
+  const { browser, context, page } = await launch({ width: 960, height: 540 });
+  if (process.env.SERVE) await serveLocal(context);
   page.setDefaultTimeout(3600000);
   try {
     await open(page, '?nocine');

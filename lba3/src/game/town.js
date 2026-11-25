@@ -4,6 +4,7 @@
 // leave around: benches, laundry, barrels, tools, a radio on a sill,
 // potted plants, fenced gardens and lamps.
 import * as THREE from 'three';
+import { gemGeo, linkedCore, asShell } from './crystallook.js';
 import { buildHouse } from './architecture.js';
 import { mergeStatic } from '../engine/merge.js';
 import { occOf } from '../engine/occlude.js';
@@ -310,13 +311,14 @@ const HEAT_POST_OUT = 0.45, HEAT_POST_SIDES = [1.45, 1.85, -1.45, -1.85], HEAT_P
 function heatPosts(parent, W, spots) {
   const { H, physics } = W;
   const teal = mat('#2c7f86', 0.45, { metalness: 0.35 }), brass = mat('#c89a3c', 0.35, { metalness: 0.6 });
-  const crystal = new THREE.MeshStandardMaterial({ color: '#6a4a3a', roughness: 0.25, emissive: '#ff9a3c', emissiveIntensity: 0, flatShading: true });
+  // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a shell over a core that warms with it; the project's warm tint: crystallook.js)
+  const crystal = asShell(new THREE.MeshStandardMaterial({ color: '#6a4a3a', roughness: 0.25, emissive: '#ff9a3c', emissiveIntensity: 0 }), 0.88), crystalCore = linkedCore(crystal);
   const geo = {
     base: new THREE.CylinderGeometry(0.2, 0.24, 0.16, 8),
     pipe: new THREE.CylinderGeometry(0.075, 0.075, 1.05, 10),
     collar: new THREE.CylinderGeometry(0.105, 0.105, 0.07, 12),
     cup: new THREE.CylinderGeometry(0.17, 0.09, 0.14, 8, 1, true),
-    gem: new THREE.OctahedronGeometry(0.15, 0).scale(1, 1.5, 1),
+    gem: gemGeo(0, 0.225, 0.095), gemCore: gemGeo(0, 0.225, 0.095, true),
   };
   const posts = [], hp = new THREE.Group(); parent.add(hp);
   for (const [x, z] of spots) {
@@ -326,7 +328,7 @@ function heatPosts(parent, W, spots) {
     put(g, geo.pipe, teal, 0, 0.66, 0);
     for (const cy of [0.2, 0.62, 1.12]) put(g, geo.collar, brass, 0, cy, 0);
     const cup = put(g, geo.cup, brass, 0, 1.24, 0); cup.material = brass; cup.castShadow = false;
-    put(g, geo.gem, crystal, 0, 1.4, 0, 0, false);
+    put(g, geo.gem, crystal, 0, 1.4, 0, 0, false); put(g, geo.gemCore, crystalCore, 0, 1.4, 0, 0, false);
     physics.add({ type: 'cyl', x, z, r: 0.2, top: y + 1.95, noStand: true, seeThrough: true });
     posts.push({ x, y: y + 1.82, z });
   }

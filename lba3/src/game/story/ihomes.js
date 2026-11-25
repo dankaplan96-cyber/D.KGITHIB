@@ -17,11 +17,11 @@ const ROOMS = new Set(IHOME_IDS);
 // (m from the door's sill: the trigger's middle and its reach (to 1.3 m out and 0.85 m either side: a portico's columns or
 //  a step keep him that far from some sills); where he comes out, just past its reach)
 const IN = 0.45, REACH = 0.85, OUT = 1.45;
-// (WORKPLAN 9.11 Wave C item 5: three doors stand on patches across the clouds, out of reach on foot — Otringal's quay
-//  cargo store in the barges' yard, its dock worker's house on the west quay, Mosquibee's honey room on its west islet.
-//  No crossing is built for them; where the walk from the island's shuttle toward each one meets the cloud gap, a look
-//  says so: FAR_LOOK_R m round that spot on the near shore)
-const FAR = { 'otringal-40-43': 'ih_far_yard', 'otringal--49-55': 'ih_far_quay', 'mosquibee--15-28': 'ih_far_islet' }, FAR_LOOK_R = 2.6;
+// (WORKPLAN 9.11 Wave C item 5: two doors stand on patches across the clouds, out of reach on foot — Otringal's quay
+//  cargo store in the barges' yard, its dock worker's house on the west quay. Where the walk from the island's shuttle
+//  toward each one meets the cloud gap, a look says so: FAR_LOOK_R m round that spot on the near shore. Mosquibee's honey
+//  room on its west islet was the third: its plank bridge is walked since BRIDGES, physics.js bridgeTreads)
+const FAR = { 'otringal-40-43': 'ih_far_yard', 'otringal--49-55': 'ih_far_quay' }, FAR_LOOK_R = 2.6;
 
 export class IsleHomes extends ChapterBase {
   get R() { return this.game.regions; }
@@ -82,7 +82,7 @@ export class IsleHomes extends ChapterBase {
     for (const d of this.ours(rid) || []) {
       if (FAR[d.id]) { const s = this.farSpot(g.room, d); if (s && Math.abs(y - s.y) < 2.5) consider(dist(s.x, s.z), FAR_LOOK_R, { kind: 'ihfar', key: FAR[d.id], label: 'p_look' }); }
       if (Math.abs(y - d.y) >= 1.6) continue;
-      if (EXCEPT.has(d.id)) consider(dist(d.x, d.z), 1.6, { kind: 'ihshut', key: IHOMES[d.id].ex, label: 'p_door' });
+      if (EXCEPT.has(d.id)) { if (!this.story.kc?.opened(d.id)) consider(dist(d.x, d.z), 1.6, { kind: 'ihshut', key: IHOMES[d.id].ex, label: 'p_door' }); }   // (KEYS-CLOVER: the pump house, once its small lock is open, is story/keysclover.js's door)
       else { const k = this.shutNow(d.id); if (k) consider(dist(d.x, d.z), 1.6, { kind: 'ihshut', key: k, label: 'p_door' }); }
     }
   }

@@ -136,7 +136,7 @@ export class Arsenal extends ChapterBase {
       const clover = new THREE.Group(); clover.position.set(0, 0.5, 0.42); grp.add(clover);
       for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2 + 0.78; const l = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), MAT.flat('#5fe36a', 0.5)); l.position.set(Math.cos(a) * 0.06, Math.sin(a) * 0.06, 0); clover.add(l); }
       GL.colliders?.push?.(g.physics.add({ type: 'cyl', x: GL.center.x + at.x, z: GL.center.z + at.z - 0.3, r: 0.95, top: at.y + 1.3, noStand: true }));
-      this.nooks.push({ id: 'gal', room: 'c3gallery', show: clover, ...pick(world(GL, grp)), give: () => { const h = g.hero; h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); } });
+      this.nooks.push({ id: 'gal', room: 'c3gallery', show: clover, ...pick(world(GL, grp)), give: () => { const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1); g.hud.toast('toast_clover_found'); } });
     }
     // ---- Baldino's hop-pack on its peg post by the workshop door (EQ-1)
     const WS = R.workshop;
@@ -421,7 +421,7 @@ export class Arsenal extends ChapterBase {
         g.hero.actAt(S.x, S.z, 'use', 0.6, () => {
           if (f.a_jetTin) return;
           f.a_jetTin = true; S.tin.visible = false;
-          const h = g.hero; h.clovers = Math.min(9, h.clovers + 1); h.coins += 10;
+          const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1); h.coins += 10;
           g.audio.play('chest');
           hero(['a_jet_tin'], () => { g.hud.toast('a_toast_kashes', { n: 10 }); g.save(false); });
         }, 0.3);
@@ -442,7 +442,7 @@ export class Arsenal extends ChapterBase {
     if (!o.move.glove) { g.impact(B.x, g.hero.pos.y + 1, B.z, 'wood', 'blocked'); g.hud.toast('a_boards_thud'); return true; }
     f.a_boards = true; B.boards.visible = false;
     g.audio.play('break'); g.particles.burst(B.x, g.hero.pos.y + 0.9, B.z, '#8a6430', 26, 4); g.camRig.shake(0.25);
-    const h = g.hero; h.clovers = Math.min(9, h.clovers + 1); h.coins += 12;
+    const h = g.hero; h.clovers = Math.min(h.cloverMax, h.clovers + 1); h.coins += 12;
     this.chain([['hero', 'a_boards_cache']], () => { g.hud.toast('a_toast_kashes', { n: 12 }); g.save(false); });
     return true;
   }

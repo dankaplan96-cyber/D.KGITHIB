@@ -129,6 +129,7 @@ export class Kit2 extends ChapterBase {
     if (this.tube && this.f.e2_hide && !this.f.e2_tube) out.push({ id: 'tube', room: 'house', x: this.tube.x, y: this.tube.y, z: this.tube.z });
     if (this.tin && !this.f.e2_tin) out.push({ id: 'tin', room: 'cellar', x: this.tin.x, y: this.tin.y, z: this.tin.z });
     out.push(...(this.story.hostel?.hums() || []));   // (ASYLUM-2: the humming crate in Vesk's store, story/hostel.js)
+    out.push(...(this.story.depth?.hums() || []));    // (DES-1: the drift where the figures look, story/depth.js)
     return out;
   }
   journal() {
@@ -206,8 +207,8 @@ export class Kit2 extends ChapterBase {
           if (f.e2_tin) return;
           f.e2_tin = true; this.applyFlags(); T.tin.visible = true;
           g.audio.play('chest');
-          const full = h.clovers >= 9;
-          if (full) h.coins += 10; else h.clovers = Math.min(9, h.clovers + 1);
+          const full = h.clovers >= h.cloverMax;
+          if (full) h.coins += 10; else h.clovers = Math.min(h.cloverMax, h.clovers + 1);
           hero(['e2_tin_lift', full ? 'e2_tin_kashes' : 'e2_tin_clover'], () => { T.tin.visible = false; if (full) g.hud.toast('a_toast_kashes', { n: 10 }); else g.hud.toast('toast_clover_found'); g.hud.stats?.(h); g.save(false); });
         }, 0.3);
         return true;

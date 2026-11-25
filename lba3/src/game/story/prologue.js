@@ -12,6 +12,7 @@
 // At the bottom: warm water, crystals that weren't there before, and the magic ball pulled toward the wall. Then
 // Sendell speaks. Every step is a flag (saved); a save from before CH1-LONGER plays the steps it hasn't passed.
 import * as THREE from 'three';
+import { crystalGem, linkedCore, asShell } from '../crystallook.js';
 import { POI } from '../world.js';
 import { pierOff, pierAng } from '../island.js';
 import { t, STR } from '../i18n.js';
@@ -195,14 +196,15 @@ export class Prologue extends ChapterBase {
     });
     mergeStatic(grp, { recolor: true });
     // the warm stones: three small crystals wedged on the top rock, the near one the one he takes
-    const R = this.bay[2], glow = new THREE.MeshStandardMaterial({ color: '#d8fbff', emissive: '#56d8ff', emissiveIntensity: 1.2, roughness: 0.25 });
+    // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a translucent shell over a core that glows with it: crystallook.js)
+    const R = this.bay[2], glow = asShell(new THREE.MeshStandardMaterial({ color: '#d8fbff', emissive: '#56d8ff', emissiveIntensity: 1.2, roughness: 0.25 }), 0.8), glowCore = linkedCore(glow);
     // (ROTATE-STALL: `keep` — their glow pulses (update, below) and the near one is taken — so the draw batches leave them
     //  out: batched, they left their 48 m cell on the first pulse after every arrival in Citadel and the cell was rebuilt
     //  in view, then rejoined at the next arrival (drawbatch.js readmit) and left again. Drawn on their own, as they were
     //  after leaving: the same picture)
     const stones = new THREE.Group(); stones.userData.keep = true; W.root.add(stones);
     const take = new THREE.Group(); take.userData.keep = true; W.root.add(take);
-    const crystal = (parent, dx, dz, s, rx, rz) => { const c = new THREE.Mesh(new THREE.OctahedronGeometry(s, 0), glow); c.scale.y = 1.7; c.position.set(R.x + dx, R.top + s * 0.9, R.z + dz); c.rotation.set(rx, dx * 3, rz); parent.add(c); };
+    const crystal = (parent, dx, dz, s, rx, rz) => { const c = crystalGem(glow, glowCore, { v: Math.round(dx * 10), hs: s }); c.scale.y = 1.7; c.position.set(R.x + dx, R.top + s * 0.9, R.z + dz); c.rotation.set(rx, dx * 3, rz); parent.add(c); };
     crystal(stones, -0.32, 0.18, 0.11, 0.2, -0.3); crystal(stones, -0.18, 0.36, 0.08, -0.25, 0.35);
     crystal(take, 0.05, -0.05, 0.14, 0.1, 0.15);
     mergeStatic(stones, { recolor: false });
@@ -454,7 +456,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     if (it.spot.id === 'asylum_register') {
       g.searched.push(it.spot.id); g.audio.play('search');
-      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
+      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(h.cloverMax, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
       return true;
     }
     if (it.spot.id === 'as_cell') {

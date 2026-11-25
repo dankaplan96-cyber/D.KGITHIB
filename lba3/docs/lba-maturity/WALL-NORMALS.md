@@ -88,3 +88,7 @@ off (the shop house's door sill, −33.75, −1.5, 0.24 m under the ground: geom
   heavy against the desert's bright walls, so the dressed stone is now gentler — its relief 6.0 (was 8.0) and its joints'
   shade 0.7 (was 0.58) — close to the game's look; the mean brightness of a sunlit wall within −1 to −4 % of off. Draws on
   Desert Island the same (116 → 116). Citadel's stone picture redone with it.
+
+## The weight in the material (the user, 24.11: "don't touch the normal map, it's good; just make it weigh more in the material")
+The map is drawn exactly as before (`wnstr` stays 1). The material's `normalScale` is now **2.5** (was 1): the same map
+moves the light 2.5× as much. `?wnscale=` compares (1 = the old weight). Nothing else changes: no draw more, no new texture.

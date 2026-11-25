@@ -751,6 +751,9 @@ export const WALLNORM = {
     if (WN_ARG[1] === 'all') return new Set(ALL);
     return WN_ARG[1] === '0' ? new Set() : new Set(WN_ARG[1].split(',')); })(),
   str: (typeof location !== 'undefined' && +(/[?&]wnstr=([\d.]+)/.exec(location.search) || [])[1]) || 1,
+  // (the user, 24.11: "don't touch the normal map, it's good; just make it weigh more in the material": the map is drawn
+  //  as before; the material's normalScale gives it the weight. `?wnscale=` to compare, default 2.5)
+  scale: (typeof location !== 'undefined' && +(/[?&]wnscale=([\d.]+)/.exec(location.search) || [])[1]) || 2.5,
   // (the joints' ambient occlusion with it — the shade's relief —, `?wnao=0` off, `?wnao=0.5` half)
   ao: typeof location !== 'undefined' && /[?&]wnao=([\d.]+)/.test(location.search) ? +/[?&]wnao=([\d.]+)/.exec(location.search)[1] : 1,
 };
@@ -853,7 +856,7 @@ export function wallNormalFor(map) {
 export function withWallNormal(m) {
   const w = wallNormalFor(m?.map);
   if (w) {
-    m.normalMap = w.n; m.normalScale.set(1, 1);
+    m.normalMap = w.n; m.normalScale.set(WALLNORM.scale, WALLNORM.scale);
     if (WALLNORM.ao > 0) { m.aoMap = w.ao; m.aoMapIntensity = WALLNORM.ao; }
     m.needsUpdate = true;
   }

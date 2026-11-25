@@ -84,7 +84,7 @@ await helpers();
 const base = await ev(() => crystals());
 check('a new game: no crystals, 10 max life; the layer counts out of 12 (crystals.js: 6 in the world, 6 from puzzles, 4 of them not built yet)', base.n === 0 && base.max === 10, base);
 const reg = await ev(async () => { const C = await import('/src/game/crystals.js'); return { total: C.CRYSTAL_TOTAL, world: C.CRYSTAL_WORLD.length, built: Object.entries(C.CRYSTAL_QUEST).filter(([, q]) => q.built).map(([id]) => id), unbuilt: Object.entries(C.CRYSTAL_QUEST).filter(([, q]) => !q.built).map(([id, q]) => q.quest) }; });
-check('the registry: 12 crystals; 6 in the world; ISL-1, HAM-1 and U-3 (DES-2\'s slot, Tali\'s prize) built; DES-1, HAM-3, UND-1 slots only (unobtainable)', reg.total === 12 && reg.world === 6 && reg.built.join() === 'sc-jaspa,sc-waystone,sc-trial' && reg.unbuilt.join() === 'DES-1,HAM-3,UND-1', reg);
+check('the registry: 12 crystals; 6 in the world; all six quest slots built (ISL-1, HAM-1, U-3 = DES-2\'s slot; since wave 2 DES-1, HAM-3, UND-1: tests/depth-wave2.mjs)', reg.total === 12 && reg.world === 6 && reg.built.join() === 'sc-jaspa,sc-waystone,sc-figures,sc-trial,sc-pack,sc-source' && reg.unbuilt.length === 0, reg);
 
 // ================================================================ ISL-1 · Old Jaspa's warm gems (chapter 4)
 iso('chapter 4 by its flags; on Knartas a few metres before the gem-sorting room\'s door');

@@ -1,5 +1,8 @@
 # Orders from the cloud to the laptop (3.11.2026, night mode)
 
+> **24.11.2026, evening: INSTALL-69, 68.1, 68.3 and WALL-NORMALS received and merged (thank you). ORDER 70 (at the end) is
+> the queue now.** Still no performance or frame-time work.
+
 > **24.11.2026, later: ORDER 69 (at the very end) FIRST — the user: "give the local agent an order to install and test the
 > game".** It replaces 68 step 2. Then 68 steps 1, 3, 4. Still no performance or frame-time work.
 
@@ -1052,3 +1055,46 @@ occluders ship in v118). Still open, in this order: **60.0 FPS30-PRESENT → 62 
        that the shortcut is gone.
     8. **Summary line for the user** at the top of INSTALL-69: "installs / runs / saves / Hebrew / offline / uninstalls:
        yes/no", and the three worst things a tester would notice, each with its picture. The cloud turns it into fixes.
+
+70. **After INSTALL-69 (24.11, evening).** Build: the cloud's `ccr-c1c2c4b9-dep6ed` head (v160 + the merged WALL-NORMALS);
+    `git pull` before each step. Reply in `WORLD_ART_REQUESTS.md` as **ORDER-70**, pictures in `captures/hw-70/`, push.
+    No frame-time or performance numbers. **The cloud is fixing now (don't touch):** E's target next to people (the tap,
+    Gilbert at the well and ladder), the Benchmark buttons in the pause menu, Quit Game's first click, the Modern-controls
+    bank shot from a plate, Brix/Garrick/Dot's overhead remarks, the see-through arm in Zoé's talk shot, the shop house's
+    door sill. Answers to your questions: the Sphero's ball knees stay (the user approved them as LBA1's look, 23.11);
+    the door sill is in the cloud's fix above.
+    1. **v160's behaviour modes, played with real keys** (P125, `docs/lba-maturity/BEHAVIOUR-MODES.md`): the yard's new
+       step — sneak up to the sleeping Dino-Fly on the lawn in Discreet and pet him, then the pipe in Athletic; switch
+       through all four modes once and picture the caption bottom-left (English and Hebrew); in the chapter 2 project
+       depot, walk in Discreet and picture the yellow "?" and the red "!" over the guard. Say if anything reads wrong
+       at 1366×768 on the real GPU.
+    2. **WALL-NORMALS for Zeelich's and the islands' wall stones** (your open item): only if it can be done in code the
+       same way as the Citadel's; **behind a switch, off by default** (these places weren't in the user's "everything"
+       pick), before/after pictures from the play camera for the user's pick.
+    3. **The first fights again, after the cloud's fixes land** (watch for the commit "TESTER-FIXES merged"): the Core's
+       three pylons in **Modern** controls (report only to the cloud, late-game), and the Zeelich depot once more as in
+       68.3. Same logs as 68.3.
+
+71. **After v168 (25.11). Do this before 70 if 70 is still open; 70's step 3 (the first fights in Modern) folds in here.**
+    Build: the cloud's `ccr-c1c2c4b9-dep6ed` head; `git pull` first. Build the Windows installer as in 69 and install over the
+    old one. Reply in `WORLD_ART_REQUESTS.md` as **ORDER-71**, pictures in `captures/hw-71/`, push. No frame-time or
+    performance numbers. Play as a player, real keys and mouse, with sound, 1366×768 and fullscreen.
+    1. **The opening** (P130): watch it whole once. Twinsen must NOT stand on the pier under the title (he is at home
+       until the film goes home). Arthur reads the notebook (his name on the subtitle). The crew wear orange overalls and
+       a lime vest. Picture the title over the pier.
+    2. **Zoé's new head** (P131, `almond-s`): at home, in a talk with her and from the play camera; front, side and
+       talking. Say if it reads right on the real GPU (no holes, no flicker on the back of the skull, the ponytail and tie
+       sit on the head). `?zoehead=twinsen` is the old one if you want a side-by-side (dev page only).
+    3. **The crystals** (P128): the well cave in chapter 1 and the singing crystal on Citadel: a clear shell with a glowing
+       core, no z-fighting or sparkle on the real GPU.
+    4. **Small keys and clover boxes** (KEYS-CLOVER.md): in chapters 1–2 find the POWDER chest in the fort yard, take the
+       key (the brass key with its count shows by the kashes), open FunFrock's old passage, take the clover box (the cap
+       reads 10 in the behaviour menu), draw the bolt by the ladder and come back up through the yard trapdoor. Save &
+       quit with the key held, Continue: still held.
+    5. **The first fights in Modern controls** (70.3): the chapter 2 depot fight and the Zeelich depot (the softer Grobo
+       guard, v162): health in and out, deaths, tries.
+    6. **Plank bridge** (BRIDGES.md), only if you have a save on Zeelich's islands from chapter 3 on, or reach it: walk
+       Mosquibee's plank bridge to the honey islet and back, and down the new stone steps; you must not fall through the
+       gaps, and (after the cloud's next change) not off the sides either.
+    7. **Summary line for the user** at the top: "opening / Zoé / crystals / key door / fights / bridge: ok or not", and
+       the three worst things a tester would notice, each with its picture.

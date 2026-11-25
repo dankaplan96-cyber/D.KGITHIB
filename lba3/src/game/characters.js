@@ -118,16 +118,24 @@ export const LOOKS = {
     hairStyle: 'bald', hair: '#5a4a8a', nose: 'long', eyes: '#e0a020', eyeScale: 0.75, mouth: 'smile', brow: 1.1, headS: 0.95, neck: 0.12, height: 1.12, longCoat: true,
   },
   worker: {
-    // project worker: stocky, teal overalls with a tool belt, yellow hard hat
-    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.05, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
+    // project worker: stocky, orange-yellow work overalls with a tool belt, a hi-vis vest, a yellow hard hat
+    // P127 (the user 24.11: "why is Twinsen at the harbour in the film?"): the crew wore teal overalls on Twinsen's build and
+    // read as him in the opening's harbour shots. Now the crew's own look, nothing blue on the body: orange-yellow
+    // overalls, a lime hi-vis vest with two reflective bands and shoulder straps (cast_poly.py `vest`), the hard hat.
+    // `crew`: DRESS-1's other dresses of this look stay in the overalls' orange (dressVariant), the hard hat's colour varies.
+    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.05, tunic: '#f2901c', tunicTrim: '#a85a16', belt: '#5a3a1a', pants: '#d97c18', shoes: '#3a2a1a',
+    vest: '#c4e23a', vestBand: '#ecebe4', crew: true,
     hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'bald', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', hardhat: '#e8c030', headS: 0.95, neck: 0.07, height: 0.97,
   },
   worker_b: {
     // CAST-POLISH-UNDERGROUND (order 24, worker's shape variant): the project's maintenance hand, a heavier man in the same
-    // teal crew overalls, bare-headed with short dark hair, a moustache, brass goggles pushed up on his brow and the sleeves
+    // crew overalls, bare-headed with short dark hair, a moustache, brass goggles pushed up on his brow and the sleeves
     // rolled (cast_poly.py CAST worker_b). Taken by Tolli (dp_tolli, the deep installation), Surveyor Anko (dg_surv, the dig)
     // and Fennick (zr_fennick, Zeelich); the yard's worker, Teo (dg_porter), Kasp (dg_dig) and Brann keep worker (the hard hat)
-    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.1, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
+    // P127: the crew's orange-yellow overalls and hi-vis vest, as worker's; still bare-headed (the goggles sit where a hat's
+    // brim would, and the bare head with the goggles is what tells the maintenance hand from the hatted crew)
+    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.1, tunic: '#f2901c', tunicTrim: '#a85a16', belt: '#5a3a1a', pants: '#d97c18', shoes: '#3a2a1a',
+    vest: '#c4e23a', vestBand: '#ecebe4', crew: true,
     hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'cap', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', moustache: true, goggles: true, headS: 0.95, neck: 0.07, height: 0.97,
   },
   guard: {
@@ -1335,6 +1343,7 @@ function dressColour(rec, c) {
 // shades stepped, grey cloth tinted; hair from natural colours. The same n gives the same dress on every load.
 const TRIMS = ['tunicTrim', 'belt', 'buckle', 'collarColor', 'emblem', 'cord'];
 const HAIRS = ['#2a1a12', '#5a3a1a', '#8a4a20', '#c89a50', '#9a9a98', '#e8e2d8', '#3a2a2a', '#6a4a2a'];
+const CREW_HATS = ['#e8c030', '#eeece4', '#c8402a', '#e8c030', '#eeece4'];   // (P127: the crew's hard hats, yellow, white or red)
 export function dressVariant(lookName, n) {
   const base = LOOKS[lookName];
   if (!base || !n) return {};
@@ -1344,7 +1353,16 @@ export function dressVariant(lookName, n) {
     const v = base[k];
     if (typeof v !== 'string' || !/^#[0-9a-f]{6}$/i.test(v)) continue;
     if (k === 'hair' || k === 'beard') { out[k] = HAIRS[(HAIRS.indexOf(v) + 1 + n * 3) % HAIRS.length]; continue; }
+    if (base.crew && k === 'hardhat') { out[k] = CREW_HATS[n % CREW_HATS.length]; continue; }
     c.set(v).getHSL(hsl, THREE.SRGBColorSpace);
+    if (base.crew) {
+      // P127: the Joint Project's crew stay in their orange-yellow overalls (a turn round the wheel made blue and teal ones:
+      // the colour that read as Twinsen); each dress a little warmer or more golden, a little lighter or darker (half the
+      // other looks' steps: a full step down turned the orange to khaki)
+      c.setHSL(hsl.h + (((n * 0.618) % 1) - 0.5) * 0.05, hsl.s, Math.max(0.06, Math.min(0.88, hsl.l * (1 + (light - 1) * 0.5))), THREE.SRGBColorSpace);
+      out[k] = '#' + c.getHexString();
+      continue;
+    }
     // gold and cream trim (braid, a belt, a buckle) stays: turned round the wheel it came out as neon cyan and pink
     if (TRIMS.includes(k) && hsl.h > 0.07 && hsl.h < 0.19 && hsl.l > 0.45) { out[k] = v; continue; }
     const s = hsl.s < 0.12 ? (hsl.l > 0.85 || hsl.l < 0.1 ? hsl.s : 0.28) : Math.min(0.7, hsl.s * 0.9);   // (white and black stay; greys take a tint; no brighter than the cast's own cloth)
@@ -2158,13 +2176,18 @@ const ZH_BAND_BIG = { ...ZH_BAND_BARE, ro: 0.014, rl: 0.019, off: 0.004, lift: 0
 // at the sides, down to the nape behind) and 1 a few centimetres above it, so the face, brows, lashes, earrings, neck
 // and body are not touched and the reshaped skull runs into the kept skin without a step. Behind and below, the target
 // keeps clear of the neck (a soft union with a cylinder round it), so the nape still covers the neck's top.
-// ?zoehead=twinsen (default) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison) | ZOE-HEAD-2's
+// ?zoehead=almond-s (default since P131, 25.11) | twinsen (the default before) | round (a little fuller: k 0.77) | current (the bare skull as v154: the comparison) | ZOE-HEAD-2's
 // tall | tall-long | egg (below, ZOE_HEADS). The
 // lock and the tie move with the crown (zoeHair).
 const ZH_TW = { ax: 0.15192, a: [0.13867, 0.15100], ang: [-155.41, -65.41], off: [0.01433, -0.14902] };
 const ZH_EGG = {
   tall: { c: [0.015, -0.086], tip: 8, up: 0.15, down: 0.115, x: 0.1, z: 0.096, zb: 0.1, taper: 0.16, tp: 2 },
   egg: { c: [0.02, -0.086], tip: 6, up: 0.17, down: 0.115, x: 0.096, z: 0.094, zb: 0.096, taper: 0.24, tp: 2 },
+  // ZOE-HEAD-4 (P131): the same form fitted to LBA2's in-game Zoé (lba2remake's render of the original data; looked at and
+  // measured only, nothing of it stored): her cranium scaled to our standing height and set at our eyes and forehead,
+  // sampled over the part of the head the reshape moves (rms 4.7 mm). An almond lying back: its long axis tipped 64° from
+  // straight up, reaching 16.5 cm back and up from a centre 12 cm behind the eyes, narrowing a little toward that end
+  almond: { c: [0.0071, -0.1219], tip: 64.4, up: 0.1651, down: 0.0965, x: 0.1042, z: 0.089, zb: 0.1523, taper: 0.1061, tp: 2 },
 };
 const ZH_CHIN = { L: 0.02, pt: 0.3, fw: 0.6 };
 const ZOE_HEADS = {
@@ -2183,12 +2206,21 @@ const ZOE_HEADS = {
   'twin-head': { twin: { g: 1, nose: 'hers' } },
   'twin-head-s': { twin: { g: 0.92, nose: 'hers' } },
   'twin-head-nose': { twin: { g: 1, nose: 'his' } },
+  // ZOE-HEAD-4 (P131, the user 25.11: "still very strange … maybe more like an almond"; "check LBA2's model of Zoé"):
+  // LBA2's head is as wide as hers and 8 % taller, but 39 % deeper — a long almond lying back from the face, its far end
+  // the back-top of the head, where LBA2's ponytail springs. almond: that cranium (ZH_EGG.almond), the tie on its far end
+  // (`tie`° past the long axis); almond-s: half of the way there from today's head (mix: each point a share `a` of the way
+  // from where today's `twinsen` puts it); almond-chin: almond + LBA2's longer face (its chin 2 cm lower under the eyes
+  // than hers: ZH_CHIN, as ZOE-HEAD-2's tall-long)
+  almond: { egg: ZH_EGG.almond, tie: 0 },
+  'almond-s': { egg: ZH_EGG.almond, tie: 0, mix: { of: { k: 0.71, kx: 0.69 }, a: 0.5 } },
+  'almond-chin': { egg: ZH_EGG.almond, tie: 0, chin: ZH_CHIN },
 };
 export const ZOE_HEAD = (() => {
   let s = '';
   try { s = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('zoehead')) || JSON.parse(localStorage.getItem('sunshard_settings_v1'))?.zoeHead || ''; } catch { /* no storage */ }
   s = String(s).trim().toLowerCase();
-  return s === 'current' || ZOE_HEADS[s] ? s : 'twinsen';
+  return s === 'current' || ZOE_HEADS[s] ? s : 'almond-s';   // (P131, the user 25.11: almond-s, beside LBA2's own model; ?zoehead=twinsen is the head before)
 })();
 // the band the weight rises over (y from, y to, m) by the angle round the head from the front (as the hairline's)
 // (the brows end at 50°, the earrings hang at 100–111° below 1.77 m; behind them it reaches down to the head's underside:
@@ -2224,7 +2256,7 @@ function zhChin(eye, C) {
 function zoeHeadShape(eye, S) {
   const k = S.k || 0.71, c = S.egg ? [0, eye[1] + S.egg.c[0], eye[2] + S.egg.c[1]] : [0, eye[1] + k * ZH_TW.off[0], eye[2] + k * ZH_TW.off[1] + (S.dz || 0)];
   const e = ZH_TW.ang.map((g) => [Math.cos((g * Math.PI) / 180), Math.sin((g * Math.PI) / 180)]), a = ZH_TW.a.map((x) => x * k), ax = ZH_TW.ax * (S.kx || 0.69);
-  const chin = S.chin && zhChin(eye, S.chin);
+  const chin = S.chin && zhChin(eye, S.chin), other = S.mix && zoeHeadShape(eye, S.mix.of);
   const f = (p0) => {
     const pc = chin && chin(p0), p = pc || p0;
     const th = (Math.atan2(Math.abs(p[0]), p[2] + 0.025) * 180) / Math.PI, w = sstep(zhdLerp(th, 1), zhdLerp(th, 2), p[1]);
@@ -2238,8 +2270,11 @@ function zoeHeadShape(eye, S) {
       const h = Math.min(1, Math.max(0, 0.5 + (0.5 * (rn - rt)) / ZHD_NECK.k));
       rt = Math.min(rt * (1 - h) + rn * h + ZHD_NECK.k * h * (1 - h), Math.max(r, rt));
     }
-    const rr = r + w * (rt - r);
-    return c.map((x, i) => x + u[i] * rr);
+    const rr = r + w * (rt - r), q = c.map((x, i) => x + u[i] * rr);
+    if (!other) return q;
+    // (ZOE-HEAD-4 almond-s: the point a share `mix.a` of the way from where today's head puts it to where this one does)
+    const q0 = other(p0);
+    return q0 ? q0.map((x, i) => x + S.mix.a * (q[i] - x)) : q;
   };
   f.c = c;
   if (S.tie != null) { const t = ((S.egg.tip + S.tie) * Math.PI) / 180; f.tie = [0, Math.cos(t), -Math.sin(t)]; }

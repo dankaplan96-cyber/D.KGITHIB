@@ -4,6 +4,8 @@ contextBridge.exposeInMainWorld('desktop', {
   quit: () => ipcRenderer.send('lba3:quit'),
   fullscreen: (on) => ipcRenderer.send('lba3:fullscreen', on),
   platform: process.platform,
+  // (TESTER-FIXES: run from source or with LBA3_DEVTOOLS: the pause menu's Benchmark tools are shown; the testers' build hides them)
+  dev: (() => { try { return !!ipcRenderer.sendSync('lba3:dev'); } catch { return false; } })(),
   // PERF-BATTERY: on battery now (true / false; null: not known), and its changes (src/engine/power.js); the window's
   // focus / minimised / shown state as it changes (main.js: drawing slows down while it can't be seen or is not in use)
   onBattery: (() => { try { const v = ipcRenderer.sendSync('lba3:power-now'); return typeof v === 'boolean' ? v : null; } catch { return null; } })(),

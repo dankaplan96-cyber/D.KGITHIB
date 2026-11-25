@@ -24,6 +24,7 @@
 //   R.onDisc(i) (story/observatory.js); R.ventPuff(i, s) jets a disc's steam for s seconds
 //   R.snow {setLevel(0..1)}
 import * as THREE from 'three';
+import { gemGeo, coreOfGem, linkedCore, asShell } from './crystallook.js';
 import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
@@ -573,7 +574,10 @@ export function* buildHamalayiSteps(scene, physics) {
     col({ type: 'cyl', x: HP.x, z: HP.z, r: 0.25, top: gy + 2.4, noStand: true });
     put('lift', 'heatCabinet', SH.x, SH.z, 0, (k) => heatCabinetDress(k), { y: gs, col: false, nocheck: true });
   }
-  const crystalHP = mesh(group, new THREE.OctahedronGeometry(0.22, 0).scale(1, 1.5, 1), pm('#6a4a3a', 0.25, { emissive: '#ff9a3c', emissiveIntensity: 0, flatShading: true }), HP.x, H(HP.x, HP.z) + 2.5, HP.z, 0, { cast: false });
+  // (CRYSTALS-ONE-LOOK: the well's faceted crystal, a shell over a core that warms with it; the project's warm tint: crystallook.js)
+  const hpM = asShell(new THREE.MeshStandardMaterial({ color: '#6a4a3a', roughness: 0.25, emissive: '#ff9a3c', emissiveIntensity: 0 }), 0.88);
+  const crystalHP = mesh(group, gemGeo(0, 0.33, 0.14), hpM, HP.x, H(HP.x, HP.z) + 2.5, HP.z, 0, { cast: false });
+  crystalHP.add(coreOfGem(hpM, linkedCore(hpM), { v: 0, hs: 0.33, rr: 0.14 }));
   R.heatPost = { ...W(HP.x, HP.z), on: false, setOn(b) { this.on = !!b; crystalHP.material.emissiveIntensity = b ? 1.6 : 0; } };
 
   // ---- the ledge and the rockslide

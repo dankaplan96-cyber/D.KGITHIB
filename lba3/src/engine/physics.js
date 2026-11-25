@@ -8,6 +8,7 @@ export const STEP_UP = 0.55;     // max height you can walk onto
 export const WATER_FLOOR = -0.35; // deeper than this counts as sea (blocked)
 export const MAX_SLOPE = 1.1;     // steepest walkable terrain (rise / run)
 export const BLOCK_LOW = 0.12;   // a `block` collider lower than this over the feet is stepped over (it is under them)
+const LIP = 0.15;                 // the most a bank's lip may stand over a bridge's end plank to be covered (bridgeTreads)
 
 const NONE = Object.freeze([]);   // (PERF-CPU: near()'s answer for an empty cell)
 const _pushOut = { x: 0, z: 0 };   // (GC-STREET: _push's answer)
@@ -137,6 +138,95 @@ export class Physics {
     }
     this._brick = brick;
     return g;
+  }
+
+  // BRIDGES: a deck laid as separate planks (the islands' plank bridges: each of the original's slats is its own object,
+  // and so its own collider) leaves a gap between each two that the one point under his middle reads as the drop under
+  // the bridge: he stopped at the first gap, or fell through it. Once, as an area is built (regions.js finish), every
+  // run of three or more planks — thin boxes (≤ 0.6 m deep, a floor one can pass under) turned alike, of about one
+  // length across the run, in line (within 0.5 m), each 2–60 cm from the next at nearly one height (≤ 0.3 m), over a drop of a metre or
+  // more — gets an unseen tread across each gap, at the lower plank's top. Nothing else changes: stepping stones
+  // (cylinders), blocks and crates (solid to the ground), two floors side by side, one gap alone stay as they were.
+  // Returns the treads added. (globalThis.__noTreads: none, for the tests' before pictures and the A/B)
+  bridgeTreads(cols) {
+    if (globalThis.__noTreads) return [];
+    const plank = (c) => c.type === 'box' && c.enabled && !c.noStand && !c.block && !c.stair && !c.tread && c.bottom > -40 && c.top - c.bottom <= 0.6
+      && Math.min(c.hw, c.hd) <= 0.6 && Math.max(c.hw, c.hd) >= 1.5 * Math.min(c.hw, c.hd);
+    const P = cols.filter(plank); if (P.length < 3) return [];
+    const id = new Map(P.map((c, i) => [c, i])), links = new Map(), edges = [];
+    const axes = (c) => (c.hw <= c.hd ? { ux: c.cos, uz: -c.sin, s: c.hw, l: c.hd } : { ux: c.sin, uz: c.cos, s: c.hd, l: c.hw });   // (its short axis in the world, half-widths)
+    for (const a of P) {
+      const A = axes(a);
+      for (const b of this.near(a.x, a.z)) {
+        if (!(id.get(b) > id.get(a)) || Math.abs(a.top - b.top) > 0.3) continue;
+        const B = axes(b);
+        if (Math.abs(A.ux * B.uz - A.uz * B.ux) > 0.12) continue;   // (turned alike: their short axes parallel)
+        const dx = b.x - a.x, dz = b.z - a.z, al = dx * A.ux + dz * A.uz, ac = -dx * A.uz + dz * A.ux;
+        const gap = Math.abs(al) - A.s - B.s;
+        if (gap < 0.02 || gap > 0.6 || Math.abs(ac) > 0.5 || Math.min(A.l, B.l) < 0.55 * Math.max(A.l, B.l)) continue;
+        const k = Math.sign(al), mx = a.x + A.ux * k * (A.s + gap / 2) - A.uz * ac / 2, mz = a.z + A.uz * k * (A.s + gap / 2) + A.ux * ac / 2;
+        const top = Math.min(a.top, b.top);
+        if (this._ground(mx, mz, top + 0.05) > top - 1.0) continue;   // (floor under it: not a drop)
+        edges.push({ a, b, mx, mz, gap, top, l: Math.min(A.l, B.l), rot: Math.atan2(A.ux, A.uz) });
+        for (const [p, q] of [[a, b], [b, a]]) { if (!links.has(p)) links.set(p, []); links.get(p).push(q); }
+      }
+    }
+    // runs: the planks linked one to the next; three or more make a deck
+    const runOf = new Map();
+    for (const c of links.keys()) {
+      if (runOf.has(c)) continue;
+      const run = [c]; runOf.set(c, run);
+      for (let i = 0; i < run.length; i++) for (const q of links.get(run[i])) if (!runOf.has(q)) { runOf.set(q, run); run.push(q); }
+    }
+    const out = [];
+    for (const e of edges) {
+      if (runOf.get(e.a).length < 3) continue;
+      // (the tread's long side across the run, as long as the shorter plank; 5 cm onto each)
+      out.push(this.add({ type: 'box', x: e.mx, z: e.mz, hw: e.l, hd: e.gap / 2 + 0.05, rot: e.rot, top: e.top, bottom: e.top - 0.3, seeThrough: true, tread: true }));
+    }
+    // the sides (the user, 25.11: "block the sides"): the drawn rails stand outside the planks, so he could walk off the
+    // deck's long edges into the drop. Along each run, an unseen guard at each plank end, from the first plank's middle to
+    // the last's (the two ends stay open to step on and off), a metre high, that the ball and the eye pass
+    for (const run of new Set(runOf.values())) {
+      if (run.length < 3) continue;
+      const A = axes(run[0]);
+      let cx = 0, cz = 0, l = Infinity, top = -Infinity;
+      for (const c of run) { cx += c.x / run.length; cz += c.z / run.length; l = Math.min(l, axes(c).l); top = Math.max(top, c.top); }
+      let t0 = Infinity, t1 = -Infinity;
+      for (const c of run) { const t = (c.x - cx) * A.ux + (c.z - cz) * A.uz; t0 = Math.min(t0, t); t1 = Math.max(t1, t); }
+      const px = -A.uz, pz = A.ux, D = 0.25;
+      for (const k of [-1, 1]) {
+        // (only over a drop: where ground or a stair meets the edge — Mosquibee's steps down to the honey yard — it stays open)
+        const drop = (t) => this._ground(cx + A.ux * t + px * k * (l + 0.35), cz + A.uz * t + pz * k * (l + 0.35), top + 0.05) < top - 1.0;
+        const seg = (a, b) => { const tm = (a + b) / 2;
+          out.push(this.add({ type: 'box', x: cx + A.ux * tm + px * k * (l + 0.06), z: cz + A.uz * tm + pz * k * (l + 0.06), hw: 0.06, hd: (b - a) / 2,
+            rot: Math.atan2(A.ux, A.uz), top: top + 1.0, bottom: top - 0.3, seeThrough: true, noBall: true, block: true, tread: 'side' })); };
+        let a = null;
+        for (let t = t0; t <= t1 + 1e-6; t += D) {
+          if (drop(t)) { if (a == null) a = t; }
+          else if (a != null) { if (t - D - a > 0.1) seg(a, t - D); a = null; }
+        }
+        if (a != null && t1 - a > 0.1) seg(a, t1);
+      }
+    }
+    // the ends: where the bank an end plank meets rises steeply through its far half to a lip a few cm over it (Mosquibee's
+    // east end: 7 cm, steeper than he walks up from a standing step: he walked off the bank onto the bridge and could not
+    // walk back), a tread over the lip at its crest's height, from where the ground comes up through the plank to 15 cm
+    // past the crest (at most LIP over the plank, within a metre past its edge; ground lower than the plank: nothing)
+    for (const [c, nb] of links) {
+      if (nb.length !== 1 || runOf.get(c).length < 3) continue;
+      const A = axes(c), q = nb[0], k = Math.sign((c.x - q.x) * A.ux + (c.z - q.z) * A.uz) || 1;
+      let s1 = null, sM = 0, m = -Infinity;
+      for (let s = 0; s <= A.s + 1.0; s += 0.025) {
+        const g = this._ground(c.x + A.ux * k * s, c.z + A.uz * k * s, c.top + LIP + 0.01);
+        if (g > c.top + 0.01 && s1 == null) s1 = s;
+        if (s1 != null && g > m) { m = g; sM = s; }
+      }
+      if (s1 == null || m > c.top + LIP) continue;
+      const a0 = Math.max(0, s1 - 0.05), a1 = sM + 0.15, am = (a0 + a1) / 2, top = m + 0.02;   // (2 cm over the crest: the ground between the samples never stands over it)
+      out.push(this.add({ type: 'box', x: c.x + A.ux * k * am, z: c.z + A.uz * k * am, hw: A.l, hd: (a1 - a0) / 2, rot: Math.atan2(A.ux, A.uz), top, bottom: top - 0.3, seeThrough: true, tread: 'end' }));
+    }
+    return out;
   }
 
   // Standing on bare terrain steeper than walkable? Returns the downhill direction (actors slide and can't

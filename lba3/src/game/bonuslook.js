@@ -16,6 +16,7 @@
 // new material per spawn, never freed. The materials keep the old pickups' program (standard, no maps, no vertex
 // colours, opaque), so nothing new compiles. Glow: lower than before (they were lamps), still bright enough to find.
 import * as THREE from 'three';
+import { gemGeo, crystalShell, crystalMats, CRYSTAL_TINTS } from './crystallook.js';
 
 // ------------------------------------------------------------------ helpers
 // position + normal of several geometries (their normals as they are), as one non-indexed geometry; triangles of no
@@ -148,16 +149,30 @@ export const coinGeo = () => once('coin', () => {
   return merge([body, k1, k2]);
 });
 
-// the singing crystal (as before: three blue spikes from one root), its three parts now one mesh
-export const crystalGeo = () => once('crystal', () => {
-  const parts = [];
-  for (const [rx, rz, s] of [[0, 0, 1], [0.5, 0.2, 0.62], [-0.45, -0.3, 0.55]]) {
-    const g = new THREE.OctahedronGeometry(0.2, 0);
-    g.scale(0.8 * s, 2.2 * s, 0.8 * s); g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(rx, 0, rz))); g.translate(rz * -0.35, 0.2 * s, rx * 0.35);
+// the singing crystal (as before: three spikes from one root), CRYSTALS-ONE-LOOK: the well's faceted crystals, a
+// translucent shell over a glowing core (crystallook.js). Two geometries, made once: every shell one mesh, every core one.
+const crystalParts = (core) => {
+  const T = new THREE.Color(CRYSTAL_TINTS.cyan.core), parts = [];
+  [[0, 0, 1], [0.5, 0.2, 0.62], [-0.45, -0.3, 0.55]].forEach(([rx, rz, s], i) => {
+    const g = gemGeo(i, 0.44 * s, 0.105 * s, core, core ? T : null).clone();
+    g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(rx, 0, rz))); g.translate(rz * -0.35, 0.2 * s, rx * 0.35);
     parts.push(g);
+  });
+  return parts;
+};
+const joinColored = (list) => {   // (the cores' parts, their colour kept: non-indexed, concatenated)
+  const out = new THREE.BufferGeometry();
+  for (const k of ['position', 'normal', 'uv', 'color']) {
+    const arrs = list.map((g) => g.attributes[k].array), n = arrs.reduce((a, b) => a + b.length, 0), a = new Float32Array(n);
+    let o = 0; for (const x of arrs) { a.set(x, o); o += x.length; }
+    out.setAttribute(k, new THREE.BufferAttribute(a, list[0].attributes[k].itemSize));
   }
-  return merge(parts);
-});
+  return out;
+};
+export const crystalGeo = () => once('crystal', () => merge(crystalParts(false)));
+export const crystalCoreGeo = () => once('crystalCore', () => joinColored(crystalParts(true)));
+// the singing crystal as a model: its shell, the core a child of it (actors.js pickupModel('crystal'))
+export const crystalModel = () => { const m = new THREE.Mesh(crystalGeo(), bonusMat('crystal')); const c = new THREE.Mesh(crystalCoreGeo(), bonusMat('crystalCore')); m.add(c); return m; };
 
 // ------------------------------------------------------------------ the materials (made once, shared)
 const MATS = {};
@@ -169,5 +184,7 @@ export const bonusMat = (k) => MATS[k] || (MATS[k] = ({
   flask: () => new THREE.MeshStandardMaterial({ color: '#4cb0ff', emissive: '#1450e0', emissiveIntensity: 0.7, roughness: 0.12 }),
   // gold: a third metal, so it still reads bright gold without a reflected sky (the game has none)
   coin: () => new THREE.MeshStandardMaterial({ color: '#ffd84a', emissive: '#b88000', emissiveIntensity: 0.6, metalness: 0.35, roughness: 0.32 }),
-  crystal: () => new THREE.MeshStandardMaterial({ color: '#9fe8ff', emissive: '#2a9aff', emissiveIntensity: 1.8, roughness: 0.15, flatShading: true }),
+  // (the well's cyan shell, a little brighter than the cave's: a pickup has to read from the far camera)
+  crystal: () => crystalShell(CRYSTAL_TINTS.cyan.shell, CRYSTAL_TINTS.cyan.em, 1.0, 0.8),
+  crystalCore: () => crystalMats('cyan').core,
 })[k]());

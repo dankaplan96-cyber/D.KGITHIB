@@ -10,7 +10,8 @@ import { WATER_FLOOR, GRAVITY } from '../engine/physics.js';
 import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
 import { SlashTrail } from './slashtrail.js';
-import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalGeo, bonusMat } from './bonuslook.js';
+import { coinGeo, heartGeo, flaskGeo, cloverGeo, crystalModel, bonusMat } from './bonuslook.js';
+import { gemGeo, crystalShell, crystalCore } from './crystallook.js';
 import { workHands } from './workhands.js';
 import { ballGeo, ballMaterial, ballEmissive, ballGlowTexture, swordMeshes } from './equiplook.js';
 
@@ -137,6 +138,8 @@ const _footM = { x: 0, z: 0 };   // (Hero.footOfSlope's answer)
 const SLIDE_POSE = 0.07;   // s of sliding before the fall pose shows (Hero.update)
 
 // ------------------------------------------------------------------ hero
+// STEER-HOLD: how long (s) a move must be held to take over from the game's few steps (walkTo) to a use
+const STEER_TAKE = 0.22;
 export class Hero extends Actor {
   constructor(game, x, z) {
     super(game, createCharacter('twinsen'), x, z, 0.4);
@@ -147,6 +150,8 @@ export class Hero extends Actor {
     this.maxHp = 10; this.hp = 10;
     this.magicLevel = 1; this.mp = 8;
     this.clovers = 2; this.coins = 0;
+    this.cloverMax = 9;   // (KEYS-CLOVER: 9 + the clover boxes found, flags kc_box_*: story/keysclover.js keeps it; every cap site reads it)
+    this.smallKeys = 0;   // (KEYS-CLOVER: the small keys held, from the kc_ flags: story/keysclover.js)
     this.hasKey = false;
     this.hasBall = false; // still in the cupboard at home
     this.shards = [false, false, false];
@@ -274,8 +279,14 @@ export class Hero extends Actor {
     });
     const locked = cs.lock || this.hiding || this.hurtT > 0.15 || this.actT > 0;
     const speedK = cs.speedK ?? 1;
-    // a few steps the game asked for (walkTo): the player's own stick takes over at once; a hit cancels them
-    if (this.steer && (Math.hypot(mv.x, mv.y) > 0.3 || this.hurtT > 0.15 || wheel)) this.steer = null;
+    // a few steps the game asked for (walkTo): the player's own stick takes over; a hit cancels them
+    // (STEER-HOLD, INSTALL-69 P115: a key tapped while he steps up to the garden tap — a turn to line up, a nudge — threw
+    //  the use away with nothing said, and E "did nothing" for 40 s: a move held STEER_TAKE s (a deliberate walk away)
+    //  takes over; a tap shorter than that is ignored while the game's few steps play)
+    if (this.steer) {
+      this.steerPush = Math.hypot(mv.x, mv.y) > 0.3 ? (this.steerPush || 0) + dt : 0;
+      if (this.steerPush >= STEER_TAKE || this.hurtT > 0.15 || wheel) { this.steer = null; this.steerPush = 0; }
+    } else this.steerPush = 0;
 
     if (!locked && this.steer) {
       const s = this.steerStep(dt);
@@ -1921,15 +1932,16 @@ const PICK = {
   // a clover leaf (the extra life): four heart-shaped leaflets on a stem
   clover: () => new THREE.Mesh(cloverGeo(), bonusMat('clover')),
   // a singing crystal: three blue spikes from one root, like the well's crystals in miniature
-  crystal: () => new THREE.Mesh(crystalGeo(), bonusMat('crystal')),   // (its three spikes one mesh: ITEMS-1)
+  crystal: () => crystalModel(),   // (its three spikes one shell mesh + one core mesh: ITEMS-1, CRYSTALS-ONE-LOOK)
   // a Sendell shard: a bright crystal in a ring of light (its parts made once and shared: ITEMS-1)
   shard: () => {
     const S = (SHARD ??= {
-      gem: new THREE.OctahedronGeometry(0.45, 0), gemMat: new THREE.MeshStandardMaterial({ color: '#fff0a0', emissive: '#ffb000', emissiveIntensity: 3.5, metalness: 0.3, roughness: 0.1 }),
+      // (CRYSTALS-ONE-LOOK: the well's faceted crystal, shell + core; Sendell's gold kept: crystallook.js)
+      gem: gemGeo(0, 0.45, 0.27), gemMat: crystalShell('#fff0a0', '#ffb000', 1.6, 0.82), core: gemGeo(0, 0.45, 0.27, true), coreMat: crystalCore('#fff6c8'),
       ring: new THREE.TorusGeometry(0.75, 0.03, 6, 32), ringMat: new THREE.MeshBasicMaterial({ color: '#ffe080', transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }),
     });
     const g = new THREE.Group();
-    const m = new THREE.Mesh(S.gem, S.gemMat); m.scale.set(0.7, 1.4, 0.7); g.add(m);
+    const m = new THREE.Mesh(S.gem, S.gemMat); m.scale.set(0.7, 1.4, 0.7); m.add(new THREE.Mesh(S.core, S.coreMat)); g.add(m);
     const ring = new THREE.Mesh(S.ring, S.ringMat); ring.rotation.x = Math.PI / 2; g.add(ring);
     return g;
   },
