@@ -77,7 +77,31 @@ Not touched: `story/depth.js`, any keys/clover file, the harbour's layout (the l
 
 ## Tests (Automated runtime only, SwiftShader)
 
-RESULTS-PLACEHOLDER
+| Suite | Run | Result | What it covers |
+|---|---|---|---|
+| `SERVE=1 SHOTS=captures/wave7 node tests/wave7.mjs` | once, all parts (A, S, B), on the final code | **PASS 27/27**, no page/console error, no missing file | A from base-11-town (chapter 8, format 5 → 6, no w7 flag made up): Pippa's hook, her chalked crate, the lift's compare and tag, Odile's ledger, the baggage claim by its door, Osk wrong then right, the lever seized then kicked free, run in (nothing lost) then out, the key and the back door, out by the back passage and in again, **a death in the baggage claim → Game Over → Retry** (all kept), the clamp off and Swing first (refused), **Save & quit → Continue** (kept), Hoist and Swing (the crate on the pier), Pippa's delivery (a clover leaf), the shelter stocked, Tim at the shelter, the ending (ISO: the lift as the opening left it, the back passage still open); S the pieces shown only in a state scanned with the sweep library (0 findings naming a wave-7 piece); B from base-13-desert (chapter 14, the bore's relay held): the torn shade, Lumi wrong then right, Dallan at the bore (walked to), the rigged sail, **Save & quit → Continue** (kept), the ball at the hook, the sail up, the lines after |
+| `SERVE=1 ONLY=citadel,baggage,desert node tests/overlap-sweep.mjs` | once | **PASS**: citadel, baggage, desert 0 open findings (citadel's 2 a / 19 c / 217 d / 9 e / 1 g and the desert's 1 c / 3 d / 1 e are its KNOWN list) | the always-visible pieces (the cage, the back door, the moved drums and cloth) in a new game |
+| `node tools/he-bundle.mjs && node tests/dialogue-check.mjs` | after the last text change | **PASS**, Hebrew 100 % (6110/6110) | the text |
+
+An earlier run of the suite (the same code but one shortened line) stopped being useful at its first Save & quit: the
+suite's own reboot did not press Continue on the title, so the checks after it read a game not yet loaded. The suite
+was fixed (Continue pressed as a player does) and run once more on the final code: the row above. During development
+the flows were tried in scratch probes (not committed). Not run: the full test, the chapter suites, door-sweep,
+interior-life (Osk's `stays` changes the baggage claim's evacuation cast: covered by A's talk with him).
+
+## Pictures (P107: the user picks)
+
+`captures/wave7/` — the play camera (deviceScaleFactor 1), 960×540, and `captures/wave7/sheet.png` (all of them).
+Before/after pairs are the same frame with this wave's pieces hidden or in their old state (the before is today's game):
+01 the cargo lift before/after (the crate on the pier; stalled on the barge with stencils and the clamp) ·
+02 Pippa's stall before/after (her chalked crate; small at this camera) · 03 the baggage claim's back store shut ·
+04 the same, open (the shutter up, the bales out) · 05 the 'bug' house's west wall before/after (the back door, open) ·
+06 the lift swinging the crate over the pier · 07 the depot shelter's door before/after (the bales and casks) ·
+08 Lumi's loom before/after (the shade whole today; torn) · 09 the shade rigged by Dallan (the canvas roll and poles) ·
+10 the shade up again (close: the camera after the throw).
+Pictures 01, 05 and 07 were retaken after the suite with a scratch script (the same states set by flags, the hero
+placed beside the piece, the camera rig snapped: closer than the Far default) because the suite's frames had the hero
+in front of the piece or missed it.
 
 ## Questions for the user
 
@@ -103,4 +127,16 @@ RESULTS-PLACEHOLDER
 
 ## Hebrew summary (סיכום בעברית)
 
-RESULTS-HE-PLACEHOLDER
+נבנה גל 7 (H-17, H-18). משלוחים שנעלמו (פרקים 8–14, סיטדל): פיפה מספרת שהעגלה השנייה שלה למקלט לא הגיעה – שמיכות
+וחביות מים, ועל כל ארגז כתבה בגיר "מקלט". במנוף המטען בנמל (המנוף של הפתיחה, לא הוזז) הוו מונח על ארגז על הדוברה:
+מעליו שבלונה "תחנה" ומתחתיה הגיר של פיפה; על הארגז השני אין כלום מתחת לצבע. הידית נעולה במלחציים עם תווית: המפתח
+במחלקת המטען. אודיל (רשות) מסבירה מהפנקס שלה. באולם המטען אוסק שואל מה יש בארגזים (בחירה; טעות לא עולה כלום); אחרי
+התשובה הנכונה – המחסן האחורי, כלוב רשת באולם התחתון, נפתח בידית של המסוע הישן שמקשיבה רק לבעיטה. בעיטה משחררת אותה;
+"פנימה" זה הכיוון הלא נכון, "החוצה" מרים את התריס. בפנים: המפתח של המנוף, ודלת אחורית שנפתחת למעבר מאחורי הבית (קיצור
+דרך מהמדרגות של חומת הים לכיכר, נשאר פתוח). במנוף: קודם להרים, אחר כך לסובב ולהוריד – הארגז על המזח. פיפה שולחת את
+טים ולולו עם העגלה, עלה תלתן; ליד דלת המקלט במחסן מופיעות שמיכות וחביות. החוב של דאלן (פרק 14 אחרי הממסר בקידוח, וסוף
+המשחק, קש): הסוכך של לומי נקרע. לשאול אותה "מה את צריכה?" (ולא "דאלן צריך לשלם"), דאלן אומר "לא. אני אסחוב אותו",
+קושר את הפינות התחתונות, והכדור מעלה את הטבעת העליונה לוו. "המפרש ישר. זה משהו." – בלי התנצלות. דגלים חדשים בלבד
+(w7m_/w7d_), שמירות ישנות נטענות, הנמל לא זז. tests/wave7.mjs עבר 27/27 (כולל מוות וניסיון חוזר, שמירה וטעינה),
+overlap-sweep נקי, dialogue-check עבר. הכול ריצה אוטומטית בלבד (SwiftShader). התמונות ב־captures/wave7 ממתינות לבחירת
+המשתמש.
