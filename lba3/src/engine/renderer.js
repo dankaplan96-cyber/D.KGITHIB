@@ -11,6 +11,7 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { updateShownWorld, MW } from './drawcull.js';
 import { warmPassPrograms } from './warmup.js';
 import { withCulledShown } from './viewinst.js';
+import { DL, dlBake } from './depthlook.js';
 // LOOK-FIRST-2: on battery the automatic resolution stops here (was 0.5: pixelated)
 export const BATTERY_MIN_SCALE = 0.85;
 
@@ -666,6 +667,7 @@ export class Renderer {
       if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
       else if (this.mid) S.updateMatrixWorld();
       this.mid?.();   // (RENDER-INV: the draw batches check their pieces with this frame's matrices: engine/drawbatch.js)
+      if (DL.contact && !this.retro) dlBake(this.renderer, S, DL.area);   // (DEPTH-LOOK ?depth=contact: the height map round Twinsen)
       this.motionStep();   // (FPS30: the motion smoothing's uniforms for this frame, or off)
       this.timer?.begin();   // (RENDER-INV: the GPU's time for the frame, while the benchmark runs: perf.js GpuTimer)
       this.composer.render();

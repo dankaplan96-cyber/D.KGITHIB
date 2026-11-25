@@ -3,6 +3,7 @@
 // pieces becomes ~25 draw calls; materials are kept, so fading or tinting a material still works.
 // Only for groups whose pieces never move or change on their own.
 import * as THREE from 'three';
+import { dlHook } from './depthlook.js';
 
 //
 // Options (PERF-IGPU):
@@ -40,6 +41,7 @@ function perVertexRM(t) {
     sh.fragmentShader = 'varying vec2 vRM;\n' + sh.fragmentShader
       .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = vRM.x;')
       .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = vRM.y;');
+    dlHook(sh, t);   // (DEPTH-LOOK: ?depth=, off by default: nothing)
   };
   t.customProgramCacheKey = () => 'merged-rm';
 }

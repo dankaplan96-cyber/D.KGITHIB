@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { rng } from './math.js';
 import { registerStatic } from './texarray.js';
+import { DL, nameWorldTextures, nameWorldTexture } from './depthlook.js';
 
 function canvas(size) {
   const c = document.createElement('canvas');
@@ -370,6 +371,8 @@ export function makeTextures() {
     T.blob = toTex(c, false);
   }
   islandTextures(T);
+  nameWorldTextures(T);   // (DEPTH-LOOK: each painted texture's relief weight by its name)
+  if (DL.paint) paintDepth(T);   // (DEPTH-LOOK ?depth=paint: off by default)
   return T;
 }
 
@@ -699,7 +702,9 @@ export function wallTexture(kind) {
     }
     speckle(x, N, r, 200, ['#eee8de', '#7c7468'], 0.25, 0.3);
   }
-  return (WALL_TEX[kind] = toTex(c));
+  if (DL.paint) paintDepthCanvas(c, null, 1);   // (DEPTH-LOOK ?depth=paint)
+  WALL_TEX[kind] = toTex(c); nameWorldTexture(WALL_TEX[kind], 'wall' + kind);
+  return WALL_TEX[kind];
 }
 
 // P87b: a copy of a shared texture (its own wrap, repeat, offset) on the same pixels. three's clone() (its copy() sets
@@ -844,3 +849,47 @@ export function withWallNormal(m) {
 }
 // (tests, pictures: the height and normal canvases of a wall texture)
 export function wallNormalCanvas(name, ao = false) { const t = normalTexture(name); return t ? (ao ? NORM_AO[name] : t).source.data : null; }
+
+// DEPTH-LOOK (P132) `?depth=paint`, candidate (e), off by default: LBA2's way — the relief painted into the colour itself,
+// lit from the upper left: each stone's or block's upper-left rim a little lighter, its lower-right rim darker, and a
+// soft shadow it casts into the joint below it. It reads the same in the sun and in the shade (a normal map moves only
+// the sun's light; the shade's sky light is nearly the same from every side). Made at load, on the canvases before they
+// are first sent: no new texture, no draw, no shader. The heights: the WALL-NORMALS layout where there is one (the fort's
+// blocks, the rubbles), else the texture's own light and dark, softened.
+// (the rubbles' stones are already painted lit from the upper left: half; the dressed stone of steps and sills and the
+//  paving lighter, so a flight of steps does not turn busy)
+const PAINT = { plaster: 0.5, plasterWall: 0.5, stone: 0.7, brick: 1, roof: 0.9, roofBlue: 0.9, wood: 0.7, planks: 0.8, cliff: 0.9, rubble: 0.5,
+  rubbleHouse: 0.5, thatch: 0.7, slate: 0.9, fortStone: 1, cobble: 0.5, concrete: 0.5, teal: 0.5, brass: 0.4, deck: 0.5, metal: 0.4, pipe: 0.4, rock: 0.9 };
+function paintDepth(T) {
+  for (const [name, k] of Object.entries(PAINT)) {
+    const t = T[name], c = t?.source?.data; if (!c?.getContext) continue;
+    const L = LAYOUT[name];
+    paintDepthCanvas(c, L ? heightCanvas(L) : null, k * DL.paintK);
+  }
+}
+export function paintDepthCanvas(c, hc, k) {
+  const N = c.width, M = c.height, x = c.getContext('2d'), img = x.getImageData(0, 0, N, M), D = img.data;
+  let H = new Float32Array(N * M);
+  if (hc) { const hd = hc.getContext('2d').getImageData(0, 0, N, M).data; for (let i = 0; i < N * M; i++) H[i] = hd[i * 4] / 255; }
+  else for (let i = 0; i < N * M; i++) H[i] = Math.sqrt((0.2126 * D[i * 4] + 0.7152 * D[i * 4 + 1] + 0.0722 * D[i * 4 + 2]) / 255);
+  for (let pass = 0; pass < 2; pass++) {   // (softened: two 3×3 box passes, wrapped — the tile stays seamless; a rim 3–4 texels wide)
+    const o = new Float32Array(N * M);
+    for (let y = 0; y < M; y++) for (let xx = 0; xx < N; xx++) {
+      let s = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) s += H[((y + dy + M) % M) * N + ((xx + dx + N) % N)];
+      o[y * N + xx] = s / 9;
+    }
+    H = o;
+  }
+  // (its range stretched to 0..1: a pale plaster's faint variation weighs as a rubble's)
+  { let lo = 1, hi = 0; for (const v of H) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    const sp = Math.max(hi - lo, 0.05); for (let i = 0; i < H.length; i++) H[i] = (H[i] - lo) / sp; }
+  const h = (xx, y) => H[((y + M) % M) * N + ((xx + N) % N)];
+  const E = 1.6 * k, S = 1.1 * k;   // (the rim's and the cast shadow's weight)
+  for (let y = 0; y < M; y++) for (let xx = 0; xx < N; xx++) {
+    const em = (h(xx - 1, y - 1) - h(xx + 1, y + 1)) * 0.5 + (h(xx - 2, y - 2) - h(xx + 2, y + 2)) * 0.35 + (h(xx - 3, y - 3) - h(xx + 3, y + 3)) * 0.2;
+    const sh = Math.max(0, Math.max(h(xx - 2, y - 3), h(xx - 2, y - 5), h(xx - 1, y - 4)) - h(xx, y) - 0.06);
+    const f = Math.min(1.4, Math.max(0.58, 1 + E * em - S * sh));
+    const i = (y * N + xx) * 4; D[i] = Math.min(255, D[i] * f); D[i + 1] = Math.min(255, D[i + 1] * f); D[i + 2] = Math.min(255, D[i + 2] * f);
+  }
+  x.putImageData(img, 0, 0);
+}
