@@ -174,7 +174,7 @@ Object.assign(STR.en, {
   dx_far_look_line: 'A davit with a cord ring, and more rings across the cloud. The line can take me over.',
   dx_far_hint_yard: "The barges' yard. No way over on foot... but further along the railing there's a mooring rock with an Esmer arch.",
   dx_far_hint_quay: 'The west quay. Not on foot. Further along the shore, though, an old mooring rock sits in the cloud. Rings on it.',
-  dx_far_hint_islet: "The honey islet. Its plank bridge is set for Mosquibee strides, not mine. But there's a ring on its middle.",
+  dx_far_hint_islet: "The honey islet. Its plank bridge is set for Mosquibee strides, not mine. But there's a ring over one of its planks.",
   dx_far_yard_over: "The barges' yard. The cargo store is round the front.",
   dx_far_quay_over: "The west quay. Somebody's house, and a locker by it.",
   dx_far_honey_over: 'The honey islet. It smells wonderful.',

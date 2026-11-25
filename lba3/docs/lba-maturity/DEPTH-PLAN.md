@@ -173,6 +173,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | story: shows the project's cost in miniature after its benefit is seen (the bible's rule), Vesk not named as the cause, only "the drawing". Flags `dx_heat_tag/pipe/grate/spanner/open` |
 | Test | Fennick refuses before both clues; each clue by input; the valve; the lit post and the cool grate after Continue; chapter 10 closes it with Grumm's line |
 | Evidence → principle | P4 (the oddity is the story's evidence), P8, the bible's "show a working system, then let the player investigate its cost" |
+| **Built** (25.11.2026, wave 3 = H-6) | `story/depth.js` (ZEE-1), `tests/depth-wave3.mjs`, `WAVE3.md`. The fitter is the street's Garn (his name in the game; "Fennick" was the card's working name). The clues: the dark post's tag (the street's own look, counted when read), a new capped riser at the foot of the west end's post (Mr Pelleck's; his hand on its pipe: warm) and the burrow's existing vent (his hand over it: hot). Garn refuses without both ("show me where"), then lends his valve spanner (inventory); the cap turned: the post's crystal lit (crystallook.js, the street's warm crystal over its dull one), the vent's warm breath stops. Grumm pays the west end's 12 kashes; the spanner goes back to Garn. Window: chapter 3 until the network chapter; there Grumm says the council connects the west end anyway (nothing lost). Not built: Fennick's spare heat cell (a carried charge for the flask needs an item use the inventory lacks), the warm windows (the houses are merged geometry), the pocket set's hum along the feed. Nobody is named as the cause: "the drawing". Flags `dx_heat_ask/tag/pipe/grate/fen/spanner/open/back/paid/late/pel`, owed `dx_owe_heat`. |
 
 #### ZEE-2 · The project stores, after the pulse tool (a return)
 | | |
@@ -188,6 +189,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | the shed must stay shut before chapter 10 with its current reason. Flags `dx_store_open/ledger/kit` |
 | Test | the pulse by input; before chapter 10 still shut; the ledger read; Pelleck after Continue |
 | Evidence → principle | P6 (a later verb reopens an old door) |
+| **Built** (25.11.2026, wave 3 = H-6) | `story/depth.js` (ZEE-2), `tests/depth-wave3.mjs`, `WAVE3.md`. The teal shed in the depot yard gets a roller shutter over its door, a PROJECT STORES plate and a motor with a lamp on the wall beside it. Before the network chapter its look says what holds it; there the pulse tool at the motor (`index.js pulseHit` now asks depth.js too) stalls it and the shutter rolls up. Inside is a look-in store (a painted interior in the doorway, two states: with and without the kit): the ledger (heat cells and connection kits, RESERVED, UPPER DISTRICTS; kept in the journal, nobody named) and the kit marked PELLECK, WEST END, which goes to Mr Pelleck: 15 kashes, his receipt, a later line. Flags `dx_store_seen/open/ledger/kit/given/later`, owed `dx_owe_store`. |
 
 ### Zeelich's isles
 
@@ -235,6 +237,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Cost | S–M (three rings, three routes checked for clearance, the rooms exist) |
 | Risks | a way back is needed from each patch (a ring on the near shore). Flags `dx_far_yard/quay/honey` |
 | Test | each crossing and back by input; without the line the looks stay "no way over"; `island-doors` reaches the three rooms |
+| **Built** (25.11.2026, wave 3 = H-8) | `story/depth.js` (ISL-3), `tests/depth-wave3.mjs`, `WAVE3.md`. The gaps measured about 20–24 m from standing ground to landing (the line reaches 14): the yard and the quay each cross by an old mooring rock in the cloud with an Esmer arch (as the canal's) and a davit with a ring on each shore; Mosquibee's honey islet already has a plank bridge whose slats are set too far apart to walk (the physics wants ground under his middle): a davit at each end and a tall arch on a plank near the islet end, and Twinsen says why. Routes rise over whatever stands between (the highest ground or roof along the way) and pass the line's own clearance test. Over there: the yard's barge crate (a read on the project's spare optics, Madam Orla's lens; 15 kashes), the dock worker's locker (his note, a clover; the card's person not built: a new person needs a narrative card), the hive's honey pot (full life, once a visit; carried honey needs an inventory use the game lacks). The rooms behind the doors were always enterable. With the line the near shore's old look points along the shore to the crossing. Flags `dx_far_yard/quay/honey/crate/locker/honeyN`, owed `dx_owe_far_yard`, `dx_owe_far_quay`. |
 | Evidence → principle | P6 |
 
 ### Desert Island
@@ -320,6 +323,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Risks | traversal: the path must not open the observatory before chapter 7 nor bypass any gate (locomotion engineer; `jumpreach`, `slidetraps`); its top lands where chapter 10 still meets the ridge's mites. Flags `dx_kite_torn/mended/given`, `dx_goatpath` |
 | Test | the torn kite in chapter 6; Lumi with and without the Wind-Catcher; the ledges by input (Athletic); the path refused before chapter 7; chapter 10's segment with the path (time saved, recorded as an automated measure only) |
 | Evidence → principle | P3, P8, P7 (a shortcut as a reward), sample 2 (help changes what a place offers later) |
+| **Built** (25.11.2026, wave 3 = H-7) | `story/depth.js` (HAM-2), `tests/depth-wave3.mjs`, `WAVE3.md`. Pim's hook after his own line from the fuse on; Twinsen carries the torn kite (inventory). Lumi: with Kesh's wind-catcher done, mended at once; without, she names the wind-catcher first and keeps the kite (mended when it is done, or by the next chapter). Back to Pim (Lhar, the monastery camp or the peak): it flies; before chapter 7 is done the drone line, after it the goats' way. Six rock ledges west of the icefall's spur (rises 1.0 m, Athletic jumps; there from the start, a dead end without the rope), an iron ring on the top one; Pim's rope from the high rock's lip; Twinsen ties its end (hands on rope and ring) and climbs (E; down again from the stake at the top). The high rock leads on foot to the ridge's upper end by the observatory (measured walkable). Chapter 14's glider lands at the monastery, so there it is no shortcut; it is one on every visit that starts in Lhar (foothills arrivals, the glacier basin of H-3). Not built: Pim's and Arthur's radio lines in chapter 14. Flags `dx_kite` ('torn' / 'left' / 'mended' / 'given'), `dx_kite_left/flew`, `dx_goatpath`, `dx_goat_ring/tied/up/thx`. |
 
 #### HAM-3 · Yorna's brother's pack (two ways to melt the ice)
 | | |
@@ -350,6 +354,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
 | Cost | S |
 | Risks | a way back (a second ring). Flag `dx_arch` |
 | Test | the crossing and back by input; the chest |
+| **Built** (25.11.2026, wave 3 = H-8) | `story/depth.js` (HAM-4), `tests/depth-wave3.mjs`, `WAVE3.md`. The card's ledge under the old gate's far pier does not fit the map (the old gate stands 11 m south of the gorge): a rock stack in the meltwater 10 m west of the tree bridge (sheer: no jump reaches it), an ice arch from its shoulder to the north bank, a ring frozen into its crown (from the bridge or the bank: onto the stack) and one into its foot (back to the bank). On the stack the old gate crew's chest: a clover, 12 kashes, their joke. The look from the bank by the bridge. Flags `dx_arch_seen`, `dx_arch`, `dx_arch_chest`, owed `dx_owe_arch`, `dx_owe_arch_clover`. |
 | Evidence → principle | P6 |
 
 ### The underground

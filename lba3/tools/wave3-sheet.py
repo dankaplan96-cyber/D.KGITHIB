@@ -15,16 +15,17 @@ except OSError:
     FONT = ImageFont.load_default()
 
 ROWS = [
-    ('h6-westpost', "H-6 Zeelich's west end: the dark post (Mr Pelleck's) and its new capped riser"),
-    ('h6-westpost-lit', 'H-6 the same, the cap opened: the post lit'),
-    ('h6-store', "H-6 the depot yard: the store's door gets a motor shutter (PROJECT STORES)"),
-    ('h6-store-open', 'H-6 the shutter up after the pulse tool: the store inside (painted, look-in)'),
-    ('h7-ledges', "H-7 Lhar's north cliff by the icefall: six goats' ledges"),
-    ('h7-rope', "H-7 the same once Pim has told the way: the rope, tied"),
-    ('h8-yard', "H-8 Otringal, the barges' yard: a davit, a mooring rock with an Esmer arch, a davit across"),
-    ('h8-quay', 'H-8 Otringal, the west quay: the same, to the dock worker\'s house'),
-    ('h8-honey', "H-8 Mosquibee's plank bridge: a davit at each end, an arch on its middle plank"),
-    ('h8-gorge', "H-8 the Hamalayi gorge by the tree bridge: a rock stack, an ice arch with two rings, a chest"),
+    ('h6-westpost', "H-6 Zeelich's west end: the dark post (Mr Pelleck's) and its new capped riser (play camera)"),
+    ('h6-westpost-lit', 'H-6 the same, the cap opened: the post lit (play camera)'),
+    ('h6-westpost-NOTPLAY', 'H-6 the riser and the lit post, close (fixed camera)'),
+    ('h6-store', "H-6 the depot yard: the store's door gets a motor shutter (PROJECT STORES) (play camera)"),
+    ('h6-store-open', 'H-6 the shutter up after the pulse tool: the store inside (painted, look-in) (play camera)'),
+    ('h7-ledges-NOTPLAY', "H-7 Lhar's north cliff west of the icefall: six goats' ledges (fixed camera)"),
+    ('h7-rope-NOTPLAY', "H-7 the same once Pim has told the way: the rope, tied (fixed camera)"),
+    ('h8-yard-NOTPLAY', "H-8 Otringal, the barges' yard: a davit, a mooring rock with an Esmer arch, a davit across (fixed camera)"),
+    ('h8-quay-NOTPLAY', "H-8 Otringal, the west quay: the same, to the dock worker's house (fixed camera)"),
+    ('h8-honey-NOTPLAY', "H-8 Mosquibee's plank bridge: a davit at each end, an arch on a plank near the islet (fixed camera)"),
+    ('h8-gorge-NOTPLAY', 'H-8 the Hamalayi gorge by the tree bridge: a rock stack, an ice arch with two rings, a chest (fixed camera)'),
 ]
 img = Image.new('RGB', (PAD + 2 * (W + PAD), HEAD + PAD + len(ROWS) * (H + HEAD + PAD)), (24, 24, 24))
 d = ImageDraw.Draw(img)
