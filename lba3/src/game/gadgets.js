@@ -130,6 +130,7 @@ export class Gadgets {
       pos: pg.pos, radius: 0.35, dead: false, onGround: true, hiding: false, isLure: true, behaviour: 'normal', speed: G.speed,
       get angle() { return pg.angle; },
       visibility: () => 1.3,
+      sneak: () => 1,   // (BEHAVIOUR-MODES asks hero.sneak() in every enemy's sight: the penguin never sneaks)
       damage: (n) => this.hitPenguin(n),
       distTo(o) { return Math.hypot(o.pos.x - pg.pos.x, o.pos.z - pg.pos.z); },
       angleTo(o) { return Math.atan2(o.pos.x - pg.pos.x, o.pos.z - pg.pos.z); },
