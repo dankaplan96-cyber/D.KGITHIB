@@ -91,9 +91,10 @@ export function draw(a, y, dt) {
   m.f = frame;
   const e = m.eT > 0, M = S.material;
   if (M.map !== (e ? T.e : T.q)) { M.map = e ? T.e : T.q; M.needsUpdate = true; }
-  M.opacity = e ? Math.min(1, m.eT / 0.25) : 0.35 + 0.65 * Math.min(1, (m.q - SHOW_Q) / (1 - SHOW_Q) * 1.6);
+  // (ORDER-70: from 0.35 the "?" came up pale over the depot's yellow hazard tape and was easy to miss: it starts at 0.75 now)
+  M.opacity = e ? Math.min(1, m.eT / 0.25) : 0.75 + 0.25 * Math.min(1, (m.q - SHOW_Q) / (1 - SHOW_Q) * 1.6);
   // ("!" pops in a touch larger, then settles; "?" bobs gently)
-  const k = e ? 1 + 0.35 * Math.max(0, (m.eT - (E_TIME - 0.18)) / 0.18) : 1;
+  const k = e ? 1 + 0.35 * Math.max(0, (m.eT - (E_TIME - 0.18)) / 0.18) : 1.2;   // (the "?" a fifth larger: ORDER-70)
   S.scale.setScalar(SIZE * k);
   S.position.set(a.pos.x, a.pos.y + y + (e ? 0 : Math.sin(a.game.time * 4) * 0.04), a.pos.z);
 }

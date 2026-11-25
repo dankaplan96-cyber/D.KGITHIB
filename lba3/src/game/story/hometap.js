@@ -314,7 +314,7 @@ export class HomeTap {
   update(dt) {
     const g = this.game, f = this.f, h = g.hero, P = this.parts.house, C = this.parts.cave, Y = this.parts.yard, Kk = this.parts.kiosk;
     if (this.later?.length) { for (const l of this.later) l.t -= dt; const due = this.later.filter((l) => l.t <= 0); this.later = this.later.filter((l) => l.t > 0); for (const l of due) l.fn(); }
-    if (this.pendingLine && g.state === 'play' && (this.pendingLine.t -= dt) <= 0) { const fn = this.pendingLine.fn; this.pendingLine = null; fn(); }
+    if (this.pendingLine && g.state === 'play' && !this.pendingLine.hold?.() && (this.pendingLine.t -= dt) <= 0) { const fn = this.pendingLine.fn; this.pendingLine = null; fn(); }
     if (P) {
       // the pipe's shake
       if (P.shake > 0) { P.shake = Math.max(0, P.shake - dt); P.pipe.rotation.z = Math.sin(g.time * 55) * 0.012 * P.shake; P.pipe.position.y = Math.sin(g.time * 70) * 0.004 * P.shake; }
@@ -327,7 +327,10 @@ export class HomeTap {
       if (Y && !this.yardHeard && !f.pr_yard && Math.hypot(h.pos.x - Y.x, h.pos.z - Y.z) < 3.4) { this.yardHeard = true; this.rattle('yard'); }
       else if (Kk && !f.pr_lane && !this.pendingLine && Math.hypot(h.pos.x - Kk.pipe.x, h.pos.z - Kk.pipe.z) < 3.6) {
         f.pr_lane = true; this.rattle('kiosk');
-        this.pendingLine = { t: 0.9, fn: () => this.ch.chain([['hero', f.pr_yard ? 'prh_lane' : 'prh_lane0']], () => g.save(false)) };
+        // (ORDER-70: the line opened as he ran at the copper pipe in Athletic and cut off the first jump. With the opening
+        //  steps' pipe still to clear, it waits until he has cleared it (or had his tries), or has walked on from it)
+        const pipeOpen = () => f.pr_tut2 && !f.pr_pipe && Math.hypot(h.pos.x - Kk.pipe.x, h.pos.z - Kk.pipe.z) < 7;
+        this.pendingLine = { t: 0.9, hold: () => pipeOpen() || !h.onGround, fn: () => this.ch.chain([['hero', f.pr_yard ? 'prh_lane' : 'prh_lane0']], () => g.save(false)) };
       }
     }
     for (const T of [Y, Kk]) if (T && T.t != null) { T.t += dt; const k = Math.max(0, 1 - T.t / 0.9); T.grp.rotation.z = Math.sin(T.t * 48) * 0.035 * k; if (k <= 0) { T.t = null; T.grp.rotation.z = 0; } }

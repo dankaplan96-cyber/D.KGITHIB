@@ -35,7 +35,7 @@ function addHudStyle() {
 #weapon .meter circle { fill: #ffe8a0; }
 #weapon .meter.lit .face { stroke: rgba(255, 232, 160, 0.95); }
 #weapon .meter b { font-size: 12px; font-weight: 800; color: #ffe8a0; min-width: 4ch; }
-#modecap { position: absolute; bottom: 104px; inset-inline-start: 16px; display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-weight: 500; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; white-space: nowrap; }
+#modecap { position: absolute; bottom: 104px; left: 16px; display: flex; align-items: center; gap: 8px; padding-block: 4px; padding-inline: 6px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; font-weight: 500; color: #fff; text-shadow: 0 1px 2px #000; pointer-events: none; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; white-space: nowrap; }
 #modecap.show { opacity: 1; transform: none; transition: opacity 0.12s, transform 0.12s; }
 #modecap .ico { display: block; width: 28px; height: 28px; background-size: contain; background-repeat: no-repeat; background-position: center; }
 #modecap b { font-size: 16px; color: var(--accent); letter-spacing: 0.02em; }
@@ -130,6 +130,7 @@ export class HUD {
       const k = `<kbd>${String(this.key('action')).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])}</kbd>`;
       el.innerHTML = `<span class="beh-${b}"><span class="ico"></span></span><b>${t('beh_' + b)}</b>${tips ? `<span class="mk">${keyHints(t('bm_' + b, { k }))}</span>` : ''}`;
       el.dataset.b = b;
+      el.dir = getLang() === 'he' ? 'rtl' : 'ltr';   // (ORDER-70: in Hebrew the box reads from the right — picture, name, then what the key does — in the same corner)
       el.classList.add('show');
       this.modeUntil = now + MODE_SHOW;
       return;
