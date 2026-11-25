@@ -111,7 +111,7 @@ const FAR_PAY = 15;
 const FARS = [
   { id: 'yard', room: 'isle_otringal', near: { x: 1917.6, z: 1844.7 }, nPost: { x: 1918.3, z: 1846.5 }, rock: { x: 1927.5, z: 1844.0, y: 4.0 }, seed: 31, far: { x: 1937.6, z: 1844.2 }, fPost: { x: 1937.4, z: 1842.4 }, thing: { x: 1937.8, z: 1848.6 }, thingRy: 0.3, kind: 'crate', flag: 'dx_far_crate', read: ['dx_far_crate1', 'dx_far_crate2'], after: 'dx_far_crate_after', zone: 3.0 },
   { id: 'quay', room: 'isle_otringal', near: { x: 1879.0, z: 1851.0 }, nPost: { x: 1878.4, z: 1849.5 }, rock: { x: 1867.5, z: 1852.0, y: 3.8 }, seed: 43, far: { x: 1855.4, z: 1855.6, top: 4 }, fPost: { x: 1854.7, z: 1856.3, top: 4 }, fTall: 1.2, thing: { x: 1854.6, z: 1850.6, top: 4 }, thingRy: Math.PI / 2, kind: 'locker', flag: 'dx_far_locker', read: ['dx_far_locker1', 'dx_far_locker2'], after: 'dx_far_locker_after', zone: 3.0 },
-  { id: 'honey', room: 'isle_mosquibee', near: { x: 2567.5, z: 1828.4 }, nPost: { x: 2568.2, z: 1830.3 }, mid: { x: 2560.5, z: 1828.25 }, archLift: 0.6, far: { x: 2548.6, z: 1824.6 }, fPost: { x: 2550.4, z: 1823.9 }, thing: { x: 2549.4, z: 1822.6 }, kind: 'honey', zone: 3.0, color: '#e8a830' },
+  { id: 'honey', room: 'isle_mosquibee', near: { x: 2567.5, z: 1828.4 }, nPost: { x: 2569.8, z: 1829.6 }, mid: { x: 2556.97, z: 1828.38 }, archLift: 1.2, far: { x: 2547.5, z: 1823.0 }, fPost: { x: 2546.6, z: 1822.2 }, thing: { x: 2549.4, z: 1822.6 }, kind: 'honey', zone: 3.0, color: '#e8a830' },
 ];
 // HAM-4: the gorge's ice arch (the Hamalayi's frame): the rock stack in the meltwater (its top), the arch's foot on the
 // north bank, where the look is (the bank by the tree bridge's north end), the road crew's kashes
@@ -1400,8 +1400,8 @@ export class Depth extends ChapterBase {
     // a post 2.9 m tall, an arm 1.1 m toward the gap, the brass ring hanging from it (above his head as he leaves)
     const a = Math.atan2(toward.x - at.x, toward.z - at.z), ux = Math.sin(a), uz = Math.cos(a);
     const post = MAT.wood('dark'), brass = MAT.brass();
-    const H = 2.9 + tall;
-    k.add(cyl(0.08, 0.1, H, 8), post, at.x, y + H / 2, at.z);
+    const H = 2.9 + tall, sink = 0.2;   // (its foot set 20 cm into the ground: a slope under it never shows a gap)
+    k.add(cyl(0.08, 0.1, H + sink, 8), post, at.x, y + (H - sink) / 2, at.z);
     k.add(cyl(0.11, 0.11, 0.08, 8), color ? MAT.flat(color, 0.6) : brass, at.x, y + H + 0.02, at.z);
     k.add(cyl(0.045, 0.045, 1.15, 6), post, at.x + ux * 0.55, y + H - 0.08, at.z + uz * 0.55, a, { rx: Math.PI / 2 });
     k.add(cyl(0.012, 0.012, 0.22, 5), brass, at.x + ux * 1.1, y + H - 0.2, at.z + uz * 1.1);
@@ -1423,7 +1423,9 @@ export class Depth extends ChapterBase {
       // an old mooring rock in the cloud, its paved deck (or the bridge's own middle plank) and an Esmer arch over it (as
       // the cloud canal's: kit2b.js)
       const M = { ...mid, y: def.rock ? def.rock.y : gy(mid) }, face = Math.atan2(F.x - N.x, F.z - N.z), dx = Math.sin(face), dz = Math.cos(face);
-      const rockM = MAT.flat('#d8c0d8', 0.92, { vertexColors: true }), white = MAT.flat('#f2ece6', 0.8), lilac = MAT.flat(def.color || '#9a7ab8', 0.55), brass = MAT.brass();
+      // (the deck is laid into the rock by design: its material marked as set, rocksettle.js and tests/overlap-sweep.mjs (g))
+      const rockM = MAT.flat('#d8c0d8', 0.92, { vertexColors: true }).clone(); rockM.userData = { ...rockM.userData, rockSet: true }; delete rockM.userData.vcKey;
+      const white = MAT.flat('#f2ece6', 0.8), lilac = MAT.flat(def.color || '#9a7ab8', 0.55), brass = MAT.brass();
       if (def.rock) {
         k.add(rockGeometry(def.seed || 31), rockM, M.x, M.y - 0.75, M.z, face, { sx: 1.9, sy: 1.5, sz: 1.9 });
         k.add(cyl(1.55, 1.6, 0.18, 18), MAT.stone('grey', 1), M.x, M.y - 0.09, M.z);
@@ -1516,8 +1518,8 @@ export class Depth extends ChapterBase {
     const S = { x: A.stack[0], z: A.stack[1], y: A.top }, foot = { x: A.foot[0], z: A.foot[1], y: T.heightAt(o.x + A.foot[0], o.z + A.foot[1]) };
     const floor = T.heightAt(o.x + S.x, o.z + S.z);
     // the rock stack out of the meltwater, flat-topped (snow on it), sheer: no jump reaches it from the floor or the banks
-    const rockM = MM.stone('#bdb3a3');
-    const h = S.y - floor + 0.4;
+    const rockM = MM.stone('#bdb3a3').clone(); rockM.userData = { ...rockM.userData, rockSet: true }; delete rockM.userData.vcKey;
+    const h = S.y - floor + 0.2;   // (its top just under the deck stone, so nothing on the deck stands in rock)
     // (three rough blocks one on another, each turned and set a little off the last: a weathered column, not a pot)
     for (const [i, f0, f1, sx, sz, ox, oz, ry] of [[0, 0, 0.45, 1.8, 1.6, 0.1, -0.1, 0.4], [1, 0.38, 0.78, 1.5, 1.4, -0.12, 0.08, 1.9], [2, 0.7, 1.0, 1.35, 1.3, 0.05, 0.05, 3.1]]) {
       const y0 = floor - 0.3 + h * f0, y1 = floor - 0.3 + h * f1;
