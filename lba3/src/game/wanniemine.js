@@ -27,7 +27,7 @@
 //   wannieMineDoors() / wannieMineExit(to)  the Platform's mine mouth leads into the gallery's upper end (always open:
 //                                           the shortcut once the bulkhead is down); 'wm-out' back out before the mouth
 import * as THREE from 'three';
-import { RoomBuilder } from './interiors.js';
+import { RoomBuilder, glowSprite } from './interiors.js';
 import { MAT, M, rbox, plane, cyl, sphere, canvasTex, barrel, crate, jar } from './props.js';
 import { rockGeo, rockMat, floorTex } from './underground.js';
 import { crystalMats, crystalCluster } from './crystallook.js';
@@ -63,6 +63,29 @@ function timberSet(k, w = 2.4, h = 3.0) {
   k.add(rbox(w + 0.5, 0.3, 0.32, 0.03), timber(), 0, h + 0.12, 0);
   return { hw: w / 2 + 0.2, hd: 0.2, top: h };
 }
+// ---- the warm lamp light (WAVE6 second round, the user 25.11: "keep, and light it"): caged bulbs hung from the timbers,
+// their glass self-lit with a soft halo, and the lit pools they throw on the floor. The pools are unlit additive discs
+// (no lamp, no shadow: they stay on Low, where the light pool keeps only the two nearest lamps), as Tralu's cave's and the
+// lamp room's pools. No new lamp casts a shadow.
+const poolTex = () => M('wm_pooltex', () => canvasTex(128, 128, (x, W) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.5, 'rgba(255,255,255,0.42)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, W, W); }));
+const poolMat = (color, opacity) => { const m = new THREE.MeshBasicMaterial({ map: poolTex(), color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }); m.userData.noShadow = true; return m; };
+// a lit pool on the floor (room-local x, z; y the floor under it), its size r (radius, m)
+function floorPool(B, x, z, r, mat, y = 0) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(r * 2, r * 2), mat);
+  m.rotation.x = -Math.PI / 2; m.position.set(x, y + 0.035, z); m.renderOrder = 1; B.group.add(m);
+  return m;
+}
+const bulbGlass = () => M('wm_bulb', () => { const m = new THREE.MeshStandardMaterial({ color: '#ffe6b0', emissive: '#ffb050', emissiveIntensity: 1.8, roughness: 0.3 }); m.userData.noShadow = true; return m; });
+// a caged bulb hung on a wire under a timber (room-local; y the wire's top), its halo a sprite
+function hangBulb(B, x, y, z, drop = 0.5) {
+  const k = B.k;
+  k.add(cyl(0.012, 0.012, drop, 4), MAT.iron(), x, y - drop / 2, z);
+  k.add(cyl(0.05, 0.09, 0.07, 8), MAT.iron(), x, y - drop - 0.03, z);
+  k.add(sphere(0.085, 10, 8), bulbGlass(), x, y - drop - 0.12, z);
+  for (let i = 0; i < 3; i++) k.add(rbox(0.015, 0.2, 0.015, 0.004), MAT.iron(), x + Math.sin(i * 2.09) * 0.1, y - drop - 0.13, z + Math.cos(i * 2.09) * 0.1);
+  const h = glowSprite('#ffc070', 1.1, 0.55); h.position.set(x, y - drop - 0.12, z); B.group.add(h);
+}
+
 // a miner's lamp post: a timber post, an iron arm, a caged glass lamp (its glass a material of its own: it lights)
 function lampPost(k, glass) {
   k.add(rbox(0.22, 2.7, 0.22, 0.03), timber(), 0, 1.35, 0);
@@ -209,7 +232,7 @@ function buildLanding(scene, physics) {
   const W = 18, D = 14, H = 6;
   B.W = W; B.D = D;
   R.view = 13.5; R.follow = 0.7; R.music = 'cave'; R.cave = true; R.surface = 'stone';
-  R.indoor = { sunDir: [0.42, 0.78, 0.46], sun: 0.45, hemi: 0.7 };
+  R.indoor = { sunDir: [0.42, 0.78, 0.46], sun: 0.7, hemi: 0.95 };   // (second round: 0.45 / 0.7, too dark in the play camera)
   const TUN = 3.6;   // (the tunnel to the gallery: the left wall at z 3.6)
   caveShell(B, { W, D, H, open: [{ side: 'left', at: TUN, w: 2.2, h: 2.6 }], seed: 3 });
   tunnelMouth(B, 'left', TUN, { w: 2.2, h: 2.6 });
@@ -268,6 +291,18 @@ function buildLanding(scene, physics) {
   B.light('#ffd8a0', 3.6, 13, 4.2, 3.4, 1.4);
   B.light('#e8e0c8', 3.2, 12, -5.0, 4.2, -2.0);
   B.light('#b8a8ff', 1.4, 7, -7.4, 2.0, -3.0);
+  // (second round) the bulbs on the back timbers and the left one, a lantern on the cage's guide; their pools, the camp's
+  // warm pool round the stove and the bedrolls, the cage's work light on the rails
+  for (const x of [-1.0, 3.2, 7.0]) hangBulb(B, x, 3.3, -6.35, 0.45);
+  hangBulb(B, -8.0, 3.3, -1.0, 0.45);
+  hangBulb(B, CX + CW / 2 + 0.15, 2.5, CZ + CW / 2 + 0.3, 0.3);
+  const warmP = poolMat('#ffb060', 0.34), workP = poolMat('#ffe0b0', 0.26);
+  for (const x of [-1.0, 3.2, 7.0]) floorPool(B, x, -5.0, 2.4, warmP);
+  floorPool(B, -6.9, -1.0, 2.2, warmP);
+  floorPool(B, 5.0, 0.2, 4.2, warmP);
+  floorPool(B, CX + 0.6, CZ + 3.2, 3.0, workP);
+  floorPool(B, -7.2, TUN, 1.8, workP);
+  B.light('#ffc890', 3.0, 11, 1.0, 2.8, -5.2);
   B.finish();
   const spots = { gant: { ...B.world(5.0, -4.9), a: 0.25 }, tull: { ...B.world(6.3, 0.8), a: -1.9 }, marl: { ...B.world(2.0, -5.3), a: Math.PI * 0.1 } };
   R.npcSpots = spots;
@@ -292,7 +327,7 @@ function buildGallery(scene, physics) {
   const W = 36, D = 12, H = 6.5, RX = W / 2;
   B.W = W; B.D = D;
   R.view = 15; R.follow = 0.85; R.music = 'cave'; R.cave = true; R.surface = 'stone';
-  R.indoor = { sunDir: [0.42, 0.78, 0.46], sun: 0.4, hemi: 0.65 };
+  R.indoor = { sunDir: [0.42, 0.78, 0.46], sun: 0.62, hemi: 0.85 };   // (second round: 0.4 / 0.65 read black before the lamps)
   const LAND = 14.5, BLOW = -1.5, MOUTH_Z = -0.5;
   caveShell(B, { W, D, H, open: [{ side: 'back', at: LAND, w: 2.2, h: 2.6 }, { side: 'back', at: BLOW, w: 2.0, h: 2.4 }, { side: 'left', at: MOUTH_Z, w: 2.2, h: 2.6, y: INC.top }], seed: 5 });
   tunnelMouth(B, 'back', LAND, { w: 2.2, h: 2.6 });
@@ -326,13 +361,27 @@ function buildGallery(scene, physics) {
     glass.userData.noShadow = true;
     B.put(x, z, 0, (kk) => lampPost(kk, glass));
     const l = B.light('#ffcf8a', 0, 13, x + 0.52, 2.2, z + 0.3);
-    lamps.push({ glass, l }); posts.push({ ...B.world(x + 0.2, z + 0.9), y: 0 });
+    // (second round) its pool on the floor: faint while it is dark, a warm round of light once lit (setLamp), and a halo
+    const pm = poolMat('#ffc070', 0.05); floorPool(B, x + 0.6, z + 2.0, 3.4, pm);
+    const halo = glowSprite('#ffc070', 1.5, 0); halo.position.set(x + 0.52, 2.06, z); B.group.add(halo);
+    lamps.push({ glass, l, pm, halo }); posts.push({ ...B.world(x + 0.2, z + 0.9), y: 0 });
   });
   // a dim cold light from the gems, the landing's tunnel and the Blow's way (amber), so the dark gallery still reads
   B.light('#9a8aff', 1.5, 12, 6.0, 2.4, -3.2);
   B.light('#e8c890', 1.2, 8, LAND, 2.0, -4.2);
   B.light('#ff8a3a', 1.6, 7, BLOW, 1.4, -4.6);
-  B.light('#d8c8a8', 2.4, 10, -16.4, INC.top + 2.4, MOUTH_Z);
+  B.light('#d8c8a8', 4.0, 10, -16.4, INC.top + 2.4, MOUTH_Z);
+  // (second round) the landing's end is the camp's side: two bulbs always lit there, their pools; the Blow's way glows
+  // amber on the floor; the incline's head: a bulb on the timber over the mouth and the daylight in from it
+  hangBulb(B, 16.4, 3.5, -D / 2 + 0.55, 0.4); hangBulb(B, 12.2, 3.5, -D / 2 + 0.55, 0.4);
+  const warmP = poolMat('#ffb060', 0.3);
+  floorPool(B, 16.0, -3.4, 2.8, warmP); floorPool(B, 12.2, -3.6, 2.4, warmP);
+  floorPool(B, LAND, -3.0, 2.2, poolMat('#ffe0b0', 0.22));
+  floorPool(B, BLOW, -4.2, 2.0, poolMat('#ff8a3a', 0.3));
+  hangBulb(B, -RX + 1.2, INC.top + 3.0, MOUTH_Z - 1.6, 0.4);
+  floorPool(B, -17.0, MOUTH_Z - 0.4, 1.1, poolMat('#ffe8c0', 0.4), INC.top);   // (on the landing only: it does not hang over the steps)
+  floorPool(B, -17.0, -3.4, 1.1, poolMat('#ffe8c0', 0.26), INC.top);
+  B.light('#ffd8a0', 3.0, 9, 15.0, 3.0, -3.0);
   // ---- the old incline: timber steps from the floor up to the mouth's landing at the west end
   const IZ0 = -4.0, IZ1 = 3.0, run = (INC.x0 - INC.x1) / INC.n;
   for (let i = 0; i < INC.n; i++) {
@@ -349,6 +398,13 @@ function buildGallery(scene, physics) {
   B.col((INC.x0 + INC.x1) / 2, IZ0 - 1.0, (INC.x0 - INC.x1) / 2 + 0.2, 1.0, INC.top + 1.2, { noStand: true });
   k.add(rbox(INC.x0 - INC.x1, INC.top * 0.6, 2.0, 0.05), rock(), (INC.x0 + INC.x1) / 2, INC.top * 0.3, IZ0 - 1.0);
   for (let i = 0; i <= 5; i++) { const x = INC.x0 - i * (INC.x0 - INC.x1) / 5, y = INC.top * (i / 5) * 0.92; k.add(rbox(0.1, 1.0, 0.1, 0.01), timber(), x, y + 0.5, IZ1 + 0.25); }
+  // (second round) a lantern on the rail half way up: an iron rod up the post, an arm along the rail, a bulb under it
+  // (over the rail, out of the way up)
+  { const x = INC.x0 - 3 * (INC.x0 - INC.x1) / 5, y = INC.top * 0.6 * 0.92 + 1.0, z = IZ1 + 0.25;
+    k.add(rbox(0.04, 0.8, 0.04, 0.01), MAT.iron(), x + 0.07, y + 0.4, z);
+    k.add(rbox(0.36, 0.04, 0.04, 0.01), MAT.iron(), x + 0.23, y + 0.78, z);
+    hangBulb(B, x + 0.38, y + 0.76, z, 0.1);
+    B.light('#ffc890', 3.2, 9, x, y + 0.6, IZ1 - 1.5); }
   { const len = Math.hypot(INC.x0 - INC.x1, INC.top), ang = Math.atan2(INC.top, INC.x0 - INC.x1); k.add(rbox(len, 0.08, 0.08, 0.01), timber(), (INC.x0 + INC.x1) / 2, INC.top / 2 + 0.95, IZ1 + 0.25, 0, { rz: -ang }); }
   k.add(rbox(LX0 - LX1, 0.08, 0.08, 0.01), timber(), (LX0 + LX1) / 2, INC.top + 0.95, IZ1 + 0.25);
   // ---- the project's bulkhead across the gallery at the incline's foot: timber planks on posts, stencilled both
@@ -384,7 +440,7 @@ function buildGallery(scene, physics) {
     posts, lamps, wedges, bulk: B.world(BULK_X + 0.9, 0), back: { ...B.world(BULK_X - 3.0, 0), y: INC.top }, mouth: B.world(-RX + 0.35, MOUTH_Z),
     mouthIn: { ...B.world(-RX + 1.6, MOUTH_Z), a: Math.PI / 2 }, blowDoor: B.world(BLOW, -D / 2 + 0.35), sign: B.world(BLOW + 2.0, -D / 2 + 0.9),
     landTop: { x: B.cx + (INC.x1 - 1.0), z: B.cz + MOUTH_Z, y: INC.top },
-    setLamp(i, on) { const L = lamps[i]; if (!L) return; L.glass.color.set(on ? '#ffe6b0' : '#3a342a'); L.glass.emissive.set(on ? '#ffb050' : '#000000'); L.l.userData.base = on ? 5.2 : 0; L.l.intensity = R.group.visible ? L.l.userData.base : 0; },
+    setLamp(i, on) { const L = lamps[i]; if (!L) return; L.glass.color.set(on ? '#ffe6b0' : '#3a342a'); L.glass.emissive.set(on ? '#ffb050' : '#000000'); L.l.userData.base = on ? 5.2 : 0; L.l.intensity = R.group.visible ? L.l.userData.base : 0; L.pm.opacity = on ? 0.42 : 0.05; L.halo.material.opacity = on ? 0.6 : 0; },
     setWedge(i, out) { const wg = wedgeMesh[i]; if (!wg) return; wg.visible = !out; wedgeCols[i].enabled = !out; },
     // 'shut', 'falling' (k 0…1: tipped back into the sump), 'open'
     setBulk(state, kk = 1) {
@@ -408,7 +464,7 @@ function buildBlow(scene, physics) {
   const W = 18, D = 16, H = 7;
   B.W = W; B.D = D;
   R.view = 15.5; R.follow = 0.55; R.music = 'cave'; R.cave = true; R.surface = 'stone';
-  R.indoor = { sunDir: [0.42, 0.78, 0.46], sun: 0.35, hemi: 0.55 };
+  R.indoor = { sunDir: [0.42, 0.78, 0.46], sun: 0.6, hemi: 0.85 };   // (second round: 0.35 / 0.55)
   const DOOR = 5.2;
   caveShell(B, { W, D, H, open: [{ side: 'left', at: DOOR, w: 2.0, h: 2.4 }], seed: 9 });
   tunnelMouth(B, 'left', DOOR, { w: 2.0, h: 2.4 });
@@ -444,6 +500,12 @@ function buildBlow(scene, physics) {
   for (const [x, z, s] of [...VENTS.map(([x, z]) => [x, z, 1.6]), [6.4, -6.0, 2.0], [-1.0, -6.2, 1.8]]) for (let i = 0; i < 2; i++) { const m = new THREE.Mesh(sphere(1, 12, 8), gasM); m.position.set(x + (hash(i, x, 1) - 0.5) * 0.8, 0.5 + i * 0.6, z + (hash(i, z, 2) - 0.5) * 0.8); m.scale.set(s * 0.85, s * 0.22, s * 0.85); gas.add(m); }
   // light: the vents' amber, the vein's warm glow, a weak cold light by the door
   const vl = VENTS.map(([x, z]) => B.light('#ff8a3a', 3.4, 9, x, 1.0, z));
+  // (second round) the vents' glow on the floor round them, the seam's warm light at the back wall's foot (THE BLOW · NO
+  // LAMPS: the light here is the gas's own)
+  const ventP = poolMat('#ff8a3a', 0.4), veinP = poolMat('#ffb060', 0.3);
+  for (const [x, z] of VENTS) floorPool(B, x, z, 2.6, ventP);
+  floorPool(B, 1.8, -D / 2 + 2.2, 3.2, veinP);
+
   const veinL = B.light('#ffb060', 2.4, 10, 1.8, 2.4, -6.4);
   B.light('#b8c8e0', 1.8, 9, -6.4, 2.8, 4.0);
   B.finish();
@@ -456,6 +518,7 @@ function buildBlow(scene, physics) {
     setCalm(on) {
       ventGlow.emissiveIntensity = on ? 0.15 : 1.2; ventGlow.emissive.set(on ? '#5a3a2a' : '#ff7a1a');
       gasM.opacity = on ? 0.03 : 0.07; gas.visible = !on;
+      ventP.opacity = on ? 0.08 : 0.4; veinP.color.set(on ? '#7ac8ff' : '#ffb060');
       for (const l of vl) { l.userData.base = on ? 0.6 : 3.4; if (R.group.visible) l.intensity = l.userData.base; }
       veinL.color.set(on ? '#9ad8ff' : '#ffb060'); veinL.userData.base = on ? 3.2 : 2.4; if (R.group.visible) veinL.intensity = veinL.userData.base;
       warm.shell.emissive.set(on ? '#1096d0' : '#ff9a3c'); warm.shell.color.set(on ? '#b8f0ff' : '#ffe2b8');
