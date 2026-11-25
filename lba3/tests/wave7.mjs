@@ -17,10 +17,18 @@
 //      "What do you need?"; Dallan (TALK, INPUT: walked to him at the bore): "I can carry it." "No. I'll carry it.":
 //      at the sail with the canvas, the low corners tied; Save & quit → Continue: kept; the ball (INPUT, F) at the high
 //      ring's hook: the sail up, Lumi's "That's something", Dallan's knots; their lines after
+//   E  H-17 in the ending's free play (the user, 25.11), from the same chapter-8 save with the ending set (ISO: the
+//      chapter key 'home', the dinner and the end card done; no w7 state): the lift stalled with the crate; Pippa
+//      (TALK): the ending's hook (her stock, her stall; nothing of the shelters waiting); the lift (E): the crates, "This
+//      one is Pippa's", the tag; the baggage claim (INPUT): Osk, the right answer; the kick; Run it out; the key; the
+//      back door; Save & quit -> Continue (in the ending, kept); the lift: Hoist, Swing; Pippa (TALK): "then back here",
+//      the reward once; her goods by her stall, the depot shelter bare, the pier spot empty; Pippa again: her after
+//      line, no second reward; then her own ending line; Tim (TALK): back to the stall; the journal; the stall's goods
+//      scanned with the sweep library. (A's last check is the other side: finished in chapter 8, the ending unchanged.)
 //   S  the pieces shown only in a state (the stall's crate, the stencils, the store open, the back door open, the
 //      shelter's stock, the shade torn and rigged) scanned with the overlap sweep's library (tests/lib/sweep.js): no
 //      finding that names a wave-7 piece
-// ISO (logged): a region reached by the travel network's own move; the ending's chapter key set. ONLY=A|B|S runs a part.
+// ISO (logged): a region reached by the travel network's own move; the ending's chapter key set. ONLY=A|B|S|E runs a part.
 // SHOTS=dir writes the pictures (the play camera; before/after pairs: the before frame is the same frame with this wave's
 // pieces hidden or in their old state). SERVE=1 answers this checkout's files by request routing.
 // Automated runtime only (SwiftShader, headless Chromium): no listening, no hardware figure.
@@ -32,7 +40,7 @@ const { check, done } = checker({ info: 'always' });
 const HARNESS = fileURLToPath(new URL('./lib/player.js', import.meta.url));
 const SWEEP = fileURLToPath(new URL('./lib/sweep.js', import.meta.url));
 const FIX = (n) => fileURLToPath(new URL(`./fixtures/campaign/${n}.save.json`, import.meta.url));
-const ONLY = process.env.ONLY || 'ABS';
+const ONLY = process.env.ONLY || 'ABSE';
 const SHOTS = process.env.SHOTS || null;
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 let browser, page;
@@ -152,8 +160,51 @@ if (ONLY.includes('A')) {
   await ev(() => { const p = W7.stock.at; P.go(p.x + 2.5, p.z + 3.2, { tol: 0.5 }); P.face(p.x, p.z); for (let i = 0; i < 20; i++) game.step(0.05); });
   await pair('wave7-07-shelter-stock', (h) => W7.stock.setOn(!h));
   iso('the ending (the chapter key set to home)');
-  const a20 = await ev(() => { Object.assign(game.flags, { chapterKey: 'home', chapter: game.story.chapters.findIndex((c) => c.key === 'home'), ep_dinner: true }); game.story.applyFlags(); game.step(0.2); const L = W7.lift.L; return { crate: L.crate.visible, u: L.u, stencil: W7.lift.L.crate.children.some((c) => c.isGroup && c.visible === false), doors: game.story.doors().filter((d) => d.room === 'baggage').length, stock: game.world.root.children.find((o) => o.name === 'wave7 shelter stock')?.visible }; });
-  check('A: the ending (ISO): the lift as the opening left it (its crate back on the pier, no stencil); the back passage still open (two doors into the baggage claim); the shelter\'s stock gone with the shelters', a20.crate && a20.u === 1 && a20.doors === 2 && a20.stock === false, a20);
+  const a20 = await ev(() => { Object.assign(game.flags, { chapterKey: 'home', chapter: game.story.chapters.findIndex((c) => c.key === 'home'), ep_dinner: true }); game.story.applyFlags(); game.step(0.2); const L = W7.lift.L, vis = (n) => game.world.root.children.find((o) => o.name === n)?.visible; return { crate: L.crate.visible, u: L.u, stencil: W7.lift.L.crate.children.some((c) => c.isGroup && c.visible === false), doors: game.story.doors().filter((d) => d.room === 'baggage').length, stock: vis('wave7 shelter stock'), stallStock: vis('wave7 stall stock'), stallCrate: vis('wave7 stall crate'), home: !!game.flags.w7m_home, piTalk: game.story.w7.talkFirst(P.npc('pippa')), state: game.state, j: game.story.journal().find((s) => /Missing deliveries/.test(s.title))?.lines[0]?.key }; });
+  check('A: the ending (ISO), finished in chapter 8 — as before: the lift as the opening left it (its crate back on the pier, no stencil); the back passage still open (two doors into the baggage claim); the shelter\'s stock gone with the shelters; nothing by Pippa\'s stall, no ending story with her (her own ending line answers), the journal\'s first line as it was', a20.crate && a20.u === 1 && a20.doors === 2 && a20.stock === false && a20.stallStock === false && a20.stallCrate === false && !a20.home && a20.piTalk === false && a20.state === 'play' && a20.j === 'w7m_j_hook', a20);
+}
+
+// ================================================================ E · H-17 started and finished in the ending's free play
+if (ONLY.includes('E')) {
+  if (browser) await browser.close();
+  await boot('base-11-town');
+  iso('the ending\'s free play: the chapter-8 save (no w7 state), the chapter key set to home, the dinner and the end card done');
+  const vis = () => ev(() => { const v = (n) => !!game.world.root.children.find((o) => o.name === n)?.visible; return { stall: v('wave7 stall crate'), stallStock: v('wave7 stall stock'), shelter: v('wave7 shelter stock'), crate: W7.lift.L.crate.visible, crateY: r2(W7.lift.crateA().y), stencil: W7.lift.L.crate.children.some((c) => c.isGroup && c.visible) }; });
+  const e0 = await ev(() => { const G = game, f = G.flags; if (G.room) G.exitRoom({ x: -60, z: -2, a: 0 }, true); Object.assign(f, { chapterKey: 'home', chapter: G.story.chapters.findIndex((c) => c.key === 'home'), ep_dinner: true, ep_free: true }); G.story.applyFlags(); G.story.refreshCast(); for (let i = 0; i < 10; i++) G.step(0.05); P.settle(); return { ck: G.story.cur.key, w7: Object.keys(w7()), state: G.state, pippa: at('pippa'), tim: at('tim') }; });
+  const e0v = await vis();
+  check('E: the ending (ISO, no w7 state): the cargo lift still stalled, its hook down on the crate aboard the barge with the stencils; the chalked crate by Pippa\'s stall; no stock at the depot shelter', e0.ck === 'home' && e0.state === 'play' && e0.w7.length === 0 && e0v.crate && e0v.crateY < 1.2 && e0v.stencil && e0v.stall && !e0v.stallStock && !e0v.shelter && !!e0.pippa, { e0, e0v });
+  const e1 = await ev(() => { toCit(-44.0, 3.5, -2.4); const k = P.talk('pippa'); return { k: k.r, hook: !!game.flags.w7m_hook }; });
+  const e1l = await said();
+  check('E: Pippa (TALK): the ending\'s hook — her second cart never came, her stock, her stall half bare; nothing of people waiting in the shelters', e1.k === 'talked' && e1.hook && has(e1l, /stall's half bare/) && has(e1l, /chalked SHELTER/) && !has(e1l, /sleeping|bare stone/), { e1, e1l });
+  const e2 = await ev(() => { const r = ctrl(); return { r, tag: !!game.flags.w7m_tag, labels: !!game.flags.w7m_labels, j: game.story.journal().find((s) => /Missing deliveries/.test(s.title))?.lines.map((l) => l.key) }; });
+  const e2l = await said();
+  check('E: the cargo lift (INPUT, E): STATION over Pippa\'s chalk, "This one is Pippa\'s" (not the shelter\'s), the clamp\'s tag; the journal\'s ending line', e2.r === 'used' && e2.tag && e2.labels && has(e2l, /This one is Pippa's/) && !has(e2l, /shelter's\./) && has(e2l, /KEY AT THE BAGGAGE CLAIM/) && e2.j?.[0] === 'w7m_j_hookh', { e2, e2l });
+  const e3 = await ev(() => { const e = P.enter('baggage'); const k = P.talk('osk'); const p = pick('Blankets'); P.settle(); return { e: e.r, k: k.r, p, claim: !!game.flags.w7m_claim }; });
+  const e3l = await said();
+  check('E: the baggage claim (INPUT): Osk (TALK) — Twinsen\'s ending word ("stencilled STATION over her chalk"), blankets and water casks: the back store, the kick', e3.e === 'entered' && e3.k === 'talked' && e3.claim && has(e3l, /over her chalk/) && has(e3l, /only listens to a kick/), { e3, e3l });
+  const e4 = await ev(() => { const G = game, S = W7.store; const R = G.rooms.baggage, c = R.center; P.go(c.x - 1.2, c.z + 8.6, { tol: 0.4 }); G.hero.combat.equip('fists', true); P.face(S.leverAt.x, S.leverAt.z); P.settle(); P.tap('KeyK', 0.05); G.step(0.8); P.settle(); const free = !!G.flags.w7m_free; lever(); pick('Run it out'); G.step(2.6); P.settle(); const u1 = P.use(S.pin.x, S.pin.z, { kind: 'w7m_key', near: 0.5, match: 2 }).r; P.settle(); const u2 = P.use(S.door.x, S.door.z, { kind: 'w7m_bolt', near: 0.5, match: 2 }).r; P.settle(); return { free, store: !!G.flags.w7m_store, u1, u2, key: !!G.flags.w7m_key, back: !!G.flags.w7m_back }; });
+  check('E: the lever kicked free (INPUT, K), Run it out (the shutter up), the lift\'s key (E), the back door unbolted (E)', e4.free && e4.store && e4.u1 === 'used' && e4.key && e4.u2 === 'used' && e4.back, e4);
+  await said();
+  iso('Save & quit in the ending\'s free play, then Continue');
+  await saveQuit();
+  const e5 = await ev(() => ({ ck: game.story.cur.key, dinner: !!game.flags.ep_dinner, state: game.state, w7: w7(), inv: game.story.items().some((i) => i.id === 'w7m_key'), crateY: r2(W7.lift.crateA().y) }));
+  check('E: Save & quit → Continue: still the ending\'s free play, the key carried, the lift still stalled', e5.ck === 'home' && e5.dinner && e5.state === 'play' && e5.w7.w7m_key && e5.w7.w7m_back && e5.inv && e5.crateY < 1.2, e5);
+  const e6 = await ev(() => { ctrl(); pick('Hoist'); game.step(2.8); P.settle(); ctrl(); pick('Swing'); game.step(4.2); P.settle(); return { lift: !!game.flags.w7m_lift, unclamp: !!game.flags.w7m_unclamp }; });
+  const e6l = await said();
+  check('E: the lift (INPUT): the clamp off, Hoist, Swing over and lower: the crate on the pier', e6.lift && e6.unclamp && has(e6l, /clamp comes off/) && has(e6l, /On the pier/), { e6, e6l });
+  const e7 = await ev(() => { const c0 = game.hero.clovers, k0 = game.hero.coins; const k = P.talk('pippa'); P.settle(); return { k: k.r, done: !!game.flags.w7m_done, home: !!game.flags.w7m_home, dc: game.hero.clovers - c0, dk: game.hero.coins - k0, j: game.story.journal().find((s) => /Missing deliveries/.test(s.title))?.lines.map((l) => l.done) }; });
+  const e7l = await said();
+  const e7v = await vis();
+  check('E: Pippa (TALK): "Take the cart … then back here"; a clover leaf (or kashes at nine); her goods by her stall beside the chalked crate; no stock at the depot shelter; the pier spot empty; the journal\'s section done', e7.k === 'talked' && e7.done && e7.home && (e7.dc === 1 || e7.dk === 15) && e7.j?.every(Boolean) && has(e7l, /then back here/) && e7v.stallStock && e7v.stall && !e7v.shelter && !e7v.crate, { e7, e7l, e7v });
+  const e8 = await ev(() => { const c0 = game.hero.clovers, k0 = game.hero.coins; P.talk('pippa'); P.settle(); P.talk('pippa'); P.settle(); return { dc: game.hero.clovers - c0, dk: game.hero.coins - k0, after: !!game.flags.w7m_piAfter }; });
+  const e8l = await said();
+  check('E: Pippa twice more (TALK): her after line ("My stock\'s back"), then her own ending line; no second reward (completed once)', e8.after && e8.dc === 0 && e8.dk === 0 && has(e8l, /My stock's back/) && has(e8l, /half price/) && !has(e8l, /Take the cart/), { e8, e8l });
+  const e9 = await ev(() => { const k = P.talk('tim', { run: true }); P.settle(); return { k: k.r, after: !!game.flags.w7m_timAfter, tim: at('tim') }; });
+  const e9l = await said();
+  check('E: Tim (TALK): they wheeled it all back to the stall (not up to a shelter)', e9.k === 'talked' && e9.after && has(e9l, /back to the stall/) && !has(e9l, /wheeled the blankets up/), { e9, e9l });
+  await page.addScriptTag({ path: SWEEP }); await ev(() => SW.init());
+  const e10 = await ev(() => { const keep = (r) => { const all = [...(r.interp || []), ...(r.zf || []), ...(r.floats || []), ...(r.sunk || []), ...(r.buried || []), ...(r.decals || []), ...(r.rockCut || [])]; return all.filter((x) => /wave7/.test(JSON.stringify(x))).map((x) => JSON.stringify(x).slice(0, 300)); }; const p = W7.stallStock.at; const out = keep(SW.scan({ bounds: { x0: p.x - 3, x1: p.x + 3, z0: p.z - 3, z1: p.z + 3 } }, { step: 0.2 })); SW.free(); return out; });
+  check('E: Pippa\'s stall with her goods and the chalked crate (the ending\'s piece), scanned (overlap sweep library): no finding names a wave-7 piece', e10.length === 0, e10);
 }
 
 // ================================================================ S · the pieces shown in a state, scanned

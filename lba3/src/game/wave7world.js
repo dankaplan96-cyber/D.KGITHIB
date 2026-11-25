@@ -6,7 +6,8 @@
 //   Citadel, the harbour's cargo lift (island.js cargoLift, the opening's): STATION stencilled on its two crates (the one
 //     on the hook has Pippa's chalk SHELTER under the paint; the one aboard the barge has nothing under it); a pin through
 //     the control's lever with a red tag (HELD).
-//   Citadel, Pippa's stall: one of her crates beside it, SHELTER in her chalk (the loop on the S).
+//   Citadel, Pippa's stall: one of her crates beside it, SHELTER in her chalk (the loop on the S); in the ending, once
+//     delivered then, her goods beside it (two bales of blankets, a water cask): the town is home, the shelters shut.
 //   The baggage claim (baggage.js, the 'bug' house): the back store, a wire cage against the front hall's left wall with
 //     a roller shutter on its hall side, the old conveyor inside it, its lever outside, the bales of blankets, the lift's
 //     pin on a hook, the back door through the left wall (bolted; once unbolted it stands open on a dim passage).
@@ -19,6 +20,7 @@
 //   W7                          filled as each part is built
 //   buildLiftBits(game)         → W7.lift { crateA () → {x,y,z}, crateB () → {x,y,z}, ctrl {x,z}, setOn(b), setPin(b), setCrate(b) }
 //   buildStallCrate(game)       → W7.stall { x, z, setOn(b) }
+//   buildStallStock(game)       → W7.stallStock { at {x,z}, setOn(b) } (the ending's delivery, by the chalked crate)
 //   buildBackStore(R, plan, physics) (the baggage room) → W7.store { lever {x,z}, pin {x,z}, door {x,z}, inside(x,z),
 //                                 setShutter(u 0..1), setBales('back'|'in'|'out'|null), setPin(b), setDoor(open), setLever(-1|0|1),
 //                                 exit {x,z} (the back door's trigger, room) }
@@ -122,6 +124,29 @@ export function buildStallCrate(game) {
   const col = game.physics.add({ type: 'box', x, z, hw: 0.28, hd: 0.28, rot: a + 0.2, top: y + 0.55, noStand: true });
   W7.stall = { x: x + Math.sin(a) * 0.75, z: z + Math.cos(a) * 0.75, at: { x, z }, setOn(on) { g.visible = !!on; col.enabled = !!on; if (on) g.updateMatrixWorld(true); } };
   return W7.stall;
+}
+
+// ================================================================ the ending's delivery, by her chalked crate
+// (the stall's frame as buildStallCrate's: local x along the counter, local z toward the customer; the crate stands at
+//  x −2.0, z +0.15; the goods behind it, toward the stall's back, and the cask at its outer side)
+export function buildStallStock(game) {
+  if (W7.stallStock) return W7.stallStock;
+  const W = game.world, S = W?.stall; if (!S) return null;
+  const a = S.a, sx = S.x - Math.sin(a) * 1.6, sz = S.z - Math.cos(a) * 1.6;
+  const at = (lx, lz) => ({ x: sx + lx * Math.cos(a) + lz * Math.sin(a), z: sz - lx * Math.sin(a) + lz * Math.cos(a) });
+  const PH = game.physics, g = worldGroup(W.root, 'wave7 stall stock'), k = new Kit(g);
+  const A = at(-2.05, -0.6), B = at(-2.75, -0.05);
+  const ya = PH.groundAt(A.x, A.z), yb = PH.groundAt(B.x, B.z);
+  k.at(A.x, ya, A.z, a - 0.1, () => {
+    for (const [i, c] of [['#c8b890', '#a89870'], ['#b8a8c8', '#9888a8']].entries()) k.add(rbox(0.62, 0.42, 0.5, 0.12), MAT.cloth(c[0], c[1]), 0, 0.21 + i * 0.42, 0, i * 0.18);
+  });
+  k.at(B.x, yb, B.z, a, () => P.barrel(k, { r: 0.26, h: 0.7 }));
+  k.flush();
+  for (let i = 0; i < 2; i++) { const ch = new THREE.Mesh(plane(0.5, 0.22), decalMat('chalk', chalkTex)); const ry = a - 0.1 + i * 0.18; ch.position.set(A.x + Math.sin(ry) * 0.255, ya + 0.23 + i * 0.42, A.z + Math.cos(ry) * 0.255); ch.rotation.y = ry; g.add(ch); }
+  const cols = [PH.add({ type: 'box', x: A.x, z: A.z, hw: 0.34, hd: 0.3, rot: a, top: ya + 0.86, noStand: true }), PH.add({ type: 'cyl', x: B.x, z: B.z, r: 0.28, top: yb + 0.72, noStand: true })];
+  W7.stallStock = { at: A, cask: B, setOn(on) { g.visible = !!on; for (const c of cols) c.enabled = !!on; if (on) g.updateMatrixWorld(true); } };
+  W7.stallStock.setOn(false);
+  return W7.stallStock;
 }
 
 // ================================================================ the baggage claim's back store

@@ -36,13 +36,15 @@ Chromium)**. Nobody has played it; no hardware figure; no listening; no measured
 ## Flags (new only; save format 6 unchanged)
 
 `w7m_hook, w7m_labels, w7m_tag, w7m_ledger, w7m_claim, w7m_wrong (n), w7m_free, w7m_store, w7m_key, w7m_back,
-w7m_unclamp, w7m_hoist, w7m_lift, w7m_done, w7m_piAfter, w7m_timAfter, w7m_osAfter`;
+w7m_unclamp, w7m_hoist, w7m_lift, w7m_done, w7m_piAfter, w7m_timAfter, w7m_osAfter, w7m_home` (delivered in the
+ending: to Pippa's stall; see Ending);
 `w7d_paid, w7d_need, w7d_dallan, w7d_up, w7d_luAfter, w7d_daAfter`. An old save has none (base-11-town and
 base-13-desert, format 5, load with none made up). applyFlags keeps them consistent (a later step implies the earlier
 ones). A lift, shutter or lever moving is not saved: a load stands each where its flags put it.
 
-Nothing on the main path needs either story; neither changes a main-path rule. H-17 is open only while the shelters are
-in use (the depot shelter is where the goods go); a player who never does it loses nothing.
+Nothing on the main path needs either story; neither changes a main-path rule. H-17 is open while the shelters are in
+use (the depot shelter is where the goods go) and, since 25.11, in the ending's free play for a player who has not
+finished it (see Ending); a player who never does it loses nothing.
 
 ## Files
 
@@ -113,7 +115,7 @@ in front of the piece or missed it.
 3. The back passage is a short way (behind the house, by the sea wall's stair, to Bug Street and the square), not a
    long shortcut. Is that enough, or should it lead somewhere further (a new path would mean world changes)?
 4. Osk now stays in the evacuation. Keep, or should the claim in chapter 8 go through someone else?
-5. H-17 closes when the network ends (the shelters empty). Should it stay open in the ending's free play too (the card
+5. (Answered 25.11: open in the ending's free play too; see Ending.) H-17 closes when the network ends (the shelters empty). Should it stay open in the ending's free play too (the card
    said "postgame (outcome kept)", read here as: the outcome stays, the story does not start then)?
 
 ## Known gaps (concrete)
@@ -124,6 +126,62 @@ in front of the piece or missed it.
 - The stencils and the chalk are small at the play camera (pictures 01, 02); the lines carry them.
 - The canvas roll and the rigged sail use the sail's own striped material; no new texture.
 - Minutes: unmeasured. The card estimates (25 + 10 min first play) are not claimed; the bot knows every answer.
+
+## Ending (H-17 in the ending's free play; the user, 25.11)
+
+H-17 can now also be started and finished in the ending's free play: chapter key `home`, after the dinner
+(`ep_dinner`). The window opens for a player who has not finished it, whether he never started it or stopped partway
+in chapters 8–14. A player who finished it in chapters 8–14 sees the ending exactly as before. The chapters 8–14
+version is unchanged: same lines, same pieces, same checks (A).
+
+| Step | In the ending |
+|---|---|
+| Hook | Pippa: "My second cart never came. Blankets and water casks, from when we all went up to the shelters. That's my stock, and my stall's half bare." Then the same chalk line. Tim: "Pippa's still cross about her second cart…" Neither line says anyone is waiting in the shelters. |
+| Lift | The cargo lift is still stalled, with the mislabelled crate under the hook (the same stencils and clamp). The crate's last look ends with "This one is Pippa's." instead of "the shelter's". |
+| Claim | Twinsen to Osk: "Pippa's goods, stencilled STATION over her chalk." Osk, Odile, the kick, the lever, the key and the back door are unchanged. The back-passage shortcut opens and stays open as before. |
+| Delivery | Pippa: "…Take the cart. The pier, the baggage claim, then back here." The reward is the same (a clover leaf, or 15 kashes at nine), given once. |
+| After | The goods sit by her stall (two bales of blankets with her chalk, a water cask, beside her chalked crate). The depot shelter gets no stock, and the pier spot is empty. Pippa: "My stock's back. Blankets, in this heat. The casks will sell, though." Next time she gives her own ending line. Tim: "We wheeled it all back to the stall. Lulu rode on top the whole way." Journal: "Pippa's second cart never came". |
+
+State: one new flag, `w7m_home` (delivered in the ending; it implies `w7m_done`). `homeOpen()` = chapter `home`
+&& `ep_dinner` && (not done || `w7m_home`). The ending's line keys are the chapter keys plus `h` (8 new keys, English and
+Hebrew). Save format 6 is unchanged. The ending is still not saved as its own fixture (see Tests below).
+
+Visible change (P107: the user picks): **8. Pippa's stall in the ending, only when H-17 was delivered there:** two
+bales and a water cask beside her chalked crate (`wave7world.js buildStallStock`, the stall's own frame, at its west
+end). Nothing new is shown otherwise.
+
+Tests. All results are **automated runtime only (SwiftShader, headless Chromium)**:
+
+| Suite | Run | Result |
+|---|---|---|
+| `SERVE=1 ONLY=E node tests/wave7.mjs` | once | **PASS 11/11**, no page or console error. Starts from base-11-town with the ending set (ISO, logged: chapter key `home`, `ep_dinner`, `ep_free`; no w7 state). Covers the lift stalled with the crate; Pippa's ending hook; the lift compare ("This one is Pippa's") and the journal's ending line; Osk; the kick, Run it out, the key, the back door; **Save & quit → Continue in the ending** (kept); Hoist and Swing; the delivery (`w7m_home`, a clover leaf, the goods by the stall, no shelter stock, the pier empty); Pippa twice more (her after line, then her own ending line, no second reward); Tim's ending line; the stall's goods scanned with the sweep library (0 findings naming a wave-7 piece) |
+| `SERVE=1 ONLY=AS node tests/wave7.mjs` | once, on the final code | **PASS 20/20**, no error. Covers chapters 8–14 unchanged. A's last check now also verifies that a player who finished in chapter 8 sees nothing by Pippa's stall in the ending, gets no ending story from her (`talkFirst` false) and keeps the original journal line |
+| `node tools/he-bundle.mjs && node tests/dialogue-check.mjs` | once | **PASS**, Hebrew 100 % (6213/6213) |
+
+E's picture lines were removed from the suite after that run (only the pictures; no check changed). B (Kesh) was not
+rerun because its code is unchanged. overlap-sweep.mjs was not run: the only new piece is visible only in a state, so
+E scans it with the sweep library instead.
+
+Pictures: `captures/wave7-ending/` and `sheet.png`, taken with the play camera (deviceScaleFactor 1, 960×540) by a
+scratch script (not committed). It sets the states by flags, places the hero and snaps the camera rig. 01 the lift in
+the ending: before (as the opening left it, as today) / after (stalled, the hook on the barge's crate). 02 Pippa's stall
+in the ending: before (delivered in chapters 8–14: nothing, as today) / after (delivered in the ending: the bales, the
+cask, the chalked crate). 03 the pier after the ending's delivery (the crate gone). The stencils are small at this camera.
+
+Gaps: no committed save fixture in the ending (E sets it by ISO from the chapter-8 save). Tim and Lulu are not shown
+moving the cart. In the ending Odile's ledger lines are unchanged; they speak only of the label and the station, not of
+the shelters.
+
+### Hebrew summary of the ending (סיכום בעברית)
+
+לפי ההחלטה מ־25.11, אפשר עכשיו להתחיל ולסיים את "משלוחים שנעלמו" גם במשחק החופשי של סוף המשחק (אחרי ארוחת הערב), אם
+השחקן לא סיים אותה בפרקים 8–14. מי שסיים בפרקים 8–14 לא רואה שום שינוי בסוף, והגרסה שבתוך הפרקים לא השתנתה. בסוף
+המשחק המנוף עדיין תקוע עם הארגז. פיפה רוצה בחזרה את הסחורה שלה לדוכן ("הדוכן שלי חצי ריק"), בלי להזכיר אנשים שמחכים
+במקלטים. החידה, קיצור הדרך האחורי והפרס (עלה תלתן, פעם אחת) נשארו כמו שהם. אחרי המסירה בסוף המשחק הסחורה מופיעה ליד
+הדוכן של פיפה (שתי חבילות שמיכות וחבית מים ליד הארגז עם הגיר), ולא ליד המקלט. נוסף דגל חדש אחד (w7m_home), ושמונה
+שורות חדשות באנגלית ובעברית. הבדיקות: wave7 חלק E עבר 11/11 (כולל שמירה וטעינה בסוף המשחק, ופרס שניתן פעם אחת),
+וחלקים A ו־S עברו 20/20. גם dialogue-check עבר. הכול ריצה אוטומטית בלבד (SwiftShader). התמונות נמצאות ב־captures/wave7-ending.
+
 
 ## Hebrew summary (סיכום בעברית)
 
