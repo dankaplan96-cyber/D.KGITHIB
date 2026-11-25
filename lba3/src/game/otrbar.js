@@ -22,6 +22,7 @@
 //     npcSpots {boss, performer, bouncer1, bouncer2, regular1, regular2, regular3} {x,z,a}
 //     stage {x,z}  (its middle, on the boards: the performer's place)      office {x,z} (the office door's spot)
 //     counter {x,z,r}  (a search spot behind the bar)                       winch {x,y,z,r}  (a ball target, high)
+//     setCurtain(open)  (WAVE6 H-16: the curtains drawn, or gathered at the posts once the winch is freed)
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex, table, counter, jar, pottedPlant, railing } from './props.js';
@@ -131,11 +132,16 @@ export function buildOtrBarRoom(scene, physics) {
   k.add(rbox(GX1 - GX0, 0.02, GZ1 - BZ - 0.32, 0.01), MAT.planks('honey'), (GX0 + GX1) / 2, GH + 0.005, (BZ + 0.3 + GZ1) / 2);
   B.col((GX0 + GX1) / 2, (BZ + 0.3 + GZ1) / 2, (GX1 - GX0) / 2 + 0.06, (GZ1 - BZ - 0.3) / 2 + 0.06, GH);
   for (let i = 0; i < 3; i++) { const z = GZ1 + (i + 0.5) * 0.4, tp = GH * (3 - i) / 3; k.add(rbox(1.8, tp, 0.42, 0.015), MAT.wood('dark'), GX0 + 1.2, tp / 2, z); B.col(GX0 + 1.2, z, 0.9, 0.2 + 0.12, tp, { stair: true }); }
+  // (WAVE6 H-16: the two curtains are a pair of their own meshes, drawn together over the stage while the winch is
+  //  jammed and gathered to the frame's posts once it is freed: BAR.setCurtain, story/liftbelow.js)
   const curtain = MAT.flat('#e0703a', 0.7, { emissive: '#3a1408' });
+  const sides = [];
   for (const sx of [-1, 1]) {
-    const cx = (GX0 + GX1) / 2 + sx * 2.1;
-    for (let i = 0; i < 6; i++) k.add(cyl(0.09, 0.09, 3.3, 8), curtain, cx + (i - 2.5) * 0.17, GH + 1.65, BZ + 1.6 + Math.sin(i) * 0.05);
+    const side = new THREE.Group(); side.position.set((GX0 + GX1) / 2 + sx * 2.1, GH + 1.65, BZ + 1.6); side.userData.x0 = side.position.x; side.userData.sx = sx;
+    for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(cyl(0.09, 0.09, 3.3, 8), curtain); m.position.set((i - 2.5) * 0.17, 0, Math.sin(i) * 0.05); m.castShadow = true; m.receiveShadow = true; side.add(m); }
+    B.group.add(side); sides.push(side);
   }
+  const drape = { sides, gather: (GX1 - GX0) / 2 - 2.1 - 0.75 };
   const FH = GH + 3.6;
   for (const x of [GX0 + 0.2, GX1 - 0.2]) { k.add(rbox(0.22, FH, 0.22, 0.03), MAT.paint('#2a2a30', 0.5), x, FH / 2, BZ + 1.6); B.col(x, BZ + 1.6, 0.11, 0.11, FH, { noStand: true }); }
   k.add(rbox(GX1 - GX0, 0.26, 0.24, 0.03), MAT.paint('#2a2a30', 0.5), (GX0 + GX1) / 2, FH - 0.1, BZ + 1.6);
@@ -176,6 +182,14 @@ export function buildOtrBarRoom(scene, physics) {
   B.light('#fff0d8', 6, 16, -4.0, 4.4, 0.0); B.light('#ffe0c0', 5, 14, 5.6, 4.0, -3.0); B.light('#ffd8a0', 3, 9, -5.0, 2.8, 4.0); B.light('#bfe6ff', 2, 6, 4.6, 1.6, 1.6);
 
   Object.assign(BAR, {
+    // drawn (false) or gathered at the frame's posts (true): its folds pushed together toward each post
+    setCurtain(open) {
+      for (const sd of drape.sides) {
+        sd.position.x = sd.userData.x0 + (open ? sd.userData.sx * drape.gather : 0);
+        sd.children.forEach((m, i) => { m.position.x = (i - 2.5) * (open ? 0.07 : 0.17); });
+        sd.scale.x = 1;
+      }
+    },
     stage: { x: B.cx + (GX0 + GX1) / 2, z: B.cz + BZ + 2.6 },
     office: { x: B.cx + OX, z: B.cz + BZ + 0.45 },
     counter: { x: B.cx + (BX0 + BX1) / 2, z: B.cz + BZB - 0.9, r: 1.0 },
