@@ -42,6 +42,7 @@ import { ChapterBase } from './base.js';
 import { W7, buildLiftBits, buildStallCrate, buildStallStock, buildBackStore, buildBackDoor, buildShelterStock, buildShade } from '../wave7world.js';
 import { BAGGAGE_PLAN } from '../baggage.js';
 import { shelterFrame, centreForWheel } from './shelters.js';
+import { CLOVER_FULL_KASHES } from '../actors.js';
 import '../text/wave7.js';
 
 export const MD_KEYS = ['evacuation', 'council', 'throttle', 'ballastra', 'balances', 'survey', 'network'];
@@ -346,7 +347,8 @@ export class Wave7 extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     f.w7m_done = true;
     if (this.ck === 'home') f.w7m_home = true;   // (the ending: to her stall)
-    this.giveClover('w7m_toast_clover');
+    // (CLOVER-BALANCE option A, the user's pick 25.11: kashes, not a leaf)
+    h.coins += CLOVER_FULL_KASHES; g.hud.toast('w7m_toast_kashes', { n: CLOVER_FULL_KASHES }); g.hud.stats?.(h);
     g.audio.play('coin');
     this.applyWorld(); g.save(false);
   }

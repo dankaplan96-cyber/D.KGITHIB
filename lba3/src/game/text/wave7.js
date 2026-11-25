@@ -53,7 +53,8 @@ Object.assign(STR.en, {
   w7m_back_shut: 'A back door. Bolted from inside.',
   // the delivery
   w7m_pi_done1: "On the pier? And the blankets in the back store? Tim! Lulu! Take the cart. The pier, then the baggage claim.",
-  w7m_pi_done2: 'Here. A clover leaf, from the good jar. Don\'t tell the others I have a good jar.',
+  w7m_pi_done2: 'Here. Ten kashes, from the good jar. Don\'t tell the others I have a good jar.',
+  w7m_toast_kashes: '{n} kashes from Pippa',
   w7m_pi_after: "Blankets in every corner of the shelter. And Osk keeps the back passage open now. Says it's quicker to the square.",
   w7m_tim_after: 'We wheeled the blankets up ourselves. Lulu rode on top the whole way.',
   w7m_toast_clover: 'A clover leaf',

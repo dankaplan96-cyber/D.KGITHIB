@@ -5,7 +5,7 @@
 //   C  a leaf on the ground at the cap stays on the ground (it is not taken, it hops aside); with room it is taken
 //   D  the shops: Pippa's stall and Mr Bazoo's sell a leaf only below nine (greyed with why at 9, with a box found);
 //      at 8 it is bought
-//   E  Mila (wave 4), Arthur (wave 4) and Pippa (wave 7) with a clover box found and 9–12 leaves held: a leaf each
+//   E  Mila (wave 4), Arthur (wave 4) and Pippa (wave 7): kashes, never a leaf (option A, the user's pick 25.11): Mila 15 + 10, Arthur 10, Pippa 10, under the cap and at it
 //      (they compared with a fixed 9 before); at the cap: their kashes and 10 more
 //   F  a converted reward: the quay light pays 15 kashes and no leaf; the stump gives 10 kashes, once ever; the asylum
 //      desk and the Bù maze's chest give no clover and refill as other containers do
@@ -118,9 +118,9 @@ const e = await ev(() => {
   out.state = G.state;
   return out;
 });
-check('E: Mila with a box found (cap 11) and 10 leaves: a leaf (11) and her 15 kashes', !e.milaErr && e.mila.given && e.mila.clovers === 11 && e.mila.coins === 15, e);
-check('E: Arthur with a box found (cap 11) and 9 leaves: a leaf (10), no kashes', !e.arthurErr && e.arthur.clovers === 10 && e.arthur.coins === 0, e);
-check('E: Pippa with four boxes (cap 13) and 12 leaves: a leaf (13), no kashes', !e.pippaErr && e.pippa.clovers === 13 && e.pippa.coins === 0, e);
+check('E: Mila with a box found (cap 11) and 10 leaves: no leaf (10), 15 + 10 kashes', !e.milaErr && e.mila.given && e.mila.clovers === 10 && e.mila.coins === 25, e);
+check('E: Arthur with a box found (cap 11) and 9 leaves: no leaf (9), 10 kashes', !e.arthurErr && e.arthur.clovers === 9 && e.arthur.coins === 10, e);
+check('E: Pippa with four boxes (cap 13) and 12 leaves: no leaf (12), 10 kashes', !e.pippaErr && e.pippa.clovers === 12 && e.pippa.coins === 10, e);
 check('E: at the cap (13): Mila 15 + 10 kashes, Arthur 10, Pippa 10; no leaf over the cap', e.milaCap.clovers === 13 && e.milaCap.coins === 25 && e.arthurCap.coins === 10 && e.pippaCap.coins === 10 && e.pippaCap.clovers === 13, e);
 
 // ================================================================ F · converted rewards and containers

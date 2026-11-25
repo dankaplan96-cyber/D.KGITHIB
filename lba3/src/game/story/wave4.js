@@ -346,9 +346,10 @@ export class Wave4 extends ChapterBase {
     if (f.w4l_sack && !f.w4l_given) {
       return c(['w4l_mila_give', 'w4l_mila_give2', 'w4l_mila_gift'], () => {
         f.w4l_given = true; f.w4l_reply = true;
-        const clover = h.gainClover(), n = PAY.mila + (clover ? 0 : CLOVER_FULL_KASHES);   // (at the cap: its kashes too)
-        h.coins += PAY.mila;
-        g.audio.play('coin'); g.hud.toast(clover ? 'w4l_toast_gift' : 'w4l_toast_kashes', { n }); g.hud.stats?.(h);
+        // (CLOVER-BALANCE option A, the user's pick 25.11: no leaf, her kashes and the leaf's worth: 15 + 10)
+        const n = PAY.mila + CLOVER_FULL_KASHES;
+        h.coins += n;
+        g.audio.play('coin'); g.hud.toast('w4l_toast_kashes', { n }); g.hud.stats?.(h);
         g.found('leaflet', 'it_w4l_reply', () => g.save(false));
       });
     }
@@ -508,7 +509,8 @@ export class Wave4 extends ChapterBase {
     this.endLamp(false);
     f.w4b_lamp = true;
     this.chain([['arthur', 'w4b_ar_lampyes'], ['arthur', 'w4b_ar_lampgift']], () => {
-      this.giveClover('w4b_toast_clover');
+      // (CLOVER-BALANCE option A, the user's pick 25.11: kashes, not a leaf)
+      h.coins += CLOVER_FULL_KASHES; g.hud.toast('w4b_toast_kashes', { n: CLOVER_FULL_KASHES }); g.hud.stats?.(h);
       g.audio.play('coin');
       this.story.refreshCast(); this.applyWorld(); g.save(false);
     });
