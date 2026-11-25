@@ -44,6 +44,9 @@ for (const [name, key, flags, area, x, z, fx, fz, afterOnly, cam] of VIEWS) {
     Object.assign(f, JSON.parse(JSON.stringify(BASE)), { prologueDone: true, intro: true, c1_water: true, c1_done: true, chapterKey: key }, flags);
     f.chapter = G.story.chapters.findIndex((c) => c.key === key); h.hasBall = true;
     G.story.applyFlags(); G.regions.ensure(area, 'shots'); G.enterRoom(area, { x, z, a: 0 }, true); P.settle(); G.story.refreshCast(); G.story.depth?.applyWorld?.();
+    // (the pictures are of places: an enemy a staged chapter left standing — the depot's chapter-3 guard — is taken out of the view)
+    for (const e of G.enemies) { e.present = false; if (e.mesh) e.mesh.visible = false; if (e.rig?.root) e.rig.root.visible = false; }
+    h.hp = h.maxHp;
     h.pos.set(x, G.physics.groundAt(x, z, 60), z); h.angle = Math.atan2(fx - x, fz - z); h.onGround = true; h.vy = 0;
     if (G.camRig.lba) G.camRig.lba.init = false;
     G.camRig.snap?.();

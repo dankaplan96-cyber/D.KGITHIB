@@ -92,11 +92,38 @@ Nothing existing moved; the Citadel harbour is not touched. Save format unchange
 
 ## Tests (Automated runtime only, SwiftShader, headless Chromium; the machine shared)
 
-RESULTS
+All on 25.11.2026, **automated runtime only (SwiftShader, headless Chromium)**, `SERVE=1`, the machine shared with one
+other worker (load 6–10). Each suite once on the final code, except where a fix followed a failure (said).
+
+| Suite | Result | Notes |
+|---|---|---|
+| `tests/depth-wave3.mjs` (all parts) | **45 of 46 PASS**, errors none, resources none missing | the one FAIL: back from the honey islet, the bridge's ring not in sight from where he stood. Fixed (the arch moved to a plank nearer the islet and made 1.2 m taller; the near davit moved clear of the bridge's rails; the islet's landing moved), then part 8 again: |
+| `ONLY=8 tests/depth-wave3.mjs` (H-8, after the fix) | **PASS 13/13**, errors none | all three isle crossings there and back, the crate, the locker, the honey pot (and again next visit), the gorge's stack, chest and way back, the journal |
+| `tests/jumpreach.mjs` | **PASS 6/6** | §5 new: up the six ledges by jumps (none missed); from the top ledge the high rock's lip is not reached (17.81), nor the gorge's stack from its bank (fell into the gorge, 1.18) |
+| `ALWAYS=… tests/slidetraps.mjs` | **PASS 5/5** | the Hamalayi: every scanned slide spot (24 + 5 known) run, the ledges' and the gorge's boxes included: no respawn, no life lost, all standing |
+| `ONLY=zeelich,hamalayi,isle_otringal,isle_mosquibee tests/overlap-sweep.mjs` | (a)(b)(d)(e)(f) **0 open**; (c) 2 open, (g) 3 open, all ours | fixed: the near davits' feet 3 and 10 cm over a slope (now set 20 cm into the ground, every davit); the gorge's stack through its chest (its top now under the deck stone); the two mooring rocks through their decks (the decks marked as laid in, as the canal's and UND-1's are) |
+| the sweep again, `hamalayi,isle_otringal,isle_mosquibee` / `isle_otringal` | **PASS** (a)–(g), 0 open | known (by design, all older): zeelich b 1, c 1, e 2; hamalayi c 7, d 26; isle_otringal b 4, c 11, d 3, e 1; isle_mosquibee c 8, d 3, e 1 |
+| `node tools/he-bundle.mjs` + `node tests/dialogue-check.mjs` | **PASS** | Hebrew 100 % (5869 of 5869 keys); four new lines warned for 4–5 short sentences, left as they are |
+
+Development runs before the final ones (scratch probes and part runs, not counted above) found and fixed: Garn's talk
+missing while he walks his round (the suite tries again, as a player does); the ledges too far apart for a standing jump
+(closer, rises 1.0 m); the far patches' "far side" too small (6 m round the landing); the quay's landing under an
+awning (moved to the door's front); the honey islet's ring out of sight (above).
+
+Not run (one suite per change): `tests/depth-1.mjs`, `tests/depth-wave2.mjs`, `tests/equip2b.mjs` (the line's own suite:
+kit2b.js is untouched; `index.js lineTargets` now appends depth.js's rings), the chapter suites, the campaign chain.
 
 ## Pictures (`captures/wave3/`)
 
-PICTURES
+`before-*` = the base build's `depth.js` served in place of the new one (none of wave 3 built), `after-*` = this build;
+same place, same staging. `-NOTPLAY` = a fixed camera for a close look (labelled so), the rest the play camera (Follow, Far),
+1280×720. The sheet: **`captures/wave3/wave3-sheet.jpg`** (every pair, one row each). Inspected by the agent only.
+
+- H-6: `h6-westpost` (before/after), `h6-westpost-lit` (after), `h6-westpost-NOTPLAY` (before/after), `h6-store`
+  (before/after), `h6-store-open` (after)
+- H-7: `h7-ledges-NOTPLAY` (before/after), `h7-rope-NOTPLAY` (after)
+- H-8: `h8-yard-NOTPLAY`, `h8-quay-NOTPLAY`, `h8-honey-NOTPLAY`, `h8-gorge-NOTPLAY` (each before/after)
+- The suite's own pictures (`SHOTS=dir`) were not kept.
 
 ## Decisions for the user
 
