@@ -347,11 +347,14 @@ export function barGate(parent, x, y, z, ry) {
 // the fountain's high jet (Otringal): a white column out of the finial and the spray falling from its top (animated)
 export function highJet(parent, x, y, z) {
   const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
-  const mat = new THREE.MeshStandardMaterial({ color: '#eafcff', transparent: true, opacity: 0.55, emissive: '#90d8ec', emissiveIntensity: 0.35, depthWrite: false, side: THREE.DoubleSide });
+  const mat = new THREE.MeshStandardMaterial({ color: '#f2feff', transparent: true, opacity: 0.7, emissive: '#a8e4f4', emissiveIntensity: 0.45, depthWrite: false, side: THREE.DoubleSide });
   mat.userData.noShadow = true;
-  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.09, 3.2, 10, 1, true), mat); col.position.y = 1.6; g.add(col);
-  const top = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 8), mat); top.position.y = 3.2; top.scale.set(1, 0.5, 1); g.add(top);
-  const fall = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.6, 2.6, 18, 1, true), mat.clone()); fall.material.opacity = 0.22; fall.position.y = 1.9; g.add(fall);
+  // (the column out of the finial, 2.4 m; its crown; a thin veil falling from the crown back over the top bowl)
+  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 2.4, 12, 1, true), mat); col.position.y = 1.2; g.add(col);
+  const top = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 10), mat); top.position.y = 2.4; top.scale.set(1, 0.5, 1); g.add(top);
+  const veil = new THREE.MeshStandardMaterial({ color: '#eafaff', transparent: true, opacity: 0.14, roughness: 0.2, depthWrite: false, side: THREE.DoubleSide });
+  veil.userData.noShadow = true;
+  const fall = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.62, 2.8, 20, 1, true), veil); fall.position.y = 0.9; g.add(fall);
   g.visible = false;
   let t = 0;
   return {

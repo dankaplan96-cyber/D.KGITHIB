@@ -63,6 +63,14 @@ const MILL_KEY_A = -1.2;
 // face, east −; v out of it, south)
 export const MASK_LEDGE = { u: -3.3, v: 2.25, y: 7.15, w: 1.3, d: 1.5 };
 
+// a group under an area's own group that takes world coordinates (an area's group stands at its place in the world:
+// a piece added to it is placed relative to that)
+function worldGroup(R, name) {
+  const g = new THREE.Group(); g.name = name; const p = R.group.position;
+  g.position.set(-p.x, -p.y, -p.z); R.group.add(g);
+  return g;
+}
+
 export class KeysClover extends ChapterBase {
   constructor(story) { super(story); this.fx = []; this.jet = null; this.fountKey = null; this.drop = null; }
   get h() { return this.game.hero; }
@@ -126,9 +134,10 @@ export class KeysClover extends ChapterBase {
     const P = g.physics, gy = P.groundAt(f0.x, f0.z, 80);
     this.fount = { x: f0.x, z: f0.z, y: gy };
     // the high jet out of the finial (3.62 m over the basin's foot)
-    this.jet = highJet(R.group, f0.x, gy + 3.55, f0.z);
+    const W = worldGroup(R, 'kc-otringal');
+    this.jet = highJet(W, f0.x, gy + 3.55, f0.z);
     // the key on the top bowl's rim (2.95 m up), glinting; a ball target there
-    const key = smallKey(true); key.position.set(f0.x + 0.42, gy + 2.98, f0.z + 0.1); key.rotation.set(-Math.PI / 2, 0, 0.6); R.group.add(key);
+    const key = smallKey(true); key.position.set(f0.x + 0.42, gy + 2.98, f0.z + 0.1); key.rotation.set(-Math.PI / 2, 0, 0.6); W.add(key);
     this.fountKey = key;
     this._fountT = { x: key.position.x, y: key.position.y, z: key.position.z, r: 0.5, material: 'machine', result: 'switch', done: false, onHit: () => this.knockKey() };
     R.ballTargets.push(this._fountT);
@@ -160,7 +169,7 @@ export class KeysClover extends ChapterBase {
       key: { x: cx + Math.sin(ang) * 3.3, z: cz + Math.cos(ang) * 3.3, y: top.y },
       out: { x: cx + Math.sin(ang) * 3.92, z: cz + Math.cos(ang) * 3.92 },
     };
-    const key = smallKey(true); key.position.set(this.mill.out.x, top.y + 0.78, this.mill.out.z); key.rotation.set(0, -ang + Math.PI / 2, -Math.PI / 2); R.group.add(key);
+    const key = smallKey(true); key.position.set(this.mill.out.x, top.y + 0.78, this.mill.out.z); key.rotation.set(0, -ang + Math.PI / 2, -Math.PI / 2); worldGroup(R, 'kc-mill-key').add(key);
     this.millKey = key;
   }
   buildDesert() {
@@ -169,7 +178,7 @@ export class KeysClover extends ChapterBase {
     const S = R.school, L = MASK_LEDGE, P = g.physics;
     // the mask's frame (desertold.js frame with ry = π): world x = S.x − u, z = S.z − v
     const at = (u, v) => ({ x: S.x - u, z: S.z - v });
-    const c = at(L.u, L.v), grp = new THREE.Group(); grp.name = 'kc-mask-ledge'; R.group.add(grp);
+    const c = at(L.u, L.v), grp = worldGroup(R, 'kc-mask-ledge');
     const k = new Kit(grp);
     const stone = new THREE.MeshStandardMaterial({ color: '#cdc6da', roughness: 0.7, emissive: '#2e2a3a', emissiveIntensity: 0.55 });
     // a ledge of the mask's own stone out of its east cheek under the brow, a corbel under it
@@ -367,7 +376,7 @@ export class KeysClover extends ChapterBase {
     if (f['kc_key_' + d]) return;
     f['kc_key_' + d] = true;
     this.sync(); this.applyWorld();
-    g.found('key', 'it_kc_key', () => { g.hud.stats?.(g.hero); g.save(false); }, { icon: 'key' });
+    g.found('kc_key', 'it_kc_key', () => { g.hud.stats?.(g.hero); g.save(false); }, { icon: 'key' });   // (its own look: itemlook.js kc_key)
   }
   openBox(b) {
     const g = this.game, f = this.f, h = g.hero;
