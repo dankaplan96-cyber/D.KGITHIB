@@ -126,3 +126,12 @@ steps down to the honey room's yard (placed there for the picture); `sheet.png`:
 **הסריקה:** 149 אזורים וחדרים: גשר קרשים אחד בכל המשחק (מוסקיבי); כל שאר הגשרים הם משטח אחד בלי רווחים.
 **תוצאות (הרצה אוטומטית בלבד, SwiftShader):** הליכה מקצה לקצה ובחזרה בלי נפילה; מהגדה, על הגשר, במדרגות אל החצר
 ובחזרה בלי פגיעה; depth-wave3 חלק 8 עבר 13/13; overlap-sweep למוסקיבי עבר; העברית 100 %.
+
+## Sides blocked (the user, 25.11: "לחסום")
+`physics.bridgeTreads` now also lays an unseen guard along each long edge of a plank run (just outside the planks, inside
+the drawn rails, a metre high, see-through and passed by the ball), only where the edge stands over a drop: where ground or
+a stair meets the edge (Mosquibee's steps down to the honey yard) it stays open, and the two ends stay open to step on and
+off. `tests/bridges-walk.mjs` walks off each long edge from the middle. Result (automated runtime only, SwiftShader),
+`ONLY=isle_mosquibee`: PASS 6/6 — the walk both ways, both sides held, bank → bridge → steps → yard and back unhurt, the sweep.
+
+**בעברית:** חסמנו את הצדדים של גשר הקרשים בקיר שקוף בתוך המעקה, רק מעל התהום. הקצוות והמקום שבו המדרגות יורדות לחצר נשארו פתוחים. הבדיקה עברה 6 מתוך 6.

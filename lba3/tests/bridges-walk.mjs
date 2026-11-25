@@ -83,7 +83,7 @@ const SCAN = () => {
   };
   // the bridges: the treads in each area, a site per run (treads within 2.5 m); its axis, its two end planks
   window.__bridges = (want) => {
-    const tr = Ph.colliders.filter((c) => c.tread && want.includes(sceneOf(c.x, c.z)));
+    const tr = Ph.colliders.filter((c) => c.tread && c.tread !== 'side' && want.includes(sceneOf(c.x, c.z)));   // (the side guards: checked by the side walks)
     // (each tread's two ends on a plank at its height)
     // (an end tread, over a bank's lip: one end on the plank, the other on the ground at its height)
     const onPlank = (c, x, z) => Ph.near(x, z).some((q) => q !== c && !q.tread && stand(q) && Math.abs(q.top - c.top) <= 0.3 && Ph._inside(q, x, z));
@@ -156,15 +156,21 @@ for (const [bi, B] of batches.entries()) {
       const there = __walk(bg.a, bg.b, lo);
       const back = __walk(bg.b, bg.a, lo);
       __tp(bg.a.x, bg.a.z, bg.top[1] + 0.3);
+      // (the user, 25.11, "block the sides": from the middle, walked straight off each long edge for 5 m: he stays on the deck)
+      const L = Math.hypot(bg.b.x - bg.a.x, bg.b.z - bg.a.z), ux = (bg.b.x - bg.a.x) / L, uz = (bg.b.z - bg.a.z) / L;
+      const sides = [-1, 1].map((k) => { __tp((bg.a.x + bg.b.x) / 2, (bg.a.z + bg.b.z) / 2, bg.top[1] + 0.3); const m = { x: G.hero.pos.x, z: G.hero.pos.z };
+        const r = __walk(m, { x: m.x - uz * k * 5, z: m.z + ux * k * 5 }, lo); return { fell: r.fell, hurt: r.hurt, y: r.at[1] }; });
+      __tp(bg.a.x, bg.a.z, bg.top[1] + 0.3);
       const mid = __walk(bg.a, bg.b, lo, true);
       G.renderer.render();
-      return { y0: +y0.toFixed(2), there, back, mid };
+      return { y0: +y0.toFixed(2), there, back, mid, sides };
     }, { bg });
     const name = `${bg.scene}-${k + 1}`;
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, name + '.png'), timeout: 600000 });
     walks.push({ name, bg, r });
     check(`walk: ${name} (${bg.planks} planks, ${bg.len} m, deck ${bg.top.join('–')} m) from its first plank to its last and back by input: no fall, no life lost`,
       r.there.left < 0.6 && r.back.left < 0.6 && !r.there.fell && !r.back.fell && r.there.hurt <= 0 && r.back.hurt <= 0 && Math.abs(r.y0 - bg.top[1]) < 0.6, { a: bg.a, b: bg.b, ...r });
+    check(`sides: ${name}: walked off each long edge from the middle, he stays on the deck (the side guards)`, r.sides.every((q) => !q.fell && q.hurt <= 0 && q.y > bg.top[0] - 0.3), r.sides);
   }
   // 3. Mosquibee's honey islet: bank → bridge → steps → yard and back
   if (want.includes('isle_mosquibee')) {

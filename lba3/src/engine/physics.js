@@ -184,6 +184,31 @@ export class Physics {
       // (the tread's long side across the run, as long as the shorter plank; 5 cm onto each)
       out.push(this.add({ type: 'box', x: e.mx, z: e.mz, hw: e.l, hd: e.gap / 2 + 0.05, rot: e.rot, top: e.top, bottom: e.top - 0.3, seeThrough: true, tread: true }));
     }
+    // the sides (the user, 25.11: "block the sides"): the drawn rails stand outside the planks, so he could walk off the
+    // deck's long edges into the drop. Along each run, an unseen guard at each plank end, from the first plank's middle to
+    // the last's (the two ends stay open to step on and off), a metre high, that the ball and the eye pass
+    for (const run of new Set(runOf.values())) {
+      if (run.length < 3) continue;
+      const A = axes(run[0]);
+      let cx = 0, cz = 0, l = Infinity, top = -Infinity;
+      for (const c of run) { cx += c.x / run.length; cz += c.z / run.length; l = Math.min(l, axes(c).l); top = Math.max(top, c.top); }
+      let t0 = Infinity, t1 = -Infinity;
+      for (const c of run) { const t = (c.x - cx) * A.ux + (c.z - cz) * A.uz; t0 = Math.min(t0, t); t1 = Math.max(t1, t); }
+      const px = -A.uz, pz = A.ux, D = 0.25;
+      for (const k of [-1, 1]) {
+        // (only over a drop: where ground or a stair meets the edge — Mosquibee's steps down to the honey yard — it stays open)
+        const drop = (t) => this._ground(cx + A.ux * t + px * k * (l + 0.35), cz + A.uz * t + pz * k * (l + 0.35), top + 0.05) < top - 1.0;
+        const seg = (a, b) => { const tm = (a + b) / 2;
+          out.push(this.add({ type: 'box', x: cx + A.ux * tm + px * k * (l + 0.06), z: cz + A.uz * tm + pz * k * (l + 0.06), hw: 0.06, hd: (b - a) / 2,
+            rot: Math.atan2(A.ux, A.uz), top: top + 1.0, bottom: top - 0.3, seeThrough: true, noBall: true, block: true, tread: 'side' })); };
+        let a = null;
+        for (let t = t0; t <= t1 + 1e-6; t += D) {
+          if (drop(t)) { if (a == null) a = t; }
+          else if (a != null) { if (t - D - a > 0.1) seg(a, t - D); a = null; }
+        }
+        if (a != null && t1 - a > 0.1) seg(a, t1);
+      }
+    }
     // the ends: where the bank an end plank meets rises steeply through its far half to a lip a few cm over it (Mosquibee's
     // east end: 7 cm, steeper than he walks up from a standing step: he walked off the bank onto the bridge and could not
     // walk back), a tread over the lip at its crest's height, from where the ground comes up through the plank to 15 cm
