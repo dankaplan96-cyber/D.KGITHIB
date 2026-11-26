@@ -45,3 +45,10 @@ Thanks, and long live Twinsen! 🌍
 אשמח לשמוע מה אתם חושבים: מה מרגיש לכם LBA ומה לא. בהמשך אחפש כמה אנשים שירצו לבדוק אותו.
 
 תודה, ויחי טווינסן! 🌍
+
+## Follow-up (more pictures, 26.11) — English, to post as a comment or a new post
+
+Thanks so much for all the interest! Here are a few more places from further into the adventure: the harbour town and stilt houses of Ballastra, the Zeelich islands (Knartas with its round huts and a moored zeppelin, the blossom orchard, the old gas works), Zeelich's city gate, the Kesh oasis on Desert Island, and Twinsen's home. All real in-game screenshots, still a work in progress.
+
+## המשך (עברית, לך)
+תודה רבה על כל ההתעניינות! הנה עוד כמה מקומות מהמשך ההרפתקה: עיר הנמל ובתי הכלונסאות של בלסטרה, איי זיליך (קנרטאס עם הבקתות העגולות והצפלין העוגן, מטע הפריחה, מפעל הגז הישן), שער העיר של זיליך, נווה המדבר קש באי המדבר, והבית של טווינסן. כולם צילומי מסך אמיתיים מהמשחק, שעדיין בעבודה.
