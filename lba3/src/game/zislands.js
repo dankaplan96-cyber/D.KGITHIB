@@ -1453,12 +1453,11 @@ const BARE = {
 };
 // #17b (franco.js KNARTAS_PAL, the user's pick 26.11, ?knartaspal=old the old ground; docs/lba-maturity/KNARTAS-PALETTE.md): Knartas's ground in
 // LBA2's palette (resemblance-zeelich.md §C: "pale grey-white rock with green moss, an orange-brown earth square, sand
-// rims"), where ours was dark violet-grey rock, bright green turf and dark tiles. Vertex colours only, on the textures
-// the island already reads (the cliff tile, the grass, the dirt, the sand): no texture, draw or shader of its own.
-//   - rock (cliffs, the bare-rock patches, the brink under the clouds): the cliff tile is grey-violet (mean ~#8e8796);
-//     its vertex colour, a multiplier in linear light, takes the violet out and lifts it to a pale warm grey (~#a6a29a
-//     before light: about the quay paving's value, so its lit facets stay under white). Over 1, as the tile needs, but
-//     modest, so the one-cell blend into the turf beside a cliff reads as a lit lip, not a glow;
+// rims"), where ours was dark violet-grey rock, bright green turf and dark tiles. Vertex colours, on the textures the
+// game already has (the grass, the dirt, the sand, and Otringal's granite for the rock): no draw or shader of its own.
+//   - rock (cliffs, the bare-rock patches, the brink under the clouds): Otringal's pale granite tile (a quiet speckled
+//     grey: the cliff tile's facets and cracks read as crazy paving lifted this pale), its vertex colour a multiplier in
+//     linear light to a pale warm grey (~#a6a29a before light: about the quay paving's value);
 //   - turf: a softer, greyer moss green (the grass tile under a pale sage), so it reads as moss on the rock;
 //   - earth: the bare patches that were dark paving tiles are orange-brown earth (the dirt tile #8a6a50, warmed to a
 //     brown ~#9c6843: darker than the huts' walls #c9a074, lighter than their domes, browner than the terracotta jars),
@@ -1467,8 +1466,12 @@ const BARE = {
 // (Every branch below reads PAL, which only this sets, on Knartas only: every other island's ground is as before.)
 const KNA_PAL = KNARTAS_PAL && {
   ground: ['#d4dab0', '#c6cea0', '#f0e0c0'],   // (moss, moss, the sand rim)
-  rock: [1.42, 1.5, 1.07],                      // (linear multipliers on the cliff tile: ~#a6a29a)
-  stone: [1.2, 1.27, 0.92],                     // (the bare-rock patches on the flat: darker, as they face the sun)
+  // (#17b, the user 26.11, "a quieter rock": the cliff tile's light facets and dark cracks, drawn for Citadel's dark cliffs,
+  //  read busy lifted to a pale grey, like crazy paving on the flat patches. The rock is Otringal's pale granite tile
+  //  (graniteTex: one shared 512² texture), darkened by its vertex colour to the same lit grey as before)
+  granite: true,
+  rock: [0.76, 0.76, 0.75],                     // (linear multipliers on the granite tile (#bcb8b0): ~#a6a29a, as before)
+  stone: [0.72, 0.72, 0.73],                    // (the bare-rock patches on the flat: darker, as they face the sun)
   earth: [1.3, 0.96, 0.7],                      // (on the dirt tile: ~#9c6843; a first #a86c44 read as near the jars' terracotta)
   paveCol: '#f2ece2', pathMix: 0.8,
   rockProp: [1.45, 1.45, 1.35],                 // (the rocks' instance colour: their grey-brown sculpt (#9a9182) to pale grey)
@@ -1583,9 +1586,13 @@ function buildIsland0(scene, physics, name, L, at) {
       else { wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p); }
     }
     if (PAL && rk < 0.5) { const e = earthSq(x, z, slope); if (e > 0) { wt[3] = Math.max(wt[3], e * 1.4); wt[0] *= 1 - e; wt[2] = Math.max(rk, wt[2] * (1 - e)); } }   // #17b: the village square
+    // #17b: the terrain shader moves the rock's edge by the tile's brightness (terrain.js: dot(rock, 1/3) - 0.5, times 0.3);
+    // the granite is paler than the cliff tile (linear mean 0.466 against 0.294: +0.052), which ate ~9 % of the turf on
+    // screen. The rock's share a little less, so its edge stays where the approved palette had it
+    if (PAL?.granite) wt[2] *= 0.81;
     if (S.turfRock) { wt[2] += wt[0]; wt[0] = 0; }   // (ZEELICH-2: no grass: the turf is the island's granite)
   };
-  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: S.turfRock ? graniteTex() : TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite)
+  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: S.turfRock || PAL?.granite ? graniteTex() : TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite; #17b Knartas's rock too)
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);
