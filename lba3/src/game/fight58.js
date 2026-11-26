@@ -9,8 +9,12 @@
 //     barrels already do)
 //  c  the Zeelich depot's Grobo guard: a longer pause after his baton strike (hit or miss), long enough for a charged
 //     throw back; the baton's hit stays 2 (the user's pick, v162)
-const q = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('fight58') || ''; } catch { return ''; } })();
-export const FIGHT58 = new Set(q.toLowerCase().split(/[,|\s]+/).filter((k) => /^[abc]$/.test(k)));
+//  h  (split out of b) only the Citadel depot's heart: its public-path barrels give one heart when searched
+// The user's pick (26.11): a + c + h on by default; b's crates stay off. ?fight58=none (or any other list) overrides the
+// default, so ?fight58=none is the game as before #58, and ?fight58=a,b,c,h adds the crates.
+export const FIGHT58_DEFAULT = 'a,c,h';
+const q = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('fight58') ?? FIGHT58_DEFAULT; } catch { return FIGHT58_DEFAULT; } })();
+export const FIGHT58 = new Set(q.toLowerCase().split(/[,|\s]+/).filter((k) => /^[abch]$/.test(k)));
 export const f58 = (k) => FIGHT58.has(k);
 // (a) the first two fights' drones: tell (s, × the difficulty's wind-up) and rest after a shot (s, × its cool), against
 // enemies.js DRONE_TUNE's 0.75 and 1.6

@@ -2428,9 +2428,9 @@ function buildDepot(W0, root, r) {
   // (#58 ?fight58=b: a cover stack in the yard, and the barrels on the public path give a heart when searched: fight58.js)
   if (f58('b')) {
     crateStack(W, grp, COVER58.citadel.map(([x, z, n]) => [x, z, n, 1]), r);
-    W0.givers.push({ id: 'depot-barrels', ...sh('depot', 8.8, 45.1), r: 1.9, top: 1.0, kinds: ['life'], n: 1 });
     W0.depotCover = COVER58.citadel.map(([x, z]) => sh('depot', x, z));
   }
+  if (f58('b') || f58('h')) W0.givers.push({ id: 'depot-barrels', ...sh('depot', 8.8, 45.1), r: 1.9, top: 1.0, kinds: ['life'], n: 1 });
   handcart(W, grp, B, 6.4, 45.7, 0.2, r);
   floodMast(W, B, -0.4, 59.4, 9, 52);
   floodMast(W, B, 18.4, 44.6, 9, 52);

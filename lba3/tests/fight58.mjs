@@ -8,7 +8,7 @@
 //           zdepot  the Zeelich depot (base-05): STAGED at the gate (D.x − 4, D.z − 11, as fight68 and tests/depot.mjs),
 //                   then by keys: the fight, then the locker
 //   CTRL    modern | classic        READ  0 (fight68: never dodges a bolt) | 1 (dodges what a player reads)
-//   V       off | a | b | c (or a list: a,b) — the ?fight58= switch            TRIES  runs (different starts: WAIT k)
+//   V       off (=none) | a | b | c | h (or a list) — ?fight58=                     TRIES  runs (different starts: WAIT k)
 // Run: SERVE=1 FIGHT=ch2 CTRL=modern V=off TRIES=3 node tests/fight58.mjs   → one JSON line per run (OUT=file appends)
 import { launch, open, menu, URL0 } from './lib/boot.mjs';
 import fs from 'node:fs';
@@ -25,7 +25,7 @@ fs.writeFileSync(LOAD, fixture);
 for (let tr = 0; tr < TRIES; tr++) {
   const { browser, page } = await launch({ storageState: LOAD, width: 960, height: 540 });
   const ev = (f, a) => page.evaluate(f, a);
-  await open(page, '?nocine' + (V !== 'off' ? `&fight58=${V}` : ''));
+  await open(page, '?nocine' + (V !== 'off' ? `&fight58=${V}` : '&fight58=none'));
   await menu(page, 'continue');
   await page.addScriptTag({ path: path.join(HERE, 'lib/fightlog.js') });
   await page.addScriptTag({ path: path.join(HERE, 'lib/fight58bot.js') });
