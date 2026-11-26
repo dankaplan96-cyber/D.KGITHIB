@@ -32,6 +32,9 @@ import { fitAdd } from './worldfit.js';
 import { buildCelPortal } from './celtemple.js';
 import { roomOcc, occCollider } from './roomocc.js';
 import { Occluders } from '../engine/occlude.js';
+import { KNARTAS_NEW, francoHut, zeppelinMast, HUT_WALLS, HUT_DOMES } from './franco.js';
+// (#17: a batch that keeps nothing: esmerBuilding asked where a house's door would be, nothing drawn)
+const NO_BATCH = { add() { return this; }, addM() { return this; } };
 
 // The original's Zeelich islands (assets/lba2/islands, numbers from the user's files: tools/lba2-islands.py), then
 // our own places (src/game/zplaces.js). (Appended at the end: an island's place in the world is its index, and
@@ -640,6 +643,9 @@ const STYLE = {
     // south side, clear of the hedges and their fence on the north (narrower where they stand beside it); the arm's tree that
     // stood on the slope in their way stands beside their foot, on the arm)
     doorStairs: { 'knartas--30--18': { lo: -0.25, hi: 1.2, loTop: -0.8, topTo: 2.9 } },
+    // (#17 ?knartas=new, franco.js: the houses are the Francos' round brown huts; the dig foreman's keeps the gold dome
+    //  the Francos' rhyme names, story/francos.js — the only gold one, so the riddle points at one house)
+    hut: { gold: ['knartas-22-15'] },
     layout: (L) => ({ ...L, decor: L.decor.map((o) => (o[8] === 27 && o[7] === 'tall' && Math.hypot(o[0] + 23.85, o[1] + 17.55) < 0.05 ? [o[0], -15.75, 2.59, ...o.slice(3)] : o)) }),
     crates: 'wood', lines: ['#f4eee0', '#3a7ac8', '#e8608a', '#f0c040'],
     landmark(api) {
@@ -662,6 +668,9 @@ const STYLE = {
       api.open('laundry', 3, { lo: 1.8, space: 9, around: { x: 22, z: 20, r: 22 } });
       api.street({ benches: 4, clutter: 8, kinds: ['barrels', 'crates', 'jars', 'bin', 'planter'], lamps: 12, doors: 0.85, banners: 0, lines: true, fillSpacing: 8 });
       api.signs([{ word: 'VILLAGE', x: 22, z: 22 }]);
+      // (#17 ?knartas=new: the zeppelin port at the south arm's west end: the mooring mast on the quay, the moored
+      //  zeppelin over the clouds to the west; placed last, so nothing else of the plan moves for it)
+      if (KNARTAS_NEW) api.near('zepMast', -32.6, -40.2, -Math.PI / 2, {}, 1.5) || api.add('zepMast', -32.6, -40.2, -Math.PI / 2, {});
     },
   },
   mosquibee: {   // the Mosquibees' honey island: a hive meadow on the broad top, flower beds and hives on the ledges
@@ -907,6 +916,7 @@ const FOOT = {
   ruinedTower: () => ({ r: 2.6 }), telescope: () => ({ r: 1.8 }), brokenCol: () => ({ r: 0.5 }), fallenDome: () => ({ r: 2.3 }), liftTower: (o) => ({ r: (o.w ?? 3) * 0.75 }),
   // ZEELICH-1 item 5
   mineMouth: () => ({ hw: 3.0, hd: 2.0 }), bellFrame: () => ({ r: 1.0 }), boardSign: (o) => ({ hw: (o.w ?? 2.6) / 2 + 0.1, hd: 0.3 }),
+  zepMast: () => ({ r: 1.45 }),   // (#17)
 };
 // how tall each piece stands (for the camera's view: the big ones are kept out of a chosen view's foreground)
 const HGT = { gasHolder: (o) => (o.r ?? 2.6) > 2.2 ? (o.h ?? 5.2) + 1.2 : (o.h ?? 4.2) + 1.2, crane: (o) => o.h ?? 9, mast: (o) => o.h ?? 8, waterTank: () => 3.6, beacon: () => 5.9,
@@ -914,7 +924,7 @@ const HGT = { gasHolder: (o) => (o.r ?? 2.6) > 2.2 ? (o.h ?? 5.2) + 1.2 : (o.h ?
   weighBeam: () => 4.6, telescope: () => 2.4, stage: () => 2.0, nectarPress: () => 2.6, fountain: () => 3.6, plinth: () => 3.2, netRack: () => 2.3, laundry: () => 2.3,
   colossus: (o) => o.h ?? 28, fallenDome: () => 2.0, hive: () => 1.3, crates: () => 1.3, barrels: () => 0.9, honey: () => 1.0, bench: () => 0.9, planter: () => 1.2,
   boxPlanter: () => 0.8, flowerBed: () => 0.6, bin: () => 1.1, jars: () => 0.8, bottles: () => 1.2, barrier: () => 1.1, brokenCol: (o) => o.h ?? 2.2, warn: () => 2.0,
-  mineMouth: () => 4.4, bellFrame: () => 3.2, boardSign: () => 2.6 };
+  mineMouth: () => 4.4, bellFrame: () => 3.2, boardSign: () => 2.6, zepMast: () => 8.0 };
 const pieceH = (kind, o = {}) => HGT[kind]?.(o) ?? 1.0;
 const THIN_PIECES = new Set(['lamp', 'cageLamp', 'banner', 'pole', 'signpost', 'flagPole', 'bollard', 'post', 'shuttleBoard', 'skiff', 'warn']);
 const FS = 0.5;   // the plan's grid (m)
@@ -1837,14 +1847,30 @@ function buildIsland0(scene, physics, name, L, at) {
         const half = (toward[0] ? ex : ez) / 2;
         const hangs = [0.5, 1.0].some((v) => [-0.4, 0, 0.4].some((u) => { const g = gy(o.x + toward[0] * (half + v) + toward[1] * u, o.z + toward[1] * (half + v) - toward[0] * u); return g != null && y0 - g > 0.1; }));
         const lk0 = look(o), hs0 = S.house?.(o, { walls, stone: stoneM }) || {};
-        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...lk0, ...hs0, fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
+        const hopts = { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...lk0, ...hs0 };
+        // (#17 ?knartas=new: a Franco hut on the footprint, its door where the Esmer house's would be — asked of
+        //  esmerBuilding without drawing it — so every door, room, route and save is as before: franco.js)
+        let built = null;
+        if (S.hut && KNARTAS_NEW && Math.min(ex, ez) >= 2.5 && Math.max(ex, ez) / Math.min(ex, ez) <= 2.2) {
+          const dry = built = EP.esmerBuilding(new EP.Place(NO_BATCH, o.x, y0, o.z, P.ry), hopts), hid = `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`;
+          const base = Math.min(0.38, dry.top * 0.15), bury = o.bury ?? 0.6, pick4 = Math.abs(Math.round(o.x * 3 + o.z * 7));
+          const hut = francoHut(P, { w: hopts.w, d: hopts.d, h: o.sy, base, bury, door: dry.door, wall: HUT_WALLS[pick4 % HUT_WALLS.length], dome: HUT_DOMES[(pick4 >> 2) % HUT_DOMES.length], gold: S.hut.gold?.includes(hid), blind, mats: { stone: stoneM, wood: plankM, brass, vc: EP.EM.vc() } });
+          const [fx0, fz0] = P.pt(0, 0), W2 = hopts.w / 2 - 0.16, D2 = hopts.d / 2 - 0.16, pt = hut.portal;
+          fitAdd({ region: 'isle_' + name, name: `hut (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, x: fx0 + ox, z: fz0 + oz, ry: P.ry, oy: P.y + base, w: hopts.w, d: hopts.d, base: -base - bury, plinth: 0, floor: 0, steps: base + 0.1,
+            sides: { front: W2, back: W2, left: D2, right: D2 }, top: { front: hut.Hw - base, back: hut.Hw - base, left: hut.Hw - base, right: hut.Hw - base },
+            openings: pt ? [{ side: 'front', kind: 'door', x0: pt.x - pt.w / 2, x1: pt.x + pt.w / 2, y0: 0, y1: pt.h - base }] : [], door: !!pt, banked: blind });
+          for (const c of hut.cols) { const [cx, cz] = P.pt(c.lx, c.lz); col(c.type === 'box' ? { type: 'box', x: cx, z: cz, hw: c.hw, hd: c.hd, rot: P.ry, top, noStand: true } : { type: 'cyl', x: cx, z: cz, r: c.r, top, noStand: true }); }
+          (R.huts ||= []).push({ id: hid, x: ox + o.x, z: oz + o.z, door: !!dry.door, gold: !!S.hut.gold?.includes(hid), ports: hut.ports });
+        }
+        const hutBuilt = !!built;
+        built ||= EP.esmerBuilding(P, { ...hopts, fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
         // (DOORS-1: a door that leads nowhere says so: "Locked." (the story's shut doors; a story door at the same
         // place is offered instead))
         // (ISLE-HOMES: what the building is, for its room (ihomes.js): its size, its role and sign; the door's own place)
         if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8), [sx, sz] = P.pt(built.door.x, built.door.z); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry, sill: { x: ox + sx, z: oz + sz }, w: +(toward[0] ? ez : ex).toFixed(2), d: +(toward[0] ? ex : ez).toFixed(2), h: +o.sy.toFixed(2), role: (hs0.role ?? lk0.role) || 'house', sign: (hs0.sign ?? lk0.sign) || null, domed: !!(lk0.domeM && (hs0.domed ?? lk0.domed) !== false && o.sy > 4.5) }); }
         // (KNARTAS-LEDGE: a door on a ledge over the lane below it gets a flight of steps down: S.doorStairs)
         { const ds = S.doorStairs?.[`${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`]; if (built.door && ds) doorStair(P, built.door, y0, toward, ds); }
-        col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
+        if (!hutBuilt) col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
         break;
       }
       case 'tower': {
@@ -2062,6 +2088,14 @@ function buildIsland0(scene, physics, name, L, at) {
     weighBeam: EP.weighBeam, cloudCatcher: EP.cloudCatcher, nectarPress: EP.nectarPress, ruinedTower: EP.ruinedTower, telescope: EP.telescope,
     brokenCol: EP.brokenCol, fallenDome: EP.fallenDome, liftTower: EP.liftTower,
     mineMouth: EP.mineMouth, bellFrame: EP.bellFrame, boardSign: EP.boardSign,   // (ZEELICH-1 item 5)
+    // (#17: the mooring mast and the moored zeppelin, franco.js; two mooring lines from the gondola down to the quay)
+    zepMast: (P) => {
+      const z = zeppelinMast(P, { mats: { stone: stoneM, wood: plankM, brass, vc: EP.EM.vc() } });
+      for (const c of z.cols) { if (c.type === 'cyl') P.cyl(c.lx, c.lz, c.r, c.top, { seeThrough: false }); else P.box(c.lx, c.lz, c.hw, c.hd, c.top, { seeThrough: false, bottom: P.y + c.bottom }); }
+      for (const s of [-1, 1]) { const [ax, az] = P.pt(s * 2.2, 0.9); EP.hangingLine(B, z.gondola, [ax, gy(ax, az) + 0.25, az], { kind: 'plain', sag: 0.6 }); }
+      (R.landmarks ||= []).push({ kind: 'zeppelin', x: ox + P.x, z: oz + P.z, nose: z.nose, hy: z.hy });
+      P.r = 1.5; return P;
+    },
   };
   const groundUnder = (x, z, rr) => { if (A.floorAt) return gy(x, z); let y = gy(x, z); for (let q = 0; q < 6; q++) { const a = (q / 6) * Math.PI * 2; y = Math.min(y, gy(x + Math.sin(a) * rr, z + Math.cos(a) * rr)); } return y; };
   let pieces = 0;

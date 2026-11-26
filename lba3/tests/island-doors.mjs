@@ -30,7 +30,7 @@ await open(page, '?nocine'); await menu(page, 'new');
 iso('chapter 5 by its flags (as the island tests do)');
 await ev(() => { const G = game, f = G.flags; Object.assign(f, { prologueDone: true, intro: true, chapterKey: 'steam' }); f.chapter = G.story.chapters.findIndex((c) => c.key === 'steam'); G.hero.hasBall = true; G.story.refreshCast(); P.settle(); });
 await said();
-const regions = ['isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas', 'isle_platform', 'isle_orchard', 'desert', 'hamalayi'];   // (DOOR-SWEEP: and the Hamalayi's seven: the landing's hut, Lhar, the observatory keeper's)
+const regions = ['isle_otringal', 'isle_knartas', 'isle_mosquibee', 'isle_celebration', 'isle_undergas', 'isle_platform', 'isle_orchard', 'desert', 'hamalayi'].filter((r) => !process.env.REGIONS || process.env.REGIONS.split(',').includes(r));   // (DOOR-SWEEP: and the Hamalayi's seven: the landing's hut, Lhar, the observatory keeper's)   // (REGIONS=isle_knartas: one region's doors, #17)
 const WALK = ['isle_knartas'];   // (regions whose doors he walks to from the landing, not placed before them)
 const all = [];
 for (const reg of regions) {
@@ -135,7 +135,7 @@ check('Knartas: every door, the harbour\'s and the diggers\' village\'s, reached
 for (const r of walkedTo) console.log('WALK ' + r.room + ' ' + JSON.stringify(r.walked));
 // (DESERT-BAR: + the dig crew's bunkhouse in S28 on Desert Island; the School's dormitory opens only once its crystal is
 //  awake: its door is a knock in this state, purposes.js)
-if (!ONLY) check('every room of ISLE-HOMES open in this state was entered (72: 55 on the islands, 5 Kesh houses, 3 post cabins, the crew\'s bunkhouse, Bashir\'s home, 7 in the Hamalayi)', all.length === 72 && all.every((r) => r.inRoom), all.length);
+if (!ONLY && !process.env.REGIONS) check('every room of ISLE-HOMES open in this state was entered (72: 55 on the islands, 5 Kesh houses, 3 post cabins, the crew\'s bunkhouse, Bashir\'s home, 7 in the Hamalayi)', all.length === 72 && all.every((r) => r.inRoom), all.length);
 
 // the keepers behind their counters, talking
 const keep = await ev(async () => {
@@ -154,7 +154,7 @@ const keep = await ev(async () => {
   return out;
 });
 const kl = await said();
-const asked = keep.filter((k) => !k.skipped);
+const asked = keep.filter((k) => !k.skipped && !(process.env.REGIONS && k.r === 'room not built'));   // (REGIONS: only the keepers of the regions toured)
 check('the keepers stand in their rooms and talk (their own lines)', asked.every((k) => k.present && k.inRoom && k.talk === 'talked') && kl.length >= asked.length, { keep, kl: kl.slice(0, 8) });
 
 // a save inside a house comes back there, and its door still leads out
