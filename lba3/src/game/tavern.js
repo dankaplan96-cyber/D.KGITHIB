@@ -144,9 +144,9 @@ export function buildTavernRoom(scene, physics) {
   // --- the bar at the front left by the door: a counter along the left wall turning into the room at its back end,
   // the tap barrel and bottles on it, red stools along it, the bottle shelf on the wall behind
   const { BARX, BZ0, BZ1 } = P;
-  k.at(BARX, 0, (BZ0 + BZ1) / 2, Math.PI / 2, () => counter(k, { w: BZ1 - BZ0, d: 0.7, h: 1.08, pal: 'grey', top: MAT.steel() }));
+  k.at(BARX, 0, (BZ0 + BZ1) / 2, Math.PI / 2, () => counter(k, { w: BZ1 - BZ0, d: 0.7, h: 1.086, pal: 'grey', top: MAT.steel() }));   // (FLICKER-142: its top 6 mm over the short counter's where the two meet)
   B.col(BARX, (BZ0 + BZ1) / 2, 0.36, (BZ1 - BZ0) / 2, 1.1, { noStand: true });
-  k.at(BARX + 0.65, 0, BZ0 - 0.1, 0, () => counter(k, { w: 1.6, d: 0.7, h: 1.086, pal: 'grey', top: MAT.steel() }));   // (FLICKER-142: its top 6 mm over the long counter's where the two meet)
+  k.at(BARX + 0.65, 0, BZ0 - 0.1, 0, () => counter(k, { w: 1.6, d: 0.7, h: 1.08, pal: 'grey', top: MAT.steel() }));
   B.col(BARX + 0.65, BZ0 - 0.1, 0.8, 0.36, 1.1, { noStand: true });
   k.at(P.tap.x, 1.08, P.tap.z, 0, () => { barrel(k, { r: 0.26, h: 0.62, pal: 'dark' }); k.add(cyl(0.02, 0.02, 0.2, 6), MAT.brass(), 0.27, 0.35, 0, 0, { rz: Math.PI / 2 }); });
   for (const [z, c, kind] of [[1.15, '#2f8a7a', 'bottle'], [1.5, '#7a3a2a', 'bottle'], [2.0, '#2f6f74', 'bottle'], [2.5, '#c8a050', 'jar'], [3.4, '#2f8a7a', 'bottle'], [4.1, '#7a3a2a', 'bottle']]) jar(k, BARX - 0.05, 1.1, BZ0 + z, kind, c, 1.1);   // (from the bar's back end, past the tap)

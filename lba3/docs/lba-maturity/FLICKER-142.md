@@ -4,6 +4,8 @@ The user (26.11): "check the flickering in rooms, the wall behind Zoé in the ki
 Evidence here is **automated runtime only (SwiftShader, headless Chromium)**: no person played, no real GPU was used,
 and no frame-time numbers were measured.
 
+Branch `p142-flicker` (on base `ccr-c1c2c4b9-dep6ed` at 03ac7560).
+
 ## The cause
 
 Two causes, both game-wide:
@@ -121,6 +123,7 @@ the geometry at the old 0.1 m near plane.
 | after builders only (shell, partition) | 137 | 315 | — |
 | after, full run (c8f4cda1) | 137 | 1 (the bazoo counter's rounded corners, 0.04 m², 3.2 mm; 0 render pixels) | 1509 |
 | after the bazoo fix (`ROOMS=house,bazoo NOFIT=1`) | 2 | 0: PASS | 63 |
+| **final, full run at 00e97609** | 137 | **0: PASS** ((3) 137/137, (4) 137/137) | 1418 (4 long seams listed: 0.02–0.034 m²) |
 
 - **Render check (the jittered diff, game's own render path), before → after:**
   - 475 of the 597 failing clusters were seen flickering (changed pixels on their overlap) before; 0 after.
@@ -149,11 +152,23 @@ full log is in `captures/flicker-142/before.log.gz`.
   - before (35ba477f): FAIL, 597 clusters.
   - after (c8f4cda1): FAIL, 1 cluster (bazoo). That one was fixed in a later commit, and `ROOMS=house,bazoo` then
     PASSED.
-  - A last full run after the bazoo fix was not made. The machine was shared, and a full run takes ~25 min.
+  - final, full run at 00e97609: PASS.
+  - The only later change is the tavern counter's height swap (place-scan, below). After it, `ROOMS=tavern` PASSED.
 - `worldfit`: PASS. Its outdoor z-fight scan (3) found 0 clusters of 0.15 m² or more and listed 113 smaller ones in
   Citadel, Zeelich and the islands. Ballastra, the Desert and the Hamalayi are listed, not judged. This change touches
   none of them.
 - `walkers`: PASS (37/37).
+- `place-scan`: FAIL with 104 findings. The base revision (03ac7560, an export served on its own port) FAILs with the
+  same 103. The one new finding was the tavern's L-bar: the second counter's raised top made it the taller one, which
+  flipped the pair's order away from its LEFT entry. I swapped the raise to the long counter, and `ONLY=tavern` then
+  PASSED.
+- **Checks on the depth fit** (scratch probes, not suites):
+  - The NOFIT run of the control room and the projoffice: 0 clusters. The consoles' and monitors' screens show no red
+    in the diff with the depth fit off. Before, they were the brightest red in the control room.
+  - The opening film played without `?nocine`: 238 renders logged. In none was the world drawn with a raised near
+    plane, and the house's own shots kept 0.1.
+  - The fit now runs only while the room's group is drawn and the lens is within 130 m of the room's box. (4) also
+    checks a lens over Citadel while the room is current: near 0.1.
 - `opening-tutorial`: PASS (48/48). The house is in the opening.
 
 ## Visible changes (each small; listed for the user's pick)
@@ -167,6 +182,13 @@ full log is in `captures/flicker-142/before.log.gz`.
 - The cellar target's rings lie side by side in one plane.
 - On the isle homes' cutting table, four short cloth bolts with gaps replace one long roll. The four bolts had
   overlapped each other along one axis.
+- In every shell room's windows, the plaster lining is recessed 1 cm. Round-window reveals are 1 cm smaller.
+- Where two sewer railings meet there is one post; the first railing's material wins. The sewer walkways' lips step by
+  4 and 8 mm.
+- The underground's walking plates (every other one) and one grating run sit 6 mm up.
+- Every screen in the game, outdoors too, has a polygon offset and is drawn on its own, outside the draw batches. That is
+  a few more draw calls where screens stand, such as the control room and offices. No frame time was measured.
+- Goods shelves' back panels are 1 cm narrower inside their sides.
 - Several touching pieces are 1–2 cm narrower or 6 mm higher: dais and steps, lintels, kerbs, counter tops, the arena's
   short wall, the bazoo counter's U, sofa arms and the tavern's arched door head.
 
@@ -180,4 +202,8 @@ full log is in `captures/flicker-142/before.log.gz`.
   scanned in their default state.
 - **Outdoors.** Outdoor areas are worldfit's.
 - **Small findings.** Smaller clusters (< 0.02 m²) are listed in the suite's output, not fixed one by one.
+- **The geometry fixes alone (`NOFIT`).** Their render evidence covers only the rooms run that way: house and bazoo, and
+  control and projoffice (below).
+- **Long thin seams** are cut into many 0.6 m clusters, each under 0.02 m². The suite sums each room's clusters of one
+  pair of pieces and lists the sums of 0.02 m² or more, but does not judge them.
 - **Real GPUs.** Not tested. SwiftShader's depth is not a GPU's, so real-GPU flicker can differ.
