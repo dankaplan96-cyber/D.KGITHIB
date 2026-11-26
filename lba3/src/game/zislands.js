@@ -1451,7 +1451,7 @@ const BARE = {
   platform: { rock: 0.4, pave: 0.35, stone: '#8c8c90' },     // dark rock and paving
   liftdock: { rock: 0.5, pave: 0.1, stone: '#a0a0a4' },
 };
-// #17b (?knartaspal=new, franco.js KNARTAS_PAL, default off; docs/lba-maturity/KNARTAS-PALETTE.md): Knartas's ground in
+// #17b (franco.js KNARTAS_PAL, the user's pick 26.11, ?knartaspal=old the old ground; docs/lba-maturity/KNARTAS-PALETTE.md): Knartas's ground in
 // LBA2's palette (resemblance-zeelich.md §C: "pale grey-white rock with green moss, an orange-brown earth square, sand
 // rims"), where ours was dark violet-grey rock, bright green turf and dark tiles. Vertex colours only, on the textures
 // the island already reads (the cliff tile, the grass, the dirt, the sand): no texture, draw or shader of its own.
@@ -1464,7 +1464,7 @@ const BARE = {
 //     brown ~#9c6843: darker than the huts' walls #c9a074, lighter than their domes, browner than the terracotta jars),
 //     and so are the worn paths and the village's square (earthAt: the open ground round (23, 26), between the huts 73, 76 and 79);
 //   - the quay's paving a pale warm stone, the shore's rim a sand colour; the scattered rocks the same pale grey.
-// (Every branch below reads S.pal, which only this sets: without the switch every island's ground is as before.)
+// (Every branch below reads PAL, which only this sets, on Knartas only: every other island's ground is as before.)
 const KNA_PAL = KNARTAS_PAL && {
   ground: ['#d4dab0', '#c6cea0', '#f0e0c0'],   // (moss, moss, the sand rim)
   rock: [1.42, 1.5, 1.07],                      // (linear multipliers on the cliff tile: ~#a6a29a)
@@ -1500,7 +1500,7 @@ function buildIsland0(scene, physics, name, L, at) {
   const A = analyse(L, S), { w, d, cx, cz, gx, gz } = A, H = S.paveFlat ? paveFlat(A, L, S.paveFlat) : A.H;   // (OTRINGAL-37: the street's bumps cut down)
   const plan = planIsland(name, L, A), pad = plan.pad;
   const COL = { ...COL0, ...(S.ground ? { turf: C(S.ground[0]), turf2: C(S.ground[1]), dust: C(S.ground[2]) } : {}), ...(S.rock ? { rock: C(S.rock), rockHi: C(S.rockHi || S.rock), rim: C(S.rock).multiplyScalar(0.85) } : {}), ...(S.paveCol ? { pave: C(S.paveCol) } : {}) };
-  // #17b (?knartaspal=new: KNA_PAL above): Knartas's ground colours; the rock and earth are linear multipliers, over 1
+  // #17b (KNA_PAL above): Knartas's ground colours; the rock and earth are linear multipliers, over 1
   const PAL = name === 'knartas' ? KNA_PAL : null, lin = (v) => new THREE.Color().setRGB(v[0], v[1], v[2]);
   if (PAL) Object.assign(COL, { turf: C(PAL.ground[0]), turf2: C(PAL.ground[1]), dust: C(PAL.ground[2]), rock: lin(PAL.rock), rockHi: lin(PAL.rock), rim: lin(PAL.rock).multiplyScalar(0.9), pave: C(PAL.paveCol), path: lin(PAL.earth), earth: lin(PAL.earth) });
   // the routes (to the landmarks) and the paving, at the terrain's points: worn paths, paved squares
