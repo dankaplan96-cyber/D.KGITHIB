@@ -6058,3 +6058,22 @@ The three worst things: (1) **the Hebrew opening's subtitles put the speaker's n
 4. **Wave 8 (base-11, Citadel, the evacuation):** the Weather Wizard's slate by the tent's door: "W Read" → "A slate by the tent's door: WEATHER WIZARD. QUIET, PLEASE…" ok. The square's notice board: its EVACUATION notice reads; **no news sheet** after it — the save has no optional deed done (no `w8` flag), so nothing to show, as designed; not verified with a deed. Bersimon in Normal not reached. Pictures on the desktop (past chapter 2).
 5. **For 72:** the opening's "flash" at t≈14 s: in my frames 1.5 s apart the notebook is at ~13 s, Twinsen's close-up at ~14 s, the notebook again at ~16 s, so it lasted between 1.5 and 3 s, not one frame: it is the film's own close-up, fine. Fullscreen not checked (Chrome).
 Pictures `captures/hw-73/` (1–8), scripts `depth73.mjs`, `heopen.mjs`, `w8.mjs` (the modes with hw-70's `modes70.mjs`).
+
+## ORDER-74 (the desktop, 26.11; v171's code, fcfbd187 with ce018853 — v172's charge sounds not in these runs; headed Chrome 1366×768, real keys)
+**The wider aim line reads clearly; a + c is not too easy: the Zeelich depot still costs most of the clovers, and the Grobo guard's baton is still the main damage.** 24 runs: 2 depots × `?fight58=none` (before #58) / the default (a + c + the Citadel depot heart) × Modern / Classic × 3 runs (68.3's bot, `fight74.mjs`, now also in Classic: ← → turn, ↑ walks, W the action key; L locks, F throws).
+| depot · controls · build | hits per run (bolt / baton / dog / drone) | clovers lost | deaths | time |
+|---|---|---|---|---|
+| Citadel · Modern · none | 0, 0, 0 | 0 | 0 | 106–130 s, valve open ×3 |
+| Citadel · Modern · default | 0, 0, 0 | 0 | 0 | 115–121 s, valve open ×3 |
+| Citadel · Classic · none | 3 (2/0/1), 2 (1/0/1), — | 0 | 0 | 90–94 s, the third run the bot stuck on the way (valve shut, 501 s) |
+| Citadel · Classic · default | 3 (2/0/1), 2 (1/0/1), — | 0 | 0 | 90 s, the same stuck third run |
+| Zeelich · Modern · none | 4 (3/0/0/1), 13 (2/11/0), 33 (9/11/13) | 0, 2, 2 | 1 | 38–567 s |
+| Zeelich · Modern · default | 23 (7/15/0/1), 16 (5/9/1/1), 29 (5/15/9) | 2, 1, 2 | 0 | 118–771 s |
+| Zeelich · Classic · none | 26 (10/15/1), 32 (14/17/1), 27 (7/18/2) | 2, 2, 2 | 3 | 64–89 s |
+| Zeelich · Classic · default | 14 (8/6/0), 19 (2/17/0), 19 (1/18/0) | 1, 2, 2 | 2 | 70–910 s |
+- **The aim line (a):** at the end of the wind-up it is a thick, bright red line from the drone's glowing eye to Twinsen, readable even across the guard; before it was a pale hairline that vanished over the floor (1, 2). The drones' bolts drop with a in Classic (10/14/7 → 8/2/1), not clearly in Modern (3/2/9 → 7/5/5).
+- **The guard (c):** the baton still lands 9–18 times a run in Zeelich with c (6–18 Classic, 9–15 Modern) against 11–18 without: for this bot c does not show. It is what empties the clovers. (The bot dodges on the wind-up's timing; a player who backs off after his strike may do better.)
+- **The Citadel depot** no longer separates the two: today's bot is hardly hit there at all in Modern (ORDER-71 took 20 hits on v168 with the same bot; the paths differ run to run), and the Classic runs came out identical with and without (2–3 hits). The depot heart wasn't needed.
+- **Too easy? No.** Zeelich in Classic still ends in 2 of 3 deaths with the default.
+- Bot's own: "no cylinder" in every Zeelich run (it presses the locker but doesn't take it, even facing it) and the runs of 500–900 s are the bot wandering after the fight; neither is the game's.
+Pictures `captures/hw-74/` (1, 2), the run log `batch.log`, scripts `fight74.mjs`, `aim.mjs`.
