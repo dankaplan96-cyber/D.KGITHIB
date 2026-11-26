@@ -14,6 +14,25 @@ import { dlHook } from './depthlook.js';
 //   sunLambert (trade-off, off) the sun lights the terrain without its specular term (GGX): diffuse only
 export const TERRAIN_SHADE = { grassSkip: true, nrmVarying: false, diag: null, sunLambert: false };
 const MATS = new Set();   // (the terrains' splat materials: a switch marks them for a new program)
+// QUIET-ROCK (docs/lba-maturity/QUIET-ROCK.md; the user 26.11: the quiet granite game-wide): a terrain may read its
+// flat rock (the triplanar's read from above) from another tile (textures.rockTop), times a tint (textures.rockTopK).
+// tileTint(a, b): that tint for tile b to take tile a's mean colour, per channel in linear light (what the shader
+// reads), so the vertex colours, the splat and the rock's edge wobble (dot(rock, 1/3)) stay as they were on average.
+// Read once per pair from the tiles' canvases (512²: a few ms), at the first build that asks.
+const TINTS = new Map();
+const linMean = (t) => {
+  const img = t.image, c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height).data, L = new Float32Array(256), s = [0, 0, 0];
+  for (let i = 0; i < 256; i++) { const v = i / 255; L[i] = v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+  for (let i = 0; i < d.length; i += 4) { s[0] += L[d[i]]; s[1] += L[d[i + 1]]; s[2] += L[d[i + 2]]; }
+  return s.map((v) => v / (d.length / 4));
+};
+export function tileTint(a, b) {
+  const k = a.uuid + b.uuid;
+  if (!TINTS.has(k)) { let r = [1, 1, 1]; try { const ma = linMean(a), mb = linMean(b); r = ma.map((v, i) => v / mb[i]); } catch { /* unreadable: no tint */ } TINTS.set(k, r); }
+  return TINTS.get(k);
+}
 export function setTerrainShade(k, v) { if (TERRAIN_SHADE[k] === v) return false; TERRAIN_SHADE[k] = v; for (const m of MATS) m.needsUpdate = true; return true; }
 const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVarying ? '-n' : '') + (S.diag ? '-' + S.diag : '') + (S.sunLambert ? '-sl' : '');
 
@@ -43,7 +62,7 @@ function splatShader(S) {
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
   const vert = `vSplat = splat; vSplat2 = splat2; vEdge = edge * ${EDGE_RANGE}.0; vWPos = (modelMatrix * vec4(position, 1.0)).xyz;\n`
     + (nv ? 'vWNrm = normalize(mat3(modelMatrix) * normal);\n' : '#ifdef FLAT_SHADED\nvWNrm = normalize(mat3(modelMatrix) * normal);\n#endif\n');
-  const fpre = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
+  const fpre = 'uniform sampler2D tGrass, tSand, tRock, tRockTop, tDirt, tCobble; uniform vec3 uRockTop; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
   // SHADE-COST: the world normal from the view-space one three interpolates anyway (vNormal), turned back by the view's
   // rotation: the same direction (a rotation commutes with the interpolation), and the weights below do not depend on
@@ -55,7 +74,7 @@ function splatShader(S) {
           vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
           vec3 rock = texture2D(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14).rgb * bw.x
                     + texture2D(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14).rgb * bw.z
-                    + texture2D(tRock, vWPos.xz * 0.14).rgb * bw.y;
+                    + texture2D(tRockTop, vWPos.xz * 0.14).rgb * uRockTop * bw.y;
           vec4 sp = vSplat; float sp2 = vSplat2;
           float rk = smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3);
           float rest = 1.0 - sp.z;
@@ -95,13 +114,14 @@ function splatShader(S) {
           vec2 gx = dPx.xz * 0.22, gy = dPy.xz * 0.22;
           vec4 sp = vSplat; float sp2 = vSplat2;
           // cliffs: triplanar rock so steep faces show undistorted strata
+          // (QUIET-ROCK: the read from above, the flat ground's, is tRockTop times uRockTop: by default the same tile, times 1)
           // (the rock's share below is 0 wherever the splat's rock weight is under 0.23: 0.38 minus the wobble's 0.15)
           vec3 rock = vec3(0.0);
           if (sp.z > 0.229) {
             vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
             rock = textureGrad(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14, vec2(dPx.z, dPx.y * 1.25) * 0.14, vec2(dPy.z, dPy.y * 1.25) * 0.14).rgb * bw.x
                  + textureGrad(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14, vec2(dPx.x, dPx.y * 1.25) * 0.14, vec2(dPy.x, dPy.y * 1.25) * 0.14).rgb * bw.z
-                 + textureGrad(tRock, vWPos.xz * 0.14, dPx.xz * 0.14, dPy.xz * 0.14).rgb * bw.y;
+                 + textureGrad(tRockTop, vWPos.xz * 0.14, dPx.xz * 0.14, dPy.xz * 0.14).rgb * uRockTop * bw.y;
           }
           // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
           // (GFX-LOOK-2: a shorter ramp, wobbled by the rock's own strata: on a steep slope one ~1 m grid cell spans
@@ -354,7 +374,8 @@ export class Terrain {
   // (grass, sand, rock, dirt, cobbles), tinted by the vertex colour. The shader's text: splatShader() below.
   _splatMaterial(mat) {
     const T = this.tex;
-    const uniforms = { tGrass: { value: T.grass }, tSand: { value: T.sand }, tRock: { value: T.rock }, tDirt: { value: T.dirt }, tCobble: { value: T.cobble } };
+    // (QUIET-ROCK: T.rockTop, the rock's tile seen from above (the flat ground; the faces keep T.rock), times T.rockTopK)
+    const uniforms = { tGrass: { value: T.grass }, tSand: { value: T.sand }, tRock: { value: T.rock }, tRockTop: { value: T.rockTop || T.rock }, uRockTop: { value: new THREE.Vector3(...(T.rockTopK || [1, 1, 1])) }, tDirt: { value: T.dirt }, tCobble: { value: T.cobble } };
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, uniforms);
       const S = splatShader(TERRAIN_SHADE);

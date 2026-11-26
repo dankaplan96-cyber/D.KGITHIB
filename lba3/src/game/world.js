@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
 import { Terrain } from '../engine/terrain.js';
+import { quietRock } from './quietrock.js';
 import { Physics } from '../engine/physics.js';
 import { ZoneSystem } from '../engine/scripts.js';
 import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
@@ -1049,7 +1050,7 @@ export function* buildWorldSteps(parentScene) {
   yield 'textures';
   const grid = buildHeightGrid(TERRAIN_SIZE, TERRAIN_SEGS);
   yield 'heights';
-  const terrain = new Terrain({ size: TERRAIN_SIZE, segs: TERRAIN_SEGS, cx: ISLAND.cx, cz: ISLAND.cz, heightFn: grid.at, colorFn: islandColor, splatFn: islandSplat, edgeFn: islandEdge, textures: { ...TX, rock: TX.cliff } });   // (LAWN-EDGES: edgeFn)
+  const terrain = new Terrain({ size: TERRAIN_SIZE, segs: TERRAIN_SEGS, cx: ISLAND.cx, cz: ISLAND.cz, heightFn: grid.at, colorFn: islandColor, splatFn: islandSplat, edgeFn: islandEdge, textures: { ...TX, rock: TX.cliff, ...quietRock(TX.cliff) } });   // (LAWN-EDGES: edgeFn; QUIET-ROCK: the wild ground's flat rock (WA-12) the quiet granite, in the cliff tile's colour)
   tintGrid = null;
   scene.add(terrain.mesh);
   const physics = new Physics(terrain);
