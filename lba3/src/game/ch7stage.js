@@ -4,4 +4,5 @@
 //   hamalayi.js     builds the seal's turning ring and its five grooves instead of the discs
 //   story/ventring.js  the stage itself (the kicks, the turns, the opening); story/observatory.js asks it first
 const q = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('ch7stage') || ''; } catch { return ''; } })();
-export const CH7_NEW = q === 'new';
+// The user's pick (26.11): the new stage is the default; ?ch7stage=old brings back the discs (for comparison and the old tests)
+export const CH7_NEW = q !== 'old';

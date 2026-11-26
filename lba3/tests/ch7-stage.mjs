@@ -94,7 +94,7 @@ is('A10 chapter 7 ends: the monastery gate, the next chapter (evacuation)', awai
 // ------------------------------------------------------------------ B: the switch off, the same mid-stage save
 if (ONLY.includes('B')) {
 await ev((f) => { const s = JSON.parse(localStorage.getItem('lba3_save_v1')); s.flags = f; s.room = 'hamalayi'; localStorage.setItem('lba3_save_v1', JSON.stringify(s)); }, { ...saved, c7_free1: false });
-await boot('', 'continue');
+await boot('&ch7stage=old', 'continue');
 is('B1 without the switch the mid-stage save loads into the discs\' game: five discs, three breathing, the objective counts them', await ev(() => { const G = game; G.step(0.5); T.talkAll(); const M = G.rooms.hamalayi; return { key: G.flags.chapterKey, ring: !!M.ventRing, discs: M.ventDiscs.length, breathing: G.story.cur.breathing(), obj: T.obj() }; }),
   (v) => v.key === 'observatory' && !v.ring && v.discs === 5 && v.breathing === 3 && /5/.test(v.obj));
 is('B2 the two iced discs freed by thrown balls and the seal opened by E: the vent breathes', await ev(() => { const G = game, M = G.rooms.hamalayi, V = M.vent, h = G.hero;

@@ -49,8 +49,23 @@ export const steps = [
   ['the heavy drone at the vent', () => { const G = game, V = G.rooms.hamalayi.vent; P.go(V.x + 8, V.z + 8, { tol: 2, run: true, maxT: 120 }); P.settle(); const r = P.fight({ maxT: 180, range: 6 }); const d = G.story.cur.heavy?.(); return { ...r, drone: d ? d.alive : null, fail: d && d.alive ? 'drone' : null }; }],
   // (PUZZLES P-B, 20.11, changed on purpose: the seal turns only with all five discs breathing; three steam already, the
   // two under ice are freed with the ball, each thrown at from the ice outside the rim)
+  // (#18/#28, the user's pick 26.11: the default seal is "the mountain's pulse" — the ring with an arrow and five grooves;
+  //  a player watches a kick, turns the arrow to the groove whose stones jumped, and leaves it for the next kick)
+  ['the seal\'s ring (the new stage)', () => {
+    const G = game, M = G.rooms.hamalayi, V = M.vent, R = M.ventRing;
+    if (!R) return { skip: true };
+    const at = () => { const g = R.grooves[0], a = Math.atan2(g.x0 - V.x, g.z0 - V.z) + 0.4; return [V.x + Math.sin(a) * 3.9, V.z + Math.cos(a) * 3.9]; };
+    const [sx, sz] = at(); P.go(sx, sz, { tol: 0.5, maxT: 40, run: true }); P.settle();
+    P.use(V.x, V.z, { near: 0.6 }); P.settle();
+    let turns = 0;
+    for (let i = 0; i < 8 && R.notch !== R.live && !G.flags.c7_vent; i++) { P.use(V.x, V.z, { near: 0.6, kind: 'c7ring' }); for (let k = 0; k < 60 && (R.moving || G.hero.actT > 0); k++) G.step(0.05); P.settle(); turns++; }
+    for (let t = 0; t < 30 && !G.flags.c7_vent; t += 0.1) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+    P.settle();
+    return { live: R.live, notch: R.notch, turns, vent: !!G.flags.c7_vent, fail: G.flags.c7_vent ? null : 'ring' };
+  }],
   ['the seal\'s iced discs (ball)', () => {
     const G = game, M = G.rooms.hamalayi, V = M.vent, out = [];
+    if (!M.ventDiscs?.length || G.flags.c7_vent) return { skip: true };
     for (const D of M.ventDiscs.filter((d) => !d.warm)) for (let k = 0; k < 5 && !D.free; k++) {
       const a = Math.atan2(D.x - V.x, D.z - V.z) + (k - 2) * 0.35, x = D.x + Math.sin(a) * 3.5, z = D.z + Math.cos(a) * 3.5;
       P.go(x, z, { tol: 0.6, maxT: 20, run: true }); P.settle(); P.throwAt(D.x, D.z); P.settle(); out.push(D.free);
@@ -58,6 +73,6 @@ export const steps = [
     const n = M.ventDiscs.filter((d) => d.breathing).length;
     return { n, tries: out.length, fail: n >= 5 ? null : 'discs' };
   }],
-  ['the vent', () => { const V = game.rooms.hamalayi.vent; const r = P.use(V.x + 2.8, V.z, { near: 1.2 }); P.wait(2); P.settle(); return { ...r, vent: game.flags.c7_vent, fail: game.flags.c7_vent ? null : 'vent' }; }],
+  ['the vent', () => { if (game.flags.c7_vent) return { skip: true }; const V = game.rooms.hamalayi.vent; const r = P.use(V.x + 2.8, V.z, { near: 1.2 }); P.wait(2); P.settle(); return { ...r, vent: game.flags.c7_vent, fail: game.flags.c7_vent ? null : 'vent' }; }],
   ['the monastery gate → chapter 8', () => { const g = game.rooms.hamalayi.monastery.gate; P.go(g.x, g.z + 1, { tol: 1, run: true, maxT: 200 }); P.settle(60); P.settle(30); return { chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'evacuation' ? null : 'no chapter 8' }; }],
 ];

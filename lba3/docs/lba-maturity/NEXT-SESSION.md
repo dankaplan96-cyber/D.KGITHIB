@@ -2,6 +2,8 @@
 
 > **Publishing cadence (the user, 26.11):** publish a new version only after 10 small fixes or 5 big ones have been approved, or when the user asks. Don't publish after every approval (it wastes tokens). Keep a running count in OPEN-TASKS.he.md.
 
+> **The user's main checklist is the app's side panel (26.11: "that's what matters to me")**: keep it with TaskCreate/TaskUpdate (Hebrew subjects; in work, waiting for the user, needs the PC, the next-version counter, low priority), and mark each done as it finishes. The artifact page below is secondary.
+
 > **The user's checklist page (26.11):** `docs/lba-maturity/checklist/index.html`, published as artifact slug `98d80407-2559-4868-8915-406317b81b85` (https://claude.ai/artifact/KsgUvrHqD21dbJrMarozzx, version 1795682265-bf5c). Update its data array (and the 'since version' counters) whenever OPEN-TASKS changes, with a cheap edit_version / publish_files of that one file.
 
 > **Start here: `docs/lba-maturity/HANDOFF.md`** (25.11, after v170; updated 26.11 after v171): the ordered handoff (state, next tasks, the local agent, how we work). The worker preamble is `docs/lba-maturity/AGENT-PREAMBLE.md`.
