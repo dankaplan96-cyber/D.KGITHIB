@@ -698,7 +698,7 @@ export function* buildZeelichSteps(scene, physics) {
       // (FEET-66: the pad is walked on: a floor at its top, gy + 0.245; he stood on the slab under it, 24.5 cm in it; its
       //  yellow ring 1.5 cm over the pad, was 9.5)
       const ring = new THREE.Mesh(new THREE.TorusGeometry(4.1, 0.08, 6, 32), new THREE.MeshStandardMaterial({ color: '#e8c040', roughness: 0.5 })); ring.rotation.x = Math.PI / 2; ring.position.set(px, gy + 0.18, pz); group.add(ring);
-      col({ type: 'cyl', x: px, z: pz, r: 4.65, top: gy + 0.245, seeThrough: true });
+      col({ type: 'cyl', x: px, z: pz, r: 4.68, top: gy + 0.245, seeThrough: true });   // (to 4.63 under him: the cap's edge 4.6, its side 3.5 cm under there)
       const sh = esmerShuttle({ landed: true }); sh.position.set(px, gy + 0.25, pz); sh.rotation.y = 0.6; group.add(sh);
       col({ type: 'cyl', x: px, z: pz, r: 3.5, top: gy + 4.4, noStand: true });
       keepClear(px - 5, pz - 5, px + 5, pz + 5);
@@ -1921,7 +1921,7 @@ export function* buildZeelichSteps(scene, physics) {
     // (P93 DEPOT: the hazard beam over the gate had nothing behind it: a high lob went through it. Above anyone's head)
     col({ type: 'box', x: (D.gate[0] + D.gate[1]) / 2, z: D.z0, hw: (D.gate[1] - D.gate[0] + 0.5) / 2, hd: 0.15, rot: 0, bottom: Y0 + 3.05, top: Y0 + 3.35 });
     // concrete yard floor
-    B.add(slabGeo([[D.x0 + 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z1 - 0.15], [D.x0 + 0.15, D.z1 - 0.15]], 0.04, TILE.concrete), tm('concrete', { color: '#e8dcd8' }), 0, Y0, 0);
+    B.add(slabGeo([[D.x0 + 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z1 - 0.15], [D.x0 + 0.15, D.z1 - 0.15]], 0.04, TILE.concrete), tm('concrete', { color: '#e8dcd8' }), 0, PV(0.04, 0.008), 0);   // (FEET-66: its top 0.8 cm over the slab, 4 mm under the spur's paving; was 4 cm)
     // containers
     // (P93 DEPOT: loose — the red container's west door leaf is unlatched and hangs on its hinge: built apart from the
     //  merged body so it can swing; see swingLeaf below)

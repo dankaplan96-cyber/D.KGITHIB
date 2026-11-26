@@ -251,8 +251,9 @@ function kit({ group, H, col, ox, oz, updaters, y0 }) {
     rug(x, z, ry, w, d) {
       const y = gy(x, z);
       const m = new THREE.Mesh(cached('rugG', () => new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2)), cached('rugM', () => new THREE.MeshStandardMaterial({ map: rugTex(), roughness: 1 })));
-      m.scale.set(w, 1, d); m.position.set(x, y + 0.035, z); m.rotation.y = ry; m.receiveShadow = true; group.add(m);
-      K.add(bbox(w + 0.04, 0.03, d + 0.04, 0.01, 1), '#9a3a28', x, y + 0.015, z, 0, ry, 0);
+      // (FEET-66: the rug 1.7 cm over the sand, its backing 1.2: he walks on it; they were 3.5 and 3)
+      m.scale.set(w, 1, d); m.position.set(x, y + 0.017, z); m.rotation.y = ry; m.receiveShadow = true; group.add(m);
+      K.add(bbox(w + 0.04, 0.03, d + 0.04, 0.01, 1), '#9a3a28', x, y - 0.003, z, 0, ry, 0);
     },
     // a tarp on four poles; (x, z) its middle, hb / hf the high (back, -z) and low (front, +z) edge
     tarp(x, z, w, d, hb, hf, mat) {

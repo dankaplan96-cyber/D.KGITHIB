@@ -7,6 +7,9 @@
 //      standable collider top with no drawn surface within 5 cm of it but one 5 cm - 0.6 m under it (an invisible
 //      floor): "float" spots. Spots of one piece (one part, or one collider) are one candidate; candidates under
 //      0.36 m^2 (a pebble, a collider's rim) are left out. Discovery only nominates: the verdict is the walk's.
+//      Classes: A (judged) — a piece up to 30 cm thick lying no more than 30 cm (on average) over his floor, a sheet, or a
+//      floor with nothing drawn at its top; B (listed) — a thicker or higher piece walked through (a missing collider);
+//      C (listed) — a standable collider over a rock's domed top.
 //   2. the walk: Twinsen placed 3 m off each candidate (ISO, logged: hero.pos set on standable ground in its area) and
 //      walked across it by input (Classic: face it, ArrowUp held, as tests/lib/player.js does); every frame on the
 //      ground over the candidate's footprint, his feet (hero.pos.y) against the candidate's drawn top at his x, z.
@@ -125,7 +128,9 @@ for (const area of areas) {
     const cand = [];
     for (const c of sinks.values()) { if (c.n < MIN_N) continue; const nm = nameOf(c.oi), path = SW.raw.path(c.oi), lk = SW.raw.look(S[c.si].lk);
       const th = c.th.sort((a, b) => a - b)[c.th.length >> 1];
-      cand.push({ kind: 'sink', cls: th <= 0.3 ? 'A' : 'B', th: r3(th), area: area.id, si: c.si, name: nm + (c.built ? ' over a built walk' : ''), path, look: lk.hex + (lk.tex ? '/' + lk.tex : '') + (lk.transparent ? ' (see-through)' : ''), water: WATER.test(nm) || S[c.si].box[3] - S[c.si].box[0] > 300, soft: (SOFT.test(nm) || SNOW.includes(lk.hex)) && !c.built, m2: r3(c.n * C * C), dMax: r3(c.dMax), dMean: r3(c.dSum / c.n), x: r3(c.x / c.n), z: r3(c.z / c.n), box: S[c.si].box.map(r3), pts: c.pts }); }
+      // (A: up to 30 cm thick and on average no more than 30 cm over his floor — a sheet, a slab, a pad, a step; deeper
+      //  is a thing at knee height walked through, a bench's seat or a table: B)
+      cand.push({ kind: 'sink', cls: th <= 0.3 && c.dSum / c.n <= 0.3 ? 'A' : 'B', th: r3(th), area: area.id, si: c.si, name: nm + (c.built ? ' over a built walk' : ''), path, look: lk.hex + (lk.tex ? '/' + lk.tex : '') + (lk.transparent ? ' (see-through)' : ''), water: WATER.test(nm) || S[c.si].box[3] - S[c.si].box[0] > 300, soft: (SOFT.test(nm) || SNOW.includes(lk.hex)) && !c.built, m2: r3(c.n * C * C), dMax: r3(c.dMax), dMean: r3(c.dSum / c.n), x: r3(c.x / c.n), z: r3(c.z / c.n), box: S[c.si].box.map(r3), pts: c.pts }); }
     for (const [ci, f] of floats) cand.push({ kind: 'float', cls: f.rock > f.n / 2 ? 'C' : 'A', area: area.id, ci, name: 'collider ' + ci + (f.c.stair ? ' (stair)' : '') + (f.c.type === 'cyl' ? ' cyl r ' + f.c.r : ` box ${r3(f.c.hw * 2)}x${r3(f.c.hd * 2)}`), top: r3(f.c.top), m2: r3(f.n * C * C), dMax: r3(f.gMax), x: r3(f.x / f.n), z: r3(f.z / f.n), pts: f.pts });
     cand.sort((a, b) => b.m2 * b.dMax - a.m2 * a.dMax);
     return { census: res.census, decals: res.decals.length, cols, cand };

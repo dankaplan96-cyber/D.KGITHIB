@@ -250,7 +250,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     }
     // fresh cobbles across the street (lighter than the old), two iron covers
     LF.add(boxUV(bbox(1.1, 0.06, 7.3, 0.02, 1), 1.6), tm('cobble', { color: '#fff4ea', rough: 0.8 }), CROSS.x, Y0 - 0.005, 0);   // (AUDIT-FIX: its top 5 mm over the kerbs' tops, where it crosses them: level with them it flickered; FEET-66: the paving's tops lowered, the kerbs' to 2 cm, so this one's to 2.5)
-    for (const z of [-2.2, 2.2]) LF.add(cached('zlcover', () => tint(cyl(0.38, 0.38, 0.03, 16), '#4a4650')), C.VC, CROSS.x, Y0 + 0.017, z);   // (FEET-66: 7 mm over the crossing, as before 2 cm over its old top)
+    for (const z of [-2.2, 2.2]) LF.add(cached('zlcover', () => tint(cyl(0.38, 0.38, 0.03, 16), '#4a4650')), C.VC, CROSS.x, Y0 + 0.013, z);   // (FEET-66: its top 3 mm over the crossing's (2.5 cm), was 2 cm over its old top)
     // the junction at the depot fence: a teal box with a valve wheel and the project's violet stripe
     L.add(tint(bbox(0.6, 0.7, 0.46, 0.04, 1), TEAL), C.MVC, CROSS.x + 0.1, Y0 + 0.35, 8.55);
     L.add(cached('zlwheel', () => tint(new THREE.TorusGeometry(0.17, 0.025, 6, 16), '#b02a2a')), C.VC, CROSS.x + 0.1, Y0 + 0.82, 8.55, Math.PI / 2, 0, 0);

@@ -147,7 +147,7 @@ export function buildSpaceport(root, physics, W) {
   //  it, and its yellow ring stood 9 cm over the pad: now 1.5 cm over it, the ring's tube sunk into the pad)
   add(cyl(4.8, 5.0, 0.12, 32), pad, PAD.x, Y + 0.06, PAD.z);
   add(torus(4.3, 0.08, 6, 40), yellow, PAD.x, Y + 0.055, PAD.z, 0, { rx: Math.PI / 2 });
-  physics.add({ type: 'cyl', x: PAD.x, z: PAD.z, r: 4.85, top: Y + 0.12, bottom: Y - 0.6, seeThrough: true });
+  physics.add({ type: 'cyl', x: PAD.x, z: PAD.z, r: 4.9, top: Y + 0.12, bottom: Y - 0.6, seeThrough: true });   // (to 4.85 under him, physics.js: the cap's edge 4.8, its slanting side 3 cm under there)
   for (let i = 0; i < 16; i++) { const a = (i + 0.5) * Math.PI / 8; add(rbox(0.5, 0.02, 0.14, 0.01), i % 2 ? pad : yellow, PAD.x + Math.sin(a) * 4.62, Y + 0.125, PAD.z + Math.cos(a) * 4.62, a + Math.PI / 2); }
   for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; add(cyl(0.1, 0.12, 0.12, 8), MAT.glow('#fff4c0', '#ffd860', 1.6), PAD.x + Math.sin(a) * 5.2, Y + 0.06, PAD.z + Math.cos(a) * 5.2); }
   for (const s of [-1, 1]) for (let x = TB.x1 + 0.5; x < PAD.x - 5.6; x += 1.4) pv(k, rbox(0.9, 0.012, 0.1, 0.005), '#e8c040', x + 0.45, Y + 0.006, BRIDGE.z + s * 1.75);
