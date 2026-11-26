@@ -56,9 +56,9 @@ Ballastra 27, the isles 10.
 | Hamalayi vent seal, 40 groove strips (`ventseal.js`, the default ch7 stage) | flat boxes 1.5 cm over the ice at their middle; on the vent's slope their top stood 5–9 cm over his feet | laid on the ice, tilted with it, top 1.2 cm over it | 6.1 → 1.3 cm (row h6) |
 | Hamalayi, the lift's top ramp | a collider (top L3) with nothing drawn on it: he stood up to 0.8 m over the cliff's edge | its planks drawn at the collider's top, on two bearers | nothing drawn → 0 (row h7) |
 | Hamalayi gorge, the rock stack's snow (`story/depth.js`) | snow disc 4.5 cm over the stone he stands on | 1.5 cm | 4.5 → 1.5 cm |
-| Zeelich, all the paving (`buildPaths`): street, plaza, kerbs, star, arcade flags, depot spur, gravel tracks, the plaza's kerb ring; the depot's concrete yard; the crossing and its covers (`zeelife.js`) | slabs 3.5–10 cm thick laid *on* the island's slab, which is his floor | the tops 0.8–3.0 cm over the slab in the same order, 4 mm apart (gravel 0.8, yard 0.8, street 1.2, arcade 1.6, kerbs 2.0, plaza 2.4, crossing 2.5, covers 2.8, star 2.8, ring 3.0); the slabs' bodies sunk into the island | street 5 → 1.2 cm (row z1); plaza 6.5, star 7.5, ring 10 → under 3 |
+| Zeelich, all the paving (`buildPaths`): street, plaza, kerbs, star, arcade flags, depot spur, gravel tracks, the plaza's kerb ring; the depot's concrete yard; the crossing and its covers (`zeelife.js`) | slabs 3.5–10 cm thick laid *on* the island's slab, which is his floor | the tops 0.4–3.0 cm over the slab in the same order, 3.5 mm or more apart (gravel and yard 0.4, street 1.4 over the gate's planks at 1.0, arcade 1.75, kerbs 2.1, crossing 2.5, plaza 2.45, star 2.8, covers 2.9, ring 3.0); the slabs' bodies sunk into the island | street 5 → 1.4 cm (row z1); plaza 6.5, star 7.5, ring 10 → under 3 |
 | Zeelich, the dog yard's leaf bed and track | boxes 5 and 8 cm over the ground | 0.8 and 1.6 cm | 5 → 0.8 cm (row z3) |
-| Pads: Zeelich's shuttle pad, the Zeelich port's (`travel.js`), the Citadel spaceport's | drawn discs 12–24.5 cm tall with no floor; their yellow rings 8–9 cm over the disc | a floor at each disc's top (to its cap's edge), the rings 1.5 cm over the disc | Zeelich 24.5 → 0 (row z2); spaceport 12 → 0 (row c1) |
+| Pads: Zeelich's shuttle pad, the Zeelich port's (`travel.js`), the Citadel spaceport's | drawn discs 12–24.5 cm tall with no floor; their yellow rings 8–9 cm over the disc; the spaceport's bevelled side a slope off the floor | a floor at each disc's top (to its cap's edge), the rings 1.5 cm over the disc; the spaceport pad's side upright (4.8–5.0 → 4.9) | Zeelich 24.5 → 0 (row z2); spaceport 12 → 0 (row c1) |
 | Ballastra, the pad's glazed ring | 5 cm over the pad | 2.2 cm | 5 → 2.2 |
 | Ballastra, every floating deck (`look.js deckSlab`, 'floats') | the pontoons (and the floats' crowns) reached up through a low deck: on the Water Gardens' walkways 5 cm over the boards along both sides | a pontoon's top and a float's crown 1 cm under the deck's underside at most | 5 → 0 cm (row b2) |
 | Desert, the camp rugs | the rug 3.5 cm over the sand | 1.7 cm (its backing 1.2) | 3.5 → 1.7 |
@@ -115,8 +115,10 @@ Class B (108 before, 95 after) and C (76) are listed in the run's report (REPORT
 | `tests/feet-on-surface.mjs` on the base (`a68358be`, the same test copied in) | **FAIL**: class A 296 FAIL (above) |
 | `tests/feet-on-surface.mjs` on this branch (`077d7a5c`..`ae3c18d7`, all areas) | FAIL 1 (the spaceport pad's bevel), 122 handed on, 74 not reached; water: the river 37.7 cm deep at the deepest walk, the channel 18.5, the vent's pool 7.1, the Desert's sea 14.9 |
 | the same, `ONLY=citadel`, after the pad's fix (`d1db477e`) | **PASS** (class A 85: ok 4, handed on 68, not reached 13) |
-| `tests/walkers.mjs` | (below) |
-| `tests/worldfit.mjs` | (below) |
+| the same, `ONLY=zeelich`, after the paving's re-spacing (`2958282b`) | **PASS** (class A 13: ok 1, handed on 8, not reached 4) |
+| `tests/walkers.mjs` (`d1db477e`) | **PASS** 37/37, no errors |
+| `tests/worldfit.mjs` (`d1db477e`) | FAIL 7/8 visual: z-fighting my lowering made in Zeelich (the street's west end 2 mm over the gate's planks, 0.63 m²; the crossing's covers 3 mm over it, 0.17 m² twice). The layers re-spaced 3.5 mm or more apart |
+| `tests/worldfit.mjs` again (`2958282b`; the result was in doubt) | **PASS** 8/8 visual, 1/1 functional (0 judged z-fights; 113 smaller listed) |
 | `tests/feet-shots.mjs` (pictures and numbers, before on the base, after here) | the table's before → after |
 
 ## Questions
@@ -127,3 +129,9 @@ Class B (108 before, 95 after) and C (76) are listed in the run's report (REPORT
    feet go up to 26 cm under a tread. Stair colliders per ring would fix it without changing the look. Allowed?
 3. Class C (standable rock colliders over domed rocks, 76): make the rocks' colliders `noStand`, lower them, or leave?
 4. The gap in the Hamalayi's snow lip at the arch's steps: fine, or should the lip end in a taper there?
+
+## Commits (branch `feet-66`, not pushed)
+
+`e82027d4`, `b9f987de`, `1e0d614c`, `ae3c18d7` the suite (`tests/feet-on-surface.mjs`, `tests/lib/sweep.js` SW.raw,
+`tests/feet-shots.mjs`, `tests/README.md`); `f5fb720f` the Hamalayi; `7dde9965`, `077d7a5c`, `d1db477e`, `2958282b` the
+rest; the doc and sheet last. Old saves: nothing saved changes (no ids, no flags; colliders and draws only).

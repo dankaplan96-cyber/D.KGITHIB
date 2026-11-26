@@ -49,5 +49,6 @@ for sid in ids:
         cx = max(0, min(im.width - CW, fx - CW // 2)); cy = max(0, min(im.height - CH, fy - CH * 2 // 3))
         img.paste(im.crop((cx, cy, cx + CW, cy + CH)).resize((W, H), Image.LANCZOS), (x, yy + H + PAD))
     y += ROW
+img = img.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG)   # (a 256-colour sheet: a third of the size)
 img.save(OUT, optimize=True)
 print('wrote', OUT, len(ids), 'spots', img.size)
