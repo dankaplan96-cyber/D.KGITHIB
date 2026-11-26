@@ -26,8 +26,11 @@ triplanar: two reads from the sides (the faces) and one from above (the flat gro
   - The vertex colours and splat weights are untouched. So every island keeps its own rock tint, and the in-game map
     (it reads them) is unchanged.
   - The rock's edge wobble reads the tile's brightness (`dot(rock, 1/3)`). With the 0.9 its mean is 0.03 lower on the
-    flat, which moves the edge by about 0.009 of splat weight, toward less rock. No splat correction was made. Knartas
-    needed × 0.81 because its granite stayed pale: a shift of +0.052.
+    flat. That moves the edge by about 0.009 of splat weight, toward less rock (an estimate). No splat correction was
+    made. Knartas needed × 0.81 because its granite stayed pale: a shift of +0.052.
+  - Measured on the captures, the turf-green share per frame (G over R and B by 12, and by 4) moved by 0.1 point at
+    most: Citadel 7.42 → 7.43 %, Mosquibee 3.00 → 3.02 %, Under Celebration 11.96 → 12.06 %, the Old Watch 51.92 →
+    52.09 %, Celebration 7.84 → 7.92 % (at 4).
 - **Knartas and Otringal are unchanged.** Their rock is already the granite on every face (Knartas's approved recipe).
   For them the top read is that same tile, times 1.
 
@@ -45,7 +48,7 @@ triplanar: two reads from the sides (the faces) and one from above (the flat gro
 | Hamalayi (`hamalayi.js`) | cliff tile; the blurred rock band at the cliffs' feet and tops | **changed**: the tops of the rock walls. The walls keep the carved tile |
 | Knartas | granite on every face (#17b, approved) | unchanged (its read from above is the same granite, × 1). Its capture differs only round Twinsen's idle pose |
 | Otringal | granite on every face (`turfRock`) | unchanged (same as Knartas) |
-| The Lift Dock | decks; no terrain drawn | not applicable |
+| The Lift Dock | decks; a probe of its group found no splat mesh | not applicable (the code path would apply if it drew one) |
 | Zeelich (the spaceport, `zeelich.js`) | its own granite meshes, no `Terrain` | not applicable |
 
 Other uses of the cliff tile are not flat ground, and were left alone:
@@ -82,8 +85,16 @@ Over all the pixels that changed (dilated 4 px), the means are:
 - desert: (139, 132, 130) → (140, 133, 130);
 - Mosquibee: (89, 70, 50) → (86, 68, 48).
 
-The fine pattern drops to 40–60 % where the rock is flat, and less on slopes. Each place keeps its colour within about 5
-levels per channel. Citadel's blue is 7 levels lower over the changed pixels, but 3 in its box.
+Where the rock is flat, the fine pattern drops to 40–60 % (to 38 % in Under Celebration's yard, now the flattest
+result: the user may judge it too plain). On slopes it drops less.
+
+The bright places keep their colour within about 4 levels per channel. The × 0.9 was fitted to them (Citadel, the
+desert, Mosquibee). The dark ones end up darker:
+- the Platform's lip is −6 levels;
+- Celebration's corner is −5;
+- Citadel's blue is −7 over all its changed pixels (−3 in its box).
+
+A per-place screen factor would fix that, but was not done.
 
 ## Cost (automated runtime only: SwiftShader)
 
@@ -124,15 +135,22 @@ Final code, with the branch head (P135) merged:
     portal's floor at the sill's height. The fix is the next section.
   - Knartas's scan now lists one small cluster (0.07 m², stone against stone, at (2193.8, 2.9, 1779.3)). It is under
     the 0.15 m² bar, so it is not judged.
-- `tests/island-doors.mjs` (all regions): **FAIL, 86 passed, 3 failed.** None of the three is from this change, which
-  touches only terrain textures and the huts' 1 cm sill (no collider, door or text):
+- `tests/island-doors.mjs` (all regions): **FAIL, 86 passed, 3 failed.** All three fail the same way on the base. This
+  change touches only terrain textures and the huts' 1 cm sill: no collider, door or text.
   - "isle_otringal: each door kept shut gives its own reason" and "the shut doors' lines are their own": the pump
     house's door (`otringal-16-6`) is now the KEYS-CLOVER lock (`kc_lock`, keysclover.js), where the suite wants
     `ihx_pump`. **The same two fail on the base** (`768cb2a2`, `REGIONS=isle_otringal`, served from an export of that
     commit). It is a suite/story disagreement and is handed to the coordinator.
-  - "the keepers stand in their rooms and talk": the logged detail is cut off at Old Hanna (`ih_hanna`, Kesh's
-    lodging), so which keeper failed is not shown. It was not rerun on the base; the cause is not established.
+  - "the keepers stand in their rooms and talk": **it also fails on the base.** With `REGIONS=desert`, the base export
+    and the final code give the same result, 12 passed and 2 failed: this check, plus "Knartas … reached on foot",
+    which a `REGIONS` run always fails (no Knartas walk). Every keeper listed is present, in their room and talked.
+    The logged detail is cut off, so the part that fails is not shown: the count of lines said, or an entry past the
+    cut-off. Not in KNOWN-FAILING.md. Handed to the coordinator.
   - Every island's doors otherwise passed: no generic "Locked.", every room entered, saves inside / Continue.
+
+- `?quietrock=old` (captured on the final code, Citadel and Mosquibee): the rock boxes are identical to the before
+  captures: (112, 108, 120) and (80, 62, 44), the same SDs. The textures are 450 and 467, as before. Mosquibee differs
+  only round Twinsen (1,114 pixels). Citadel also differs in the paths P135 changed and in the tutorial prompt.
 
 ## The huts' door sills (the coordinator's item, 26.11)
 `worldfit` (3) failed on Knartas with 12 clusters, one per hut door. The cause is `franco.js` `francoHut`: the portal's
@@ -150,7 +168,7 @@ colliders are unchanged.
   `find.mjs` (spots from the splat data).
 
 ## Untested
-- `?quietrock=old` together with `?knartaspal=old`. With `knartaspal=old` alone, Knartas's flat rock is the quiet granite
-  too (Knartas is then on the cliff tile like the other isles).
+- `?knartaspal=old`: Knartas then skips the quiet rock, so it keeps the old ground whole (one line in `zislands.js`).
+  This is not run.
 - Chapter or lighting states other than the new game's, the in-game map (unchanged by construction: vertex colours and
   splat are untouched), and any real GPU.
