@@ -388,21 +388,25 @@ export class Terrain {
   _edgeChannels(spl, spl2, slopes) {
     const t0 = performance.now(), n = this.segs + 1, S = LE_SUB, NF = this.segs * S + 1, st = this.step, fs = st / S;
     // the channels: [name, threshold, the value at a grid point k, the value from a fine sample's weights w (sum: their
-    // sum), the weight of a grid point's side when it has no value (NaN), the trace's step in fine samples]
+    // sum), the weight of a grid point's side when it has no value (NaN), the trace's step in fine samples, smoothed]
     const C = [];
     if (LAWN_EDGE) C.push(['lawn', 0.5, (k) => { const g = spl[k * 4] + spl[k * 4 + 3]; return g > 0.01 ? spl[k * 4 + 3] / g : NaN; },
-      (w, sum) => { const g = (w[0] + w[3]) / sum; return g > 0.01 ? w[3] / (w[0] + w[3]) : NaN; }, (k) => spl[k * 4] + spl[k * 4 + 3], 1]);
+      (w, sum) => { const g = (w[0] + w[3]) / sum; return g > 0.01 ? w[3] / (w[0] + w[3]) : NaN; }, (k) => spl[k * 4] + spl[k * 4 + 3], 1, true]);
     // ROCK-EDGES: the rock's share of all (the shader splits on it: rk), at the old split's mean midpoint for this terrain's
     // tile (this.rockThr); the paving's share of the ground that is not rock (pk's ratio, sp2 / ns)
+    // (the rock's and the paving's distances are not smoothed: measured against their splat functions over their edge
+    //  cells, the smoothing doubled the area drawn on the wrong side (Citadel's rock 7.8 → 12.4 %, the isles' 8–10 →
+    //  13–15 %; ROCK-EDGES.md). Their sources are smooth or traced finely; the lawn's smoothing is for the isles' routes,
+    //  read at the nearest data point.)
     // (the rock's line on fine samples at most ~0.5 m apart: on the grids of 1 m or less (Citadel, the desert, the
     //  Hamalayi) every second one, 2 × 2 a cell — there the rock has 3–100× the lawn's cells, and at 4 × 4 it tripled
     //  Citadel's build time; on the isles' 1.7 m grid all 4 × 4, as the lawn's. The paving's at 4 × 4 everywhere: its
     //  edges are often a step (paved(), the posts), and its cells are few)
     if (ROCK_EDGE) {
-      C.push(['rock', this.rockThr, (k) => spl[k * 4 + 2], (w, sum) => w[2] / sum, () => 1, st > 1.2 ? 1 : 2]);
+      C.push(['rock', this.rockThr, (k) => spl[k * 4 + 2], (w, sum) => w[2] / sum, () => 1, st > 1.2 ? 1 : 2, false]);
       const nr = (k) => spl[k * 4] + spl[k * 4 + 1] + spl[k * 4 + 3] + spl2[k];
       C.push(['pave', 0.5, (k) => { const g = nr(k); return g > 0.01 ? spl2[k] / g : NaN; },
-        (w, sum) => { const g = w[0] + w[1] + w[3] + w[4]; return g / sum > 0.01 ? w[4] / g : NaN; }, nr, 1]);
+        (w, sum) => { const g = w[0] + w[1] + w[3] + w[4]; return g / sum > 0.01 ? w[4] / g : NaN; }, nr, 1, false]);
     }
     const NC = C.length, ratios = C.map(([, , gv]) => { const r = new Float32Array(n * n); for (let k = 0; k < n * n; k++) r[k] = gv(k); return r; });
     // the fine samples, shared by the channels and by neighbouring cells: the splat at each, one value per channel
@@ -426,7 +430,7 @@ export class Terrain {
     };
     const outs = [], stats = {};
     for (let c = 0; c < NC; c++) {
-      const [name, thr, , , wtOf, u] = C[c], ratio = ratios[c], fq = fs * u;
+      const [name, thr, , , wtOf, u, smooth] = C[c], ratio = ratios[c], fq = fs * u;
       const side = (v) => (v >= thr ? 1 : 0);
       // the cells the edge crosses
       const cells = [];
@@ -490,14 +494,14 @@ export class Terrain {
         }
         D[k] = cls * Math.min(EDGE_RANGE, best[k]);
       }
-      // smoothed once (1-2-1 each way) where a piece is near
+      // smoothed once (1-2-1 each way) where a piece is near (the lawn only, above)
       const out = new Int16Array(n * n * 2), q16 = (v) => Math.round(Math.max(-1, Math.min(1, v / EDGE_RANGE)) * 32767);
       let near = 0, kept = 0;
       for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
         const k = j * n + i;
         let v = D[k];
-        if (best[k] < EDGE_RANGE) {
-          near++;
+        if (best[k] < EDGE_RANGE) near++;
+        if (best[k] < EDGE_RANGE && smooth) {
           let a = 0, ws = 0;
           for (let b = -1; b <= 1; b++) for (let cc = -1; cc <= 1; cc++) {
             const ii = i + cc, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
