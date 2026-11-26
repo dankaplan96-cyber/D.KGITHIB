@@ -256,6 +256,7 @@ Final code, with the branch head (P135) merged:
       skipped ones. Before, the whole list was cut off at 600 characters.
   - **"Knartas … reached on foot"** is asked only when Knartas is toured. A `REGIONS` run without it always failed.
   - `REGIONS=desert` (6 rooms) before the full run: 9 of 9 PASS.
+- `tests/worldfit.mjs` (whole), on the final code: **PASS**, functional 1/1, visual 8/8 ((3) z-fighting: 0 judged, 115 smaller listed).
 - The sweep of the keepers' fault: other suites that hear lines through a `game.say` wrapper and talk to minor residents
   may count short of the same way. Candidates (not run, FEWER TESTS):
   - suites with such a wrapper, `P.talk`, a minor module named, and no "remark" in them: `desert-life`,
