@@ -19,12 +19,16 @@ page.on('console', (m) => { if (/^PROBE/.test(m.text())) console.log(m.text()); 
 page.on('pageerror', (e) => console.log('PAGEERROR', e.message));
 await page.addInitScript(() => { try { if (!localStorage.getItem('cr_init')) { localStorage.setItem('sunshard_settings_v1', JSON.stringify({ quality: 'medium', qPicked: true, qv: 4, v: 2, fps: 'auto' })); localStorage.setItem('cr_init', '1'); } } catch {} });
 const ev = (f, a) => page.evaluate(f, a);
+// (OLD_RIG=file: src/engine/rig.js answered from that file — a "before" run of the rig against this checkout's rest;
+//  with QUERY=slowhypot as well, the builtin Math.hypot)
+if (E.OLD_RIG) await page.route('**/src/engine/rig.js', (r) => r.fulfill({ path: E.OLD_RIG, contentType: 'text/javascript' }));
 await open(page, '?nocine');
 await ev(() => { document.querySelector('[data-act="new"]').click(); game.testFreeze = true; game.step(0.3); game.setState('play'); });
 await ev(() => game.bench.prepareAreas());
 const extra = [...new Set(JOBS.map((j) => j[0]))].filter((p) => p !== 'street' && !['zeelich', 'desert', 'hamalayi', 'house', 'arena'].includes(p));
 if (extra.length) await ev((ids) => game.buildAreas(ids, 'probe'), extra);
-for (const [PLACE, PROF] of JOBS) {
+for (const [PLACE, PROF, JCAM] of JOBS) {
+const CAM = JCAM || E.CAM || '';
 await ev(async (id) => {
   const Q = await import('/src/engine/autoquality.js'), G = game, p = Q.indexOfId(id);
   if (p < 0) throw new Error('no profile ' + id);
@@ -59,8 +63,9 @@ const info = await ev(({ place, cam }) => {
       },
     };
   }
+  G.bench.setCamera(cam === 'follow' ? 'follow' : 'orbit');
   G.state = 'play'; route.setup(); G.state = 'play';
-  if (cam === 'follow') { G.bench.setCamera('follow'); G.bench.camera(); }
+  if (cam === 'follow') G.bench.camera();
   window.__route = route; window.__t = 0;
   for (let i = 0; i < 240; i++) { window.__t += 1 / 60; route.drive(window.__t, 1 / 60); G.frame(1 / 60, i % 6 === 0); }
   // (the arm profiles' background job — spare-time work in the real loop, excluded from the frame's counted work — done
@@ -140,7 +145,7 @@ const info = await ev(({ place, cam }) => {
   walk(G.scene, true);
   const hp = G.hero.pos, near40 = G.npcs.filter((n) => n.present !== false && n.rig?.root?.visible !== false && n.pos && Math.hypot(n.pos.x - hp.x, n.pos.z - hp.z) < 40).length;
   return { room: G.room?.id || 'citadel', near40, npcs: G.npcs.length, npcsPresent: G.npcs.filter((n) => n.present !== false && n.group?.visible !== false).length, enemies: G.enemies.length, objects, shown, meshesShown, autoShown, keys: [...seen], q: G.settings.quality, prof: G.autoQ?.applied ?? null, shadows: G.renderer.renderer.shadowMap.enabled, regions: Object.keys(G.rooms || {}) };
-}, { place: PLACE, cam: E.CAM || '' });
+}, { place: PLACE, cam: CAM });
 console.log('PROBE scene', JSON.stringify(info));
 const AB = E.AB_A ? [E.AB_A, E.AB_B || ''] : null, BLK = +(E.AB_BLOCK || 16);
 if (AB) await ev((ab) => { window.__ab = ab.map((c) => new Function(c)); }, AB);
@@ -172,7 +177,7 @@ const mean = (a) => a.reduce((s, x) => s + x, 0) / a.length;
 const show = (rows, tag) => {
   const keys = [...new Set(rows.flatMap((r) => Object.keys(r.ms)))];
   const tot = rows.map((r) => r.all);
-  console.log(`CPU-RELIEF sections · ${PLACE} · ${PROF} · ${E.CAM || 'orbit'} · ${rows.length} frames${tag ? ' · ' + tag : ''}`);
+  console.log(`CPU-RELIEF sections · ${PLACE} · ${PROF} · ${CAM || 'orbit'} · ${rows.length} frames${tag ? ' · ' + tag : ''}`);
   console.log(`  frame work: p50 ${pct(tot, 0.5).toFixed(2)} · p90 ${pct(tot, 0.9).toFixed(2)} · mean ${mean(tot).toFixed(2)} ms · draws (renderBufferDirect) p50 ${pct(rows.map((r) => r.n['three.draw(program,uniforms,gl)'] || 0), 0.5)}`);
   // (per block of frames: the block's mean; min and median over the blocks — a load spike on this shared machine lifts
   //  a block, rarely all of them)

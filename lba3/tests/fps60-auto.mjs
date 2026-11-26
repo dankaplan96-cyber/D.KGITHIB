@@ -5,9 +5,10 @@
 //   A. saves: a stored Frame Rate 'auto' (Unlimited) stays Unlimited and gets the new rule; a stored '30' is the player's
 //      own choice (only the Settings chip writes it) and stays 30; nothing stored: Unlimited
 //   B. 59.9 Hz, GPU-bound (the frame's cost 60 ms at High, CPU 5): Auto (the governor on: ?autoq) steps the picture down
-//      one profile at a time at commit points (a pause), past Low by resolution (Low-eco stepped over), until 60 holds;
+//      one profile at a time at commit points (a pause), past Low by resolution (the CPU rung stepped over), until 60 holds;
 //      the Frame Rate stays Unlimited, no frame-rate limit appears, the even pace never engages (≤ 70 Hz)
-//   C. 59.9 Hz, CPU-bound (the CPU 26 ms at High): the CPU rung below Low (Low-eco) and no resolution rung; no limit
+//   C. 59.9 Hz, CPU-bound (the CPU 26 ms at High): down the CPU side only (P137b: Medium-lean, then CPU-eco, which keeps
+//      the shadows and the full resolution; never Low or a resolution rung); no limit
 //   D. 120 Hz, GPU-bound (45 ms at High): the even pace takes every 2nd refresh (60) at most — never every 4th (30) as
 //      before P137 — and Auto steps the picture down until 60 holds
 // The frame cost: a drawn frame costs max(gpu, cpu) × the applied profile's share (the governor's own cost model — the
@@ -65,12 +66,12 @@ async function startAt(p) {
   await ev((p) => { const G = game, A = G.autoQ; A.gov.noHelp = {}; A.gov.rec.clear(); A.gov.setProfile(p, 'test: start', { commitNow: true, t: performance.now() }); A.applyAll(); G.warmGraphics(); G.evenPace.reset('test'); G.evenPace.log = []; A.gov.log.length = 0; }, p);
   await page.waitForFunction(() => !game.gfxHold, null, { timeout: 600000 });
 }
-const IDS = ['high', 'medium', 'lean', 'low', 'loweco', 'low75', 'low65'];
+const IDS = ['high', 'medium', 'lean', 'loweco', 'low', 'low75', 'low65'];
 // run `ms` of display time at `hz` with the modelled cost; a pause (a commit point) every `pauseEvery` ms. Returns when
 // the time is up, or right after a commit (its programs are made asynchronously: the caller waits for them)
 const chunk = (o) => ev((o) => {
   const S = SYN, G = game, A = G.autoQ, R = 1000 / o.hz, end = S.t + o.ms;
-  const SH = { high: [1, 1], medium: [0.56, 0.8], lean: [0.46, 0.74], low: [0.32, 0.7], loweco: [0.31, 0.63], low75: [0.29, 0.63], low65: [0.26, 0.63] };
+  const SH = { high: [1, 1], medium: [0.56, 0.8], lean: [0.46, 0.74], loweco: [0.46, 0.72], low: [0.32, 0.7], low75: [0.29, 0.63], low65: [0.26, 0.63] };
   let t = S.t, acc = S.acc || 0, committed = null;
   const seen = S.seen ??= { caps: [], fps: [], nMax: 0, rates: [] };
   // (one clock: Auto stamps its frames with performance.now() and the even pace with the rAF time; on this synthetic
@@ -116,7 +117,7 @@ async function scenario({ hz, gpu, cpu, secs, tail = 8000, pauseEvery = 5000 }) 
   return ev(([commits, IDS]) => {
     const S = SYN, G = game, A = G.autoQ, d = S.drawn, iv = d.slice(1).map((x, k) => +(x - d[k]).toFixed(2));
     const fps = iv.length ? +(1000 * iv.length / iv.reduce((a, b) => a + b, 0)).toFixed(1) : 0;
-    return { commits, p: IDS[A.gov.applied], phase: A.gov.phase, scale: G.renderer.knobs?.scale ?? null, eco: G.farCull.anim.eco, fps, long: iv.filter((x) => x > 20).length, n: iv.length,
+    return { commits, p: IDS[A.gov.applied], phase: A.gov.phase, scale: G.renderer.knobs?.scale ?? null, shadows: G.renderer.knobs?.shadows ?? null, eco: G.farCull.anim.eco, fps, long: iv.filter((x) => x > 20).length, n: iv.length,
       caps: [...new Set(S.seen.caps)], fpsSet: [...new Set(S.seen.fps)], nMax: S.seen.nMax, paceLog: G.evenPace.log.map((e) => e.why || e.probe || (e.denied ? `denied ${e.denied}` : '')),
       steps: A.gov.log.filter((e) => e.kind === 'down' || e.kind === 'up').map((e) => `${e.kind}${e.revert ? ' (back)' : ''}: ${e.what} — ${String(e.why).slice(0, 90)}`), stored: JSON.parse(localStorage.getItem('sunshard_settings_v1') || '{}').fps,
       govLog: A.gov.log.slice(-6).map((e) => `${e.kind}: ${String(e.why || '').slice(0, 140)}`), last: A.gov.lastWindow, pace: G.evenPace.state() };
@@ -129,7 +130,7 @@ if (ONLY.includes('B')) {
   await startAt(0);
   const r = await scenario({ hz: 59.9, gpu: 60, cpu: 5, secs: 150 });
   log('B 59.9 Hz, GPU-bound (60 ms at High)', r);
-  check('B 59.9 Hz, GPU-bound: Auto steps the picture down one profile at a time, each at a pause, past Low by resolution (Low 75 % or Low 65 %), Low-eco stepped over',
+  check('B 59.9 Hz, GPU-bound: Auto steps the picture down one profile at a time, each at a pause, past Low by resolution (Low 75 % or Low 65 %), the CPU rung (CPU-eco) stepped over',
     IDS.indexOf(r.p) >= 5 && r.commits.length >= 4 && r.commits.every((c, i) => IDS.indexOf(c.to) > IDS.indexOf(c.from) || /back/.test(r.steps[i] || '')) && !r.commits.some((c) => c.to === 'loweco') && r.scale <= 0.75, r);
   check('B ...and 60 holds at the end (≥ 55 fps drawn, the governor\'s own bar; under 6 % of the intervals over 20 ms)', r.fps >= 55 && r.long / Math.max(1, r.n) < 0.06, { fps: r.fps, long: r.long, n: r.n });
   check('B ...the Frame Rate stays Unlimited the whole time: no 30 (or any) limit set, nothing stored but Unlimited, the even pace never engaged on 59.9 Hz', noCap(r) && r.nMax === 1, { caps: r.caps, fpsSet: r.fpsSet, stored: r.stored, nMax: r.nMax });
@@ -138,9 +139,9 @@ if (ONLY.includes('C')) {
   await startAt(0);
   const r = await scenario({ hz: 59.9, gpu: 8, cpu: 26, secs: 150 });
   log('C 59.9 Hz, CPU-bound (CPU 26 ms at High)', r);
-  check('C 59.9 Hz, CPU-bound: down to the CPU rung below Low (Low-eco), never a resolution rung for CPU pressure; no limit, the Frame Rate Unlimited',
-    r.p === 'loweco' && !r.commits.some((c) => c.to === 'low75' || c.to === 'low65') && r.scale === 0.85 && r.eco === true && noCap(r) && r.nMax === 1, r);
-  console.log(`       C (not a check): at Low-eco this modelled CPU (26 ms at High, × 0.63 there by the cost model) draws ${r.fps} fps; a real street whose CPU work stays past 16.7 ms there stays below 60 (FPS60-AUTO.md §4)`);
+  check('C 59.9 Hz, CPU-bound: down the CPU side only (P137b: Medium-lean or CPU-eco at the end), the shadows on and the full resolution throughout; never Low or a resolution rung for CPU pressure; no limit, the Frame Rate Unlimited',
+    (r.p === 'lean' || r.p === 'loweco') && !r.commits.some((c) => c.to === 'low' || c.to === 'low75' || c.to === 'low65') && r.scale === 1 && r.shadows === 1 && r.eco === true && noCap(r) && r.nMax === 1, r);
+  console.log(`       C (not a check): at ${r.p} this modelled CPU (26 ms at High, × 0.74 / 0.72 at Medium-lean / CPU-eco by the cost model) draws ${r.fps} fps: P137b keeps the shadows, so a CPU-bound street stays below 60 (CPU-RELIEF.md)`);
 }
 if (ONLY.includes('D')) {
   await startAt(0);

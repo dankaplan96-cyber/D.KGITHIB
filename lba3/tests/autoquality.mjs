@@ -15,8 +15,8 @@ const { check, done } = checker();
 // ---------------------------------------------------------------- a simulated machine
 // truth: what each knob value saves (multiplicative), independent of the governor's model
 const TRUTH = {
-  gpu: { scale: (s) => 0.55 + 0.45 * s * s, bloom: { 1: 1, 0: 0.72 }, filter: { soft: 1, pcf: 0.95 }, map: { 4096: 1, 2048: 0.95, 1024: 0.91 }, lamps: { 8: 1, 4: 0.94, 2: 0.9 }, msaa: { 4: 1, 2: 0.93, 0: 0.85 }, shadows: { 1: 1, 0: 0.8 }, veg: { high: 1, medium: 0.99, low: 0.97 }, casters: { high: 1, medium: 0.99, low: 0.98 }, anim: { full: 1, eco: 1 }, detail: { normal: 1, near: 0.98 } },
-  cpu: { scale: () => 1, bloom: { 1: 1, 0: 0.88 }, filter: { soft: 1, pcf: 1 }, map: { 4096: 1, 2048: 0.95, 1024: 0.95 }, lamps: { 8: 1, 4: 1, 2: 1 }, msaa: { 4: 1, 2: 1, 0: 1 }, shadows: { 1: 1, 0: 0.82 }, veg: { high: 1, medium: 0.98, low: 0.95 }, casters: { high: 1, medium: 0.95, low: 0.92 }, anim: { full: 1, eco: 0.95 }, detail: { normal: 1, near: 0.94 } },
+  gpu: { scale: (s) => 0.55 + 0.45 * s * s, bloom: { 1: 1, 0: 0.72 }, filter: { soft: 1, pcf: 0.95 }, map: { 4096: 1, 2048: 0.95, 1024: 0.91 }, lamps: { 8: 1, 4: 0.94, 2: 0.9 }, msaa: { 4: 1, 2: 0.93, 0: 0.85 }, shadows: { 1: 1, 0: 0.8 }, veg: { high: 1, medium: 0.99, low: 0.97 }, casters: { high: 1, medium: 0.99, low: 0.98 }, anim: { full: 1, eco: 1, deep: 1 }, detail: { normal: 1, near: 0.98 } },
+  cpu: { scale: () => 1, bloom: { 1: 1, 0: 0.88 }, filter: { soft: 1, pcf: 1 }, map: { 4096: 1, 2048: 0.95, 1024: 0.95 }, lamps: { 8: 1, 4: 1, 2: 1 }, msaa: { 4: 1, 2: 1, 0: 1 }, shadows: { 1: 1, 0: 0.82 }, veg: { high: 1, medium: 0.98, low: 0.95 }, casters: { high: 1, medium: 0.95, low: 0.92 }, anim: { full: 1, eco: 0.95, deep: 0.92 }, detail: { normal: 1, near: 0.94 } },
 };
 const cost = (K, side, hi) => { let f = hi; for (const k of KNOBS) { const T = TRUTH[side][k]; f *= typeof T === 'function' ? T(K.scale) : T[K[k]]; } return f; };
 let seed = 7;
@@ -53,15 +53,20 @@ const name = (p) => PROFILES[p].name;
 
 // ---------------------------------------------------------------- the profiles and the labels
 {
-  check('seven named profiles, best first: High · Medium · Medium-lean · Low (AUTO-2, P95, AUTO-FLOOR) · Low-eco · Low 75 % · Low 65 % (P137)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium · Medium-lean · Low · Low-eco · Low 75 % · Low 65 %', PROFILES.map((x) => x.name));
+  check('seven named profiles, best first: High · Medium · Medium-lean (AUTO-2, P95) · CPU-eco (P137b) · Low (AUTO-FLOOR) · Low 75 % · Low 65 % (P137)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium · Medium-lean · CPU-eco · Low · Low 75 % · Low 65 %', PROFILES.map((x) => x.name));
   const eq = (a, b) => KNOBS.every((k) => a[k] === b[k]);
-  check('High, Medium and Low are the presets exactly (every knob); TIER_AT.low is Low', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && eq(knobsAt(3), PRESET_KNOBS.low) && TIER_AT.low === 3, {});
-  // P137: below Low, only far-people detail and resolution: Low-eco (CPU) = Low + far people at half rate + tiny far parts
-  // dropped; Low 75 % / 65 % (GPU) = Low-eco at 75 / 65 % resolution; nothing else (shadows already off, lamps 2 kept)
-  { const L = knobsAt(3), d = (p) => KNOBS.filter((k) => knobsAt(p)[k] !== L[k]).join();
-    check('P137 the rungs below Low: Low-eco (CPU: anim, detail), Low 75 % and Low 65 % (GPU: + resolution 0.75 / 0.65); lamps, vegetation, casters as Low; for one side each',
-      d(4) === 'anim,detail' && d(5) === 'scale,anim,detail' && d(6) === 'scale,anim,detail' && knobsAt(5).scale === 0.75 && knobsAt(6).scale === 0.65
-      && PROFILES[3].only === 'gpu' && PROFILES[4].only === 'cpu' && PROFILES[5].only === 'gpu' && PROFILES[6].only === 'gpu' && PROFILES.slice(0, 3).every((x) => !x.only), [d(4), d(5), d(6)]); }
+  check('High, Medium and Low are the presets exactly (every knob); TIER_AT.low is Low', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && eq(knobsAt(4), PRESET_KNOBS.low) && TIER_AT.low === 4, {});
+  // P137: below Low, only far-people detail and resolution: Low 75 % / 65 % (GPU) = Low + far people at half rate + tiny
+  // far parts dropped, at 75 / 65 % resolution; nothing else (shadows already off, lamps 2 kept)
+  // P137b: the CPU rung (CPU-eco, id 'loweco' as Low-eco was) is Medium-lean exactly — its shadows, map, filter, casters,
+  // full resolution — with the people farther off animated at a lower rate (anim 'deep'); it sits above Low
+  { const L = knobsAt(4), d = (p) => KNOBS.filter((k) => knobsAt(p)[k] !== L[k]).join(), ln = knobsAt(2), c = knobsAt(3), dc = KNOBS.filter((k) => c[k] !== ln[k]).join();
+    check('P137b CPU-eco is Medium-lean with only far people animated at a lower rate (anim deep): its shadows (map, filter, casters), 100 % resolution; id loweco; for CPU pressure only',
+      dc === 'anim' && c.anim === 'deep' && c.shadows === 1 && c.scale === 1 && c.map === ln.map && c.filter === ln.filter && c.casters === ln.casters && PROFILES[3].id === 'loweco' && PROFILES[3].only === 'cpu', { dc, c });
+    check('P137 the rungs below Low: Low 75 % and Low 65 % (GPU: + resolution 0.75 / 0.65, far people at half rate, tiny far parts); lamps, vegetation, casters as Low; for one side each',
+      d(5) === 'scale,anim,detail' && d(6) === 'scale,anim,detail' && knobsAt(5).scale === 0.75 && knobsAt(6).scale === 0.65
+      && PROFILES[4].only === 'gpu' && PROFILES[5].only === 'gpu' && PROFILES[6].only === 'gpu' && PROFILES.slice(0, 3).every((x) => !x.only), [d(5), d(6)]);
+    check('P137b no profile CPU pressure can step to turns the shadows off (every profile not only for the GPU keeps them)', PROFILES.filter((x) => x.only !== 'gpu').every((x) => x.K.shadows === 1), PROFILES.map((x) => [x.id, x.only, x.K.shadows])); }
   { const M = knobsAt(1), Ln = knobsAt(2), diff = KNOBS.filter((k) => M[k] !== Ln[k]);
     check('P95 Medium-lean is Medium at full resolution with its shadows (map, filter), minus MSAA (output-pass edges), 2 lamps, Low\'s far grass and small shadows, far people at half rate and their tiny far parts',
       Ln.scale === 1 && Ln.shadows === 1 && Ln.filter === M.filter && Ln.map === M.map && Ln.bloom === 0 && diff.join() === 'lamps,msaa,veg,casters,anim,detail' && Ln.msaa === 0 && Ln.lamps === 2, { diff, Ln }); }
@@ -154,31 +159,35 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
 {
   const G = new Governor();
   const { applied } = run(G, { cpu: 45, gpu: 30, display: 16.67, scene: 30000 }, 400);
-  // (P137: CPU-bound — CPU 45 ms, GPU 30 at High: the CPU rung below Low (Low-eco), never a resolution-only rung for CPU
-  //  pressure; then held at the lowest profile for CPU pressure)
-  check('a machine below even Low (CPU-bound): walks down to Low-eco (P137: the CPU rung, no resolution rung for CPU pressure), settles there, no oscillation', G.applied === 4 && G.phase === 'hold' && steps(G).every((e) => e.kind === 'down') && !steps(G).some((e) => /Low 75|Low 65/.test(e.what)) && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });
+  // (P137: CPU-bound — CPU 45 ms, GPU 30 at High: down the CPU side only, never a resolution-only rung for CPU pressure.
+  //  P137b: the CPU side ends at CPU-eco, which keeps the shadows; by this test's truth it buys ~3 % over Medium-lean
+  //  (anim deep, CPU-RELIEF.md), under P95's 7 %, so the revisit gives Medium-lean back and no further CPU step is taken:
+  //  held at Medium-lean or CPU-eco, the shadows on, never Low or below)
+  console.log('       P137b CPU-bound below even Low:', JSON.stringify({ p: name(G.applied), phase: G.phase, steps: steps(G).map((e) => e.what) }));
+  check('a machine below even Low (CPU-bound): walks down the CPU side only (P137b: Medium → Medium-lean → CPU-eco, which keeps the shadows; never Low, Low 75 % or Low 65 %), settles, no oscillation, every change at a commit point',
+    (G.applied === 2 || G.applied === 3) && knobsAt(G.applied).shadows === 1 && G.phase === 'hold' && !steps(G).some((e) => /→ Low/.test(e.what)) && steps(G).filter((e) => e.kind === 'up').length <= 1 && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });
 }
 // ---------------------------------------------------------------- 9b. P137: GPU-bound below Low: the resolution rungs
 {
   // (GPU 60 ms at High, CPU 6: Low draws ~19 ms by this test's truth — past 60 — and Low 65 % ~15.7: the resolution
-  //  rungs, Low-eco stepped over (it buys almost no GPU time), and 60 held at the end)
+  //  rungs, CPU-eco stepped over (it buys almost no GPU time), and 60 held at the end)
   const G = new Governor();
   const { trace, applied } = run(G, { cpu: 6, gpu: 60, display: 16.67, scene: 30000 }, 600);
   const f = fpsOf(trace, trace[trace.length - 1].t - 120000);
   console.log('       P137 GPU-bound below Low:', JSON.stringify({ p: name(G.applied), phase: G.phase, fps: +f.toFixed(1), steps: steps(G).map((e) => e.what) }));
-  check('P137 a GPU-bound machine Low cannot hold at 60: steps on below Low by resolution (Low 75 %, Low 65 %), steps over Low-eco, holds ≥ 55 fps at the end, every change at a commit point',
-    G.applied >= 5 && G.phase === 'hold' && !steps(G).some((e) => /→ Low-eco/.test(e.what)) && f >= 55 && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), fps: f, steps: steps(G).map((e) => e.what) });
+  check('P137 a GPU-bound machine Low cannot hold at 60: steps on below Low by resolution (Low 75 %, Low 65 %), steps over CPU-eco, holds ≥ 55 fps at the end, every change at a commit point',
+    G.applied >= 5 && G.phase === 'hold' && !steps(G).some((e) => /→ CPU-eco/.test(e.what)) && f >= 55 && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), fps: f, steps: steps(G).map((e) => e.what) });
 }
-// ---------------------------------------------------------------- 9c. P137: no GPU timer, a clean 60 at Low 65 %: never up into Low-eco
+// ---------------------------------------------------------------- 9c. P137: no GPU timer, a clean 60 at Low 65 %: never up into the CPU rung
 {
   // (GPU 70 ms at High, no timer query: Low 65 % draws ~14.4 ms — a clean 60 with room. The model's room for the profile
-  //  above is then judged on the frame time alone; up from a GPU rung is the GPU rung above it (Low 75 %), never Low-eco,
-  //  whose GPU cost is Low's)
+  //  above is then judged on the frame time alone; up from a GPU rung is the GPU rung above it (Low 75 %), never the CPU
+  //  rung (P137: Low-eco, whose GPU cost was Low's; P137b: CPU-eco, above Low: up from Low is Medium-lean))
   const G = new Governor();
   const { applied } = run(G, { cpu: 6, gpu: 70, display: 16.67, scene: 30000 }, 900, { timer: false });
   const ups = steps(G).filter((e) => e.kind === 'up').map((e) => e.what);
   console.log('       P137 no timer, clean 60 at the bottom:', JSON.stringify({ p: name(G.applied), phase: G.phase, steps: steps(G).map((e) => e.what), above: G.above(6) }));
-  check('P137 up from a GPU rung below Low is the GPU rung above it (Low 65 % → Low 75 % → Low), never Low-eco; no timer, 15 min: no step into Low-eco, held', G.above(6) === 5 && G.above(5) === 3 && G.above(4) === 2 && !ups.some((x) => /→ Low-eco/.test(x)) && !steps(G).some((e) => /→ Low-eco/.test(e.what)) && G.phase === 'hold' && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });
+  check('P137 up from a GPU rung below Low is the GPU rung above it (Low 65 % → Low 75 % → Low → Medium-lean), never the CPU rung (CPU-eco; up from it: Medium-lean); no timer, 15 min: no step into CPU-eco, held', G.above(6) === 5 && G.above(5) === 4 && G.above(4) === 2 && G.above(3) === 2 && !ups.some((x) => /→ CPU-eco/.test(x)) && !steps(G).some((e) => /→ CPU-eco/.test(e.what)) && G.phase === 'hold' && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });
 }
 // ---------------------------------------------------------------- 10. a 30 fps limit: 33 ms frames are on time
 {
@@ -251,8 +260,10 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
   // (P137: the rungs below Low, for every machine — an assumption, not a measurement: Low's share × the far-people knobs
   //  (GPU 0.98; CPU: what Medium → Medium-lean saves on that machine, whose six knobs include these two — an upper
   //  bound) and the resolution's pixel share at the GPU (0.55 + 0.45 · s², as TRUTH above))
+  //  (P137b: CPU-eco is Medium-lean's picture: Medium-lean's GPU share, and its CPU share × 0.97 for the far people's lower
+  //   animation rate — about what CPU-RELIEF measured it to save on the street, an assumption for the other machines)
   for (const M of Object.values(MACH)) { const g = M.gpuF.low, c = M.cpuF.low, px = (sc) => (0.55 + 0.45 * sc * sc) / (0.55 + 0.45 * 0.85 * 0.85);
-    Object.assign(M.gpuF, { loweco: g * 0.98, low75: g * 0.98 * px(0.75), low65: g * 0.98 * px(0.65) }); Object.assign(M.cpuF, { loweco: c * M.cpuF.lean / M.cpuF.medium, low75: c * M.cpuF.lean / M.cpuF.medium, low65: c * M.cpuF.lean / M.cpuF.medium }); }
+    Object.assign(M.gpuF, { loweco: M.gpuF.lean, low75: g * 0.98 * px(0.75), low65: g * 0.98 * px(0.65) }); Object.assign(M.cpuF, { loweco: M.cpuF.lean * 0.97, low75: c * M.cpuF.lean / M.cpuF.medium, low65: c * M.cpuF.lean / M.cpuF.medium }); }
   // power states: mains; battery on a 60 Hz panel; battery with the panel at 41 Hz (GTX1050-BATTERY: 24.4 ms with nothing
   // drawn; the GPU clocks down and its timer reads ~1.4× longer); battery with Chrome's pacing (12 % of the callbacks a
   // refresh late: FPS30-PRESENT, rAF p95 33.4) — the browser's, not the game's
@@ -436,13 +447,13 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
     check('P95 REVISIT: a step down that raised the frame rate ≥ 10 % stays', G.applied === 2 && !G.log.some((e) => e.revert), G.log.filter((e) => e.kind !== 'commit').map((e) => `${e.t} ${e.kind} ${e.what || ''}`)); }
   // the ladder's skip (battery): Medium → Low directly; a margin's try one up steps over it too
   { const G = new Governor({ skip: (p) => p === 2 }); G.setProfile(1, 'test', { commitNow: true, t: 0 }); feed(G, { secs: 8, ms: 25, cpu: 8, gpu: 24 });
-    check('P95 skip (Medium-lean on battery): GPU pressure at Medium queues Low; above(Low) is Medium', G.p === 3 && G.above(3) === 1 && G.below(1) === 3, { p: G.p }); }
+    check('P95 skip (Medium-lean on battery): GPU pressure at Medium queues Low (P137b: over the CPU rung); above(Low) is Medium; CPU pressure there would take CPU-eco', G.p === 4 && G.above(4) === 1 && G.below(1, 'gpu') === 4 && G.below(1, 'cpu') === 3, { p: G.p }); }
   // the cache: v4 entries by index move to v5 by id; v5 by id; junk dropped
   { const { migrateCache } = await import('../src/engine/autoquality.js');
     const v4 = migrateCache({ a: { p: 2, src: 'settled', margin: true, noTry: 1, at: 'x' }, b: { p: 1, src: 'calib' }, c: { p: 7 }, d: 'junk', e: null }, true);
-    const v5 = migrateCache({ a: { p: 2, id: 'low', src: 'settled' }, b: { p: 2, id: 'lean' }, c: { p: 1 }, d: { id: 'gone', p: 0 } });
-    check('P95 cache: a v4 entry (High · Medium · Low by index) keeps its profile by id (Low → index 3, Medium → 1, its margin and noTry); a v5 entry is read by id; unknown or broken entries are dropped',
-      v4.a.p === 3 && v4.a.id === 'low' && v4.a.margin === true && v4.a.noTry === 1 && v4.b.p === 1 && !v4.c && !v4.d && !v4.e && v5.a.p === 3 && v5.b.p === 2 && v5.c.p === 1 && !v5.d, { v4, v5 }); }
+    const v5 = migrateCache({ a: { p: 2, id: 'low', src: 'settled' }, b: { p: 2, id: 'lean' }, c: { p: 1 }, d: { id: 'gone', p: 0 }, e: { p: 4, id: 'loweco', src: 'settled' } });
+    check('P95 cache: a v4 entry (High · Medium · Low by index) keeps its profile by id (Low → index 4 since P137b, Medium → 1, its margin and noTry); a v5 entry is read by id (P137b: a settled Low-eco, id loweco, is CPU-eco now); unknown or broken entries are dropped',
+      v4.a.p === 4 && v4.a.id === 'low' && v4.a.margin === true && v4.a.noTry === 1 && v4.b.p === 1 && !v4.c && !v4.d && !v4.e && v5.a.p === 4 && v5.e.p === 3 && v5.e.id === 'loweco' && v5.b.p === 2 && v5.c.p === 1 && !v5.d, { v4, v5 }); }
 }
 
 // ---------------------------------------------------------------- PACE-ALL (22.11): every screen (engine/pace.js)
