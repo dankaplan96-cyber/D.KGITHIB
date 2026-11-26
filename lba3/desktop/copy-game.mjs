@@ -25,4 +25,6 @@ if (existsSync(join(ROOT, 'assets', 'fonts', 'rubik.css'))) {
 if (process.env.BUILD_NUMBER) html = html.replace('<head>', `<head><script>window.LBA_BUILD = '${process.env.BUILD_NUMBER.replace(/\D/g, '')}';</script>`);
 writeFileSync(join(OUT, 'index.html'), html);
 cpSync(join(HERE, 'build', 'icon.png'), join(OUT, 'icon.png'));
+// #33: the soundfonts' and the font's notices, which their licences ask to be included (THIRD-PARTY-NOTICES.txt)
+cpSync(join(ROOT, 'THIRD-PARTY-NOTICES.txt'), join(OUT, 'THIRD-PARTY-NOTICES.txt'));
 console.log(`desktop/game: ${n + 1} files`);
