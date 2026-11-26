@@ -506,8 +506,9 @@ function buildShaft(scene, physics) {
   }
   for (let y = 3.8; y < 16; y += 2.4) { const [x, z] = polar(Math.PI / 4 + 0.48, bcR + 0.5, BC.x, BC.z); kt.add(rbox(0.5, 0.1, 0.18, 0.02), iron(), x, y, z, Math.PI / 4 + 0.48); }
   // trench gratings with brass edging over the cables
-  const grate = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0); k.at((x0 + x1) / 2, 0, (z0 + z1) / 2, -Math.atan2(z1 - z0, x1 - x0), () => { k.add(rbox(L + 0.5, 0.05, 0.6, 0.01), MAT.tread('#5a6068'), 0, 0.1, 0); for (const s of [-1, 1]) k.add(rbox(L + 0.5, 0.08, 0.06, 0.015), brass(), 0, 0.07, s * 0.33); }); };
-  grate(tr[0][0] + 0.2, tr[0][1], tr[1][0], tr[1][1]); grate(tr[1][0], tr[1][1] - 0.3, tr[2][0], BZ + 0.5);
+  const grate = (x0, z0, x1, z1, dy = 0) => { const L = Math.hypot(x1 - x0, z1 - z0); k.at((x0 + x1) / 2, 0, (z0 + z1) / 2, -Math.atan2(z1 - z0, x1 - x0), () => { k.add(rbox(L + 0.5, 0.05, 0.6, 0.01), MAT.tread('#5a6068'), 0, 0.1 + dy, 0); for (const s of [-1, 1]) k.add(rbox(L + 0.5, 0.08, 0.06, 0.015), brass(), 0, 0.07 + dy, s * 0.33); }); };
+  // (FLICKER-142: the second run 6 mm higher: where the two cross their tops lay in one plane)
+  grate(tr[0][0] + 0.2, tr[0][1], tr[1][0], tr[1][1]); grate(tr[1][0], tr[1][1] - 0.3, tr[2][0], BZ + 0.5, 0.006);
   for (const [y, phi] of [[3.5, Math.PI / 4], [5.9, -Math.PI / 4 + 0.3], [8.3, Math.PI * 0.6]]) {
     const [x, z] = polar(phi, bcR + 0.38, BC.x, BC.z);
     kt.at(x, y, z, phi, () => wallLamp(kt, { arm: 0.3 }));
@@ -533,7 +534,7 @@ function buildShaft(scene, physics) {
     k.at(0, 3.55, 0.1, 0, () => ibeam(k, 3.5, 0.42, 0.3));
     k.add(rbox(3.3, 0.3, 0.06, 0.02), hazard(), 0, 3.12, 0.28);
     k.at(0, 4.15, 0.24, 0, () => signPlate(k, 1.8, 0.52, signMat(['DEEP INSTALLATION', 'LEVEL -2  ·  COOLING'], { w: 512, h: 150, arrow: 1 })));
-    k.add(new THREE.BoxGeometry(2.9, 0.1, 3.4), floorMat('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), 0, -0.05, -1.8);
+    k.add(new THREE.BoxGeometry(2.9, 0.1, 3.4), floorMat('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), 0, -0.044, -1.8);   // (FLICKER-142: 6 mm over the cave's floor, which it overlapped in one plane)
     // (REVIEW-UNDER: beside the shoring posts at ±1.25, not in the passage: at ±1.7 × 0.8 they reached in to ±0.55 m and the mouth read as rock)
     for (const s of [-1, 1]) for (let z = -0.8; z > -3.4; z -= 1.2) k.add(rockGeo(7 + Math.round(-z * 3) + (s > 0 ? 5 : 0)), rockD, s * 2.05, 0, z, z * 2, { sx: 0.6, sy: 1.9, sz: 0.9 });
     k.add(new THREE.BoxGeometry(3.8, 0.3, 3.4), rockD, 0, 3.15, -1.8);
@@ -547,7 +548,7 @@ function buildShaft(scene, physics) {
   B.light('#ffe6c0', 5, 7, tunnelX, 2.6, TZ + 1.4);
   // laid steel plates: the walked route from the lift to the tunnel
   const plates = [[-1.9, -0.2, 0.1], [-0.2, 0.4, -0.05], [1.5, 0.95, 0.08], [3.2, 0.95, -0.04], [4.6, 0.4, 0.12], [tunnelX, -1.1, 0.0], [tunnelX + 0.1, -2.7, 0.06], [tunnelX, -4.3, -0.03]];
-  plates.forEach(([x, z, ry], i) => k.at(x, 0, z, ry, () => { k.add(rbox(1.5, 0.05, 1.3, 0.015), MAT.tread('#8e8a92'), 0, 0.025, 0); if (i % 2) k.add(rbox(1.5, 0.02, 0.12, 0.005), hazard(), 0, 0.055, 0.55); for (const sx of [-0.65, 0.65]) for (const sz of [-0.55, 0.55]) k.add(sphere(0.025, 6, 4), iron(), sx, 0.05, sz); }));
+  plates.forEach(([x, z, ry], i) => k.at(x, (i % 2) * 0.006, z, ry, () => { k.add(rbox(1.5, 0.05, 1.3, 0.015), MAT.tread('#8e8a92'), 0, 0.025, 0); if (i % 2) k.add(rbox(1.5, 0.02, 0.12, 0.005), hazard(), 0, 0.055, 0.55); for (const sx of [-0.65, 0.65]) for (const sz of [-0.55, 0.55]) k.add(sphere(0.025, 6, 4), iron(), sx, 0.05, sz); }));   // (FLICKER-142: every other plate 6 mm up: where two overlap their tops lay in one plane)
   R.exits.push({ ...B.world(tunnelX, TZ + 0.3), r: 0.95, to: 'c3-deep' });
   R.exits.push({ ...B.world(LS.x, LS.z), r: 0.8, to: 'c3-up' });
   R.lift = B.world(LS.x, LS.z);
@@ -886,8 +887,8 @@ function buildDeep(scene, physics) {
   const cwL = CW.x1 - CW.x0, cwX = (CW.x0 + CW.x1) / 2, cwZ = (CW.z0 + CW.z1) / 2;
   k.add(rbox(cwL, 0.08, CW.z1 - CW.z0, 0.02), deck(), cwX, UY - 0.04, cwZ);
   k.add(rbox(cwL, 0.32, 0.1, 0.02), tealP(), cwX, UY - 0.22, CW.z1 - 0.05);
-  k.add(rbox(cwL, 0.1, 0.12, 0.02), hazard(), cwX, UY - 0.05, CW.z1 - 0.02);
-  for (let x = CW.x0 + 1.2; x < CW.x1; x += 3.0) k.at(x, 0, BZ + 0.25, 0, () => { k.add(rbox(0.16, 0.5, 2.1, 0.02), tealP(), 0, UY - 0.35, 1.0); });
+  k.add(rbox(cwL, 0.1, 0.12, 0.02), hazard(), cwX, UY - 0.044, CW.z1 - 0.02);   // (FLICKER-142: 6 mm over the deck: their tops lay in one plane)
+  for (let x = CW.x0 + 1.2; x < CW.x1; x += 3.0) k.at(x, 0, BZ + 0.25, 0, () => { k.add(rbox(0.16, 0.5, 2.09, 0.02), tealP(), 0, UY - 0.35, 0.995); });   // (FLICKER-142: 1 cm short of the edge plate's face)
   const posts = [-9.4, -3.4, -0.2];
   for (const x of posts) { k.at(x, 0, CW.z1 - 0.2, 0, () => column(k, UY - 0.08, 0.26)); B.ccol(x, CW.z1 - 0.2, 0.2, UY - 0.1, { noStand: true }); }
   B.col(cwX, cwZ, cwL / 2, (CW.z1 - CW.z0) / 2, UY, { bottom: UY - 0.35, seeThrough: true });
@@ -948,7 +949,7 @@ function buildDeep(scene, physics) {
   const sk = new Kit(shutter);
   sk.add(rbox(2.7, 3.0, 0.18, 0.04), MAT.plates('#5a6670', 1), 0, 1.5, 0);
   for (let i = 0; i < 7; i++) sk.add(rbox(2.66, 0.05, 0.22, 0.01), iron(), 0, 0.2 + i * 0.42, 0);
-  sk.add(rbox(2.7, 0.42, 0.21, 0.03), hazard(), 0, 0.22, 0);
+  sk.add(rbox(2.7, 0.42, 0.24, 0.03), hazard(), 0, 0.22, 0);   // (FLICKER-142: 1 cm proud of the slats, not 5 mm behind them)
   sk.at(0, 1.7, 0.1, 0, () => signPlate(sk, 1.4, 0.46, signMat(['HEAT SHUTTER', 'OPENS AT COOLING'], { w: 384, h: 126, bg: '#6a2a24', emblem: false })));
   sk.flush();
   for (const s of [-1, 1]) k.at(doorX + s * 1.5, 0, BZ + 0.18, 0, () => column(k, 3.2, 0.3));
@@ -975,7 +976,7 @@ function buildDeep(scene, physics) {
   for (const s of [-1, 1]) k.at(HX + s * (HW / 2 + 0.14), 0, BZ + 0.15, 0, () => column(k, HH + 0.3, 0.24));
   k.at(HX, HH + 0.34, BZ + 0.18, 0, () => ibeam(k, HW + 0.62, 0.32, 0.24));
   k.add(rbox(HW + 0.5, 0.2, 0.06, 0.02), hazard(), HX, HH + 0.08, BZ + 0.27);
-  k.add(plane(HW, HH), MAT.flat('#050406', 1), HX, HH / 2, BZ + 0.05);
+  k.add(plane(HW, HH), MAT.flat('#050406', 1), HX, HH / 2, BZ + 0.065);   // (FLICKER-142: in front of the skirting's face, not in it)
   for (const s of [-1, 1]) k.add(rbox(0.08, HH, 0.08, 0.02), iron(), HX + s * 0.52, HH / 2, BZ + 0.1);
   for (const s of [-0.16, 0.16]) k.add(cyl(0.02, 0.02, HH, 5), MAT.steel(), HX + s, HH / 2, BZ + 0.12);
   for (let i = 0; i <= 8; i++) k.add(rbox(0.035, HH - 0.12, 0.035, 0.008), iron(), HX - HW / 2 + 0.04 + i * ((HW - 0.08) / 8), HH / 2, BZ + 0.22);
@@ -1077,7 +1078,7 @@ function buildDeep(scene, physics) {
 
   // --- the diagram on the left wall by the entrance
   const dgZ = 2.3;
-  k.at(LX + 0.04, 1.75, dgZ, Math.PI / 2, () => { k.add(rbox(1.68, 1.16, 0.06, 0.02), brass(), 0, 0, 0.02); k.add(plane(1.56, 1.04), M('ugdiagM', () => stdM({ map: diagramTex(), roughness: 0.7 })), 0, 0, 0.055); for (const [sx, sy] of [[-0.78, 0.52], [0.78, 0.52], [-0.78, -0.52], [0.78, -0.52]]) k.add(sphere(0.025, 6, 4), iron(), sx, sy, 0.06); });
+  k.at(LX + 0.04, 1.75, dgZ, Math.PI / 2, () => { k.add(rbox(1.68, 1.16, 0.06, 0.02), brass(), 0, 0, 0.02); k.add(plane(1.56, 1.04), M('ugdiagM', () => stdM({ map: diagramTex(), roughness: 0.7 })), 0, 0, 0.062); for (const [sx, sy] of [[-0.78, 0.52], [0.78, 0.52], [-0.78, -0.52], [0.78, -0.52]]) k.add(sphere(0.025, 6, 4), iron(), sx, sy, 0.066); });   // (FLICKER-142: the diagram 1.2 cm off its plate, not 5 mm)
   k.at(LX + 0.35, 2.55, dgZ, Math.PI / 2, () => wallLamp(k, { arm: 0.25 }));
   B.light('#fff0d0', 3, 4, LX + 1.2, 2.3, dgZ);
   R.diagram = { ...B.world(LX + 0.9, dgZ), y: 1.75 };
@@ -1224,7 +1225,7 @@ function buildGallery(scene, physics) {
   const shelf = (x0, x1) => {
     const w = x1 - x0, cx = (x0 + x1) / 2;
     k.add(new THREE.BoxGeometry(w, DY + 1.2, D + 2 * t), rockC, cx, (DY - 1.2) / 2, 0);
-    k.add(new THREE.BoxGeometry(w, 0.08, D), floor, cx, DY - 0.03, 0);
+    k.add(new THREE.BoxGeometry(w - 0.02, 0.08, D), floor, cx, DY - 0.03, 0);   // (FLICKER-142: 1 cm in from the rock's ends: their end faces lay in one plane)
     B.col(cx, 0, w / 2, D / 2, DY, { seeThrough: true, bottom: -2 });
   };
   shelf(LX - t, CX0); shelf(CX1, W / 2 + t);
@@ -1252,13 +1253,13 @@ function buildGallery(scene, physics) {
   k.at(LX - t, CY, BZ, 0, () => rockWallRun(k, a0, bwH, 61, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3, ends: [false, true] }));
   k.at(exX + 1.9, CY, BZ, 0, () => rockWallRun(k, W / 2 + t - exX - 1.9, bwH, 62, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3, ends: [true, false] }));
   k.add(new THREE.BoxGeometry(3.8, bwH, 0.6), rock, exX, CY + bwH / 2, BZ - 0.78);
-  k.add(new THREE.BoxGeometry(3.8, bwH - (DY - CY) - 3.7, 0.9), rock, exX, DY + 3.7 + (bwH - (DY - CY) - 3.7) / 2, BZ - 0.3);
+  k.add(new THREE.BoxGeometry(3.8, bwH - (DY - CY) - 3.7 - 0.006, 0.9), rock, exX, DY + 3.7 + (bwH - (DY - CY) - 3.7 - 0.006) / 2, BZ - 0.3);   // (FLICKER-142: 6 mm under the wall's top)
   k.at(LX, DY, D / 2 + t, Math.PI / 2, () => {
     // left wall, broken by the tunnel from the deep installation
     const a = D / 2 + t - entZ;
     rockWallRun(k, a - 1.4, WH, 63, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3, ends: [false, true] });
     k.at(a + 1.4, 0, 0, 0, () => rockWallRun(k, D + t - a - 1.4, WH, 64, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3, ends: [true, false] }));
-    k.add(new THREE.BoxGeometry(2.9, WH - 2.7, 1.0), rock, a, 2.7 + (WH - 2.7) / 2, -0.7);
+    k.add(new THREE.BoxGeometry(2.9, WH - 2.7 - 0.006, 1.0), rock, a, 2.7 + (WH - 2.7 - 0.006) / 2, -0.7);   // (FLICKER-142: 6 mm under the wall's top)
     k.add(rockGeo(5), rock, a, 2.5, -0.4, 0.4, { sx: 2.0, sy: 1.6, sz: 0.8 });
   });
   B.col(0, BZ - 0.35 + 0.3, W / 2 + t, 0.65, DY + WH);
@@ -1287,7 +1288,7 @@ function buildGallery(scene, physics) {
 
   // --- the entrance tunnel from the deep installation: rough rock, project shoring, a lamp
   k.at(LX, DY, entZ, Math.PI / 2, () => {
-    k.add(new THREE.BoxGeometry(2.6, 0.08, 3.2), floor, 0, -0.03, -1.4);
+    k.add(new THREE.BoxGeometry(2.6, 0.08, 3.2), floor, 0, -0.024, -1.4);   // (FLICKER-142: 6 mm over the gallery's floor, which it overlapped in one plane)
     for (let z = -0.4; z > -3.0; z -= 1.1) { for (const s of [-1, 1]) k.add(rbox(0.18, 2.6, 0.18, 0.03), MAT.wood('grey'), s * 1.15, 1.3, z); k.add(rbox(2.6, 0.2, 0.22, 0.03), MAT.wood('grey'), 0, 2.6, z); }
     k.add(plane(2.4, 2.8), MAT.flat('#060508', 1), 0, 1.4, -3.0);
     for (const s of [-1, 1]) for (let z = -0.6; z > -3; z -= 1.0) k.add(rockGeo(90 + Math.round(-z * 5) + (s > 0 ? 7 : 0)), rockD, s * 1.55, 0, z, z, { sx: 0.7, sy: 1.6, sz: 0.8 });
@@ -1617,7 +1618,7 @@ function buildSendell(scene, physics) {
     const [x, z] = polar(ph, Rr - 0.03);
     k.at(x, 1.15, z, ph + Math.PI, () => {
       k.add(rbox(1.95, 1.95, 0.08, 0.04), paleS, 0, 1.05, 0.0);
-      k.add(plane(1.75, 1.75), M('ugsunsM' + Math.round(ph * 10), () => stdM({ map: sunsTex(Math.round(ph * 10)), roughness: 0.85 })), 0, 1.0, 0.045);
+      k.add(plane(1.75, 1.75), M('ugsunsM' + Math.round(ph * 10), () => stdM({ map: sunsTex(Math.round(ph * 10)), roughness: 0.85 })), 0, 1.0, 0.052);   // (FLICKER-142: 1.2 cm off its panel, not 5 mm)
       k.add(rbox(1.9, 0.12, 0.22, 0.04), paleS, 0, 0.12, 0.06);
     });
   }

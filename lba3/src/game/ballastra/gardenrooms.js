@@ -55,8 +55,8 @@ function buildTunnel(scene, physics) {
   // the ladder up to the hatch (against the back wall at the west end), the hatch's square of daylight over it
   for (const s of [-1, 1]) k.add(rbox(0.07, H + 0.4, 0.07, 0.01), MAT.iron(), LX + s * 0.3, (H + 0.4) / 2, BZ + 0.3);
   for (let i = 0; i < 9; i++) k.add(cyl(0.025, 0.025, 0.6, 6), MAT.iron(), LX, 0.3 + i * 0.36, BZ + 0.3, 0, { rz: Math.PI / 2 });
-  k.add(rbox(1.3, 0.12, 1.3, 0.02), MAT.stone('sand', 1), LX, H + 0.06, BZ + 0.6);
-  k.add(plane(1.0, 1.0), MAT.glow('#e8f4f0', '#cfe8e4', 0.9), LX, H + 0.13, BZ + 0.6, 0, { rx: -Math.PI / 2 });
+  k.add(rbox(1.3, 0.12, 1.3, 0.02), MAT.stone('sand', 1), LX, H + 0.066, BZ + 0.6);   // (FLICKER-142: 6 mm over the wall's cap)
+  k.add(plane(1.0, 1.0), MAT.glow('#e8f4f0', '#cfe8e4', 0.9), LX, H + 0.136, BZ + 0.6, 0, { rx: -Math.PI / 2 });
   B.col(LX, BZ + 0.3, 0.4, 0.15, H, { block: true });
   R.exits.push({ ...B.world(LX, BZ + 0.95), r: 0.55, room: 'bl_gardens' });
   R.spawn = { ...B.world(LX + 1.5, BZ + 2.0), a: Math.PI / 2 };

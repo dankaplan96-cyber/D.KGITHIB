@@ -241,7 +241,7 @@ export function dressWorkshop(B, R, { glowSprite, H }) {
   });
   k.add(pipe([[kX + 0.08, 0.76, kZ + 0.05], [kX + 0.25, 0.4, kZ + 0.1], [kX + 0.3, 0.02, kZ + 0.05]], 0.008, 0.06, 4), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
   k.add(plane(0.5, 2.7), MAT.map(teaTex(), 0.95, { transparent: true, depthWrite: false }), kX, 2.06, BZ + 0.045);
-  k.add(plane(0.2, 0.13), MAT.map(noteTex(['TEA:', 'BY HAND.'], { w: 128, h: 80, font: 'bold 17px cursive, serif', ink: '#7a1a10', dy: 22 }), 0.9), kX - 0.12, 1.32, BZ + 0.05, 0, { rz: 0.08 });
+  k.add(plane(0.2, 0.13), MAT.map(noteTex(['TEA:', 'BY HAND.'], { w: 128, h: 80, font: 'bold 17px cursive, serif', ink: '#7a1a10', dy: 22 }), 0.9), kX - 0.12, 1.32, BZ + 0.056, 0, { rz: 0.08 });   // (FLICKER-142: 1.1 cm off the tea stain, not 5 mm)
   // the lid, stuck in the vault overhead, with cracks round it
   {
     // the vault's cove here: a circle about (z = BZ + c, y = H); at angle a its surface faces (y -sin a, z cos a)

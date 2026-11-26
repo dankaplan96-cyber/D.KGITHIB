@@ -37,7 +37,7 @@ export function shelfGoods(k, w, y, seed = 1, z = 0) {
 export function goodsShelf(k, { w = 1.4, h = 2.0, d = 0.38, rows = 4, pal = 'honey', seed = 1, goods = null } = {}) {
   const m = MAT.wood(pal);
   for (const sx of [-1, 1]) k.add(rbox(0.05, h, d, 0.01), m, sx * (w / 2 - 0.025), h / 2, 0);
-  k.add(rbox(w, h, 0.03, 0.005), MAT.wood(pal === 'dark' ? 'dark' : 'honey'), 0, h / 2, -d / 2 + 0.015);
+  k.add(rbox(w, h - 0.006, 0.03, 0.005), MAT.wood(pal === 'dark' ? 'dark' : 'honey'), 0, (h - 0.006) / 2, -d / 2 + 0.015);   // (FLICKER-142: 6 mm under the top board: their tops lay in one plane)
   k.add(rbox(w, 0.05, d, 0.01), m, 0, h - 0.025, 0);
   for (let i = 0; i < rows; i++) {
     const y = 0.12 + i * ((h - 0.25) / rows);

@@ -113,7 +113,7 @@ export function buildKcTunnel(scene, physics) {
   k.add(plane(1.0, 0.36), decal(stencil(['SHELTER'], { bg: '#e8c84a', ink: '#1a1410', size: 92, h: 160 })), SH, 2.42, -D / 2 + 0.03);
   B.col(SH, -D / 2 + 0.1, 0.6, 0.12, 2.2, { noStand: true });
   // the side niche: an arched recess, a stone step, the clover box on it
-  k.add(plane(1.1, 1.5), dark, NICHE, 0.95, -D / 2 + 0.005);
+  k.add(plane(1.1, 1.5), dark, NICHE, 0.95, -D / 2 + 0.012);   // (FLICKER-142: 1.2 cm off the wall, not 5 mm)
   k.add(rbox(1.4, 0.18, 0.2, 0.03), MAT.stone('sand', 1), NICHE, 1.78, -D / 2 + 0.1);
   for (const s of [-1, 1]) k.add(rbox(0.16, 1.7, 0.2, 0.03), MAT.stone('sand', 1), NICHE + s * 0.63, 0.85, -D / 2 + 0.1);
   B.put(NICHE, -D / 2 + 0.42, 0, () => { k.add(rbox(1.0, 0.24, 0.5, 0.03), MAT.stone('sand', 1), 0, 0.12, 0); return { hw: 0.5, hd: 0.25, top: 0.24 }; });

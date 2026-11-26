@@ -142,8 +142,9 @@ function seatRow(k, n) {
 // a security pillar of the gate (LBA2's: a slim column with a green screen and a pointed cap)
 function gatePillar(k) {
   k.add(rbox(0.42, 2.2, 0.42, 0.06), MAT.stone('sand', 1), 0, 1.1, 0);
-  k.add(plane(0.26, 1.4), MAT.glow('#3fae6a', '#2a8a4a', 0.9), 0.215, 1.15, 0, Math.PI / 2);
-  k.add(plane(0.26, 1.4), MAT.glow('#3fae6a', '#2a8a4a', 0.9), -0.215, 1.15, 0, -Math.PI / 2);
+  // (FLICKER-142: the screens 1.2 cm off the column, not 5 mm)
+  k.add(plane(0.26, 1.4), MAT.glow('#3fae6a', '#2a8a4a', 0.9), 0.222, 1.15, 0, Math.PI / 2);
+  k.add(plane(0.26, 1.4), MAT.glow('#3fae6a', '#2a8a4a', 0.9), -0.222, 1.15, 0, -Math.PI / 2);
   k.add(lathe([[0.001, 0], [0.22, 0], [0.16, 0.12], [0.03, 0.42], [0.001, 0.45]], 10), ORANGE(), 0, 2.2, 0);
   return { hw: 0.22, hd: 0.22, top: 2.6 };
 }
@@ -185,7 +186,7 @@ export function buildTerminalRoom(scene, physics) {
   // the door from the footbridge (the near wall's, cut away: blue jambs with rounded caps, a stone threshold and a step
   // outside, daylight on the floor and in the doorway, so the way out reads from across the hall) and the gate to the pad
   for (const sx of [-1, 1]) {
-    k.add(rbox(0.22, 0.66, 0.58, 0.04), BLUE(), DOORX + sx * 0.86, 0.33, D / 2 + 0.25);
+    k.add(rbox(0.24, 0.66, 0.58, 0.04), BLUE(), DOORX + sx * 0.85, 0.33, D / 2 + 0.25);   // (FLICKER-142: 2 cm past the rim's cut end, which its face lay in)
     k.add(rbox(0.28, 0.1, 0.64, 0.045), cap, DOORX + sx * 0.86, 0.7, D / 2 + 0.25);
   }
   k.add(rbox(1.5, 0.06, 0.56, 0.02), MAT.stone('sand', 1.0), DOORX, 0.02, D / 2 + 0.25);

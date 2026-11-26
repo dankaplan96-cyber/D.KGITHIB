@@ -333,7 +333,8 @@ function buildSchoolRoom(scene, physics) {
   });
   B.giver('sm_remedies', X(61.2), Z(32), ['life', 'life', 'magic'], 1, { r: 1.1 });
   // the door's stone frame in the front
-  for (const sx of [-1, 1]) { k.add(rbox(0.55, 3.6, 0.75, 0.03), cap, DOORX + sx * (DOORW / 2 + 0.27), 1.8, D / 2 + 0.3); B.col(DOORX + sx * (DOORW / 2 + 0.27), D / 2 + 0.3, 0.28, 0.38, 3.6); }
+  // (FLICKER-142: each side 1.5 cm wider into the doorway, past the rim's cut end: their faces stood 5 mm apart)
+  for (const sx of [-1, 1]) { k.add(rbox(0.565, 3.6, 0.75, 0.03), cap, DOORX + sx * (DOORW / 2 + 0.2625), 1.8, D / 2 + 0.3); B.col(DOORX + sx * (DOORW / 2 + 0.27), D / 2 + 0.3, 0.28, 0.38, 3.6); }
   k.add(rbox(DOORW + 1.1, 0.5, 0.75, 0.03), cap, DOORX, 3.85, D / 2 + 0.3);
   R.exits.push({ x: B.cx + DOORX, z: B.cz + D / 2 - 0.3, r: 0.9, to: 'school-out' });
   R.spawn = { x: B.cx + DOORX, z: B.cz + D / 2 - 1.7, a: Math.PI };
@@ -370,7 +371,7 @@ function starChest(k) {
   k.add(rbox(0.9, 0.5, 0.6, 0.03), MAT.paint('#1e2830', 0.5), 0, 0.25, 0);
   k.add(rbox(0.94, 0.06, 0.64, 0.02), MAT.brass(), 0, 0.52, 0);
   const st = MAT.map(starPlaque('#1e2830'), 0.5, { transparent: true });
-  for (const x of [-0.25, 0.05, 0.3]) k.add(plane(0.22, 0.22), st, x, 0.27, 0.305);
+  for (const x of [-0.25, 0.05, 0.3]) k.add(plane(0.22, 0.22), st, x, 0.27, 0.312);   // (FLICKER-142: 1.2 cm off the chest, not 5 mm)
   return { hw: 0.47, hd: 0.32, top: 0.56 };
 }
 function candleStand(k, iron) {

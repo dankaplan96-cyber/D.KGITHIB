@@ -60,16 +60,18 @@ function stool(k, h = 0.72) {
 function jukebox(k) {
   k.add(rbox(0.9, 1.25, 0.55, 0.12), RED(), 0, 0.62, 0);
   k.add(lathe([[0.001, 0], [0.45, 0], [0.45, 0.06], [0.3, 0.32], [0.001, 0.42]], 16), TEAL(), 0, 1.24, 0);
-  k.add(plane(0.62, 0.42), MAT.glow('#ffe8a0', '#ffb040', 1.1), 0, 0.98, 0.281);
-  k.add(plane(0.62, 0.3), MAT.paint('#3a3a40', 0.4), 0, 0.42, 0.281);
-  for (let i = 0; i < 5; i++) k.add(rbox(0.58, 0.02, 0.02, 0.005), MAT.steel(), 0, 0.3 + i * 0.06, 0.29);
+  // (FLICKER-142: the window and the grille 1.2 cm off the cabinet, not 6 mm)
+  k.add(plane(0.62, 0.42), MAT.glow('#ffe8a0', '#ffb040', 1.1), 0, 0.98, 0.287);
+  k.add(plane(0.62, 0.3), MAT.paint('#3a3a40', 0.4), 0, 0.42, 0.287);
+  for (let i = 0; i < 5; i++) k.add(rbox(0.58, 0.02, 0.02, 0.005), MAT.steel(), 0, 0.3 + i * 0.06, 0.297);
   return { hw: 0.46, hd: 0.3, top: 1.6 };
 }
 // the red sofa: a long padded seat with a rolled back
 function sofa(k, w = 2.0) {
-  k.add(rbox(w, 0.34, 0.7, 0.08), RED(), 0, 0.3, 0);
-  k.add(rbox(w, 0.55, 0.2, 0.09), RED(), 0, 0.7, -0.27);
-  for (const s of [-1, 1]) k.add(rbox(0.16, 0.5, 0.7, 0.07), RED(), s * (w / 2 - 0.08), 0.42, 0);
+  // (FLICKER-142: the seat and back 1 cm in from the arms' outer faces, the arms 1 cm proud in front: their faces lay in one plane)
+  k.add(rbox(w - 0.02, 0.34, 0.7, 0.08), RED(), 0, 0.3, 0);
+  k.add(rbox(w - 0.02, 0.55, 0.2, 0.09), RED(), 0, 0.7, -0.27);
+  for (const s of [-1, 1]) k.add(rbox(0.16, 0.5, 0.72, 0.07), RED(), s * (w / 2 - 0.08), 0.42, 0.01);
   for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) k.add(cyl(0.03, 0.03, 0.14, 6), MAT.steel(), sx * (w / 2 - 0.1), 0.07, sz * 0.28);
   return { hw: w / 2, hd: 0.36, top: 0.95 };
 }
@@ -103,7 +105,7 @@ export function buildTavernRoom(scene, physics) {
   // the arched door under the gallery (the original's way down to the cellar, scene 4)
   const AX = 3.6 * F;
   k.add(rbox(1.2, 1.7, 0.08, 0.02), MAT.wood('dark'), AX, 0.85, GZ1 + 0.04);
-  k.add(cyl(0.6, 0.6, 0.08, 16), MAT.wood('dark'), AX, 1.7, GZ1 + 0.04, 0, { rx: Math.PI / 2 });
+  k.add(cyl(0.6, 0.6, 0.06, 16), MAT.wood('dark'), AX, 1.7, GZ1 + 0.04, 0, { rx: Math.PI / 2 });   // (FLICKER-142: its round head 1 cm behind the leaf's face, which it overlapped in one plane)
   k.add(rbox(1.5, 0.16, 0.14, 0.02), cap, AX, 2.38, GZ1 + 0.07);
   for (const sx of [-1, 1]) k.add(rbox(0.16, 2.3, 0.14, 0.02), cap, AX + sx * 0.68, 1.15, GZ1 + 0.07);
   k.add(cyl(0.04, 0.04, 0.03, 8), MAT.iron(), AX + 0.35, 1.0, GZ1 + 0.1, 0, { rx: Math.PI / 2 });
@@ -120,7 +122,7 @@ export function buildTavernRoom(scene, physics) {
   }
   const LX1 = SX0 - N * run;   // (the landing: from the stair's top to the left wall, level with the gallery)
   k.add(rbox(LX1 - GX0, GH - 0.02, SZ1 - SZ0, 0.02), stone, (GX0 + LX1) / 2, (GH - 0.02) / 2, (SZ0 + SZ1) / 2);
-  k.add(rbox(LX1 - GX0 + 0.06, 0.14, SZ1 - SZ0 + 0.06, 0.02), cap, (GX0 + LX1) / 2, GH - 0.07, (SZ0 + SZ1) / 2);
+  k.add(rbox(LX1 - GX0 + 0.06, 0.14, SZ1 - SZ0 + 0.06, 0.02), cap, (GX0 + LX1) / 2, GH - 0.064, (SZ0 + SZ1) / 2);   // (FLICKER-142: 6 mm over the gallery's cap where they meet)
   B.col((GX0 + LX1) / 2, (SZ0 + SZ1) / 2, (LX1 - GX0) / 2, (SZ1 - SZ0) / 2, GH);
   // teal iron railings: the stair's open side and the landing's, the gallery's edge over the stair and on to the right
   railing(k, [[SX0, SZ1], [GX0, SZ1]], { h: 0.95, mat: TEAL(), step: 0.5 });
@@ -144,7 +146,7 @@ export function buildTavernRoom(scene, physics) {
   const { BARX, BZ0, BZ1 } = P;
   k.at(BARX, 0, (BZ0 + BZ1) / 2, Math.PI / 2, () => counter(k, { w: BZ1 - BZ0, d: 0.7, h: 1.08, pal: 'grey', top: MAT.steel() }));
   B.col(BARX, (BZ0 + BZ1) / 2, 0.36, (BZ1 - BZ0) / 2, 1.1, { noStand: true });
-  k.at(BARX + 0.65, 0, BZ0 - 0.1, 0, () => counter(k, { w: 1.6, d: 0.7, h: 1.08, pal: 'grey', top: MAT.steel() }));
+  k.at(BARX + 0.65, 0, BZ0 - 0.1, 0, () => counter(k, { w: 1.6, d: 0.7, h: 1.086, pal: 'grey', top: MAT.steel() }));   // (FLICKER-142: its top 6 mm over the long counter's where the two meet)
   B.col(BARX + 0.65, BZ0 - 0.1, 0.8, 0.36, 1.1, { noStand: true });
   k.at(P.tap.x, 1.08, P.tap.z, 0, () => { barrel(k, { r: 0.26, h: 0.62, pal: 'dark' }); k.add(cyl(0.02, 0.02, 0.2, 6), MAT.brass(), 0.27, 0.35, 0, 0, { rz: Math.PI / 2 }); });
   for (const [z, c, kind] of [[1.15, '#2f8a7a', 'bottle'], [1.5, '#7a3a2a', 'bottle'], [2.0, '#2f6f74', 'bottle'], [2.5, '#c8a050', 'jar'], [3.4, '#2f8a7a', 'bottle'], [4.1, '#7a3a2a', 'bottle']]) jar(k, BARX - 0.05, 1.1, BZ0 + z, kind, c, 1.1);   // (from the bar's back end, past the tap)

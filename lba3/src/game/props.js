@@ -809,8 +809,9 @@ export function radio(k, { s = 1 } = {}) {
   const arch = (hw, h, top) => (sh) => { sh.moveTo(-hw, 0); sh.lineTo(hw, 0); sh.lineTo(hw, h); sh.bezierCurveTo(hw, top, -hw, top, -hw, h); sh.lineTo(-hw, 0); };
   k.add(slab('radio' + s, arch(0.22 * s, 0.28 * s, 0.56 * s), 0.24 * s, 0.025), md, 0, 0.02 * s, 0);
   k.add(rbox(0.48 * s, 0.04 * s, 0.27 * s, 0.015), MAT.wood('red'), 0, 0.02 * s, 0);
-  k.add(slab('radiog' + s, arch(0.15 * s, 0.2 * s, 0.4 * s), 0.02 * s, 0.006), MAT.cloth('#6a4a2a', '#e0b070'), 0, 0.15 * s, 0.115 * s);
-  for (let i = -2; i <= 2; i++) k.add(rbox(0.012 * s, (0.26 - Math.abs(i) * 0.03) * s, 0.012 * s, 0.004), br, i * 0.05 * s, (0.28 - Math.abs(i) * 0.015) * s, 0.13 * s);
+  // (FLICKER-142: the grille 4 mm further out, 9.5 mm off the case: 5.5 mm before; its bars in front of it)
+  k.add(slab('radiog' + s, arch(0.15 * s, 0.2 * s, 0.4 * s), 0.02 * s, 0.006), MAT.cloth('#6a4a2a', '#e0b070'), 0, 0.15 * s, 0.119 * s);
+  for (let i = -2; i <= 2; i++) k.add(rbox(0.012 * s, (0.26 - Math.abs(i) * 0.03) * s, 0.012 * s, 0.004), br, i * 0.05 * s, (0.28 - Math.abs(i) * 0.015) * s, 0.135 * s);
   k.add(rbox(0.18 * s, 0.05 * s, 0.02 * s, 0.008), MAT.glow('#ffd890', '#ff9a2a', 1.1), 0, 0.1 * s, 0.12 * s);
   for (const sx of [-1, 1]) k.add(cyl(0.025 * s, 0.028 * s, 0.03 * s, 12), br, sx * 0.15 * s, 0.1 * s, 0.13 * s, 0, { rx: Math.PI / 2 });
   k.add(cyl(0.004, 0.004, 0.55 * s, 4), MAT.steel(), 0.12 * s, 0.75 * s, -0.06 * s, 0, { rz: -0.35 });
@@ -1016,7 +1017,7 @@ export function stove(k) {
   k.add(rbox(0.38, 0.28, 0.02, 0.02), ir, 0.27, 0.46, 0.345);
   k.add(cyl(0.014, 0.014, 0.4, 8), br, 0.27, 0.7, 0.38, 0, { rz: Math.PI / 2 });
   k.add(rbox(0.38, 0.3, 0.04, 0.02), MAT.paint('#2e3036', 0.45), -0.3, 0.5, 0.32);
-  for (let i = 0; i < 4; i++) k.add(new THREE.BoxGeometry(0.05, 0.12, 0.02), fire, -0.42 + i * 0.08, 0.5, 0.335);
+  for (let i = 0; i < 4; i++) k.add(new THREE.BoxGeometry(0.05, 0.12, 0.02), fire, -0.42 + i * 0.08, 0.5, 0.345);   // (FLICKER-142: 1.5 cm proud of the firebox door, not 5 mm)
   k.add(rbox(0.36, 0.06, 0.03, 0.01), fire, -0.3, 0.24, 0.32);
   k.add(sphere(0.025, 8, 6), br, -0.15, 0.5, 0.36);
   // brass towel rail
@@ -1345,7 +1346,8 @@ TEX.hazard = () => tex('hazard', () => {
   return toTex(c);
 });
 MAT.hazard = () => M('hazard', () => std({ map: TEX.hazard(), roughness: 0.6, metalness: 0.2 }, 0.5));
-MAT.screen = (t, k = 1.3) => M('scr' + t.uuid + k, () => std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: k, roughness: 0.25 }, 0, { noShadow: true }));
+// (FLICKER-142: a screen is a decal on its bezel or desk: drawn a little toward the lens, never fighting the face it lies on)
+MAT.screen = (t, k = 1.3) => M('scr' + t.uuid + k, () => std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: k, roughness: 0.25, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }, 0, { noShadow: true }));
 MAT.leather = (c = '#7a2a22') => M('lea' + c, () => std({ map: TEX.fabric(c, '#000000'), roughness: 0.55 }, 0.5));
 
 // ---- furniture ---------------------------------------------------------
@@ -1365,8 +1367,9 @@ export function filingCabinet(k, { w = 0.48, d = 0.62, h = 1.32, n = 4, color = 
     }
     k.add(rbox(w - 0.05, dh - 0.03, 0.03, 0.01), body, 0, y, d / 2 + 0.005 + oz, 0, { jit: true });
     k.add(handle, br, 0, y - dh * 0.18, d / 2 + 0.02 + oz);
-    k.add(rbox(0.1, 0.055, 0.008, 0.003), br, 0, y + dh * 0.17, d / 2 + 0.022 + oz);
-    k.add(plane(0.082, 0.04), card, 0, y + dh * 0.17, d / 2 + 0.027 + oz);
+    // (FLICKER-142: the label's plate 1 cm proud of the drawer, its card 1 cm on the plate: 6 and 1 mm before)
+    k.add(rbox(0.1, 0.055, 0.008, 0.003), br, 0, y + dh * 0.17, d / 2 + 0.026 + oz);
+    k.add(plane(0.082, 0.04), card, 0, y + dh * 0.17, d / 2 + 0.04 + oz);
   }
   return { hw: w / 2 + 0.01, hd: d / 2 + 0.03, top: h + 0.015 };
 }
@@ -1438,7 +1441,8 @@ export function ledger(k, x, y, z, ry = 0, color = '#7a2a22') {
 // a few loose sheets
 export function papers(k, x, y, z, n = 3, seed = 1, kind = 'form') {
   const r = rng(seed * 13 + 7);
-  for (let i = 0; i < n; i++) k.add(plane(0.21, 0.29), MAT.map(CANV.doc(kind), 0.9), x + (r() - 0.5) * 0.12, y + 0.003 + i * 0.002, z + (r() - 0.5) * 0.1, (r() - 0.5) * 1.2, { rx: -Math.PI / 2 });
+  // (FLICKER-142: 11 mm up, over a desk's leather (8 mm), and 4 mm between sheets: they lay in the leather and 2 mm apart)
+  for (let i = 0; i < n; i++) k.add(plane(0.21, 0.29), MAT.map(CANV.doc(kind), 0.9), x + (r() - 0.5) * 0.12, y + 0.011 + i * 0.004, z + (r() - 0.5) * 0.1, (r() - 0.5) * 1.2, { rx: -Math.PI / 2 });
 }
 // banker's lamp: brass stand, green glass shade
 export function deskLamp(k, { shade = '#2f8a4a' } = {}) {
@@ -1520,18 +1524,18 @@ export function pipeline(k, pts, r = 0.06, mat = null, flMat = null) {
 // hanging sign on two chains (centre at the board), faces +z
 export function hangingSign(k, w, h, t, top) {
   k.add(rbox(w + 0.06, h + 0.06, 0.05, 0.02), MAT.wood('dark'), 0, 0, 0);
-  for (const s of [-1, 1]) k.add(plane(w, h), MAT.map(t, 0.6), 0, 0, s * 0.027, s > 0 ? 0 : Math.PI);
+  for (const s of [-1, 1]) k.add(plane(w, h), MAT.map(t, 0.6), 0, 0, s * 0.035, s > 0 ? 0 : Math.PI);   // (FLICKER-142: 1 cm off the board, not 2 mm)
   for (const sx of [-1, 1]) { k.add(cyl(0.006, 0.006, top - h / 2, 4), MAT.iron(), sx * w * 0.38, h / 2 + (top - h / 2) / 2, 0); k.add(torus(0.02, 0.005, 4, 8), MAT.brass(), sx * w * 0.38, h / 2 + 0.02, 0); }
 }
 // cork notice board with pinned notes, faces +z
 export function noticeBoard(k, w = 0.8, h = 0.55, seed = 1) {
   const r = rng(seed * 3 + 1);
   k.add(rbox(w + 0.06, h + 0.06, 0.03, 0.012), MAT.wood('dark'), 0, 0, 0.015);
-  k.add(plane(w, h), MAT.cloth('#b8885a', '#6a4a2a'), 0, 0, 0.032);
+  k.add(plane(w, h), MAT.cloth('#b8885a', '#6a4a2a'), 0, 0, 0.042);   // (FLICKER-142: the cork 1 cm off the frame's face, the notes 1 cm off the cork)
   for (let i = 0; i < 5; i++) {
     const px = (r() - 0.5) * (w - 0.2), py = (r() - 0.5) * (h - 0.2);
-    k.add(plane(0.15, 0.2), MAT.map(CANV.doc(i % 2 ? 'form' : 'ledger'), 0.9), px, py, 0.036 + i * 0.001, 0, { rz: (r() - 0.5) * 0.3 });
-    k.add(sphere(0.012, 6, 4), MAT.flat(['#c8452f', '#3a6fb0', '#e9c46a'][i % 3], 0.4), px, py + 0.08, 0.045);
+    k.add(plane(0.15, 0.2), MAT.map(CANV.doc(i % 2 ? 'form' : 'ledger'), 0.9), px, py, 0.052 + i * 0.002, 0, { rz: (r() - 0.5) * 0.3 });
+    k.add(sphere(0.012, 6, 4), MAT.flat(['#c8452f', '#3a6fb0', '#e9c46a'][i % 3], 0.4), px, py + 0.08, 0.064);
   }
 }
 export function wallClock(k, r = 0.2) {
@@ -2008,7 +2012,7 @@ export function toolBoard(k, w = 2.0, h = 0.8) {
   const st = MAT.steel(), md = MAT.wood('dark');
   k.add(rbox(w + 0.06, h + 0.06, 0.03, 0.01), md, 0, 0, 0.015);
   const pm = MAT.map(CANV.pegboard(), 0.85); pm.map.repeat.set(w * 4, h * 4);
-  k.add(plane(w, h), pm, 0, 0, 0.032);
+  k.add(plane(w, h), pm, 0, 0, 0.042);   // (FLICKER-142: 1 cm off the frame's face, not 2 mm)
   const z = 0.05;
   // spanners by size, a saw, a hammer, pliers, a coil of wire, a brace drill
   for (let i = 0; i < 5; i++) { const s = 0.6 + i * 0.12, x = -w / 2 + 0.15 + i * 0.09; k.add(rbox(0.02 * s, 0.2 * s, 0.008, 0.003), st, x, 0.1 - i * 0.012, z); k.add(torus(0.02 * s, 0.008 * s, 4, 10, Math.PI * 1.5), st, x, 0.1 - i * 0.012 + 0.11 * s, z, 0, { rz: -Math.PI / 4 }); k.add(torus(0.016 * s, 0.007 * s, 4, 10), st, x, 0.1 - i * 0.012 - 0.11 * s, z); }
@@ -2029,7 +2033,7 @@ export function pinnedSheet(k, w, h, t, tilt = 0) {
 export function chalkboard(k, w = 1.6, h = 1.0) {
   const md = MAT.wood('honey');
   k.add(rbox(w + 0.12, h + 0.12, 0.04, 0.015), md, 0, 0, 0.02);
-  k.add(plane(w, h), MAT.map(CANV.chalk(), 0.95), 0, 0, 0.042);
+  k.add(plane(w, h), MAT.map(CANV.chalk(), 0.95), 0, 0, 0.052);   // (FLICKER-142: 1 cm off the frame's face, not 2 mm)
   k.add(rbox(w + 0.1, 0.03, 0.09, 0.01), md, 0, -h / 2 - 0.05, 0.06);
   for (let i = 0; i < 3; i++) k.add(cyl(0.008, 0.008, 0.07, 5), MAT.flat(['#f4f2e8', '#f4e08a', '#f4b0c8'][i], 0.9), -w / 2 + 0.2 + i * 0.1, -h / 2 - 0.025, 0.07, 0.3 * i, { rz: Math.PI / 2 });
   k.add(rbox(0.13, 0.035, 0.05, 0.01), MAT.wood('dark'), w / 2 - 0.25, -h / 2 - 0.018, 0.07);
@@ -2179,10 +2183,11 @@ export function radioDesk(k) {
   // the set
   k.at(-0.05, h, -0.1, 0, () => {
     k.add(rbox(0.66, 0.4, 0.34, 0.02), m, 0, 0.2, 0);
-    k.add(plane(0.6, 0.32), bk, 0, 0.2, 0.172);
-    for (const [x, zc] of [[-0.18, '#3a6fb0'], [0.06, '#c8452f']]) { k.add(disc(0.075, 20), MAT.map(CANV.dial(zc), 0.5), x, 0.22, 0.175); k.add(torus(0.078, 0.008, 4, 18), br, x, 0.22, 0.176); k.add(cyl(0.025, 0.03, 0.04, 10), bk, x, 0.22, 0.19, 0, { rx: Math.PI / 2 }); }
-    k.add(rbox(0.12, 0.08, 0.01, 0.004), MAT.glow('#ffe8b0', '#ff9a2a', 0.9), 0.22, 0.27, 0.175);
-    for (let i = 0; i < 3; i++) k.add(cyl(0.014, 0.016, 0.02, 8), br, 0.17 + i * 0.05, 0.1, 0.18, 0, { rx: Math.PI / 2 });
+    // (FLICKER-142: the face 1.2 cm off the set's front, its dials 1 cm on it: 2 and 3 mm before)
+    k.add(plane(0.6, 0.32), bk, 0, 0.2, 0.182);
+    for (const [x, zc] of [[-0.18, '#3a6fb0'], [0.06, '#c8452f']]) { k.add(disc(0.075, 20), MAT.map(CANV.dial(zc), 0.5), x, 0.22, 0.192); k.add(torus(0.078, 0.008, 4, 18), br, x, 0.22, 0.193); k.add(cyl(0.025, 0.03, 0.04, 10), bk, x, 0.22, 0.205, 0, { rx: Math.PI / 2 }); }
+    k.add(rbox(0.12, 0.08, 0.01, 0.004), MAT.glow('#ffe8b0', '#ff9a2a', 0.9), 0.22, 0.27, 0.19);
+    for (let i = 0; i < 3; i++) k.add(cyl(0.014, 0.016, 0.02, 8), br, 0.17 + i * 0.05, 0.1, 0.195, 0, { rx: Math.PI / 2 });
     // valves on top behind a brass cage
     for (let i = 0; i < 3; i++) { k.add(lathe([[0.025, 0], [0.028, 0.05], [0.026, 0.12], [0.015, 0.15], [0.001, 0.16]], 10), MAT.glass('#f4e8c8', 0.45), -0.18 + i * 0.12, 0.4, -0.04); k.add(cyl(0.008, 0.008, 0.08, 5), MAT.glow('#ffc070', '#ff7a1a', 1.8), -0.18 + i * 0.12, 0.46, -0.04); }
     for (let i = 0; i < 6; i++) k.add(cyl(0.004, 0.004, 0.2, 4), br, -0.27 + i * 0.1, 0.5, 0.06);
@@ -2203,7 +2208,7 @@ export function draftingTable(k, t = null) {
   k.add(cyl(0.015, 0.015, 0.8, 6), ir, 0, 0.25, 0, 0, { rz: Math.PI / 2 });
   k.at(0, 0.92, 0, 0, () => {
     k.add(rbox(1.0, 0.04, 0.7, 0.012), m, 0, 0, 0, 0, { rx: 0.35 });
-    if (t) k.add(plane(0.62, 0.46), MAT.map(t, 0.9), -0.05, 0.022 * Math.cos(0.35) + 0.002, 0.0, 0, { rx: -Math.PI / 2 + 0.35 });
+    if (t) k.add(plane(0.62, 0.46), MAT.map(t, 0.9), -0.05, 0.022 * Math.cos(0.35) + 0.011, 0.0, 0, { rx: -Math.PI / 2 + 0.35 });   // (FLICKER-142: the plan 1 cm over the board, not 1 mm)
     k.add(rbox(1.0, 0.02, 0.04, 0.006), MAT.wood('dark'), 0, -0.1, 0.36, 0, { rx: 0.35 });
   });
   k.add(rbox(0.6, 0.012, 0.04, 0.004), MAT.wood('dark'), 0.05, 1.0, -0.05, 0.3, { rx: 0.35 });
@@ -2221,7 +2226,7 @@ export function lensPedestal(k) {
   // clockwork box with a winding crank and weight chain
   k.at(0, 0.38, 0.27, 0, () => {
     k.add(rbox(0.3, 0.26, 0.12, 0.02), br, 0, 0, 0);
-    k.add(disc(0.09, 20), MAT.map(CANV.clock(), 0.5), 0, 0.02, 0.062);
+    k.add(disc(0.09, 20), MAT.map(CANV.clock(), 0.5), 0, 0.02, 0.072);   // (FLICKER-142: 1.2 cm off the box, not 2 mm)
     k.add(pipe([[0.12, -0.06, 0.06], [0.12, -0.06, 0.14], [0.22, -0.06, 0.14], [0.22, -0.06, 0.2]], 0.01, 0.03, 5), MAT.steel(), 0, 0, 0);
     k.add(cyl(0.02, 0.02, 0.08, 8), MAT.wood('dark'), 0.22, -0.06, 0.24, 0, { rx: Math.PI / 2 });
   });

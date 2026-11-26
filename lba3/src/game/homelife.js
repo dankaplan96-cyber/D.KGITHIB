@@ -71,7 +71,7 @@ export function dressHomeLife(B, R) {
     // the board on its little easel at the back of the desk
     const boardM = [0, 1, 2].map((st) => MAT.map(boardTex(st), 0.8));
     const board = new THREE.Mesh(plane(0.8, 0.54), boardM[0]);
-    board.position.set(wx(0, -0.18), 0.78 + 0.38, wz(0, -0.18)); board.rotation.order = 'YXZ'; board.rotation.set(-0.12, ry, 0); B.group.add(board);
+    board.position.set(wx(0, -0.17), 0.78 + 0.38, wz(0, -0.17)); board.rotation.order = 'YXZ'; board.rotation.set(-0.12, ry, 0); B.group.add(board);   // (FLICKER-142: 1.5 cm off its backing, not 5 mm)
     stageFns.push((st) => { board.material = boardM[Math.min(2, st)]; });
     k.at(x, 0, z, ry, () => {
       k.add(rbox(0.86, 0.6, 0.03, 0.01), MAT.wood('dark'), 0, 0.78 + 0.38, -0.2, 0, { rx: -0.12 });
@@ -139,7 +139,7 @@ export function dressHomeLife(B, R) {
     k.add(cyl(0.05, 0.05, 1.2, 10), MAT.copper(), x, 0.6, z);
     k.add(cyl(0.12, 0.12, 0.06, 18), MAT.brass(), x, 1.15, z + 0.07, 0, { rx: Math.PI / 2 });
     const dialM = [MAT.map(dialTex(false), 0.6), MAT.map(dialTex(true), 0.6)];
-    const dial = new THREE.Mesh(plane(0.18, 0.18), dialM[0]); dial.position.set(x, 1.15, z + 0.105); B.group.add(dial);
+    const dial = new THREE.Mesh(plane(0.18, 0.18), dialM[0]); dial.position.set(x, 1.15, z + 0.112); B.group.add(dial);   // (FLICKER-142: 1.2 cm off the brass, not 5 mm)
     // Zoé's note goes up once the heat is on and the needle jumps
     const note = new THREE.Mesh(plane(0.16, 0.12), MAT.map(noteTex(['jumps when', 'ground hums', '-Z']), 0.9)); note.position.set(x, 0.88, z + 0.06); B.group.add(note);
     stageFns.push((st) => { dial.material = dialM[st >= 1 ? 1 : 0]; note.visible = st >= 1; });

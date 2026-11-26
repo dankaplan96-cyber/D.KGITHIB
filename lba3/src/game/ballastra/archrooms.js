@@ -209,7 +209,7 @@ function buildMags(scene, physics) {
   const LX = Wd / 2 - 0.9;
   for (const s of [-1, 1]) k.add(rbox(0.07, H + 0.2, 0.07, 0.01), MAT.wood('honey'), LX + s * 0.25, (H + 0.2) / 2, BZ + 0.55, 0, { rx: -0.18 });
   for (let i = 0; i < 8; i++) k.add(cyl(0.025, 0.025, 0.5, 6), MAT.wood('dark'), LX, 0.25 + i * 0.36, BZ + 0.55 + 0.05 - i * 0.065, 0, { rz: Math.PI / 2 });
-  k.add(rbox(0.9, 0.08, 0.9, 0.02), MAT.wood('dark'), LX, H - 0.04, BZ + 0.4);
+  k.add(rbox(0.9, 0.08, 0.9, 0.02), MAT.wood('dark'), LX, H - 0.046, BZ + 0.4);   // (FLICKER-142: 6 mm under the cornice's top)
   B.col(LX, BZ + 0.45, 0.32, 0.35, H, { block: true });
   // a bench with a folded blanket under the window
   B.put(WINX - 0.3, BZ + 0.35, 0, (kk) => { kk.add(rbox(1.4, 0.07, 0.4, 0.02), MAT.wood('grey'), 0, 0.45, 0); for (const s of [-1, 1]) kk.add(rbox(0.08, 0.45, 0.36, 0.02), MAT.wood('grey'), s * 0.6, 0.22, 0); kk.add(rbox(0.5, 0.1, 0.34, 0.04), MAT.cloth('#c6684c', '#e6b866'), 0.3, 0.53, 0); return { hw: 0.72, hd: 0.22, top: 0.5 }; });
@@ -258,9 +258,11 @@ function buildPump(scene, physics) {
   // the spill gate: a stone channel in the back wall's right part, the vertical gate in bronze-framed grooves, its
   // spindle up to a frame with the hand-wheel, the ratchet and pawl high on the pier wall
   const GX = 3.2, GW = 1.8, GH = 2.4;
-  k.add(rbox(GW + 0.8, 0.3, 1.6, 0.04), MAT.stone('slate', 1), GX, -0.15, BZ - 0.2);
-  for (const s of [-1, 1]) { k.add(rbox(0.4, H, 0.6, 0.04), MAT.stone('sand', 1), GX + s * (GW / 2 + 0.2), H / 2, BZ + 0.1); k.add(rbox(0.1, 4.2, 0.14, 0.01), bronze(), GX + s * (GW / 2 + 0.02), 2.1, BZ + 0.38); }
-  k.add(rbox(GW + 0.8, 0.5, 0.6, 0.04), MAT.stone('sand', 1), GX, 4.4, BZ + 0.1);
+  // (FLICKER-142: the base 6 mm under the floor, the piers 6 mm under the cornice, the lintel 1 cm proud and 1 cm in at its
+  //  ends: each pair's faces lay in one plane)
+  k.add(rbox(GW + 0.8, 0.3, 1.6, 0.04), MAT.stone('slate', 1), GX, -0.156, BZ - 0.2);
+  for (const s of [-1, 1]) { k.add(rbox(0.4, H - 0.006, 0.6, 0.04), MAT.stone('sand', 1), GX + s * (GW / 2 + 0.2), (H - 0.006) / 2, BZ + 0.1); k.add(rbox(0.1, 4.2, 0.14, 0.01), bronze(), GX + s * (GW / 2 + 0.02), 2.1, BZ + 0.38); }
+  k.add(rbox(GW + 0.78, 0.5, 0.62, 0.04), MAT.stone('sand', 1), GX, 4.4, BZ + 0.11);
   k.add(plane(GW, 2.6), flat('#1c2226', 0.9), GX, 1.3, BZ - 0.15);
   const gate = k.pivot(GX, 0, BZ + 0.36, 0);
   { const gl = new THREE.Mesh(new THREE.BoxGeometry(GW, GH, 0.14), MAT.wood('dark')); gl.position.y = GH / 2; gl.castShadow = true; gate.add(gl);

@@ -154,7 +154,7 @@ export function buildZTerminalRoom(scene, physics) {
   // and a step outside, daylight in the doorway) and the gate to the pad in the back wall between the security pillars
   // (their lights toward the hall and the gate), PAD · TWINSUN over it, the deck's daylight in it
   for (const sx of [-1, 1]) {
-    k.add(rbox(0.22, 0.66, 0.58, 0.04), TURQ(), DOORX + sx * 0.86, 0.33, D / 2 + 0.25);
+    k.add(rbox(0.24, 0.66, 0.58, 0.04), TURQ(), DOORX + sx * 0.85, 0.33, D / 2 + 0.25);   // (FLICKER-142: 2 cm past the rim's cut end, which its face lay in)
     k.add(rbox(0.28, 0.1, 0.64, 0.045), cap, DOORX + sx * 0.86, 0.7, D / 2 + 0.25);
   }
   k.add(rbox(1.5, 0.06, 0.56, 0.02), cap, DOORX, 0.02, D / 2 + 0.25);
@@ -196,7 +196,7 @@ export function buildZTerminalRoom(scene, physics) {
 
   // --- arrivals (right): the deck 0.8 m up at the back, glass-block front under a railing, a stair down at each end
   k.add(rbox(AX1 - AX0, AH, AZ1 - BZ - 0.3, 0.03), cap, (AX0 + AX1) / 2, AH / 2, (BZ + 0.3 + AZ1) / 2);
-  k.add(plane(AX1 - AX0 - 2.4, AH - 0.12), blocks, (AX0 + AX1) / 2, AH / 2, AZ1 + 0.005);
+  k.add(plane(AX1 - AX0 - 2.4, AH - 0.12), blocks, (AX0 + AX1) / 2, AH / 2, AZ1 + 0.012);   // (FLICKER-142: 1.2 cm off the deck's face, not 5 mm)
   B.col((AX0 + AX1) / 2, (BZ + 0.3 + AZ1) / 2, (AX1 - AX0) / 2 + 0.06, (AZ1 - BZ - 0.3) / 2 + 0.06, AH);
   const run = P.stair.run, N = P.stair.n, rise = AH / N;
   for (const x of P.stair.xs) for (let i = 0; i < N; i++) {

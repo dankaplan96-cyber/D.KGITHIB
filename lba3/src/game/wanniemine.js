@@ -158,7 +158,8 @@ function caveShell(B, { W, D, H, open = [], seed = 1 }) {
   const inGap = (side, s, y) => gaps(side).some((o) => Math.abs(s - o.at) < o.w / 2 + 0.15 && y < (o.y || 0) + o.h + 0.2 && y > (o.y || 0) - 0.4);
   // the backing walls (boxes) with their openings cut as runs
   const run = (side) => {
-    const L = side === 'back' ? W : D, s0 = side === 'back' ? -RX - T : -RZ, s1 = side === 'back' ? RX + T : RZ + T;
+    // (FLICKER-142: each wall's near end 1 cm short of the rim's outer face, which it lay in)
+    const L = side === 'back' ? W : D, s0 = side === 'back' ? -RX - T : -RZ, s1 = (side === 'back' ? RX + T : RZ + T) - 0.01;
     const cuts = gaps(side).map((o) => [o.at - o.w / 2, o.at + o.w / 2, o]).sort((a, b) => a[0] - b[0]);
     let a = s0;
     const box = (p, q, y0, y1) => {
@@ -340,7 +341,7 @@ function buildGallery(scene, physics) {
   k.at(BLOW + 2.0, 0, -D / 2 + 0.45, 0, () => {
     k.add(rbox(0.1, 2.0, 0.1, 0.01), timber(), 0, 1.0, 0);
     k.add(rbox(1.3, 0.62, 0.06, 0.01), MAT.wood('honey'), 0, 1.75, 0.06);
-    k.add(plane(1.2, 0.54), MAT.map(signTex(['THE BLOW', 'NO LAMPS'], { stripes: true, size: 46 }), 0.7), 0, 1.75, 0.095);
+    k.add(plane(1.2, 0.54), MAT.map(signTex(['THE BLOW', 'NO LAMPS'], { stripes: true, size: 46 }), 0.7), 0, 1.75, 0.102);   // (FLICKER-142: 1.2 cm off its board, not 5 mm)
   });
   B.ccol(BLOW + 2.0, -D / 2 + 0.45, 0.15, 2.0);
   // ---- rails along the gallery (z 1.0) from the landing's tunnel to the bulkhead, an ore cart, timber sets
@@ -473,7 +474,7 @@ function buildBlow(scene, physics) {
   const VENTS = [[-3.0, -3.6], [4.6, -3.2], [1.6, 3.0]], ventGlow = M('wm_vent', () => new THREE.MeshStandardMaterial({ color: '#2a1408', emissive: '#ff7a1a', emissiveIntensity: 1.2, roughness: 0.6 }));
   for (const [x, z] of VENTS) {
     for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; k.add(rockGeo((i + 3) % 12, { detail: 0 }), rock(), x + Math.sin(a) * 1.05, 0, z + Math.cos(a) * 1.05, a, { sx: 0.42, sy: 0.26, sz: 0.36 }); }
-    k.add(cyl(0.85, 0.85, 0.04, 16), ventGlow, x, 0.02, z);
+    k.add(cyl(0.85, 0.85, 0.05, 16), ventGlow, x, 0.025, z);   // (FLICKER-142: 1 cm over the floor's scorch, which its top lay in)
     for (let i = -3; i <= 3; i++) k.add(rbox(0.05, 0.05, Math.sqrt(Math.max(0.05, 0.72 - (i * 0.22) ** 2)) * 2, 0.01), MAT.iron(), x + i * 0.22, 0.06, z);
   }
   // the seam in the back wall: a big vein, warm while the Blow is in it

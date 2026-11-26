@@ -64,8 +64,8 @@ function barTable(k) {
 // a slot machine: a rounded dark cabinet, a lit window, red buttons
 function slotMachine(k) {
   k.add(rbox(0.7, 1.5, 0.5, 0.12), MAT.paint('#2a3a44', 0.4), 0, 0.75, 0);
-  k.add(plane(0.46, 0.4), MAT.glow('#9fe0ff', '#4fa8d8', 0.9), 0, 1.15, 0.255);
-  for (let i = 0; i < 3; i++) k.add(sphere(0.045, 8, 6), MAT.glow('#ff5a3a', '#ff2a10', 1.2), -0.15 + i * 0.15, 0.78, 0.26);
+  k.add(plane(0.46, 0.4), MAT.glow('#9fe0ff', '#4fa8d8', 0.9), 0, 1.15, 0.262);   // (FLICKER-142: 1.2 cm off the cabinet, not 5 mm)
+  for (let i = 0; i < 3; i++) k.add(sphere(0.045, 8, 6), MAT.glow('#ff5a3a', '#ff2a10', 1.2), -0.15 + i * 0.15, 0.78, 0.27);
   return { hw: 0.36, hd: 0.26, top: 1.5 };
 }
 // a tall leaf plant in a dark pot (LBA2's)

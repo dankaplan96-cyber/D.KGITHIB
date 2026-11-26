@@ -17,6 +17,9 @@
 //       clear one (SwiftShader's depth is not a GPU's).
 //   (3) coverage: every room the region builder registers that is not outdoor is visited; one that fails to build or to
 //       enter FAILS (named), never skipped.
+//   (4) the depth range fitted to the room (src/engine/roomdepth.js): from each room camera position the floor he walks
+//       (and 2.5 m over it) at least 1.5 × the fitted near plane from the lens, the near plane far out from the room
+//       camera (> 10 m), the camera's own near plane for a lens inside the room.
 // ROOMS=a,b: those rooms only. SHOTS=dir: per room with a cluster (or every room named in ROOMS) the frame and the
 // two-frame diff overlay (red = pixels that change between the two jittered frames) as PNG. REPORT=file.json: every
 // finding with its coordinates. SPOTS=room@x,z;...: extra render views from those room-local floor spots, with pictures.
@@ -26,7 +29,27 @@ import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 const { check, checkVisual, done } = checker();
-const { browser, page, errs } = await launch({ width: 960, height: 540 });
+const { browser, context, page, errs } = await launch({ width: 960, height: 540 });
+// ATTR=1 (report only): each drawn part named by where it was drawn — a small recorder in props.js's / kit.js's hooks
+// (globalThis.__PLACE_REC, as tests/place-scan.mjs uses them) keeps each part's box in its group and the call sites
+// above the Kit; a finding's part is matched to it by its box. Nothing in the game changes with it but the cost.
+if (process.env.ATTR) await context.addInitScript(() => {
+  const L = new Map();
+  const R = (globalThis.__PLACE_REC = { open: () => null, close() {}, merged() {}, tagN: 0, parts: L });
+  const rec = (group, geo, m) => {
+    if (!group) return;
+    if (!geo.boundingBox) geo.computeBoundingBox();
+    const b = geo.boundingBox; if (!b || !Number.isFinite(b.min.x)) return;
+    const e = m.elements, lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+    for (let c = 0; c < 8; c++) { const x = c & 1 ? b.max.x : b.min.x, y = c & 2 ? b.max.y : b.min.y, z = c & 4 ? b.max.z : b.min.z;
+      const w = [e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14]];
+      for (let i = 0; i < 3; i++) { lo[i] = Math.min(lo[i], w[i]); hi[i] = Math.max(hi[i], w[i]); } }
+    const st = String(new Error().stack).split('\n').slice(3, 9).map((l) => { const q = /at (?:([\w$.<>]+) \()?.*?\/([\w.-]+\.m?js):(\d+)/.exec(l); return q ? `${q[1] || '?'}@${q[2]}:${q[3]}` : null; }).filter(Boolean).slice(0, 4).join(' < ');
+    let l = L.get(group); if (!l) L.set(group, (l = [])); l.push({ lo, hi, st });
+  };
+  R.add = (kit, geo, m) => rec(kit.group, geo, m);
+  R.bpart = (batch, geo, m) => rec(batch.parent, geo, m);
+});
 const ev = (f, a) => page.evaluate(f, a);
 const SHOTS = process.env.SHOTS || null; if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const ONLY = process.env.ROOMS ? process.env.ROOMS.split(',') : null;
@@ -222,7 +245,14 @@ await ev(async () => {
       for (let i = v0; i < v1; i++) { const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), w = [e[0] * x + e[4] * y + e[8] * z + e[12], e[1] * x + e[5] * y + e[9] * z + e[13], e[2] * x + e[6] * y + e[10] * z + e[14]]; for (let c = 0; c < 3; c++) { b[c] = Math.min(b[c], w[c]); b[c + 3] = Math.max(b[c + 3], w[c]); } }
       const cc = [R.center.x, 0, R.center.z], L = look(t, q, t);
       const col = '#' + L.col.map((c) => Math.round(Math.min(1, c) * 255).toString(16).padStart(2, '0')).join('');
-      return `${o.name || o.type}${part >= 0 ? ' part ' + part : ''}${it.inst >= 0 ? ' inst ' + it.inst : ''} ${[0, 1, 2].map((c) => (b[c + 3] - b[c]).toFixed(3)).join('×')} @ ${[0, 1, 2].map((c) => ((b[c] + b[c + 3]) / 2 - cc[c]).toFixed(3)).join(',')} ${m?.name || (src && texName.get(src)) || (m?.map ? 'map' : '')}${col}${m.side === 2 ? ' double-sided' : ''}${F[t] & 2 ? ' (back face)' : ''}`;
+      let site = '';
+      const RP = globalThis.__PLACE_REC?.parts;
+      if (RP) for (let g = o.parent; g && !site; g = g.parent) { const l = RP.get(g); if (!l) continue; g.updateMatrixWorld(); const ge = g.matrixWorld.elements;
+        const tw = (v) => [ge[0] * v[0] + ge[4] * v[1] + ge[8] * v[2] + ge[12], ge[1] * v[0] + ge[5] * v[1] + ge[9] * v[2] + ge[13], ge[2] * v[0] + ge[6] * v[1] + ge[10] * v[2] + ge[14]];
+        let best = null, bd = 0.004;
+        for (const q of l) { const a = tw(q.lo), c = tw(q.hi), d = Math.max(...[0, 1, 2].map((i) => Math.abs(Math.min(a[i], c[i]) - b[i]) + Math.abs(Math.max(a[i], c[i]) - b[i + 3]))); if (d < bd) { bd = d; best = q; } }
+        if (best) site = ' {' + best.st + '}'; }
+      return `${o.name || o.type}${part >= 0 ? ' part ' + part : ''}${it.inst >= 0 ? ' inst ' + it.inst : ''} ${[0, 1, 2].map((c) => (b[c + 3] - b[c]).toFixed(3)).join('×')} @ ${[0, 1, 2].map((c) => ((b[c] + b[c + 3]) / 2 - cc[c]).toFixed(3)).join(',')} ${m?.name || (src && texName.get(src)) || (m?.map ? 'map' : '')}${col}${m.side === 2 ? ' double-sided' : ''}${F[t] & 2 ? ' (back face)' : ''}${site}`;
     };
     const cl = new Map();
     for (const p of pairs) {
@@ -333,9 +363,9 @@ const all = await ev(() => [...game.regions.of.keys()].filter((id) => { const c 
 const rooms = ONLY ? ONLY.filter((r) => all.includes(r)) : all;
 if (ONLY) for (const r of ONLY) if (!all.includes(r)) console.log('NOT A ROOM ' + r);
 console.log(`rooms registered (not outdoor): ${all.length}; scanned here: ${rooms.length}`);
-const res = [], failedRooms = [];
+const res = [], failedRooms = [], depthBad = [];
 for (const id of rooms) {
-  const r = await ev(({ id }) => {
+  const r = await ev(async ({ id }) => {
     const G = game, R = G.regions.ensure(id, 'flicker');
     if (!R) return { id, err: 'not built' };
     G.enterRoom(id, null, true, true); G.step(0.1); G.step(0.1);
@@ -350,7 +380,26 @@ for (const id of rooms) {
     //  loosen the scan — what is fixed here holds for any camera)
     const near = G.camRig.near0 ?? G.camera.near;
     const S = FL.scan(id, cams, near);
-    return { id, spots: spots.length, cams: cams.length, sp0, ...S };
+    // (4) the depth range fitted to the room (engine/roomdepth.js), checked with the room's own box: the floor he walks
+    // (each floor spot, at his feet and 2.5 m over them) and where he comes in inside it; from the room camera the near
+    // plane far out (the depth step far under a millimetre); a lens in the room (a close-up) keeps the camera's own
+    const RD = await import(location.origin + '/src/engine/roomdepth.js');
+    const cam = G.camera, h = G.hero, p0 = cam.position.clone(), n0 = cam.near;
+    // (every floor spot, at his feet and 2.5 m over them, from each of the room camera's positions: nearer to the lens
+    //  than 1.5 × the fitted near plane is a fault — what he walks on could be cut)
+    FL.place(sp0.x, sp0.z);
+    RD.fitRoomDepth(R, cam); const nearIso = cam.near, dIso = cam.position.distanceTo(G.camRig.look ?? R.center); RD.restoreRoomDepth(cam);
+    const box = R._depthBox, outside = [], V3 = cam.position.constructor;
+    const pts = [{ ...sp0, y: G.physics.groundAt(sp0.x, sp0.z, 6) }, ...spots].flatMap((s) => [0, 2.5].map((dy) => new V3(s.x, (s.y ?? 0) + dy, s.z)));
+    for (const c of cams) {
+      cam.position.set(c.x, c.y, c.z); RD.fitRoomDepth(R, cam); const nf = cam.near; RD.restoreRoomDepth(cam);
+      for (const v of pts) if (v.distanceTo(cam.position) < nf * 1.5 && outside.length < 3) outside.push([+(v.x - R.center.x).toFixed(2), +v.y.toFixed(2), +(v.z - R.center.z).toFixed(2), +nf.toFixed(1)]);
+    }
+    cam.position.set(h.pos.x + 1.5, h.pos.y + 1.7, h.pos.z + 1.5);
+    RD.fitRoomDepth(R, cam); const nearClose = cam.near; RD.restoreRoomDepth(cam);
+    cam.position.copy(p0); cam.near = n0; cam.updateProjectionMatrix();
+    const depth = { nearIso: +nearIso.toFixed(2), stepMm: +((dIso * dIso) / (nearIso * 16777216) * 1000).toFixed(4), nearClose, base: n0, outside, box: !!box };
+    return { id, spots: spots.length, cams: cams.length, sp0, depth, ...S };
   }, { id }).catch((e) => ({ id, err: e.message.slice(0, 300) }));
   if (r.err) { failedRooms.push(r); console.log('ROOM ' + JSON.stringify({ id, err: r.err })); res.push(r); continue; }
   // the render check: where he comes in, then the floor nearest each cluster not yet in a view
@@ -382,7 +431,9 @@ for (const id of rooms) {
     if (v.shot) for (const k of ['plain', 'diff']) fs.writeFileSync(path.join(SHOTS, `${id}-${vi}-${k}.png`), Buffer.from(v.shot[k].split(',')[1], 'base64'));
   }
   const fail = r.findings.filter((f) => f.m2 >= FAIL_M2);
-  console.log('ROOM ' + JSON.stringify({ id, tris: r.tris, meshes: r.meshes, camD: r.camD, near: r.near, depthStepMm: r.dzMm, pairs: r.pairs, clusters: r.findings.length, fail: fail.length,
+  const dOk = r.depth.box && !r.depth.outside.length && r.depth.nearClose <= r.depth.base + 1e-6 && r.depth.nearIso > 10;
+  if (!dOk) depthBad.push({ id, ...r.depth });
+  console.log('ROOM ' + JSON.stringify({ id, depthFit: r.depth, tris: r.tris, meshes: r.meshes, camD: r.camD, near: r.near, depthStepMm: r.dzMm, pairs: r.pairs, clusters: r.findings.length, fail: fail.length,
     render: r.views.map((v) => v.err ? { err: v.err } : { why: v.why, at: v.at, changed: v.changed, noise: v.noise, unowned: v.others.map((o) => o.px + 'px@' + o.box.join(',')) }), instSkipped: r.instSkipped || undefined }));
   for (const f of r.findings) console.log(`  ${f.m2 >= FAIL_M2 ? 'FLICKER' : 'small  '} ${id} ${f.m2} m² (raw ${f.raw}) gap ${f.gapMm} mm at local ${f.local.join(', ')} n ${f.n.join(',')} | ${f.a} | ${f.b}${f.seenPx != null ? ` | render: ${f.seenPx} of ${f.screenPx} px changed` : ''}`);
   for (const f of r.findings) delete f.polys;
@@ -394,6 +445,7 @@ const small = res.flatMap((r) => (r.findings || []).filter((f) => f.m2 < FAIL_M2
 const confirmed = fails.filter((f) => f.seenPx > 0).length;
 console.log(`clusters: ${fails.length} of ${FAIL_M2} m² or more (${confirmed} seen flickering in the render check), ${small.length} smaller (listed)`);
 check(`(3) every interior room built, entered and scanned (${res.length - failedRooms.length} of ${rooms.length}${ONLY ? '' : `; registered ${all.length}`})`, failedRooms.length === 0 && (ONLY || rooms.length === all.length), failedRooms.map((r) => ({ id: r.id, err: r.err })));
+check(`(4) the depth range fitted to each room: his floor (and 2.5 m over it) well beyond the near plane from every room camera position, the near plane far out from the room camera (> 10 m), the camera's own near plane for a lens inside the room (${res.length - failedRooms.length - depthBad.length} of ${res.length - failedRooms.length})`, depthBad.length === 0, depthBad.slice(0, 8));
 checkVisual(`(1) no visible z-fighting in any room (same-facing faces within the depth step, ${FAIL_M2} m² or more, seen from the room camera): ${fails.length}; smaller, listed: ${small.length}`, fails.length === 0,
   fails.slice(0, 12).map((f) => ({ room: f.room, m2: f.m2, gapMm: f.gapMm, local: f.local, a: f.a, b: f.b, renderPx: f.seenPx })));
 await browser.close();
