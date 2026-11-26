@@ -313,7 +313,9 @@ const hs = f140.filter((t) => t.type === 'HOLE'), cov = await ev((pts) => PE.hol
 hs.forEach((t, i) => { t.covered = cov[i]; });
 for (const t of f140) {
   t.known = isKnown140(t);
-  t.ok = (t.type === 'EDGE' && t.met >= 0.7) || (t.type === 'HOLE' && t.covered);
+  // (a ragged stretch under 1.5 m is a convex corner's bevel on the terrain's grid (0.25–1.25 m at Citadel's street
+  //  corners, looked at from above): listed, not counted; the notch the user saw measured 2.75 m)
+  t.ok = (t.type === 'EDGE' && (t.met >= 0.7 || t.len < 1.5)) || (t.type === 'HOLE' && t.covered);
   t.fault = !t.ok && !t.known;
   console.log(`${t.fault ? 'FAULT ' : t.known ? 'KNOWN ' : 'ok    '}${line140(t)}${t.type === 'EDGE' ? `; meets ${Math.round(t.met * 100)} %${t.metBy ? ' (' + t.metBy + ')' : ''}` : t.type === 'HOLE' ? (t.covered ? '; covered' : '; open') : ''}${t.known ? ' — ' + t.known : ''}`);
 }

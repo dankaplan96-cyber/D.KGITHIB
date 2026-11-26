@@ -28,7 +28,12 @@
       const e = ed ? (ed[k * 2] / Q) * RANGE : RANGE;
       const rock = tot > 1e-6 ? sp[k * 4 + 2] / tot : 0;   // (the shader: rock over ~0.45 of the splat takes the pixel)
       const isRock = re ? re[k * 4] < 0 && re[k * 4 + 1] / Q > 0.45 : rock > 0.45;
-      f[k] = e < RANGE - 0.05 ? e : isRock ? 1 : re ? (re[k * 4 + 3] / Q > 0.5 ? (re[k * 4 + 2] / Q) * RANGE : Math.max(0.05, (0.5 - share) * 2)) : (0.5 - share) * 2;
+      // (traced: paved where the rock's line leaves it and the paving's line takes it — the larger of the two signed
+      //  distances, so the zero between two grid points falls where the shader draws it. Where the paving fills all
+      //  that is not rock (Otringal's granite turf), the rock's line is the paving's edge: a grid point's class alone
+      //  (+1 rock, −4 deep paving) drew it as the grid's staircase)
+      const rD = re && re[k * 4 + 1] / Q > 0.45 ? -(re[k * 4] / Q) * RANGE : -RANGE;   // (no rock near: no limit)
+      f[k] = e < RANGE - 0.05 ? e : re ? Math.max(rD, re[k * 4 + 3] / Q > 0.5 ? (re[k * 4 + 2] / Q) * RANGE : Math.max(0.05, (0.5 - share) * 2)) : isRock ? 1 : (0.5 - share) * 2;
       const kd = kind ? kind(lx0 + (k % n) * t.step, lz0 + Math.floor(k / n) * t.step) : null;
       if (f[k] < 0 && kd === 'under') { f[k] = 1; under++; }
       if (kd === 'patch') { pk[k] = 1; if (f[k] < 0) patch++; }
@@ -36,11 +41,12 @@
       // the bare earth
       const g = sp[k * 4], sand = sp[k * 4 + 1], soil = sp[k * 4 + 3];
       let dv = -1;
-      if (!isRock && g + soil > sand) {
+      if ((re || !isRock) && g + soil > sand) {
         if (lw) dv = lw[k * 2 + 1] / Q > 0.5 ? -(lw[k * 2] / Q) * RANGE : -1;
         else dv = g + soil > 0.01 ? (soil / (g + soil) - 0.5) * 2 : -1;
         const bw = ed ? (ed[k * 2 + 1] / Q) * RANGE : 0;
         if (bw > 0.05 && e > -0.5) dv = Math.max(dv, bw - e);   // (the earth band: from the paving's edge to its width)
+        if (re) dv = Math.min(dv, re[k * 4 + 1] / Q < 0.45 ? RANGE : (re[k * 4] / Q) * RANGE);   // (not where the rock's line takes the ground)
       }
       d[k] = dv;
     }

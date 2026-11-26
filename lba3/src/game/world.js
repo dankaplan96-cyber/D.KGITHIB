@@ -179,8 +179,9 @@ const GRID_STREETS = [
   // (P136: P135 listed the dirt between the north street and the ring as planted beds and kept them; from the player's
   //  view they are two pavings that almost meet, 0.8–3.5 m of dirt between: paved, west of the climb's ramp from the
   //  block's west street, east of it to the block's east street, both ends flush)
-  [-51.0, -11.4, -41.0, -11.4, 6.0],
-  [-39.0, -11.8, -33.0, -11.8, 5.2],
+  // (P140: the two ended 2 m apart under the climb's paving, flush; a bare fleck was left between them: both run to x −40)
+  [-51.0, -11.4, -40.0, -11.4, 6.0],
+  [-40.0, -11.8, -33.0, -11.8, 5.2],
   [-52.0, -15.8, -52.0, 2.9, 3.0],
   [-32.5, -15.8, -32.5, -4.0, 3.0],
   // FLAT-TOWN: the street down to the harbour's end (town.js STREETS, x −64) on to the foot of the promenade's flight

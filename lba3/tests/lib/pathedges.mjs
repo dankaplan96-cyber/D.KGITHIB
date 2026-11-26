@@ -86,7 +86,7 @@ export function edges(R, area) {
   const toBig = chamfer(W, H, (p) => big[p] === 1);
   const cxz = (c) => [+(X0 + (c.sx / c.n + 0.5) * RES).toFixed(2), +(Z0 + (c.sy / c.n + 0.5) * RES).toFixed(2)];
   for (let id = 1; id < P.comps.length; id++) {
-    const c = P.comps[id]; if (c.n >= minPx) continue;
+    const c = P.comps[id]; if (c.n >= minPx || !c.pix.some((q) => R.src[q] & 1)) continue;   // (a piece built as a mesh — a step, a plinth's top — is designed, not splat noise)
     let dmin = 1e9; for (const q of c.pix) dmin = Math.min(dmin, toBig[q]);
     if (dmin * RES <= 1.5 && c.n * RES * RES >= 0.1) { const [x, z] = cxz(c); out.push({ type: 'ISLAND', area, x, z, m2: +(c.n * RES * RES).toFixed(2) }); }
   }
