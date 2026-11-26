@@ -8,7 +8,7 @@
 //        (a quay, a stair, a cliff: a jump ≥ 0.3 m), not the sea, no paving again within 3 m. A bin, a lamp, a post or a
 //        tree there is a prop, not a destination.
 //   GAP  a paving's edge facing other paving straight out across 0.75–5 m of level bare ground with nothing solid
-//        between (rays along the edge's normal, ≥ 1 m of edge): the way stops short of the next one (the user's photo).
+//        between (rays along the edge's normal, ≥ 1.5 m of edge): the way stops short of the next one (the user's photo).
 // Not paths: the isles' terrain paving is their landing pads, round squares and WA-11's bare stone patches (noise
 // blobs): listed apart, not counted. Ballastra's districts are paved masses over water (no terrain).
 // Env: SERVE=1 (or GAME_URL), TAG=before|after, OUT=dir (default captures/paths-135/<TAG>), SHOTS=0 (no pictures),
@@ -167,13 +167,14 @@ const judged = await ev(({ tips, ahead }) => PE.judge(tips, ahead), { tips: all,
 for (const j of judged) Object.assign(all[j.id], { h0: j.h0, hits: j.hits });
 const gj = await ev((rays) => PE.gaps(rays), gapRays.map(({ id, x0, z0, x1, z1, y }) => ({ id, x0, z0, x1, z1, y })));
 for (const j of gj) Object.assign(gapRays[j.id], j);
-// the open rays in clusters (starts within 1 m of each other, the same way within 30°); a gap is ≥ 4 rays (1 m of edge)
+// the open rays in clusters (starts within 1 m of each other, the same way within 30°); a gap is ≥ 6 rays (1.5 m of
+// edge, a path's width: fewer are an inside corner's own edge)
 const openRays = gapRays.filter((r) => r.open), used = new Set(), gapsFound = [];
 for (const r of openRays) {
   if (used.has(r)) continue;
   const cl = [r]; used.add(r);
   for (let i = 0; i < cl.length; i++) for (const q of openRays) if (!used.has(q) && q.area === cl[i].area && Math.hypot(q.x0 - cl[i].x0, q.z0 - cl[i].z0) < 1.0 && q.nx * r.nx + q.nz * r.nz > 0.86) { used.add(q); cl.push(q); }
-  if (cl.length < 4) continue;
+  if (cl.length < 6) continue;
   const m = (k) => cl.reduce((s, q) => s + q[k], 0) / cl.length;
   const nx = m('nx'), nz = m('nz'), nl = Math.hypot(nx, nz);
   gapsFound.push({ type: 'GAP', area: r.area, x: +m('x0').toFixed(2), z: +m('z0').toFixed(2), dx: +(nx / nl).toFixed(3), dz: +(nz / nl).toFixed(3), L: +m('L').toFixed(2), edge: +(cl.length * RES).toFixed(2), notPath: r.notPath });
