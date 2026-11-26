@@ -145,7 +145,7 @@ Not done in v170, recorded for later (none blocks):
 - **Release goal:** a full public release on 31.5.2027 (`RELEASE-2027.he.md`).
 
 ## 5. Where things are
-**The user's checklist page (26.11):** `docs/lba-maturity/checklist/index.html`, published as artifact slug `98d80407-2559-4868-8915-406317b81b85` (https://claude.ai/artifact/KsgUvrHqD21dbJrMarozzx, version 1795682166-240c). Update its data array (and the 'since version' counters) whenever OPEN-TASKS changes, with a cheap edit_version / publish_files of that one file.
+**The user's checklist page (26.11):** `docs/lba-maturity/checklist/index.html`, published as artifact slug `98d80407-2559-4868-8915-406317b81b85` (https://claude.ai/artifact/KsgUvrHqD21dbJrMarozzx, version 1795682265-bf5c). Update its data array (and the 'since version' counters) whenever OPEN-TASKS changes, with a cheap edit_version / publish_files of that one file.
 
 | What | File |
 |---|---|
