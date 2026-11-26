@@ -1431,6 +1431,7 @@ const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
 const PATCH_LEVEL = 0.35;   // (P140: a WA-11 paving patch lies where the ground's averaged slope is under this: the old fade's middle, smoothstep(0.45, 0.25))
 const PATCH_BLUR = 0.9;   // (PATHS-140B: the pieces' outline blurred over this, m (the Gaussian's sigma): nothing finer than the terrain's 1.7 m grid can be drawn)
 const SQUARE_LEVEL = 0.6;   // (PATHS-140B: a square's paving where the slope averaged over 1.5 m is under this)
+const PATCH_GROW = 0.1;   // (PATHS-140B: the patch noise's level lowered by this for the smoothed pieces: the smoothing takes their necks, tips and specks; this gives the pieces back most of their share (Otringal's paving as drawn 4134 m² before, 4115 after))
 const PAD_JOIN = 4.6;   // (P140: a kept paving piece reaches this near the pad's middle, under the edge of the pad's own paving (~4.85 m))
 const OLD_PATCHES = !ROCK_EDGE || (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('isles140') === 'old'; } catch { return false; } })();
 // (PATHS-140B: the paving and the earth as a built terrain's shader draws them, Terrain.drawn: the kerbs' line)
@@ -1615,7 +1616,7 @@ function buildIsland0(scene, physics, name, L, at) {
   // outside. Pieces under 6 m² go.
   function patchGrid() {
     const st = 0.5, xa = cx(0) - 2, za = cz(0) - 2, nI = Math.ceil((cx(L.nx - 1) + 2 - xa) / st) + 1, nJ = Math.ceil((cz(L.nz - 1) + 2 - za) / st) + 1, N = nI * nJ;
-    const pv = (x, z) => fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3) - BG.tp, rv = (x, z) => (Math.hypot(x - pad.x, z - pad.z) < 7 ? 1 : BG.tr - fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
+    const pv = (x, z) => fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3) - BG.tp + PATCH_GROW, rv = (x, z) => (Math.hypot(x - pad.x, z - pad.z) < 7 ? 1 : BG.tr - fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
     const ex = new Uint8Array(N), P = new Float32Array(N), Rv = new Float32Array(N), Lv = new Float32Array(N);
     const ptSlope = (x, z) => { const i = Math.round(gx(x)), j = Math.round(gz(z)), h = (q, w) => heightFn(cx(q), cz(w)); return Math.hypot(h(i + 1, j) - h(i - 1, j), h(i, j + 1) - h(i, j - 1)) / (2 * cell); };   // (the terrain's slope at its nearest point, as the splat reads it)
     for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) {
@@ -1667,6 +1668,15 @@ function buildIsland0(scene, physics, name, L, at) {
         for (const [q, w] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]]) { if (q < 0 || w < 0 || q >= nI || w >= nJ) continue; const c = w * nI + q; if (B[c] > 0.5 && ex[c] === 0 && !comp[c]) { comp[c] = id; stack.push(c); } }
       }
       keep.push(n * st * st >= 6 ? 1 : 0); stats.push(n * st * st);
+    }
+    // (a small piece, under 25 m², within 2.5 m of another: the terrain's 1.7 m grid drew a thin link across the gap
+    //  between them; it goes — the bigger one stays)
+    for (let k = 0; k < N; k++) {
+      const c = comp[k]; if (!c || !keep[c] || stats[c - 1] >= 25) continue;
+      const i = k % nI, j = (k - i) / nI, R5 = 5;
+      for (let w = Math.max(0, j - R5); w <= Math.min(nJ - 1, j + R5) && keep[c]; w++) for (let q = Math.max(0, i - R5); q <= Math.min(nI - 1, i + R5); q++) {
+        const o = comp[w * nI + q]; if (o && o !== c && keep[o] && stats[o - 1] >= stats[c - 1] && (q - i) ** 2 + (w - j) ** 2 <= R5 * R5) { keep[c] = 0; break; }
+      }
     }
     const kept = keep.filter(Boolean).length, all = keep.length - 1;
     // (a dropped piece's lattice points: B lowered under the cut there, so its outline goes with it)
@@ -1724,7 +1734,7 @@ function buildIsland0(scene, physics, name, L, at) {
   // (P136, the path-ends scan, tests/lib/pathends.js: which paving a point of this ground is, island-local x, z — the
   //  island's designed square (paveAt), its landing pad, a WA-11 bare patch, or ground under a deck island's decks, far
   //  under the clouds and never seen. Read by the test only)
-  terrain.probe140 = (x, z) => ({ land: land(x, z), h: +heightFn(x, z).toFixed(2), paved: paved(x, z), pad: +Math.hypot(x - pad.x, z - pad.z).toFixed(1), route: route[atData(x, z)], bare: bare(x, z).map((v) => +v.toFixed(2)), B: PG ? +PG.bAt(x, z).toFixed(2) : null, drawn: terrain.drawn(x, z)?.map((v) => +v.toFixed(2)) });   // (PATHS-140B: for the probes, island-local x, z)
+  terrain.probe140 = (x, z) => ({ land: land(x, z), h: +heightFn(x, z).toFixed(2), paved: paved(x, z), pad: +Math.hypot(x - pad.x, z - pad.z).toFixed(1), route: route[atData(x, z)], bare: bare(x, z).map((v) => +v.toFixed(2)), B: PG ? +PG.bAt(x, z).toFixed(2) : null, piece: PG ? (() => { const i = Math.round((x - PG.xa) / PG.st), j = Math.round((z - PG.za) / PG.st), c = PG.comp[j * PG.nI + i]; return c ? [c, +PG.stats[c - 1].toFixed(1), PG.keep[c]] : null; })() : null, drawn: terrain.drawn(x, z)?.map((v) => +v.toFixed(2)) });   // (PATHS-140B: for the probes, island-local x, z)
   terrain.paveKind = (x, z) => (S.decks ? 'under' : paved(x, z) ? 'square' : Math.hypot(x - pad.x, z - pad.z) < 5.5 ? 'pad' : !PG || PG.nearAt(x, z) ? 'patch' : 'ground');   // (PATHS-140B: with the smoothed pieces, 'patch' only on and near one: the edge of a square (Otringal's west side) is the square's, not a WA-11 patch's)
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);
