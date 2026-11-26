@@ -139,7 +139,7 @@ const ar = await ev(() => {
   return { prompt, promptKeyLeft: pk != null && pt != null && pk < pt, state: game.state, name: N?.textContent, text: D.querySelector('.text')?.textContent, reads: HE.reads('#dialog .text'), tagRight: N.getBoundingClientRect().right > D.getBoundingClientRect().right - D.getBoundingClientRect().width / 3, dir: getComputedStyle(D).direction, fit: HE.fit('#dialog'), textFit: HE.fit('#dialog .text') };
 });
 check('Arthur in the house: the prompt "לדבר" with its key on the left (English\'s order)', /לדבר/.test(ar.prompt) && ar.promptKeyLeft, ar);
-check('Arthur: a Hebrew box, his name ארתור on the name tag at the top right (P138), the box itself as English's, the line read right to left, inside the screen', ar.state === 'dialog' && ar.name === 'ארתור' && HEB.test(ar.text || '') && ar.reads === 'rtl' && ar.tagRight && ar.dir === 'ltr' && ar.fit.ok && ar.textFit.ok, ar);
+check('Arthur: a Hebrew box, his name ארתור on the name tag at the top right (P138), the box itself as in English, the line read right to left, inside the screen', ar.state === 'dialog' && ar.name === 'ארתור' && HEB.test(ar.text || '') && ar.reads === 'rtl' && ar.tagRight && ar.dir === 'ltr' && ar.fit.ok && ar.textFit.ok, ar);
 if (SHOTS) await big(() => shot(PRE ? '01-dialogue' : '01-house-dialogue'));
 const cup = await ev(() => {
   P.settle();
