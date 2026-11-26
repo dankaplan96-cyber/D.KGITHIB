@@ -4,7 +4,7 @@
 // settings after thinking a little, and then NOT change every few seconds — it jumps"; "if the game runs well on battery
 // there's no reason it won't on mains".
 //
-// Quality: Auto chooses between complete, named profiles (PROFILES, best first): High · Medium (AUTO-2) · Medium-lean (P95) · Low (AUTO-FLOOR, below). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
+// Quality: Auto chooses between complete, named profiles (PROFILES, best first): High · Medium (AUTO-2) · Medium-lean (P95) · Low (AUTO-FLOOR, below) · Low-eco · Low 75 % · Low 65 % (P137). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
 // and small-caster distances, the people's animation rate, the far detail); Auto moves one profile at a time, never a
 // single knob. Low / Medium / High chosen by hand are exactly the presets they always were (renderer.knobs stays null).
 //
@@ -85,15 +85,42 @@ export const TOP = PRESET_KNOBS.high;
 // GTX 1050 street 8.2 → 7.2–7.4 ms, Vega 8 battery −5.3 of 37 ms) × ~0.95 for the rest. On battery the battery profile
 // already takes MSAA and lamps away from every profile, so there Medium-lean adds almost nothing and the ladder skips it
 // (Governor opts.skip; autoapply.js). It is never a start (a guess or a calibration starts at Medium at the lowest).
+// P137 (the user, 26.11, the UHD 620 laptop: "whatever we do, 30 fps just looks bad"; picked: always 60, lower the quality
+// instead): three rungs below Low, so a machine Low cannot hold at 60 has somewhere to go. The four above are unchanged
+// (the user's own order: LOOK-FIRST, AUTO-2, P95 — effects and edges first, resolution and shadows last). Below Low
+// each rung answers one side, and `only` says which: a step down for CPU pressure never takes a resolution-only rung
+// (it would cost sharpness and buy no CPU time), and one for GPU pressure steps over the CPU rung (it buys almost no GPU
+// time, so P95's revisit would take it back and block every GPU step after it). Governor.below(p, kind).
+//   Low-eco  (CPU) Low + far people animated at half rate beyond 25 m + their tiny far parts dropped (Medium-lean's two
+//            CPU knobs, which Low, the preset, does not have). The picture at the play camera: as Low.
+//   Low 75 % (GPU) Low-eco at 75 % resolution (Low's 85 → 75: −22 % pixels), the output pass's sharpening on.
+//   Low 65 % (GPU) Low-eco at 65 % (−25 % pixels from 75). The floor: at the UHD 620 laptop's pixel ratio 1.25 (an
+//            integrated GPU on a dPR 2 screen) 0.81 of the screen's pixels across; on a dPR 1 screen 0.65 — never under
+//            minDyn's 0.6. (Steps of ~−22 % pixels, not smaller: P95's revisit keeps a step that bought ≥ 7 %, and a GPU
+//            pays for only part of its time by the pixel, so −11 % pixels would buy ~6 % and be taken back.)
+// Low itself is now a GPU rung (`only: 'gpu'`): from Medium-lean it lowers the resolution and turns the shadows off, but
+// gives back the far-people knobs Medium-lean had, so for CPU pressure it bought ~nothing (P95's revisit took it back:
+// the UHD 620's street, AUTO-P95 S4) and then blocked every CPU step after it. CPU pressure at Medium-lean goes to
+// Low-eco instead: Low's picture with Medium-lean's far-people knobs kept, the shadows off (the CPU side's biggest
+// lever left). GPU pressure goes Medium-lean → Low → Low 75 % → Low 65 % as before.
+// No rung below Low turns anything else off: the shadows are already off at Low; lamps stay 2 (night streets and
+// interiors need them to read), the vegetation and small casters are already at Low's distances; nothing a rung
+// changes touches the simulation, collision, aim or timing (visual knobs only). The gpu / cpu shares of the three are
+// ESTIMATES (no hardware measured them): Low's × the pixel share at the GPU (0.55 + 0.45 · s², the test machines'
+// truth) and × 0.95 · 0.94 at the CPU for the two far-people knobs; they pick nothing at a start (a start is never
+// below Medium) and only judge a step up's room.
 export const PROFILES = [
   { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
   { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
   { id: 'lean', name: 'Medium-lean', tier: 'medium', K: { ...PRESET_KNOBS.medium, msaa: 0, lamps: 2, veg: 'low', casters: 'low', anim: 'eco', detail: 'near' }, gpu: 0.46, cpu: 0.74 },
-  { id: 'low', name: 'Low', tier: 'low', K: { ...PRESET_KNOBS.low }, gpu: 0.32, cpu: 0.7 },
+  { id: 'low', name: 'Low', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low }, gpu: 0.32, cpu: 0.7 },
+  { id: 'loweco', name: 'Low-eco', tier: 'low', only: 'cpu', K: { ...PRESET_KNOBS.low, anim: 'eco', detail: 'near' }, gpu: 0.31, cpu: 0.63 },
+  { id: 'low75', name: 'Low 75 %', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low, scale: 0.75, anim: 'eco', detail: 'near' }, gpu: 0.29, cpu: 0.63 },
+  { id: 'low65', name: 'Low 65 %', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low, scale: 0.65, anim: 'eco', detail: 'near' }, gpu: 0.26, cpu: 0.63 },
 ];
 export const N_PROFILES = PROFILES.length;
-export const TIER_AT = { high: 0, medium: 1, low: N_PROFILES - 1 };
 export const indexOfId = (id) => PROFILES.findIndex((x) => x.id === id);
+export const TIER_AT = { high: 0, medium: 1, low: indexOfId('low') };   // (P137: Low by id, the rungs below it are Auto's own)
 export const START_FLOOR = TIER_AT.medium;   // (AUTO-FLOOR: a guess never starts below Medium; only measured pressure goes lower)
 export const profileOf = (p) => PROFILES[Math.max(0, Math.min(N_PROFILES - 1, p | 0))];
 export const knobsAt = (p) => ({ ...profileOf(p).K });
@@ -237,9 +264,12 @@ export class Governor {
     this.rec = new Map(); this.lastDown = null; this.noHelp = {}; this.pressured = new Set();
     this.startEval(0, 'start');
   }
-  // the next profile below / above p on the ladder (skipping what adds nothing now); null at the end
-  below(p = this.applied) { for (let q = p + 1; q < N_PROFILES; q++) if (!this.skip(q)) return q; return null; }
-  above(p = this.applied) { for (let q = p - 1; q >= 0; q--) if (!this.skip(q)) return q; return null; }
+  // the next profile below / above p on the ladder (skipping what adds nothing now); null at the end. kind: the pressure a
+  // step down answers ('cpu' | 'gpu'): a rung for the other side only (P137's rungs below Low) is stepped over
+  below(p = this.applied, kind = null) { for (let q = p + 1; q < N_PROFILES; q++) if (!this.skip(q) && !(kind && PROFILES[q].only && PROFILES[q].only !== kind)) return q; return null; }
+  // (P137: up from a rung for one side, the rungs for the other side are stepped over — up from Low 75 % is Low, not
+  //  Low-eco, whose GPU cost is Low's: a GPU-bound game would go up into the load it just left and down again)
+  above(p = this.applied) { const o = PROFILES[p]?.only; for (let q = p - 1; q >= 0; q--) if (!this.skip(q) && !(PROFILES[q].only && PROFILES[q].only !== o)) return q; return null; }
   // ---- where it stands: wanted (queued) and in force (applied at the last commit point)
   wanted() { return knobsAt(this.p); }
   knobs() { return knobsAt(this.applied); }
@@ -353,7 +383,7 @@ export class Governor {
     this.note(info); this.onChange(info);
     return info;
   }
-  step(dir, t, why, opt) { return this.stepTo(dir > 0 ? this.below(this.applied) : this.above(this.applied), t, why, opt); }
+  step(dir, t, why, opt) { return this.stepTo(dir > 0 ? this.below(this.applied, opt?.kind) : this.above(this.applied), t, why, opt); }
   // the pressure the windows show: the side most of them name, and whether they were 'late' (PRESENT)
   pressureOf(ws) {
     const P = ws.filter(isPressure); if (!P.length) return { kind: null, late: false };
@@ -363,7 +393,7 @@ export class Governor {
   // (GPU-TIMER-KA: a step down taken for suspect pressure, in force and not yet judged by the revisit)
   suspectPending() { const D = this.lastDown; return !!D && D.suspect && !D.done && this.applied === D.to; }
   // may it step down for this kind of pressure? (not from where a step of that kind already bought nothing, or lower)
-  mayStepDown(kind) { return this.below(this.applied) != null && !(kind && this.noHelp[kind] != null && this.applied >= this.noHelp[kind]); }
+  mayStepDown(kind) { return this.below(this.applied, kind) != null && !(kind && this.noHelp[kind] != null && this.applied >= this.noHelp[kind]); }
   // (the windows of each scene at each profile, for judging a step: the last REC_KEEP)
   record(w) {
     const k = `${w.scene}|${w.at}`, a = this.rec.get(k) || [];
@@ -407,7 +437,7 @@ export class Governor {
     // sustained pressure: one profile down (queued)
     if ((L.length >= DOWN_RUN && L.slice(-DOWN_RUN).every(isPressure)) || last.filter(isPressure).length >= DOWN_OF) {
       const P = this.pressureOf(last);
-      if (this.below(this.applied) == null) { this.lock(`evaluation: pressure at the lowest profile (${this.why(last)})`, t); return { kind: 'settled', p: this.p }; }
+      if (this.below(this.applied, P.kind) == null) { this.lock(`evaluation: ${P.kind ? P.kind.toUpperCase() + ' ' : ''}pressure at the lowest profile for it (${this.why(last)})`, t); return { kind: 'settled', p: this.p }; }
       if (!this.mayStepDown(P.kind)) { this.lock(`evaluation: ${P.kind.toUpperCase()} pressure, but a lower profile did not help here: held (${this.why(last)})`, t); return { kind: 'settled', p: this.p }; }
       if (P.suspect && this.suspectPending()) return null;   // (GPU-TIMER-KA: the last such step is still to be judged)
       if (this.trial && this.applied === this.trial.from) { this.trial.failed = true; }
@@ -425,7 +455,7 @@ export class Governor {
       const own = L.filter((x) => x.kind !== 'paced'), pr = L.filter(isPressure).length / L.length, n = own.reduce((s, x) => s + x.n, 0), m = own.reduce((s, x) => s + x.missN, 0);
       if (pr <= PASS_PRESSURE && m / Math.max(1, n) <= PASS_MISS) { this.lock(`evaluation passed: ${this.why(L)}`, t); return { kind: 'settled', p: this.p }; }
       const P = this.pressureOf(L), k = P.kind || 'gpu';
-      if (this.below(this.applied) == null) { this.lock(`evaluation: the lowest profile (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
+      if (this.below(this.applied, k) == null) { this.lock(`evaluation: the lowest profile for ${k.toUpperCase()} pressure (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
       if (!this.mayStepDown(k)) { this.lock(`evaluation: a lower profile did not help here: held (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
       if (P.suspect && this.suspectPending()) { this.lock(`evaluation: GPU readings taken after keep-alive marks, the last step down for them not yet judged: held (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
       return this.step(+1, t, `evaluation failed (${Math.round(pr * 100)} % of windows under pressure): ${this.why(L)}`, { kind: k, late: P.late, suspect: P.suspect });
@@ -456,7 +486,7 @@ export class Governor {
     const scenes = (ws) => new Set(ws.filter(real).map((x) => x.scene)).size;
     if ((bad(a) && scenes(a) >= 2) || bad(b)) {
       const ws = (a && bad(a) ? a : b).filter((x) => !x.suspect), P = this.pressureOf(ws);
-      if (!this.mayStepDown(P.kind)) { if (t - (this._floorNoted || -1e9) > 120000) { this._floorNoted = t; this.note({ kind: 'floor', why: `a sustained problem ${this.below(this.applied) == null ? 'at the lowest profile' : 'that a lower profile did not help'}: ${this.why(ws)}` }); } return null; }
+      if (!this.mayStepDown(P.kind)) { if (t - (this._floorNoted || -1e9) > 120000) { this._floorNoted = t; this.note({ kind: 'floor', why: `a sustained problem ${this.below(this.applied, P.kind) == null ? 'at the lowest profile for it' : 'that a lower profile did not help'}: ${this.why(ws)}` }); } return null; }
       H.cool = t; H.w = [];
       return this.step(+1, t, `held, but a sustained problem${bad(a) && scenes(a) >= 2 ? ' across scene changes' : ' for 60 s'}: ${this.why(ws)}`, P);
     }

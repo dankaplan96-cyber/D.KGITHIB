@@ -2306,7 +2306,7 @@ class Game {
       res: () => t('set_h_res_' + s.res),
       aa: () => t(s.quality === 'low' && !s.qualityAuto ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
       // (AUTO-QUALITY: what Auto runs now, in words; PERF-BATTERY: the battery profile's note)
-      quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() + (this.autoQ.gov.phase === 'evaluate' && !this.autoQ.test ? ', settling' : ''), f: s.fps === '30' ? '30' : '60' }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
+      quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.labelText(t) + (this.autoQ.gov.phase === 'evaluate' && !this.autoQ.test ? t('set_h_q_settling') : ''), f: s.fps === '30' ? '30' : '60' }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
       // (UI-PASS: every row says what it does; the keys named are the ones in use)
       lang: () => t('set_h_lang'),

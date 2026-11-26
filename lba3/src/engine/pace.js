@@ -42,7 +42,7 @@ export function refreshOf(a, n, s) {
 // refreshes, not a slower screen. A faster reading replaces it at once (a move to a faster screen); a reading that is no
 // multiple (144 → 60 Hz) at once too; a multiple (120 → 60 Hz) when the memory is MEM_MS old — meanwhile the pace counts
 // in refreshes of the old rate, which come out at the same drawn intervals (every 2nd 120 Hz refresh is every 60 Hz one).
-export const MEM_MS = 20000;
+export const MEM_MS = 20000, MEM_LONG = 300000;
 export class RefreshMeter {
   constructor() { this.a = new Float32Array(REFRESH_N); this.s = new Float32Array(REFRESH_N); this.n = 0; this.k = 0; this.R = 0; this.mem = 0; this.memT = -1e9; }
   // d: the interval since the last callback (ms), t: the callback's timestamp; returns the refresh (ms, 0 until measured)
@@ -55,7 +55,17 @@ export class RefreshMeter {
     else if (r < M) { this.mem = r; this.memT = t; }
     else {
       const k = Math.round(r / M);
-      if (k >= 2 && k <= 6 && Math.abs(r - k * M) <= 0.04 * k * M && t - this.memT < MEM_MS) r = M;
+      let whole = k >= 2 && k <= 6 && Math.abs(r - k * M) <= 0.04 * k * M;
+      // (P137: a slower reading whose intervals are each a whole multiple of the remembered refresh — a game drawing every
+      //  5th and 6th refresh in a mix, 41.7 / 50 ms on 120 Hz, whose mean is no multiple — is skipped refreshes too, not a
+      //  22 Hz screen: read as one, Auto's budget became 45 ms and a GPU-bound game held its picture at 22 fps)
+      let mix = false;
+      if (!whole && r > 1.5 * M) { let c = 0; for (let i = 0; i < this.n; i++) { const q = this.a[i] / M, kk = Math.round(q); if (kk >= 2 && kk <= 12 && Math.abs(q - kk) <= 0.04 * kk) c++; } whole = mix = c >= 0.8 * this.n; }
+      // (P137: and such a reading of 3 or more refreshes, or a mix, keeps the memory for MEM_LONG, not MEM_MS: a GPU-bound
+      //  game drawing every 3rd refresh on 120 Hz for 20 s — Auto still stepping down to fit 60 — was read as a 40 Hz
+      //  screen, and Auto's budget became 25 ms: held at 40 fps. A real move to a slower screen is a 2× one (120 → 60,
+      //  still MEM_MS) or no multiple (at once); counting in the old refresh meanwhile gives the same drawn intervals)
+      if (whole && t - this.memT < (mix || k >= 3 ? MEM_LONG : MEM_MS)) r = M;
       else { this.mem = r; this.memT = t; }
     }
     this.R = r;
@@ -98,11 +108,11 @@ export function limitRefreshes(capMs, refreshMs) {
 // — a compile, an upload, a GC — is left out, one over BREAK_MS starts the window again).
 //   engage   at every refresh, ENGAGE_RUN windows in a row with ≥ MISS_ON of the intervals ≥ 1.5 refreshes, or the GPU's
 //            p90 (a reading not taken after a keep-alive mark) past the refresh. n: the smallest whole count ≥ 2 whose
-//            interval holds the frame's need (the mean interval, the CPU p90, the GPU p90) within FIT; only if that rate
-//            is ≥ MIN_FPS, or ≥ KEEP × the rate the game delivers now (on 75 Hz every 2nd refresh is 37.5 fps: only for a
-//            game already under ~47 there). Never on a screen of ≤ MIN_HZ (60 Hz: every refresh is the target, Auto
-//            handles quality).
-//   deeper   paced, ENGAGE_RUN windows with ≥ MISS_ON of the intervals ≥ n + ½ refreshes: n + 1 (if allowed).
+//            interval holds the frame's need (the mean interval, the CPU p90, the GPU p90) within FIT, at most the
+//            screen's floor (floorRefreshes, P137 below): a need past the floor takes the floor's pace, and Auto quality
+//            makes the frame fit it. Never on a screen of ≤ MIN_HZ (60 Hz: every refresh is the target, Auto handles
+//            quality).
+//   deeper   paced, ENGAGE_RUN windows with ≥ MISS_ON of the intervals ≥ n + ½ refreshes: n + 1 (if within the floor).
 //   release  by a probe: after COOL ms paced (doubling after each failed probe, up to COOL_MAX; back to COOL at a scene
 //            change, the probe 2 s after it) and only while the CPU p90 is ≤ ROOM × the faster pace, one PROBE_WIN window
 //            at n − 1. It stays there when < MISS_OFF of its intervals miss and the CPU and GPU p90 are ≤ PROBE_FIT × that
@@ -111,8 +121,21 @@ export function limitRefreshes(capMs, refreshMs) {
 //            mark-free readings decide.) A pace taken again within QUICK ms of a release counts as a failed probe.
 // Hysteresis: in at ≥ 15 % misses for 2 s, out only at < 5 % with the work p90 ≤ 85 % of the refresh; probes at most
 // every 8 s, then 16, 32 … 120 s.
+// P137 (the user, 26.11, the UHD 620 laptop: "whatever we do, 30 fps just looks bad"; picked: always 60, lower the quality
+// instead): the even pace never goes below the screen's ~60 class — the whole-refresh rate nearest 60 (by ratio, ties to
+// the faster). 120 Hz: 60 · 240: 60 · 144: 72 (48 is as far below as 72 is above: the faster) · 165: 55 · 100: 50 (P101's
+// even pace on the user's work computer kept) · 90: 45 · 75: every refresh (37.5 is further from 60 than 75). Before, the
+// floor was 45 fps or 80 % of what the game drew: a game drawing ~30 on 120 Hz was paced every 4th refresh (30), on 144
+// Hz every 5th (28.8), on 240 Hz every 6th (40). Now such a game is paced at the floor and Auto (budget 16.67 ms,
+// paceBudgetMs) lowers the picture until the frame fits. 50 / 59.9 / 60 Hz screens are never paced (≤ MIN_HZ).
+export function floorRefreshes(hz, maxN = 6) {
+  if (!(hz > 0)) return 1;
+  let best = 1, bd = Infinity;
+  for (let n = 1; n <= maxN; n++) { const d = Math.abs(Math.log(hz / n / 60)); if (d < bd - 0.02) { bd = d; best = n; } }
+  return best;
+}
 export const PACE = {
-  MIN_HZ: 70, MIN_FPS: 45, KEEP: 0.8, WIN: 1000, PROBE_WIN: 600, ENGAGE_RUN: 2, MISS_ON: 0.15, MISS_OFF: 0.05, FIT: 0.9,
+  MIN_HZ: 70, WIN: 1000, PROBE_WIN: 600, ENGAGE_RUN: 2, MISS_ON: 0.15, MISS_OFF: 0.05, FIT: 0.9,
   ROOM: 0.7, PROBE_FIT: 0.85, COOL: 8000, COOL_MAX: 120000, SCENE_PROBE: 2000, QUICK: 5000, STALL_MS: 50, BREAK_MS: 250, MAX_N: 6,
 };
 const pct = (a, p) => { if (!a.length) return null; const v = a.slice().sort((x, y) => x - y); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
@@ -147,8 +170,9 @@ export class EvenPace {
   hz() { return this.R0 ? 1000 / this.R0 : 0; }
   // a GPU reading (ms) for a frame drawn at about time t; ka: taken after a keep-alive mark
   gpu(t, ms, ka = false) { this.gq.push([t, ms, !!ka]); if (this.gq.length > 400) this.gq.splice(0, 200); }
-  // may the game pace at n refreshes here? (the rate floor; `fps` what it delivers now)
-  allowed(n, fps) { const f = this.hz() / n; return n <= this.P.MAX_N && (f >= this.P.MIN_FPS - 0.01 || (fps > 0 && f >= this.P.KEEP * fps)); }
+  // the most refreshes a frame may take here (P137: the screen's ~60 class, floorRefreshes) and whether n is within it
+  floor() { return floorRefreshes(this.hz(), this.P.MAX_N); }
+  allowed(n) { return n >= 1 && n <= this.floor(); }
   // one drawn frame in Unlimited. t: ms (the rAF clock), iv: ms since the last drawn frame, cpu: its CPU work (ms, or
   // null), count: counted play (see above), scene: an id (a change brings the probe forward). (Arguments, not an object:
   // called on every drawn frame, GC-STREET)
@@ -196,7 +220,11 @@ export class EvenPace {
       //  CPU and GPU p90 are the frame's own time and want FIT's margin)
       const need = Math.max(S.mean * P.FIT, S.cpu ?? 0, S.gpu ?? 0);
       let m = Math.max(n + 1, 2); while (m < P.MAX_N && m * R * P.FIT < need) m++;
-      if (!this.allowed(m, S.fps)) { if (!this.denied) { this.denied = true; this.note({ t: Math.round(t), denied: m, why: `every ${m} refreshes would be ${(this.hz() / m).toFixed(1)} fps: under ${P.MIN_FPS} and under ${Math.round(P.KEEP * 100)} % of the ${S.fps.toFixed(0)} fps drawn now` }); } return null; }
+      // (P137: a need past the floor takes the floor's pace — the even ~60 class — when that is still a step deeper; the
+      //  frame is then Auto quality's to fit. Already at the floor: no deeper pace, noted once)
+      const F = this.floor();
+      if (m > F) m = F;
+      if (m <= n || !this.allowed(m)) { if (!this.denied) { this.denied = true; this.note({ t: Math.round(t), denied: Math.max(n + 1, 2), why: `every ${Math.max(n + 1, 2)} refreshes would be ${(this.hz() / Math.max(n + 1, 2)).toFixed(1)} fps: under this ${this.hz().toFixed(0)} Hz screen's ~60 class (${(this.hz() / F).toFixed(1)} fps, every ${F === 1 ? 'refresh' : `${F} refreshes`}); Auto quality lowers the picture instead (${S.fps.toFixed(0)} fps drawn now)` }); } return null; }
       this.denied = false;
       if (n === 1 && t - this.releasedAt < P.QUICK) this.backoff = Math.min(P.COOL_MAX, this.backoff * 2);
       this.cool = t + this.backoff;
