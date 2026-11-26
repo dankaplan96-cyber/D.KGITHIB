@@ -32,6 +32,7 @@
 import * as THREE from 'three';
 import { crystalMats, gemGeo } from './crystallook.js';
 import { Terrain } from '../engine/terrain.js';
+import { quietRock } from './quietrock.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
@@ -556,7 +557,7 @@ export function* buildDesertSteps(scene, physics) {
   // --- ground
   const R0 = {};
   const ground = groundGrid();
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), squares: BATCH.on ? 25 : 0, heightFn: ground.at, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), squares: BATCH.on ? 25 : 0, heightFn: ground.at, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, ...quietRock(TX.cliff, 'desert'), cobble: TX.concrete } });   // (QUIET-ROCK: the outcrops' flat rock the quiet granite, in the cliff tile's colour)
   R0.trapFixes = ground.fixed;
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);

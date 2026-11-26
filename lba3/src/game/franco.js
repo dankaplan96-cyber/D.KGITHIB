@@ -16,6 +16,9 @@ import { tm, cached, bbox, cyl, lathe, panelGeo, frameGeo, fillGeo, rod, member 
 const q = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('knartas') || ''; } catch { return ''; } })();
 // (#17, the user's pick 26.11: the Franco huts and the moored zeppelin are Knartas's look; ?knartas=old shows the old houses)
 export const KNARTAS_NEW = q !== 'old';
+// (#17b, docs/lba-maturity/KNARTAS-PALETTE.md, the user's pick 26.11: Knartas's ground in LBA2's palette, pale grey rock and
+//  orange-brown earth; zislands.js KNA_PAL. ?knartaspal=old shows the old ground)
+export const KNARTAS_PAL = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('knartaspal') !== 'old'; } catch { return true; } })();
 
 // the huts' two materials (plaster with the colour in the vertices)
 // (one material for both: the walls and the domes are one draw; the domes are darker by their vertices)
@@ -153,7 +156,9 @@ export function francoHut(P, o) {
     const back = (() => { let zb = hz; for (const u of [-half, half]) { const Ls = Math.abs(hx - hz), ux = hx >= hz ? Math.max(0, Math.abs(u) - Ls) : Math.abs(u); zb = Math.min(zb, (hx >= hz ? 0 : Ls) + Math.sqrt(Math.max(0, R * R - ux * ux))); } return zb - 0.12; })();
     const t = +(front - back).toFixed(2), op = { x: 0, y: 0, w: +dw.toFixed(2), h: dh, arch: true };
     add(cached('fhut-portal' + pw.toFixed(2) + ph.toFixed(2) + t + o.wall, () => tintGeo(panelGeo(+pw.toFixed(2), +ph.toFixed(2), t, [op]), o.wall, 0.97)), wallM, M(door.x, base, back));
-    add(bbox(+(pw + 0.1).toFixed(2), +(base + bury).toFixed(2), +(t + 0.08).toFixed(2), 0.03, 1.8), mats.stone, M(door.x, (base - bury) / 2, back + t / 2));
+    // (the sill's top 1 cm over the portal's floor: level with it, the plaster of the opening's floor (the panel's hole
+    //  reaches its foot) and the stone z-fought in the doorway of every hut: tests/worldfit.mjs (3))
+    add(bbox(+(pw + 0.1).toFixed(2), +(base + bury + 0.01).toFixed(2), +(t + 0.08).toFixed(2), 0.03, 1.8), mats.stone, M(door.x, (base + 0.01 - bury) / 2, back + t / 2));
     add(frameGeo(op, 0.13, 0.08), mats.stone, M(door.x, base, front - 0.06));
     add(fillGeo(op, 0.03, 0.05), mats.wood, M(door.x, base, back + 0.16));
     add(cached('fhut-dring', () => new THREE.TorusGeometry(0.07, 0.016, 5, 10)), mats.brass, M(door.x + dw * 0.26, base + 0.95, back + 0.23));

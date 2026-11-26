@@ -18,12 +18,13 @@
 import { placeTag } from '../engine/placetag.js';
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
+import { graniteTex, quietRock } from './quietrock.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, fbm } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { MAX_SLOPE } from '../engine/physics.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
-import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances, brassM, panelGeo, frameGeo, fillGeo, BATCH, ctex } from './kit.js';
+import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances, brassM, panelGeo, frameGeo, fillGeo, BATCH } from './kit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
@@ -32,7 +33,7 @@ import { fitAdd } from './worldfit.js';
 import { buildCelPortal } from './celtemple.js';
 import { roomOcc, occCollider } from './roomocc.js';
 import { Occluders } from '../engine/occlude.js';
-import { KNARTAS_NEW, francoHut, zeppelinMast, HUT_WALLS, HUT_DOMES } from './franco.js';
+import { KNARTAS_NEW, KNARTAS_PAL, francoHut, zeppelinMast, HUT_WALLS, HUT_DOMES } from './franco.js';
 // (#17: a batch that keeps nothing: esmerBuilding asked where a house's door would be, nothing drawn)
 const NO_BATCH = { add() { return this; }, addM() { return this; } };
 
@@ -557,24 +558,7 @@ function otrShape(o) {
   if (s === 'lamp') o.lampPost = true;   // (the Esmer street lamp at any height: the original's post and head are 4.8 m)
   return s;
 }
-// (ZEELICH-2: the original's Otringal rock, pale and speckled: a neutral grey with white and dark flecks and a little
-// moss grey, lit planes and cracks; used triplanar on the ground and cliffs where S.turfRock)
-const graniteTex = () => ctex('isle-granite', 512, 512, (x, S) => {
-  const r = rng(77);
-  x.fillStyle = '#bcb8b0'; x.fillRect(0, 0, S, S);
-  for (let i = 0; i < 160; i++) {
-    const px = r() * S, py = r() * S, w = 18 + r() * 60, h = 10 + r() * 30, t = r();
-    x.fillStyle = t < 0.4 ? 'rgba(232,230,224,0.5)' : t < 0.7 ? 'rgba(120,118,110,0.35)' : 'rgba(150,154,138,0.35)';
-    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) { x.beginPath(); x.ellipse(px + ox, py + oy, w / 2, h / 2, r() * 3, 0, 7); x.fill(); }
-  }
-  x.strokeStyle = 'rgba(70,68,62,0.5)'; x.lineWidth = 1.6;
-  for (let i = 0; i < 50; i++) {
-    let px = r() * S, py = r() * S; const pts = [[px, py]];
-    for (let k = 0; k < 5; k++) { px += 8 + r() * 20; py += (r() - 0.5) * 10; pts.push([px, py]); }
-    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) { x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(a + ox, b + oy) : x.moveTo(a + ox, b + oy))); x.stroke(); }
-  }
-  for (let i = 0; i < 2600; i++) { const t = r(); x.fillStyle = t < 0.45 ? '#f2f0ea' : t < 0.8 ? '#6a6860' : '#7c8270'; x.fillRect(r() * S, r() * S, 1 + r() * 2, 1 + r() * 2); }
-});
+// (ZEELICH-2: Otringal's pale granite tile, graniteTex: quietrock.js, shared with every terrain's flat rock since QUIET-ROCK)
 const STYLE = {
   otringal: {   // the Esmers' capital: a paved plaza with a fountain, market stalls, banners, the Grand Hall
     // (ZEELICH-1 item 6: LBA2's Otringal is overcast, misty and pale grey: a grey sky and fog, a softer sun, less colour)
@@ -1451,6 +1435,32 @@ const BARE = {
   platform: { rock: 0.4, pave: 0.35, stone: '#8c8c90' },     // dark rock and paving
   liftdock: { rock: 0.5, pave: 0.1, stone: '#a0a0a4' },
 };
+// #17b (franco.js KNARTAS_PAL, the user's pick 26.11, ?knartaspal=old the old ground; docs/lba-maturity/KNARTAS-PALETTE.md): Knartas's ground in
+// LBA2's palette (resemblance-zeelich.md §C: "pale grey-white rock with green moss, an orange-brown earth square, sand
+// rims"), where ours was dark violet-grey rock, bright green turf and dark tiles. Vertex colours, on the textures the
+// game already has (the grass, the dirt, the sand, and Otringal's granite for the rock): no draw or shader of its own.
+//   - rock (cliffs, the bare-rock patches, the brink under the clouds): Otringal's pale granite tile (a quiet speckled
+//     grey: the cliff tile's facets and cracks read as crazy paving lifted this pale), its vertex colour a multiplier in
+//     linear light to a pale warm grey (~#a6a29a before light: about the quay paving's value);
+//   - turf: a softer, greyer moss green (the grass tile under a pale sage), so it reads as moss on the rock;
+//   - earth: the bare patches that were dark paving tiles are orange-brown earth (the dirt tile #8a6a50, warmed to a
+//     brown ~#9c6843: darker than the huts' walls #c9a074, lighter than their domes, browner than the terracotta jars),
+//     and so are the worn paths and the village's square (earthAt: the open ground round (23, 26), between the huts 73, 76 and 79);
+//   - the quay's paving a pale warm stone, the shore's rim a sand colour; the scattered rocks the same pale grey.
+// (Every branch below reads PAL, which only this sets, on Knartas only: every other island's ground is as before.)
+const KNA_PAL = KNARTAS_PAL && {
+  ground: ['#d4dab0', '#c6cea0', '#f0e0c0'],   // (moss, moss, the sand rim)
+  // (#17b, the user 26.11, "a quieter rock": the cliff tile's light facets and dark cracks, drawn for Citadel's dark cliffs,
+  //  read busy lifted to a pale grey, like crazy paving on the flat patches. The rock is Otringal's pale granite tile
+  //  (graniteTex: one shared 512² texture), darkened by its vertex colour to the same lit grey as before)
+  granite: true,
+  rock: [0.76, 0.76, 0.75],                     // (linear multipliers on the granite tile (#bcb8b0): ~#a6a29a, as before)
+  stone: [0.72, 0.72, 0.73],                    // (the bare-rock patches on the flat: darker, as they face the sun)
+  earth: [1.3, 0.96, 0.7],                      // (on the dirt tile: ~#9c6843; a first #a86c44 read as near the jars' terracotta)
+  paveCol: '#f2ece2', pathMix: 0.8,
+  rockProp: [1.45, 1.45, 1.35],                 // (the rocks' instance colour: their grey-brown sculpt (#9a9182) to pale grey)
+  earthAt: (x, z) => Math.hypot((x - 23) / 6.5, (z - 26) / 5.5),   // (the village square: < 1 inside)
+};
 
 // ================================================================== one island
 // (OTR-VARIETY: S.cellBatch, the island's pieces merged per square of that size (drawbatch.js's CELL, on the world's
@@ -1477,6 +1487,9 @@ function buildIsland0(scene, physics, name, L, at) {
   const A = analyse(L, S), { w, d, cx, cz, gx, gz } = A, H = S.paveFlat ? paveFlat(A, L, S.paveFlat) : A.H;   // (OTRINGAL-37: the street's bumps cut down)
   const plan = planIsland(name, L, A), pad = plan.pad;
   const COL = { ...COL0, ...(S.ground ? { turf: C(S.ground[0]), turf2: C(S.ground[1]), dust: C(S.ground[2]) } : {}), ...(S.rock ? { rock: C(S.rock), rockHi: C(S.rockHi || S.rock), rim: C(S.rock).multiplyScalar(0.85) } : {}), ...(S.paveCol ? { pave: C(S.paveCol) } : {}) };
+  // #17b (KNA_PAL above): Knartas's ground colours; the rock and earth are linear multipliers, over 1
+  const PAL = name === 'knartas' ? KNA_PAL : null, lin = (v) => new THREE.Color().setRGB(v[0], v[1], v[2]);
+  if (PAL) Object.assign(COL, { turf: C(PAL.ground[0]), turf2: C(PAL.ground[1]), dust: C(PAL.ground[2]), rock: lin(PAL.rock), rockHi: lin(PAL.rock), rim: lin(PAL.rock).multiplyScalar(0.9), pave: C(PAL.paveCol), path: lin(PAL.earth), earth: lin(PAL.earth) });
   // the routes (to the landmarks) and the paving, at the terrain's points: worn paths, paved squares
   const route = new Float32Array(L.nx * L.nz).fill(9);
   for (const path of plan.routes) for (let q = 0; q < path.length; q += 2) {
@@ -1516,16 +1529,26 @@ function buildIsland0(scene, physics, name, L, at) {
   const colorFn = (x, z, h, slope, c) => {
     if (h < -0.5) { c.copy(COL.rim); return; }
     c.copy(COL.turf).lerp(COL.turf2, 0.5 + Math.sin(x * 0.31 + z * 0.17) * Math.sin(z * 0.23 - x * 0.11) * 0.5);
-    if (slope > 0.7) c.lerp(COL.rock, smoothstep(0.7, 1.4, slope));
+    if (PAL) c.lerp(COL.rock, smoothstep(0.8, 1.1, slope));   // #17b: a sharper ramp, near the shader's cut (less of the rock's lift on the turf beside it)
+    else if (slope > 0.7) c.lerp(COL.rock, smoothstep(0.7, 1.4, slope));
     if (h > 12) c.lerp(COL.rockHi, smoothstep(12, 26, h) * 0.5);
     if (h < 0.8) c.lerp(COL.dust, smoothstep(0.8, 0.1, h) * 0.6);
     const k = atData(x, z);
-    if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * 0.5);
+    if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * (PAL ? PAL.pathMix * smoothstep(0.95, 0.75, slope) : 0.5));   // (#17b: no earth tint on the rock of a slope: it read pink)
     if (slope < 0.7 && paved(x, z)) c.copy(COL.pave).lerp(COL.turf, 0.15);
-    if (BG && h >= 0.8) { const [r, p] = bare(x, z); if (r + p > 0) c.lerp(BG.col, Math.min(1, r + p)); }   // WA-11 (proto)
+    if (PAL && h >= 0.8) {   // #17b: the bare patches pale rock (BG.col) and orange-brown earth (not tiles); the village square earth
+      const [r, p] = bare(x, z); if (r > 0) c.lerp(BG.col, r); if (p > 0) c.lerp(COL.earth, p * smoothstep(0.95, 0.75, slope));
+      const e = earthSq(x, z, slope); if (e > 0) c.lerp(COL.earth, e);
+    } else if (BG && h >= 0.8) { const [r, p] = bare(x, z); if (r + p > 0) c.lerp(BG.col, Math.min(1, r + p)); }   // WA-11 (proto)
+  };
+  // #17b: the village square's earth share at x, z (an organic edge: the ellipse wobbled by the patch noise; flat ground only)
+  const earthSq = (x, z, slope) => {
+    if (!PAL || paved(x, z)) return 0;
+    const q = PAL.earthAt(x, z) + fbm(x * 0.15 + 1.7, z * 0.15 - 4.2, 2) * 0.5;
+    return smoothstep(1.0, 0.85, q) * smoothstep(0.75, 0.5, slope);
   };
   // WA-11 (proto): [rock, pave] shares of the island's bare patches at x,z (none on the landing pad or the paved squares)
-  const BG = BARE[name] && { ...BARE[name], col: C(BARE[name].stone), tr: BARE[name].rock ? BARE_T(BARE[name].rock) : 9, tp: BARE[name].pave ? BARE_T(BARE[name].pave / (1 - BARE[name].rock)) : 9 };
+  const BG = BARE[name] && { ...BARE[name], col: PAL ? lin(PAL.stone) : C(BARE[name].stone), tr: BARE[name].rock ? BARE_T(BARE[name].rock) : 9, tp: BARE[name].pave ? BARE_T(BARE[name].pave / (1 - BARE[name].rock)) : 9 };
   const bare = (x, z) => {
     if (Math.hypot(x - pad.x, z - pad.z) < 7 || paved(x, z)) return [0, 0];
     const r = smoothstep(BG.tr - 0.03, BG.tr + 0.03, fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
@@ -1543,11 +1566,17 @@ function buildIsland0(scene, physics, name, L, at) {
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
     if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
       const [r, p] = bare(x, z);
-      wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p);
+      if (PAL) { wt[2] = Math.max(wt[2], r * 1.2); wt[3] = Math.max(wt[3] * (1 - r), p * 1.4); wt[0] *= 1 - Math.min(1, r + p); }   // #17b: the 'paved' patches earth (the dirt tile), not tiles
+      else { wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p); }
     }
+    if (PAL && rk < 0.5) { const e = earthSq(x, z, slope); if (e > 0) { wt[3] = Math.max(wt[3], e * 1.4); wt[0] *= 1 - e; wt[2] = Math.max(rk, wt[2] * (1 - e)); } }   // #17b: the village square
+    // #17b: the terrain shader moves the rock's edge by the tile's brightness (terrain.js: dot(rock, 1/3) - 0.5, times 0.3);
+    // the granite is paler than the cliff tile (linear mean 0.466 against 0.294: +0.052), which ate ~9 % of the turf on
+    // screen. The rock's share a little less, sized to cancel that (it recovers about a third of it on screen: KNARTAS-PALETTE.md)
+    if (PAL?.granite) wt[2] *= 0.81;
     if (S.turfRock) { wt[2] += wt[0]; wt[0] = 0; }   // (ZEELICH-2: no grass: the turf is the island's granite)
   };
-  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: S.turfRock ? graniteTex() : TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite)
+  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, ...(S.turfRock || PAL?.granite ? { rock: graniteTex() } : { rock: TX.cliff, ...(name === 'knartas' ? {} : quietRock(TX.cliff, name)) }), cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite; #17b Knartas's rock too; QUIET-ROCK: on every other isle the granite on the flat, in the cliff tile's colour; ?knartaspal=old keeps Knartas's old ground whole)
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);
@@ -2245,12 +2274,12 @@ function buildIsland0(scene, physics, name, L, at) {
   // instanced pieces, each scaled to its object's box (by the geometry's own size)
   // (HEADING-LOAD-2: culled per instance in each pass, kit.js cullInstances: the island-wide meshes went to the GPU in
   //  full at every heading — Otringal's sculpted trees 1.1–1.3M triangles a frame)
-  const fit = (geo, list, mat, lo = null, ys = 1) => {
+  const fit = (geo, list, mat, lo = null, ys = 1, tint = null) => {
     if (!list.length) return;
     geo.computeBoundingBox(); const b = geo.boundingBox, gw = b.max.x - b.min.x, gh = b.max.y - b.min.y, gd = b.max.z - b.min.z;
     // (TREES-1: a cut plant's colour is drawn all the same, so the island's random stream is unchanged)
     const items = list.map((o) => ({ x: o.x, y: (seated.get(o) ?? o.y) - b.min.y * (o.sy / gh) * ys, z: o.z,   // (P65-2: a plant on a seated slab follows it)
-      ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })).filter((_, i) => !list[i].cut);
+      ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: (tint ? tint.clone() : new THREE.Color(S.trees || '#fff0ff')).multiplyScalar(0.9 + r() * 0.15) })).filter((_, i) => !list[i].cut);
     if (items.length) cullInstances(group, geo, mat, items, { lo }).userData.gpuGroup = 'trees';   // (benchgpu.js)
   };
   const vc = pm('#ffffff', 0.85, { vertexColors: true });
@@ -2258,7 +2287,7 @@ function buildIsland0(scene, physics, name, L, at) {
   fit(treeGeometry('round', 3), trees[0], vc, () => treeGeometry('round', 3, 1)); fit(treeGeometry('tall', 2), trees[1], vc, () => treeGeometry('tall', 2, 1));
   fit(treeGeometry('bush', 1), bushes, vc, () => treeGeometry('bush', 1, 1)); fit(treeGeometry('bush', 2), plants, vc, () => treeGeometry('bush', 2, 1));
   const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#3a2030', emissiveIntensity: 0.4 });
-  rocks.forEach((list, v) => fit(rockGeometry(v + 1), list, rockMat, () => rockGeometry(v + 1, 1)));
+  rocks.forEach((list, v) => fit(rockGeometry(v + 1), list, rockMat, () => rockGeometry(v + 1, 1), 1, PAL ? lin(PAL.rockProp) : null));
 
   // --- the shuttle pad and the shuttle (the way back: src/game/story/islands.js)
   {

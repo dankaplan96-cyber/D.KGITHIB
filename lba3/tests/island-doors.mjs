@@ -105,6 +105,7 @@ for (const reg of regions) {
   // the region's shut doors: none generic
   const sh = await ev(async (reg) => {
     const G = game, R = G.rooms[reg], { EXCEPT, IHOMES } = await import(location.origin + '/src/game/ihomes.js');
+    const KC_LOCKS = { 'otringal-16-6': 'pump' };
     if (G.room?.id !== reg) { const e = G.room?.exits?.find((x) => !x.room); if (e) P.through(e.x, e.z); }
     const live = G.story.doors().filter((e) => e.region === reg);
     const generic = R.shutDoors.filter((d) => !d.own && !live.some((e) => Math.hypot(e.x - d.x, e.z - d.z) < 2.2)).map((d) => d.id);
@@ -113,15 +114,18 @@ for (const reg of regions) {
       G.hero.pos.set(d.x, G.physics.groundAt(d.x, d.z, d.y + 2), d.z); G.hero.angle = (d.ry ?? 0) + Math.PI; P.settle();
       const it = G.findInteractable();
       let sign = false; R.group.traverse((m) => { if (m.isMesh && m.material?.map && Math.hypot(m.getWorldPosition(m.position.clone()).x - d.sill.x, m.getWorldPosition(m.position.clone()).z - d.sill.z) < 0.5) sign = true; });
-      ex.push({ id: d.id, kind: it?.kind, key: it?.key, sign, want: IHOMES[d.id].ex });
-      if (it?.kind === 'ihshut') { G.story.interact(it); P.settle(); }
+      // (KEYS-CLOVER: the pump house's door (otringal-16-6) is a small key's lock from chapter 4 on (story/keysclover.js,
+      //  KEYS-CLOVER.md K2); without its key it says its own line (kc_pump_locked) and nothing changes)
+      const kc = KC_LOCKS[d.id];
+      ex.push({ id: d.id, kind: it?.kind, key: it?.key, door: it?.door, sign, want: kc ? 'kc_lock:' + kc : IHOMES[d.id].ex, keyHeld: kc ? !!G.flags['kc_key_' + kc] : undefined });
+      if (it?.kind === 'ihshut' || (kc && it?.kind === 'kc_lock' && !G.flags['kc_key_' + kc])) { G.story.interact(it); P.settle(); }
     }
     return { generic, ex };
   }, reg);
   const exl = await said();
   check(`${reg}: no house door is left to the generic "Locked."`, sh.generic.length === 0, sh.generic);
   if (sh.ex.length) {
-    check(`${reg}: each door kept shut gives its own reason and carries its sign`, sh.ex.every((e) => e.kind === 'ihshut' && e.key === e.want && e.sign), sh.ex);
+    check(`${reg}: each door kept shut gives its own reason and carries its sign`, sh.ex.every((e) => (e.kind === 'ihshut' ? e.key === e.want : e.kind === 'kc_lock' && 'kc_lock:' + e.door === e.want && !e.keyHeld) && e.sign), sh.ex);
     check(`${reg}: the shut doors' lines are their own (not "Locked.")`, exl.length && !exl.some((l) => /^Locked\.?$/.test(l)), exl);
     for (const e of sh.ex) { await ev((id) => { const G = game, d = G.room.shutDoors.find((q) => q.id === id), a = (d.ry ?? 0); G.hero.pos.set(d.sill.x + Math.sin(a) * 3, G.physics.groundAt(d.sill.x + Math.sin(a) * 3, d.sill.z + Math.cos(a) * 3, d.y + 2), d.sill.z + Math.cos(a) * 3); G.hero.angle = a + Math.PI; P.settle(); for (let i = 0; i < 20; i++) G.frame(1 / 30, false); }, e.id); await shot('shut-' + e.id); }
   }
@@ -131,7 +135,7 @@ for (const reg of regions) {
 for (const r of all) check(`${r.room}: leads in (on its floor, furnished, lit), its own look reads, back out by its door facing away, and in again`,
   r.inRoom && r.floor && r.meshes >= 14 && r.lights >= 1 && r.look === 'read' && r.line && !/^Locked/.test(r.line) && r.out !== r.room && r.near < 2.8 && r.away > 0.3 && r.ground && r.again, r);
 const walkedTo = all.filter((r) => WALK.includes(r.reg));
-check('Knartas: every door, the harbour\'s and the diggers\' village\'s, reached on foot from the shuttle pad (one walk door to door, by the planner)', walkedTo.length > 0 && walkedTo.every((r) => r.walked && !r.walked.failed), { n: walkedTo.length, failed: walkedTo.filter((r) => !r.walked || r.walked.failed).map((r) => ({ room: r.room, ...r.walked })) });
+if (regions.some((r) => WALK.includes(r))) check('Knartas: every door, the harbour\'s and the diggers\' village\'s, reached on foot from the shuttle pad (one walk door to door, by the planner)', walkedTo.length > 0 && walkedTo.every((r) => r.walked && !r.walked.failed), { n: walkedTo.length, failed: walkedTo.filter((r) => !r.walked || r.walked.failed).map((r) => ({ room: r.room, ...r.walked })) });
 for (const r of walkedTo) console.log('WALK ' + r.room + ' ' + JSON.stringify(r.walked));
 // (DESERT-BAR: + the dig crew's bunkhouse in S28 on Desert Island; the School's dormitory opens only once its crystal is
 //  awake: its door is a knock in this state, purposes.js)
@@ -149,13 +153,20 @@ const keep = await ev(async () => {
     const reg = (await import(location.origin + '/src/game/ihomes.js')).regionOf((await import(location.origin + '/src/game/ihomes.js')).doorOf(K.room));
     if (G.room?.id !== K.room) { if (G.room?.id !== reg) { G.enterRoom(reg, G.rooms[reg].spawn, true); P.settle(); } const d = G.story.doors().find((x) => x.room === K.room); const sd = G.room.shutDoors.find((e) => e.id === d.house), a = sd.ry ?? 0; G.hero.pos.set(sd.sill.x + Math.sin(a) * 2.4, G.physics.groundAt(sd.sill.x + Math.sin(a) * 2.4, sd.sill.z + Math.cos(a) * 2.4, sd.y + 2), sd.sill.z + Math.cos(a) * 2.4); P.settle(); P.through(d.x, d.z); }
     const n = P.npc(id);
-    out.push({ id, present: !!n?.present, inRoom: G.room?.id === K.room, talk: P.talk(id).r });
+    const tk = P.talk(id);
+    // (P116, walkers.js Remarks: the keepers are minor residents (story/index.js MINOR: ihomes), so a short line of theirs
+    //  goes over their head, not through game.say: the test's said() never heard it, and the line count fell short. It is
+    //  read from the remark itself)
+    const remark = tk.remark && G.remarks?.cur?.n?.def?.id === id ? G.remarks.cur.text : null;
+    out.push({ id, present: !!n?.present, inRoom: G.room?.id === K.room, talk: tk.r, ...(tk.remark ? { remark } : { box: tk.lines }) });
   }
   return out;
 });
-const kl = await said();
+const kl = [...await said(), ...keep.filter((k) => k.remark).map((k) => k.remark)];
 const asked = keep.filter((k) => !k.skipped && !(process.env.REGIONS && k.r === 'room not built'));   // (REGIONS: only the keepers of the regions toured)
-check('the keepers stand in their rooms and talk (their own lines)', asked.every((k) => k.present && k.inRoom && k.talk === 'talked') && kl.length >= asked.length, { keep, kl: kl.slice(0, 8) });
+// (the log line: the keepers that failed first (the whole list was cut off at 600 characters), the counts, then the rest)
+const kbad = asked.filter((k) => !(k.present && k.inRoom && k.talk === 'talked' && (k.remark === undefined || k.remark)));
+check('the keepers stand in their rooms and talk (their own lines)', !kbad.length && kl.length >= asked.length, { bad: kbad, asked: asked.length, lines: kl.length, ok: asked.filter((k) => !kbad.includes(k)).map((k) => k.id + (k.remark ? ' (overhead)' : ' (box)')), skipped: keep.filter((k) => !asked.includes(k)).map((k) => k.id + ': ' + (k.skipped || k.r)), kl: kl.slice(0, 4) });
 
 // a save inside a house comes back there, and its door still leads out
 const rid = 'ih_otringal_6_m24';

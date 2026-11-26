@@ -20,7 +20,7 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
   The test bot's dodge (`tests/lib/player.js P.meleeThreat`) now reads a guard's own wind-up (0.9 s at Zeelich).
   Merged-branch tests 26.11 (automated runtime only, SwiftShader): tester-fixes 10/10, wave7 E+S 12/12, wave4 B+D+E
   20/20, combat 84/84 (after the #58 merge), dialogue-check PASS.
-- **Published:** **v172** (26.11), artifact version **`1795681304-c03b`** = the next `base_version`. v171 = v170 +
+- **Published:** **v173** (26.11), artifact version **`1795698735-32af`** = the next `base_version` (see NEXT-SESSION for its contents). Before it: **v172** `1795681304-c03b`. v171 = v170 +
   the small fixes, #65, #58 a + c + the Citadel heart; v172 = v171 + the drone's charge-up sound (all picked 26.11).
   - Slug `6f31d0d2-efe4-4413-a370-7d95a7f5785b`.
   - URL https://claude.ai/artifact/EjPMQXPwbmre2kDevMC4tA.
@@ -92,8 +92,8 @@ Not done in v170, recorded for later (none blocks):
 ## 3. The local agent (the user's desktop: "LBA3 מקומי ACER")
 - Orders go in `lba3/tools/testlab/CLOUD_ORDERS.md`; replies come back in `WORLD_ART_REQUESTS.md` on its branch
   `ccr-adf00ea7-37ebl3` (merge it when it reports).
-- **Open:** **72** (install the GitHub installer if Smart App Control allows it; else Chrome) and **73** (check v170: the
-  walls' depth at the fort wall, Zoé almond-m, the 70 fixes).
+- **Open:** **72** (waiting for the user to install the GitHub installer by hand). **Done and merged 26.11:** 73, 74 and
+  75 (the trailer: `captures/hw-75/awakening-trailer-20s.mp4`). 76 (P137, 60 fps on the laptop) is being written.
 - **Done and merged:** 70 and 71.
 - **Never** escalate trust to message it directly (no `confirm_repository_trust`); answer through CLOUD_ORDERS.
 - No performance work in its orders.
