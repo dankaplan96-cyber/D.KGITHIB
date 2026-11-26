@@ -2,7 +2,103 @@
 
 Branch `ccr-c1c2c4b9-dep6ed` + this worktree's commits. Evidence: **automated runtime only (SwiftShader, headless
 Chromium)**, on a shared machine under heavy load (load average 6–18). Nobody played it; nothing was checked on a real
-GPU. **Behind `?rockedge=new`, off by default.**
+GPU. **The default since 26.11 (the user's pick); `?rockedge=old` brings back the old split.** The sections below the
+first two were written while it was behind `?rockedge=new`: there "switch on" is now the default and "switch off" is
+`?rockedge=old`.
+
+## Default (26.11)
+The user picked it (26.11: "Yes, make it the default, and keep the earth patches in Knartas").
+- `terrain.js` `ROCK_EDGE` is on unless the URL says `?rockedge=old`, as `LAWN_EDGE` / `?lawnedge=old`.
+- `?rockedge=old` gives the previous build exactly: no `rockedge` attribute, no tracer work, the old shader text, the
+  Hamalayi's nearest-vertex rock, and Knartas's approved ground (below). Knartas with `?rockedge=old`: the same splat and
+  vertex-colour digests as the build before this change (one load each).
+- No test or fixture pinned the old default (`rockedge` appears in no test). No other doc named `?rockedge=new`.
+
+## Knartas patches (the user: "keep the earth patches in Knartas")
+**The cause.** In `zislands.js` `bare()`, a WA-11 earth patch is the earth noise field × (1 − the bare-rock patch). So the
+earth lies only in the gaps the rock patches leave: slivers, mostly a fraction of a cell (1.71 m) wide. The old split drew
+them as the grid's diamonds; that is the approved #17b look. The traced edge drew the slivers as they are, so most of
+them went under the rock, and their vertex tint stayed as a faint orange cast on it. Measured around the 19 soil vertices
+(share > 0.5; the paths' and the square's included) with 5 or more rock neighbours: the splat function's own earth is
+34 % of the 2 × 2 cells round them; the old split drew 47 %. On flat ground too (e.g. one vertex: 14 % against 47 %), so
+it is not only the slope gate.
+
+**The fix** (`zislands.js`, Knartas only, and only with the traced edge: `PATCH = PAL && ROCK_EDGE`):
+- `earthPatch()`: the same noise field's patches **whole**, over the bare rock (no × (1 − r)), on the flat (h ≥ 0.8), not
+  on the pad or the paved squares, fading out on slopes 0.8–0.92. They join the village square's earth (`earthSq`) in
+  the splat: earth wins over the bare rock there. `bare()`'s own earth share (p) is not used for Knartas when `PATCH`.
+- **The share**: 14 % of the flat land (`KP_SHARE`; `bare()`'s field used 18 % before the × (1 − r)). At 18 % the
+  patches were clearly bigger than the approved ones on the captures.
+- **The tint**: 0 at the patch's edge, whole half a cell inside (the depth: the noise over its gradient). The vertex colour
+  is interpolated over a cell: a tint whole up to the edge spread orange onto the rock beside it. A whole cell's ramp
+  left the smaller patches a dull grey-brown (tried, then halved).
+- `bare()` and the WA-11 lines for the other isles are not touched (PATHS-140 edits those). Lines touched in
+  `zislands.js`: the import of `ROCK_EDGE`; in `colorFn` the PAL branch's two lines; the new `earthPatch` block after
+  `earthSq`; in `splatFn` the PAL half of the WA-11 line (it sits next to the other isles' `else` line: a merge there
+  may need a hand) and the village square's line.
+
+**Measured on the captures** (mean RGB of boxes, 1280 × 720, the same frames as the sheet; R − G is the orange; plain
+sunlit rock is +3 to +4):
+
+| Box | approved (`?rockedge=old`) | traced edge, before this fix | after |
+|---|---|---|---|
+| play camera, where the lower slope patch was (215–265, 305–335) | earth (112, 81, 59) +31 | rock with the cast (134, 116, 100) **+18** | earth (108, 77, 54) +31 |
+| play camera, rock 1 m below the new patch (250–330, 345–375) | (134, 130, 125) +3.6 | +3.6 | +3.6 |
+| play camera, rock far from earth (150–350, 480–580) | (135, 131, 126) +3.4 | +3.4 | +3.4 |
+| from above, rock beside a new patch (600–640, 400–430) | (126, 123, 118) +3.3 | +3.3 | +3.5 |
+| from above, rock far from earth (560–640, 150–200) | +3.3 | +2.9 | +2.9 |
+
+So the cast where the patches went is gone (they are earth again), and the rock right beside the new patches reads as
+the rock far from them, within 0.6 of R − G.
+
+**Measured over the whole island** (automated runtime only; the terrain's own data, 4 × 4 samples a cell over the land, each classed rock as the
+shader draws it, its vertex colour interpolated; "orange rock" = R − G of the vertex colour over the deep rock's by
+more than 0.06, i.e. an earth tint of about 0.18 or more):
+
+| Knartas | rock m² | orange rock m² | soil m² (share > 0.5, includes the paths and the square) |
+|---|---:|---:|---:|
+| approved (`?rockedge=old`) | 2280 | 200 | 472 |
+| traced edge, before this fix | 2434 | 215 | 451 |
+| after | 2260 | 194 | 518 |
+
+- This whole-island count barely moves (200 → 215 → 194 m²): most of the orange rock it counts is the fringe along the
+  paths and the village square (their tint is unchanged), not the patches. It shows the fix adds no cast; the boxes
+  above show the cast it removes.
+- Visible changes for the user: the patches show again, with the smooth edge, in the same places (the same noise field),
+  but rounder and **larger** than the approved diamonds (the play camera's left slope patch several times larger); a few
+  appear where the approved look had none (the whole blob, where the approved look had only a sliver under the rock).
+- Not changed: every other isle (the code reads `PAL`, Knartas's palette, only); the paths' and the square's tint.
+- Knartas's scatter (tufts, rocks) and the holomap read the splat function, so they follow the new patches a little.
+- Cost: no draw, texture or shader change. Knartas's splat function over its 8,649 vertices: 4.3 → 6.1 ms (one run
+  each, load average 17–19); the tracer 88 → 78 ms (noise). renderer.info identical at all three spots (calls 84 / 61 /
+  124, textures 472).
+
+- Gap: a patch under about a cell (1.7 m) wide never reaches the whole tint, so it reads a dull grey-brown (the tint
+  ramps in over half a cell from each side).
+
+**Step 3, the other isles** (every isle with a splat terrain: Otringal, Mosquibee, Celebration, Under Celebration, the
+Platform, the Lift Dock, the Orchard, the Old Watch; the CX islet and Tralu have none). Knartas is the only one with
+an earth tint (`KNA_PAL.earth`). On each, in one load, the orange rock the traced edge adds over the old split's rock, and
+how much of it lies where the splat has soil (share > 0.3):
+
+| Isle | orange rock added / removed m² | of it on soil |
+|---|---:|---:|
+| Otringal, Lift Dock, Orchard, Old Watch | 0 / 0 | 0 |
+| Mosquibee | 96 / 23 | 0 |
+| Celebration | 12 / 0 | 0 |
+| Under Celebration | 57 / 10 | 0 |
+| The Platform | 141 / 29 | 0 |
+| Knartas, after the fix | 33 / 19 | 23 |
+
+The other isles' added warm rock is never on soil: the biggest cells are at the island's rim, where the sand-coloured
+shore tint (`COL.dust`, h < 0.8) and the turf meet the rock (read from one corner of the top cells only), i.e. the
+general "vertex tint follows the grid" below, not an earth patch gone under the rock. So no other isle was changed.
+Not pictured; open for the coordinator, biggest on the Platform (around world 3857.7, 1810.3) and Mosquibee
+(2551.4, 1810.3). Not measured on Citadel, the desert or the Hamalayi (not isles; their colour functions are other files).
+
+**Pictures**: `captures/rock-edges-2/sheet.png` (1288 px wide): Knartas from the play camera and from above, before (the
+traced edge, patches gone) | after; then the approved look (`?rockedge=old`) | after at full size. No other rows: no
+other place changed.
 
 ## The fault
 Two splits on the terrain were still re-cut per pixel from the per-vertex shares, so their edges followed the grid's
@@ -67,7 +163,7 @@ LAWN-EDGES-2's tracer, generalised to channels: `Terrain._edgeChannels` (was `_l
   (bilinear); with it off, the nearest vertex's as before. At a vertex it returns the vertex's own value either way,
   so the splat, the colours and the scatter are unchanged (digests below). Only the build reads it (`GRID` is cleared
   after the terrain is made).
-- **Switch off** (the default): no attribute, no CPU work. The shader text is **identical** to the previous build's for
+- **Switch off** (now `?rockedge=old`): no attribute, no CPU work. The shader text is **identical** to the previous build's for
   all 18 generated variants: the 16 SHADE-COST combinations plus the `grass` and `unlit` diagnostics. Checked with
   `?lawnedge=old` too.
 
@@ -178,7 +274,7 @@ not a player's PC. **No frame-time claim.**
   - The batched terrains (the desert, the Hamalayi, the isles) keep a second copy in the batch: about 1.7 MB more on
     the GPU side.
   - The fine samples are a temporary map during the build.
-- **Switch off**: no attribute, no CPU work, the same shader text: zero cost.
+- **Switch off** (now `?rockedge=old`): no attribute, no CPU work, the same shader text: zero cost.
 
 ## Pictures
 `captures/rock-edges/sheet.png`: before (default) | after (`?rockedge=new`).
@@ -227,7 +323,7 @@ not a player's PC. **No frame-time claim.**
 - No test pictures were overwritten (`git status` clean after both).
 
 ## Unresolved / for the user
-- Make `?rockedge=new` the default? Then the switch and the old splits can go.
+- ~~Make `?rockedge=new` the default?~~ Done 26.11 ("Default" above). The switch stays as `?rockedge=old`.
 - The isles' **vertex tint** (`zislands.js` colorFn: the paving colour copied per vertex, the rock lerp by slope, the
   bare patches' colours) still follows the grid, softly, under the new edges. Seen on Knartas (row 6: the orange cast
   where the earth patches were); elsewhere I could not tell it from the shading. Not measured. `zislands.js` is
