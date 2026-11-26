@@ -48,7 +48,7 @@ const LAWN_WOB = 0.1;   // (m: the edge's wobble by the grass tile's brightness,
 // point (Terrain._edgeChannels). Off: no attribute, no work, the shader's text as before. Where LAWN-EDGES' own paving
 // line runs (Citadel's streets, vEdge), its cut (EDGE_CUT) still decides, as before.
 export const ROCK_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('rockedge') === 'new'; } catch { return false; } })();
-const ROCK_WOB = 0.25, PAVE_WOB = 0.1;   // (m: the rock's edge wobbled by the rock tile's brightness about its mean (uRockMid), the paving's by the grass tile's)
+const ROCK_WOB = 0.1, PAVE_WOB = 0.1;   // (m: the rock's edge wobbled by the rock tile's brightness about its mean (uRockMid), the paving's by the grass tile's; 0.25 drew the granite's dark specks as a dotted fringe outside the line)
 const RB = (0.25 + ROCK_WOB).toFixed(3), PB = (0.25 + PAVE_WOB).toFixed(3);   // (m: beyond these on the outer side the cut is 0 whatever the wobble)
 // the rock's share: the old split (the share plus the tile's wobble, on a short ramp: across a ~1 m triangle the grid's
 // saw-tooth) or ROCK-EDGES' cut at the rock distance 0, times the old split on the rock's own strength (a faint rock
@@ -394,11 +394,12 @@ export class Terrain {
       (w, sum) => { const g = (w[0] + w[3]) / sum; return g > 0.01 ? w[3] / (w[0] + w[3]) : NaN; }, (k) => spl[k * 4] + spl[k * 4 + 3], 1]);
     // ROCK-EDGES: the rock's share of all (the shader splits on it: rk), at the old split's mean midpoint for this terrain's
     // tile (this.rockThr); the paving's share of the ground that is not rock (pk's ratio, sp2 / ns)
-    // (the rock's line on every second fine sample, 2 × 2 a cell: its sources are smooth (slopes, broad patches), it has
-    //  3× the lawn's cells on Citadel, and at 4 × 4 it tripled the build's time; the paving's at 4 × 4: its edges are
-    //  often a step (paved(), the posts), and its cells are few)
+    // (the rock's line on fine samples at most ~0.5 m apart: on the grids of 1 m or less (Citadel, the desert, the
+    //  Hamalayi) every second one, 2 × 2 a cell — there the rock has 3–100× the lawn's cells, and at 4 × 4 it tripled
+    //  Citadel's build time; on the isles' 1.7 m grid all 4 × 4, as the lawn's. The paving's at 4 × 4 everywhere: its
+    //  edges are often a step (paved(), the posts), and its cells are few)
     if (ROCK_EDGE) {
-      C.push(['rock', this.rockThr, (k) => spl[k * 4 + 2], (w, sum) => w[2] / sum, () => 1, 2]);
+      C.push(['rock', this.rockThr, (k) => spl[k * 4 + 2], (w, sum) => w[2] / sum, () => 1, st > 1.2 ? 1 : 2]);
       const nr = (k) => spl[k * 4] + spl[k * 4 + 1] + spl[k * 4 + 3] + spl2[k];
       C.push(['pave', 0.5, (k) => { const g = nr(k); return g > 0.01 ? spl2[k] / g : NaN; },
         (w, sum) => { const g = w[0] + w[1] + w[3] + w[4]; return g / sum > 0.01 ? w[4] / g : NaN; }, nr, 1]);
