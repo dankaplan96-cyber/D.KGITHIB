@@ -40,7 +40,8 @@ LAWN-EDGES-2's tracer, generalised to channels: `Terrain._edgeChannels` (was `_l
 - **Fine samples**:
   - rock: at most ~0.5 m apart. On the grids of 1 m or less (Citadel 0.93 m, the desert, the Hamalayi) every second
     one, 2 × 2 a cell. At 4 × 4 the rock tripled Citadel's build time (743 ms against 223 ms in one run). On the isles'
-    1.7 m grid all 4 × 4: at 2 × 2 (0.86 m) Knartas's small grass and earth patches lost too much.
+    1.7 m grid all 4 × 4, to keep the spacing at ~0.43 m (2 × 2 would be 0.86 m; on Knartas's captures the two looked
+    nearly alike).
   - paving: 4 × 4 everywhere. Its sources are often a step (`paved()`, the posts), and its cells are few.
 - **The `rockedge` attribute**: int16 × 4, normalised: [rock distance, rock strength, paving distance, paving strength].
   - Every splat terrain has it when the switch is on, so there is still one program per switch set.
@@ -62,8 +63,10 @@ LAWN-EDGES-2's tracer, generalised to channels: `Terrain._edgeChannels` (was `_l
     paving's share of the ground that is not rock has no value on the rock side, so there is no paving line there: the
     rock channel draws that edge (Otringal: 20 paving cells, no line).
 - **The Hamalayi's rock** (`hamalayi-finish.js` `gridCapture` `G.rock`): a share per vertex, read at the nearest vertex.
-  Between vertices the tracer then saw the grid's squares. It now interpolates between the vertices (bilinear). At a
-  vertex it returns the vertex's own value, so the splat, the colours and the scatter are unchanged (digests below).
+  Between vertices the tracer then saw the grid's squares. With the switch on it now interpolates between the vertices
+  (bilinear); with it off, the nearest vertex's as before. At a vertex it returns the vertex's own value either way,
+  so the splat, the colours and the scatter are unchanged (digests below). Only the build reads it (`GRID` is cleared
+  after the terrain is made).
 - **Switch off** (the default): no attribute, no CPU work. The shader text is **identical** to the previous build's for
   all 18 generated variants: the 16 SHADE-COST combinations plus the `grass` and `unlit` diagnostics. Checked with
   `?lawnedge=old` too.
@@ -85,7 +88,7 @@ Edge cells = grid cells whose corners lie on both sides of the threshold (where 
 | Celebration | 1.71 m | 235 | 49 | row 8 |
 | Under Celebration | 1.71 m | 1152 | 207 | row 9 |
 | The Platform | 1.71 m | 1333 | 333 | row 10 |
-| Old Watch, Orchard | 1.71 m | 239, 214 | 20, 24 | not pictured: their rock is on slopes only; no flat edge near the spawn (the spot finder found none) |
+| Old Watch, Orchard | 1.71 m | 239, 214 | 20, 24 | rows 11, 12: the island's rim (their rock is on slopes; the spot finder needed looser filters) |
 | Lift Dock | 1.71 m | 22 | 0 | not pictured (decks) |
 | Zeelich (main island), Ballastra | — | — | — | not applicable: no splat terrain |
 
@@ -125,12 +128,17 @@ Wrong = the share of the edge cells' area on the wrong side. Inner = rock (or pa
   build. The source fix above makes its rock continuous between vertices.
 
 ## Visible changes with the switch on (for the user's pick)
+- **Knartas (row 6) first: its approved palette (#17b) loses most of its small orange earth patches in the rock.**
+  The splat function puts rock there (Knartas's rock area: function 60 %, old 48 %, new 60 % of the edge cells), so
+  the edge is right by that measure. But the vertex colour (`zislands.js` colorFn's per-vertex earth lerp) still tints
+  the rock faintly orange where the patches were. If the user wants the patches kept, the source (the earth patches'
+  shares in `zislands.js`) needs a change, not the tracer.
 - Rock edges are smooth lines and curves on Citadel's wild ground, the cliff rims, the desert's outcrops, the
   Hamalayi's rock band and every isle's bare patches; the saw-tooth and the soft notched halo are gone.
 - Paving edges are smooth on the isles' pads and squares, Under Celebration's and the Platform's yards.
 - **Shapes move by up to about a cell** where the splat is sharper than the grid: the edge now follows the splat
-  function (what the scatter and the map read), not the grid's diamonds. On Knartas (row 6) some small earth and grass
-  patches shrink to their true size; Knartas's palette was approved (#17b), so look at that row in particular.
+  function (what the scatter and the map read), not the grid's diamonds. The biggest shifts are on the Orchard and the
+  Old Watch (rock 29 % and 38 % of the edge cells before, 57 % after, function 60 % and 59 %).
 - Weak rock (share under the threshold everywhere around) that showed as a faint mottle is gone, as with LAWN-EDGES-2's
   weak soil.
 - Citadel's streets: unchanged. At the user's spot (−60, 2), facing west, 0.3 % of pixels differ: the rock patches behind
@@ -140,7 +148,7 @@ Wrong = the share of the edge cells' area on the wrong side. Inner = rock (or pa
 All automated runtime, SwiftShader, on a machine shared with another agent's tests (load average 6–18). JS timings,
 not a player's PC. **No frame-time claim.**
 - **`renderer.info`** (one frame, play camera, Far, 1280 × 720): calls, triangles, programs, geometries and textures
-  **identical** before and after at all 11 spots in one pair of runs. In the final pair, 10 of 11; at Citadel's bank rim
+  **identical** before and after at all 11 spots in one pair of runs, and at the Orchard and the Old Watch. In the final pair, 10 of 11; at Citadel's bank rim
   the after run drew 1 call and 436 triangles fewer, which the earlier pair did not show (run noise: something moving).
   Examples: Citadel by the well 318 calls / 1,264,370 triangles; the
   user's street spot 234 / 918,795; the desert 36 / 77,884; Knartas 84 / 645,659. No new mesh, light, texture or pass.
@@ -179,14 +187,15 @@ not a player's PC. **No frame-time claim.**
 - The spots were chosen from the tracer's own edge points (strong rock or paving, flat ground, nearest the spawn), and
   Twinsen was put 7 m from the edge on open ground, facing it.
 - Rows: 1 Citadel's wild ground by the well, 2 Citadel's bank rim, 3 the desert, 4 the Hamalayi, 5 Otringal, 6 Knartas,
-  7 Mosquibee, 8 Celebration, 9 Under Celebration, 10 the Platform; then rows 1 and 3 at full resolution.
-- Pixels changed (difference > 8 of 255), rows 1–10: 2.3, 2.1, 4.5, 1.2, 2.8, 7.7, 4.4, 7.9, 6.1, 4.2 %. These
+  7 Mosquibee, 8 Celebration, 9 Under Celebration, 10 the Platform, 11 the Orchard, 12 the Old Watch; then rows 1 and
+  3 at full resolution. Rows 11 and 12 were shot in a later pair of runs (the Orchard first, then the Old Watch).
+- Pixels changed (difference > 8 of 255), rows 1–12: 2.3, 2.1, 4.5, 1.2, 2.8, 7.7, 4.4, 7.9, 6.1, 4.2, 1.1, 2.6 %. These
   include the hero's idle pose and the isles' moving cloud sea.
 - Nothing from chapters 15–16. Every shot is a new game's state, and every pictured place is reached long before:
   - Citadel from the prologue;
   - the Zeelich isles from chapters 3–5 (Under Celebration's seam is wave 5's, 'steam'; `tests/camisles.mjs` walks
     Otringal, Knartas and the Platform at chapter 5);
-  - the desert and the Hamalayi from the middle chapters ('dig', 'pass').
+  - the desert from 'dig' (`story/dig.js` enters it), the Hamalayi from 'pass' (`story/pass.js`).
   - This is inspected from the story files and the tests, not traced through every chapter's gating.
 
 ## Checks
@@ -199,7 +208,7 @@ not a player's PC. **No frame-time claim.**
 - **Shader text, switch off**: identical for all 18 variants, with and without `?lawnedge=old`.
 - **Every variant compiles with the switch on**: the 16 SHADE-COST combinations × the 4 `diag` values (null,
   `implicit`, `grass`, `unlit`) rendered in the page, with `?lawnedge=new` and `?lawnedge=old`. No console error.
-- **No weight hole**: looked at, not measured. The all-rock interiors at full resolution (rows 11, 12) show no dark
+- **No weight hole**: looked at, not measured. The all-rock interiors at full resolution (the last two rows) show no dark
   speckle. The unlit A/B the plan named was not run.
 
 ## Tests (automated runtime only, SwiftShader, SERVE=1, once each, both with `QUERY=rockedge=new`)
@@ -210,7 +219,7 @@ not a player's PC. **No frame-time claim.**
   - The scan reads geometry, which this change does not touch. LAWN-EDGES-2's Knartas hut-floor z-fight (fixed since,
     `f07e693f`) did not recur.
 - Both suites ran on `7b86e428`. After them, two changes to what the attribute holds, not the shader: no smoothing for
-  the rock and the paving, and the Hamalayi's interpolated rock. The switch-on shader text is identical to the tested
+  the rock and the paving, and the Hamalayi's interpolated rock (switch-gated). The switch-on shader text is identical to the tested
   one (generated and compared); the digests were re-taken. The suites were not run again.
 - Neither suite ran with the switch off. The default rests on three things: the shader text is identical with the switch
   off, there is no attribute and no work, and the digests above match.
@@ -220,8 +229,9 @@ not a player's PC. **No frame-time claim.**
 ## Unresolved / for the user
 - Make `?rockedge=new` the default? Then the switch and the old splits can go.
 - The isles' **vertex tint** (`zislands.js` colorFn: the paving colour copied per vertex, the rock lerp by slope, the
-  bare patches' colours) still follows the grid, softly, under the new edges. I expect it most on paving; on the
-  captures I could not tell it from the shading. Not measured. `zislands.js` is another worker's; left alone.
+  bare patches' colours) still follows the grid, softly, under the new edges. Seen on Knartas (row 6: the orange cast
+  where the earth patches were); elsewhere I could not tell it from the shading. Not measured. `zislands.js` is
+  another worker's; left alone.
 - Boolean sources (`paved()`, Citadel's `flatClear` rock cut-out) trace as a quarter-cell staircase. A straight edge
   may show it as a faint wave. Not seen on the captures; not checked systematically.
 - The Hamalayi's rock band shows a few kinks along the river (row 4) where its per-vertex rock field bends.

@@ -12,6 +12,7 @@
 // Materials are the plain opaque MeshStandardMaterials the region already uses, so no shader program is new.
 import * as THREE from 'three';
 import { rng, smoothstep } from '../engine/math.js';
+import { ROCK_EDGE } from '../engine/terrain.js';
 import { MM, driftGeo } from './props-mountain.js';
 import { pm, tm, ctex, Batch, bbox } from './kit.js';
 
@@ -50,7 +51,7 @@ export function gridCapture(heightFn, size, segs) {
     // (ROCK-EDGES: between the vertices the shares interpolated, not the nearest vertex's: the terrain's traced rock edge
     //  samples between them, and the nearest one drew the edge as the grid's squares. At a vertex, the vertex's own value)
     const gi = (x + half) / step, gj = (z + half) / step, i = Math.round(gi), j = Math.round(gj), R = (a, b) => G._rock[clamp(b, 0, n - 1) * n + clamp(a, 0, n - 1)];
-    if (Math.abs(gi - i) < 1e-6 && Math.abs(gj - j) < 1e-6) return R(i, j);
+    if (!ROCK_EDGE || (Math.abs(gi - i) < 1e-6 && Math.abs(gj - j) < 1e-6)) return R(i, j);   // (switch off: the nearest vertex's, as before)
     const i0 = Math.floor(gi), j0 = Math.floor(gj), fx = gi - i0, fz = gj - j0;
     return (R(i0, j0) * (1 - fx) + R(i0 + 1, j0) * fx) * (1 - fz) + (R(i0, j0 + 1) * (1 - fx) + R(i0 + 1, j0 + 1) * fx) * fz;
   };
