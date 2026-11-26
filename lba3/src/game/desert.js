@@ -61,10 +61,10 @@ export const DESERT_DOCK = { x: DESERT.x + DOCK.x - 2, z: DESERT.z + DOCK.z, a: 
 const VILLAGE = { x: -50, z: 2, r: 19 };
 // (KESH-ORIG, MAP-ORIG: LBA2's Kesh has paved grey streets and a paved plaza, and a paved strip along the quay: the
 //  plaza's core and the street west to the quay (the first track's stretch), 0..1)
-function keshPave(x, z) {
-  const core = smoothstep(VILLAGE.r - 3, VILLAGE.r - 7, Math.hypot(x - VILLAGE.x, z - VILLAGE.z));
+function keshPave(x, z, m = 0) {   // (m: the paving grown by m metres, PATHS-140B: the shore's rock kept that far off it)
+  const core = smoothstep(VILLAGE.r - 3 + m, VILLAGE.r - 7 + m, Math.hypot(x - VILLAGE.x, z - VILLAGE.z));
   let street = 0;
-  if (x > -94 && x < -54) { const ax = -94, az = 4, bx = -58, bz = 3, t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2))); street = smoothstep(2.8, 1.8, Math.hypot(x - ax - t * (bx - ax), z - az - t * (bz - az))); }
+  if (x > -94 - m && x < -54) { const ax = -94, az = 4, bx = -58, bz = 3, t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2))); street = smoothstep(2.8 + m, 1.8 + m, Math.hypot(x - ax - t * (bx - ax), z - az - t * (bz - az))); }
   return Math.max(core, street);
 }
 const OASIS = { x: -40, z: -15, r: 7.5 };
@@ -328,8 +328,9 @@ function dryRock(seed, lo = 0) {
 }
 function rockAt(x, z, h, slope) {
   const old = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
-  if (h < 0.6) return old;
-  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z)))) * (1 - courtAt(x, z));   // (P83: Tali's court is sand)
+  const unpaved = 1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z)));
+  if (h < 0.6) return old * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z, 1))));   // (PATHS-140B: by the water too, no slope's rock on the paving, nor within 1 m of it, as no outcrop: the shore's rock cut notches into the pier road's corners)
+  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * unpaved * (1 - courtAt(x, z));   // (P83: Tali's court is sand)
   if (clear <= 0) return old;
   // (near a place the outcrops shrink, their edge kept crisp, rather than fading: a half weight smeared the texture)
   const out = outcropNoise(x, z) + 0.3 * smoothstep(1, 8, h) + 0.45 * smoothstep(0.15, 0.7, slope) - 0.35 - 1.5 * (1 - clear);
