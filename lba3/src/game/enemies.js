@@ -474,17 +474,28 @@ export class Drone extends Actor {
   melee(D) { this.damage(D.dmg, this.game.hero.pos, D.poise); return 'hit'; }
   ballHit(ball, p) { this.damage(ball.damage, p, ball.charged ? 3 : 1); return 'hit'; }
   // Baldino's pulse: the rotor stutters, it sags and can't fire for a while
-  pulse(C) { if (!this.alive) return; this.state = 'stunned'; this.stateT = 0; this.stunT = C.stun; this.rig.hitFlash(); this.game.combatDir?.done(this); this.aimLine.visible = false; this.game.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 14, 3); }
+  pulse(C) { if (!this.alive) return; this.state = 'stunned'; this.stateT = 0; this.stunT = C.stun; this.rig.hitFlash(); this.game.combatDir?.done(this); this.aimLine.visible = false; this._chargeSync(); this.game.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 14, 3); }
   // Arthur's pocket set (tools.js): its feedback squeal scrambles the drone's aim for a while — no wind-up, its head
   // wanders — but it keeps flying (the bore's guardian is too big to mind)
   squeal(t) {
     if (!this.alive || this.def.kind === 'guardian') return false;
     if (this.state === 'windup') { this.state = 'chase'; this.stateT = 0; this.game.combatDir?.done(this); }
-    this.deafT = t; this.aimLine.visible = false;
+    this.deafT = t; this.aimLine.visible = false; this._chargeSync();
     return true;
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  // DRONE-CHARGE (#58): the wind-up's own sound ('droneCharge', audio.js), no longer the shot's zap: started once as a
+  // wind-up begins, as long as the tell (what is left of it), following the drone; cut the moment the wind-up ends by
+  // any way (fired, aborted, staggered, stunned, squealed at, beaten, sent away). Called where the state changes
+  // outside update() and at both ends of update(), so a change made anywhere is heard within the step
+  tellLen() { return this.tune.tell * (this.game.combatDir?.diff?.windup ?? 1); }
+  _chargeSync() {
+    const on = this.state === 'windup' && this.present && !this.gone && !koActive(this);
+    if (on && !this._charging) { this._charging = true; this._chargeV = this.game.audio?.held?.('droneCharge', this.pos, { dur: Math.max(0.15, this.tellLen() - this.stateT), low: this.def.kind === 'guardian' }) || null; }
+    else if (!on && this._charging) { this._charging = false; this._chargeV?.stop(); this._chargeV = null; }
+    else if (on) this._chargeV?.place(this.pos);
+  }
+  setPresent(on) { this.present = on; this._chargeSync(); if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   // (P9: a watch the story keeps calm, story/depotwatch.js, takes no alarm from the others)
   alert(pos) { if (this.def.calm?.()) return; if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
   damage(n, from, poise = 1) {
@@ -514,6 +525,7 @@ export class Drone extends Actor {
       new KnockOut(this, 'drone', from);
       g.onEnemyKilled(this);
     }
+    this._chargeSync();
   }
   // can it see Twinsen? cone + range + line of sight, scaled by his visibility (P9: a calm watch looks without acting
   // on it: only the story's own look, raw, sees him then: story/depotwatch.js)
@@ -533,6 +545,7 @@ export class Drone extends Actor {
   // ball (Bolts.update): it does not shoot into one (the depot's drones shot him through the fence his ball can't pass)
   clearShot(hero) { return !this.game.physics.ballFenceBetween(this.pos.x, this.pos.y + this.hover - 0.4, this.pos.z, hero.pos.x, hero.pos.y + 0.9, hero.pos.z); }
   update(dt) {
+    this._chargeSync();
     if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
@@ -579,7 +592,7 @@ export class Drone extends Actor {
       // keep a firing distance of 4–6 m
       sp = d > 6 ? 2.2 : d < 3.5 ? -1.4 : 0;
       if (this.deafT > 0) face = this.angle + 2.6 * Math.sin(this.stateT * 3.1);   // (squealed at: its aim wanders)
-      else if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap', this.pos); }
+      else if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; }   // (its sound: _chargeSync)
       if (this.lostT > 3) { this.state = 'search'; this.stateT = 0; g.combatDir?.done(this); }
       if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 24) { this.state = 'search'; this.stateT = 0; }
     } else if (this.state === 'windup') {
@@ -625,6 +638,7 @@ export class Drone extends Actor {
     this.keepOffHero(dt);
     this.rig.update(dt);
     this.syncHover();
+    this._chargeSync();
   }
   syncHover() {
     const g = this.game;
@@ -696,7 +710,7 @@ export class Guardian extends Drone {
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 22, 4);
     if (this.state === 'drop') return;   // (committed: it lands whatever hits it)
     this.marks.hide();
-    this.state = 'stunned'; this.stateT = 0; this.stunT = 2.6;
+    this.state = 'stunned'; this.stateT = 0; this.stunT = 2.6; this._chargeSync();
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 5, Math.cos(a) * 5); }
   }
   // the dive (BOSS-SHAPE): rise → lock → drop → ground; returns the facing it wants, or null
@@ -764,7 +778,10 @@ export class Guardian extends Drone {
     this.ko.noBonus = true;   // (the boss was never "killed": no bonus, as before)
   }
   // keep circling the hero at a firing distance, inside the arena
+  // (its tell: 1.35 s, quicker with each converted pylon; DRONE-CHARGE plays the charge, a fourth lower, over its alert)
+  tellLen() { return 1.35 - this.level * 0.15; }
   update(dt) {
+    this._chargeSync();
     if (koActive(this)) { this.fan.hide(); super.update(dt); return; }
     if (!this.present || !this.alive) { this.fan.hide(); return; }
     const g = this.game, hero = g.hero, P = g.physics;
@@ -804,7 +821,7 @@ export class Guardian extends Drone {
       } else if (this.state === 'windup') {
         // the tell: stops, glows, hums
         this.rig.play('windup');
-        const tell = 1.35 - this.level * 0.15;
+        const tell = this.tellLen();
         const k = Math.min(1, this.stateT / tell);
         this.rig.k = k;
         if (Math.random() < dt * 14) g.particles.burst(this.pos.x + Math.sin(this.angle) * 1.1, this.pos.y + this.hover - 0.6, this.pos.z + Math.cos(this.angle) * 1.1, '#ffb070', 1, 1);
@@ -837,6 +854,7 @@ export class Guardian extends Drone {
     this.keepOffHero(dt);
     this.rig.update(dt);
     this.syncHover();
+    this._chargeSync();
   }
 }
 
