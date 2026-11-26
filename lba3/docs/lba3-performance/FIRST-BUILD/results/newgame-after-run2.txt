@@ -1,0 +1,16 @@
+PROBE title after 375.6 s
+New Game (stepped 60 Hz frames) · medium · battery true · title frames 30 · audio before the click: none, context made while loading (running)
+loading: build 42619 ms · preparation 324840 ms · steps {"paint":7067,"programs":132,"textures":56,"geometry":31730,"geometryPart":5287,"shadowBatches":448,"layers":61846,"batches":3261,"batchUpload":348,"startRoom":85540,"audioContext":425,"shadowPrograms":73949,"firstDraws":30416,"firstFrame":29621} · slices (count/longest) textures 1/22 layers 34/23442 startLayers 23/63862 shadowPrograms 9/23195
+click handler: 35 ms (title frame, in view)  · state play · room house · audio running
+    0     93 ms view  play   house  sim 20 render 72 calls 50 shadow cache built (dropped: casters changed), +5 geometries
+    1     10 ms view  play   house  sim 2 render 7 calls 45 
+    2      6 ms view  play   house  sim 2 render 4 calls 45 
+    3      9 ms view  play   house  sim 2 render 8 calls 45 
+    4      7 ms view  play   house  sim 2 render 5 calls 45 
+    5      8 ms view  play   house  sim 1 render 7 calls 45 
+    6      3 ms view  play   house  sim 1 render 2 calls 45 
+    7      3 ms view  play   house  sim 1 render 2 calls 45 
+   23 129112 ms view  play   house  sim 1 render 129111 calls 46 
+   49    176 ms view  play   house  sim 3 render 173 calls 45 
+frames in view: worst 129112 ms, mean of frames 5+ 2354.6 ms · black frames 0 ms in all (worst 0) · frames in view that made geometries 1
+state play · room house · draw batch areas 2 · shadow areas 2 · programs 83 · geometries 1056 · textures 234

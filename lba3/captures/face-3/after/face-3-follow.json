@@ -1,0 +1,213 @@
+{
+ "SEC": "follow",
+ "W": 1280,
+ "H": 720,
+ "mode": [
+  "follow",
+  "2026",
+  "follow",
+  false
+ ],
+ "lines": [
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "talk": 1,
+   "line": "Same next door. Their tap ran warm, knoc",
+   "why": [
+    0.9,
+    1,
+    0.3,
+    1,
+    0.42,
+    0.7
+   ],
+   "head": {
+    "px": 134,
+    "x": 875,
+    "bottom": 323,
+    "top": 189,
+    "turn": 51
+   },
+   "other": {
+    "px": 175,
+    "x": 188,
+    "bottom": 386,
+    "top": 211,
+    "turn": 77
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "talk": 1,
+   "line": "And look at their kettle. Furred with th",
+   "why": [
+    0.9,
+    1,
+    0.3,
+    1,
+    0.42,
+    0.7
+   ],
+   "head": {
+    "px": 133,
+    "x": 899,
+    "bottom": 324,
+    "top": 190,
+    "turn": 48
+   },
+   "other": {
+    "px": 174,
+    "x": 165,
+    "bottom": 388,
+    "top": 214,
+    "turn": 78
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  },
+  {
+   "who": "hero",
+   "fav": "hero",
+   "talk": 1,
+   "line": "(Tiny crystals. Still warm.)",
+   "why": [
+    0.62,
+    1.12,
+    0.3,
+    -1,
+    0.3,
+    0.64
+   ],
+   "head": {
+    "px": 114,
+    "x": 523,
+    "bottom": 310,
+    "top": 196,
+    "turn": 37
+   },
+   "other": {
+    "px": 173,
+    "x": 1124,
+    "bottom": 588,
+    "top": 415,
+    "turn": 101
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  },
+  {
+   "who": "zoe",
+   "fav": "npc",
+   "talk": 1,
+   "line": "Mira's got the well padlocked, and she's",
+   "why": [
+    0.76,
+    1,
+    0.3,
+    1,
+    0.42,
+    0.53
+   ],
+   "head": {
+    "px": 133,
+    "x": 873,
+    "bottom": 303,
+    "top": 169,
+    "turn": 45
+   },
+   "other": {
+    "px": 197,
+    "x": 144,
+    "bottom": 429,
+    "top": 233,
+    "turn": 85
+   },
+   "box": 534,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "follow"
+  }
+ ],
+ "handback": {
+  "before": [
+   -43.61,
+   7.307,
+   84.091,
+   0.079,
+   -0.415,
+   -0.906
+  ],
+  "after": [
+   -40.785,
+   4.941,
+   76.179,
+   -0.72,
+   -0.453,
+   -0.526
+  ],
+  "heroBefore": [
+   -42.91795259306421,
+   76.1816478351319,
+   3.05432619099008
+  ],
+  "heroAfter": [
+   -42.91795259306421,
+   76.1816478351319,
+   3.0141653126656216
+  ],
+  "talkAfter": 1,
+  "modeBefore": "follow",
+  "modeAfter": "follow"
+ },
+ "path": {
+  "frames": 1159,
+  "cuts": [
+   2.22,
+   2.54
+  ],
+  "maxMovePerFrame": 0.206,
+  "solid": 0
+ }
+}

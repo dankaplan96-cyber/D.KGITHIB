@@ -1,0 +1,16 @@
+start: {"room":"desert","ch":"dig","k":{},"cowl":2,"jars":2,"ferry":true,"items":["evacplan"],"coins":7,"hp":"9/11","pos":[3292,2,4],"lying":[],"state":"play"}
+two turns (input): {"dir":0,"sand":true}
+turn lines: ["n_hero: Side-on to the wind. Barely a breath.","n_hero: Air rushes down the tower, and half a dune with it.","n_hero: (It needs a screen over the mouth.)"]
+door (mouth into the wind, sand in): {"label":"p_look","dir":0}
+door lines: ["n_hero: Kesh's cool room. It was one of FunFrock's blockhouses. Kesh dug the door out of the dune and built a wind-catcher on the roof.","n_hero: Sand on the floor, sand on the jars. Brosk is not going to like this.","n_hero: (Up on the roof, the wind-catcher's mouth is turned the wrong way.)"]
+brosk: "talked"
+brosk lines: ["n_dtrader: Sand! In my dates! Whatever you did up there, do the opposite."]
+race: E then Esc at once: {"d0":0,"actT":0.9,"dirNow":0,"cowl":0}
+paused state: {"state":"pause","dir":0,"cowl":0}
+kept save-race.json (quit during the crank action): 1
+after continue: {"room":"desert","ch":"dig","k":{"k_dir":0,"k_turns":2,"k_sand":true,"k_ask":true,"k_doorSeen":true},"cowl":0,"jars":2,"ferry":true,"items":["evacplan"],"journal":[{"key":"k_j_cool","done":false}],"coins":7,"hp":"9/11","pos":[3330.71,8.01,-6.32],"lying":[],"state":"play"}
+after continue +3s: {"dir":0,"cowl":0,"turns":2,"sand":true,"state":"play"}
+lines: []
+ISO  hero hp set to 1 (to provoke a fall death on purpose)
+death by jumping off the roof: {"dead":false,"hp":0,"state":"play"}
+no errors

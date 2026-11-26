@@ -1,0 +1,224 @@
+{
+  "file": "art/blender/props/equip/sword/source/sword.baseline.polyprop.json",
+  "blender": "5.2.3 LTS",
+  "objects": [
+    {
+      "name": "sword:7c6edb.01",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.2,
+        0.064,
+        0.227
+      ],
+      "mesh": {
+        "vertices": 276,
+        "faces": 92,
+        "triangles": 92,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "sword:7c6edb"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    },
+    {
+      "name": "sword:b05bfd.02",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.0553,
+        0.02,
+        0.7296
+      ],
+      "mesh": {
+        "vertices": 612,
+        "faces": 204,
+        "triangles": 204,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "sword:b05bfd"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    },
+    {
+      "name": "sword:dfe477.00",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.048,
+        0.048,
+        0.16
+      ],
+      "mesh": {
+        "vertices": 96,
+        "faces": 32,
+        "triangles": 32,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "sword:dfe477"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "sword:7c6edb",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "sword:7c6edb",
+        "recipe": null,
+        "color": "#e0b25a",
+        "roughness": 0.35,
+        "metalness": 0.7,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    },
+    {
+      "name": "sword:b05bfd",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "sword:b05bfd",
+        "recipe": null,
+        "color": "#f4f8fc",
+        "roughness": 0.3,
+        "metalness": 0.35,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    },
+    {
+      "name": "sword:dfe477",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "sword:dfe477",
+        "recipe": null,
+        "color": "#5a3a24",
+        "roughness": 0.8,
+        "metalness": 0,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    }
+  ],
+  "images": [],
+  "armatures": [],
+  "actions": [],
+  "totals": {
+    "objects": 3,
+    "meshes": 3,
+    "triangles": 328,
+    "materials": 3,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.1,
+        -0.0056,
+        -0.032
+      ],
+      "max": [
+        0.1,
+        0.942,
+        0.032
+      ],
+      "size": [
+        0.2,
+        0.9476,
+        0.064
+      ]
+    }
+  },
+  "polyprop": {
+    "format": "lba3-polyprop",
+    "version": 1,
+    "name": "sword",
+    "units": "metres; +y up; the blade down, its tip on the floor; front (+z) = the flat",
+    "source": {
+      "kind": "code-built equipment",
+      "builder": "src/game/actors.js buildSword (HEAD 68315019)"
+    },
+    "footprint": null,
+    "textureDir": "textures",
+    "bbox": {
+      "min": [
+        -0.1,
+        -0.0056,
+        -0.032
+      ],
+      "max": [
+        0.1,
+        0.942,
+        0.032
+      ],
+      "size": [
+        0.2,
+        0.9476,
+        0.064
+      ]
+    },
+    "triangles": 328
+  }
+}

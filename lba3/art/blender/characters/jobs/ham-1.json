@@ -1,0 +1,1 @@
+[{ "op": "script", "name": "ham-1: lharMan (MOUSTACHE-LHAR), lharElder (GLASSES-ELDER), lharMan_b, lharWoman_b, lharWoman (unchanged)", "script": "tools/blender/cast_poly.py", "args": ["C:/Users/dan/lba3-cast3/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-cast3/lba3/art/blender/characters/ham/export", "lharMan", "lharElder", "lharMan_b", "lharWoman_b", "lharWoman"] }]

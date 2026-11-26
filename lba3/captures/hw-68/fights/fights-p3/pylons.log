@@ -1,0 +1,9 @@
+== try 1 pylons (base-15): hp 12/12 mp 8
+[6.2] bank shot from plate 2
+[7.4] PYLON 1/3 converted
+[15.6] bank shot from plate 1
+[16.8] PYLON 2/3 converted
+[20.1] HIT hp 12→11 BOLT, nearest guardian:guardian (chase, 5.9 m)
+[25.6] bank shot from plate 0
+[26.8] PYLON 3/3 converted
+SUMMARY {"try":1,"result":"pylons 3/3; converted at 7.4, 16.8, 26.8 s; throws 10","hpIn":12,"hpOut":11,"maxHp":12,"dead":false,"secs":26.9,"hits":1,"byKind":{"bolt":1},"enemiesSeen":1,"beaten":0}

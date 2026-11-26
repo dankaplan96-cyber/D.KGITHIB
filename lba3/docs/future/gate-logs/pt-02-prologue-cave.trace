@@ -1,0 +1,26 @@
+[0.3] go → (1091.0, -4.0) plan ok=false pts=4 left=0.85
+[0.3] threat: fight
+[2.3] fight mite2 d=2.2 st=chase aim=it e@1095.8,0.0,4.3 me@1093.4,0.0,3.3 ball=idle hp 2→1 me 11 mp 7.344166666666668
+[3.7] fight mite2 d=2.6 st=dead aim=it e@1095.7,0.0,5.0 me@1093.4,0.0,3.3 ball=idle hp 1→0 me 11 mp 6.810833333333337
+[3.7] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[6.9] threat: fight
+[9.0] fight mite0 d=5.6 st=chase aim=it e@1095.2,0.0,-1.3 me@1092.7,0.0,-0.8 ball=idle hp 2→1 me 11 mp 7.344166666666668
+[10.2] fight mite0 d=2.6 st=dead aim=it e@1095.3,0.0,-1.8 me@1092.7,0.0,-0.8 ball=idle hp 1→0 me 11 mp 6.76416666666667
+[10.2] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[17.8] stuck at (1092.3, -4.0): replan
+[20.8] stuck at (1091.9, -4.0): replan
+[26.2] stuck at (1092.1, -3.9): replan
+[29.1] stuck at (1091.8, -4.3): replan
+[32.0] stuck at (1092.1, -4.2): replan
+[37.4] stuck at (1092.1, -3.9): replan
+[43.5] go → (1096.5, -5.2) plan ok=true pts=3 left=0.34
+[47.5] go → (1097.0, 4.8) plan ok=true pts=4 left=0.28
+[47.5] threat: fight
+[48.7] fight mite3 d=5.7 st=chase aim=none e@1101.5,0.0,-4.7 me@1095.8,0.0,-5.1 ball=return hp 2→1 me 11 mp 6.974166666666671
+[50.1] fight mite3 d=5.7 st=dead aim=it e@1100.5,0.0,-4.2 me@1095.8,0.0,-5.1 ball=idle hp 1→0 me 11 mp 6.475833333333339
+[50.1] fight → {"left":0,"dead":false,"hp":11,"t":2.6}
+[52.3] threat: fight
+[54.0] fight mite1 d=4.3 st=chase aim=it e@1099.5,0.0,-1.3 me@1097.1,0.0,-2.1 ball=idle hp 2→1 me 11 mp 6.817500000000011
+[55.1] fight mite1 d=2.6 st=dead aim=it e@1099.6,0.0,-0.8 me@1097.1,0.0,-2.1 ball=idle hp 1→0 me 11 mp 6.225833333333346
+[55.1] fight → {"left":0,"dead":false,"hp":11,"t":2.4}
+[63.6] go → (1107.2, -5.1) plan ok=false pts=3 left=0.5

@@ -1,0 +1,16 @@
+{
+ "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "walker": {
+  "id": "oda",
+  "char": "lharWoman",
+  "speed": 1.15
+ },
+ "groundSpeed": 0.708,
+ "seconds": 7.36,
+ "frames": {
+  "n": 127,
+  "p50": 35.6,
+  "p95": 88.7
+ },
+ "errors": []
+}

@@ -1,0 +1,38 @@
+=== 11-evacuation start 2026-11-01T22:45:52Z LOAD=/dev/shm/gatefix/saves/f/10.json ASSIST=1 SRC=/dev/shm/gatefix/c/lba3/tests/playthrough/11-evacuation.mjs
+[0s +0s] continue: {"chapter":"evacuation"} | citadel [-58.08,15.89,-59.48] hp 8 | Go home to Zoé
+[7s +7s] home: Zoé: {"r":"talked","to":"zoe","state":"play","lines":14,"home":true,"fail":null} | house [998.93,0,-1.71] hp 8 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Ask Mira for water◆ Ask Pippa for supplies
+[13s +7s] Gilbert: {"r":"talked","to":"gilbert","state":"play","lines":8,"g":true,"fail":null} | citadel [-38.86,2.2,5.05] hp 8 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+  [112.6] ISO assist: 5 enemies beaten (cc1,ccg1,ccclone,ccdog,ccg2)
+[34s +20s] the fortress lever: {"r":"used","target":{"kind":"c8lever","id":"p_lever","label":"p_lever"},"state":"play","lines":4,"fort":true,"fail":null} | citadel [-33.21,15.88,-69.59] hp 4 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+[56s +22s] the depot wheel (ball): {"depot":true,"fail":null} | citadel [-92.16,15.87,-68.25] hp 7 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+[60s +4s] Mira (Water Office): {"door":"entered","r":"talked","to":"mira","state":"play","lines":6,"mira":true,"fail":null} | office [1199.32,0,-0.05] hp 7 | Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for wa
+[134s +74s] Pippa: {"r":"talked","to":"pippa","state":"play","lines":2,"pippa":true,"fail":null} | citadel [-45.93,2.2,1.27] hp 7 | Tell Zoé the shelters are open
+[137s +3s] Zoé starts her run: {"r":"talked","to":"zoe","state":"play","lines":4,"start":true,"body":"zoe","fail":null} | citadel [-44.75,2.34,77.2] hp 7 | Zoé: bring the hill families to the lighthouse (0/3)
+[145s +9s] the three farms: {"done":3,"fail":null} | citadel [-58.58,2.19,54.58] hp 7 | Zoé: go to the lighthouse
+[158s +13s] the lighthouse gathering: {"relay":true,"body":"twinsen","fail":null} | citadel [-25.7,20.2,-55.55] hp 7 | Go to the station's control room
+[159s +0s] the control room: {"vesk":true,"fail":null} | control [1404.3,0,-3] hp 7 | Board a project ship at the spaceport
+[172s +14s] a project ship at the spaceport → chapter 9: {"r":"used","target":{"kind":"c8ship","id":"p_board","label":"p_board"},"state":"play","lines":4,"chapter":"council","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 7 | Find Baldino in his workshop
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[334.7] go → (-66.0, -53.0) plan ok=true pts=25 left=1.06
+[390.1] stuck at (-40.6, -40.1): replan
+[395.6] stuck at (-40.9, -39.9): replan
+[401.1] stuck at (-40.5, -40.2): replan
+[411.7] stuck at (-42.7, -46.0): replan
+[428.7] go → (-25.7, -58.5) plan ok=false pts=3 left=0.95
+[429.3] go: transition (citadel → citadel, trans true) at (-25.70, -57.61)
+[432.3] go → (1404.3, -4.0) plan ok=true pts=2 left=0.25
+[434.1] go: transition (control → control, trans true) at (1404.33, -3.30)
+[435.0] go → (0.3, 41.0) plan ok=true pts=20 left=0.48
+[452.7] stuck at (-33.4, -21.6): replan
+[472.9] go → (0.3, 41.0) plan ok=true pts=2 left=0.33
+kept /dev/shm/gatefix/saves/f/11.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 11-evacuation end rc=0 wall=510s 2026-11-01T22:54:22Z

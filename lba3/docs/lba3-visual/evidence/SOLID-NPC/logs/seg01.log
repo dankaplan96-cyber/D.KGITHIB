@@ -1,0 +1,47 @@
+[0s +0s] intro: {"state":"play","lines":0} | house [1001.55,0,-1.75] hp 10 | Check the well◆ Take the magic ball from the cupboard
+[0s +0s] cupboard: {"r":"used","target":{"kind":"roomsearch","id":"p_search","label":"p_search"},"state":"play","lines":4,"ball":true,"fail":null} | house [997.27,0,-1.65] hp 10 | Check the well
+[5s +4s] out of the house: {"r":"transition","from":"house","to":"citadel","fail":null} | citadel [-43.98,2.34,77.2] hp 10 | Check the well
+[33s +28s] look at the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":4,"fail":null} | citadel [-41.32,2.2,-5.5] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[34s +1s] Gilbert and Mira: no key for a pipe fault: {"r":"talked","to":"gilbert","state":"play","lines":12,"fail":null} | citadel [-39.84,2.2,-3.54] hp 10 | Climb down the well◆ Lid key: Mira wants proof◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[36s +2s] Zoé next door: the kettle crystals: {"r":"talked","to":"zoe","state":"play","lines":10,"fail":null} | citadel [-29.67,2.35,74.18] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[38s +2s] Mira: the key: {"r":"talked","to":"mira","state":"play","lines":8,"fail":null} | citadel [-40.18,2.2,-0.08] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[183s +145s] the lid: rusted to the rim: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":8,"fail":null} | citadel [-41.03,2.2,-5.34] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[211s +28s] the lid: a kick (Aggressive): {"r":"used","target":{"kind":"well","id":"p_kick","label":"p_kick"},"state":"play","lines":0,"label":"p_kick","open":true,"fail":null} | citadel [-40.35,2.2,-3.69] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[215s +4s] Xil: {"r":"talked","to":"xil","state":"play","lines":8,"fail":null} | citadel [-130.48,1.75,42.42] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (Xil needs Doran's stamp)◆ Optional: what did Tim throw in the well?
+[215s +0s] Doran asleep: {"r":"talked","to":"doran","state":"play","lines":4,"fail":null} | citadel [-119.01,1.84,44.47] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (Xil needs Doran's stamp)◆ Optional: what did Tim throw in the well?
+[224s +9s] the harbour bell: looked at: {"r":"used","target":{"kind":"bell","id":"p_look","label":"p_look"},"state":"play","lines":4,"fail":null} | citadel [-119.26,1.84,42.13] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (Xil needs Doran's stamp)◆ Optional: what did Tim throw in the well?
+[225s +1s] the bell: the magic ball rings it, Doran stamps: {"bell":true,"stamp":true,"fail":null} | citadel [-115.82,1.8,45.11] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[225s +0s] Xil: the rope: {"r":"talked","to":"xil","state":"play","lines":4,"fail":null} | citadel [-130.54,1.75,42.83] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[228s +3s] Tim and Lulu: {"r":"talked","to":"tim","state":"play","lines":6} | citadel [-49.49,2.2,5.11] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[228s +0s] overhear (Discreet): {"overheard":true,"fail":null} | citadel [-49.49,2.2,5.11] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[228s +0s] Tim confesses: {"r":"talked","to":"tim","state":"play","lines":8,"fail":null} | citadel [-49.49,2.2,5.11] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+[232s +4s] the clover Tim gives back: {"found":true,"clovers":[2,3]} | citadel [-48.34,2.2,4.4] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+[234s +2s] the bay rocks: looked at: {"r":"used","target":{"kind":"rocks","id":"p_look","label":"p_look"},"state":"play","lines":2,"fail":null} | citadel [-65.49,1.25,95.09] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+[235s +1s] the bay rocks: up (Athletic): {"ys":[2.08,3.08,4.08],"tops":[2.08,3.08,4.08],"fail":null} | citadel [-69.62,4.08,97.99] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+[236s +0s] the warm stones: {"r":"used","target":{"kind":"stones","id":"p_take","label":"p_take"},"state":"play","lines":4,"coins":[0,10],"fail":null} | citadel [-70.16,4.08,98.3] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+[238s +3s] down off the rocks: {"y":0.95,"fail":null} | citadel [-65.93,0.95,95.7] hp 10 | Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the war
+[268s +30s] down the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":8,"fail":null} | well [1093.4,0,3.3] hp 10 | Find the source of the heat◆ Wake the three dark crystals
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[337.4] go → (-70.4, 98.5) plan ok=true pts=2 left=0.11
+[337.5] go → (-70.4, 98.5) plan ok=true pts=2 left=0.11
+[338.8] go → (-68.9, 97.4) plan ok=false pts=3 left=1.02
+[343.8] stuck at (-69.8, 97.9): replan
+[347.2] go → (-67.4, 96.2) plan ok=false pts=3 left=1.06
+[352.3] stuck at (-68.2, 96.9): replan
+[355.7] go → (-64.8, 95.0) plan ok=false pts=1 left=3.84
+[358.2] stuck at (-68.1, 97.0): replan
+[363.7] stuck at (-67.6, 96.8): replan
+[368.6] go → (-42.0, -4.0) plan ok=false pts=9 left=1.61
+[391.0] go → (-42.0, -4.0) plan ok=false pts=2 left=1.61
+[393.5] stuck at (-43.4, -3.1): replan
+kept /dev/shm/seg01.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+EXIT 0

@@ -1,0 +1,268 @@
+diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
+index a90deed..0184a8a 100644
+--- a/lba3/src/game/interiors.js
++++ b/lba3/src/game/interiors.js
+@@ -55,8 +55,10 @@ export class RoomBuilder {
+   put(x, z, ry, fn, opts = {}, colExtra = { noStand: true }) {
+     const fp = this.k.at(x, opts.y || 0, z, ry, () => fn(this.k, opts));
+     if (fp && !opts.noCol) {
+-      if (fp.r) this.ccol(x, z, fp.r, fp.top, colExtra);
+-      else if (fp.hw) this.col(x, z, fp.hw, fp.hd, fp.top, { rot: ry, ...colExtra });
++      // (a piece stood on a raised floor, opts.y: its collider's top is up there with it, else it was walked through)
++      const top = fp.top + (opts.y || 0);
++      if (fp.r) this.ccol(x, z, fp.r, top, colExtra);
++      else if (fp.hw) this.col(x, z, fp.hw, fp.hd, top, { rot: ry, ...colExtra });
+     }
+     return fp;
+   }
+diff --git a/lba3/src/game/regions.js b/lba3/src/game/regions.js
+index 6d19036..814612c 100644
+--- a/lba3/src/game/regions.js
++++ b/lba3/src/game/regions.js
+@@ -41,6 +41,7 @@ import { buildBazooRoom } from './bazoo.js';
+ import { buildTicketRoom } from './ticket.js';
+ import { buildPharmacyRoom } from './pharmacy.js';
+ import { buildNbrHouseRoom } from './nbrhouse.js';
++import { buildTraluCaveRoom } from './tralucave.js';
+ import { buildBaggageRoom } from './baggage.js';
+ import { buildTavCellarRoom } from './tavcellar.js';
+ import { buildNellHouseRoom } from './nellhouse.js';
+@@ -49,7 +50,7 @@ import { buildNellHouseRoom } from './nellhouse.js';
+ // scaled by how fast this computer built Citadel (Regions.speed). A wrong guess only makes the bar's pace uneven.
+ const REF = { house: 450, well: 80, office: 100, projoffice: 110, control: 90, workshop: 180, lighttop: 140, cellar: 70,
+   zeelich: 800, underground: 400, desert: 700, condenser: 30, butemple: 30, wtent: 20, school: 30, asylum: 150, bumaze: 170,
+-  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
++  hamalayi: 600, obsv: 15, upper: 350, valves: 20, arena: 10, sewer: 160, tavern: 120, bazoo: 60, ticket: 50, pharmacy: 60, nbrhouse: 80, nellhouse: 80, tavcellar: 60, baggage: 90, tralucave: 120, isle_otringal: 600, isle_knartas: 300, isle_mosquibee: 260,
+   isle_celebration: 160, isle_undergas: 320, isle_cxislet: 80, isle_platform: 180, isle_liftdock: 120, isle_tralu: 290,
+   isle_orchard: 230, isle_oldwatch: 90, isle: 250 };
+ // Where each room stands (its group's origin; an interior's centre where it differs), known before it is built: for
+@@ -59,7 +60,7 @@ const AT = { house: [1000, 0], well: [1100, 0], office: [1200, 0], projoffice: [
+   lighttop: [1600, 0], cellar: [1700, 0], c3shaft: [1799.2, -1], c3deep: [1899.4, -0.8], c3gallery: [1998, -2], c3sendell: [2100, 0],
+   c3core: [2199, -1], condA: [3700, 0], condB: [3760, 0], butemple: [3830, 0], wtent: [5400, 0], school: [5600, 0], asylum: [7000, 0],
+   bumaze: [7200, 0], buhalls: [7400, 0], obsv: [4600, 0], upper: [4800, 0], council: [4850, 0], archive: [4900, 0], valves: [5000, 0],
+-  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0] };
++  arena: [6200, 0], sewer: [5800, 0], sewervault: [5880, 0], tavern: [6600, 0], bazoo: [6700, 0], ticket: [6800, 0], pharmacy: [6900, 0], nbrhouse: [7600, 0], nellhouse: [7800, 0], tavcellar: [8000, 0], baggage: [8200, 0], tralucave: [8400, 0] };
+ const OUT_AT = { zeelich: [2400, 0], desert: [3400, 0], hamalayi: [4300, 0] };
+ const isleAt = (id) => { const i = ISLES.indexOf(id.slice(5)); return i >= 0 ? [1900 + i * 330, 1800] : null; };
+ export const CITADEL_REF = 5200;   // (Citadel's own build, the same machine)
+@@ -115,6 +116,7 @@ function groupDefs() {
+   add('nellhouse', ['nellhouse'], buildNellHouseRoom);   // (LBA-CITADEL-6: Paul's house of LBA2's scene 7, now Nell's, in the 'wing2' house)
+   add('tavcellar', ['tavcellar'], buildTavCellarRoom);   // (LBA-CITADEL-7: Chez Luc's cellar, LBA2's scene 4, under the tavern)
+   add('baggage', ['baggage'], buildBaggageRoom);   // (LBA-CITADEL-8: the baggage claim, LBA2's scene 5, in the 'bug' house)
++  add('tralucave', ['tralucave'], buildTraluCaveRoom);   // (LBA-CITADEL-9: Tralu's cave, LBA2's scene 2, behind the plateau's door)
+   for (const n of ISLES) if (hasIsland(n)) add('isle_' + n, ['isle_' + n], (S, P) => ({ ['isle_' + n]: buildIsle(S, P, n) }));
+   return G;
+ }
+diff --git a/lba3/src/game/story/index.js b/lba3/src/game/story/index.js
+index 16f43f5..15a0a93 100644
+--- a/lba3/src/game/story/index.js
++++ b/lba3/src/game/story/index.js
+@@ -9,6 +9,7 @@ import { bazooDoors, bazooExit } from '../bazoo.js';
+ import { ticketDoors, ticketExit } from '../ticket.js';
+ import { pharmacyDoors, pharmacyExit } from '../pharmacy.js';
+ import { nbrhouseDoors, nbrhouseExit } from '../nbrhouse.js';
++import { traluCaveDoors, traluCaveExit } from '../tralucave.js';
+ import { baggageDoors, baggageExit } from '../baggage.js';
+ import { nellhouseDoors, nellhouseExit } from '../nellhouse.js';
+ import { t } from '../i18n.js';
+@@ -190,9 +191,9 @@ export class Story {
+   }
+   items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items()]; }
+   // (the wizards' doors are open in every chapter: src/game/wizards.js)
+-  doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors(), ...sewerDoors(), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world), ...baggageDoors(this.game.world)]; }
++  doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors(), ...sewerDoors(), ...tavernDoors(this.game.world), ...bazooDoors(this.game.world), ...ticketDoors(this.game.world), ...pharmacyDoors(this.game.world), ...nbrhouseDoors(this.game.world, this.game.flags), ...nellhouseDoors(this.game.world), ...baggageDoors(this.game.world), ...traluCaveDoors(this.game.world)]; }
+   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
+-  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world) || baggageExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
++  exitTo(to) { const w = wizardExit(to) || lba1Exit(to) || sewerExit(to) || tavernExit(to, this.game.world) || bazooExit(to, this.game.world) || ticketExit(to, this.game.world) || pharmacyExit(to, this.game.world) || nbrhouseExit(to, this.game.world) || nellhouseExit(to, this.game.world) || baggageExit(to, this.game.world) || traluCaveExit(to, this.game.world); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
+   // the town's doors on Citadel (house, water office, control room) for chapters set there after chapter 2
+   // (chapter 2 offers the control room only until Zoé's office segment; later chapters need it again — ch. 8's relay)
+   townDoors() {
+diff --git a/lba3/src/game/story/prologue.js b/lba3/src/game/story/prologue.js
+index ca86656..4c6dae8 100644
+--- a/lba3/src/game/story/prologue.js
++++ b/lba3/src/game/story/prologue.js
+@@ -327,7 +327,8 @@ export class Prologue extends ChapterBase {
+       W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }); });
+       // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
+       // from the door's own level, not from the slope above it)
+-      for (const d of W.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
++      // (LBA-CITADEL-9: a shut door the director opens, the plateau's to Tralu's cave, is a door now: { house: its id })
++      for (const d of W.shutDoors || []) if (!open.has(d.id) && Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
+       if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
+     } else {
+       for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
+diff --git a/lba3/src/game/tralucave.js b/lba3/src/game/tralucave.js
+new file mode 100644
+index 0000000..11792dd
+--- /dev/null
++++ b/lba3/src/game/tralucave.js
+@@ -0,0 +1,169 @@
++// LBA-CITADEL-9 (night mode: "work to the plan"): the cave behind the plateau's door, after LBA2's scene 2 (Tralu's
++// cave). WORLD-80 built the door in the bank behind the depot and kept it shut (island.js OLD_DOORS.plateau); now it
++// opens. Our own geometry, from a study of the original's layout (numbers and descriptions only; nothing copied):
++//   - a cave of rough grey rock on two levels: a raised rock terrace at the back with a barred gate in the rock and
++//     clusters of blue eggs; a stair down from it; a lower cave floor with clusters of pale spiked stalagmites; a
++//     railed pool of pale cyan water; posts with cyan glass globes; an old stone guard house of squared blocks with
++//     barred windows: barrels inside, a table with plates and a bottle, a bench, iron candle stands
++// Twelve years on (ours): the eggs are empty shells, broken open long ago; the gate's bars are rusted; the guard house
++// is a store again (a lantern, a coil of rope, a crate).
++//
++// CONTRACT
++//   TRALUCAVE_AT                  where the room stands (regions.js)
++//   buildTraluCaveRoom(scene, physics) → { tralucave }   (regions.js group 'tralucave')
++//   traluCaveDoors() / traluCaveExit(to)   the plateau's door leads in ({ house: 'plateau' }: story/prologue.js no
++//                                          longer offers it as shut); 'tralucave-out' leads back out before it
++import * as THREE from 'three';
++import { RoomBuilder } from './interiors.js';
++import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, table, bench, barrel, plate, jar, candle } from './props.js';
++import { OLD_DOORS } from './island.js';
++
++export const TRALUCAVE_AT = { x: 8400, z: 0 };
++
++const std = (map, color, rough, tile, glow = 0) => { const m = new THREE.MeshStandardMaterial({ map, color, roughness: rough, ...(glow ? { emissive: '#ffffff', emissiveMap: map, emissiveIntensity: glow } : {}) }); m.userData.tile = tile; return m; };
++const rockM = () => M('tc_rock', () => std(TEX.rubble('grey'), '#a49e94', 0.95, 1.4, 0.34));
++const floorM = () => M('tc_floor', () => std(TEX.rubble('grey'), '#b0aca4', 0.95, 2.6, 0.34));   // (rough rock underfoot)
++const paveM = () => M('tc_pave', () => std(TEX.tiles('#6e6c66', '#64625c', '#33393a', false, 3, 'tc'), '#ffffff', 0.9, 2.2));   // (the worn paved patches)
++const blockM = () => M('tc_block', () => std(TEX.stone('grey'), '#b8b4aa', 0.9, 2, 0.3));
++const capM = () => M('tc_cap', () => std(TEX.stone('grey'), '#c8c2b6', 0.9, 1.2, 0.22));
++const waterM = () => M('tc_water', () => { const m = new THREE.MeshStandardMaterial({ color: '#8ccfd8', emissive: '#4e9aa0', emissiveIntensity: 0.6, roughness: 0.25, metalness: 0.05, transparent: true, opacity: 0.88 }); m.userData.noShadow = true; return m; });
++const boneM = () => M('tc_bone', () => new THREE.MeshStandardMaterial({ color: '#e6d4b8', roughness: 0.7, emissive: '#5a4c3c', emissiveIntensity: 0.6 })), tipM = () => MAT.paint('#5a3a2c', 0.6), rustM = () => MAT.paint('#6e4532', 0.85);
++const globeM = () => MAT.glow('#d6f2ff', '#5ab0e0', 1.5), eggM = () => M('tc_egg', () => new THREE.MeshStandardMaterial({ color: '#5aa0c8', roughness: 0.3, emissive: '#1e4a66', emissiveIntensity: 0.6 }));
++
++// a cluster of pale spiked stalagmites, dark at the tips
++function spikes(k, n = 5, s = 1) {
++  for (let i = 0; i < n; i++) {
++    const a = i * 2.4, r = i ? 0.12 + (i % 3) * 0.08 : 0, h = (0.9 - (i % 3) * 0.2) * s;
++    k.add(cyl(0.001, 0.11 * s, h, 7), boneM(), Math.sin(a) * r * s, h / 2, Math.cos(a) * r * s);
++    k.add(cyl(0.001, 0.034 * s, h * 0.3, 6), tipM(), Math.sin(a) * r * s, h * 0.86, Math.cos(a) * r * s);
++  }
++  return { r: 0.32 * s, top: 0.9 * s };
++}
++// a clutch of blue eggs, broken open long ago: half shells and one whole
++function eggs(k, n = 4) {
++  for (let i = 0; i < n; i++) {
++    const a = i * 2.1, r = i ? 0.24 : 0, x = Math.sin(a) * r, z = Math.cos(a) * r;
++    if (i % 2) k.add(sphere(0.17, 12, 8), eggM(), x, 0.15, z, a, { sy: 1.25 });
++    else k.add(new THREE.SphereGeometry(0.17, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), eggM(), x, 0.03, z, a, { rx: Math.PI, sy: 1.2 });
++  }
++  return { r: 0.4, top: 0.4 };
++}
++// a short stone post with a cyan glass globe
++function globePost(k) {
++  k.add(rbox(0.3, 1.0, 0.3, 0.04), blockM(), 0, 0.5, 0);
++  k.add(rbox(0.36, 0.08, 0.36, 0.02), capM(), 0, 1.02, 0);
++  k.add(sphere(0.17, 14, 10), globeM(), 0, 1.24, 0);
++  return { hw: 0.17, hd: 0.17, top: 1.4 };
++}
++// a wrought-iron candle stand
++function candleStand(k) {
++  k.add(cyl(0.16, 0.2, 0.05, 10), MAT.iron(), 0, 0.025, 0);
++  k.add(cyl(0.025, 0.025, 1.3, 6), MAT.iron(), 0, 0.67, 0);
++  k.add(cyl(0.09, 0.05, 0.06, 10), MAT.iron(), 0, 1.33, 0);
++  k.add(cyl(0.035, 0.035, 0.16, 8), MAT.paint('#f2ead6', 0.6), 0, 1.44, 0);
++  candle(k, 0, 1.33, 0);
++  return { r: 0.18, top: 1.5 };
++}
++// a boulder against a wall's foot
++function boulder(k, s = 1) {
++  k.add(sphere(0.5, 9, 7), rockM(), 0, 0.25 * s, 0, 0, { sx: 1.3 * s, sy: 0.75 * s, sz: s });
++  return { r: 0.55 * s, top: 0.6 * s };
++}
++
++export function buildTraluCaveRoom(scene, physics) {
++  const B = new RoomBuilder(scene, physics, 'tralucave', TRALUCAVE_AT.x, TRALUCAVE_AT.z);
++  const R = B.room, k = B.k;
++  const W = 18, D = 14, H = 4.6;
++  R.view = 17; R.follow = 0.35; R.music = 'home';
++  const rock = rockM(), block = blockM(), cap = capM();
++  const LX = -W / 2, BZ = -D / 2, DOORZ = 4.8;
++  B.shell({ floor: floorM(), slab: rock, body: rock, low: rock, rail: rustM(), cap: rock, H, t: 0.7, dado: 0.6, rimH: 0.6, rimMat: rock, W, D,
++    left: [{ at: DOORZ, w: 1.6, h: 2.6, y0: 0, kind: 'door' }] });
++  R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'tralucave-out' });
++  R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
++
++  // the worn paved patches in the rock floor (the original's darker brick)
++  for (const [x, z, w, d] of [[-3.0, 3.6, 4.2, 2.6], [1.0, 1.4, 3.0, 1.6], [-4.6, 5.8, 2.0, 1.2]]) k.add(plane(w, d), paveM(), x, 0.006, z, 0, { rx: -Math.PI / 2 });
++  // --- the rock terrace at the back left, 1.6 m up, its face rough rock with boulders at its foot
++  const TY = 1.6, TX1 = -1.0, TZ1 = -1.6;
++  k.add(rbox(TX1 - LX, TY, TZ1 - BZ, 0.06), rock, (LX + TX1) / 2, TY / 2, (BZ + TZ1) / 2);
++  k.add(plane(TX1 - LX - 0.1, TZ1 - BZ - 0.1), floorM(), (LX + TX1) / 2, TY + 0.004, (BZ + TZ1) / 2, 0, { rx: -Math.PI / 2 });
++  k.add(plane(3.6, 2.4), paveM(), -5.0, TY + 0.008, -3.4, 0, { rx: -Math.PI / 2 });
++  B.col((LX + TX1) / 2, (BZ + TZ1) / 2, (TX1 - LX) / 2, (TZ1 - BZ) / 2, TY);
++  for (const [x, z, s] of [[-8.0, -1.3, 0.8], [-6.4, -1.25, 0.6], [-4.6, -1.3, 0.7]]) B.put(x, z, x, (kk) => boulder(kk, s));
++  // the stair down at its right end, from the terrace's edge toward the front
++  const SX0 = -2.5, SX1 = TX1 - 0.05, N = 5, run = 0.52, rise = TY / N;
++  for (let i = 0; i < N; i++) {
++    const top = rise * (N - i), z = TZ1 + (i + 0.5) * run;
++    k.add(rbox(SX1 - SX0, top, run + 0.02, 0.02), block, (SX0 + SX1) / 2, top / 2, z);
++    k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), cap, (SX0 + SX1) / 2, top - 0.025, z);
++    B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.08, top, { stair: true });   // (+0.08: the steps overlap under groundAt's 5 cm shrink)
++  }
++  // rusted railings: along the terrace's edge (open over the stair), down its right side, and down the stair
++  const rail = rustM();
++  k.at(0, TY, 0, 0, () => railing(k, [[LX + 0.2, TZ1 - 0.06], [SX0 - 0.05, TZ1 - 0.06]], { h: 0.95, mat: rail, step: 0.42 }));
++  B.col((LX + 0.2 + SX0) / 2, TZ1 - 0.06, (SX0 - LX - 0.2) / 2, 0.06, TY + 1.0, { seeThrough: true, noStand: true });
++  k.at(0, TY, 0, 0, () => railing(k, [[TX1 - 0.06, BZ + 0.2], [TX1 - 0.06, TZ1]], { h: 0.95, mat: rail, step: 0.42 }));
++  B.col(TX1 - 0.06, (BZ + 0.2 + TZ1) / 2, 0.06, (TZ1 - BZ - 0.2) / 2, TY + 1.0, { seeThrough: true, noStand: true });
++  railing(k, [[SX0 - 0.05, TZ1], [SX0 - 0.05, TZ1 + N * run]], { h: 0.95 + TY / 2, mat: rail, step: 0.45 });
++  B.col(SX0 - 0.05, TZ1 + N * run / 2, 0.06, N * run / 2, TY + 1.0, { seeThrough: true, noStand: true });
++  // the barred gate in the back rock: a stone arch with rusted bars, shut
++  const GX = -5.0, gw = 1.6, gh = 2.4;
++  k.add(rbox(gw + 0.9, gh + 0.5, 0.5, 0.05), block, GX, TY + (gh + 0.5) / 2, BZ + 0.2);
++  k.add(rbox(gw, gh - gw / 2, 0.06, 0.01), MAT.flat('#141618', 0.9), GX, TY + (gh - gw / 2) / 2, BZ + 0.46);
++  k.add(new THREE.CircleGeometry(gw / 2, 16, 0, Math.PI), MAT.flat('#141618', 0.9), GX, TY + gh - gw / 2, BZ + 0.46);
++  k.add(new THREE.TorusGeometry(gw / 2 + 0.06, 0.1, 6, 16, Math.PI), cap, GX, TY + gh - gw / 2, BZ + 0.5);
++  for (let i = 0; i < 7; i++) { const x = GX - gw / 2 + 0.15 + i * (gw - 0.3) / 6, h = gh - 0.15 - Math.max(0, Math.abs(x - GX) - 0.25) * 0.9; k.add(cyl(0.025, 0.025, h, 6), rail, x, TY + h / 2, BZ + 0.52); }
++  for (const y of [0.5, 1.4]) k.add(rbox(gw - 0.1, 0.06, 0.04, 0.01), rail, GX, TY + y, BZ + 0.52);
++  // on the terrace: the egg clutches (empty shells), spikes, a globe post at each end of the edge
++  for (const [x, z, n] of [[-7.6, -6.2, 5], [-3.0, -6.0, 3], [-8.2, -3.4, 4]]) B.put(x, z, x, (kk) => eggs(kk, n), { y: TY });
++  for (const [x, z, s] of [[-6.6, -5.2, 0.9], [-2.0, -4.2, 0.8]]) B.put(x, z, 0, (kk) => spikes(kk, 5, s), { y: TY });
++  for (const x of [LX + 0.45, SX0 - 0.35]) B.put(x, TZ1 - 0.35, 0, (kk) => globePost(kk), { y: TY });
++
++  // --- the old guard house at the back right: squared blocks, a doorway and barred windows in its front
++  const HX0 = 0.2, HZ1 = -0.8, HH = 3.0;
++  const wall = { h: HH, t: 0.4, body: block, cap, dado: 0 };
++  B.partition(HX0, BZ, HX0, HZ1, wall);
++  B.partition(HX0, HZ1, W / 2, HZ1, { ...wall, doors: [{ at: 1.9, w: 1.3 }] });
++  for (const x of [4.2, 6.0, 7.8]) {   // (the barred windows, both faces)
++    for (const s of [-1, 1]) {
++      k.add(rbox(0.9, 1.0, 0.04, 0.01), MAT.flat('#141618', 0.9), x, 1.6, HZ1 + s * 0.21);
++      for (let i = 0; i < 4; i++) k.add(cyl(0.022, 0.022, 1.0, 6), rail, x - 0.3 + i * 0.2, 1.6, HZ1 + s * 0.24);
++    }
++  }
++  // its pillars of blocks at the corners
++  for (const [x, z] of [[HX0, HZ1], [W / 2 - 0.3, HZ1]]) { k.add(rbox(0.6, HH + 0.4, 0.6, 0.04), block, x, (HH + 0.4) / 2, z); k.add(rbox(0.7, 0.12, 0.7, 0.03), cap, x, HH + 0.46, z); B.col(x, z, 0.3, 0.3, HH + 0.5); }
++  // inside: barrels, the table with plates and a bottle, a bench, candle stands; a lantern, rope and a crate (ours)
++  for (const [x, z] of [[1.0, -6.3], [1.75, -6.4], [1.3, -5.6], [8.3, -2.0]]) B.put(x, z, x, (kk) => barrel(kk, { pal: 'honey' }));
++  B.put(5.4, -4.8, 0, (kk) => { const r = table(kk, { w: 1.7, d: 0.85, pal: 'honey' }); plate(kk, -0.4, 0.78, 0); plate(kk, 0.35, 0.78, 0.05); jar(kk, 0, 0.78, -0.1, 'bottle', '#2f8a9a', 1.0); return r; });
++  B.put(5.4, -3.9, 0, (kk) => bench(kk, { w: 1.5, pal: 'honey' }));
++  for (const x of [3.6, 7.2]) B.put(x, -5.0, 0, (kk) => candleStand(kk));
++  B.put(8.2, -6.2, 0.3, (kk) => { kk.add(rbox(0.75, 0.6, 0.6, 0.02), MAT.paint('#7a5a36', 0.8), 0, 0.3, 0); kk.add(cyl(0.2, 0.2, 0.12, 14, true), MAT.paint('#b89a6a', 0.9), 0, 0.66, 0); kk.add(rbox(0.12, 0.2, 0.12, 0.02), MAT.glow('#ffe0a0', '#ffb040', 0.9), 0.2, 0.7, 0.15); return { hw: 0.38, hd: 0.3, top: 0.75 }; });
++
++  // --- the lower cave: the railed pool at the front right, globe posts at its corners, spike clusters, boulders
++  const PX0 = 3.0, PX1 = 7.4, PZ0 = 2.0, PZ1 = 5.4, kerb = 0.3;
++  for (const [x0, z0, x1, z1] of [[PX0, PZ0, PX1, PZ0 + 0.3], [PX0, PZ1 - 0.3, PX1, PZ1], [PX0, PZ0, PX0 + 0.3, PZ1], [PX1 - 0.3, PZ0, PX1, PZ1]]) k.add(rbox(x1 - x0, kerb, z1 - z0, 0.03), block, (x0 + x1) / 2, kerb / 2, (z0 + z1) / 2);
++  k.add(plane(PX1 - PX0 - 0.6, PZ1 - PZ0 - 0.6), waterM(), (PX0 + PX1) / 2, kerb - 0.08, (PZ0 + PZ1) / 2, 0, { rx: -Math.PI / 2 });
++  k.at(0, kerb, 0, 0, () => railing(k, [[PX0 + 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ0 + 0.15]], { h: 0.9, mat: rail, step: 0.45 }));
++  B.col((PX0 + PX1) / 2, (PZ0 + PZ1) / 2, (PX1 - PX0) / 2, (PZ1 - PZ0) / 2, kerb + 1.0, { seeThrough: true, noStand: true });
++  for (const [x, z] of [[PX0 - 0.3, PZ0 - 0.3], [PX1 + 0.3, PZ0 - 0.3], [PX0 - 0.3, PZ1 + 0.3]]) B.put(x, z, 0, (kk) => globePost(kk));
++  for (const [x, z, s] of [[-6.2, 2.6, 1], [-4.2, 6.2, 0.8], [1.2, 6.0, 0.9], [8.2, 1.0, 1.1], [-0.5, -6.4, 0.9], [8.3, 6.1, 0.8]]) B.put(x, z, 0, (kk) => spikes(kk, 6, s));
++  for (const [x, z, s] of [[LX + 0.5, 1.2, 0.9], [LX + 0.5, 6.4, 0.7], [W / 2 - 0.4, 3.6, 0.8]]) B.put(x, z, x, (kk) => boulder(kk, s));
++  // a clutch of shells down here too, by the pool
++  B.put(2.2, 4.4, 1, (kk) => eggs(kk, 3));
++
++  // light: cold from the globes, warm in the guard house
++  B.light('#bfe6ff', 4, 10, 5.2, 2.6, 3.6); B.light('#bfe6ff', 3.5, 10, -5.0, TY + 2.4, -4.0); B.light('#bfe6ff', 3, 9, -4.0, 2.8, 4.0);
++  B.light('#ffd8a0', 3.5, 8, 5.4, 2.4, -4.0);
++  return { tralucave: B.finish() };
++}
++
++// the plateau's door leads in; coming out, Twinsen stands 1.2 m before it, facing away
++const PD = OLD_DOORS.plateau;
++export function traluCaveDoors() {
++  return [{ house: 'plateau', x: PD.x + Math.sin(PD.ry) * 0.35, z: PD.z + Math.cos(PD.ry) * 0.35, r: 0.9, room: 'tralucave' }];
++}
++export function traluCaveExit(to) {
++  if (to !== 'tralucave-out') return null;
++  return { x: PD.x + Math.sin(PD.ry) * 1.6, z: PD.z + Math.cos(PD.ry) * 1.6, a: PD.ry };
++}

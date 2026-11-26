@@ -1,0 +1,1597 @@
+{
+ "conditions": "SwiftShader, 4-core container, quiet, 1366x768, Medium, devicePixelRatio 1; base f09ce7e (port 8185) vs candidate (port 8184), interleaved",
+ "boots_round1_before_rebake": [
+  {
+   "which": "base",
+   "bootS": 46.534,
+   "buildMs": 11533,
+   "shadersMs": 33486,
+   "programs": 93,
+   "gpu": {
+    "geometries": 1237,
+    "textures": 457
+   },
+   "heapAfterGcMB": 128,
+   "perfMemoryUsedMB": 712,
+   "loadTimes": {
+    "world": 3358,
+    "spaceport": 277,
+    "townlife": 71,
+    "containers": 18,
+    "citydress": 115,
+    "interiors": 983,
+    "zeelich": 502,
+    "underground": 479,
+    "desert": 821,
+    "condenser": 33,
+    "temple": 44,
+    "wizards": 42,
+    "lba1": 391,
+    "hamalayi": 600,
+    "obsroom": 20,
+    "upper": 495,
+    "valves": 23,
+    "arena": 14,
+    "islands": 2434,
+    "regioncontainers": 31,
+    "actors": 483,
+    "total": 11533,
+    "prep": {
+     "paint": 77,
+     "programs": 217,
+     "textures": 19491,
+     "geometry": 370,
+     "paint2": 2,
+     "batches": 213,
+     "shadowPrograms": 3359,
+     "firstFrame": 9759
+    },
+    "shaders": 33486,
+    "programs": 93
+   }
+  },
+  {
+   "which": "candidate",
+   "bootS": 28.597,
+   "buildMs": 5270,
+   "shadersMs": 21771,
+   "programs": 74,
+   "gpu": {
+    "geometries": 911,
+    "textures": 170
+   },
+   "heapAfterGcMB": 62,
+   "perfMemoryUsedMB": 228,
+   "loadTimes": {
+    "worldSteps": {
+     "textures": 140,
+     "heights": 469,
+     "ground": 147,
+     "terrain": 25,
+     "town": 321,
+     "statue": 64,
+     "tree spots": 6,
+     "tree round": 485,
+     "tree fruit": 385,
+     "tree tall": 129,
+     "tree pine": 322,
+     "trees": 192,
+     "plants": 58,
+     "island": 478,
+     "landmarks": 2,
+     "end": 13
+    },
+    "world": 3236,
+    "spaceport": 311,
+    "townlife": 73,
+    "containers": 20,
+    "citydress": 142,
+    "wizards": 4,
+    "lba1": 15,
+    "citadel": 4555,
+    "house": 321,
+    "well": 37,
+    "regioncontainers": 0,
+    "actors": 106,
+    "story": 126,
+    "total": 5270,
+    "regions": {
+     "startup": [
+      {
+       "group": "house",
+       "ms": 320,
+       "why": "startup"
+      },
+      {
+       "group": "well",
+       "ms": 37,
+       "why": "startup"
+      }
+     ],
+     "later": [],
+     "deferred": [
+      "office",
+      "projoffice",
+      "control",
+      "workshop",
+      "lighttop",
+      "cellar",
+      "zeelich",
+      "underground",
+      "desert",
+      "condenser",
+      "butemple",
+      "wtent",
+      "school",
+      "asylum",
+      "bumaze",
+      "hamalayi",
+      "obsv",
+      "upper",
+      "valves",
+      "arena",
+      "isle_otringal",
+      "isle_knartas",
+      "isle_mosquibee",
+      "isle_celebration",
+      "isle_undergas",
+      "isle_cxislet",
+      "isle_platform",
+      "isle_liftdock",
+      "isle_tralu",
+      "isle_orchard",
+      "isle_oldwatch"
+     ],
+     "speed": 0.88
+    },
+    "prep": {
+     "paint": 942,
+     "programs": 59,
+     "textures": 5847,
+     "geometry": 1181,
+     "geometryPart": 196,
+     "batches": 257,
+     "shadowPrograms": 2824,
+     "firstFrame": 10662
+    },
+    "shaders": 21771,
+    "programs": 74
+   }
+  },
+  {
+   "which": "base",
+   "bootS": 49.463,
+   "buildMs": 11720,
+   "shadersMs": 36019,
+   "programs": 93,
+   "gpu": {
+    "geometries": 1237,
+    "textures": 457
+   },
+   "heapAfterGcMB": 129,
+   "perfMemoryUsedMB": 712,
+   "loadTimes": {
+    "world": 3578,
+    "spaceport": 349,
+    "townlife": 98,
+    "containers": 33,
+    "citydress": 133,
+    "interiors": 1050,
+    "zeelich": 496,
+    "underground": 408,
+    "desert": 529,
+    "condenser": 24,
+    "temple": 20,
+    "wizards": 27,
+    "lba1": 242,
+    "hamalayi": 573,
+    "obsroom": 11,
+    "upper": 297,
+    "valves": 15,
+    "arena": 7,
+    "islands": 3128,
+    "regioncontainers": 26,
+    "actors": 463,
+    "total": 11720,
+    "prep": {
+     "paint": 109,
+     "programs": 249,
+     "textures": 19295,
+     "geometry": 1778,
+     "paint2": 2,
+     "batches": 258,
+     "shadowPrograms": 5235,
+     "firstFrame": 9094
+    },
+    "shaders": 36019,
+    "programs": 93
+   }
+  },
+  {
+   "which": "candidate",
+   "bootS": 28.299,
+   "buildMs": 5111,
+   "shadersMs": 21572,
+   "programs": 74,
+   "gpu": {
+    "geometries": 911,
+    "textures": 170
+   },
+   "heapAfterGcMB": 62,
+   "perfMemoryUsedMB": 215,
+   "loadTimes": {
+    "worldSteps": {
+     "textures": 121,
+     "heights": 602,
+     "ground": 156,
+     "terrain": 24,
+     "town": 285,
+     "statue": 75,
+     "tree spots": 6,
+     "tree round": 523,
+     "tree fruit": 394,
+     "tree tall": 114,
+     "tree pine": 233,
+     "trees": 238,
+     "plants": 72,
+     "island": 313,
+     "landmarks": 2,
+     "end": 13
+    },
+    "world": 3170,
+    "spaceport": 277,
+    "townlife": 73,
+    "containers": 26,
+    "citydress": 162,
+    "wizards": 6,
+    "lba1": 7,
+    "citadel": 4348,
+    "house": 355,
+    "well": 63,
+    "regioncontainers": 0,
+    "actors": 95,
+    "story": 115,
+    "total": 5111,
+    "regions": {
+     "startup": [
+      {
+       "group": "house",
+       "ms": 355,
+       "why": "startup"
+      },
+      {
+       "group": "well",
+       "ms": 63,
+       "why": "startup"
+      }
+     ],
+     "later": [],
+     "deferred": [
+      "office",
+      "projoffice",
+      "control",
+      "workshop",
+      "lighttop",
+      "cellar",
+      "zeelich",
+      "underground",
+      "desert",
+      "condenser",
+      "butemple",
+      "wtent",
+      "school",
+      "asylum",
+      "bumaze",
+      "hamalayi",
+      "obsv",
+      "upper",
+      "valves",
+      "arena",
+      "isle_otringal",
+      "isle_knartas",
+      "isle_mosquibee",
+      "isle_celebration",
+      "isle_undergas",
+      "isle_cxislet",
+      "isle_platform",
+      "isle_liftdock",
+      "isle_tralu",
+      "isle_orchard",
+      "isle_oldwatch"
+     ],
+     "speed": 0.84
+    },
+    "prep": {
+     "paint": 2112,
+     "programs": 55,
+     "textures": 4883,
+     "geometry": 1047,
+     "geometryPart": 174,
+     "batches": 209,
+     "shadowPrograms": 4229,
+     "firstFrame": 9040
+    },
+    "shaders": 21572,
+    "programs": 74
+   }
+  }
+ ],
+ "boots_round2_final": [
+  {
+   "which": "base",
+   "bootS": 48.365,
+   "buildMs": 10859,
+   "shadersMs": 35789,
+   "programs": 93,
+   "gpu": {
+    "geometries": 1237,
+    "textures": 457
+   },
+   "heapAfterGcMB": 128,
+   "perfMemoryUsedMB": 712,
+   "loadTimes": {
+    "world": 3293,
+    "spaceport": 340,
+    "townlife": 70,
+    "containers": 12,
+    "citydress": 119,
+    "interiors": 872,
+    "zeelich": 419,
+    "underground": 373,
+    "desert": 596,
+    "condenser": 33,
+    "temple": 29,
+    "wizards": 27,
+    "lba1": 289,
+    "hamalayi": 457,
+    "obsroom": 13,
+    "upper": 271,
+    "valves": 38,
+    "arena": 13,
+    "islands": 2951,
+    "regioncontainers": 32,
+    "actors": 383,
+    "total": 10859,
+    "prep": {
+     "paint": 78,
+     "programs": 202,
+     "textures": 18783,
+     "geometry": 1757,
+     "paint2": 4,
+     "batches": 208,
+     "shadowPrograms": 5458,
+     "firstFrame": 9301
+    },
+    "shaders": 35789,
+    "programs": 93
+   }
+  },
+  {
+   "which": "candidate",
+   "bootS": 24.044,
+   "buildMs": 4004,
+   "shadersMs": 18630,
+   "programs": 74,
+   "gpu": {
+    "geometries": 911,
+    "textures": 170
+   },
+   "heapAfterGcMB": 61,
+   "perfMemoryUsedMB": 215,
+   "loadTimes": {
+    "worldSteps": {
+     "textures": 87,
+     "heights": 538,
+     "ground": 136,
+     "terrain": 32,
+     "town": 272,
+     "statue": 59,
+     "tree spots": 4,
+     "tree round": 6,
+     "tree fruit": 3,
+     "tree tall": 2,
+     "tree pine": 3,
+     "trees": 24,
+     "plants": 63,
+     "island": 320,
+     "landmarks": 2,
+     "end": 24
+    },
+    "world": 1574,
+    "spaceport": 240,
+    "townlife": 69,
+    "containers": 30,
+    "citydress": 173,
+    "wizards": 5,
+    "lba1": 9,
+    "citadel": 3359,
+    "house": 291,
+    "well": 53,
+    "regioncontainers": 0,
+    "actors": 95,
+    "story": 109,
+    "total": 4004,
+    "regions": {
+     "startup": [
+      {
+       "group": "house",
+       "ms": 291,
+       "why": "startup"
+      },
+      {
+       "group": "well",
+       "ms": 53,
+       "why": "startup"
+      }
+     ],
+     "later": [],
+     "deferred": [
+      "office",
+      "projoffice",
+      "control",
+      "workshop",
+      "lighttop",
+      "cellar",
+      "zeelich",
+      "underground",
+      "desert",
+      "condenser",
+      "butemple",
+      "wtent",
+      "school",
+      "asylum",
+      "bumaze",
+      "hamalayi",
+      "obsv",
+      "upper",
+      "valves",
+      "arena",
+      "isle_otringal",
+      "isle_knartas",
+      "isle_mosquibee",
+      "isle_celebration",
+      "isle_undergas",
+      "isle_cxislet",
+      "isle_platform",
+      "isle_liftdock",
+      "isle_tralu",
+      "isle_orchard",
+      "isle_oldwatch"
+     ],
+     "speed": 0.65
+    },
+    "prep": {
+     "paint": 208,
+     "programs": 56,
+     "textures": 5769,
+     "geometry": 1393,
+     "geometryPart": 231,
+     "batches": 190,
+     "shadowPrograms": 1065,
+     "firstFrame": 9949
+    },
+    "shaders": 18630,
+    "programs": 74,
+    "timeline": [
+     [
+      1407,
+      "Building Citadel\u2026"
+     ],
+     [
+      1496,
+      "Building Citadel\u2026"
+     ],
+     [
+      2040,
+      "Building Citadel\u2026"
+     ],
+     [
+      2178,
+      "Building Citadel\u2026"
+     ],
+     [
+      2212,
+      "Building Citadel\u2026"
+     ],
+     [
+      2613,
+      "Building Citadel\u2026"
+     ],
+     [
+      2681,
+      "Building Citadel\u2026"
+     ],
+     [
+      3276,
+      "Building Citadel\u2026"
+     ],
+     [
+      3306,
+      "Building Citadel\u2026"
+     ],
+     [
+      3401,
+      "Building Citadel\u2026"
+     ],
+     [
+      3427,
+      "Building Citadel\u2026"
+     ],
+     [
+      3451,
+      "Building Citadel\u2026"
+     ],
+     [
+      3559,
+      "Building Citadel\u2026"
+     ],
+     [
+      3561,
+      "Building Citadel\u2026"
+     ],
+     [
+      3608,
+      "Building Citadel\u2026"
+     ],
+     [
+      3612,
+      "Building Citadel\u2026"
+     ],
+     [
+      3638,
+      "Building Citadel\u2026"
+     ],
+     [
+      3804,
+      "Building Citadel\u2026"
+     ],
+     [
+      3868,
+      "Building Citadel\u2026"
+     ],
+     [
+      4190,
+      "Building Citadel\u2026"
+     ],
+     [
+      4193,
+      "Building Citadel\u2026"
+     ],
+     [
+      4225,
+      "Building Citadel\u2026"
+     ],
+     [
+      4920,
+      "Building Twinsen's house\u2026"
+     ],
+     [
+      5225,
+      "Building The well cave\u2026"
+     ],
+     [
+      5287,
+      "Preparing the story\u2026"
+     ],
+     [
+      5404,
+      "Preparing graphics\u2026"
+     ],
+     [
+      5471,
+      "Preparing graphics\u2026"
+     ],
+     [
+      11306,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11415,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11424,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11489,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11498,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11852,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      12824,
+      "Almost there\u2026"
+     ],
+     [
+      13016,
+      "Almost there\u2026"
+     ],
+     [
+      14083,
+      "Almost there\u2026"
+     ],
+     [
+      24034,
+      "title"
+     ]
+    ],
+    "longestStep": 9951
+   }
+  },
+  {
+   "which": "base",
+   "bootS": 46.502,
+   "buildMs": 10654,
+   "shadersMs": 34324,
+   "programs": 93,
+   "gpu": {
+    "geometries": 1237,
+    "textures": 457
+   },
+   "heapAfterGcMB": 128,
+   "perfMemoryUsedMB": 712,
+   "loadTimes": {
+    "world": 3008,
+    "spaceport": 357,
+    "townlife": 116,
+    "containers": 26,
+    "citydress": 121,
+    "interiors": 1062,
+    "zeelich": 548,
+    "underground": 442,
+    "desert": 610,
+    "condenser": 26,
+    "temple": 22,
+    "wizards": 33,
+    "lba1": 277,
+    "hamalayi": 479,
+    "obsroom": 9,
+    "upper": 275,
+    "valves": 13,
+    "arena": 4,
+    "islands": 2612,
+    "regioncontainers": 25,
+    "actors": 353,
+    "total": 10654,
+    "prep": {
+     "paint": 76,
+     "programs": 165,
+     "textures": 18549,
+     "geometry": 1584,
+     "paint2": 3,
+     "batches": 187,
+     "shadowPrograms": 3922,
+     "firstFrame": 9838
+    },
+    "shaders": 34324,
+    "programs": 93
+   }
+  },
+  {
+   "which": "candidate",
+   "bootS": 24.726,
+   "buildMs": 4018,
+   "shadersMs": 19088,
+   "programs": 74,
+   "gpu": {
+    "geometries": 911,
+    "textures": 170
+   },
+   "heapAfterGcMB": 60,
+   "perfMemoryUsedMB": 215,
+   "loadTimes": {
+    "worldSteps": {
+     "textures": 164,
+     "heights": 513,
+     "ground": 149,
+     "terrain": 28,
+     "town": 255,
+     "statue": 86,
+     "tree spots": 4,
+     "tree round": 14,
+     "tree fruit": 5,
+     "tree tall": 2,
+     "tree pine": 3,
+     "trees": 37,
+     "plants": 81,
+     "island": 432,
+     "landmarks": 2,
+     "end": 12
+    },
+    "world": 1787,
+    "spaceport": 230,
+    "townlife": 67,
+    "containers": 20,
+    "citydress": 111,
+    "wizards": 5,
+    "lba1": 9,
+    "citadel": 3348,
+    "house": 336,
+    "well": 44,
+    "regioncontainers": 1,
+    "actors": 96,
+    "story": 122,
+    "total": 4018,
+    "regions": {
+     "startup": [
+      {
+       "group": "house",
+       "ms": 336,
+       "why": "startup"
+      },
+      {
+       "group": "well",
+       "ms": 44,
+       "why": "startup"
+      }
+     ],
+     "later": [],
+     "deferred": [
+      "office",
+      "projoffice",
+      "control",
+      "workshop",
+      "lighttop",
+      "cellar",
+      "zeelich",
+      "underground",
+      "desert",
+      "condenser",
+      "butemple",
+      "wtent",
+      "school",
+      "asylum",
+      "bumaze",
+      "hamalayi",
+      "obsv",
+      "upper",
+      "valves",
+      "arena",
+      "isle_otringal",
+      "isle_knartas",
+      "isle_mosquibee",
+      "isle_celebration",
+      "isle_undergas",
+      "isle_cxislet",
+      "isle_platform",
+      "isle_liftdock",
+      "isle_tralu",
+      "isle_orchard",
+      "isle_oldwatch"
+     ],
+     "speed": 0.64
+    },
+    "prep": {
+     "paint": 711,
+     "programs": 68,
+     "textures": 4666,
+     "geometry": 692,
+     "geometryPart": 114,
+     "batches": 238,
+     "shadowPrograms": 3915,
+     "firstFrame": 8797
+    },
+    "shaders": 19088,
+    "programs": 74,
+    "timeline": [
+     [
+      1605,
+      "Building Citadel\u2026"
+     ],
+     [
+      1771,
+      "Building Citadel\u2026"
+     ],
+     [
+      2294,
+      "Building Citadel\u2026"
+     ],
+     [
+      2446,
+      "Building Citadel\u2026"
+     ],
+     [
+      2477,
+      "Building Citadel\u2026"
+     ],
+     [
+      2891,
+      "Building Citadel\u2026"
+     ],
+     [
+      2981,
+      "Building Citadel\u2026"
+     ],
+     [
+      3230,
+      "Building Citadel\u2026"
+     ],
+     [
+      3694,
+      "Building Citadel\u2026"
+     ],
+     [
+      3737,
+      "Building Citadel\u2026"
+     ],
+     [
+      3766,
+      "Building Citadel\u2026"
+     ],
+     [
+      3831,
+      "Building Citadel\u2026"
+     ],
+     [
+      3855,
+      "Building Citadel\u2026"
+     ],
+     [
+      3871,
+      "Building Citadel\u2026"
+     ],
+     [
+      3888,
+      "Building Citadel\u2026"
+     ],
+     [
+      3905,
+      "Building Citadel\u2026"
+     ],
+     [
+      3921,
+      "Building Citadel\u2026"
+     ],
+     [
+      3973,
+      "Building Citadel\u2026"
+     ],
+     [
+      4057,
+      "Building Citadel\u2026"
+     ],
+     [
+      4490,
+      "Building Citadel\u2026"
+     ],
+     [
+      4494,
+      "Building Citadel\u2026"
+     ],
+     [
+      4506,
+      "Building Citadel\u2026"
+     ],
+     [
+      5077,
+      "Building Twinsen's house\u2026"
+     ],
+     [
+      5429,
+      "Building The well cave\u2026"
+     ],
+     [
+      5483,
+      "Preparing the story\u2026"
+     ],
+     [
+      5628,
+      "Preparing graphics\u2026"
+     ],
+     [
+      5717,
+      "Preparing graphics\u2026"
+     ],
+     [
+      10410,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      10480,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      10485,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      10740,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11053,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11443,
+      "Preparing Citadel\u2026"
+     ],
+     [
+      11758,
+      "Almost there\u2026"
+     ],
+     [
+      11998,
+      "Almost there\u2026"
+     ],
+     [
+      15917,
+      "Almost there\u2026"
+     ],
+     [
+      24716,
+      "title"
+     ]
+    ],
+    "longestStep": 8799
+   }
+  }
+ ],
+ "firstEntry": {
+  "start": {
+   "heap": 60,
+   "geos": 995
+  },
+  "areas": [
+   {
+    "id": "zeelich",
+    "room": "zeelich",
+    "wallMs": 12126,
+    "builds": [
+     {
+      "group": "zeelich",
+      "ms": 806,
+      "why": "enter",
+      "phase": "play",
+      "at": 34278
+     }
+    ],
+    "newPrograms": 9,
+    "card": true,
+    "maxFrameGapMs": 7223,
+    "heap": 70,
+    "geos": 1345,
+    "pass": 1
+   },
+   {
+    "id": "zeelich",
+    "room": "zeelich",
+    "wallMs": 15976,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 3497,
+    "heap": 69,
+    "geos": 1343,
+    "pass": 2
+   },
+   {
+    "id": "desert",
+    "room": "desert",
+    "wallMs": 33607,
+    "builds": [
+     {
+      "group": "desert",
+      "ms": 852,
+      "why": "enter",
+      "phase": "play",
+      "at": 99619
+     }
+    ],
+    "newPrograms": 3,
+    "card": true,
+    "maxFrameGapMs": 26156,
+    "heap": 74,
+    "geos": 1522,
+    "pass": 1
+   },
+   {
+    "id": "desert",
+    "room": "desert",
+    "wallMs": 9934,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 2267,
+    "heap": 74,
+    "geos": 1522,
+    "pass": 2
+   },
+   {
+    "id": "hamalayi",
+    "room": "hamalayi",
+    "wallMs": 29638,
+    "builds": [
+     {
+      "group": "hamalayi",
+      "ms": 927,
+      "why": "enter",
+      "phase": "play",
+      "at": 168039
+     }
+    ],
+    "newPrograms": 1,
+    "card": true,
+    "maxFrameGapMs": 23190,
+    "heap": 79,
+    "geos": 1639,
+    "pass": 1
+   },
+   {
+    "id": "hamalayi",
+    "room": "hamalayi",
+    "wallMs": 11542,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 2726,
+    "heap": 79,
+    "geos": 1639,
+    "pass": 2
+   },
+   {
+    "id": "isle_otringal",
+    "room": "isle_otringal",
+    "wallMs": 29921,
+    "builds": [
+     {
+      "group": "isle_otringal",
+      "ms": 873,
+      "why": "enter",
+      "phase": "play",
+      "at": 240051
+     }
+    ],
+    "newPrograms": 0,
+    "card": true,
+    "maxFrameGapMs": 22366,
+    "heap": 82,
+    "geos": 1699,
+    "pass": 1
+   },
+   {
+    "id": "isle_otringal",
+    "room": "isle_otringal",
+    "wallMs": 16583,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 4060,
+    "heap": 82,
+    "geos": 1700,
+    "pass": 2
+   },
+   {
+    "id": "workshop",
+    "room": "workshop",
+    "wallMs": 39673,
+    "builds": [
+     {
+      "group": "workshop",
+      "ms": 379,
+      "why": "enter",
+      "phase": "play",
+      "at": 326280
+     }
+    ],
+    "newPrograms": 2,
+    "card": true,
+    "maxFrameGapMs": 29658,
+    "heap": 85,
+    "geos": 1833,
+    "pass": 1
+   },
+   {
+    "id": "workshop",
+    "room": "workshop",
+    "wallMs": 4758,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 1260,
+    "heap": 86,
+    "geos": 1833,
+    "pass": 2
+   },
+   {
+    "id": "upper",
+    "room": "upper",
+    "wallMs": 26218,
+    "builds": [
+     {
+      "group": "upper",
+      "ms": 663,
+      "why": "enter",
+      "phase": "play",
+      "at": 389500
+     }
+    ],
+    "newPrograms": 0,
+    "card": true,
+    "maxFrameGapMs": 22119,
+    "heap": 89,
+    "geos": 1851,
+    "pass": 1
+   },
+   {
+    "id": "upper",
+    "room": "upper",
+    "wallMs": 5765,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 2380,
+    "heap": 89,
+    "geos": 1851,
+    "pass": 2
+   },
+   {
+    "id": "c3shaft",
+    "room": "c3shaft",
+    "wallMs": 23965,
+    "builds": [
+     {
+      "group": "underground",
+      "ms": 588,
+      "why": "enter",
+      "phase": "play",
+      "at": 441517
+     }
+    ],
+    "newPrograms": 7,
+    "card": true,
+    "maxFrameGapMs": 21354,
+    "heap": 97,
+    "geos": 1905,
+    "pass": 1
+   },
+   {
+    "id": "c3shaft",
+    "room": "c3shaft",
+    "wallMs": 10095,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 3564,
+    "heap": 97,
+    "geos": 1905,
+    "pass": 2
+   },
+   {
+    "id": "office",
+    "room": "office",
+    "wallMs": 26604,
+    "builds": [
+     {
+      "group": "office",
+      "ms": 208,
+      "why": "enter",
+      "phase": "play",
+      "at": 500676
+     }
+    ],
+    "newPrograms": 0,
+    "card": true,
+    "maxFrameGapMs": 22001,
+    "heap": 98,
+    "geos": 1973,
+    "pass": 1
+   },
+   {
+    "id": "office",
+    "room": "office",
+    "wallMs": 5548,
+    "builds": [],
+    "newPrograms": 0,
+    "card": false,
+    "maxFrameGapMs": 1314,
+    "heap": 98,
+    "geos": 1973,
+    "pass": 2
+   }
+  ],
+  "summary": {
+   "startup": [
+    {
+     "group": "house",
+     "ms": 330,
+     "why": "startup"
+    },
+    {
+     "group": "well",
+     "ms": 53,
+     "why": "startup"
+    }
+   ],
+   "later": [
+    {
+     "group": "office",
+     "ms": 208,
+     "why": "enter"
+    },
+    {
+     "group": "workshop",
+     "ms": 379,
+     "why": "enter"
+    },
+    {
+     "group": "zeelich",
+     "ms": 806,
+     "why": "enter"
+    },
+    {
+     "group": "underground",
+     "ms": 588,
+     "why": "enter"
+    },
+    {
+     "group": "desert",
+     "ms": 852,
+     "why": "enter"
+    },
+    {
+     "group": "hamalayi",
+     "ms": 927,
+     "why": "enter"
+    },
+    {
+     "group": "upper",
+     "ms": 663,
+     "why": "enter"
+    },
+    {
+     "group": "isle_otringal",
+     "ms": 873,
+     "why": "enter"
+    }
+   ],
+   "deferred": [
+    "projoffice",
+    "control",
+    "lighttop",
+    "cellar",
+    "condenser",
+    "butemple",
+    "wtent",
+    "school",
+    "asylum",
+    "bumaze",
+    "obsv",
+    "valves",
+    "arena",
+    "isle_knartas",
+    "isle_mosquibee",
+    "isle_celebration",
+    "isle_undergas",
+    "isle_cxislet",
+    "isle_platform",
+    "isle_liftdock",
+    "isle_tralu",
+    "isle_orchard",
+    "isle_oldwatch"
+   ],
+   "speed": 0.68
+  },
+  "errors": []
+ },
+ "throttle6": {
+  "url": "http://localhost:8184/",
+  "quality": "medium",
+  "bootS": 48.953,
+  "pageLoadS": 0.821,
+  "L": {
+   "worldSteps": {
+    "textures": 477,
+    "heights": 2354,
+    "ground": 771,
+    "terrain": 207,
+    "town": 1367,
+    "statue": 233,
+    "tree spots": 5,
+    "tree round": 44,
+    "tree fruit": 15,
+    "tree tall": 9,
+    "tree pine": 2,
+    "trees": 116,
+    "plants": 365,
+    "island": 1596,
+    "landmarks": 35,
+    "end": 60
+   },
+   "world": 7655,
+   "spaceport": 922,
+   "townlife": 328,
+   "containers": 51,
+   "citydress": 525,
+   "wizards": 23,
+   "lba1": 51,
+   "citadel": 9929,
+   "house": 1378,
+   "well": 249,
+   "regioncontainers": 0,
+   "actors": 462,
+   "story": 536,
+   "total": 13041,
+   "regions": {
+    "startup": [
+     {
+      "group": "house",
+      "ms": 1378,
+      "why": "startup"
+     },
+     {
+      "group": "well",
+      "ms": 249,
+      "why": "startup"
+     }
+    ],
+    "later": [],
+    "deferred": [
+     "office",
+     "projoffice",
+     "control",
+     "workshop",
+     "lighttop",
+     "cellar",
+     "zeelich",
+     "underground",
+     "desert",
+     "condenser",
+     "butemple",
+     "wtent",
+     "school",
+     "asylum",
+     "bumaze",
+     "hamalayi",
+     "obsv",
+     "upper",
+     "valves",
+     "arena",
+     "isle_otringal",
+     "isle_knartas",
+     "isle_mosquibee",
+     "isle_celebration",
+     "isle_undergas",
+     "isle_cxislet",
+     "isle_platform",
+     "isle_liftdock",
+     "isle_tralu",
+     "isle_orchard",
+     "isle_oldwatch"
+    ],
+    "speed": 1.91
+   },
+   "prep": {
+    "paint": 11410,
+    "programs": 282,
+    "textures": 1360,
+    "geometry": 1261,
+    "geometryPart": 205,
+    "batches": 870,
+    "shadowPrograms": 5944,
+    "firstFrame": 12111
+   },
+   "shaders": 33237,
+   "programs": 74,
+   "timeline": [
+    [
+     2617,
+     "Building Citadel\u2026"
+    ],
+    [
+     3097,
+     "Building Citadel\u2026"
+    ],
+    [
+     5505,
+     "Building Citadel\u2026"
+    ],
+    [
+     6292,
+     "Building Citadel\u2026"
+    ],
+    [
+     6525,
+     "Building Citadel\u2026"
+    ],
+    [
+     7909,
+     "Building Citadel\u2026"
+    ],
+    [
+     8154,
+     "Building Citadel\u2026"
+    ],
+    [
+     8169,
+     "Building Citadel\u2026"
+    ],
+    [
+     8215,
+     "Building Citadel\u2026"
+    ],
+    [
+     8227,
+     "Building Citadel\u2026"
+    ],
+    [
+     8229,
+     "Building Citadel\u2026"
+    ],
+    [
+     8255,
+     "Building Citadel\u2026"
+    ],
+    [
+     8266,
+     "Building Citadel\u2026"
+    ],
+    [
+     8289,
+     "Building Citadel\u2026"
+    ],
+    [
+     8295,
+     "Building Citadel\u2026"
+    ],
+    [
+     8312,
+     "Building Citadel\u2026"
+    ],
+    [
+     8322,
+     "Building Citadel\u2026"
+    ],
+    [
+     8461,
+     "Building Citadel\u2026"
+    ],
+    [
+     8847,
+     "Building Citadel\u2026"
+    ],
+    [
+     10459,
+     "Building Citadel\u2026"
+    ],
+    [
+     10526,
+     "Building Citadel\u2026"
+    ],
+    [
+     10603,
+     "Building Citadel\u2026"
+    ],
+    [
+     13212,
+     "Building Twinsen's house\u2026"
+    ],
+    [
+     14675,
+     "Building The well cave\u2026"
+    ],
+    [
+     14976,
+     "Preparing the story\u2026"
+    ],
+    [
+     15690,
+     "Preparing graphics\u2026"
+    ],
+    [
+     16013,
+     "Preparing graphics\u2026"
+    ],
+    [
+     28408,
+     "Preparing Citadel\u2026"
+    ],
+    [
+     28828,
+     "Preparing Citadel\u2026"
+    ],
+    [
+     28868,
+     "Preparing Citadel\u2026"
+    ],
+    [
+     29033,
+     "Preparing Citadel\u2026"
+    ],
+    [
+     29067,
+     "Preparing Citadel\u2026"
+    ],
+    [
+     29405,
+     "Preparing Citadel\u2026"
+    ],
+    [
+     29979,
+     "Almost there\u2026"
+    ],
+    [
+     30855,
+     "Almost there\u2026"
+    ],
+    [
+     36808,
+     "Almost there\u2026"
+    ],
+    [
+     48927,
+     "title"
+    ]
+   ],
+   "longestStep": 12395
+  },
+  "programs": 74,
+  "mem": {
+   "geometries": 911,
+   "textures": 170
+  },
+  "heap": 215,
+  "built": {
+   "startup": [
+    {
+     "group": "house",
+     "ms": 1378,
+     "why": "startup"
+    },
+    {
+     "group": "well",
+     "ms": 249,
+     "why": "startup"
+    }
+   ],
+   "later": [],
+   "deferred": [
+    "office",
+    "projoffice",
+    "control",
+    "workshop",
+    "lighttop",
+    "cellar",
+    "zeelich",
+    "underground",
+    "desert",
+    "condenser",
+    "butemple",
+    "wtent",
+    "school",
+    "asylum",
+    "bumaze",
+    "hamalayi",
+    "obsv",
+    "upper",
+    "valves",
+    "arena",
+    "isle_otringal",
+    "isle_knartas",
+    "isle_mosquibee",
+    "isle_celebration",
+    "isle_undergas",
+    "isle_cxislet",
+    "isle_platform",
+    "isle_liftdock",
+    "isle_tralu",
+    "isle_orchard",
+    "isle_oldwatch"
+   ],
+   "speed": 1.91
+  },
+  "heapGC": 61,
+  "load": [
+   3.8,
+   4.4
+  ],
+  "errors": []
+ }
+}

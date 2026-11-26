@@ -1,0 +1,151 @@
+== try 1 ch2 (base-03): hp 10/10 mp 7
+the depot valve at -68.0 -71.4 open false
+[0.2] at -62.6,11.0 hp 10; near: ; prompt ""
+[1.9] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS+KeyA cam 0.00,0.88
+[6.9] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS+KeyA cam 0.00,0.88
+[10.3] at -55.5,1.6 hp 10; near: ; prompt ""
+[11.9] plan 17 pts, wp 1 → -47.5,-11.3 keys KeyS+KeyA cam 0.00,0.88
+[17.1] plan 16 pts, wp 2 → -40.7,-17.8 keys KeyS+KeyA cam 0.00,0.88
+[20.4] at -46.2,-9.5 hp 10; near: ; prompt "E Talk"
+[22.2] plan 16 pts, wp 2 → -40.7,-17.8 keys KeyS+KeyA cam 0.00,0.88
+[27.2] plan 14 pts, wp 1 → -38.8,-20.3 keys KeyS+KeyA cam 0.00,0.85
+[30.5] at -36.3,-23.4 hp 10; near: ; prompt "E Talk"
+[32.3] plan 13 pts, wp 1 → -34.6,-27.9 keys KeyS cam 0.00,0.81
+[37.4] plan 15 pts, wp 1 → -39.1,-37.9 keys KeyS+KeyD cam -0.00,0.87
+[40.5] at -38.6,-37.5 hp 10; near: ; prompt "E Talk"
+[42.4] plan 15 pts, wp 3 → -40.7,-41.1 keys KeyW cam -0.34,-0.81
+[47.4] plan 11 pts, wp 2 → -40.4,-41.4 keys KeyW cam 0.01,-0.88
+[50.5] at -40.5,-40.2 hp 10; near: ; prompt "E Talk"
+[52.5] plan 10 pts, wp 2 → -40.6,-41.4 keys KeyW cam 0.01,-0.88
+[57.6] plan 13 pts, wp 2 → -40.4,-41.4 keys KeyW cam 0.01,-0.88
+[60.6] at -40.2,-40.2 hp 10; near: ; prompt "E Talk"
+[62.6] plan 10 pts, wp 2 → -40.6,-41.4 keys KeyW cam 0.01,-0.88
+[67.6] plan 10 pts, wp 2 → -40.6,-41.4 keys KeyW cam -0.07,-0.88
+[70.7] at -40.2,-40.3 hp 10; near: ; prompt "E Talk"
+[72.6] plan 13 pts, wp 3 → -40.5,-41.5 keys KeyW cam -0.02,-0.88
+[77.7] plan 11 pts, wp 2 → -40.6,-41.5 keys KeyW cam 0.00,-0.88
+[80.7] at -40.1,-40.3 hp 10; near: ; prompt "E Talk"
+[82.7] plan 12 pts, wp 2 → -40.5,-41.5 keys KeyW cam 0.00,-0.88
+[87.8] plan 12 pts, wp 2 → -40.9,-41.9 keys KeyW cam -0.26,-0.84
+[90.8] at -41.3,-40.9 hp 10; near: ; prompt "E Talk"
+[92.8] plan 12 pts, wp 3 → -43.7,-48.7 keys KeyW cam -0.12,-0.87
+[97.8] plan 11 pts, wp 1 → -40.5,-41.7 keys KeyW cam -0.01,-0.88
+[100.3] go → timeout
+[100.8] at -40.4,-41.6 hp 10; near: ; prompt "E Talk"
+[102.9] plan 11 pts, wp 1 → -43.2,-47.8 keys KeyW cam -0.25,-0.84
+[108.0] plan 9 pts, wp 1 → -61.7,-67.2 keys KeyW cam -0.55,-0.69
+[110.9] at -51.0,-57.7 hp 10; near: drone1 patrol 22.2, guard1 patrol 27.9, gdog1 guard 32.1, drone2 patrol 32.6; prompt "E Talk"
+[113.0] plan 8 pts, wp 1 → -62.7,-72.5 keys KeyW cam -0.55,-0.69
+[118.1] plan 8 pts, wp 1 → -62.7,-72.5 keys KeyW cam -0.55,-0.69
+[120.9] at -63.2,-73.0 hp 10; near: drone2 patrol 8.9, gdog1 guard 13.0, drone1 patrol 16.7, guard1 patrol 17.3; prompt "E Talk"
+[123.2] plan 8 pts, wp 3 → -69.8,-73.5 keys KeyW cam -0.88,0.09
+[125.1] go → stop
+[128.3] go → stop
+[129.2] plan 4 pts, wp 1 → -65.7,-73.1 keys KeyS+KeyD cam 0.85,0.06
+[131.0] at -65.9,-72.8 hp 10; near: guard1 patrol 1.6, gdog1 guard 5.5, drone1 patrol 8.3, drone2 patrol 12.6; prompt "E Talk"
+[131.1] go → stop
+[132.0] go → threat
+[132.0] fight: hp 10 mp 6; guard1 alerted 1.6m, gdog1 warn 5.2m, drone1 alerted 7.8m, drone2 alerted 12.4m; throws 0
+[137.1] fight: hp 10 mp 3; gdog1 hurt 4.2m, drone2 chase 5.9m, drone1 chase 6.0m; throws 6
+[142.4] fight: hp 10 mp 0; drone1 chase 5.7m; throws 11
+[143.8] fight → {"r":"clear","throws":12,"dodges":0}
+SUMMARY {"try":1,"result":"valve shut","hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":143.9,"hits":0,"byKind":{},"enemiesSeen":4,"beaten":3}
+== try 2 ch2 (base-03): hp 10/10 mp 7
+the depot valve at -68.0 -71.4 open false
+[0.2] at -62.6,11.0 hp 10; near: ; prompt ""
+[1.9] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS+KeyA cam 0.00,0.88
+[7.0] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS+KeyA cam 0.00,0.88
+[10.2] at -55.1,1.2 hp 10; near: ; prompt ""
+[12.0] plan 16 pts, wp 1 → -47.1,-12.0 keys KeyS+KeyA cam 0.00,0.88
+[17.3] plan 16 pts, wp 2 → -41.8,-16.6 keys KeyS+KeyA cam 0.00,0.88
+[20.3] at -46.0,-9.7 hp 10; near: ; prompt "E Talk"
+[22.3] plan 16 pts, wp 2 → -41.8,-16.6 keys KeyS+KeyA cam 0.00,0.88
+[27.4] plan 14 pts, wp 1 → -34.8,-26.7 keys KeyS cam 0.00,0.86
+[30.7] at -36.2,-23.9 hp 10; near: ; prompt "E Talk"
+[32.4] plan 12 pts, wp 1 → -34.6,-28.2 keys KeyS+KeyA cam 0.00,0.79
+[37.5] plan 11 pts, wp 1 → -35.6,-34.4 keys KeyS+KeyD cam -0.00,0.87
+[40.8] at -38.1,-39.9 hp 10; near: ; prompt "E Talk"
+[42.5] plan 11 pts, wp 2 → -44.0,-48.8 keys KeyS+KeyD cam 0.00,0.81
+[47.6] plan 10 pts, wp 1 → -47.3,-52.8 keys KeyS+KeyA cam 0.65,0.24
+[50.9] at -49.6,-54.0 hp 10; near: drone2 patrol 25.8, guard1 patrol 30.9, gdog1 guard 35.1, drone1 patrol 35.3; prompt "E Talk"
+[52.6] plan 6 pts, wp 1 → -62.5,-69.0 keys KeyS+KeyD cam 0.00,0.88
+[57.6] plan 6 pts, wp 1 → -62.9,-73.1 keys KeyS cam 0.00,0.88
+[60.9] at -60.8,-67.8 hp 10; near: drone1 patrol 10.9, gdog1 guard 13.5, drone2 patrol 19.0, guard1 patrol 19.3; prompt "E Talk"
+[62.7] plan 7 pts, wp 1 → -62.9,-72.8 keys KeyS cam 0.00,0.88
+[65.7] go → stop
+[68.6] plan 6 pts, wp 1 → -69.8,-73.6 keys KeyS cam 0.88,-0.00
+[68.9] go → stop
+[70.9] at -65.1,-73.5 hp 10; near: guard1 patrol 2.0, gdog1 guard 6.4, drone2 patrol 10.6, drone1 patrol 12.4; prompt "E Talk"
+[71.5] go → stop
+[72.4] go → threat
+[72.4] fight: hp 10 mp 6; guard1 alerted 2.5m, gdog1 warn 5.5m, drone2 alerted 9.4m, drone1 alerted 12.0m; throws 0
+[73.8] HIT hp 10→9 nearest guard:guard1 (recover, 2.5 m)
+[76.7] HIT hp 9→8 nearest guard:guard1 (recover, 2.4 m)
+[77.5] fight: hp 8 mp 3; guard1 chase 2.3m, gdog1 chase 4.8m, drone2 chase 6.0m, drone1 chase 6.4m; throws 4
+[79.6] HIT hp 8→7 nearest guard:guard1 (hurt, 2.5 m)
+[82.9] fight: hp 7 mp 0; gdog1 chase 4.8m, drone2 chase 6.0m; throws 10
+[88.0] fight: hp 7 mp 0; gdog1 chase 4.2m; throws 17
+[93.1] fight: hp 7 mp 0; gdog1 chase 3.6m; throws 27
+[98.3] fight: hp 7 mp 0; gdog1 chase 3.2m; throws 38
+[103.3] fight: hp 7 mp 0; gdog1 chase 2.7m; throws 48
+[108.3] fight: hp 7 mp 0; gdog1 chase 4.1m; throws 56
+[113.3] fight: hp 7 mp 0; gdog1 chase 3.6m; throws 63
+[118.7] fight: hp 7 mp 0; gdog1 chase 2.9m; throws 71
+[123.7] fight: hp 7 mp 0; gdog1 recover 4.3m; throws 79
+[128.7] fight: hp 7 mp 0; gdog1 chase 3.7m; throws 86
+[133.7] fight: hp 7 mp 0; gdog1 chase 3.1m; throws 93
+[138.8] fight: hp 7 mp 0; gdog1 chase 2.5m; throws 101
+[144.0] fight: hp 7 mp 0; gdog1 chase 4.1m; throws 108
+[149.1] fight: hp 7 mp 0; gdog1 chase 3.5m; throws 115
+[154.2] fight: hp 7 mp 0; gdog1 chase 2.9m; throws 123
+[159.2] fight: hp 7 mp 0; gdog1 recover 4.3m; throws 131
+[164.6] fight: hp 7 mp 0; gdog1 chase 3.8m; throws 138
+[169.7] fight: hp 7 mp 0; gdog1 chase 3.3m; throws 145
+[174.8] fight: hp 7 mp 0; gdog1 chase 2.7m; throws 153
+[179.9] fight: hp 7 mp 0; gdog1 chase 4.2m; throws 161
+[185.3] fight: hp 7 mp 0; gdog1 chase 3.6m; throws 168
+[190.3] fight: hp 7 mp 0; gdog1 chase 3.1m; throws 175
+[195.7] fight: hp 7 mp 0; gdog1 windup 2.4m; throws 184
+[201.1] fight: hp 7 mp 0; gdog1 chase 3.9m; throws 191
+[206.2] fight: hp 7 mp 0; gdog1 chase 3.3m; throws 198
+[211.3] fight: hp 7 mp 0; gdog1 chase 2.6m; throws 206
+[216.3] fight: hp 7 mp 0; gdog1 chase 4.2m; throws 213
+[221.7] fight: hp 7 mp 0; gdog1 chase 3.7m; throws 220
+[222.5] fight → {"r":"timeout","throws":221,"dodges":7}
+[222.6] go → there
+[225.8] E at the valve; open true
+SUMMARY {"try":2,"result":"valve open","hpIn":10,"hpOut":7,"maxHp":10,"dead":false,"secs":225.8,"hits":3,"byKind":{"guard":3},"enemiesSeen":4,"beaten":3}
+== try 3 ch2 (base-03): hp 10/10 mp 7
+the depot valve at -68.0 -71.4 open false
+[0.2] at -62.6,11.0 hp 10; near: ; prompt ""
+[1.9] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS+KeyA cam 0.00,0.88
+[6.9] plan 15 pts, wp 1 → -53.0,-5.0 keys KeyS+KeyA cam 0.00,0.88
+[10.3] at -55.4,1.5 hp 10; near: ; prompt ""
+[12.0] plan 17 pts, wp 1 → -47.4,-11.6 keys KeyS+KeyA cam 0.00,0.88
+[17.2] plan 17 pts, wp 1 → -50.4,-6.7 keys KeyS+KeyD cam 0.00,0.88
+[20.3] at -47.1,-10.7 hp 10; near: ; prompt ""
+[22.2] plan 17 pts, wp 3 → -38.8,-20.3 keys KeyS+KeyA cam 0.00,0.88
+[27.3] plan 16 pts, wp 1 → -35.8,-23.2 keys KeyS+KeyA cam 0.00,0.82
+[30.4] at -36.0,-24.3 hp 10; near: ; prompt ""
+[32.3] plan 14 pts, wp 1 → -34.4,-28.3 keys KeyS cam -0.00,0.78
+[37.4] plan 9 pts, wp 1 → -44.3,-49.4 keys KeyS+KeyD cam -0.00,0.87
+[40.4] at -37.8,-39.7 hp 10; near: ; prompt ""
+[42.5] plan 9 pts, wp 1 → -44.3,-49.4 keys KeyS+KeyD cam 0.05,0.80
+[47.6] plan 9 pts, wp 1 → -49.6,-55.2 keys KeyS+KeyA cam 0.66,0.24
+[50.4] at -48.6,-53.4 hp 10; near: drone2 patrol 26.6, guard1 patrol 32.4, gdog1 guard 36.1, drone1 patrol 36.8; prompt ""
+[52.6] plan 8 pts, wp 1 → -62.9,-68.7 keys KeyS+KeyD cam 0.00,0.88
+[57.7] plan 7 pts, wp 1 → -62.9,-72.7 keys KeyS cam 0.00,0.88
+[60.5] at -62.5,-65.9 hp 10; near: drone1 patrol 9.7, gdog1 guard 11.2, guard1 patrol 17.8, drone2 patrol 17.8; prompt "E Read"
+[62.8] plan 8 pts, wp 1 → -62.9,-70.6 keys KeyS+KeyA cam 0.00,0.88
+[66.6] go → stop
+[69.4] plan 6 pts, wp 1 → -69.8,-73.6 keys KeyS cam 0.88,-0.00
+[69.7] go → stop
+[70.6] at -63.3,-74.6 hp 10; near: guard1 patrol 3.3, gdog1 guard 8.2, drone2 patrol 11.5, drone1 patrol 15.2; prompt "E Read"
+[72.4] go → there
+[76.0] E at the valve; open false
+[76.0] go → there
+[79.2] E at the valve; open false
+[79.2] HIT hp 10→8 nearest guard:guard1 (strike, 1.8 m)
+[79.2] go → there
+[82.4] E at the valve; open false
+SUMMARY {"try":3,"result":"valve shut","hpIn":10,"hpOut":7,"maxHp":10,"dead":false,"secs":82.5,"hits":1,"byKind":{"guard":1},"enemiesSeen":4,"beaten":0}

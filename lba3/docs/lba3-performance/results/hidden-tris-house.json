@@ -1,0 +1,3901 @@
+{
+ "when": "2026-11-20T19:07:35.932Z",
+ "views": [
+  {
+   "name": "spawn@0",
+   "A": {
+    "name": "spawn@0",
+    "c": {
+     "main": 55,
+     "shadow": 6,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 208759,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1172.7,
+     "min": 1094.8,
+     "max": 1265.9
+    }
+   },
+   "B": {
+    "name": "spawn@0",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "spawn@0",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1224.2,
+     "min": 1196.2,
+     "max": 1226.5
+    }
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412648
+   }
+  },
+  {
+   "name": "spawn@90",
+   "A": {
+    "name": "spawn@90",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "spawn@90",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "spawn@90",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412647
+   }
+  },
+  {
+   "name": "spawn@180",
+   "A": {
+    "name": "spawn@180",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "spawn@180",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "spawn@180",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412670
+   }
+  },
+  {
+   "name": "spawn@-90",
+   "A": {
+    "name": "spawn@-90",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "spawn@-90",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "spawn@-90",
+    "dp": 0,
+    "c": {
+     "main": 53,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226151,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412659
+   }
+  },
+  {
+   "name": "a@0",
+   "A": {
+    "name": "a@0",
+    "c": {
+     "main": 53,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 226195,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "a@0",
+    "c": {
+     "main": 100,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 211145,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "a@0",
+    "dp": 0,
+    "c": {
+     "main": 51,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 221921,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 1
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358966
+   }
+  },
+  {
+   "name": "a@90",
+   "A": {
+    "name": "a@90",
+    "c": {
+     "main": 53,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 226195,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1011.5,
+     "min": 978,
+     "max": 1103.3
+    }
+   },
+   "B": {
+    "name": "a@90",
+    "c": {
+     "main": 100,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 211145,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "a@90",
+    "dp": 0,
+    "c": {
+     "main": 50,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 221921,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 828.6,
+     "min": 802.9,
+     "max": 995.6
+    }
+   },
+   "pv": {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358865
+   }
+  },
+  {
+   "name": "a@180",
+   "A": {
+    "name": "a@180",
+    "c": {
+     "main": 54,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226195,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 1
+    },
+    "t": null
+   },
+   "B": {
+    "name": "a@180",
+    "c": {
+     "main": 100,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 211145,
+     "tshadow": 37215,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "a@180",
+    "dp": 0,
+    "c": {
+     "main": 50,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 221921,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358795
+   }
+  },
+  {
+   "name": "a@-90",
+   "A": {
+    "name": "a@-90",
+    "c": {
+     "main": 53,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226195,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "a@-90",
+    "c": {
+     "main": 100,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211145,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "a@-90",
+    "dp": 0,
+    "c": {
+     "main": 50,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 221921,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358735
+   }
+  },
+  {
+   "name": "b@0",
+   "A": {
+    "name": "b@0",
+    "c": {
+     "main": 61,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 227117,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "b@0",
+    "c": {
+     "main": 131,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 226885,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "b@0",
+    "dp": 0,
+    "c": {
+     "main": 59,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 227037,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 212399,
+    "hid": 159775,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3364
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     277654
+    ],
+    "pxAll": 2726571
+   }
+  },
+  {
+   "name": "b@90",
+   "A": {
+    "name": "b@90",
+    "c": {
+     "main": 61,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 227117,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "b@90",
+    "c": {
+     "main": 131,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 226885,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "b@90",
+    "dp": 0,
+    "c": {
+     "main": 60,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 227037,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 1
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 212399,
+    "hid": 159768,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3357
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     275894
+    ],
+    "pxAll": 2726483
+   }
+  },
+  {
+   "name": "b@180",
+   "A": {
+    "name": "b@180",
+    "c": {
+     "main": 61,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 227117,
+     "tshadow": 37215,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1173.8,
+     "min": 1151.4,
+     "max": 1247.9
+    }
+   },
+   "B": {
+    "name": "b@180",
+    "c": {
+     "main": 131,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 226885,
+     "tshadow": 37215,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "b@180",
+    "dp": 0,
+    "c": {
+     "main": 59,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 227037,
+     "tshadow": 37215,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1331.7,
+     "min": 1275.9,
+     "max": 1363.9
+    }
+   },
+   "pv": {
+    "tris": 212399,
+    "hid": 159768,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3357
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     275894
+    ],
+    "pxAll": 2726408
+   }
+  },
+  {
+   "name": "b@-90",
+   "A": {
+    "name": "b@-90",
+    "c": {
+     "main": 61,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 227117,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "b@-90",
+    "c": {
+     "main": 132,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226885,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 1
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "b@-90",
+    "dp": 0,
+    "c": {
+     "main": 61,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 227117,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 212399,
+    "hid": 159768,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3357
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     275894
+    ],
+    "pxAll": 2726346
+   }
+  },
+  {
+   "name": "c@0",
+   "A": {
+    "name": "c@0",
+    "c": {
+     "main": 56,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 1
+    },
+    "t": null
+   },
+   "B": {
+    "name": "c@0",
+    "c": {
+     "main": 109,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "c@0",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 2,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 62731,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411985
+   }
+  },
+  {
+   "name": "c@90",
+   "A": {
+    "name": "c@90",
+    "c": {
+     "main": 55,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "c@90",
+    "c": {
+     "main": 109,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "c@90",
+    "dp": 0,
+    "c": {
+     "main": 56,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 108815,
+     "tpost": 1,
+     "lines": 1
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411931
+   }
+  },
+  {
+   "name": "c@180",
+   "A": {
+    "name": "c@180",
+    "c": {
+     "main": 55,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 37215,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "c@180",
+    "c": {
+     "main": 109,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 37215,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "c@180",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 3,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 37215,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411879
+   }
+  },
+  {
+   "name": "c@-90",
+   "A": {
+    "name": "c@-90",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1162.8,
+     "min": 891.6,
+     "max": 1180.2
+    }
+   },
+   "B": {
+    "name": "c@-90",
+    "c": {
+     "main": 107,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211743,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "c@-90",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1209.8,
+     "min": 1012.6,
+     "max": 1218.4
+    }
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   }
+  },
+  {
+   "name": "d@0",
+   "A": {
+    "name": "d@0",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1026.9,
+     "min": 939.3,
+     "max": 1061.7
+    }
+   },
+   "B": {
+    "name": "d@0",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "d@0",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": {
+     "med": 1012.9,
+     "min": 931,
+     "max": 1164.8
+    }
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   }
+  },
+  {
+   "name": "d@90",
+   "A": {
+    "name": "d@90",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "d@90",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "d@90",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   }
+  },
+  {
+   "name": "d@180",
+   "A": {
+    "name": "d@180",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "d@180",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "d@180",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   }
+  },
+  {
+   "name": "d@-90",
+   "A": {
+    "name": "d@-90",
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "B": {
+    "name": "d@-90",
+    "c": {
+     "main": 109,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 211823,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "dp": 0
+   },
+   "E": {
+    "name": "d@-90",
+    "dp": 0,
+    "c": {
+     "main": 55,
+     "shadow": 1,
+     "post": 1,
+     "tmain": 226231,
+     "tshadow": 1,
+     "tpost": 1,
+     "lines": 0
+    },
+    "t": null
+   },
+   "pv": {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   }
+  }
+ ],
+ "notes": [],
+ "moving": {
+  "list": [
+   {
+    "name": "Mesh",
+    "site": "polyCharacter@characters.js",
+    "tris": 64
+   },
+   {
+    "name": "Mesh",
+    "site": "polyCharacter@characters.js",
+    "tris": 16
+   },
+   {
+    "name": "SkinnedMesh",
+    "site": "polyCharacter@characters.js",
+    "tris": 4194
+   },
+   {
+    "name": "SkinnedMesh",
+    "site": "polyCharacter@characters.js",
+    "tris": 5044
+   },
+   {
+    "name": "Mesh",
+    "site": "polyCharacter@characters.js",
+    "tris": 108
+   },
+   {
+    "name": "Mesh",
+    "site": "polyCharacter@characters.js",
+    "tris": 16
+   },
+   {
+    "name": "SkinnedMesh",
+    "site": "addSilhouette@characters.js",
+    "tris": 5044
+   }
+  ],
+  "perView": 14482
+ },
+ "soup": {
+  "nan": 0,
+  "tris": 212739,
+  "objs": 146,
+  "chunks": [
+   "1|0|0",
+   "0|2|0",
+   "1|2|0",
+   "0|0|0",
+   "0|0|-2,-2"
+  ],
+  "bmEntries": 0
+ },
+ "analysis": {
+  "totals": {
+   "tris": 212739,
+   "seen": 52964,
+   "batched": 0,
+   "dbl": 303,
+   "dblBackSeen": 94,
+   "dblSeen": 136,
+   "byClass": [
+    0,
+    45980,
+    3998,
+    51544,
+    39267,
+    15622,
+    3364
+   ]
+  },
+  "classes": [
+   "buried",
+   "under/inside a solid",
+   "bottom on the ground",
+   "never front-facing",
+   "outside every view",
+   "tiny",
+   "occluded"
+  ],
+  "perView": [
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412648
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412647
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412670
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2412659
+   },
+   {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358966
+   },
+   {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358865
+   },
+   {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358795
+   },
+   {
+    "tris": 196659,
+    "hid": 144856,
+    "draws": 93,
+    "hidDraws": 9,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50548,
+     38939,
+     15137,
+     3348
+    ],
+    "px": [
+     0,
+     61017,
+     2,
+     0,
+     0,
+     2227,
+     199853
+    ],
+    "pxAll": 2358735
+   },
+   {
+    "tris": 212399,
+    "hid": 159775,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3364
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     277654
+    ],
+    "pxAll": 2726571
+   },
+   {
+    "tris": 212399,
+    "hid": 159768,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3357
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     275894
+    ],
+    "pxAll": 2726483
+   },
+   {
+    "tris": 212399,
+    "hid": 159768,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3357
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     275894
+    ],
+    "pxAll": 2726408
+   },
+   {
+    "tris": 212399,
+    "hid": 159768,
+    "draws": 124,
+    "hidDraws": 14,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     45980,
+     3998,
+     51544,
+     39267,
+     15622,
+     3357
+    ],
+    "px": [
+     0,
+     80831,
+     1,
+     0,
+     0,
+     3414,
+     275894
+    ],
+    "pxAll": 2726346
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411985
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411931
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411879
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   },
+   {
+    "tris": 197337,
+    "hid": 145471,
+    "draws": 102,
+    "hidDraws": 11,
+    "dbl": 303,
+    "dblBackInF": 140,
+    "hc": [
+     0,
+     32896,
+     3988,
+     50884,
+     38939,
+     15409,
+     3355
+    ],
+    "px": [
+     0,
+     62608,
+     2,
+     0,
+     0,
+     2947,
+     215973
+    ],
+    "pxAll": 2411860
+   }
+  ],
+  "sources": [
+   {
+    "label": "kit:custom RoomBuilder.shell@interiors.js",
+    "tris": 45000,
+    "hidden": 36872,
+    "hidW": 736928,
+    "triW": 899488,
+    "cls": [
+     0,
+     2253,
+     724,
+     8403,
+     23675,
+     1413,
+     404
+    ]
+   },
+   {
+    "label": "kit:bed",
+    "tris": 29585,
+    "hidden": 20820,
+    "hidW": 416400,
+    "triW": 591700,
+    "cls": [
+     0,
+     12792,
+     20,
+     2852,
+     4562,
+     447,
+     147
+    ]
+   },
+   {
+    "label": "kit:chair",
+    "tris": 20006,
+    "hidden": 12983,
+    "hidW": 259660,
+    "triW": 400120,
+    "cls": [
+     0,
+     0,
+     72,
+     7778,
+     3312,
+     1683,
+     138
+    ]
+   },
+   {
+    "label": "kit:bookcase",
+    "tris": 22468,
+    "hidden": 21949,
+    "hidW": 232196,
+    "triW": 238800,
+    "cls": [
+     0,
+     19501,
+     144,
+     225,
+     1894,
+     148,
+     37
+    ]
+   },
+   {
+    "label": "kit:pottedPlant",
+    "tris": 13596,
+    "hidden": 10206,
+    "hidW": 204120,
+    "triW": 271920,
+    "cls": [
+     0,
+     0,
+     96,
+     6606,
+     0,
+     2902,
+     602
+    ]
+   },
+   {
+    "label": "mesh:[MeshStandardMaterial]",
+    "tris": 15628,
+    "hidden": 9708,
+    "hidW": 188896,
+    "triW": 302560,
+    "cls": [
+     0,
+     1173,
+     227,
+     5705,
+     261,
+     1637,
+     705
+    ]
+   },
+   {
+    "label": "kit:dresser",
+    "tris": 7218,
+    "hidden": 4498,
+    "hidW": 89960,
+    "triW": 144360,
+    "cls": [
+     0,
+     1718,
+     194,
+     1734,
+     0,
+     656,
+     196
+    ]
+   },
+   {
+    "label": "kit:desk",
+    "tris": 4699,
+    "hidden": 3943,
+    "hidW": 78860,
+    "triW": 93980,
+    "cls": [
+     0,
+     266,
+     244,
+     1084,
+     1994,
+     308,
+     47
+    ]
+   },
+   {
+    "label": "kit:chest",
+    "tris": 4424,
+    "hidden": 3760,
+    "hidW": 75200,
+    "triW": 88480,
+    "cls": [
+     0,
+     377,
+     218,
+     1210,
+     909,
+     852,
+     194
+    ]
+   },
+   {
+    "label": "kit:crate",
+    "tris": 4103,
+    "hidden": 3392,
+    "hidW": 67840,
+    "triW": 82060,
+    "cls": [
+     0,
+     95,
+     344,
+     1657,
+     0,
+     1114,
+     182
+    ]
+   },
+   {
+    "label": "kit:plushDino",
+    "tris": 5029,
+    "hidden": 3132,
+    "hidW": 62640,
+    "triW": 100580,
+    "cls": [
+     0,
+     0,
+     528,
+     1626,
+     0,
+     978,
+     0
+    ]
+   },
+   {
+    "label": "kit:coatStand",
+    "tris": 3816,
+    "hidden": 2835,
+    "hidW": 56700,
+    "triW": 76320,
+    "cls": [
+     0,
+     1994,
+     6,
+     714,
+     0,
+     106,
+     15
+    ]
+   },
+   {
+    "label": "kit:armchair",
+    "tris": 3177,
+    "hidden": 2334,
+    "hidW": 46680,
+    "triW": 63540,
+    "cls": [
+     0,
+     1298,
+     48,
+     542,
+     394,
+     36,
+     16
+    ]
+   },
+   {
+    "label": "kit:stove",
+    "tris": 3756,
+    "hidden": 2260,
+    "hidW": 45200,
+    "triW": 75120,
+    "cls": [
+     0,
+     628,
+     22,
+     1365,
+     0,
+     194,
+     51
+    ]
+   },
+   {
+    "label": "kit:nightstand",
+    "tris": 2850,
+    "hidden": 1866,
+    "hidW": 37320,
+    "triW": 57000,
+    "cls": [
+     0,
+     328,
+     68,
+     1135,
+     19,
+     286,
+     30
+    ]
+   },
+   {
+    "label": "kit:workbench",
+    "tris": 2308,
+    "hidden": 1724,
+    "hidW": 34480,
+    "triW": 46160,
+    "cls": [
+     0,
+     1211,
+     0,
+     384,
+     0,
+     113,
+     16
+    ]
+   },
+   {
+    "label": "kit:custom buildHouse@interiors.js",
+    "tris": 2375,
+    "hidden": 1564,
+    "hidW": 31280,
+    "triW": 47500,
+    "cls": [
+     0,
+     247,
+     2,
+     957,
+     0,
+     324,
+     34
+    ]
+   },
+   {
+    "label": "kit:custom buildHouseWings@interiors.js",
+    "tris": 2228,
+    "hidden": 1366,
+    "hidW": 27320,
+    "triW": 44552,
+    "cls": [
+     0,
+     233,
+     34,
+     821,
+     78,
+     171,
+     29
+    ]
+   },
+   {
+    "label": "kit:sideTable",
+    "tris": 2272,
+    "hidden": 1348,
+    "hidW": 26960,
+    "triW": 45440,
+    "cls": [
+     0,
+     907,
+     0,
+     239,
+     151,
+     45,
+     6
+    ]
+   },
+   {
+    "label": "kit:frame",
+    "tris": 2004,
+    "hidden": 1288,
+    "hidW": 25760,
+    "triW": 40048,
+    "cls": [
+     0,
+     0,
+     0,
+     1000,
+     0,
+     267,
+     21
+    ]
+   },
+   {
+    "label": "kit:toyBlocks",
+    "tris": 1680,
+    "hidden": 1278,
+    "hidW": 25560,
+    "triW": 33600,
+    "cls": [
+     0,
+     0,
+     216,
+     624,
+     0,
+     288,
+     150
+    ]
+   },
+   {
+    "label": "kit:table",
+    "tris": 1604,
+    "hidden": 1213,
+    "hidW": 24260,
+    "triW": 32080,
+    "cls": [
+     0,
+     0,
+     0,
+     943,
+     0,
+     200,
+     70
+    ]
+   },
+   {
+    "label": "kit:wallShelf",
+    "tris": 1316,
+    "hidden": 1057,
+    "hidW": 20436,
+    "triW": 25488,
+    "cls": [
+     0,
+     0,
+     0,
+     549,
+     250,
+     216,
+     42
+    ]
+   },
+   {
+    "label": "kit:custom dressHomeLife@homelife.js",
+    "tris": 1120,
+    "hidden": 971,
+    "hidW": 19252,
+    "triW": 22096,
+    "cls": [
+     0,
+     0,
+     0,
+     150,
+     808,
+     12,
+     1
+    ]
+   },
+   {
+    "label": "kit:wardrobe",
+    "tris": 1288,
+    "hidden": 824,
+    "hidW": 16480,
+    "triW": 25760,
+    "cls": [
+     0,
+     474,
+     20,
+     290,
+     0,
+     29,
+     11
+    ]
+   },
+   {
+    "label": "kit:custom in wardrobe wardrobe@props.js",
+    "tris": 1012,
+    "hidden": 601,
+    "hidW": 12020,
+    "triW": 20240,
+    "cls": [
+     0,
+     0,
+     36,
+     466,
+     0,
+     77,
+     22
+    ]
+   },
+   {
+    "label": "kit:toyBoat",
+    "tris": 863,
+    "hidden": 582,
+    "hidW": 11640,
+    "triW": 17260,
+    "cls": [
+     0,
+     0,
+     115,
+     368,
+     0,
+     98,
+     1
+    ]
+   },
+   {
+    "label": "kit:rug",
+    "tris": 593,
+    "hidden": 560,
+    "hidW": 11200,
+    "triW": 11860,
+    "cls": [
+     0,
+     3,
+     534,
+     13,
+     0,
+     10,
+     0
+    ]
+   },
+   {
+    "label": "kit:floorLamp",
+    "tris": 928,
+    "hidden": 928,
+    "hidW": 10880,
+    "triW": 10880,
+    "cls": [
+     0,
+     480,
+     0,
+     0,
+     448,
+     0,
+     0
+    ]
+   },
+   {
+    "label": "kit:deskLamp",
+    "tris": 864,
+    "hidden": 518,
+    "hidW": 10264,
+    "triW": 16832,
+    "cls": [
+     0,
+     0,
+     0,
+     368,
+     0,
+     150,
+     0
+    ]
+   },
+   {
+    "label": "kit:custom in workbench workbench@props.js",
+    "tris": 760,
+    "hidden": 474,
+    "hidW": 9480,
+    "triW": 15200,
+    "cls": [
+     0,
+     0,
+     0,
+     380,
+     0,
+     83,
+     11
+    ]
+   },
+   {
+    "label": "kit:radio",
+    "tris": 772,
+    "hidden": 464,
+    "hidW": 9280,
+    "triW": 15440,
+    "cls": [
+     0,
+     0,
+     0,
+     354,
+     0,
+     105,
+     5
+    ]
+   },
+   {
+    "label": "dressHomeLife@homelife.js",
+    "tris": 614,
+    "hidden": 577,
+    "hidW": 9232,
+    "triW": 9832,
+    "cls": [
+     0,
+     0,
+     0,
+     306,
+     0,
+     264,
+     7
+    ]
+   },
+   {
+    "label": "kit:spinningTop",
+    "tris": 432,
+    "hidden": 432,
+    "hidW": 8640,
+    "triW": 8640,
+    "cls": [
+     0,
+     0,
+     0,
+     0,
+     432,
+     0,
+     0
+    ]
+   },
+   {
+    "label": "kit:hangingLamp",
+    "tris": 520,
+    "hidden": 374,
+    "hidW": 7480,
+    "triW": 10400,
+    "cls": [
+     0,
+     0,
+     0,
+     114,
+     0,
+     115,
+     145
+    ]
+   },
+   {
+    "label": "Arsenal.decorate@arsenal.js",
+    "tris": 398,
+    "hidden": 284,
+    "hidW": 5680,
+    "triW": 7960,
+    "cls": [
+     0,
+     0,
+     56,
+     137,
+     0,
+     87,
+     4
+    ]
+   },
+   {
+    "label": "buildHouseWings@interiors.js",
+    "tris": 140,
+    "hidden": 130,
+    "hidW": 2600,
+    "triW": 2800,
+    "cls": [
+     0,
+     0,
+     18,
+     52,
+     0,
+     42,
+     18
+    ]
+   },
+   {
+    "label": "renderer.pre@main.js",
+    "tris": 460,
+    "hidden": 87,
+    "hidW": 1607,
+    "triW": 2400,
+    "cls": [
+     0,
+     2,
+     0,
+     0,
+     78,
+     0,
+     7
+    ]
+   },
+   {
+    "label": "kit:custom Module.screwdriver@props.js",
+    "tris": 106,
+    "hidden": 67,
+    "hidW": 1340,
+    "triW": 2120,
+    "cls": [
+     0,
+     0,
+     0,
+     55,
+     0,
+     12,
+     0
+    ]
+   },
+   {
+    "label": "buildHouse@interiors.js",
+    "tris": 393,
+    "hidden": 265,
+    "hidW": 1236,
+    "triW": 1972,
+    "cls": [
+     0,
+     0,
+     0,
+     194,
+     0,
+     71,
+     0
+    ]
+   }
+  ],
+  "parts": 1152
+ },
+ "cuts": {
+  "geo": {
+   "trim": {
+    "mode": "geo",
+    "geos": 53,
+    "removed": 49976,
+    "skipped": 0,
+    "total": 211571,
+    "bmDegenerate": 0
+   },
+   "C": {
+    "calls": 55,
+    "tris": 176407,
+    "shCalls": 1.6,
+    "shTris": 29454,
+    "ms": 772.3
+   },
+   "diff": {
+    "maxShare": 0.0002907986111111111,
+    "avgShare": 0.00015690104166666663,
+    "maxPx": 268
+   },
+   "views": [
+    {
+     "name": "spawn@0",
+     "C": {
+      "name": "spawn@0",
+      "dp": 0,
+      "c": {
+       "main": 55,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176267,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 758.4,
+       "min": 725.5,
+       "max": 786
+      }
+     },
+     "D": {
+      "name": "spawn@0",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "spawn@90",
+     "C": {
+      "name": "spawn@90",
+      "dp": 0,
+      "c": {
+       "main": 55,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176267,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "spawn@90",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "spawn@180",
+     "C": {
+      "name": "spawn@180",
+      "dp": 0,
+      "c": {
+       "main": 55,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176267,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "spawn@180",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "spawn@-90",
+     "C": {
+      "name": "spawn@-90",
+      "dp": 0,
+      "c": {
+       "main": 55,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176267,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "spawn@-90",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "a@0",
+     "C": {
+      "name": "a@0",
+      "dp": 0,
+      "c": {
+       "main": 52,
+       "shadow": 2,
+       "post": 1,
+       "tmain": 176151,
+       "tshadow": 62731,
+       "tpost": 1,
+       "lines": 1
+      },
+      "t": null
+     },
+     "D": {
+      "name": "a@0",
+      "dp": 0,
+      "n": 89,
+      "share": 0.00009657118055555555,
+      "max": 42
+     }
+    },
+    {
+     "name": "a@90",
+     "C": {
+      "name": "a@90",
+      "dp": 0,
+      "c": {
+       "main": 51,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 176151,
+       "tshadow": 108815,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 673,
+       "min": 653.9,
+       "max": 747.7
+      }
+     },
+     "D": {
+      "name": "a@90",
+      "dp": 0,
+      "n": 89,
+      "share": 0.00009657118055555555,
+      "max": 42
+     }
+    },
+    {
+     "name": "a@180",
+     "C": {
+      "name": "a@180",
+      "dp": 0,
+      "c": {
+       "main": 51,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176151,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "a@180",
+      "dp": 0,
+      "n": 89,
+      "share": 0.00009657118055555555,
+      "max": 42
+     }
+    },
+    {
+     "name": "a@-90",
+     "C": {
+      "name": "a@-90",
+      "dp": 0,
+      "c": {
+       "main": 51,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176151,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "a@-90",
+      "dp": 0,
+      "n": 89,
+      "share": 0.00009657118055555555,
+      "max": 42
+     }
+    },
+    {
+     "name": "b@0",
+     "C": {
+      "name": "b@0",
+      "dp": 0,
+      "c": {
+       "main": 61,
+       "shadow": 2,
+       "post": 1,
+       "tmain": 177143,
+       "tshadow": 62731,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "b@0",
+      "dp": 0,
+      "n": 268,
+      "share": 0.0002907986111111111,
+      "max": 56
+     }
+    },
+    {
+     "name": "b@90",
+     "C": {
+      "name": "b@90",
+      "dp": 0,
+      "c": {
+       "main": 61,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 177143,
+       "tshadow": 108815,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "b@90",
+      "dp": 0,
+      "n": 268,
+      "share": 0.0002907986111111111,
+      "max": 56
+     }
+    },
+    {
+     "name": "b@180",
+     "C": {
+      "name": "b@180",
+      "dp": 0,
+      "c": {
+       "main": 61,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 177143,
+       "tshadow": 37215,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 884.5,
+       "min": 837.2,
+       "max": 885.5
+      }
+     },
+     "D": {
+      "name": "b@180",
+      "dp": 0,
+      "n": 268,
+      "share": 0.0002907986111111111,
+      "max": 56
+     }
+    },
+    {
+     "name": "b@-90",
+     "C": {
+      "name": "b@-90",
+      "dp": 0,
+      "c": {
+       "main": 62,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 177143,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 1
+      },
+      "t": null
+     },
+     "D": {
+      "name": "b@-90",
+      "dp": 0,
+      "n": 268,
+      "share": 0.0002907986111111111,
+      "max": 56
+     }
+    },
+    {
+     "name": "c@0",
+     "C": {
+      "name": "c@0",
+      "dp": 0,
+      "c": {
+       "main": 55,
+       "shadow": 2,
+       "post": 1,
+       "tmain": 176267,
+       "tshadow": 62731,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "c@0",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "c@90",
+     "C": {
+      "name": "c@90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 176187,
+       "tshadow": 108815,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "c@90",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "c@180",
+     "C": {
+      "name": "c@180",
+      "dp": 0,
+      "c": {
+       "main": 54,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 176251,
+       "tshadow": 37215,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "c@180",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "c@-90",
+     "C": {
+      "name": "c@-90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176187,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 820.7,
+       "min": 737.2,
+       "max": 841.6
+      }
+     },
+     "D": {
+      "name": "c@-90",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "d@0",
+     "C": {
+      "name": "d@0",
+      "dp": 0,
+      "c": {
+       "main": 54,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176251,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 724.9,
+       "min": 695.8,
+       "max": 734.8
+      }
+     },
+     "D": {
+      "name": "d@0",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "d@90",
+     "C": {
+      "name": "d@90",
+      "dp": 0,
+      "c": {
+       "main": 54,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176251,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "d@90",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "d@180",
+     "C": {
+      "name": "d@180",
+      "dp": 0,
+      "c": {
+       "main": 54,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176251,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "d@180",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    },
+    {
+     "name": "d@-90",
+     "C": {
+      "name": "d@-90",
+      "dp": 0,
+      "c": {
+       "main": 54,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 176251,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "d@-90",
+      "dp": 0,
+      "n": 122,
+      "share": 0.00013237847222222223,
+      "max": 74
+     }
+    }
+   ]
+  },
+  "all": {
+   "trim": {
+    "mode": "all",
+    "geos": 95,
+    "removed": 159042,
+    "skipped": 0,
+    "total": 211571,
+    "bmDegenerate": 0
+   },
+   "C": {
+    "calls": 53.9,
+    "tris": 67303,
+    "shCalls": 1.6,
+    "shTris": 29454,
+    "ms": 859.9
+   },
+   "diff": {
+    "maxShare": 0.0035188802083333335,
+    "avgShare": 0.0028852539062500003,
+    "maxPx": 3243
+   },
+   "views": [
+    {
+     "name": "spawn@0",
+     "C": {
+      "name": "spawn@0",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 777.4,
+       "min": 768,
+       "max": 812.3
+      }
+     },
+     "D": {
+      "name": "spawn@0",
+      "dp": 0,
+      "n": 2626,
+      "share": 0.002849392361111111,
+      "max": 198
+     }
+    },
+    {
+     "name": "spawn@90",
+     "C": {
+      "name": "spawn@90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "spawn@90",
+      "dp": 0,
+      "n": 2626,
+      "share": 0.002849392361111111,
+      "max": 198
+     }
+    },
+    {
+     "name": "spawn@180",
+     "C": {
+      "name": "spawn@180",
+      "dp": 0,
+      "c": {
+       "main": 54,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 1
+      },
+      "t": null
+     },
+     "D": {
+      "name": "spawn@180",
+      "dp": 0,
+      "n": 2627,
+      "share": 0.0028504774305555558,
+      "max": 198
+     }
+    },
+    {
+     "name": "spawn@-90",
+     "C": {
+      "name": "spawn@-90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "spawn@-90",
+      "dp": 0,
+      "n": 2627,
+      "share": 0.0028504774305555558,
+      "max": 198
+     }
+    },
+    {
+     "name": "a@0",
+     "C": {
+      "name": "a@0",
+      "dp": 0,
+      "c": {
+       "main": 51,
+       "shadow": 2,
+       "post": 1,
+       "tmain": 67235,
+       "tshadow": 62731,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "a@0",
+      "dp": 0,
+      "n": 2228,
+      "share": 0.0024175347222222224,
+      "max": 199
+     }
+    },
+    {
+     "name": "a@90",
+     "C": {
+      "name": "a@90",
+      "dp": 0,
+      "c": {
+       "main": 51,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 67235,
+       "tshadow": 108815,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 837.7,
+       "min": 762.3,
+       "max": 1035.8
+      }
+     },
+     "D": {
+      "name": "a@90",
+      "dp": 0,
+      "n": 2232,
+      "share": 0.002421875,
+      "max": 199
+     }
+    },
+    {
+     "name": "a@180",
+     "C": {
+      "name": "a@180",
+      "dp": 0,
+      "c": {
+       "main": 51,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67235,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "a@180",
+      "dp": 0,
+      "n": 2238,
+      "share": 0.002428385416666667,
+      "max": 199
+     }
+    },
+    {
+     "name": "a@-90",
+     "C": {
+      "name": "a@-90",
+      "dp": 0,
+      "c": {
+       "main": 51,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67235,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "a@-90",
+      "dp": 0,
+      "n": 2238,
+      "share": 0.002428385416666667,
+      "max": 199
+     }
+    },
+    {
+     "name": "b@0",
+     "C": {
+      "name": "b@0",
+      "dp": 0,
+      "c": {
+       "main": 59,
+       "shadow": 2,
+       "post": 1,
+       "tmain": 67560,
+       "tshadow": 62731,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "b@0",
+      "dp": 0,
+      "n": 3243,
+      "share": 0.0035188802083333335,
+      "max": 198
+     }
+    },
+    {
+     "name": "b@90",
+     "C": {
+      "name": "b@90",
+      "dp": 0,
+      "c": {
+       "main": 59,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 67560,
+       "tshadow": 108815,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "b@90",
+      "dp": 0,
+      "n": 3224,
+      "share": 0.003498263888888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "b@180",
+     "C": {
+      "name": "b@180",
+      "dp": 0,
+      "c": {
+       "main": 60,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 67560,
+       "tshadow": 37215,
+       "tpost": 1,
+       "lines": 1
+      },
+      "t": {
+       "med": 1097.1,
+       "min": 840,
+       "max": 1230.6
+      }
+     },
+     "D": {
+      "name": "b@180",
+      "dp": 0,
+      "n": 3224,
+      "share": 0.003498263888888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "b@-90",
+     "C": {
+      "name": "b@-90",
+      "dp": 0,
+      "c": {
+       "main": 59,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67560,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "b@-90",
+      "dp": 0,
+      "n": 3224,
+      "share": 0.003498263888888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "c@0",
+     "C": {
+      "name": "c@0",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 2,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 62731,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "c@0",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "c@90",
+     "C": {
+      "name": "c@90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 108815,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "c@90",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "c@180",
+     "C": {
+      "name": "c@180",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 3,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 37215,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "c@180",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "c@-90",
+     "C": {
+      "name": "c@-90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 843.3,
+       "min": 811.6,
+       "max": 889.6
+      }
+     },
+     "D": {
+      "name": "c@-90",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "d@0",
+     "C": {
+      "name": "d@0",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": {
+       "med": 744.2,
+       "min": 696.7,
+       "max": 869.6
+      }
+     },
+     "D": {
+      "name": "d@0",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "d@90",
+     "C": {
+      "name": "d@90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "d@90",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "d@180",
+     "C": {
+      "name": "d@180",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "d@180",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    },
+    {
+     "name": "d@-90",
+     "C": {
+      "name": "d@-90",
+      "dp": 0,
+      "c": {
+       "main": 53,
+       "shadow": 1,
+       "post": 1,
+       "tmain": 67240,
+       "tshadow": 1,
+       "tpost": 1,
+       "lines": 0
+      },
+      "t": null
+     },
+     "D": {
+      "name": "d@-90",
+      "dp": 0,
+      "n": 2603,
+      "share": 0.002824435763888889,
+      "max": 198
+     }
+    }
+   ]
+  }
+ },
+ "summary": {
+  "A": {
+   "calls": 55.9,
+   "tris": 226401,
+   "shCalls": 1.9,
+   "shTris": 39892,
+   "ms": 1109.5
+  },
+  "B": {
+   "calls": 111.5,
+   "tris": 214696,
+   "shCalls": 1.8,
+   "shTris": 31315,
+   "ms": null
+  },
+  "E": {
+   "calls": 55,
+   "tris": 225530,
+   "shCalls": 1.6,
+   "shTris": 29454,
+   "ms": 1121.4
+  },
+  "cuts": {
+   "geo": {
+    "C": {
+     "calls": 55,
+     "tris": 176407,
+     "shCalls": 1.6,
+     "shTris": 29454,
+     "ms": 772.3
+    },
+    "diff": {
+     "maxShare": 0.0002907986111111111,
+     "avgShare": 0.00015690104166666663,
+     "maxPx": 268
+    },
+    "trim": {
+     "mode": "geo",
+     "geos": 53,
+     "removed": 49976,
+     "skipped": 0,
+     "total": 211571,
+     "bmDegenerate": 0
+    }
+   },
+   "all": {
+    "C": {
+     "calls": 53.9,
+     "tris": 67303,
+     "shCalls": 1.6,
+     "shTris": 29454,
+     "ms": 859.9
+    },
+    "diff": {
+     "maxShare": 0.0035188802083333335,
+     "avgShare": 0.0028852539062500003,
+     "maxPx": 3243
+    },
+    "trim": {
+     "mode": "all",
+     "geos": 95,
+     "removed": 159042,
+     "skipped": 0,
+     "total": 211571,
+     "bmDegenerate": 0
+    }
+   }
+  },
+  "perView": {
+   "tris": 200214,
+   "hid": 148208,
+   "share": 0.7401,
+   "draws": 104.6,
+   "hidDraws": 11.2,
+   "dbl": 303,
+   "dblBackInF": 140,
+   "byClass": [
+    [
+     "buried",
+     0
+    ],
+    [
+     "under/inside a solid",
+     35513
+    ],
+    [
+     "bottom on the ground",
+     3990
+    ],
+    [
+     "never front-facing",
+     50949
+    ],
+    [
+     "outside every view",
+     39005
+    ],
+    [
+     "tiny",
+     15397
+    ],
+    [
+     "occluded",
+     3354
+    ]
+   ],
+   "pxAll": 2464344,
+   "pxByClass": [
+    [
+     "buried",
+     0
+    ],
+    [
+     "under/inside a solid",
+     65934
+    ],
+    [
+     "bottom on the ground",
+     2
+    ],
+    [
+     "never front-facing",
+     0
+    ],
+    [
+     "outside every view",
+     0
+    ],
+    [
+     "tiny",
+     2896
+    ],
+    [
+     "occluded",
+     224821
+    ]
+   ]
+  }
+ }
+}

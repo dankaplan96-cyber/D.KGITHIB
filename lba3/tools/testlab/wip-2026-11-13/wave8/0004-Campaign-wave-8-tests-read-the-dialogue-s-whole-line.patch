@@ -1,0 +1,42 @@
+From efe5c9fec5a220a036b3f826e8bfd1b7bb736121 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 10:45:06 +0000
+Subject: [PATCH 04/10] Campaign wave 8 tests: read the dialogue's whole line,
+ not the part typed so far
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/tests/campaign-thread.mjs | 2 +-
+ lba3/tests/save-migration.mjs  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lba3/tests/campaign-thread.mjs b/lba3/tests/campaign-thread.mjs
+index 651c6b5c..b01c8768 100644
+--- a/lba3/tests/campaign-thread.mjs
++++ b/lba3/tests/campaign-thread.mjs
+@@ -980,7 +980,7 @@ if (!ONLY || ONLY === 'Q') {
+   ({ browser, context, page } = await launch({ storageState: save('base-16') })); await open(page, '?nocine'); await menu(page, 'continue');
+   is('Q1 a save from before wave 8 at the epilogue\'s start (before the dinner): it loads, the dinner plays again (it loaded into a quiet house before); after it the kitchen is his: the tap\'s objective, Arthur by the sink, the cup under the spout, empty', await ev(() => {
+     const G = game, f = G.flags; for (let i = 0; i < 20 && G.state !== 'dialog'; i++) G.step(0.1);
+-    const s0 = [f.ep_v ?? null, f.ep_dinner ?? null, G.state, document.querySelector('#dialog .text')?.textContent?.slice(0, 40) || ''];
++    const s0 = [f.ep_v ?? null, f.ep_dinner ?? null, G.state, (G.hud?.dialog?.full || document.querySelector('#dialog .text')?.textContent || '').slice(0, 40)];   // (the whole line: the box types it out)
+     for (let i = 0; i < 100 && !(f.ep_dinner && G.state === 'play'); i++) { if (G.state === 'dialog') P.settle(); else G.step(0.1); }
+     return s0; }).then(async (s0) => [...s0, await EP_STATE()]), (v) => v[0] === 1 && v[1] === null && v[2] === 'dialog' && /Four days later/.test(v[3]) && v[4].dinner === true && v[4].state === 'play' && v[4].room === 'house' && /tap/i.test(v[4].obj) && v[4].arthurSink < 2 && v[4].cupUnder < 0.01 && !v[4].cupFull);
+   await shot('Q1-kitchen');
+diff --git a/lba3/tests/save-migration.mjs b/lba3/tests/save-migration.mjs
+index 4fb69b9b..28e84f9e 100644
+--- a/lba3/tests/save-migration.mjs
++++ b/lba3/tests/save-migration.mjs
+@@ -43,7 +43,7 @@ async function run(name, save) {
+       co: [game.flags.co_v ?? null, game.flags.co_go ?? null, game.flags.co_branch ?? null, game.flags.co_lock ?? null, !!game.flags.c3_fight],
+       cn: [game.flags.cn_v ?? null, game.flags.cn_closed ?? null, game.flags.cn_kell ?? null, game.flags.cn_log ?? null, !!game.flags.c9_vote, !!game.rooms.upper?.order?.shown],
+       ep: [game.flags.ep_v ?? null, game.flags.ep_dinner ?? null, game.flags.ep_tap ?? null, game.flags.ep_word ?? null, !!game.flags.ep_free],
+-      line: document.querySelector('#dialog .text')?.textContent?.slice(0, 60) || null, obj: document.querySelector('#objective')?.textContent?.slice(0, 60) || null,
++      line: (game.state === 'dialog' ? game.hud?.dialog?.full || document.querySelector('#dialog .text')?.textContent : '')?.slice(0, 60) || null,   // (the whole line: the box types it out) obj: document.querySelector('#objective')?.textContent?.slice(0, 60) || null,
+       bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
+   });
+   results.push([name, r, errs.length ? errs : 'no errors']);
+-- 
+2.43.0
+

@@ -1,0 +1,163 @@
+load before 3.06 2.57 2.60; other gpu-processes 0
+P87b census · medium · batched areas: 8b1873,a100ed,f9473b · pieces with a map: 316
+office (275 ms): 0 · batched now 0
+projoffice (105 ms): 0 · batched now 2
+control (65 ms): 0 · batched now 7
+workshop (152 ms): 0 · batched now 44
+lighttop (104 ms): 0 · batched now 2
+cellar (48 ms): 0 · batched now 2
+zeelich (734 ms): 0 · batched now 60
+underground (410 ms): 0 · batched now 116
+desert (1350 ms): 0 · batched now 30
+condenser (31 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+butemple (26 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+wtent (18 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+school (45 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+asylum (381 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 55
+bumaze (35 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+hamalayi (650 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 46
+obsv (31 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 7
+upper (254 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 4
+valves (22 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 15
+arena (9 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+sewer (107 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+tavern (71 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+bazoo (35 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ticket (37 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+pharmacy (32 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+nbrhouse (84 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 8
+pumproom (21 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 13
+nellhouse (52 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 5
+tavcellar (22 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+baggage (23 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+tralucave (55 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+zterminal (31 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+terminal (33 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 5
+zh_pelleck (83 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+zh_nara (38 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+zh_oku (17 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+zh_bakery (22 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_6_m29 (24 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_otringal_m4_m60 (44 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_m1_m53 (24 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_3_m59 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_otringal_17_m71 (24 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_otringal_63_m45 (22 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_45_m52 (26 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 4
+ih_otringal_55_m47 (18 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_otringal_63_m52 (23 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_otringal_59_m60 (15 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_47_m68 (64 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_52_m60 (33 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_otringal_m55_m15 (20 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_6_m24 (23 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_4_26 (27 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 4
+ih_otringal_m21_m10 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_4_m11 (18 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_m49_55 (16 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_otringal_4_31 (13 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_m2_56 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_3_65 (16 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_12_43 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_otringal_40_43 (13 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_knartas_m30_m18 (27 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+ih_knartas_33_m14 (13 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_25_m22 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_25_m20 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_33_m20 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_knartas_19_m20 (9 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_19_m22 (10 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_28_m36 (7 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_14_m36 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_knartas_36_m20 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_37_m14 (9 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_knartas_28_29 (19 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 37
+ih_knartas_21_19 (13 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_knartas_22_15 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_16_18 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_16_24 (13 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_9_32 (10 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_knartas_38_36 (15 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_knartas_44_37 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_knartas_35_12 (15 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_mosquibee_m15_28 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_mosquibee_26_15 (9 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_celebration_m9_4 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 5
+ih_undergas_8_m39 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+ih_platform_m24_m27 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_platform_27_m31 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 4
+ih_platform_27_m38 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_platform_27_12 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_platform_35_15 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_platform_30_27 (7 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_platform_50_46 (16 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_orchard_4_28 (16 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_kesh_house0 (20 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_kesh_house1 (44 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_kesh_house2 (20 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_kesh_house3 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_kesh_house4 (9 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_post_cabin0 (16 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 5
+ih_post_cabin1 (15 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_post_cabin2 (14 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_ham_landing0 (15 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_ham_lhar0 (18 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_ham_lhar1 (15 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_ham_lhar2 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_ham_lhar3 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+ih_ham_lhar4 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_ham_obs0 (51 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_s28 (12 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_hall (26 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ih_house_s40 (11 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+ham_hall (21 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 13
+ballastra (371 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+bl_arches (397 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 35
+bl_gardens (273 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 75
+otrbar (28 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+otrhotel (29 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+celtemple (18 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+isle_otringal (603 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+isle_knartas (289 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 3
+isle_mosquibee (222 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+isle_celebration (97 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 15
+isle_undergas (270 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+isle_platform (330 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+isle_liftdock (130 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+isle_orchard (283 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 2
+isle_oldwatch (87 ms): 0 · scene sources moved 2 (~2073 KB to send again; 1x OW.score game/offwall.js:198:118 | 1x OW.marks game/offwall.js:221:23) · batched now 0
+batched areas at the end: 146, pieces with a map: 543; scene sources moved by the builds: 234 (~242500 KB)
+TOTAL: 0 piece-moves in 0 of 126 first builds
+SITES (bumps of a batched piece's source, by call site):
+ALL bumps during the builds, by site (top 40):
+  1599x game/kit.js:432:20
+  831x game/kit.js:433:10
+  806x game/kit.js:434:20
+  465x toTex game/props.js:206:13
+  371x Terrain._squares engine/terrain.js:328:31
+  120x OW.score game/offwall.js:198:118
+  120x OW.marks game/offwall.js:221:23
+  98x cloneTex engine/textures.js:633:65
+  91x ctex game/kit.js:35:13
+  60x twinOf engine/merge.js:58:54
+  49x cloneTex engine/textures.js:633:88
+  30x twinOf engine/merge.js:58:212
+  29x ctex game/zeelich.js:121:13
+  19x flushOne engine/texarray.js:73:71
+  11x tex game/yearslate.js:60:13
+  11x Terrain._heightTexture engine/terrain.js:358:21
+  7x canvasTex game/teststand.js:36:13
+  3x signTex game/zlift.js:49:13
+  3x canvasTex game/lba1room.js:30:141
+  3x bedTexture game/ballastra/sea.js:121:65
+  2x seaSetup game/ballastra/sea.js:159:91
+  1x game/zeelich.js:2122:691
+  1x game/zlift.js:158:337
+  1x dialTex game/zlift.js:55:13
+  1x drawPaper game/teststand.js:166:24
+  1x buildOffWall game/offwall.js:166:18
+  1x buildOffWall game/offwall.js:208:17
+  1x canvasTex game/winchline.js:31:13
+  1x game/props-mountain.js:28:13
+  1x game/ballastra/skyline.js:218:15
+exit 0 load after 3.50 3.08 2.80

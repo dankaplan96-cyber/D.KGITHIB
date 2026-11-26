@@ -1,0 +1,35 @@
+# benchfps · quality auto · 2026-11-20T14:12:03.767Z · ran 142 s
+# env {"ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36","gpu":"ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)","rafMedianMs":16.7,"refreshHz":59.9,"inner":[1536,864],"dpr":1.25,"screen":[1536,864],"battery":{"charging":true,"level":1},"browser":"158.0.8127.36","settings":{"quality":"high","qualityAuto":true,"res":"auto","fps":"auto","aa":"msaa","lang":"en"},"drawingBuffer":[1920,1080]}
+# page errors []
+LBA3: The Awakening benchmark — frame rates (Unlimited / 60 / 30), the same routes and quality · build 0.49.0 · 2026-11-20 14:12
+GPU (as reported by the browser): NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11 · power: plugged in · window 1536×864 · devicePixelRatio 1.25 · render pixel ratio 1.25 · user agent Chrome/158.0.0.0 Safari/537.36
+display refresh measured from requestAnimationFrame: 60.2 Hz (median interval 16.60 ms) · quality: Auto — High (held for the run) · automatic resolution off · camera: the benchmark's free orbit · your Frame Rate setting: Unlimited
+benchmark preparation before the first route (not measured; each step its own task, ms): arena 5 · zeelich 357 (16 steps, longest 74) · desert 836 (7 steps, longest 628) · hamalayi 521 (7 steps, longest 277) · shadow programs 434 · 2727 ms in all
+  scene changes' preparation behind the black (a step per black frame; count / longest / total ms): shadow batches 20 / 18 / 223 · shader warm-up (early) 21 / 17 / 261 · texture layers 10 / 15 / 110 · draw batches 39 / 46 / 575 · geometry 24 / 52 / 215 · draw batches settle 8 / 14 / 67 · batch meshes 4 / 0 / 0 · textures 4 / 6 / 19 · shadow programs 4 / 0 / 0 · shader warm-up 19 / 15 / 222 · draw batches back 2 / 14 / 16
+
+route      limit       fps   interval p50 / p95 / p99 / max ms   on pace   >=1.5x pace   long->short   >50 ms (black)   GPU ms p50 / p95 · per s   CPU work ms p50 / p95 · per s
+  street    Unlimited   59.9   16.7 / 16.8 / 16.9 / 33.3               100 %       1           0          0 (0)           8.24 / 16.03 · 494          7.9 / 10 · 473
+  street    60            60   16.7 / 16.8 / 16.9 / 16.9               100 %       0           0          0 (0)           7.83 / 9.76 · 470           7.3 / 9.3 · 438
+  street    30            30   33.3 / 33.5 / 33.6 / 33.6               100 %       0           0          0 (0)           8.16 / 12.21 · 245          8.4 / 12.5 · 252
+  interior  Unlimited     60   16.7 / 16.8 / 16.9 / 16.9               100 %       0           0          0 (0)           6.99 / 8.28 · 419           3.7 / 4.3 · 222
+  interior  60            60   16.7 / 16.8 / 16.9 / 17                 100 %       0           0          0 (0)           6.98 / 8.38 · 419           3.7 / 4.2 · 222
+  interior  30            30   33.3 / 33.5 / 33.6 / 33.6               100 %       0           0          0 (0)           6.33 / 7.1 · 190            3.1 / 3.8 · 93
+  combat    Unlimited   59.2   16.7 / 16.8 / 16.9 / 150                100 %       1           0          1 (0)           5.1 / 6.56 · 302            4.5 / 5.7 · 266
+  combat    60            60   16.7 / 16.8 / 16.9 / 16.9               100 %       0           0          0 (0)           5.36 / 6.52 · 322           4 / 4.6 · 240
+  combat    30            30   33.3 / 33.5 / 33.6 / 33.6               100 %       0           0          0 (0)           5.47 / 7.31 · 164           3.9 / 4.7 · 117
+  arrival   Unlimited     60   16.7 / 16.8 / 16.9 / 17                 100 %       0           0          0 (0)           7.54 / 10.47 · 452          7.3 / 12.2 · 438
+  arrival   60            60   16.7 / 16.9 / 16.9 / 17                 100 %       0           0          0 (0)           9.41 / 10.77 · 565          9 / 10.4 · 540
+  arrival   30            30   33.3 / 33.5 / 33.6 / 33.6               100 %       0           0          0 (0)           9.54 / 10.47 · 286          10.1 / 13.4 · 303
+
+per limit, over the routes: fps · interval p95 / p99 · on pace · >=1.5x pace · GPU ms per second · CPU work ms per second
+  Unlimited  59.8 fps · 16.8 / 16.9 ms · 100 % · 2 · GPU 417 ms/s · CPU 350 ms/s
+  60         60.0 fps · 16.8 / 16.9 ms · 100 % · 0 · GPU 444 ms/s · CPU 360 ms/s
+  30         30.0 fps · 33.5 / 33.6 ms · 100 % · 0 · GPU 221 ms/s · CPU 191 ms/s
+
+frame callbacks: 8131 timestamps · distance from a whole number of refreshes p50 0.10 / p95 0.20 / max 0.80 ms · callbacks a refresh or more apart (missed): 20
+  street at 30: the first drawn intervals (ms): 33.3 33.3 33.3 33.4 33.2 33.4 33.4 33.4 33.2 33.3 33.2 33.5 33.3 33.4 33.1 33.4 33.5 33.2 33.4 33.2 33.4 33.3 33.3 33.3 33.3 33.4 33.3 33.1 33.4 33.3 33.5 33.3 33.2 33.5 33.1 33.5 33.3 33.3 33.3 33.4
+  interior at 30: the first drawn intervals (ms): 33.4 33.2 33.3 33.5 33.3 33.3 33.3 33.4 33.3 33.4 33.1 33.3 33.3 33.6 33.2 33.2 33.5 33.1 33.5 33.3 33.4 33.3 33.4 33.1 33.4 33.2 33.4 33.3 33.4 33.3 33.2 33.5 33.2 33.4 33.4 33.1 33.5 33.4 33.2 33.4
+  combat at 30: the first drawn intervals (ms): 33.4 33.5 33.3 33.3 33.4 33.3 33.3 33.3 33.4 33.2 33.3 33.2 33.5 33.3 33.4 33.2 33.4 33.2 33.4 33.3 33.4 33.1 33.4 33.3 33.4 33.4 33.3 33.3 33.3 33.4 33.3 33.3 33.4 33.3 33.3 33.1 33.6 33.3 33.2 33.4
+  arrival at 30: the first drawn intervals (ms): 33.3 33.5 33.3 33.1 33.4 33.3 33.3 33.5 33.3 33.3 33.3 33.3 33.2 33.4 33.4 33.1 33.5 33.3 33.2 33.5 33.3 33.2 33.4 33.4 33.1 33.5 33.3 33.1 33.5 33.3 33.5 33.1 33.4 33.2 33.3 33.4 33.4 33.2 33.5 33.3
+
+Intervals are between drawn frames, from requestAnimationFrame timestamps (when each frame began), not verified display presentation. "On pace": within ±12 % of the limit (or of the refresh when the limit does not apply). ">=1.5x pace": a frame that took a whole extra refresh or more (50 / 66.7 ms at 30). "long->short": a long interval followed by a short one (a catch-up). Frames behind a scene change's black screen are counted apart. GPU / CPU ms per second = the time a frame × frames a second: the share of each second the GPU / the game's CPU work is busy — a guide to power use, not a power measurement.

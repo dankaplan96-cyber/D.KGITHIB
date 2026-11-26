@@ -1,0 +1,9 @@
+(the user's laptop, build 132 = RENDER-INV final (F10 colour-only MSAA resolve, F8/F9, Edges setting) + the MEA loading screen; 2026-10-24 20:24; 1366x768; plugged in)
+GPU p50 / fps:
+  low:    street 8.93 (60) · interior 8.22 (58.5) · combat 8.08 (58.7) · transition 8.48 (59) · arrival 8.38 (57)
+  medium: street 9.80 (60) · interior 8.89 (59.2) · combat 8.59 (60) · transition 10.57 (58.7) · arrival 9.30 (58)
+  high:   street 15.55 (53.8; p95 19) · interior 10.78 (59) · combat 9.08 (60) · transition 10.35 (50.3) · arrival 10.48 (55.5)
+Medium street breakdown GPU: as is 9.22 · DEPTH RESOLVE ON 18.19 (=the old cost) · no MSAA 9.24 · FXAA instead 10.97 · batches off 12.65 · no shadows 9.14
+Startup: build 11.2 s (was 15.3-16.0) · shaders 7.0 s
+vs build 127: Medium street GPU 18.75 -> 9.80 ms (45.8 -> 60 fps); High street 35.4 -> 15.6 ms (25 -> 54 fps); High interior 28.4 -> 10.8 ms (33 -> 59 fps).
+Conclusion: F10 (resolve colour only; D3D11/ANGLE emulated the unused depth/stencil resolve) removed ~9 ms per frame. Medium holds 60 everywhere on the user's Vega 8; High ~54-60.

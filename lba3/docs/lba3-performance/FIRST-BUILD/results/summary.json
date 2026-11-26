@@ -1,0 +1,36 @@
+{
+  "what": "FIRST-BUILD before/after, SwiftShader in the development container under a shared load (load average 10-31 on 4 cores). Exact counts and relative CPU ms only; no GPU time, fps or feel for the laptop. Frames stepped as 60 Hz frames.",
+  "baseline": "1d0c95d",
+  "settings": { "quality": "medium (Auto on battery, desktop emulated)", "resolution": "1366x768", "pixelRatio": 1, "query": "?autoq&nocine" },
+  "titleToPlay": {
+    "probe": "probes/q_newgame.js",
+    "runs": {
+      "baseline": [
+        { "file": "newgame-base-run1.txt", "clickMs": 160, "firstHouseFrameMs": 54917, "inView": true, "jobs": "draw batches built 54619 ms, shadow batches built 179 ms, shadow cache rebuilt (casters changed), +40 geometries" },
+        { "file": "newgame-base-run2.txt", "clickMs": 169, "firstHouseFrameMs": 70136, "inView": true, "jobs": "draw batches built 69238 ms, shadow batches built 743 ms, shadow cache rebuilt (casters changed), +40 geometries" }
+      ],
+      "after": [
+        { "file": "newgame-after-run1-startroom-only.txt", "commit": "55e9684", "clickMs": 47, "firstHouseFrameMs": 187, "inView": true, "jobs": "shadow cache built (area changed), +5 geometries" },
+        { "file": "newgame-after-run2.txt", "commit": "18719e6 (all three)", "clickMs": 35, "firstHouseFrameMs": 93, "inView": true, "jobs": "shadow cache built (area changed), +5 geometries", "loadingStartRoomMs": 85540, "loadingStartLayersLongestSliceMs": 63862, "loadingAudioContextMs": 425 }
+      ]
+    },
+    "settledImage": { "file": "house-pixels.txt", "pixelsDifferOutsideAnimatedPeople": 0, "baselineAgainstItself": "0 outside the people, 0.466 % inside" }
+  },
+  "drawBatchFirstBuild": {
+    "probe": "probes/q_dbprof.js (hashes), probes/q_dbab.js (interleaved timing, 8 each)",
+    "identicalOutput": { "house": "a718bb2c/df3968dc", "zeelich": "f33e8be0/4244ead0", "desert": "1e79dabb/6db7f2e3", "hamalayi": "78cb0a66/51a46d04" },
+    "wholeBuildMs": {
+      "house": { "base": { "min": 126.7, "median": 282.7 }, "after": { "min": 74.7, "median": 210.3 } },
+      "zeelich": { "base": { "min": 198.7, "median": 281.5 }, "after": { "min": 114.9, "median": 450.7 } },
+      "desert": { "base": { "min": 85.5, "median": 183.1 }, "after": { "min": 69.1, "median": 129.5 } },
+      "hamalayi": { "base": { "min": 152.2, "median": 390 }, "after": { "min": 92.8, "median": 306.2 } }
+    }
+  },
+  "regionEntry": {
+    "probe": "probes/q_regions.js",
+    "baseline": { "file": "regions-base.txt", "shadowCacheBuildsPerFirstVisit": { "zeelich": 1, "desert": 1, "hamalayi": 1 }, "newPrograms": { "zeelich": 11, "desert": 6, "hamalayi": 1 }, "programsAtEndWarmUp": { "zeelich": 7, "desert": 6, "hamalayi": 1 } },
+    "afterEarlyWarmForced": { "file": "regions-after-earlywarm-forced.txt", "shadowCacheBuildsPerFirstVisit": { "zeelich": 1, "desert": 1, "hamalayi": 1 }, "newPrograms": { "zeelich": 11, "desert": 6, "hamalayi": 1 }, "programsStartedEarly": { "zeelich": 9, "desert": 6, "hamalayi": 1 }, "programsAtEndWarmUp": { "zeelich": 0, "desert": 0, "hamalayi": 0 } },
+    "blackUnder1500msPerFirstVisit": "NOT MET (laptop 0.43.3: the region's own build alone was 0.9 / 1.55 / 1.63 s)"
+  },
+  "laptop": "NOT VERIFIED: title-to-play, region-entry and cold-launch to be re-measured by the Test Lab"
+}

@@ -1,0 +1,26 @@
+start [ 'evacuation', 'out', 'play', 'Go home to Zoé' ]
+home [
+  'house',
+  true,
+  'Get the town to safety◆ Ask Gilbert about the tunnels◆ Ask Mira for water◆ Ask Pippa for supplies'
+]
+out out
+gilbert [
+  true,
+  'Get the town to safety◆ Ask Gilbert about the tunnels◆ Open the fortress shelter◆ Open the depot bunker◆ Ask Mira for water◆ Ask Pippa for supplies'
+]
+lever [ true ]
+hatch [ 'thrown', true ]
+mira [ 'office', true, 'out' ]
+pippa [ true, 'Tell Zoé the shelters are open' ]
+zoe [
+  true,
+  'zoe',
+  'out',
+  'Zoé: bring the hill families to the lighthouse (0/3)'
+]
+farms [ 3, 'Zoé: go to the lighthouse' ]
+lighthouse [ true, 'twinsen', "Go to the station's control room" ]
+control [ 'control', true, 'Board a project ship at the spaceport' ]
+ship [ 'c8ship', true, 'council', 'zeelich', 0 ]
+no errors

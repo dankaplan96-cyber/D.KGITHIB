@@ -1,0 +1,450 @@
+[
+ {
+  "isle": "otringal",
+  "spot": "arrival",
+  "at": null,
+  "dressing": 64,
+  "landmark": [
+   5.8,
+   -16.2,
+   "GRAND HALL"
+  ],
+  "calls": 155,
+  "tris": 2258298,
+  "meshes": 107,
+  "inst": 7,
+  "geos": 941,
+  "texs": 464,
+  "swMs": {
+   "p50": 10.4,
+   "max": 12.8
+  },
+  "hero": [
+   3.6,
+   12.7,
+   8.3
+  ],
+  "spawn": [
+   3.6,
+   8.3
+  ]
+ },
+ {
+  "isle": "otringal",
+  "spot": "landmark",
+  "at": [
+   11,
+   -14.5,
+   -2.62
+  ],
+  "dressing": 64,
+  "landmark": [
+   5.8,
+   -16.2,
+   "GRAND HALL"
+  ],
+  "calls": 142,
+  "tris": 2254144,
+  "meshes": 107,
+  "inst": 7,
+  "geos": 942,
+  "texs": 464,
+  "swMs": {
+   "p50": 6.9,
+   "max": 7.5
+  },
+  "hero": [
+   11,
+   12.7,
+   -14.5
+  ],
+  "spawn": [
+   3.6,
+   8.3
+  ]
+ },
+ {
+  "isle": "knartas",
+  "spot": "arrival",
+  "at": null,
+  "dressing": 58,
+  "landmark": [
+   -12.3,
+   -21.3,
+   "HARBOUR"
+  ],
+  "calls": 175,
+  "tris": 929016,
+  "meshes": 112,
+  "inst": 6,
+  "geos": 973,
+  "texs": 464,
+  "swMs": {
+   "p50": 14.8,
+   "max": 20.2
+  },
+  "hero": [
+   -15.7,
+   2.6,
+   -37.9
+  ],
+  "spawn": [
+   -15.7,
+   -37.9
+  ]
+ },
+ {
+  "isle": "knartas",
+  "spot": "landmark",
+  "at": [
+   -11.58,
+   -22.46,
+   -1.323
+  ],
+  "dressing": 58,
+  "landmark": [
+   -12.3,
+   -21.3,
+   "HARBOUR"
+  ],
+  "calls": 153,
+  "tris": 921034,
+  "meshes": 112,
+  "inst": 6,
+  "geos": 973,
+  "texs": 464,
+  "swMs": {
+   "p50": 9.7,
+   "max": 18.5
+  },
+  "hero": [
+   -11.6,
+   2.6,
+   -22.5
+  ],
+  "spawn": [
+   -15.7,
+   -37.9
+  ]
+ },
+ {
+  "isle": "mosquibee",
+  "spot": "arrival",
+  "at": null,
+  "dressing": 43,
+  "landmark": [
+   27.2,
+   -7.3,
+   "HIVES"
+  ],
+  "calls": 141,
+  "tris": 576288,
+  "meshes": 88,
+  "inst": 5,
+  "geos": 994,
+  "texs": 464,
+  "swMs": {
+   "p50": 16.8,
+   "max": 19.2
+  },
+  "hero": [
+   23.5,
+   21.3,
+   -30.4
+  ],
+  "spawn": [
+   23.5,
+   -30.4
+  ]
+ },
+ {
+  "isle": "mosquibee",
+  "spot": "landmark",
+  "at": [
+   26.47,
+   -8.18,
+   2.859
+  ],
+  "dressing": 43,
+  "landmark": [
+   27.2,
+   -7.3,
+   "HIVES"
+  ],
+  "calls": 142,
+  "tris": 553232,
+  "meshes": 88,
+  "inst": 5,
+  "geos": 994,
+  "texs": 464,
+  "swMs": {
+   "p50": 10.3,
+   "max": 11.4
+  },
+  "hero": [
+   26.5,
+   21.3,
+   -8.2
+  ],
+  "spawn": [
+   23.5,
+   -30.4
+  ]
+ },
+ {
+  "isle": "celebration",
+  "spot": "arrival",
+  "at": null,
+  "dressing": 19,
+  "landmark": [
+   0.6,
+   2.1,
+   "FESTIVAL"
+  ],
+  "calls": 129,
+  "tris": 244646,
+  "meshes": 88,
+  "inst": 5,
+  "geos": 1014,
+  "texs": 464,
+  "swMs": {
+   "p50": 7.5,
+   "max": 8.8
+  },
+  "hero": [
+   3.7,
+   9.6,
+   1.9
+  ],
+  "spawn": [
+   3.7,
+   1.9
+  ]
+ },
+ {
+  "isle": "celebration",
+  "spot": "landmark",
+  "at": [
+   1.71,
+   1.78,
+   -2.769
+  ],
+  "dressing": 19,
+  "landmark": [
+   0.6,
+   2.1,
+   "FESTIVAL"
+  ],
+  "calls": 126,
+  "tris": 227080,
+  "meshes": 88,
+  "inst": 5,
+  "geos": 1014,
+  "texs": 464,
+  "swMs": {
+   "p50": 6.2,
+   "max": 10
+  },
+  "hero": [
+   1.7,
+   9.5,
+   1.8
+  ],
+  "spawn": [
+   3.7,
+   1.9
+  ]
+ },
+ {
+  "isle": "undergas",
+  "spot": "arrival",
+  "at": null,
+  "dressing": 55,
+  "landmark": [
+   -14.8,
+   -24.8,
+   "GAS WORKS"
+  ],
+  "calls": 139,
+  "tris": 262996,
+  "meshes": 89,
+  "inst": 2,
+  "geos": 1038,
+  "texs": 464,
+  "swMs": {
+   "p50": 6.7,
+   "max": 12.1
+  },
+  "hero": [
+   -35.5,
+   21.3,
+   -29
+  ],
+  "spawn": [
+   -35.5,
+   -29
+  ]
+ },
+ {
+  "isle": "undergas",
+  "spot": "landmark",
+  "at": [
+   -15.96,
+   -24.96,
+   1.48
+  ],
+  "dressing": 55,
+  "landmark": [
+   -14.8,
+   -24.8,
+   "GAS WORKS"
+  ],
+  "calls": 127,
+  "tris": 261714,
+  "meshes": 89,
+  "inst": 2,
+  "geos": 1038,
+  "texs": 464,
+  "swMs": {
+   "p50": 8.9,
+   "max": 15.5
+  },
+  "hero": [
+   -16,
+   21.3,
+   -25
+  ],
+  "spawn": [
+   -35.5,
+   -29
+  ]
+ },
+ {
+  "isle": "cxislet",
+  "spot": "arrival",
+  "at": null,
+  "dressing": 17,
+  "landmark": [
+   -5.9,
+   -9.4,
+   "OUTPOST"
+  ],
+  "calls": 130,
+  "tris": 144308,
+  "meshes": 86,
+  "inst": 1,
+  "geos": 1060,
+  "texs": 464,
+  "swMs": {
+   "p50": 15.1,
+   "max": 27.2
+  },
+  "hero": [
+   4.5,
+   4.8,
+   3.5
+  ],
+  "spawn": [
+   4.5,
+   3.5
+  ]
+ },
+ {
+  "isle": "cxislet",
+  "spot": "landmark",
+  "at": [
+   -4.82,
+   -9.15,
+   -1.899
+  ],
+  "dressing": 17,
+  "landmark": [
+   -5.9,
+   -9.4,
+   "OUTPOST"
+  ],
+  "calls": 107,
+  "tris": 142718,
+  "meshes": 86,
+  "inst": 1,
+  "geos": 1060,
+  "texs": 464,
+  "swMs": {
+   "p50": 7.5,
+   "max": 7.8
+  },
+  "hero": [
+   -4.8,
+   4.7,
+   -9.2
+  ],
+  "spawn": [
+   4.5,
+   3.5
+  ]
+ },
+ {
+  "isle": "platform",
+  "spot": "arrival",
+  "at": null,
+  "dressing": 43,
+  "landmark": [
+   36.2,
+   -28.8,
+   "LOADING DECK"
+  ],
+  "calls": 150,
+  "tris": 694696,
+  "meshes": 100,
+  "inst": 7,
+  "geos": 1089,
+  "texs": 464,
+  "swMs": {
+   "p50": 12.1,
+   "max": 27.3
+  },
+  "hero": [
+   35.9,
+   4.4,
+   -36.3
+  ],
+  "spawn": [
+   35.9,
+   -36.3
+  ]
+ },
+ {
+  "isle": "platform",
+  "spot": "landmark",
+  "at": [
+   35.98,
+   -29.84,
+   0.378
+  ],
+  "dressing": 43,
+  "landmark": [
+   36.2,
+   -28.8,
+   "LOADING DECK"
+  ],
+  "calls": 143,
+  "tris": 694344,
+  "meshes": 100,
+  "inst": 7,
+  "geos": 1089,
+  "texs": 464,
+  "swMs": {
+   "p50": 7.6,
+   "max": 7.7
+  },
+  "hero": [
+   36,
+   4.3,
+   -29.8
+  ],
+  "spawn": [
+   35.9,
+   -36.3
+  ]
+ }
+]

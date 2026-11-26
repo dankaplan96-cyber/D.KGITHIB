@@ -1,0 +1,30 @@
+[0s +0s] continue (arrival): {"started":true,"taken":true} | workshop [1502.75,0,-1.19] hp 7 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[5s +5s] Baldino's workshop: {"r":"workshop","t":"talked","plan":true,"fail":null} | zeelich [2387.41,6,7.06] hp 7 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+  [65.2] ISO assist: 4 enemies beaten (zdrone1,zdrone2,zguard1,zgdog1)
+[7s +2s] depot fight (input; ISO assist below 3 HP): {"left":4,"dead":false,"hp":2,"t":9.4,"assisted":4} | zeelich [2404.54,6,4.2] hp 2 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[8s +1s] depot locker (drones, a guard, a dog): {"r":"used","target":{"kind":"c2locker","id":"p_search","label":"p_search"},"state":"play","lines":4,"cyl":true,"back":true,"hp":8,"fail":null} | zeelich [2415.14,6,23.32] hp 8 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[10s +2s] Oku sees the plan: {"r":"talked","to":"oku","state":"play","lines":4,"ok":true,"fail":null} | zeelich [2377.33,6,6.76] hp 8 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[13s +3s] climb the old mill (jumps): {"heights":[7.25,8.5,9.75,11,12.25,13.5,14.75],"y":14.75,"top":true,"fail":null} | zeelich [2395.13,14.75,-22.17] hp 8 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[14s +1s] the cog, top of the old mill: {"r":"used","target":{"kind":"c2cog","id":"p_climb","label":"p_climb"},"state":"play","lines":2,"y":14.8,"top":14.75,"cog":true,"fail":null} | zeelich [2397.51,14.75,-16.76] hp 11 | Bring both parts to Baldino◆ Brake the three mills with the ball (0/3)
+[18s +4s] brake the three mills (ball): {"mills":[["north",true],["east",true],["south",true]],"fail":null} | zeelich [2402.03,6,21.81] hp 9 | Bring both parts to Baldino◆ Brake the three mills with the ball (3/3)
+[19s +1s] Baldino builds the key → Zoé: {"r":"talked","to":"baldino","state":"play","lines":8,"key":true,"room":"lighttop","body":"zoe","fail":null} | lighttop [1601.41,0,-0.16] hp 9 | Zoé: broadcast the warning from the lighthouse
+[21s +2s] Zoé: the dials (sun, wave, star) and the microphone: {"dials":[0,1,2],"broadcast":true,"body":"twinsen","room":"workshop","fail":null} | workshop [1502.75,0,-1.95] hp 9 | Open the platform shield at the console by the gate
+[438s +417s] the platform shield: {"r":"used","target":{"kind":"c2console","id":"p_console","label":"p_console"},"state":"play","lines":2,"shield":true,"fail":null} | zeelich [2435.83,6,-4.46] hp 9 | Stop Vesk on the platform
+[439s +1s] Vesk goes down: {"r":"talked","to":"vesk","state":"play","lines":18,"down":true,"fail":null} | zeelich [2445.33,6.42,-3.76] hp 9 | Go down the drill shaft
+[478s +39s] the shaft → chapter 4: {"r":"used","target":{"kind":"c2shaft","id":"p_shaft","label":"p_shaft"},"state":"play","lines":18,"chapter":"dig","room":"desert","fail":null} | desert [3292,2,4] hp 9 | Find the professor who found the crystals
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[284.6] stuck at (2435.8, -4.4): replan
+[290.1] stuck at (2435.8, -4.4): replan
+[298.1] stuck at (2433.9, -4.0): replan
+[306.0] stuck at (2435.7, -4.5): replan
+[313.9] stuck at (2434.0, -4.0): replan
+[321.9] stuck at (2435.9, -4.4): replan
+[330.3] go → (2446.5, -4.5) plan ok=true pts=5 left=0.8
+[344.9] go → (2450.0, 0.0) plan ok=false pts=4 left=1.95
+[347.9] go → (2450.0, 0.0) plan ok=false pts=1 left=1.97
+[350.4] stuck at (2448.0, -0.5): replan
+[352.5] go → (2450.0, 0.0) plan ok=true pts=2 left=0.4
+[352.5] go → (2450.0, 0.0) plan ok=true pts=2 left=0.4
+kept docs/lba3-production/reviews/REV-TY-2/save-06-afterpair.json
+no errors

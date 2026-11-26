@@ -1,0 +1,32 @@
+[
+ {
+  "try": 1,
+  "result": "pylons 3/3; converted at 7.3, 16.8, 28.8 s; throws 11",
+  "hpIn": 12,
+  "hpOut": 10,
+  "maxHp": 12,
+  "dead": false,
+  "secs": 28.9,
+  "hits": 2,
+  "byKind": {
+   "bolt": 2
+  },
+  "enemiesSeen": 1,
+  "beaten": 0
+ },
+ {
+  "try": 2,
+  "result": "pylons 3/3; converted at 7.3, 16.6, 26.2 s; throws 9",
+  "hpIn": 12,
+  "hpOut": 11,
+  "maxHp": 12,
+  "dead": false,
+  "secs": 26.4,
+  "hits": 1,
+  "byKind": {
+   "bolt": 1
+  },
+  "enemiesSeen": 1,
+  "beaten": 0
+ }
+]

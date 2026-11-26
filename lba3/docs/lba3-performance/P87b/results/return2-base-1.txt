@@ -1,0 +1,16 @@
+load before 1.74 3.44 3.36; other gpu-processes 0
+P87b return probe · medium · zeelich > citadel > desert > zeelich > sewer > zeelich > isle_knartas > zeelich > c3shaft > citadel > bumaze > citadel
+zeelich   first   (was unloaded): left 68, uploads 2375 (109360 KB), worst frame 4518 ms, 162 frames, canvases sent again 0 (0 KB, mip 0) · in-use sources bumped by 1x twinOf engine/merge.js:58:54 | 1x twinOf engine/merge.js:58:212
+citadel   revisit (was built): left 0, uploads 1548 (11525 KB), worst frame 339 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+desert    first   (was unloaded): left 45, uploads 1964 (81263 KB), worst frame 193148 ms, 133 frames, canvases sent again 1 (256 KB, mip 0)
+zeelich   revisit (was cached): left 0, uploads 951 (3946 KB), worst frame 429 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+sewer     first   (was unloaded): left 0, uploads 523 (30064 KB), worst frame 182128 ms, 93 frames, canvases sent again 1 (256 KB, mip 0)
+zeelich   revisit (was cached): left 0, uploads 709 (2117 KB), worst frame 34 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+isle_knartas first   (was unloaded): left 47, uploads 1006 (72058 KB), worst frame 92374 ms, 123 frames, canvases sent again 2 (2048 KB, mip 0)
+zeelich   revisit (was cached): left 0, uploads 768 (2238 KB), worst frame 478 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+c3shaft   first   (was unloaded): left 3, uploads 643 (48328 KB), worst frame 150102 ms, 103 frames, canvases sent again 0 (0 KB, mip 0)
+citadel   revisit (was built): left 0, uploads 1239 (2620 KB), worst frame 500 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+bumaze    first   (was unloaded): left 0, uploads 461 (15584 KB), worst frame 122590 ms, 93 frames, canvases sent again 0 (0 KB, mip 0)
+citadel   revisit (was built): left 0, uploads 1250 (2646 KB), worst frame 19 ms, 67 frames, canvases sent again 0 (0 KB, mip 0)
+TOTAL on revisits: 0 pieces left their draw batches, 25092 KB uploaded; canvases sent again over the route: 4 (2560 KB, mip 0)
+exit 0 load after 3.89 4.08 3.91

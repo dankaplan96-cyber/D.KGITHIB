@@ -1,0 +1,26 @@
+=== resume start 2026-11-01T19:19:54Z
+PASS D17: Continue in the middle of Sendell's scene plays it on to its end (the way to the core opens) 
+PASS D16: Continue during the core fight's coil phase: the fight and the coil are back 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 2 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional, 15 note
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/music/well.mp3
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba1/bumaze.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/cxislet.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba1/buhalls.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/knartas.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/poly/dinofly.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/otringal.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba1/asylum.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/undergas.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/liftdock.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/mosquibee.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/celebration.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/poly/index.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/lba2/islands/platform.json
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/bake.bin
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== resume end rc=0 wall=384s 2026-11-01T19:26:18Z

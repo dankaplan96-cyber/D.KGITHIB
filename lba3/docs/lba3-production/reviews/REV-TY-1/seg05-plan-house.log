@@ -1,0 +1,26 @@
+[0s +0s] continue: {"state":"play","lines":0} | citadel [-56,16.76,-36.73] hp 4 | Visit Vesk at the station in the old fortress
+[3s +3s] Vesk: the tour: {"r":"talked","to":"vesk","state":"play","lines":14,"fail":null} | control [1399.6,0,-1.13] hp 4 | Meet Zoé at the station gate
+[4s +1s] Zoé at the gate: {"r":"talked","to":"zoe","state":"play","lines":10,"room":"projoffice","body":"zoe","fail":null} | projoffice [1304.8,0,-3.7] hp 4 | Zoé: find the evacuation plan without getting caught
+[4s +1s] Zoé: the lockers (stealth): {"plan":true,"tries":["arrived"],"fail":null} | projoffice [1299.12,0,-3.71] hp 4 | Zoé: get out with the plan
+[64s +60s] Zoé: out: {"zoeDone":true,"body":"twinsen","fail":null} | citadel [13.48,2.35,26.5] hp 4 | Confront Vesk at the beam pad
+[71s +7s] Vesk: the confrontation: {"r":"talked","to":"vesk","state":"play","lines":20,"gone":true,"fail":null} | citadel [-19.44,14.38,-61.04] hp 4 | Go home. Arthur is calling you
+[75s +3s] home: Arthur's radio: {"r":"talked","to":"arthur","state":"play","lines":12,"radio":true,"fail":null} | citadel [-43.99,2.34,77.2] hp 4 | Talk to Doran at the harbour and sail to Zeelich
+[75s +0s] hook: {"plan":true,"water":true,"chapter":"project"} | citadel [-43.99,2.34,77.2] hp 4 | Talk to Doran at the harbour and sail to Zeelich
+[77s +2s] house looks: {"desk":["Zoé's connections board. Green pins are on the project's heat, red ones still wait. Bug Street is green. The harbour row is all red.","(The red pins are the houses missing from Vesk's plan. She saw that before anyone.)"],"meter":["Zoé's note on the meter: \"Jumps when the ground hums. Three times today. -Z\"","(She noticed before I did. Again.)"],"bench":["Arthur's paddle boat, built to  | house [994.5,0,-1.99] hp 4 | Talk to Doran at the harbour and sail to Zeelich
+[79s +2s] nell (harbour row posts): ["Arthur's dad, right? He still owes me a sprocket.","Esmer engines are wonderful machines. Try getting a spare part for one, though. Three weeks, by shuttle."] | citadel [-103.83,2.37,35.01] hp 4 | Talk to Doran at the harbour and sail to Zeelich
+[80s +1s] bram: ["Twinsen! Just the man. The project ran its pipe right past my pump, and the handle seized the day they dug.","Mira says the pipe makes the pump pointless. The figures look fine, she says. Figures don't carry buckets.","I'll have a look at it.","Mind the valve pin. It rusted in when they dug."] | citadel [-43.42,2.25,62.19] hp 4 | Talk to Doran at the harbour and sail to Zeelich
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[299.4] go → (1003.5, 10.4) plan ok=true pts=7 left=0.2
+[309.5] go → (1003.5, 10.4) plan ok=true pts=2 left=0.15
+[310.4] go → (1003.5, 10.4) plan ok=true pts=1 left=0.21
+[310.4] go → (1003.5, 10.4) plan ok=true pts=1 left=0.21
+[311.3] go → (994.4, -2.2) plan ok=true pts=3 left=0.22
+[320.2] go → (994.4, -2.2) plan ok=true pts=2 left=0.27
+[320.8] go → (994.4, -2.2) plan ok=true pts=1 left=0.23
+[320.8] go → (994.4, -2.2) plan ok=true pts=1 left=0.23
+[321.4] go → (1001.2, 11.3) plan ok=false pts=3 left=0.55
+[326.1] go: transition (house → house, trans true) at (1001.00, 10.65)
+[326.9] go → (-104.8, 36.0) plan ok=true pts=9 left=0.54
+[344.6] go → (-42.3, 62.9) plan ok=true pts=9 left=0.78
+no errors

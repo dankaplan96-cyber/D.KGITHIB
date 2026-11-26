@@ -1,0 +1,35 @@
+<!doctype html><html><body style="margin:0;background:#8c939b">
+<script type="importmap">{ "imports": { "three": "../vendor/three/build/three.module.min.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+const D = await (await fetch('tw3ds.json')).json();
+const q = new URLSearchParams(location.search);
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#8c939b');
+scene.add(new THREE.HemisphereLight('#ffffff', '#555566', 1.6)); const sun = new THREE.DirectionalLight('#fff', 2.2); sun.position.set(3, 5, 6); scene.add(sun);
+const root = new THREE.Group(); root.rotation.x = -Math.PI / 2; // 3ds is Z-up
+const views = (q.get('views') || '0,0.785,1.571,3.14').split(',').map(Number);
+const box = new THREE.Box3();
+const parts = [];
+for (const o of D.objs) {
+  if (!o.v.length || o.name.startsWith('Text')) continue;
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(o.v.flat(), 3));
+  g.setIndex(o.f.map((f) => f.slice(0, 3)).flat());
+  g.computeVertexNormals();
+  const mn = Object.keys(o.fm)[0]; const c = D.mats[mn]?.dif || [200, 200, 200];
+  parts.push(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255), roughness: 0.6, flatShading: q.get('flat') === '1' })));
+}
+const gap = +(q.get('gap') || 70);
+views.forEach((yaw, i) => {
+  const holder = new THREE.Group(); const inner = new THREE.Group(); inner.rotation.x = -Math.PI / 2;
+  parts.forEach((p) => inner.add(p.clone()));
+  holder.add(inner); holder.rotation.y = yaw; holder.position.x = (i - (views.length - 1) / 2) * gap; scene.add(holder);
+});
+scene.updateMatrixWorld(true); box.setFromObject(scene);
+const c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+const cam = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 1, 5000);
+const d = Math.max(s.x / (2 * Math.tan(15 * Math.PI / 180) * innerWidth / innerHeight), s.y / (2 * Math.tan(15 * Math.PI / 180))) * 1.1;
+cam.position.set(c.x, c.y + (+q.get('up') || 0), c.z + d); cam.lookAt(c.x, c.y, c.z);
+r.render(scene, cam); window.done = { size: s.toArray(), center: c.toArray() };
+</script></body></html>

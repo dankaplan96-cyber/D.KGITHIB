@@ -1,0 +1,84 @@
+{
+  "file": "evidence/title-to-play-stall-1.json",
+  "frame": {
+    "t": 22097.9,
+    "ms": 1216.5,
+    "real": 1.2165,
+    "sim": 8.200000017881393,
+    "render": 4.799999982118607,
+    "black": false,
+    "calls": 46,
+    "tris": 214079,
+    "shadowCalls": 1,
+    "draws": 46,
+    "up": 3,
+    "upKB": 8.5,
+    "lag": 0,
+    "why": "frame before: work 661 ms, draw batches built 372 ms, shadow batches built 104 ms, shadow cache rebuilt (dropped: casters changed), +40 geometries, +0 textures on the GPU",
+    "lamps": 2
+  },
+  "at": {
+    "t": 22110.9,
+    "state": "play",
+    "screen": null,
+    "room": "house",
+    "trans": false,
+    "cine": false,
+    "pos": [
+      1001.55,
+      0,
+      -1.75
+    ],
+    "angle": -1.326,
+    "hp": 10,
+    "mp": 8,
+    "camera": {
+      "view": 0,
+      "yaw": 0.785,
+      "pitch": 0.42
+    },
+    "chapter": "well",
+    "objective": "<b>Check the well</b><span class=\"s \">◆ Take the magic ball from the cupboard</span>"
+  },
+  "counters": {
+    "geometries": 1047,
+    "textures": 234,
+    "programs": 83,
+    "heapMB": 455.6,
+    "drawBatchBuilds": 2,
+    "drawBatchMs": 1936,
+    "shadowBatchBuilds": 2,
+    "shadowCache": {
+      "full": 4,
+      "sliced": 0,
+      "swaps": 0,
+      "drops": 3
+    },
+    "regionsBuilt": 2,
+    "uploads": 8,
+    "jobs": {
+      "p": 83,
+      "g": 1047,
+      "x": 234,
+      "sc": 4,
+      "scd": 3,
+      "db": 1935.5,
+      "dbn": 2,
+      "sb": 579.5999999940395,
+      "sbn": 2,
+      "up": 8,
+      "aq": 2,
+      "h": 477689660,
+      "rt": 5
+    }
+  },
+  "screenshot": "evidence/title-to-play-stall-1.jpg",
+  "loaf": [
+    {
+      "t": 20867.8,
+      "ms": 1223.5,
+      "blocking": 1164.2,
+      "scripts": []
+    }
+  ]
+}

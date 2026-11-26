@@ -1,0 +1,36 @@
+{
+ "info": {
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "dpr": 1.25,
+  "inner": [
+   1536,
+   864
+  ],
+  "canvasBacking": [
+   1920,
+   1080
+  ],
+  "canvasCss": [
+   1536,
+   864
+  ],
+  "quality": "high",
+  "auto": true,
+  "pixelRatio": 1.25,
+  "eff": 1,
+  "knobs": {
+   "scale": 1,
+   "bloom": 1,
+   "filter": "soft",
+   "msaa": 4,
+   "shadows": 1
+  },
+  "overlay": "60 fps   frame p50 16.7 · p95 16.9 · max 16.9 ms\nsim 1.1 ms · render (CPU) 1.7 ms · steps 1/1\ndraw calls 66 · triangles 434k\npixel ratio 1.25 (auto ×1) · high\nNVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11\nstartup: build 7.2 s · shaders 3.3 s"
+ },
+ "box": [
+  [
+   784.3463633086308,
+   396.1143867893564
+  ]
+ ]
+}

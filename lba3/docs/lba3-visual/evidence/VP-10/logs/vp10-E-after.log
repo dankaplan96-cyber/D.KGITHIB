@@ -1,0 +1,7 @@
+E station {"x":-28,"z":-65,"gate":[-45,-65]}
+E from [-52,13.89,-65]
+E1-through-gate: frames 20, seen min 45% mean 84%, frames <20% seen 0, veil max 9, gone max 0, pitch 21.7–34.8
+E2-to-south-wall: frames 12, seen min 42% mean 77%, frames <20% seen 0, veil max 9, gone max 0, pitch 22.2–24.1
+E3 Enter by the south wall: frames 16, seen min 75% mean 97%, frames <20% seen 0, veil max 9, gone max 0, pitch 29.2–36.6
+E tower spot [-9.8,10.71,-46.8] {"t":18.47,"st":"play","anim":"idle","spd":0,"pos":[-9.8,10.71,-46.8],"ang":0.79,"fade":"","prompt":"","trans":false,"room":"citadel","pitch":70.8,"seen":100,"veil":9,"gone":0}
+no page errors

@@ -1,0 +1,12 @@
+PASS pause while charging: nothing is thrown while paused 
+PASS ...after resuming the ball is in hand again (thrown once or not at all) and he walks 
+PASS focus lost while charging: no key stays held, the ball comes home, he walks 
+PASS weapon swap (R: to the previous weapon) while the ball flies: the swap happens, the ball still comes home, one ball 
+PASS ...swap back: the ball throws again 
+PASS a door with the ball in the air: in the room the ball is in hand; back out too 
+PASS mashing E/Space at a giver: one bonus, recorded once 
+PASS quality changed ×10 through the menus: back in play, it renders and he moves 
+PASS death with the ball out: game over after the fall 
+PASS Retry: back in play from the save, alive, the ball in hand 
+no errors
+ALL PASSED

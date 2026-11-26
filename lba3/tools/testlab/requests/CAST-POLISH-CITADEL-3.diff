@@ -1,0 +1,44 @@
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index 3b55143..484573b 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -81,7 +81,7 @@ CAST = {
+     'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
+     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1),
+     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
+-    'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6),
++    'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
+     'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
+     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
+     'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1),
+@@ -1140,7 +1140,29 @@ def build(name):
+             hm.f = [f for f in hm.f if sum(hm.v[i][1] for i in f) / len(f) > c[1] + R * 0.08]
+             rim_r = R * 1.06 * math.sqrt(max(0.05, 1 - ((R * 0.08 - R * 0.22) / (R * 1.06 * 0.8)) ** 2))
+             tube(b.P('helmRim', cp.get('trim') or '#c8a050', head_w, 30), (0, c[1] + R * 0.06, c[2] - 0.01), (0, c[1] + R * 0.14, c[2] - 0.01), rim_r * 1.0, rim_r * 1.0, 14, cap=False)
+-            box(b.P('visor', '#1a2830', head_w, 30), -R * 0.66, R * 0.66, c[1] + R * 0.14, c[1] + R * 0.46, c[2] + R * 0.8, c[2] + R * 1.04)
++            if cp.get('visorCurved'):
++                # CAST-POLISH-CITADEL-3 (VISOR-GUARD): the visor was a flat box across the eyes; its square corners stood off
++                # the round helmet and, with the trunk in front of its middle, it read as two black bricks. Now it is a band
++                # of the helmet's own curve round the front (116 degrees), 1-1.6 cm proud of it, the same dark glass.
++                vz_ = b.P('visor', '#1a2830', head_w, 40)
++                n_, a_ = 12, math.radians(58)
++                rows_ = []
++                for y_, out_ in ((c[1] + R * 0.15, 0.012), (c[1] + R * 0.31, 0.016), (c[1] + R * 0.46, 0.010)):
++                    k_ = math.sqrt(max(0.05, 1 - ((y_ - (c[1] + R * 0.22)) / (R * 1.06 * 0.8)) ** 2))   # (the helmet's section there)
++                    ex_, ez_ = R * 1.06 * k_, R * 1.06 * 1.1 * k_
++                    for dd_ in (out_, -0.006):
++                        rows_.append([(math.sin(-a_ + 2 * a_ * i / n_) * (ex_ + dd_), y_, c[2] - 0.01 + math.cos(-a_ + 2 * a_ * i / n_) * (ez_ + dd_)) for i in range(n_ + 1)])
++                outer, inner = rows_[0::2], rows_[1::2]
++                m_ = n_ + 1
++                v_ = [q for r_ in outer for q in r_] + [q for r_ in inner for q in r_]
++                I = 3 * m_
++                f_ = [[j * m_ + i, j * m_ + i + 1, (j + 1) * m_ + i + 1, (j + 1) * m_ + i] for j in range(2) for i in range(n_)]
++                f_ += [[I + (j + 1) * m_ + i, I + (j + 1) * m_ + i + 1, I + j * m_ + i + 1, I + j * m_ + i] for j in range(2) for i in range(n_)]
++                f_ += [[i + 1, i, I + i, I + i + 1] for i in range(n_)] + [[2 * m_ + i, 2 * m_ + i + 1, I + 2 * m_ + i + 1, I + 2 * m_ + i] for i in range(n_)]
++                f_ += [[j * m_, (j + 1) * m_, I + (j + 1) * m_, I + j * m_] for j in range(2)] + [[(j + 1) * m_ + n_, j * m_ + n_, I + j * m_ + n_, I + (j + 1) * m_ + n_] for j in range(2)]
++                vz_.add(v_, f_)
++            else:
++                box(b.P('visor', '#1a2830', head_w, 30), -R * 0.66, R * 0.66, c[1] + R * 0.14, c[1] + R * 0.46, c[2] + R * 0.8, c[2] + R * 1.04)
+     else:  # esmer: a tall egg head, small pointed ears, a ridge over the crown
+         hp = b.P('head', skin, head_w, 80)
+         c = (0, Hc[1] + hh * 0.15, Hc[2])

@@ -1,0 +1,6 @@
+[
+  { "op": "script", "name": "twinsen: rebuild the baseline from the script (unchanged)", "script": "tools/blender/twinsen_poly.py",
+    "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/twinsen/source/twinsen.rebuilt.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/twinsen/source/twinsen.rebuilt.blend"] },
+  { "op": "script", "name": "zoe: rebuild the baseline from the script (unchanged)", "script": "tools/blender/zoe_poly.py",
+    "args": ["C:/Users/dan/lba3-blend/lba3/art/characters/skeletons.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zoe/source/zoe.rebuilt.json", "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zoe/source/zoe.rebuilt.blend"] }
+]

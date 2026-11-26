@@ -1,0 +1,651 @@
+[15.0] new game, language en
+[15.0] OBJECTIVE "Check the well"
+[15.1] HINT "Take your magic ball from the cupboard↑ Walk · ←→ Turn |  | ➤Cupboard"
+[15.1] TIP "Take your magic ball from the cupboard" keys "↑ Walk · ←→ Turn" step ball
+[15.2] STATE play room house chapter 0
+[15.6] ← turns the angle by sign 1
+[15.6] STAR 996.8,-1.6,search cupboard at 4.8 m
+[16.5] HINT "Take your magic ball from the cupboardW Search the cupboard |  | ➤Cupboard"
+[17.5] PROMPT "W Inspect"
+[18.3] SEARCHED search cupboard prompt "W Inspect"
+[18.3] STATE found room house chapter 0
+[18.8] STATE dialog room house chapter 0
+[20.1] SAY "Twinsen" "The magic ball, the holomap... and a lot of dust."
+[22.9] SAY "Twinsen" "Hello again, old friend."
+[24.4] HINT "Go out to the yard | Magic ball (Alt) · Holomap (H) | ➤Front door"
+[24.4] TIP "Go out to the yard" keys "" step out
+[24.4] STATE play room house chapter 0
+[24.4] STAR 1001.2,11.3,exit outdoor at 13.3 m
+[24.4] STUCK at 997.8 -1.6 toward 1001.2,11.3,exit outdoor 
+[26.9] HINT "Go out to the yard |  | ➤Front door"
+[38.3] STAR -42.6,73.7,Zoé at 3.7 m
+[39.6] HINT "Talk to Zoé○○○○○ |  | ➤Front door"
+[39.6] TIP "Talk to Zoé○○○○○" keys "" step zoe
+[40.1] HINT "Talk to Zoé○○○○○W Talk |  | ➤Front door"
+[40.5] HINT "Talk to Zoé○○○○○W Talk |  | ➤Front doorTwinsen! Over here."
+[44.6] STATE dialog room out chapter 0
+[45.9] SAY "Zoé" "Same next door. Their tap ran warm, knocked three times, and stopped."
+[49.8] SAY "Zoé" "And look at their kettle. Furred with these since breakfast."
+[52.8] SAY "Twinsen" "(Tiny crystals. Still warm.)"
+[57.2] SAY "Zoé" "Mira's got the well padlocked, and she's telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it."
+[60.2] STATE found room out chapter 0
+[61.3] HINT "✓ Talk to Zoé |  | ➤Front doorTwinsen! Over here."
+[61.3] TIP "✓ Talk to Zoé" keys "" step inv
+[61.4] STATE play room out chapter 0
+[61.4] STEP inv: opening the inventory (I)
+[63.2] state after I: inventory
+[67.4] HINT "Try the garden tap by the front door●●○○○W Try the tap |  | ➤Front doorTry the garden tap. If that's dry too, it isn't just our kitchen."
+[67.4] TIP "Try the garden tap by the front door●●○○○" keys "W Try the tap" step tap
+[67.5] PROMPT "W Talk"
+[67.5] STAR -43.9,74.7, at 2.0 m
+[67.8] NOTE at the star -43.9,74.7, (a thing) the prompt is "W Talk": a person beside it takes the key; stepping closer 016-note.jpg
+[68.3] PROMPT "W Try Tap"
+[69.6] STATE dialog room out chapter 0
+[70.3] SAY "Twinsen" "(Dry too. And something knocks back behind the barrels, where the pipe goes into the wall.)"
+[73.3] HINT "✓ Try the garden tap by the front door |  | ➤Front doorTry the garden tap. If that's dry too, it isn't just our kitchen."
+[73.3] TIP "✓ Try the garden tap by the front door" keys "" step barrels
+[73.4] STATE play room out chapter 0
+[73.4] STAR -48.2,74.5, at 4.9 m
+[73.6] STEP barrels: throwing the ball (F) at 4.9 m
+[75.6] HINT "✓ Knock the barrel by the house aside with the magic ball |  | ➤Front doorOver the project's pipe is quicker. You used to clear fences twice that high."
+[75.6] TIP "✓ Knock the barrel by the house aside with the magic ball" keys "" step pipe
+[75.7] STATE dialog room out chapter 0
+[76.0] SAY "Twinsen" "(Still got it.)"
+[79.4] SAY "Twinsen" "(My joint from yesterday. It held. But it's weeping warm water, and it's furred like their kettle.)"
+[84.3] SAY "Twinsen" "(Warm water, coming up the line from the square. Whatever this is starts at the well.)"
+[88.2] SAY "Zoé" "So your fix worked. It's the water, then."
+[90.1] HINT "Jump the copper pipe on your way out, or walk round it●●●●○F2 Switch to Athletic: run and jump |  | ➤Front doorOver the project's pipe is quicker. You used to clear fences twice that high."
+[90.1] TIP "Jump the copper pipe on your way out, or walk round it●●●●○" keys "F2 Switch to Athletic: run and jump" step pipe
+[90.2] STATE play room out chapter 0
+[90.2] STAR -43.5,69, at 6.1 m
+[90.2] STEP pipe: the panel says "F2 Switch to Athletic: run and jump" - F2 for Athletic
+[91.0] HINT "Jump the copper pipe on your way out, or walk round it●●●●○Space Jump · take a run at it |  | ➤Front doorOver the project's pipe is quicker. You used to clear fences twice that high."
+[91.4] PROMPT "W Talk"
+[92.2] STEP pipe: run and jump (Space)
+[93.6] PROMPT "W Inspect"
+[94.2] STATE dialog room out chapter 0
+[97.0] SAY "Twinsen" "(And here, where the project's pipe goes into the ground. Louder. Everything on this lane hangs off the square's well.)"
+[100.1] STATE play room out chapter 0
+[100.1] STUCK at -44.0 65.2 toward -43.5,69, 
+[103.4] STEP pipe: run and jump (Space)
+[104.6] STEP pipe: run and jump (Space)
+[105.8] HINT "✓ Jump the copper pipe on your way out, or walk round it |  | ➤Front doorNot bad for an old hero. And be back for dinner."
+[105.8] TIP "✓ Jump the copper pipe on your way out, or walk round it" keys "" step 
+[105.9] STAR -42,-4,The well at 73.7 m
+[105.9] ROUTE to -42,-4,The well by the streets: -45,74 > -46,40 > -44,10 > -42,-4
+[107.4] HINT "Hold Alt to see where it lands |  | ➤Front doorNot bad for an old hero. And be back for dinner."
+[107.4] TIP "" keys "" step 
+[114.7] back to Normal (F1)
+[115.3] PROMPT "W Open"
+[122.8] PROMPT "W Talk"
+[123.6] HINT "Hold Alt to see where it lands |  | ➤Front doorNot bad for an old hero. And be back for dinner.Easy, young man. These knees are older than the lighthouse."
+[134.7] PROMPT "W Search"
+[139.1] STUCK at -43.8 26.9 toward -42,-4,The well 
+[139.1] ROUTE to -42,-4,The well by the streets: -46,31 > -46,40 > -44,10 > -42,-4
+[148.5] STUCK at -45.1 26.9 toward -42,-4,The well (2× here)
+[148.5] ROUTE to -42,-4,The well by the streets: -46,31 > -46,40 > -44,10 > -42,-4
+[150.4] STAR 6594.3,7.6,exit tavern-out at 1.1 m
+[153.4] STAR -42,-4,The well at 33.6 m
+[156.9] STAR 6594.3,7.6,exit tavern-out at 1.1 m
+[160.0] STAR -42,-4,The well at 33.6 m
+[165.5] STUCK at -44.9 26.9 toward -42,-4,The well (3× here)
+[166.3] ROUTE to -42,-4,The well by the streets: -46,31 > -46,40 > -44,10 > -42,-4
+[167.4] STAR 6594.3,7.6,exit tavern-out at 1.1 m
+[170.5] STAR -42,-4,The well at 33.6 m
+[174.1] STAR 6594.3,7.6,exit tavern-out at 1.1 m
+[177.1] STAR -42,-4,The well at 33.6 m
+[180.5] STAR 6594.3,7.6,exit tavern-out at 1.1 m
+[183.5] STAR -42,-4,The well at 33.6 m
+[189.2] STUCK at -44.8 26.9 toward -42,-4,The well (4× here)
+[190.2] ROUTE to -42,-4,The well by the streets: -46,31 > -46,40 > -44,10 > -42,-4
+[200.4] STUCK at -45.1 26.9 toward -42,-4,The well (5× here)
+[201.5] ROUTE to -42,-4,The well by the streets: -46,31 > -46,40 > -44,10 > -42,-4
+[210.1] PROMPT "W Talk"
+[223.7] NOTE at the star -42,-4,The well and E does nothing for 20 s (objective "Check the well") 032-note.jpg
+[223.7] STATE dialog room out chapter 0
+[224.3] SAY "Gilbert" "I paid my water bill! So where is my water?"
+[227.5] SAY "Mira" "Mr Gilbert, the bill covers the connection, not the water."
+[230.6] SAY "Gilbert" "So I'm paying for an empty pipe?"
+[233.9] SAY "Twinsen" "Next door's kettle furred up with these since breakfast. Pipes don't do that."
+[238.3] SAY "Mira" "Crystals? No, pipes don't grow those. That comes up from the spring."
+[243.1] SAY "Mira" "All right, it's the well. Here's the key to the lid. Find the fault and I'll waive his bill this month."
+[246.8] SAY "Gilbert" "And last month too."
+[248.2] OBJECTIVE "Climb down the well"
+[248.3] STATE found room out chapter 0
+[249.3] STATE play room out chapter 0
+[250.5] STATE dialog room out chapter 0
+[251.7] SAY "Mira" "If you need anything else from the water office, I'm here. Sadly."
+[254.3] STATE play room out chapter 0
+[255.9] STATE dialog room out chapter 0
+[257.1] SAY "Mira" "If you need anything else from the water office, I'm here. Sadly."
+[259.7] STATE play room out chapter 0
+[261.7] STATE dialog room out chapter 0
+[262.4] SAY "Mira" "If you need anything else from the water office, I'm here. Sadly."
+[262.4] NOTE at the star -42,-4,The well E talks to Mira (the same line a third time: "If you need anything else from the water office, I'm here. Sadly.") instead of the thing under the star; walking round it 042-note.jpg
+[264.9] STATE play room out chapter 0
+[266.6] PROMPT "W Inspect"
+[266.6] ROUND THE STAR: the prompt now "W Inspect"
+[267.3] STATE dialog room out chapter 0
+[268.2] SAY "Twinsen" "The padlock's off. But the lid's rusted to the rim."
+[270.7] SAY "Twinsen" "It won't lift."
+[273.2] SAY "Gilbert" "Stuck? Give it a good kick. That's how I fix everything."
+[276.2] SAY "Mira" "That explains his pipes."
+[277.8] PROMPT "W Talk"
+[277.8] STATE play room out chapter 0
+[278.1] HINT "F3 Switch to Aggressive: kick and punch |  | ➤Front doorNot bad for an old hero. And be back for dinner.Easy, young man. These knees are older than the lighthouse."
+[278.1] HINT says F3 -> pressing it
+[278.8] HINT "W Kick the lid |  | ➤Front doorNot bad for an old hero. And be back for dinner.Easy, young man. These knees are older than the lighthouse."
+[279.4] PROMPT "W Kick"
+[279.4] ROUND THE STAR: the prompt now "W Kick"
+[280.1] PROMPT "W Inspect"
+[280.1] ROUND THE STAR: the prompt now "W Inspect"
+[280.8] STATE dialog room out chapter 0
+[281.8] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[285.1] SAY "Twinsen" "There. Years of rust, one kick."
+[287.5] SAY "Gilbert" "Told you. Same kick I taught Arthur."
+[289.3] PROMPT "W Talk"
+[289.3] STATE play room out chapter 0
+[289.3] back to Normal (F1)
+[291.5] PROMPT "W Inspect"
+[291.5] ROUND THE STAR: the prompt now "W Inspect"
+[292.2] STATE dialog room out chapter 0
+[293.2] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[295.6] STATE play room out chapter 0
+[295.6] ROUND THE STAR: the prompt now "W Inspect"
+[296.3] STATE dialog room out chapter 0
+[297.3] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[299.6] STATE play room out chapter 0
+[299.6] ROUND THE STAR: the prompt now "W Inspect"
+[300.3] STATE dialog room out chapter 0
+[301.3] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[303.6] STATE play room out chapter 0
+[303.6] ROUND THE STAR: the prompt now "W Inspect"
+[304.4] STATE dialog room out chapter 0
+[305.3] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[307.7] STATE play room out chapter 0
+[307.8] ROUND THE STAR: the prompt now "W Inspect"
+[308.5] STATE dialog room out chapter 0
+[309.4] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[309.4] SPENT -42,-4,The well (the same line six times); the next star
+[311.8] STATE play room out chapter 0
+[311.8] STAR -126.2,49.1,Xil at 99.1 m
+[311.8] ROUTE to -126.2,49.1,Xil by the streets: -42,-4 > -44,10 > -46,40 > -60,33 > -74,35.5 > -90,38 > -107.5,39
+[312.3] PROMPT "W Talk"
+[325.4] STUCK at -45.7 19.8 toward -126.2,49.1,Xil 
+[325.4] ROUTE to -126.2,49.1,Xil by the streets: -44,10 > -46,40 > -60,33 > -74,35.5 > -90,38 > -107.5,39
+[329.1] STUCK at -45.7 19.8 toward -126.2,49.1,Xil (2× here)
+[329.1] ROUTE to -126.2,49.1,Xil by the streets: -44,10 > -46,40 > -60,33 > -74,35.5 > -90,38 > -107.5,39
+[333.4] STUCK at -45.7 19.8 toward -126.2,49.1,Xil (3× here)
+[334.2] ROUTE to -126.2,49.1,Xil by the streets: -44,10 > -46,40 > -60,33 > -74,35.5 > -90,38 > -107.5,39
+[341.3] PROMPT "W Search"
+[369.4] PROMPT "W Talk"
+[370.1] HINT "W Kick the lid |  | ➤Front doorNot bad for an old hero. And be back for dinner.Big feet, small street!"
+[381.2] STUCK at -111.7 39.9 toward -126.2,49.1,Xil 
+[384.8] STUCK at -111.7 39.9 toward -126.2,49.1,Xil (2× here)
+[390.6] STUCK at -115.3 38.0 toward -126.2,49.1,Xil 
+[393.1] PROMPT "W Search"
+[394.2] STUCK at -115.7 37.9 toward -126.2,49.1,Xil (2× here)
+[399.9] PROMPT "W Inspect"
+[400.3] PROMPT "W Talk"
+[406.1] NOTE at the star -126.2,49.1,Xil and E does nothing for 20 s (objective "Climb down the well") 056-note.jpg
+[406.1] STATE dialog room out chapter 0
+[408.4] SAY "Xil" "Greetings, child of Twinsun. Xil, trader, of Zeelich. My cargo waits on that barge until the harbour master stamps my permit."
+[412.4] SAY "Xil" "I asked him three times. The third time, he snored."
+[416.1] SAY "Xil" "Only the bell on that post wakes him. I saw it when the barge came in."
+[420.0] SAY "Twinsen" "I need a rope for the town well. Is there any on that barge?"
+[424.4] SAY "Xil" "Rope ladders, a whole crate. Wake that man, bring me my stamp, and one is yours."
+[427.3] STATE play room out chapter 0
+[430.5] BELL: the ball (F) at the bell from 5.0 m, try 1
+[432.9] STATE dialog room out chapter 0
+[433.3] SAY "Doran" "Boat in! Ropes! Fenders! ...There is no boat."
+[436.9] SAY "Twinsen" "Sorry, Doran. The trader from Zeelich is still waiting for his stamp."
+[441.5] SAY "Doran" "The Zeelichian? He's only been waiting three days. Waiting is what harbours are for."
+[446.4] SAY "Doran" "Fine, fine. For you. There, stamped. Tell him there's no need to thank me. Again."
+[449.3] STATE found room out chapter 0
+[450.3] STATE play room out chapter 0
+[455.1] STUCK at -124.5 46.1 toward -126.2,49.1,Xil 
+[462.2] STATE dialog room out chapter 0
+[463.8] SAY "Xil" "The stamp! At last. Drills, pipes and sensors, for Twinsun and Zeelich's Joint Project."
+[468.7] SAY "Xil" "Please take this rope ladder, Twinsen. You look like someone who climbs down a lot of holes."
+[471.6] STATE found room out chapter 0
+[472.7] STATE play room out chapter 0
+[472.7] STAR -42,-4,The well at 97.1 m
+[472.7] STUCK at -124.5 47.1 toward -42,-4,The well (2× here)
+[472.7] ROUTE to -42,-4,The well by the streets: -107.5,39 > -90,38 > -74,35.5 > -60,33 > -46,40 > -44,10 > -42,-4
+[478.3] STUCK at -123.8 48.8 toward -42,-4,The well (3× here)
+[479.1] ROUTE to -42,-4,The well by the streets: -107.5,39 > -90,38 > -74,35.5 > -60,33 > -46,40 > -44,10 > -42,-4
+[485.5] STUCK at -123.8 48.8 toward -42,-4,The well (4× here)
+[486.5] ROUTE to -42,-4,The well by the streets: -107.5,39 > -90,38 > -74,35.5 > -60,33 > -46,40 > -44,10 > -42,-4
+[524.9] PROMPT "W Search"
+[527.4] PROMPT "W Inspect"
+[535.2] PROMPT "W Search"
+[541.8] STUCK at -47.7 12.2 toward -42,-4,The well 
+[546.4] STUCK at -47.7 12.2 toward -42,-4,The well (2× here)
+[550.7] STUCK at -47.7 12.2 toward -42,-4,The well (3× here)
+[562.1] PROMPT "W Talk"
+[564.2] PROMPT "W Inspect"
+[564.2] ROUND THE STAR: the prompt now "W Inspect"
+[565.0] STATE dialog room out chapter 0
+[565.6] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[567.7] STATE play room out chapter 0
+[567.7] ROUND THE STAR: the prompt now "W Inspect"
+[568.5] OBJECTIVE "Find the source of the heat"
+[568.5] STATE dialog room well chapter 0
+[568.8] SAY "Twinsen" "Crystals? Down a town well?"
+[571.9] SAY "Twinsen" "The ball's trembling in my pocket. Maybe it can wake those three dark crystals."
+[574.8] STATE play room well chapter 0
+[574.8] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[575.1] HINT "X Dodge |  | ➤Front doorNot bad for an old hero. And be back for dinner.Big feet, small street!"
+[578.0] PROMPT "W Talk"
+[578.5] STATE dialog room out chapter 0
+[579.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[581.9] STATE play room out chapter 0
+[582.3] STATE dialog room out chapter 0
+[583.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[585.7] STATE play room out chapter 0
+[586.1] STATE dialog room out chapter 0
+[587.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[587.1] NOTE at the star 1092,4.5,exit outdoor-well E talks to Gilbert (the same line a third time: "Still waiting for my water, Twinsen. And my refund.") instead of the thing under the star; walking round it 077-note.jpg
+[589.3] STATE play room out chapter 0
+[589.7] STATE dialog room out chapter 0
+[590.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[593.1] STATE play room out chapter 0
+[593.5] STATE dialog room out chapter 0
+[594.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[596.8] STATE play room out chapter 0
+[597.3] STATE dialog room out chapter 0
+[598.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[598.5] SPENT 1092,4.5,exit outdoor-well (the same line six times); the next star
+[600.7] STATE play room out chapter 0
+[601.1] STATE dialog room out chapter 0
+[602.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[604.5] STATE play room out chapter 0
+[604.9] STATE dialog room out chapter 0
+[605.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[608.0] STATE play room out chapter 0
+[608.4] STATE dialog room out chapter 0
+[609.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[611.8] STATE play room out chapter 0
+[612.2] STATE dialog room out chapter 0
+[613.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[615.6] STATE play room out chapter 0
+[616.0] STATE dialog room out chapter 0
+[617.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[619.4] STATE play room out chapter 0
+[619.9] STATE dialog room out chapter 0
+[621.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[623.3] STATE play room out chapter 0
+[623.7] STATE dialog room out chapter 0
+[624.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[626.8] STATE play room out chapter 0
+[627.2] STATE dialog room out chapter 0
+[628.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[630.6] STATE play room out chapter 0
+[631.0] STATE dialog room out chapter 0
+[632.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[634.4] STATE play room out chapter 0
+[634.8] STATE dialog room out chapter 0
+[636.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[638.2] STATE play room out chapter 0
+[638.6] STATE dialog room out chapter 0
+[639.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[642.0] STATE play room out chapter 0
+[642.5] STATE dialog room out chapter 0
+[643.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[645.6] STATE play room out chapter 0
+[646.0] STATE dialog room out chapter 0
+[647.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[649.1] STATE play room out chapter 0
+[649.5] STATE dialog room out chapter 0
+[650.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[652.9] STATE play room out chapter 0
+[653.3] STATE dialog room out chapter 0
+[654.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[656.7] STATE play room out chapter 0
+[657.2] STATE dialog room out chapter 0
+[658.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[660.6] STATE play room out chapter 0
+[661.0] STATE dialog room out chapter 0
+[662.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[664.4] STATE play room out chapter 0
+[664.9] STATE dialog room out chapter 0
+[665.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[668.0] STATE play room out chapter 0
+[668.4] STATE dialog room out chapter 0
+[669.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[671.8] STATE play room out chapter 0
+[672.2] STATE dialog room out chapter 0
+[673.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[675.3] STATE play room out chapter 0
+[675.7] STATE dialog room out chapter 0
+[676.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[678.8] STATE play room out chapter 0
+[679.3] STATE dialog room out chapter 0
+[680.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[682.4] STATE play room out chapter 0
+[682.8] STATE dialog room out chapter 0
+[683.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[685.9] STATE play room out chapter 0
+[686.3] STATE dialog room out chapter 0
+[687.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[689.7] STATE play room out chapter 0
+[690.1] STATE dialog room out chapter 0
+[691.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[693.5] STATE play room out chapter 0
+[693.9] STATE dialog room out chapter 0
+[695.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[697.3] STATE play room out chapter 0
+[697.7] STATE dialog room out chapter 0
+[699.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[701.1] STATE play room out chapter 0
+[701.5] STATE dialog room out chapter 0
+[702.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[704.7] STATE play room out chapter 0
+[705.1] STATE dialog room out chapter 0
+[706.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[708.5] STATE play room out chapter 0
+[709.0] STATE dialog room out chapter 0
+[710.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[712.4] STATE play room out chapter 0
+[712.8] STATE dialog room out chapter 0
+[713.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[715.9] STATE play room out chapter 0
+[716.3] STATE dialog room out chapter 0
+[717.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[719.7] STATE play room out chapter 0
+[720.1] STATE dialog room out chapter 0
+[721.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[723.5] STATE play room out chapter 0
+[724.0] STATE dialog room out chapter 0
+[724.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[727.0] STATE play room out chapter 0
+[727.5] STATE dialog room out chapter 0
+[728.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[730.6] STATE play room out chapter 0
+[731.0] STATE dialog room out chapter 0
+[732.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[734.4] STATE play room out chapter 0
+[734.8] STATE dialog room out chapter 0
+[736.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[738.4] STATE play room out chapter 0
+[738.8] STATE dialog room out chapter 0
+[739.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[742.0] STATE play room out chapter 0
+[742.4] STATE dialog room out chapter 0
+[743.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[745.5] STATE play room out chapter 0
+[745.9] STATE dialog room out chapter 0
+[747.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[749.3] STATE play room out chapter 0
+[749.7] STATE dialog room out chapter 0
+[751.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[753.1] STATE play room out chapter 0
+[753.6] STATE dialog room out chapter 0
+[754.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[756.7] STATE play room out chapter 0
+[757.1] STATE dialog room out chapter 0
+[758.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[760.5] STATE play room out chapter 0
+[760.9] STATE dialog room out chapter 0
+[762.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[764.3] STATE play room out chapter 0
+[764.8] STATE dialog room out chapter 0
+[766.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[768.1] STATE play room out chapter 0
+[768.6] STATE dialog room out chapter 0
+[769.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[771.9] STATE play room out chapter 0
+[772.3] STATE dialog room out chapter 0
+[773.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[775.7] STATE play room out chapter 0
+[776.2] STATE dialog room out chapter 0
+[777.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[779.6] STATE play room out chapter 0
+[780.0] STATE dialog room out chapter 0
+[781.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[783.1] STATE play room out chapter 0
+[783.5] STATE dialog room out chapter 0
+[784.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[786.9] STATE play room out chapter 0
+[787.4] STATE dialog room out chapter 0
+[788.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[790.5] STATE play room out chapter 0
+[790.9] STATE dialog room out chapter 0
+[792.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[794.3] STATE play room out chapter 0
+[794.7] STATE dialog room out chapter 0
+[795.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[798.1] STATE play room out chapter 0
+[798.6] STATE dialog room out chapter 0
+[799.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[801.9] STATE play room out chapter 0
+[802.4] STATE dialog room out chapter 0
+[803.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[805.7] STATE play room out chapter 0
+[806.2] STATE dialog room out chapter 0
+[807.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[809.6] STATE play room out chapter 0
+[810.0] STATE dialog room out chapter 0
+[811.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[813.4] STATE play room out chapter 0
+[813.8] STATE dialog room out chapter 0
+[815.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[817.2] STATE play room out chapter 0
+[817.6] STATE dialog room out chapter 0
+[818.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[820.7] STATE play room out chapter 0
+[821.2] STATE dialog room out chapter 0
+[822.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[824.3] STATE play room out chapter 0
+[824.7] STATE dialog room out chapter 0
+[826.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[828.1] STATE play room out chapter 0
+[828.5] STATE dialog room out chapter 0
+[829.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[831.9] STATE play room out chapter 0
+[832.3] STATE dialog room out chapter 0
+[833.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[835.4] STATE play room out chapter 0
+[835.8] STATE dialog room out chapter 0
+[837.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[839.2] STATE play room out chapter 0
+[839.6] STATE dialog room out chapter 0
+[840.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[843.0] STATE play room out chapter 0
+[843.5] STATE dialog room out chapter 0
+[844.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[846.8] STATE play room out chapter 0
+[847.2] STATE dialog room out chapter 0
+[848.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[850.6] STATE play room out chapter 0
+[851.1] STATE dialog room out chapter 0
+[852.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[854.1] STATE play room out chapter 0
+[854.6] STATE dialog room out chapter 0
+[855.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[858.0] STATE play room out chapter 0
+[858.4] STATE dialog room out chapter 0
+[859.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[861.8] STATE play room out chapter 0
+[862.2] STATE dialog room out chapter 0
+[863.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[865.6] STATE play room out chapter 0
+[866.1] STATE dialog room out chapter 0
+[867.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[869.4] STATE play room out chapter 0
+[869.8] STATE dialog room out chapter 0
+[871.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[873.3] STATE play room out chapter 0
+[873.7] STATE dialog room out chapter 0
+[874.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[877.1] STATE play room out chapter 0
+[877.5] STATE dialog room out chapter 0
+[878.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[880.9] STATE play room out chapter 0
+[881.3] STATE dialog room out chapter 0
+[882.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[884.8] STATE play room out chapter 0
+[885.3] STATE dialog room out chapter 0
+[886.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[888.4] STATE play room out chapter 0
+[888.8] STATE dialog room out chapter 0
+[890.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[892.2] STATE play room out chapter 0
+[892.7] STATE dialog room out chapter 0
+[893.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[896.1] STATE play room out chapter 0
+[896.5] STATE dialog room out chapter 0
+[897.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[899.9] STATE play room out chapter 0
+[900.3] STATE dialog room out chapter 0
+[901.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[903.7] STATE play room out chapter 0
+[904.1] STATE dialog room out chapter 0
+[905.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[907.5] STATE play room out chapter 0
+[907.9] STATE dialog room out chapter 0
+[909.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[911.3] STATE play room out chapter 0
+[911.8] STATE dialog room out chapter 0
+[913.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[915.1] STATE play room out chapter 0
+[915.6] STATE dialog room out chapter 0
+[916.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[919.0] STATE play room out chapter 0
+[919.4] STATE dialog room out chapter 0
+[920.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[922.5] STATE play room out chapter 0
+[922.9] STATE dialog room out chapter 0
+[923.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[926.0] STATE play room out chapter 0
+[926.5] STATE dialog room out chapter 0
+[927.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[929.6] STATE play room out chapter 0
+[930.0] STATE dialog room out chapter 0
+[930.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[933.1] STATE play room out chapter 0
+[933.5] STATE dialog room out chapter 0
+[934.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[936.6] STATE play room out chapter 0
+[937.1] STATE dialog room out chapter 0
+[938.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[940.5] STATE play room out chapter 0
+[940.9] STATE dialog room out chapter 0
+[942.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[944.3] STATE play room out chapter 0
+[944.7] STATE dialog room out chapter 0
+[945.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[948.1] STATE play room out chapter 0
+[948.5] STATE dialog room out chapter 0
+[949.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[951.6] STATE play room out chapter 0
+[952.0] STATE dialog room out chapter 0
+[952.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[955.1] STATE play room out chapter 0
+[955.6] STATE dialog room out chapter 0
+[956.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[959.0] STATE play room out chapter 0
+[959.4] STATE dialog room out chapter 0
+[960.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[962.8] STATE play room out chapter 0
+[963.2] STATE dialog room out chapter 0
+[964.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[966.6] STATE play room out chapter 0
+[967.0] STATE dialog room out chapter 0
+[968.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[970.4] STATE play room out chapter 0
+[970.8] STATE dialog room out chapter 0
+[972.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[974.2] STATE play room out chapter 0
+[974.6] STATE dialog room out chapter 0
+[975.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[978.0] STATE play room out chapter 0
+[978.4] STATE dialog room out chapter 0
+[979.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[981.8] STATE play room out chapter 0
+[982.2] STATE dialog room out chapter 0
+[983.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[985.6] STATE play room out chapter 0
+[986.0] STATE dialog room out chapter 0
+[987.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[989.4] STATE play room out chapter 0
+[989.8] STATE dialog room out chapter 0
+[991.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[993.2] STATE play room out chapter 0
+[993.7] STATE dialog room out chapter 0
+[994.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[996.8] STATE play room out chapter 0
+[997.2] STATE dialog room out chapter 0
+[998.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1000.6] STATE play room out chapter 0
+[1001.1] STATE dialog room out chapter 0
+[1002.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1004.5] STATE play room out chapter 0
+[1004.9] STATE dialog room out chapter 0
+[1006.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1008.3] STATE play room out chapter 0
+[1008.7] STATE dialog room out chapter 0
+[1009.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1012.1] STATE play room out chapter 0
+[1012.5] STATE dialog room out chapter 0
+[1013.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1015.6] STATE play room out chapter 0
+[1016.0] STATE dialog room out chapter 0
+[1017.2] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1019.4] STATE play room out chapter 0
+[1019.8] STATE dialog room out chapter 0
+[1021.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1023.2] STATE play room out chapter 0
+[1023.7] STATE dialog room out chapter 0
+[1024.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1027.1] STATE play room out chapter 0
+[1027.5] STATE dialog room out chapter 0
+[1028.8] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1030.9] STATE play room out chapter 0
+[1031.3] STATE dialog room out chapter 0
+[1032.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1034.7] STATE play room out chapter 0
+[1035.2] STATE dialog room out chapter 0
+[1036.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1038.3] STATE play room out chapter 0
+[1038.7] STATE dialog room out chapter 0
+[1039.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1041.8] STATE play room out chapter 0
+[1042.2] STATE dialog room out chapter 0
+[1043.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1045.3] STATE play room out chapter 0
+[1045.8] STATE dialog room out chapter 0
+[1047.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1049.2] STATE play room out chapter 0
+[1049.6] STATE dialog room out chapter 0
+[1050.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1052.7] STATE play room out chapter 0
+[1053.1] STATE dialog room out chapter 0
+[1054.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1056.5] STATE play room out chapter 0
+[1057.0] STATE dialog room out chapter 0
+[1057.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1060.1] STATE play room out chapter 0
+[1060.5] STATE dialog room out chapter 0
+[1061.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1063.9] STATE play room out chapter 0
+[1064.3] STATE dialog room out chapter 0
+[1065.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1067.7] STATE play room out chapter 0
+[1068.1] STATE dialog room out chapter 0
+[1069.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1071.2] STATE play room out chapter 0
+[1071.7] STATE dialog room out chapter 0
+[1072.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1074.8] STATE play room out chapter 0
+[1075.2] STATE dialog room out chapter 0
+[1076.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1078.3] STATE play room out chapter 0
+[1078.7] STATE dialog room out chapter 0
+[1079.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1081.8] STATE play room out chapter 0
+[1082.2] STATE dialog room out chapter 0
+[1083.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1085.7] STATE play room out chapter 0
+[1086.1] STATE dialog room out chapter 0
+[1087.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."

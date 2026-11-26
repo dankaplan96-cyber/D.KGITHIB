@@ -1,0 +1,196 @@
+diff --git a/lba3/src/game/characters.js b/lba3/src/game/characters.js
+index 8c95d929..81038a37 100644
+--- a/lba3/src/game/characters.js
++++ b/lba3/src/game/characters.js
+@@ -119,6 +119,14 @@ export const LOOKS = {
+     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.05, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
+     hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'bald', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', hardhat: '#e8c030', headS: 0.95, neck: 0.07, height: 0.97,
+   },
++  worker_b: {
++    // CAST-POLISH-UNDERGROUND (order 24, worker's shape variant): the project's maintenance hand, a heavier man in the same
++    // teal crew overalls, bare-headed with short dark hair, a moustache, brass goggles pushed up on his brow and the sleeves
++    // rolled (cast_poly.py CAST worker_b). Taken by Tolli (dp_tolli, the deep installation), Surveyor Anko (dg_surv, the dig)
++    // and Fennick (zr_fennick, Zeelich); the yard's worker, Teo (dg_porter), Kasp (dg_dig) and Brann keep worker (the hard hat)
++    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.1, tunic: '#2f8a8a', tunicTrim: '#1f5a5a', belt: '#5a3a1a', pants: '#2f6a6a', shoes: '#3a2a1a',
++    hair: '#3a2a1a', skin: '#e8b88a', hairStyle: 'cap', nose: 'ball', eyes: '#3a2a1a', mouth: 'smile', moustache: true, goggles: true, headS: 0.95, neck: 0.07, height: 0.97,
++  },
+   guard: {
+     // project security: broad Grobo in a teal-and-brass uniform, rounded helmet with a visor
+     race: 'grobo', outfit: 'tunic', hem: 0.58, skin: '#9aa8b8', tunic: '#245a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#d8b04a', pants: '#203a48', shoes: '#2a2a2a',
+@@ -145,6 +153,14 @@ export const LOOKS = {
+     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#f2a582', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
+     eyes: '#e8a040', height: 1.06,
+   },
++  nara_b: {
++    // CAST-POLISH-UNDERGROUND (order 24, nara's shape variant: nara dresses more people than any other look): an Esmer woman
++    // in a long dress flared to the boots with a belt at the waist, in place of the short robe over trousers (cast_poly.py
++    // CAST nara_b; LBA2's Esmers share one body and differ by dress). Taken by Sala (dp_sala, the core), Wenna (zh_wenna),
++    // Mila of Knartas (kn_mother; il_mila at home takes hers) and Sister Ione (il_ione); Nara, Neska (sefa) and the rest keep nara
++    race: 'esmer', outfit: 'robe', hem: 0.06, slim: true, skin: '#eaa07e', ridge: '#4a7a8a', tunic: '#3a6a9a', tunicTrim: '#e8d8a8', belt: '#5a3a2a', buckle: '#e8c870', pants: '#2a3a5a', shoes: '#2a2420',
++    eyes: '#d89a40', height: 1.04,
++  },
+   oku: {
+     // an old Esmer who remembers the Zeelich of before: stooped, a deep-teal robe, a white sash
+     race: 'esmer', outfit: 'robe', hem: 0.06, stoop: 0.14, belly: 0.05, skin: '#e0957a', ridge: '#3a6a5a', tunic: '#2a6a72', tunicTrim: '#e8e0d0', belt: '#e8e0d0', pants: '#1a3a40', shoes: '#2a2020',
+@@ -284,7 +300,8 @@ export const LOOKS = {
+   farmerC_b: {
+     // CAST-POLISH-DESERT (order 24, farmerC's shape variant): a working Grobo, bare-headed (no hat: the ears and the crown
+     // show), a lighter build (cast_poly.py CAST farmerC_b). Taken by Gorrum (dg_haul, the dig) and Bodo (lh_grum, the
+-    // Hamalayi); Fosse, Grull (farmer3) and Tobb keep farmerC
++    // Hamalayi) and, since CAST-POLISH-UNDERGROUND, Fosse (fosse, the sewer man: no sun hat down there); Grull (farmer3) and
++    // Tobb keep farmerC
+     race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.05, skin: '#98a6b4', tunic: '#5e4a8a', tunicTrim: '#d8a040', belt: '#3a2a1a', pants: '#4f5f4a', shoes: '#3a2a1a',
+     eyes: '#2a2a2a', height: 1.04,
+   },
+diff --git a/lba3/src/game/islandlife.js b/lba3/src/game/islandlife.js
+index 8c36579c..6f4a5439 100644
+--- a/lba3/src/game/islandlife.js
++++ b/lba3/src/game/islandlife.js
+@@ -105,7 +105,7 @@ export const ISLE_PEOPLE = {
+     { id: 'kn_fisher', char: 'keeper', tint: '#f4eadc', color: '#d0b088', speed: 0.9, start: 1, rounds: {
+       ord: [at('fi_skiff', -12.5, -48.8, 'tend', [12, 18], { d: 2.4 }), at('fi_barrel', -12.3, -18.8, 'draw', [5, 7], { carry: 'can', d: 0.9 }), at('fi_crates', -11.8, -15.8, 'put', [5, 7], { carry: null, d: 0.9 })],
+     } },
+-    { id: 'kn_mother', char: 'nara', tint: '#fff0f6', color: '#f0b0d0', speed: 0.85, rounds: {
++    { id: 'kn_mother', char: 'nara_b', tint: '#fff0f6', color: '#f0b0d0', speed: 0.85, rounds: {
+       ord: [at('mo_crates', -8.3, -22.8, 'browse', [6, 9], { carry: 'basket', d: 1.0 }), dr('mo_home', 18.7, -17.5, [10, 14], { carry: null }), at('mo_bench', 9.7, -16.8, 'stand', [8, 12], { d: 1.0 })],
+     } },
+     { id: 'kn_kid', char: 'xil', scale: 0.72, tint: '#fff8e8', color: '#f0d890', speed: 1.35, rounds: {
+diff --git a/lba3/src/game/story/deeplife.js b/lba3/src/game/story/deeplife.js
+index 10627a5a..b2881e40 100644
+--- a/lba3/src/game/story/deeplife.js
++++ b/lba3/src/game/story/deeplife.js
+@@ -23,8 +23,8 @@ const COLLAR_REACH = 5.0;   // (as chapter3.js SHAFT_REACH)
+ const LOOK_DY = 1.5;        // a thing answers only from about its own level (the gallery's board: not from the chasm floor)
+ const CREW = {
+   dp_guard: { room: 'c3shaft', char: 'keeper_b', tint: '#e4e8ff', color: '#a0a8e8' },
+-  dp_tolli: { room: 'c3deep', char: 'worker', tint: '#fff2e0', color: '#e8c070' },
+-  dp_sala: { room: 'c3core', char: 'nara', tint: '#eef4ff', color: '#a8c8f0' },
++  dp_tolli: { room: 'c3deep', char: 'worker_b', tint: '#fff2e0', color: '#e8c070' },
++  dp_sala: { room: 'c3core', char: 'nara_b', tint: '#eef4ff', color: '#a8c8f0' },
+ };
+ 
+ export class UndergroundLife extends ChapterBase {
+diff --git a/lba3/src/game/story/isleslife.js b/lba3/src/game/story/isleslife.js
+index 281b33b9..e60b81ca 100644
+--- a/lba3/src/game/story/isleslife.js
++++ b/lba3/src/game/story/isleslife.js
+@@ -31,7 +31,7 @@ const INDOOR = {
+   il_pudd: { door: 'platform-27-12', of: 'pf_vill1', work: ['stove', 'chest'], anims: ['tinker', null] },
+   il_rudd: { door: 'undergas-8--39', of: 'ug_gauge', work: ['desk', 'crates'], anims: ['tinker', null] },
+   il_avra: { door: 'otringal--4--60', char: 'ztri2', color: '#a8d0f0', work: ['bookcase', 'pew'], anims: ['tinker', 'reach'] },
+-  il_ione: { door: 'otringal-52--60', char: 'nara', color: '#f4f4ff', work: ['desk', 'jarshelf'], anims: ['tinker', 'reach'], heals: true },
++  il_ione: { door: 'otringal-52--60', char: 'nara_b', color: '#f4f4ff', work: ['desk', 'jarshelf'], anims: ['tinker', 'reach'], heals: true },
+   il_jaspa: { door: 'knartas-28-29', char: 'keeper', color: '#d8b8a0', work: ['shelf', 'sacks'], anims: ['tinker', 'reach'] },
+   il_zuzz: { door: 'mosquibee-26-15', char: 'zbee1', color: '#f0d070', work: ['barrels', 'sacks'], anims: ['tinker', 'reach'] },
+   il_zett: { door: 'orchard-4-28', char: 'zbee2', color: '#c0e090', work: ['barrels', 'crates'], anims: ['tinker', 'reach'] },
+diff --git a/lba3/src/game/story/prologue.js b/lba3/src/game/story/prologue.js
+index b8063cd5..57a7b464 100644
+--- a/lba3/src/game/story/prologue.js
++++ b/lba3/src/game/story/prologue.js
+@@ -67,7 +67,7 @@ export class Prologue extends ChapterBase {
+       { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...(R.wtent?.npcSpots?.bersimon || { x: 0, z: 0, a: 0, pending: true }), angle: R.wtent?.npcSpots?.bersimon?.a ?? 0 },
+       { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...(R.school?.npcSpots?.magus || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.magus?.a ?? 0 },
+       // SEWERS-1 (S-4): Fosse, the sewer man (LBA2's grumbling sewer worker, twelve years on), at the old hall's east pier
+-      { id: 'fosse', name: 'n_fosse', char: 'farmerC', color: '#c8b070', ...(R.sewer?.npcSpots?.fosse || { x: 0, z: 0, a: 0, pending: true }), angle: R.sewer?.npcSpots?.fosse?.a ?? 0 },
++      { id: 'fosse', name: 'n_fosse', char: 'farmerC_b', color: '#c8b070', ...(R.sewer?.npcSpots?.fosse || { x: 0, z: 0, a: 0, pending: true }), angle: R.sewer?.npcSpots?.fosse?.a ?? 0 },
+       { id: 'keraooc', name: 'n_keraooc', char: 'keraooc', color: '#b0e0ff', ...(R.school?.npcSpots?.keraooc || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.keraooc?.a ?? 0 },
+     ];
+   }
+diff --git a/lba3/src/game/story/zeelife.js b/lba3/src/game/story/zeelife.js
+index 6ce7049f..a87ba921 100644
+--- a/lba3/src/game/story/zeelife.js
++++ b/lba3/src/game/story/zeelife.js
+@@ -64,7 +64,7 @@ export class ZeelichLife extends ChapterBase {
+     return [
+       ...this.streetFolk(),
+       { id: 'zh_lissa', name: 'n_zh_lissa', char: 'nara', color: '#f4c0d0', ...at(ZH.zh_nara?.npcSpots?.lissa) },
+-      { id: 'zh_wenna', name: 'n_zh_wenna', char: 'nara', color: '#e8c8a0', ...at(ZH.zh_oku?.npcSpots?.wenna) },
++      { id: 'zh_wenna', name: 'n_zh_wenna', char: 'nara_b', color: '#e8c8a0', ...at(ZH.zh_oku?.npcSpots?.wenna) },
+     ];
+   }
+   // ZEELICH-LIFE: three of the street's working people, on rounds (walkers.js Resident): Fennick the project's heat
+@@ -79,7 +79,7 @@ export class ZeelichLife extends ChapterBase {
+     const def = (id, char, color, speed, stops0) => { const stops = Z ? clearOfDoors(stops0, Z) : stops0; return (Z ? { id, name: 'n_' + id, char, tint: '#ffffff', color, speed, ambient: true, x: stops[0].x, z: stops[0].z, angle: stops[0].a, round: stops, start: 0 }
+       : { id, name: 'n_' + id, char, tint: '#ffffff', color, ambient: true, x: 0, z: 0, angle: 0, pending: true }); };
+     return [
+-      def('zr_fennick', 'worker', '#e8a040', 1.0, [
++      def('zr_fennick', 'worker_b', '#e8a040', 1.0, [
+         S('fen_post1', 15.0, -5.6, 15.6, -6.4, [8, 12], 'tend'),
+         S('fen_box', 14.6, -10.0, 13.56, -10.15, [10, 14], 'tend'),
+         S('fen_feed', 16.9, 2.6, 16.0, 0, [6, 9]),
+diff --git a/lba3/src/game/storylife.js b/lba3/src/game/storylife.js
+index 30a19dce..815d74ec 100644
+--- a/lba3/src/game/storylife.js
++++ b/lba3/src/game/storylife.js
+@@ -76,7 +76,7 @@ const school = (f, S) => (S.index >= idx(S, 'dig') ? 'school' : null);
+ 
+ const DESERT_PEOPLE = [
+   // the surveyor at his tripod on the north rim, a look from the north-east rim, a word with his staff man, his notes at the kitchen's table
+-  { id: 'dg_surv', char: 'worker', tint: '#fff2dc', speed: 0.95, color: '#e8c030', start: 0, area: 'desert', phase: crew(true), rounds: {
++  { id: 'dg_surv', char: 'worker_b', tint: '#fff2dc', speed: 0.95, color: '#e8c030', start: 0, area: 'desert', phase: crew(true), rounds: {
+     crew: [
+       L('surv_scope', TP.x, TP.z - 0.85, TP.x, TP.z + 4, 'browse', [14, 20], { gest: ['nod'] }),
+       L('surv_rim', 77.6, 15.2, DIGC.x, DIGC.z, 'stand', [6, 9], { gest: ['nod'] }),
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index 4252017f..f1b98052 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -83,6 +83,8 @@ CAST = {
+     'councilC': dict(browS=1.8, browTilt=-0.2, mouthLift=-0.3, earS=1.0),
+     'archivist': dict(browS=1.2, browTilt=-0.2, mouthLift=-0.4, mouthW=0.9, pockets=True, pocketY=0.1, glassesRim=True),   # (GLASSES-ARCHIVIST)
+     'worker': dict(browS=1.3, mouthLift=0.8, pockets=True, pocketY=0.1),
++    'worker_b': dict(browS=1.6, browTilt=-0.15, mouthLift=0.5, mouthW=1.1, noseS=1.1, pockets=True, pocketY=0.1, rolled=True,
++                     moustacheSwept=True, gogglesGlass=True, gogglesN=8, gogglesRimN=4),   # (CAST-POLISH-UNDERGROUND: bare-headed, goggles up, heavier)
+     'guard': dict(trim='#c8a050', epaulette='#c8a050', glove='#16141a', mouthLift=-0.2, browS=1.6, visorCurved=True),
+     'yorna': dict(hatStyle='fur', browS=2.0, browTilt=-0.2, mouthLift=0.4, earS=0.95),
+     'pim': dict(hatStyle='bobble', browS=0.9, browTilt=0.4, mouthLift=1.6, mouthW=1.1, earS=0.9),
+@@ -95,6 +97,7 @@ CAST = {
+     'sphero2': dict(mouthLift=-0.8, lidDrop=6, mouthW=1.0),
+     # ---- part 3: Zeelich's races and the Esmers (build_esmer / build_bee / build_mole / build_tri / build_vesk)
+     'nara': dict(lashes=True, browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.9),
++    'nara_b': dict(lashes=True, browS=1.0, browTilt=0.1, mouthLift=0.6, noseS=0.95, robeLong=True, beltBand=True),   # (CAST-POLISH-UNDERGROUND: the long dress)
+     'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
+     'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
+     'keeper': dict(browS=1.1, browTilt=0.2, mouthLift=0.6),
+@@ -928,20 +931,22 @@ def build(name):
+                 # CAST-POLISH-CITADEL-2 (GOGGLES-NELL): the goggles were two gold drums with flat gold faces, coins on her
+                 # brow. Now each is a brass cup with a rolled rim round a dark glass lens set into it (a darker shade of the
+                 # brass), joined over the nose by a short bridge; the strap as before.
++                # (CAST-POLISH-UNDERGROUND: CAST gogglesN / gogglesRimN give a cheaper pair, 12 and 6 round as Nell's by default)
++                gn_, gs_ = cp.get('gogglesN', 12), cp.get('gogglesRimN', 6)
+                 gls_ = b.P('goggleGlass', shade('#c89a48', 0.28), head_w, 60)
+                 for sxx in (1, -1):
+                     c = (sxx * 0.03 * sx_, my(0.935), mz(0.11))
+                     e_ = (c[0], c[1] + 0.006, c[2] + 0.03)
+-                    tube(gg, c, e_, 0.020 * sx_, 0.022 * sx_, 12, cap=False)
++                    tube(gg, c, e_, 0.020 * sx_, 0.022 * sx_, gn_, cap=False)
+                     d_ = Vector(e_) - Vector(c)
+                     d_.normalize()
+                     u_ = d_.cross(Vector((1, 0, 0))).normalized()
+                     w_ = d_.cross(u_).normalized()
+-                    rim_ = [tuple(Vector(e_) + u_ * (0.0215 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.0215 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)]
+-                    cord(gg, rim_, 0.0035 * sx_, 6, True)
++                    rim_ = [tuple(Vector(e_) + u_ * (0.0215 * sx_ * math.cos(2 * math.pi * k / gn_)) + w_ * (0.0215 * sx_ * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)]
++                    cord(gg, rim_, 0.0035 * sx_, gs_, True)
+                     lens_c = Vector(e_) - d_ * 0.004
+-                    lv = [tuple(lens_c + u_ * (0.019 * sx_ * math.cos(2 * math.pi * k / 12)) + w_ * (0.019 * sx_ * math.sin(2 * math.pi * k / 12))) for k in range(12)] + [tuple(lens_c + d_ * 0.003)]
+-                    gls_.add(lv, [[k, (k + 1) % 12, 12] for k in range(12)], 180)
++                    lv = [tuple(lens_c + u_ * (0.019 * sx_ * math.cos(2 * math.pi * k / gn_)) + w_ * (0.019 * sx_ * math.sin(2 * math.pi * k / gn_))) for k in range(gn_)] + [tuple(lens_c + d_ * 0.003)]
++                    gls_.add(lv, [[k, (k + 1) % gn_, gn_] for k in range(gn_)], 180)
+                 cord(gg, [(-0.012 * sx_, my(0.937), mz(0.118) + 0.012), (0, my(0.94), mz(0.122) + 0.014), (0.012 * sx_, my(0.937), mz(0.118) + 0.012)], 0.003 * sx_, 5, False)
+             else:
+                 for sxx in (1, -1):
+@@ -2232,6 +2237,13 @@ def build_vesk(name):
+             cf.append([j * M + i, j * M + i + 1, (j + 1) * M + i + 1, (j + 1) * M + i])
+     b.P('collar', coat, 'torso', 40).add(cv, cf)
+     b.P('collarIn', lining, 'torso', 40).add([(x * 0.97, y, z * 0.97 + 0.004) for x, y, z in cv], [f[::-1] for f in cf])
++    if not os.environ.get('VESK_OLD'):
++        # CAST-POLISH-UNDERGROUND (VESK-COLLAR; VESK_OLD=1 builds the old one): the collar was two bare shells 4 mm apart, its
++        # top and its two front edges a paper line against the sky in the close shots. Now the lining rolls over them: a round
++        # edge 1.8 cm thick along both fronts and the top, on the shells' middle, in the lining's violet.
++        mid = lambda j, i: (lambda q: (q[0] * 0.985, q[1], q[2] * 0.985 + 0.002))(cv[j * M + i])
++        edge = [mid(0, 0), mid(1, 0)] + [mid(2, i) for i in range(M)] + [mid(1, M - 1), mid(0, M - 1)]
++        cord(b.P('collarEdge', lining, 'torso', 40), edge, 0.009, 6, False)
+     # pauldrons: angular brass plates on the shoulders
+     for s_, sx in (('L', 1), ('R', -1)):
+         sh = bp('sh' + s_)

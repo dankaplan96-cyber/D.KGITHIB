@@ -1,0 +1,678 @@
+[
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "workbench",
+  "frame": 55,
+  "at": [
+   -102.8,
+   33.17
+  ],
+  "world": [
+   -102.8,
+   33.17
+  ],
+  "what": "workbench goes into custom (#54 at -102.8, 33.87)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "maker": "Kit",
+  "depth": 0.06,
+  "other": 54,
+  "otherItem": "custom",
+  "left": "low (6 cm): Nell's tapered landing leg on the bench, its thick end touching the top"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildTownLife",
+  "frame": 101141,
+  "at": [
+   -102.8,
+   34.32
+  ],
+  "world": [
+   -102.8,
+   34.32
+  ],
+  "what": "buildTownLife goes into custom (#54 at -102.8, 33.87)",
+  "measure": "parts overlap 12 cm (footprint SAT and height)",
+  "maker": "buildTownLife@townlife.js:337 < ?@main.js:378",
+  "depth": 0.12,
+  "other": 54,
+  "otherItem": "custom",
+  "left": "by design: Nell's lean-to, the bench under its roof against its back wall (one structure, two builders)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "barrels",
+  "frame": 100726,
+  "at": [
+   -75.6,
+   -77.2
+  ],
+  "world": [
+   -75.6,
+   -77.2
+  ],
+  "what": "barrels goes into handcart (#100048 at -77.37, -76.29)",
+  "measure": "parts overlap 7 cm (footprint SAT and height)",
+  "maker": "barrels@island.js:391 < buildDepot@island.js:2383",
+  "depth": 0.07,
+  "other": 100048,
+  "otherItem": "handcart",
+  "left": "by design: the depot yard's barrels, a lying one against the standing ones and the hand cart (looked at)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "barrels",
+  "frame": 100728,
+  "at": [
+   -75.47,
+   -75.76
+  ],
+  "world": [
+   -75.47,
+   -75.76
+  ],
+  "what": "barrels goes into handcart (#100048 at -77.37, -76.29)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "barrels@island.js:391 < buildDepot@island.js:2383",
+  "depth": 0.04,
+  "other": 100048,
+  "otherItem": "handcart",
+  "left": "by design: the depot yard's barrels against the hand cart (4 cm)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100115,
+  "at": [
+   -81.38,
+   43.22
+  ],
+  "world": [
+   -81.38,
+   43.22
+  ],
+  "what": "crate goes into crate (#100113 at -80.76, 42.8)",
+  "measure": "parts overlap 9 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:224 < crateStack@props-esmer.js:248",
+  "depth": 0.09,
+  "other": 100113,
+  "otherItem": "crate",
+  "left": "low (9 cm): the harbour's Esmer crate stack, a wooden crate against a teal one"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildLid",
+  "frame": 100379,
+  "at": [
+   -42,
+   -4.32
+  ],
+  "world": [
+   -42,
+   -4.32
+  ],
+  "what": "buildLid goes into well (#100150 at -41.6, -4)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "maker": "Prologue.buildLid@prologue.js:125 < Prologue.decorate@prologue.js:113",
+  "depth": 0.06,
+  "other": 100150,
+  "otherItem": "well",
+  "left": "by design: the dry well's lid and the crates' lids resting on them (chapter 1 decoration)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "decorate",
+  "frame": 100370,
+  "at": [
+   -47.98,
+   74.95
+  ],
+  "world": [
+   -47.98,
+   74.95
+  ],
+  "what": "decorate goes into barrel (#100202 at -48.77, 74.46)",
+  "measure": "parts overlap 14 cm (footprint SAT and height)",
+  "maker": "Prologue.decorate@prologue.js:97 < Story.decorate@index.js:191",
+  "depth": 0.14,
+  "other": 100202,
+  "otherItem": "barrel",
+  "left": "by design: the house's supply joint (TUT-MYSTERY, hometap.js) hidden behind the near barrel until the ball knocks it aside"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "cargoLift",
+  "frame": 100286,
+  "at": [
+   -85.3,
+   -0.92
+  ],
+  "world": [
+   -85.3,
+   -0.92
+  ],
+  "what": "cargoLift goes into mkCrate (#100291 at -85.9, -0.5)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "cargoLift@island.js:884 < buildHarbour@island.js:805",
+  "depth": 0.04,
+  "other": 100291,
+  "otherItem": "mkCrate",
+  "left": "low (4 cm): the cargo lift's frame against its crate"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildLid",
+  "frame": 100375,
+  "at": [
+   -0.42,
+   -0.93
+  ],
+  "world": [
+   -0.42,
+   -0.93
+  ],
+  "what": "buildLid goes into mkCrate (#100292 at -0.39, -0.39)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "Prologue.buildLid@prologue.js:126 < Prologue.decorate@prologue.js:113",
+  "depth": 0.04,
+  "other": 100292,
+  "otherItem": "mkCrate",
+  "left": "by design: the dry well's lid and the crates' lids resting on them (chapter 1 decoration)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildLid",
+  "frame": 100376,
+  "at": [
+   0.42,
+   -0.93
+  ],
+  "world": [
+   0.42,
+   -0.93
+  ],
+  "what": "buildLid goes into mkCrate (#100294 at 0.39, -0.39)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "Prologue.buildLid@prologue.js:126 < Prologue.decorate@prologue.js:113",
+  "depth": 0.04,
+  "other": 100294,
+  "otherItem": "mkCrate",
+  "left": "by design: the dry well's lid and the crates' lids resting on them (chapter 1 decoration)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "crateStack",
+  "frame": 100718,
+  "at": [
+   -66.09,
+   -69.4
+  ],
+  "world": [
+   -66.09,
+   -69.4
+  ],
+  "what": "crateStack goes into crateStack (#100715 at -66.4, -68.37)",
+  "measure": "parts overlap 17 cm (footprint SAT and height)",
+  "maker": "crateStack@island.js:436 < buildDepot@island.js:2381",
+  "depth": 0.17,
+  "other": 100715,
+  "otherItem": "crateStack",
+  "left": "low (7–17 cm): a stack's crates turned against each other in the depot yard"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "crateStack",
+  "frame": 100717,
+  "at": [
+   -66.5,
+   -67.2
+  ],
+  "world": [
+   -66.5,
+   -67.2
+  ],
+  "what": "crateStack goes into crateStack (#100715 at -66.4, -68.37)",
+  "measure": "parts overlap 7 cm (footprint SAT and height)",
+  "maker": "crateStack@island.js:436 < buildDepot@island.js:2381",
+  "depth": 0.07,
+  "other": 100715,
+  "otherItem": "crateStack",
+  "left": "low (7–17 cm): a stack's crates turned against each other in the depot yard"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "barrels",
+  "frame": 100726,
+  "at": [
+   -75.6,
+   -77.2
+  ],
+  "world": [
+   -75.6,
+   -77.2
+  ],
+  "what": "barrels goes into barrels (#100727 at -74.8, -77.3)",
+  "measure": "parts overlap 29 cm (footprint SAT and height)",
+  "maker": "barrels@island.js:391 < buildDepot@island.js:2383",
+  "depth": 0.29,
+  "other": 100727,
+  "otherItem": "barrels",
+  "left": "by design: the depot yard's barrels, a lying one against the standing ones and the hand cart (looked at)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "handcart",
+  "frame": 100730,
+  "at": [
+   -77.03,
+   -76.26
+  ],
+  "world": [
+   -77.03,
+   -76.26
+  ],
+  "what": "handcart goes into handcart (#100729 at -77.7, -76.28)",
+  "measure": "parts overlap 7 cm (footprint SAT and height)",
+  "maker": "handcart@island.js:2324 < buildDepot@island.js:2384",
+  "depth": 0.07,
+  "other": 100729,
+  "otherItem": "handcart",
+  "left": "by design: one hand cart, its wheels and its body"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "windsock",
+  "frame": 101148,
+  "at": [
+   -102.82,
+   -68
+  ],
+  "world": [
+   -102.82,
+   -68
+  ],
+  "what": "windsock goes into mk (#101147 at -103.5, -67.5)",
+  "measure": "parts overlap 15 cm (footprint SAT and height)",
+  "maker": "windsock@travel.js:89 < buildTravel@travel.js:124",
+  "depth": 0.15,
+  "other": 101147,
+  "otherItem": "mk",
+  "left": "by design: the glider field's sock on its mast"
+ },
+ {
+  "room": "citadel",
+  "kind": "wall",
+  "item": "meshFence",
+  "frame": 100043,
+  "at": [
+   -65,
+   -77.3
+  ],
+  "world": [
+   -65,
+   -77.3
+  ],
+  "what": "meshFence goes into a building's wall",
+  "measure": "drawn parts 40 cm into a wall part",
+  "maker": "meshFence@island.js:2242 < buildDepot@island.js:2372",
+  "depth": 0.4,
+  "left": "by design: the depot gate's hinge post beside the fence's end post"
+ },
+ {
+  "room": "citadel",
+  "kind": "wall",
+  "item": "barrels",
+  "frame": 100713,
+  "at": [
+   -38.55,
+   -61.3
+  ],
+  "world": [
+   -38.55,
+   -61.3
+  ],
+  "what": "barrels goes into a building's wall",
+  "measure": "drawn parts 17 cm into a building's collider (box at -40.9, -61.95)",
+  "maker": "barrels@island.js:391 < buildStation@island.js:2155",
+  "depth": 0.17,
+  "left": null
+ },
+ {
+  "room": "citadel",
+  "kind": "wall",
+  "item": "barrels",
+  "frame": 100727,
+  "at": [
+   -74.8,
+   -77.3
+  ],
+  "world": [
+   -74.8,
+   -77.3
+  ],
+  "what": "barrels goes into a building's wall",
+  "measure": "drawn parts 12 cm into a wall part",
+  "maker": "barrels@island.js:391 < buildDepot@island.js:2383",
+  "depth": 0.12,
+  "left": "low (12 cm): a depot barrel against the yard's fence"
+ },
+ {
+  "room": "citadel",
+  "kind": "sunk",
+  "item": "custom",
+  "frame": 54,
+  "at": [
+   -102.8,
+   33.87
+  ],
+  "world": [
+   -102.8,
+   33.87
+  ],
+  "what": "custom sinks into the ground",
+  "measure": "40 cm under the ground everywhere under it — lowest part y 2.03; the ground at its middle and corners 2.43 / 2.43 / 2.43 / 2.43 / 2.43 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": -0.4,
+  "left": "not seen: Nell's lean-to's posts run 40 cm down through the quay's paving (the roof and the bench stand right)"
+ },
+ {
+  "room": "citadel",
+  "kind": "float",
+  "item": "custom",
+  "frame": 134,
+  "at": [
+   -27.99,
+   28.11
+  ],
+  "world": [
+   -27.99,
+   28.11
+  ],
+  "what": "custom floats over the ground",
+  "measure": "63 cm over the ground everywhere under it — lowest part y 2.97; the ground at its middle and corners 2.35 / 2.35 / 2.35 / 2.35 / 2.35 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.63,
+  "left": "not a standing piece: the sewer hatch lever's quadrant on its post (sewers.js; the post is drawn outside the piece)"
+ },
+ {
+  "room": "citadel",
+  "kind": "float",
+  "item": "custom",
+  "frame": 135,
+  "at": [
+   -24.59,
+   -30.99
+  ],
+  "world": [
+   -24.59,
+   -30.99
+  ],
+  "what": "custom floats over the ground",
+  "measure": "63 cm over the ground everywhere under it — lowest part y 10.34; the ground at its middle and corners 9.72 / 9.72 / 9.72 / 9.72 / 9.72 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.63,
+  "left": "not a standing piece: the sewer hatch lever's quadrant on its post (sewers.js; the post is drawn outside the piece)"
+ },
+ {
+  "room": "citadel",
+  "kind": "sunk",
+  "item": "meshFence",
+  "frame": 100043,
+  "at": [
+   -65,
+   -77.3
+  ],
+  "world": [
+   -65,
+   -77.3
+  ],
+  "what": "meshFence sinks into the ground",
+  "measure": "15 cm under the ground everywhere under it — lowest part y 15.82; the ground at its middle and corners 15.98 / 15.98 / 15.98 / 15.98 / 15.98 (terrain, bricks, slabs, pieces under it)",
+  "maker": "meshFence@island.js:2242 < buildDepot@island.js:2372",
+  "gap": -0.15,
+  "left": "by design: a fence post planted in the ground"
+ },
+ {
+  "room": "citadel",
+  "kind": "float",
+  "item": "flowerBox",
+  "frame": 100237,
+  "at": [
+   -46.7,
+   82.1
+  ],
+  "world": [
+   -46.7,
+   82.1
+  ],
+  "what": "flowerBox floats over the ground",
+  "measure": "6 cm over the ground everywhere under it — lowest part y 3.32; the ground at its middle and corners 2.34 / 2.34 / 3.26 / 3.26 / 2.34 (terrain, bricks, slabs, pieces under it)",
+  "maker": "flowerBox@architecture.js:98 < buildHouse@architecture.js:198",
+  "gap": 0.06,
+  "left": "low (6 cm): a window box under Twinsen's window"
+ },
+ {
+  "room": "citadel",
+  "kind": "walk",
+  "item": "mkCrate",
+  "frame": 100296,
+  "at": [
+   -125.1,
+   46.19
+  ],
+  "world": [
+   -125.1,
+   46.19
+  ],
+  "what": "mkCrate stands in the middle of a walkway or bridge",
+  "measure": "drawn parts 80 cm into the middle of the walkway's brick at -125.5, 49.3 (9.4 × 3.2 m, top 1.75)",
+  "maker": "mkCrate@island.js:891 < cargoLift@island.js:897",
+  "d": 0.8,
+  "left": "by design: cargo by the crane on the stone pier's leg (3.2 m wide; CITADEL-ORIG-2: the lift turned onto the L's leg)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "handcart",
+  "frame": 100048,
+  "at": [
+   -77.37,
+   -76.29
+  ],
+  "world": [
+   -77.37,
+   -76.29
+  ],
+  "what": "handcart stands on a path",
+  "measure": "its footprint 0.04 m from the path's centre line (world.js pathDist)",
+  "maker": "handcart@island.js:2312 < buildDepot@island.js:2384",
+  "d": 0.04,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "well",
+  "frame": 100150,
+  "at": [
+   -41.6,
+   -4
+  ],
+  "world": [
+   -41.6,
+   -4
+  ],
+  "what": "well stands on a path",
+  "measure": "its footprint 0.38 m from the path's centre line (world.js pathDist)",
+  "maker": "well@town.js:441 < buildTown@town.js:515",
+  "d": 0.38,
+  "left": "by design: the square's well, the paths meet round it"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "barrel",
+  "frame": 100202,
+  "at": [
+   -48.77,
+   74.46
+  ],
+  "world": [
+   -48.77,
+   74.46
+  ],
+  "what": "barrel stands on a path",
+  "measure": "its footprint 0.25 m from the path's centre line (world.js pathDist)",
+  "maker": "barrel@town.js:189 < buildTown@town.js:607",
+  "d": 0.25,
+  "left": "by design: Twinsen's barrels by his house (the home-barrels search spot)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "pot",
+  "frame": 100218,
+  "at": [
+   -45.59,
+   26.6
+  ],
+  "world": [
+   -45.59,
+   26.6
+  ],
+  "what": "pot stands on a path",
+  "measure": "its footprint 0.24 m from the path's centre line (world.js pathDist)",
+  "maker": "pot@town.js:399 < buildTown@town.js:623",
+  "d": 0.24,
+  "left": "by design: the pot beside the tavern's door, where its path ends"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "barrels",
+  "frame": 100728,
+  "at": [
+   -75.47,
+   -75.76
+  ],
+  "world": [
+   -75.47,
+   -75.76
+  ],
+  "what": "barrels stands on a path",
+  "measure": "its footprint 0 m from the path's centre line (world.js pathDist)",
+  "maker": "barrels@island.js:391 < buildDepot@island.js:2383",
+  "d": 0,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "handcart",
+  "frame": 100729,
+  "at": [
+   -77.7,
+   -76.28
+  ],
+  "world": [
+   -77.7,
+   -76.28
+  ],
+  "what": "handcart stands on a path",
+  "measure": "its footprint 0.2 m from the path's centre line (world.js pathDist)",
+  "maker": "handcart@island.js:2324 < buildDepot@island.js:2384",
+  "d": 0.2,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "handcart",
+  "frame": 100730,
+  "at": [
+   -77.03,
+   -76.26
+  ],
+  "world": [
+   -77.03,
+   -76.26
+  ],
+  "what": "handcart stands on a path",
+  "measure": "its footprint 0.37 m from the path's centre line (world.js pathDist)",
+  "maker": "handcart@island.js:2324 < buildDepot@island.js:2384",
+  "d": 0.37,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "crateMesh",
+  "frame": 100843,
+  "at": [
+   -81,
+   -76
+  ],
+  "world": [
+   -81,
+   -76
+  ],
+  "what": "crateMesh stands on a path",
+  "measure": "its footprint 0.16 m from the path's centre line (world.js pathDist)",
+  "maker": "crateMesh@island.js:423 < buildDressing@island.js:2858",
+  "d": 0.16,
+  "left": "by design: the depot's breakable crates (W.crates: there to be broken)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "crateMesh",
+  "frame": 100844,
+  "at": [
+   -70,
+   -76
+  ],
+  "world": [
+   -70,
+   -76
+  ],
+  "what": "crateMesh stands on a path",
+  "measure": "its footprint 0.02 m from the path's centre line (world.js pathDist)",
+  "maker": "crateMesh@island.js:423 < buildDressing@island.js:2858",
+  "d": 0.02,
+  "left": "by design: the depot's breakable crates (W.crates: there to be broken)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "crateMesh",
+  "frame": 100845,
+  "at": [
+   -68,
+   -75.6
+  ],
+  "world": [
+   -68,
+   -75.6
+  ],
+  "what": "crateMesh stands on a path",
+  "measure": "its footprint 0.06 m from the path's centre line (world.js pathDist)",
+  "maker": "crateMesh@island.js:423 < buildDressing@island.js:2858",
+  "d": 0.06,
+  "left": "by design: the depot's breakable crates (W.crates: there to be broken)"
+ }
+]

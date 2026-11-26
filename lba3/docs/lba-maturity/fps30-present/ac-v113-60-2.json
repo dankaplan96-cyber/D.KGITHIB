@@ -1,0 +1,166 @@
+{
+ "env": {
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "fps": "60",
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36",
+  "dpr": 1.25,
+  "inner": [
+   1536,
+   864
+  ]
+ },
+ "browser": "158.0.8127.36",
+ "page": {
+  "fps": "60",
+  "quality": "high",
+  "bat": {
+   "charging": true,
+   "level": 1
+  },
+  "endRoom": "house",
+  "gpuMs": {
+   "p50": 6.04,
+   "p95": 9.67,
+   "n": 795,
+   "disjoint": 0,
+   "invalid": 0,
+   "passes": {
+    "scene": 5.3,
+    "shadow map": 0.8,
+    "bloom": 0.01,
+    "output": 0
+   }
+  }
+ },
+ "raf": {
+  "n": 1202,
+  "p50": 16.7,
+  "p95": 16.8,
+  "refreshUnits": {
+   "1": 1201
+  }
+ },
+ "gameFrames": {
+  "n": 1196,
+  "mainThreadMs": {
+   "p50": 6.2,
+   "p95": 8.5,
+   "max": 15
+  }
+ },
+ "presented": {
+  "states": {
+   "STATE_PRESENTED_ALL": 1190,
+   "STATE_PRESENTED_PARTIAL": 747,
+   "STATE_NO_UPDATE_DESIRED": 15
+  },
+  "n": 1937,
+  "dropped": 0,
+  "intervals": {
+   "p50": 16.6,
+   "p95": 16.8,
+   "p99": 16.9
+  },
+  "refreshUnits": {
+   "0": 747,
+   "1": 1187,
+   "5": 1,
+   "11": 1
+  },
+  "first60": [
+   0,
+   16.65,
+   0,
+   16.68,
+   0,
+   16.58,
+   0,
+   16.89,
+   0,
+   16.64,
+   0,
+   16.69,
+   0,
+   16.65,
+   0,
+   16.54,
+   0,
+   16.79,
+   0,
+   16.66,
+   0,
+   16.51,
+   0,
+   16.79,
+   0,
+   16.69,
+   0,
+   16.7,
+   0,
+   16.63,
+   0,
+   16.63,
+   0,
+   16.65,
+   0,
+   16.59,
+   0,
+   16.61,
+   0,
+   16.84,
+   0,
+   16.62,
+   0,
+   16.65,
+   0,
+   16.71,
+   0,
+   16.62,
+   0,
+   16.43,
+   0,
+   16.91,
+   0,
+   16.65,
+   0,
+   16.67,
+   0,
+   16.63,
+   0,
+   16.68
+  ]
+ },
+ "overlay": [
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.6 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0",
+  "limit 60 · refresh 60 Hz · on pace 100 % (16.7 ms ±2) · ≥1.5× 0"
+ ],
+ "phases": {
+  "runMs": 12016,
+  "houseMs": 8006
+ },
+ "errs": []
+}

@@ -1,0 +1,10 @@
+(the user's laptop, build 122 = interim RENDER-INV F1/F2 + benchmark; pasted in chat 2026-10-24 16:12; window 1366x697)
+Summary (frame p50 / GPU time p50):
+low:    street 16.7/9.1 · interior 16.7/8.4 · combat 16.7/8.0 · transition 16.7/9.0 · arrival 16.7/8.9  (59-60 fps)
+medium: street 16.8/18.6 (43 fps) · interior 16.7/14.0 (58) · combat 16.7/11.7 (59) · transition 16.7/14.7 (47) · arrival 16.7/15.7 (52)
+high:   street 33.5/36.0 (25 fps) · interior 33.3/29.5 (31) · combat 33.3/25.5 (34) · transition 33.3/29.4 (28) · arrival 33.3/28.8 (32) -- GPU-bound
+breakdown medium street GPU: as is 18.1 · no shadows 15.9 · no lamps 16.7 · res x0.6 14.5 ms; interior: 14.5 · 11.4 · 12.6 · 11.3 ms
+startup build 15.3 s (Citadel 5.0) · shaders 7.0 s · 1785 geometries, 525 textures, 420 programs, JS heap 758 MB · GPU timer: yes
+vs build 120 (same laptop, window 1366x768): medium street 15.9 -> 43.1 fps, interior 23.4 -> 58.2, high street 9.6 -> 24.6.
+Caveats: window 9% smaller; power/plug state not recorded; build 120's sim CPU grew with quality (sync stall?), build 122's does not.
+Power: plugged in for build 122 (the user); build 120's power state unknown -> the 120->122 comparison is confounded. The user: Medium is a good target; High only where cheap and invisible.

@@ -1,0 +1,23 @@
+PERF-IGPU · black-frame flicker (automatic resolution) · tests/dynres.mjs · headless Chromium + SwiftShader, 960×540
+Same test, same scene (Citadel square), run against the renderer before the fix (d3a7343, with a setDyn shim that
+does what its adapt() did: dyn = k; resize()) and after.
+
+BEFORE (d3a7343):
+FAIL every drawn frame through 15 forced resolution steps has picture
+     each step after a drawn frame: probes before the step 0/8 dark, after the step 8/8 dark (the canvas was
+     resized after drawing -> its drawing buffer cleared -> the browser shows that black buffer)
+     e.g. {"s":0.9,"dark":0,"darkAfter":8,"size":"864,486,864,486,864,486,4"}
+FAIL the canvas, its drawing buffer and the render targets keep their size and objects
+     sizes seen: 960x540, 864x486, 768x432, 672x378, 576x324, 720x405 · render targets disposed 26 times
+(the adapt() / window-resize checks also fail on the old code; they test the new stepping rules)
+
+AFTER (this branch):
+PASS every drawn frame through 15 forced resolution steps has picture (drawing buffer read back before and after each step)
+PASS the canvas, its drawing buffer and the render targets keep their size and objects (nothing disposed)
+PASS at 0.6 the picture fills the screen and matches the full-resolution one (8×6 blocks: mean brightness difference < 12, none black)
+PASS a 30 fps frame time steps the resolution down to the floor (0.6) and no further
+PASS holding 60 for three windows steps it back up one step
+PASS a step up that fails at once is undone and not retried for a while (no see-saw)
+PASS quality changes (Low ↔ Medium ↔ High): the next drawn frame has picture
+PASS a window resize is applied with the next drawn frame (picture, new size)
+no errors · ALL PASSED

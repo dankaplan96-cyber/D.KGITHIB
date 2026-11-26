@@ -1,0 +1,916 @@
+// Hand-painted-style tileable textures, generated on a canvas at startup.
+// LBA2's exteriors were texture-mapped polygons with a bright, painterly
+// palette; these imitate that look without using any original artwork.
+import * as THREE from 'three';
+import { rng } from './math.js';
+import { registerStatic } from './texarray.js';
+import { DL, nameWorldTextures, nameWorldTexture } from './depthlook.js';
+
+function canvas(size) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  return [c, c.getContext('2d')];
+}
+
+// Draw something 9 times with wrap-around offsets so the tile is seamless.
+function wrap(size, fn) {
+  for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) fn(ox, oy);
+}
+
+function toTex(c, repeat = true) {
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 4;
+  registerStatic(t);   // (PERF-CPU: a layer of the world's texture array, for the draw batches: texarray.js)
+  return t;
+}
+
+function speckle(x, size, r, n, colors, alpha = 1, minR = 0.5) {
+  for (let i = 0; i < n; i++) {
+    const px = r() * size, py = r() * size, rr = minR + r() * 2.2;
+    x.globalAlpha = alpha * (0.4 + r() * 0.6);
+    x.fillStyle = colors[Math.floor(r() * colors.length)];
+    wrap(size, (ox, oy) => { x.beginPath(); x.arc(px + ox, py + oy, rr, 0, Math.PI * 2); x.fill(); });
+  }
+  x.globalAlpha = 1;
+}
+
+function transparent(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},0)`;
+}
+
+function blotches(x, size, r, n, colors, rmin, rmax, alpha) {
+  for (let i = 0; i < n; i++) {
+    const px = r() * size, py = r() * size, rr = rmin + r() * (rmax - rmin);
+    const col = colors[Math.floor(r() * colors.length)];
+    wrap(size, (ox, oy) => {
+      const g = x.createRadialGradient(px + ox, py + oy, 0, px + ox, py + oy, rr);
+      g.addColorStop(0, col);
+      g.addColorStop(1, transparent(col)); // fade to the same colour, not to black
+      x.globalAlpha = alpha;
+      x.fillStyle = g;
+      x.fillRect(px + ox - rr, py + oy - rr, rr * 2, rr * 2);
+    });
+  }
+  x.globalAlpha = 1;
+}
+
+const LAYOUT = {};   // (WALL-NORMALS: the layouts the wall generators drew, by texture name)
+
+export function makeTextures() {
+  const T = {};
+  const S = 256;
+
+  // grass: bright LBA green with painted tufts
+  {
+    const [c, x] = canvas(S); const r = rng(11);
+    // (a warmer, slightly olive green like Citadel's lawns: the cool pure green read as neon under the sun)
+    x.fillStyle = '#5a8a38'; x.fillRect(0, 0, S, S);
+    // (R6, outdoor readability: the tufts' strokes nearer the ground's own tone and no bright speckle — at play
+    // distance the white, yellow and pink dots and the pale strokes read as high-frequency glitter round every path;
+    // the broad blotches carry the painted variation instead. The same random draws as before.)
+    blotches(x, S, r, 40, ['#4f7c31', '#64903f', '#557f34', '#6c9844'], 20, 60, 0.6);
+    x.lineCap = 'round';
+    for (let i = 0; i < 700; i++) {
+      const px = r() * S, py = r() * S, l = 3 + r() * 5, a = -Math.PI / 2 + (r() - 0.5) * 0.9;
+      x.strokeStyle = ['#4a7830', '#729e46', '#517f33', '#7aa44c'][Math.floor(r() * 4)];
+      x.lineWidth = 1 + r();
+      x.globalAlpha = 0.7;
+      wrap(S, (ox, oy) => { x.beginPath(); x.moveTo(px + ox, py + oy); x.lineTo(px + ox + Math.cos(a) * l, py + oy + Math.sin(a) * l); x.stroke(); });
+      x.globalAlpha = 1;
+    }
+    speckle(x, S, r, 25, ['#6a9440', '#5f8a3a', '#78a04a'], 0.5, 0.8);
+    // GFX-LOOK-2 (the user: "the world should look good and sharp"): close up the lawns read as one flat green — the
+    // strokes above are a few percent off the base, under what the eye resolves once mipmapped. LBA2's lawns are painted
+    // tufts: a darker foot, blades fanning up to a lighter tip. 90 tufts, each a soft dark patch under 9–16 blades;
+    // mid-frequency (a tuft ~15–30 texels: 25–50 cm on the ground), moderate contrast, no bright dots (R6's glitter).
+    // Its own random stream: the draws above are unchanged.
+    {
+      const q = rng(111);
+      for (let i = 0; i < 90; i++) {
+        const cx = q() * S, cy = q() * S, rad = 6 + q() * 9, n = 9 + Math.floor(q() * 8), lush = q();
+        wrap(S, (ox, oy) => {
+          if (cx + ox < -30 || cx + ox > S + 30 || cy + oy < -30 || cy + oy > S + 30) return;
+          const g = x.createRadialGradient(cx + ox, cy + oy + rad * 0.3, 0, cx + ox, cy + oy + rad * 0.3, rad * 1.3);
+          g.addColorStop(0, 'rgba(52,86,30,0.42)'); g.addColorStop(1, 'rgba(52,86,30,0)');
+          x.fillStyle = g; x.fillRect(cx + ox - rad * 1.4, cy + oy - rad, rad * 2.8, rad * 2.8);
+        });
+        const q2 = rng(1000 + i);
+        for (let k = 0; k < n; k++) {
+          const a = -Math.PI / 2 + (q2() - 0.5) * 1.5, l = rad * (0.7 + q2() * 0.7), bx = cx + (q2() - 0.5) * rad * 0.9, by = cy + rad * 0.35 + (q2() - 0.5) * rad * 0.3;
+          const tip = lush < 0.5 ? (k % 3 ? '#80aa4e' : '#8db556') : (k % 3 ? '#76a247' : '#6a9a42');
+          const lw = 1.3 + q2() * 0.9, bend = (q2() - 0.5) * 3;   // (drawn before the copies: each copy the same blade)
+          wrap(S, (ox, oy) => {
+            if (bx + ox < -30 || bx + ox > S + 30 || by + oy < -30 || by + oy > S + 30) return;
+            const g = x.createLinearGradient(bx + ox, by + oy, bx + ox + Math.cos(a) * l, by + oy + Math.sin(a) * l);
+            g.addColorStop(0, '#43702a'); g.addColorStop(1, tip);
+            x.strokeStyle = g; x.lineWidth = lw; x.globalAlpha = 0.8;
+            x.beginPath(); x.moveTo(bx + ox, by + oy);
+            x.quadraticCurveTo(bx + ox + Math.cos(a) * l * 0.5 + bend, by + oy + Math.sin(a) * l * 0.5, bx + ox + Math.cos(a) * l, by + oy + Math.sin(a) * l);
+            x.stroke(); x.globalAlpha = 1;
+          });
+        }
+      }
+    }
+    // (WORLD-ART-9: LBA2's lawns are a soft sage green (the original Citadel's grass from above, #74885c), ours read a
+    //  deep saturated green (#497219 from above): the drawn tile taken 35 % toward its own grey, the lightness kept)
+    { const d = x.getImageData(0, 0, S, S), p = d.data;
+      for (let i = 0; i < p.length; i += 4) { const l = p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114; for (let k = 0; k < 3; k++) p[i + k] += (l - p[i + k]) * 0.35; }
+      x.putImageData(d, 0, 0); }
+    T.grass = toTex(c);
+  }
+  // sand
+  {
+    const [c, x] = canvas(S); const r = rng(12);
+    x.fillStyle = '#e8d49a'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 30, ['#f2e0aa', '#d9c084', '#efd99e'], 20, 50, 0.6);
+    // (POLISH-AUDIT #16: 18 wavy lines ran the whole width of the tile, so up close the sand looked like floorboards.
+    //  Wind ripples are short, forked crests, a pale ridge with a warm lee beside it, laid along a slowly turning flow
+    //  field on a jittered grid: dashes of 10-26 px in rows that bend and break, never one line across the tile.
+    //  The flow field is periodic in the tile, so the tile still repeats without a seam.)
+    const TAU = Math.PI * 2, flow = (px, py) => 0.5 * Math.sin(px / S * TAU + 0.7) + 0.35 * Math.cos(py / S * TAU + 1.3) + 0.12 * Math.sin((px + py) / S * TAU * 2);
+    const CELL = 11;
+    x.lineCap = 'round';
+    for (let gy = 0; gy < S; gy += CELL) for (let gx = 0; gx < S; gx += CELL) {
+      const px = gx + r() * CELL, py = gy + r() * CELL;
+      if (r() < 0.12) continue;   // gaps, so the rows break up
+      const a = flow(px, py) + (r() - 0.5) * 0.14, len = 14 + r() * 18, nx = -Math.sin(a), ny = Math.cos(a);
+      const bend = (r() - 0.5) * 3;
+      const crest = (ox, oy, dx, dy, w, col) => {
+        x.strokeStyle = col; x.lineWidth = w;
+        x.beginPath();
+        x.moveTo(px + ox - Math.cos(a) * len / 2 + dx, py + oy - Math.sin(a) * len / 2 + dy);
+        x.quadraticCurveTo(px + ox + nx * bend + dx, py + oy + ny * bend + dy, px + ox + Math.cos(a) * len / 2 + dx, py + oy + Math.sin(a) * len / 2 + dy);
+        x.stroke();
+      };
+      wrap(S, (ox, oy) => {
+        if (px + ox < -20 || px + ox > S + 20 || py + oy < -20 || py + oy > S + 20) return;
+        crest(ox, oy, nx * 2.1, ny * 2.1, 2.2, 'rgba(176,134,76,0.15)');   // the lee, a shade warmer
+        crest(ox, oy, 0, 0, 1.4, 'rgba(255,244,208,0.30)');                 // the crest, pale
+      });
+    }
+    speckle(x, S, r, 500, ['#c9ad70', '#fff1c4', '#b89a5e'], 0.7, 0.3);
+    T.sand = toTex(c);
+  }
+  // rock (cliffs)
+  {
+    const [c, x] = canvas(S); const r = rng(13);
+    x.fillStyle = '#9b8c78'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 50, ['#8a7a66', '#b09f88', '#a39079', '#7e705e'], 15, 45, 0.7);
+    x.strokeStyle = 'rgba(70,58,46,0.55)'; x.lineWidth = 1.6;
+    for (let i = 0; i < 30; i++) {
+      let px = r() * S, py = r() * S;
+      const pts = [[px, py]];
+      for (let k = 0; k < 4; k++) { px += (r() - 0.3) * 22; py += (r() - 0.5) * 14; pts.push([px, py]); }
+      wrap(S, (ox, oy) => { x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(a + ox, b + oy) : x.moveTo(a + ox, b + oy))); x.stroke(); });
+    }
+    speckle(x, S, r, 300, ['#c7b8a0', '#6b5d4c'], 0.6, 0.4);
+    T.rock = toTex(c);
+  }
+  // dirt path
+  {
+    const [c, x] = canvas(S); const r = rng(14);
+    // (GFX-LOOK-2: a shade less saturated, #9c6c44 → #9a6e4c: on screen the soil read orange, and dark orange in shade)
+    // (WORLD-ART-1: still read orange at the gameplay camera under the warm sun, laptop 31.10; LBA2's town soil is a
+    //  darker, browner earth: #9a6e4c → #8a6a50, the blotches likewise, a shade less red. Same canvas, same texture.)
+    x.fillStyle = '#8a6a50'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#7a5d45', '#99785b', '#715542'], 15, 40, 0.6);
+    for (let i = 0; i < 120; i++) {
+      const px = r() * S, py = r() * S, rr = 1.5 + r() * 3.5;
+      wrap(S, (ox, oy) => {
+        x.fillStyle = 'rgba(80,58,36,0.5)'; x.beginPath(); x.ellipse(px + ox + 0.8, py + oy + 0.8, rr, rr * 0.7, 0, 0, 7); x.fill();
+        // (GFX-LOOK-2: this pebble was never drawn — its ellipse and fill had slipped into R6's comment, so the path showed
+        //  only the pebbles' dark shadows: dark holes in the soil)
+        x.fillStyle = ['#b08c66', '#957a60', '#b89a76'][i % 3]; x.beginPath();   // (R6: the pebbles a little less bright)
+        x.ellipse(px + ox, py + oy, rr, rr * 0.7, 0, 0, 7); x.fill();
+      });
+    }
+    T.dirt = toTex(c);
+  }
+  // paving (streets and the square), as on Citadel Island: grey rectangular
+  // setts laid in running bond, each a little different in tone and wear,
+  // bevelled edges catching the light, dark joints
+  {
+    const N = 512, ROWS = 10, PER = 5;
+    const [c, x] = canvas(N); const r = rng(15);
+    x.fillStyle = '#4a4640'; x.fillRect(0, 0, N, N);
+    const rh = N / ROWS, bw = N / PER, gap = 3;
+    for (let j = 0; j < ROWS; j++) {
+      const off = (j % 2) * bw / 2 + (r() - 0.5) * 6;
+      for (let i = -1; i <= PER; i++) {
+        const x0 = i * bw + off + gap / 2, y0 = j * rh + gap / 2, w = bw - gap - r() * 3, h = rh - gap;
+        const tone = 128 + Math.floor(r() * 34), warm = r() * 10;
+        const base = `rgb(${tone + warm},${tone + warm * 0.4},${tone - 4})`;
+        for (const ox of [-N, 0, N]) {
+          x.fillStyle = base; x.beginPath(); x.roundRect(x0 + ox, y0, w, h, 6); x.fill();
+          // bevel: light top/left, dark bottom/right
+          x.fillStyle = 'rgba(255,250,235,0.22)'; x.fillRect(x0 + ox + 3, y0 + 2, w - 6, 4); x.fillRect(x0 + ox + 2, y0 + 3, 4, h - 6);
+          x.fillStyle = 'rgba(30,26,20,0.28)'; x.fillRect(x0 + ox + 3, y0 + h - 6, w - 6, 4); x.fillRect(x0 + ox + w - 6, y0 + 3, 4, h - 6);
+          // wear and grain
+          for (let k = 0; k < 14; k++) {
+            x.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+            x.beginPath(); x.ellipse(x0 + ox + 8 + r() * (w - 16), y0 + 6 + r() * (h - 12), 3 + r() * 10, 2 + r() * 5, r() * 3, 0, 7); x.fill();
+          }
+          if (r() < 0.2) { x.strokeStyle = 'rgba(40,36,30,0.4)'; x.lineWidth = 1; x.beginPath(); x.moveTo(x0 + ox + r() * w, y0 + 2); x.lineTo(x0 + ox + r() * w, y0 + h - 2); x.stroke(); }
+        }
+      }
+    }
+    T.cobble = toTex(c);
+  }
+  // plaster wall
+  {
+    const [c, x] = canvas(S); const r = rng(16);
+    x.fillStyle = '#f3ead6'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 30, ['#e6dbc2', '#fbf4e4', '#e9dcc0'], 20, 60, 0.7);
+    speckle(x, S, r, 200, ['#d8cbb0', '#fffaf0'], 0.5, 0.3);
+    // stone base band at the bottom (V=0 is the bottom after flipY)
+    for (let i = 0; i < 9; i++) {
+      x.fillStyle = ['#a39886', '#b3a892', '#968b79'][i % 3];
+      x.fillRect(i * (S / 8) - 10, S - 34 + (i % 2) * 2, S / 8 - 3, 30);
+    }
+    T.plaster = toTex(c);
+  }
+  // plaster without the stone band (exterior walls sit on a modelled plinth)
+  {
+    const [c, x] = canvas(S); const r = rng(26);
+    x.fillStyle = '#f2e8d2'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 34, ['#e8dcc2', '#fbf4e4', '#eadcbe', '#f6ead0'], 18, 60, 0.7);
+    // faint trowel strokes and a few cracks
+    x.strokeStyle = 'rgba(180,160,130,0.18)'; x.lineWidth = 2;
+    for (let i = 0; i < 26; i++) { const px = r() * S, py = r() * S; wrap(S, (ox, oy) => { x.beginPath(); x.arc(px + ox, py + oy, 10 + r() * 20, r() * 6, r() * 6 + 1.2); x.stroke(); }); }
+    x.strokeStyle = 'rgba(120,100,80,0.35)'; x.lineWidth = 1;
+    for (let i = 0; i < 4; i++) { let px = r() * S, py = r() * S; x.beginPath(); x.moveTo(px, py); for (let k = 0; k < 5; k++) { px += (r() - 0.5) * 14; py += r() * 12; x.lineTo(px, py); } x.stroke(); }
+    speckle(x, S, r, 260, ['#d6c8aa', '#fffaf0', '#cdbf9f'], 0.5, 0.3);
+    T.plasterWall = toTex(c);
+  }
+  // dressed stone (plinths, quoins, sills, surrounds)
+  {
+    const [c, x] = canvas(S); const r = rng(27);
+    x.fillStyle = '#7d756a'; x.fillRect(0, 0, S, S);
+    const sblocks = []; LAYOUT.stone = { kind: 'blocks2', N: S, blocks: sblocks };   // (WALL-NORMALS: the same blocks)
+    let y = 0;
+    while (y < S) {
+      const h = 34 + Math.floor(r() * 26);
+      let xx = -Math.floor(r() * 40);
+      while (xx < S) {
+        const w = 46 + Math.floor(r() * 50);
+        const tone = 150 + Math.floor(r() * 40);
+        sblocks.push([xx, y, w, Math.min(h, S - y)]);
+        wrap(S, (ox, oy) => {
+          const g = x.createLinearGradient(0, y + oy, 0, y + oy + h);
+          g.addColorStop(0, `rgb(${tone + 22},${tone + 16},${tone + 6})`);
+          g.addColorStop(1, `rgb(${tone - 18},${tone - 22},${tone - 28})`);
+          x.fillStyle = g;
+          x.beginPath(); x.roundRect(xx + ox + 2, y + oy + 2, w - 4, Math.min(h, S - y) - 4, 6); x.fill();
+        });
+        xx += w;
+      }
+      y += h;
+    }
+    speckle(x, S, r, 400, ['#5f574c', '#c8bea8', '#8f8676'], 0.5, 0.3);
+    T.stone = toTex(c);
+  }
+  // bricks (chimneys, garden walls)
+  {
+    const [c, x] = canvas(S); const r = rng(28);
+    x.fillStyle = '#8a7a6a'; x.fillRect(0, 0, S, S);
+    const bh = 22, bw = 52;
+    for (let j = 0; j * bh < S; j++) for (let i = -1; i * bw < S; i++) {
+      const tone = r();
+      x.fillStyle = tone < 0.3 ? '#a84a32' : tone < 0.7 ? '#b85a3a' : '#9a4030';
+      x.fillRect(i * bw + (j % 2) * bw / 2 + 2, j * bh + 2, bw - 4, bh - 4);
+    }
+    speckle(x, S, r, 300, ['#6a2a1a', '#d8805a'], 0.5, 0.3);
+    T.brick = toTex(c);
+  }
+  // terracotta roof tiles
+  {
+    const [c, x] = canvas(S); const r = rng(17);
+    x.fillStyle = '#a8442c'; x.fillRect(0, 0, S, S);
+    const rows = 10, cols = 8, w = S / cols, h = S / rows;
+    for (let j = 0; j < rows; j++) for (let i = -1; i <= cols; i++) {
+      const px = i * w + (j % 2) * w / 2, py = j * h;
+      const tone = r();
+      const g = x.createLinearGradient(0, py, 0, py + h);
+      g.addColorStop(0, tone > 0.5 ? '#d9714a' : '#cf6440');
+      g.addColorStop(1, '#8f3522');
+      x.fillStyle = g;
+      x.beginPath();
+      x.moveTo(px + 1, py);
+      x.lineTo(px + w - 1, py);
+      x.lineTo(px + w - 1, py + h * 0.7);
+      x.quadraticCurveTo(px + w / 2, py + h * 1.15, px + 1, py + h * 0.7);
+      x.closePath(); x.fill();
+    }
+    T.roof = toTex(c);
+  }
+  // blue slate roof variant
+  {
+    const [c, x] = canvas(S);
+    x.drawImage(T.roof.image, 0, 0);
+    x.globalCompositeOperation = 'hue';
+    x.fillStyle = '#3a6fd0'; x.fillRect(0, 0, S, S);
+    x.globalCompositeOperation = 'source-over';
+    T.roofBlue = toTex(c);
+  }
+  // wooden planks
+  {
+    const [c, x] = canvas(S); const r = rng(18);
+    const n = 6, w = S / n;
+    for (let i = 0; i < n; i++) {
+      x.fillStyle = ['#8a5a32', '#7d5029', '#94643a'][i % 3];
+      x.fillRect(i * w, 0, w, S);
+      x.strokeStyle = 'rgba(60,36,18,0.35)'; x.lineWidth = 1;
+      for (let k = 0; k < 6; k++) { const px = i * w + r() * w; x.beginPath(); x.moveTo(px, 0); x.bezierCurveTo(px + 3, S / 3, px - 3, S * 0.66, px, S); x.stroke(); }
+      x.fillStyle = 'rgba(40,24,10,0.6)'; x.fillRect(i * w, 0, 2, S);
+    }
+    T.wood = toTex(c);
+  }
+  // sea: painted wave crests
+  {
+    const [c, x] = canvas(S); const r = rng(19);
+    // (GFX-LOOK-2: a little more green, #2f86c4 → #2b8fc6: LBA2's sea is a saturated cyan-blue; on screen it read royal blue)
+    x.fillStyle = '#2b8fc6'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#237fb6', '#379fd2', '#2889c2'], 20, 60, 0.6);
+    x.lineCap = 'round';
+    for (let i = 0; i < 60; i++) {
+      const px = r() * S, py = r() * S, l = 8 + r() * 14;
+      x.strokeStyle = r() < 0.5 ? 'rgba(255,255,255,0.55)' : 'rgba(170,220,255,0.6)';
+      x.lineWidth = 1.5 + r() * 1.5;
+      wrap(S, (ox, oy) => { x.beginPath(); x.moveTo(px + ox - l, py + oy); x.quadraticCurveTo(px + ox, py + oy - 4, px + ox + l, py + oy); x.stroke(); });
+    }
+    T.sea = toTex(c);
+  }
+  // cloud ceiling (LBA2 draws the sky as a flat textured plane)
+  {
+    const [c, x] = canvas(512); const r = rng(20);
+    x.fillStyle = '#7fb4ec'; x.fillRect(0, 0, 512, 512);
+    for (let i = 0; i < 70; i++) {
+      const px = r() * 512, py = r() * 512, rr = 30 + r() * 60;
+      for (let k = 0; k < 6; k++) {
+        const qx = px + (r() - 0.5) * rr * 1.6, qy = py + (r() - 0.5) * rr * 0.7, q = rr * (0.4 + r() * 0.5);
+        wrap(512, (ox, oy) => {
+          const g = x.createRadialGradient(qx + ox, qy + oy - q * 0.2, 0, qx + ox, qy + oy, q);
+          g.addColorStop(0, 'rgba(255,255,255,0.95)');
+          g.addColorStop(0.6, 'rgba(240,246,255,0.6)');
+          g.addColorStop(1, 'rgba(255,255,255,0)'); // white-to-clear: no darkening
+          x.fillStyle = g; x.fillRect(qx + ox - q, qy + oy - q, q * 2, q * 2);
+        });
+      }
+    }
+    T.clouds = toTex(c);
+  }
+  // soft round shadow (LBA2 draws a shaded quad under every actor)
+  {
+    const [c, x] = canvas(64);
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(0,0,0,0.75)');
+    g.addColorStop(0.55, 'rgba(0,0,0,0.5)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    T.blob = toTex(c, false);
+  }
+  islandTextures(T);
+  nameWorldTextures(T);   // (DEPTH-LOOK: each painted texture's relief weight by its name)
+  if (DL.paint) paintDepth(T);   // (DEPTH-LOOK paint: on by default since the user's pick 25.11, P132; ?depth=none off)
+  return T;
+}
+
+// ------------------------------------------------------------------ island kit
+// Textures for the outdoor island (island.js): cliffs, rubble walls, planks,
+// and the Joint Project's "Zeelich tech" metals.
+function rivetRow(x, x0, y0, x1, y1, n, r = 2.2) {
+  for (let i = 0; i <= n; i++) {
+    const px = x0 + (x1 - x0) * (i / n), py = y0 + (y1 - y0) * (i / n);
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.arc(px + 0.8, py + 1, r, 0, 7); x.fill();
+    const g = x.createRadialGradient(px - r * 0.4, py - r * 0.4, 0, px, py, r);
+    g.addColorStop(0, 'rgba(255,255,240,0.9)'); g.addColorStop(1, 'rgba(120,110,90,0.6)');
+    x.fillStyle = g; x.beginPath(); x.arc(px, py, r, 0, 7); x.fill();
+  }
+}
+
+function islandTextures(T) {
+  const S = 256;
+  // cliff rock (LBA2 Citadel cliffs): grey-violet, horizontal strata, faceted
+  // light planes and dark cracks; used triplanar on the terrain
+  {
+    const N = 512;
+    const [c, x] = canvas(N); const r = rng(101);
+    x.fillStyle = '#8e8796'; x.fillRect(0, 0, N, N);
+    // strata bands
+    let y = 0;
+    while (y < N) {
+      const h = 18 + r() * 40, tone = r();
+      x.fillStyle = tone < 0.33 ? '#7c7586' : tone < 0.66 ? '#a29bab' : '#918a99';
+      wrap(N, (ox, oy) => { x.beginPath(); x.moveTo(ox, y + oy); for (let k = 0; k <= N; k += 32) x.lineTo(k + ox, y + oy + Math.sin(k * 0.03 + y) * 4); x.lineTo(N + ox, y + h + oy); x.lineTo(ox, y + h + oy); x.fill(); });
+      y += h;
+    }
+    // faceted chunks: light top planes, dark undersides
+    for (let i = 0; i < 160; i++) {
+      const px = r() * N, py = r() * N, w = 14 + r() * 40, h = 8 + r() * 22;
+      const pts = [[0, 0], [w * (0.4 + r() * 0.3), -h * (0.3 + r() * 0.4)], [w, r() * h * 0.2], [w * (0.5 + r() * 0.3), h], [w * 0.1, h * (0.6 + r() * 0.3)]];
+      const tone = r();
+      x.fillStyle = tone < 0.4 ? 'rgba(220,214,226,0.55)' : tone < 0.75 ? 'rgba(70,62,82,0.45)' : 'rgba(150,140,160,0.5)';
+      wrap(N, (ox, oy) => { x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(px + a + ox, py + b + oy) : x.moveTo(px + a + ox, py + b + oy))); x.closePath(); x.fill(); });
+      // highlight edge on top
+      x.strokeStyle = 'rgba(245,240,250,0.5)'; x.lineWidth = 1.5;
+      wrap(N, (ox, oy) => { x.beginPath(); x.moveTo(px + ox, py + oy); x.lineTo(px + pts[1][0] + ox, py + pts[1][1] + oy); x.lineTo(px + pts[2][0] + ox, py + pts[2][1] + oy); x.stroke(); });
+    }
+    // dark cracks, mostly horizontal with vertical joints
+    x.strokeStyle = 'rgba(40,32,48,0.7)'; x.lineWidth = 2;
+    for (let i = 0; i < 70; i++) {
+      let px = r() * N, py = r() * N;
+      const vert = r() < 0.35;
+      const pts = [[px, py]];
+      for (let k = 0; k < 5; k++) { px += vert ? (r() - 0.5) * 10 : 10 + r() * 22; py += vert ? 8 + r() * 14 : (r() - 0.5) * 9; pts.push([px, py]); }
+      wrap(N, (ox, oy) => { x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(a + ox, b + oy) : x.moveTo(a + ox, b + oy))); x.stroke(); });
+    }
+    speckle(x, N, r, 900, ['#d8d2de', '#5c5468', '#b4adbc'], 0.5, 0.3);
+    T.cliff = toTex(c);
+  }
+  // rubble stone (LBA2 harbour houses and embankments): rounded irregular
+  // stones, lit from the upper left, dark mortar
+  // (P42, the user 22.11: the houses' walls lighter, LBA2's tone. `rubbleHouse` is the houses' own: LBA2's house rubble,
+  //  seen from the play camera in lba2remake, is pale whitish-grey stones packed close in thin dark joints, where ours
+  //  read dark blue-grey on the shaded fronts. Paler stones, packed closer; the embankments and walls keep `rubble`)
+  for (const [key, o] of [['rubble', { mortar: '#5c5550', tries: 900, max: 90, gap: 0.62, grow: 1, base: 136, span: 60, hi: 70, lo: 60 }],
+    ['rubbleHouse', { mortar: '#58524e', tries: 1600, max: 130, gap: 0.45, grow: 1.12, base: 212, span: 38, hi: 40, lo: 46 }]]) {
+    const N = 256;
+    const [c, x] = canvas(N); const r = rng(102);
+    // (GFX-LOOK-2: the mortar #3e3a3a → #5c5550: with ~40 % of the tile mortar the wall averaged a dark grey, so the
+    //  lighthouse's cream footing and the harbour's embankments read as a black heap from the play camera; LBA2's
+    //  rubble walls are mid-grey stones in a darker but not black bed)
+    x.fillStyle = o.mortar; x.fillRect(0, 0, N, N);
+    const stones = [];
+    for (let i = 0; i < o.tries && stones.length < o.max; i++) {
+      const px = r() * N, py = r() * N, rx = 9 + r() * 13, ry = 7 + r() * 8;
+      let ok = true;
+      for (const s of stones) {
+        let dx = Math.abs(s[0] - px), dy = Math.abs(s[1] - py);
+        dx = Math.min(dx, N - dx); dy = Math.min(dy, N - dy);
+        if ((dx / (s[2] + rx)) ** 2 + (dy / (s[3] + ry)) ** 2 < o.gap) { ok = false; break; }
+      }
+      if (ok) stones.push([px, py, rx * o.grow, ry * o.grow, r() * 0.6 - 0.3, r()]);
+    }
+    LAYOUT[key] = { kind: 'rubble', N, stones };   // (WALL-NORMALS: the same stones, for the height map)
+    for (const [px, py, rx, ry, rot, tone] of stones) {
+      const base = o.base + tone * o.span;   // (GFX-LOOK-2: was 120 + 70: with the darker mortar, a black heap from afar)
+      wrap(N, (ox, oy) => {
+        x.save(); x.translate(px + ox, py + oy); x.rotate(rot);
+        x.fillStyle = 'rgba(20,16,16,0.5)'; x.beginPath(); x.ellipse(1.5, 2, rx, ry, 0, 0, 7); x.fill();
+        const g = x.createRadialGradient(-rx * 0.35, -ry * 0.45, 0, 0, 0, Math.max(rx, ry) * 1.1);
+        g.addColorStop(0, `rgb(${base + o.hi},${base + o.hi - 4},${base + o.hi - 8})`);
+        g.addColorStop(0.55, `rgb(${base},${base - 4},${base - 6})`);
+        g.addColorStop(1, `rgb(${base - o.lo},${base - o.lo - 4},${base - o.lo - 4})`);
+        x.fillStyle = g; x.beginPath(); x.ellipse(0, 0, rx, ry, 0, 0, 7); x.fill();
+        x.restore();
+      });
+    }
+    speckle(x, N, r, 300, ['#e8e2da', '#2a2626'], 0.35, 0.3);
+    T[key] = toTex(c);
+  }
+  // weathered planks (pier deck, plank roofs): horizontal boards, nail heads
+  {
+    const [c, x] = canvas(S); const r = rng(103);
+    const n = 8, h = S / n;
+    for (let j = 0; j < n; j++) {
+      const tone = r();
+      x.fillStyle = tone < 0.33 ? '#8d6e52' : tone < 0.66 ? '#9b7b5c' : '#82664c';
+      x.fillRect(0, j * h, S, h);
+      x.strokeStyle = 'rgba(60,40,24,0.28)'; x.lineWidth = 1;
+      for (let k = 0; k < 5; k++) { const py = j * h + 3 + r() * (h - 6); x.beginPath(); x.moveTo(0, py); x.bezierCurveTo(S / 3, py + (r() - 0.5) * 4, S * 0.66, py + (r() - 0.5) * 4, S, py); x.stroke(); }
+      x.fillStyle = 'rgba(255,240,220,0.18)'; x.fillRect(0, j * h + 1, S, 2);
+      x.fillStyle = 'rgba(30,18,8,0.75)'; x.fillRect(0, j * h + h - 2, S, 2);
+      const cut = r() * S; x.fillRect(cut, j * h, 2, h);
+      x.fillStyle = 'rgba(30,24,20,0.7)';
+      for (const px of [cut + 6, cut - 6, (cut + S / 2) % S]) { x.beginPath(); x.arc(px, j * h + h * 0.3, 1.3, 0, 7); x.arc(px, j * h + h * 0.7, 1.3, 0, 7); x.fill(); }
+    }
+    speckle(x, S, r, 200, ['#5a4430', '#c8b090'], 0.3, 0.3);
+    T.planks = toTex(c);
+  }
+  // thatch (WORLD-ART-2): LBA2's Citadel cottages (Twinsen's, his neighbour's) wear straw in courses under a dark ridge
+  {
+    const [c, x] = canvas(S); const r = rng(104);
+    x.fillStyle = '#c9a66b'; x.fillRect(0, 0, S, S);
+    const n = 6, h = S / n;
+    for (let j = 0; j < n; j++) {
+      for (let k = 0; k < 260; k++) {
+        const px = r() * S, py = j * h + r() * (h - 4), len = h * 0.45 + r() * h * 0.5;
+        x.strokeStyle = ['#e2c487', '#b8924f', '#d6b274', '#a8834a'][k % 4]; x.lineWidth = 1 + r();
+        x.beginPath(); x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 3, Math.min(py + len, j * h + h - 3)); x.stroke();
+      }
+      x.fillStyle = 'rgba(70,48,22,0.45)'; x.fillRect(0, j * h + h - 3, S, 3);   // (each course's shadow on the next)
+    }
+    speckle(x, S, r, 160, ['#7a5a30', '#f0d8a0'], 0.3, 0.3);
+    T.thatch = toTex(c);
+  }
+  // brushed brass plates with rivet rows at the seams
+  {
+    const [c, x] = canvas(S); const r = rng(104);
+    x.fillStyle = '#b8924a'; x.fillRect(0, 0, S, S);
+    for (let i = 0; i < 260; i++) { const py = r() * S; x.strokeStyle = r() < 0.5 ? 'rgba(255,230,170,0.16)' : 'rgba(90,60,20,0.14)'; x.lineWidth = 1 + r(); x.beginPath(); x.moveTo(0, py); x.lineTo(S, py + (r() - 0.5) * 2); x.stroke(); }
+    blotches(x, S, r, 14, ['#8a6a30', '#d8b468', '#a07a38'], 20, 60, 0.35);
+    for (const py of [0, S / 2]) { x.fillStyle = 'rgba(60,40,10,0.55)'; x.fillRect(0, py, S, 2); x.fillStyle = 'rgba(255,235,180,0.35)'; x.fillRect(0, py + 2, S, 1); rivetRow(x, 6, py + 8, S - 6, py + 8, 10); }
+    for (const px of [0, S / 2]) { x.fillStyle = 'rgba(60,40,10,0.5)'; x.fillRect(px, 0, 2, S); }
+    T.brass = toTex(c);
+  }
+  // teal-painted steel plates (Zeelich tech): rivets, chipped paint, grime
+  {
+    const [c, x] = canvas(S); const r = rng(105);
+    x.fillStyle = '#2f8c8a'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 26, ['#277a78', '#38a09c', '#2c8482', '#24706e'], 20, 60, 0.5);
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+      const px = i * S / 2, py = j * S / 2;
+      x.strokeStyle = 'rgba(10,40,40,0.6)'; x.lineWidth = 3; x.strokeRect(px + 1.5, py + 1.5, S / 2 - 3, S / 2 - 3);
+      x.strokeStyle = 'rgba(150,230,220,0.25)'; x.lineWidth = 1; x.strokeRect(px + 4, py + 4, S / 2 - 8, S / 2 - 8);
+      rivetRow(x, px + 9, py + 9, px + S / 2 - 9, py + 9, 6, 2);
+      rivetRow(x, px + 9, py + S / 2 - 9, px + S / 2 - 9, py + S / 2 - 9, 6, 2);
+    }
+    for (let i = 0; i < 40; i++) { x.fillStyle = r() < 0.5 ? 'rgba(160,150,130,0.6)' : 'rgba(110,70,40,0.35)'; x.beginPath(); x.ellipse(r() * S, r() * S, 1 + r() * 4, 1 + r() * 2, r() * 3, 0, 7); x.fill(); }
+    const g = x.createLinearGradient(0, 0, 0, S); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(30,25,15,0.18)'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+    T.teal = toTex(c);
+  }
+  // yellow-black hazard stripes, worn
+  {
+    const [c, x] = canvas(128); const r = rng(106);
+    x.fillStyle = '#1e1e1c'; x.fillRect(0, 0, 128, 128);
+    x.fillStyle = '#e8b51e';
+    for (let i = -2; i < 4; i++) { x.beginPath(); x.moveTo(i * 64, 0); x.lineTo(i * 64 + 32, 0); x.lineTo(i * 64 + 32 + 128, 128); x.lineTo(i * 64 + 128, 128); x.fill(); }
+    speckle(x, 128, r, 120, ['#5a5040', '#2a2620', '#c8a040'], 0.6, 0.4);
+    T.hazard = toTex(c);
+  }
+  // lavender-grey metal deck plate with a diamond tread and seams (#07/#60)
+  {
+    const [c, x] = canvas(S); const r = rng(107);
+    x.fillStyle = '#8f8a9c'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 16, ['#857f92', '#9a95a6'], 20, 60, 0.4);
+    for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) {
+      const px = i * 16 + (j % 2) * 8, py = j * 16 + 8, a = (i + j) % 2 ? 0.6 : -0.6;
+      x.save(); x.translate(px, py); x.rotate(a);
+      x.fillStyle = 'rgba(40,36,50,0.4)'; x.fillRect(-5, -0.5, 10, 3);
+      x.fillStyle = 'rgba(230,226,240,0.45)'; x.fillRect(-5, -1.5, 10, 1.5);
+      x.restore();
+    }
+    x.fillStyle = 'rgba(30,26,40,0.7)'; x.fillRect(0, 0, S, 3); x.fillRect(0, 0, 3, S);
+    rivetRow(x, 8, 8, S - 8, 8, 12, 2); rivetRow(x, 8, 8, 8, S - 8, 12, 2);
+    T.deck = toTex(c);
+  }
+  // blue-grey slate shingles (Funfrock-era tower roofs)
+  {
+    const [c, x] = canvas(S); const r = rng(108);
+    x.fillStyle = '#2c3240'; x.fillRect(0, 0, S, S);
+    const rows = 10, cols = 9, w = S / cols, h = S / rows;
+    for (let j = 0; j < rows; j++) for (let i = -1; i <= cols; i++) {
+      const px = i * w + (j % 2) * w / 2, py = j * h, tone = 80 + r() * 40;
+      const g = x.createLinearGradient(0, py, 0, py + h * 1.3);
+      g.addColorStop(0, `rgb(${tone - 10},${tone},${tone + 18})`); g.addColorStop(1, `rgb(${tone - 40},${tone - 34},${tone - 20})`);
+      x.fillStyle = g; x.beginPath(); x.roundRect(px + 1, py, w - 2, h * 1.25, [0, 0, 5, 5]); x.fill();
+    }
+    T.slate = toTex(c);
+  }
+  // Funfrock's fortress masonry: big grey-blue ashlar blocks, weathered
+  {
+    const [c, x] = canvas(S); const r = rng(109);
+    x.fillStyle = '#4a4f58'; x.fillRect(0, 0, S, S);
+    const rows = 5, rh = S / rows, blocks = [], cracks = [];
+    LAYOUT.fortStone = { kind: 'blocks', N: S, rh, blocks, cracks };   // (WALL-NORMALS: the same blocks and cracks)
+    for (let j = 0; j < rows; j++) {
+      let xx = -r() * 60;
+      while (xx < S) {
+        const w = 60 + r() * 50, tone = 120 + r() * 36;
+        blocks.push([xx, j * rh, w]);
+        wrap(S, (ox) => {
+          const g = x.createLinearGradient(0, j * rh, 0, j * rh + rh);
+          g.addColorStop(0, `rgb(${tone + 14},${tone + 20},${tone + 30})`); g.addColorStop(1, `rgb(${tone - 22},${tone - 18},${tone - 8})`);
+          x.fillStyle = g; x.beginPath(); x.roundRect(xx + ox + 2, j * rh + 2, w - 4, rh - 4, 4); x.fill();
+        });
+        xx += w;
+      }
+    }
+    blotches(x, S, r, 20, ['#3a4048', '#6a7480', '#55606a'], 15, 50, 0.3);
+    for (let i = 0; i < 18; i++) { const px = r() * S, py = r() * S, ex = px + (r() - 0.5) * 20, ey = py + 6 + r() * 14; cracks.push([px, py, ex, ey]); x.strokeStyle = 'rgba(30,30,36,0.5)'; x.lineWidth = 1; x.beginPath(); x.moveTo(px, py); x.lineTo(ex, ey); x.stroke(); }
+    speckle(x, S, r, 400, ['#2e3238', '#a8b0bc'], 0.4, 0.3);
+    T.fortStone = toTex(c);
+  }
+  // chain-link mesh (alpha), for the depot fence
+  {
+    const [c, x] = canvas(64);
+    x.clearRect(0, 0, 64, 64);
+    x.strokeStyle = '#c8ccd0'; x.lineWidth = 2.2;
+    for (let i = -2; i < 4; i++) { x.beginPath(); x.moveTo(i * 32, 0); x.lineTo(i * 32 + 64, 64); x.stroke(); x.beginPath(); x.moveTo(i * 32 + 64, 0); x.lineTo(i * 32, 64); x.stroke(); }
+    x.strokeStyle = 'rgba(60,64,70,0.8)'; x.lineWidth = 0.8;
+    for (let i = -2; i < 4; i++) { x.beginPath(); x.moveTo(i * 32 + 1, 0); x.lineTo(i * 32 + 65, 64); x.stroke(); }
+    T.chain = toTex(c);
+  }
+  // pipeline sections: teal steel with longitudinal weld seam and circumferential rivet bands
+  {
+    const [c, x] = canvas(S); const r = rng(110);
+    x.fillStyle = '#3a8f8c'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 22, ['#2f7f7c', '#46a09c', '#357f7c'], 15, 50, 0.45);
+    for (const px of [0, S / 2]) { x.fillStyle = 'rgba(10,40,40,0.55)'; x.fillRect(px, 0, 3, S); rivetRow(x, px + 9, 6, px + 9, S - 6, 12, 2.2); }
+    x.fillStyle = 'rgba(200,255,250,0.12)'; x.fillRect(0, S * 0.2, S, S * 0.08);
+    for (let i = 0; i < 30; i++) { x.fillStyle = 'rgba(120,80,50,0.3)'; x.beginPath(); x.ellipse(r() * S, r() * S, 1 + r() * 5, 1 + r() * 2, 0, 0, 7); x.fill(); }
+    T.pipe = toTex(c);
+  }
+  // concrete / poured stone (pads, plinths of machines)
+  {
+    const [c, x] = canvas(S); const r = rng(111);
+    x.fillStyle = '#a9a39a'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 30, ['#9c968c', '#b8b2a8', '#a39d92'], 15, 50, 0.5);
+    x.fillStyle = 'rgba(60,56,50,0.6)'; x.fillRect(0, 0, S, 2); x.fillRect(0, 0, 2, S);
+    speckle(x, S, r, 600, ['#7a756c', '#d0cbc2'], 0.45, 0.3);
+    T.concrete = toTex(c);
+  }
+  // neutral painted sheet metal (tinted per use): chipped paint, streaks, grime at the bottom
+  {
+    const [c, x] = canvas(S); const r = rng(112);
+    x.fillStyle = '#d4d4d4'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 26, ['#c8c8c8', '#e0e0e0', '#bcbcbc'], 15, 50, 0.45);
+    for (let i = 0; i < 70; i++) { const px = r() * S, py = r() * S; x.strokeStyle = `rgba(90,80,70,${0.08 + r() * 0.12})`; x.lineWidth = 1 + r() * 2; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 3, py + 10 + r() * 40); x.stroke(); }
+    for (let i = 0; i < 50; i++) { x.fillStyle = r() < 0.6 ? 'rgba(120,100,80,0.45)' : 'rgba(250,250,250,0.5)'; x.beginPath(); x.ellipse(r() * S, r() * S, 1 + r() * 4, 1 + r() * 2, r() * 3, 0, 7); x.fill(); }
+    const g = x.createLinearGradient(0, 0, 0, S); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.75, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(70,55,40,0.25)'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+    T.metal = toTex(c);
+  }
+}
+
+let cache = null;
+export const textures = () => (cache ??= makeTextures());
+
+// WALL-LOOK (the user, 22.11, of the promenade's inland wall behind the new stair: "The wall's texture isn't good, it
+// needs replacing"): candidate faces for the town's built walls (island.js WALL_LOOK, ?wall=a|b|c; none: `rubble` as
+// before). Made only when a candidate is asked for: 256 px tiles at 1.7 m, as `rubble` (one layer more in the same
+// texture array, no draw more). Low-frequency patterns in a pale bed, so nothing goes near black in shade or shimmers
+// at the play camera's distance. (c is the fort's own `fortStone`: no texture of its own.)
+//   a: dressed blocks in courses (LBA2's light cut-stone terrace walls): five courses (~34 cm), blocks 46–85 cm,
+//      broken joints, thin warm-grey joints, each block a little lighter at its top arris;
+//   b: the houses' pale rubble (`rubbleHouse`) at about twice its scale, bedded in a pale lime mortar.
+const WALL_TEX = {};
+export function wallTexture(kind) {
+  if (WALL_TEX[kind]) return WALL_TEX[kind];
+  const N = 256, [c, x] = canvas(N), r = rng(kind === 'a' ? 131 : 132);
+  const rgb = (a, b, d) => `rgb(${a | 0},${b | 0},${d | 0})`;
+  if (kind === 'a') {
+    x.fillStyle = '#857d71'; x.fillRect(0, 0, N, N);
+    let y = 0;
+    for (const h of [54, 49, 52, 49, 52]) {
+      const ws = [];
+      for (let s = 0; s < N;) { let w = 70 + Math.floor(r() * 58); if (N - s - w < 48) w = N - s; ws.push(w); s += w; }
+      let xx = Math.floor(r() * N);
+      for (const w of ws) {
+        const tone = 184 + r() * 36, warm = r() * 8;
+        for (const ox of [-N, 0]) {
+          const px = xx + ox;
+          const g = x.createLinearGradient(0, y, 0, y + h);
+          g.addColorStop(0, rgb(tone + 16, tone + 13, tone + 6 + warm));
+          g.addColorStop(0.18, rgb(tone + 2, tone, tone - 6 + warm));
+          g.addColorStop(1, rgb(tone - 18, tone - 21, tone - 27 + warm));
+          x.fillStyle = g; x.beginPath(); x.roundRect(px + 2, y + 2, w - 4, h - 4, 3); x.fill();
+          x.fillStyle = 'rgba(255,250,240,0.22)'; x.fillRect(px + 3, y + 2, w - 6, 2);         // (the lit top arris)
+          x.fillStyle = 'rgba(90,80,70,0.16)'; x.fillRect(px + 3, y + h - 4, w - 6, 2);       // (the shaded foot)
+        }
+        xx = (xx + w) % N;
+      }
+      y += h;
+    }
+    blotches(x, N, r, 22, ['#b6ae9e', '#efe9dc', '#c6bdac'], 14, 44, 0.18);
+    speckle(x, N, r, 220, ['#f2ece2', '#8e8578'], 0.22, 0.3);
+  } else {
+    x.fillStyle = '#a69e90'; x.fillRect(0, 0, N, N);
+    const stones = [];
+    for (let i = 0; i < 3000 && stones.length < 70; i++) {
+      const px = r() * N, py = r() * N, rx = 17 + r() * 15, ry = 12 + r() * 9;
+      let ok = true;
+      for (const s of stones) {
+        let dx = Math.abs(s[0] - px), dy = Math.abs(s[1] - py);
+        dx = Math.min(dx, N - dx); dy = Math.min(dy, N - dy);
+        if ((dx / (s[2] + rx)) ** 2 + (dy / (s[3] + ry)) ** 2 < 0.5) { ok = false; break; }
+      }
+      if (ok) stones.push([px, py, rx * 1.06, ry * 1.06, r() * 0.5 - 0.25, r()]);
+    }
+    for (const [px, py, rx, ry, rot, tone] of stones) {
+      const base = 192 + tone * 34;
+      wrap(N, (ox, oy) => {
+        x.save(); x.translate(px + ox, py + oy); x.rotate(rot);
+        x.fillStyle = 'rgba(70,62,54,0.28)'; x.beginPath(); x.ellipse(1.2, 1.8, rx, ry, 0, 0, 7); x.fill();
+        const g = x.createRadialGradient(-rx * 0.35, -ry * 0.45, 0, 0, 0, Math.max(rx, ry) * 1.1);
+        g.addColorStop(0, rgb(base + 26, base + 23, base + 18));
+        g.addColorStop(0.55, rgb(base, base - 4, base - 9));
+        g.addColorStop(1, rgb(base - 32, base - 36, base - 40));
+        x.fillStyle = g; x.beginPath(); x.ellipse(0, 0, rx, ry, 0, 0, 7); x.fill();
+        x.restore();
+      });
+    }
+    speckle(x, N, r, 200, ['#eee8de', '#7c7468'], 0.25, 0.3);
+  }
+  if (DL.paint) paintDepthCanvas(c, null, 1);   // (DEPTH-LOOK ?depth=paint)
+  WALL_TEX[kind] = toTex(c); nameWorldTexture(WALL_TEX[kind], 'wall' + kind);
+  return WALL_TEX[kind];
+}
+
+// P87b: a copy of a shared texture (its own wrap, repeat, offset) on the same pixels. three's clone() (its copy() sets
+// needsUpdate) and the builders' own needsUpdate each move the shared source's version, as if its canvas had been
+// repainted: three sent the canvas again, and every batched piece with that texture in an area already built left its
+// draw batch on that area's next frame (a first visit to Desert Island, the sewers or Ballastra: two of Zeelich's water
+// pieces each time). The source's version is kept as it was, as merge.js twinOf does (ARRIVAL-2): the pixels did not
+// change; the copy's own version still makes three set it up (a new wrap gets its own GPU texture, uploaded then).
+export function cloneTex(t) { const v = t.source.version, c = t.clone(); c.needsUpdate = true; c.source.version = v; return c; }
+
+// PERF-ARRIVAL: the JSON of a material cache key's options, a texture in them standing for itself by its identity and
+// settings. JSON.stringify of a THREE.Texture calls its toJSON, which encodes the whole image as a PNG data URL
+// (canvas.toDataURL) on every call: the builders' pm(color, rough, { map }) did that thousands of times at startup
+// (≈ 20 s of the build on the test machine, most of Zeelich's and Citadel's). The same textures and settings give the
+// same key as before (toJSON's output holds the texture's own uuid, so equal keys meant the same texture object then too).
+const texSig = (t) => ({ tex: t.uuid, image: t.source?.uuid, name: t.name, mapping: t.mapping, channel: t.channel, repeat: [t.repeat.x, t.repeat.y], offset: [t.offset.x, t.offset.y],
+  center: [t.center.x, t.center.y], rotation: t.rotation, wrap: [t.wrapS, t.wrapT], format: t.format, internalFormat: t.internalFormat, type: t.type, colorSpace: t.colorSpace,
+  minFilter: t.minFilter, magFilter: t.magFilter, anisotropy: t.anisotropy, flipY: t.flipY, generateMipmaps: t.generateMipmaps, premultiplyAlpha: t.premultiplyAlpha, unpackAlignment: t.unpackAlignment, userData: t.userData });
+export function keyJSON(o) {
+  if (o && typeof o === 'object' && !Array.isArray(o)) {
+    for (const v of Object.values(o)) if (v?.isTexture) {
+      const c = {}; for (const [k, x] of Object.entries(o)) c[k] = x?.isTexture ? texSig(x) : x;
+      return JSON.stringify(c);
+    }
+  }
+  return JSON.stringify(o);
+}
+
+// WALL-NORMALS (CLOUD_ORDERS 67, the user 23.11: "let the local agent work the walls and make normal maps"): a normal map
+// for a generated wall texture, matching it texel for texel. The generator records the layout it drew (LAYOUT: the
+// rubble's stones, the fort's blocks and cracks, from the same seeded draws); a height map is drawn from it — each stone
+// a low dome over the mortar bed, each block a plateau with a soft bevel into its joints, the fort's cracks shallow
+// grooves — softened a little across the tile's wrap, and the normals are its slopes (tangent space, OpenGL: +Y up the
+// texture; the canvas is uploaded flipped as the colour's is). Made at load, in code: no image files. On by default (the
+// user's pick, 23.11); `?wallnormals=0` off, or by name, `?wallnormals=fortStone,rubbleHouse`; `?wnstr=` the relief's
+// strength (default 1); `?wnao=` its ambient occlusion (default 1, 0 off).
+const WN_ARG = typeof location !== 'undefined' ? /[?&]wallnormals=([\w,]+)/.exec(location.search) : null;
+export const WALLNORM = {
+  // (the user, 23.11, shown the pairs: "everything" — ON by default for the three: the fort's stone, the houses' rubble
+  //  and the rubble (the harbour shed, the lighthouse's foot, Ballastra's piers). `?wallnormals=0`: off, as before;
+  //  by name, `?wallnormals=fortStone` etc., only those)
+  // (on by default: the fort's, the houses' and the rubble walls, the user's pick of 23.11; Zeelich's and the islands'
+  //  dressed stone `stone` and Zeelich's corrugated sheet `zrib` are off until the user picks them (order 70.2):
+  //  `?wallnormals=all` or by name, `?wallnormals=fortStone,rubbleHouse,rubble,stone,zrib`)
+  names: (() => { const ON = ['fortStone', 'rubbleHouse', 'rubble'], ALL = [...ON, 'stone', 'zrib'];
+    // (P132, the user's pick 25.11 "e + f": all five by default now; `?wallnormals=1` the three as before)
+    if (!WN_ARG || WN_ARG[1] === 'all') return new Set(ALL);
+    if (WN_ARG[1] === '1') return new Set(ON);
+    return WN_ARG[1] === '0' ? new Set() : new Set(WN_ARG[1].split(',')); })(),
+  str: (typeof location !== 'undefined' && +(/[?&]wnstr=([\d.]+)/.exec(location.search) || [])[1]) || 1,
+  // (the user, 24.11: "don't touch the normal map, it's good; just make it weigh more in the material": the map is drawn
+  //  as before; the material's normalScale gives it the weight. `?wnscale=` to compare, default 2.5)
+  scale: (typeof location !== 'undefined' && +(/[?&]wnscale=([\d.]+)/.exec(location.search) || [])[1]) || 2.5,
+  // (the joints' ambient occlusion with it — the shade's relief —, `?wnao=0` off, `?wnao=0.5` half)
+  ao: typeof location !== 'undefined' && /[?&]wnao=([\d.]+)/.test(location.search) ? +/[?&]wnao=([\d.]+)/.exec(location.search)[1] : 1,
+};
+const NORM = {}, NORM_AO = {}, NORM_COPY = new Map(), EXTRA = {};
+// a texture drawn outside makeTextures (Zeelich's painted ones, kit.js/zeelich.js ctex) with its layout: it gets its
+// normal map as the others do (idempotent: the painted textures are cached, called again and again)
+export function registerWallTexture(name, tex, layout) { if (!EXTRA[name]) { EXTRA[name] = tex; LAYOUT[name] = layout; } return tex; }
+function heightCanvas(L) {
+  const N = L.N, [c, x] = canvas(N);
+  x.fillStyle = '#000'; x.fillRect(0, 0, N, N);
+  if (L.kind === 'rubble') {
+    // (each stone a dome: its middle high, falling to its rim, which stands proud of the mortar)
+    for (const [px, py, rx, ry, rot] of L.stones) wrap(N, (ox, oy) => {
+      x.save(); x.translate(px + ox, py + oy); x.rotate(rot); x.scale(rx, ry);
+      const g = x.createRadialGradient(0, 0, 0, 0, 0, 1);
+      g.addColorStop(0, '#fff'); g.addColorStop(0.6, '#e0e0e0'); g.addColorStop(0.88, '#a8a8a8'); g.addColorStop(1, '#6c6c6c');
+      x.fillStyle = g; x.beginPath(); x.arc(0, 0, 1, 0, 7); x.fill();
+      x.restore();
+    });
+  } else if (L.kind === 'blocks2') {
+    // (the dressed stone: each block its own height of course, a flat face with a soft bevel into its joints)
+    for (const [xx, y, w, bh] of L.blocks) wrap(N, (ox, oy) => {
+      x.fillStyle = '#bdbdbd'; x.beginPath(); x.roundRect(xx + ox + 2, y + oy + 2, w - 4, bh - 4, 6); x.fill();
+      x.fillStyle = '#e6e6e6'; x.beginPath(); x.roundRect(xx + ox + 5, y + oy + 5, w - 10, bh - 10, 5); x.fill();
+    });
+  } else if (L.kind === 'ribs') {
+    // (corrugated sheet: n ribs across, each a rounded crest between two troughs)
+    const q = N / L.n;
+    for (let xx = 0; xx < N; xx++) { const v = Math.round(255 * (0.5 - 0.5 * Math.cos(2 * Math.PI * (xx % q) / q))); x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(xx, 0, 1, N); }
+  } else {
+    // (each block a flat face standing out of its joints; the cracks shallow grooves)
+    for (const [xx, y, w] of L.blocks) wrap(N, (ox) => {
+      x.fillStyle = '#bdbdbd'; x.beginPath(); x.roundRect(xx + ox + 2, y + 2, w - 4, L.rh - 4, 4); x.fill();
+      x.fillStyle = '#e6e6e6'; x.beginPath(); x.roundRect(xx + ox + 5, y + 5, w - 10, L.rh - 10, 3); x.fill();
+    });
+    x.strokeStyle = 'rgba(0,0,0,0.45)'; x.lineWidth = 1.2;
+    for (const [a, b, e, f] of L.cracks) wrap(N, (ox, oy) => { x.beginPath(); x.moveTo(a + ox, b + oy); x.lineTo(e + ox, f + oy); x.stroke(); });
+  }
+  // (softened across the wrap: blurred on a 3×3 tiling, the middle kept, so the tile stays seamless)
+  const [b3, x3] = canvas(N * 3);
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) x3.drawImage(c, i * N, j * N);
+  const [o, xo] = canvas(N);
+  xo.filter = `blur(${L.kind === 'rubble' ? 1.2 : L.kind === 'ribs' ? 0.6 : 1.6}px)`; xo.drawImage(b3, -N, -N); xo.filter = 'none';
+  return o;
+}
+function normalTexture(name) {
+  if (NORM[name]) return NORM[name];
+  textures();
+  const L = LAYOUT[name]; if (!L) return null;
+  const N = L.N, H = heightCanvas(L).getContext('2d').getImageData(0, 0, N, N).data;
+  const h = (x, y) => H[(((y + N) % N) * N + ((x + N) % N)) * 4] / 255;
+  const [c, x] = canvas(N), img = x.createImageData(N, N), D = img.data;
+  // (the user's look, 23.11 pictures: about 4× the first try — readable along a sunlit face up close, quiet from the
+  //  play camera, the wall's mean brightness within 2–4 % of before)
+  const k = (L.kind === 'rubble' ? 9.6 : L.kind === 'ribs' ? 3.2 : L.kind === 'blocks2' ? 6.0 : 8.0) * WALLNORM.str;   // (the dressed stone a little gentler: its many small trims, and the desert's bright walls)   // (the ribs: 16 px a rib, already steep)
+  for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+    const dx = (h(xx + 1, y) - h(xx - 1, y)) * 0.5 * k, dy = (h(xx, y + 1) - h(xx, y - 1)) * 0.5 * k;
+    // (u along the canvas's x; v up the texture, the canvas's y downward: the normal's y is +dh/dy of the canvas)
+    let nx = -dx, ny = dy, nz = 1; const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
+    const i = (y * N + xx) * 4; D[i] = (nx * 0.5 + 0.5) * 255; D[i + 1] = (ny * 0.5 + 0.5) * 255; D[i + 2] = (nz * 0.5 + 0.5) * 255; D[i + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; t.name = name + '-normal';
+  // the ambient occlusion from the same heights (the user, 23.11: "not too flat" where the sun doesn't reach): three uses
+  // it on the indirect light only — the sky and the shade —, so the joints and the gaps between stones darken a little
+  // there and the sunlit side is as the normal map makes it. Low in the mortar, 1 on a stone's or block's face.
+  {
+    const [ca, xa] = canvas(N), ia = xa.createImageData(N, N), A = ia.data;
+    const aoMin = L.kind === 'blocks2' ? 0.7 : 0.58;   // (the dressed stone's joints: a softer shade)
+    const lo = L.kind === 'rubble' ? 0.42 : L.kind === 'ribs' ? -0.4 : 0.68, hi = L.kind === 'rubble' ? 0.78 : L.kind === 'ribs' ? 0.9 : 0.86;   // (height: the mortar's, a face's; ribs: the troughs only a shade darker)
+    for (let y = 0; y < N; y++) for (let xx = 0; xx < N; xx++) {
+      const e = Math.min(1, Math.max(0, (h(xx, y) - lo) / (hi - lo))), v = aoMin + (1 - aoMin) * e * e * (3 - 2 * e);
+      const i = (y * N + xx) * 4; A[i] = A[i + 1] = A[i + 2] = v * 255; A[i + 3] = 255;
+    }
+    xa.putImageData(ia, 0, 0);
+    const a = new THREE.CanvasTexture(ca);
+    a.colorSpace = THREE.NoColorSpace; a.wrapS = a.wrapT = THREE.RepeatWrapping; a.anisotropy = 4; a.name = name + '-ao';
+    NORM_AO[name] = a;
+  }
+  return (NORM[name] = t);
+}
+// the normal map for a material's colour map, if its texture has one and it is switched on: the shared one for the
+// shared texture, a copy with the map's own repeat/offset for a copy (architecture.js's per-house repeat)
+export function wallNormalFor(map) {
+  if (!map || !WALLNORM.names.size) return null;
+  const T = textures();
+  for (const name of WALLNORM.names) {
+    const base = T[name] || EXTRA[name]; if (!base || base.source !== map.source) continue;
+    const n = normalTexture(name); if (!n) return null;
+    if (map === base) return { n, ao: NORM_AO[name] };
+    const key = map.uuid; if (NORM_COPY.has(key)) return NORM_COPY.get(key);
+    const like = (src) => { const c = cloneTex(src); c.repeat.copy(map.repeat); c.offset.copy(map.offset); c.rotation = map.rotation; c.center.copy(map.center); c.wrapS = map.wrapS; c.wrapT = map.wrapT; return c; };
+    const cpy = { n: like(n), ao: like(NORM_AO[name]) };
+    NORM_COPY.set(key, cpy); return cpy;
+  }
+  return null;
+}
+// a material with a wall texture gets its normal map (when switched on); used where the builders make their materials
+export function withWallNormal(m) {
+  const w = wallNormalFor(m?.map);
+  if (w) {
+    m.normalMap = w.n; m.normalScale.set(WALLNORM.scale, WALLNORM.scale);
+    if (WALLNORM.ao > 0) { m.aoMap = w.ao; m.aoMapIntensity = WALLNORM.ao; }
+    m.needsUpdate = true;
+  }
+  return m;
+}
+// (tests, pictures: the height and normal canvases of a wall texture)
+export function wallNormalCanvas(name, ao = false) { const t = normalTexture(name); return t ? (ao ? NORM_AO[name] : t).source.data : null; }
+
+// DEPTH-LOOK (P132) `?depth=paint`, candidate (e), off by default: LBA2's way — the relief painted into the colour itself,
+// lit from the upper left: each stone's or block's upper-left rim a little lighter, its lower-right rim darker, and a
+// soft shadow it casts into the joint below it. It reads the same in the sun and in the shade (a normal map moves only
+// the sun's light; the shade's sky light is nearly the same from every side). Made at load, on the canvases before they
+// are first sent: no new texture, no draw, no shader. The heights: the WALL-NORMALS layout where there is one (the fort's
+// blocks, the rubbles), else the texture's own light and dark, softened.
+// (the rubbles' stones are already painted lit from the upper left: half; the dressed stone of steps and sills and the
+//  paving lighter, so a flight of steps does not turn busy)
+const PAINT = { plaster: 0.5, plasterWall: 0.5, stone: 0.7, brick: 1, roof: 0.9, roofBlue: 0.9, wood: 0.7, planks: 0.8, cliff: 0.9, rubble: 0.5,
+  rubbleHouse: 0.5, thatch: 0.7, slate: 0.9, fortStone: 1, cobble: 0.5, concrete: 0.5, teal: 0.5, brass: 0.4, deck: 0.5, metal: 0.4, pipe: 0.4, rock: 0.9 };
+function paintDepth(T) {
+  for (const [name, k] of Object.entries(PAINT)) {
+    const t = T[name], c = t?.source?.data; if (!c?.getContext) continue;
+    const L = LAYOUT[name];
+    paintDepthCanvas(c, L ? heightCanvas(L) : null, k * DL.paintK);
+  }
+}
+export function paintDepthCanvas(c, hc, k) {
+  const N = c.width, M = c.height, x = c.getContext('2d'), img = x.getImageData(0, 0, N, M), D = img.data;
+  let H = new Float32Array(N * M);
+  if (hc) { const hd = hc.getContext('2d').getImageData(0, 0, N, M).data; for (let i = 0; i < N * M; i++) H[i] = hd[i * 4] / 255; }
+  else for (let i = 0; i < N * M; i++) H[i] = Math.sqrt((0.2126 * D[i * 4] + 0.7152 * D[i * 4 + 1] + 0.0722 * D[i * 4 + 2]) / 255);
+  for (let pass = 0; pass < 2; pass++) {   // (softened: two 3×3 box passes, wrapped — the tile stays seamless; a rim 3–4 texels wide)
+    const o = new Float32Array(N * M);
+    for (let y = 0; y < M; y++) for (let xx = 0; xx < N; xx++) {
+      let s = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) s += H[((y + dy + M) % M) * N + ((xx + dx + N) % N)];
+      o[y * N + xx] = s / 9;
+    }
+    H = o;
+  }
+  // (its range stretched to 0..1: a pale plaster's faint variation weighs as a rubble's)
+  { let lo = 1, hi = 0; for (const v of H) { if (v < lo) lo = v; if (v > hi) hi = v; }
+    const sp = Math.max(hi - lo, 0.05); for (let i = 0; i < H.length; i++) H[i] = (H[i] - lo) / sp; }
+  const h = (xx, y) => H[((y + M) % M) * N + ((xx + N) % N)];
+  const E = 1.6 * k, S = 1.1 * k;   // (the rim's and the cast shadow's weight)
+  for (let y = 0; y < M; y++) for (let xx = 0; xx < N; xx++) {
+    const em = (h(xx - 1, y - 1) - h(xx + 1, y + 1)) * 0.5 + (h(xx - 2, y - 2) - h(xx + 2, y + 2)) * 0.35 + (h(xx - 3, y - 3) - h(xx + 3, y + 3)) * 0.2;
+    const sh = Math.max(0, Math.max(h(xx - 2, y - 3), h(xx - 2, y - 5), h(xx - 1, y - 4)) - h(xx, y) - 0.06);
+    const f = Math.min(1.4, Math.max(0.58, 1 + E * em - S * sh));
+    const i = (y * N + xx) * 4; D[i] = Math.min(255, D[i] * f); D[i + 1] = Math.min(255, D[i + 1] * f); D[i + 2] = Math.min(255, D[i + 2] * f);
+  }
+  x.putImageData(img, 0, 0);
+}

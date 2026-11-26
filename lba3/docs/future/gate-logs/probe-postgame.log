@@ -1,0 +1,52 @@
+PROBE {
+ "start": {
+  "state": "play",
+  "room": "house",
+  "pos": [
+   1001.2,
+   0,
+   9.9
+  ],
+  "hp": 8,
+  "chapter": "home",
+  "obj": "Explore Citadel Island"
+ },
+ "free": true,
+ "chapter": "home",
+ "exit": {
+  "r": "arrived",
+  "from": "house",
+  "to": "citadel"
+ },
+ "outside": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -43.98,
+   2.34,
+   77.2
+  ],
+  "hp": 8,
+  "chapter": "home",
+  "obj": "Explore Citadel Island"
+ },
+ "toWell": "arrived",
+ "talk": {
+  "id": "brix",
+  "r": "talked",
+  "lines": 2
+ },
+ "end": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -36.94,
+   2.2,
+   1.92
+  ],
+  "hp": 8,
+  "chapter": "home",
+  "obj": "Explore Citadel Island"
+ }
+}
+rc=0

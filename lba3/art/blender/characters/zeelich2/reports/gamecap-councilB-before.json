@@ -1,0 +1,45 @@
+{
+ "councilB": {
+  "look": "councilB",
+  "body": "councilB",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 973078
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967672
+   },
+   "heroCalls": 4,
+   "heroTris": 5406
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5406,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T05:35:00.838Z",
+ "candidates": {
+  "CAND_councilB": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich2/source/councilB.committed.json"
+ }
+}

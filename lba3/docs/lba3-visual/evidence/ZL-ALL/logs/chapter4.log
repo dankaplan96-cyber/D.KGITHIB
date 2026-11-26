@@ -1,0 +1,33 @@
+sealed shaft [
+  'dig',
+  'desert',
+  'play',
+  'Find the professor who found the crystals'
+]
+tarra [ true, 'Restart the wind-pump (0/3)' ]
+gears [ 'thrown', 'thrown', 'thrown' ]
+pump [ true, 'Talk to Mother Tarra' ]
+trust [
+  true,
+  "Find Ilka's camp under the north mesa◆ Hesk can take you on his sand-yacht"
+]
+hesk [
+  true,
+  "Find Ilka's camp under the north mesa◆ Bring Hesk the rope from the pier"
+]
+rope [ true ]
+ride [ 'camp', 'play', 3391, -41 ]
+ilka [
+  true,
+  "Get Ilka's notebook from the research post◆ Go in during a sandstorm"
+]
+storm [ true, true, '1.00' ]
+desk [ true, 'Open the dig and reach the bottom' ]
+save/load true [true,true,true,true,true,"camp"] [ 'desert', 'dig', '1.00', 'Open the dig and reach the bottom' ]
+gate [ true, 'Open the three seals (0/3)' ]
+down [ '0.20', 0.1999999999999993, true ]
+seals [ 'thrown', 'thrown', 'thrown' ]
+temple [ 'butemple', true, 'Read the great carving in the temple' ]
+carving [ true, true ]
+next [ 'steam', 'desert', "Get into FunFrock's condenser hall" ]
+no errors

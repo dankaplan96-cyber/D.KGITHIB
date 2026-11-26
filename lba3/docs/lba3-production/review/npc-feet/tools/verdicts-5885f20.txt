@@ -1,0 +1,18 @@
+ANIM-POLISH-3 test verdicts on 5885f20 (git archive HEAD lba3 snapshot served by python3 -m http.server, one test at a time,
+BOOT_TIMEOUT=900000 TMPDIR=/dev/shm, SwiftShader):
+opening: VERDICT: PASS (15.3 min)
+anim-polish: VERDICT: PASS (1.8 min)   (tests/anim-polish.mjs unchanged)
+npc-feet: VERDICT: PASS (7.1 min)
+walkers: VERDICT: PASS (1.8 min)
+combat: VERDICT: PASS (1.5 min)
+anim-combat: VERDICT: PASS (1.5 min)
+deaths: VERDICT: PASS (1.7 min)
+chapter1: VERDICT: PASS (3.7 min)
+chapter2: VERDICT: PASS (4.4 min)
+perfbudget: VERDICT: PASS (8.9 min)
+drawcalls: VERDICT: PASS (2.4 min)
+townlife: VERDICT: FAIL (1 functional): "between Bram and the pump ... (FIX-PUMP-N)" {"pump":"p_talk","dBram":1.56,"bram":"p_talk"}
+  - the same check fails on 0d045bf (before ANIM-POLISH-3) with the same numbers: not this change.
+Earlier run on c0675a0: the opening failed R5 (Zoé's feet jumped 9-10 cm in a frame at 41 s: the scene's own foot placement against
+the rig's plantLite); fixed in 5885f20 (plantLite off for the opening's cast).
+Walkers' own cost note, back to back: 0d045bf 0.475 ms/frame (5 min, ten in full), 0.052 (quay); 5885f20 0.678, 0.070.

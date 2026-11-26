@@ -1,0 +1,54 @@
+diff --git a/lba3/src/game/desertold.js b/lba3/src/game/desertold.js
+index ea5edd99..de8f3b90 100644
+--- a/lba3/src/game/desertold.js
++++ b/lba3/src/game/desertold.js
+@@ -242,7 +242,7 @@ export function buildOldPlaces(C) {
+           at += len[i - 1];
+         }
+       };
+-      run([[-93.0, -71.4], [-86.0, -70.9], [-78.0, -71.0], [-72.2, -70.7]], 9.5, 13.8);   // (its west end runs into the island's high terrace: SCHOOL-CANYON)             // the north arm, west to the face
++      run([[-93.0, -71.4], [-86.0, -70.9], [-78.0, -71.3], [-72.2, -71.2]], 9.5, 13.8);   // (its west end runs into the island's high terrace: SCHOOL-CANYON)             // the north arm, west to the face
+       run([[-71.2, -70.3], [-71.2, -75.4]], 13.0, 13.0);                              // behind the face (its back)
+       run([[-71.4, -76.2], [-71.6, -82.6]], 14.2, 12.8);
+       // (SCHOOL-CANYON, the user, 15.11: "yes, a deep canyon": the south wall turns east along the plaza's far side, so the
+@@ -251,7 +251,7 @@ export function buildOldPlaces(C) {
+       run([[-71.0, -83.6], [-63.0, -84.2], [-55.0, -83.4], [-48.5, -84.6]], 12.6, 5.0);               // the south arm, falling away
+       // (each stretch a faceted rock column, the Whispering Cliffs' own shape: strata, ledges, a worn top; drawn with the
+       //  cliffs' texture and vertex tones; the columns' moss caps turned to the rock's grey: no moss in the desert)
+-      const colM = tm('cliff', { vc: true, rough: 0.95, emissive: '#2c2a32', ei: 0.6 });   // (lit a little, as the mask: the wall faces away from the sun)
++      const colM = tm('cliff', { vc: true, rough: 0.95, color: '#d4dacd', emissive: '#2a2c2a', ei: 0.6 });   // (lit a little, as the mask: the wall faces away from the sun)
+       const column = (seed, depth) => {
+         const geo = stoneColumnGeometry(seed, depth), n = geo.getAttribute('normal') || (geo.computeVertexNormals(), geo.getAttribute('normal')), c = geo.getAttribute('color');
+         if (c) for (let i = 0; i < c.count; i++) if (n.getY(i) > 0.7) { const t = 0.86 + ((i * 37) % 11) / 100; c.setXYZ(i, 0.78 * t, 0.75 * t, 0.8 * t); }
+@@ -269,15 +269,15 @@ export function buildOldPlaces(C) {
+       for (const [x, z, sc] of [[-47.2, -85.6, 1.5], [-49.0, -82.6, 1.0]]) B.add(column(seed++, sc * 1.6 + 0.6), colM, x, H(x, z) + sc * 1.0, z, 0, sc * 2, 0, sc * 0.9, 1, sc * 0.8);
+     }
+     // the mask: a broad stone egg, a wider brow over it, its chin pushed forward
+-    { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 4.5, cz, 0, S.ry, 0, S.w / 2 - 0.1, 4.15, 1.45); }
++    { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 4.3, cz, 0, S.ry, 0, S.w / 2 - 0.65, 4.0, 1.45); }   // (SCHOOL-LBA2d: narrower below the brow, LBA2's V)
+     { const [cx, cz] = f(0, -0.15); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 6.4, cz, 0, S.ry, 0, S.w / 2 + 0.15, 1.7, 1.3); }
+-    { const [cx, cz] = f(0, 0.55); B.add(bbox(3.4, 3.0, 1.6, 0.45, 1), mask, cx, g + 1.4, cz, 0, S.ry, 0); }   // the chin
++    { const [cx, cz] = f(0, 0.55); B.add(bbox(2.7, 3.0, 1.6, 0.45, 1), mask, cx, g + 1.4, cz, 0, S.ry, 0); }   // the chin
+     // the brows: long, sweeping up from the nose past the face's edge into points; the deep sockets; the big orange eyes
+     for (const s of [-1, 1]) {
+       { const [bx, bz] = f(s * 1.95, 1.0); B.add(bbox(3.6, 0.75, 1.15, 0.25, 1), mask, bx, g + 6.75, bz, 0, S.ry - s * 0.18, s * 0.42); }
+       { const [tx, tz] = f(s * 3.75, 0.75); B.add(cached('w80d-tip', () => new THREE.ConeGeometry(0.42, 1.5, 6)), mask, tx, g + 7.75, tz, 0, S.ry, -s * 0.75); }
+-      { const [ex, ez] = f(s * 1.5, 0.82); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.dark, ex, g + 5.75, ez, 0, S.ry, s * 0.32, 1.25, 0.72, 0.42); }
+-      { const [ex, ez] = f(s * 1.5, 1.0); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), lava, ex, g + 5.75, ez, 0, S.ry, s * 0.32, 1.02, 0.52, 0.3); }
++      { const [ex, ez] = f(s * 1.5, 0.82); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.dark, ex, g + 5.75, ez, 0, S.ry, s * 0.5, 1.25, 0.72, 0.42); }
++      { const [ex, ez] = f(s * 1.5, 1.0); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), lava, ex, g + 5.75, ez, 0, S.ry, s * 0.5, 1.02, 0.52, 0.3); }
+       { const [kx, kz] = f(s * 1.75, 0.75); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, kx, g + 3.9, kz, 0, S.ry, -s * 0.2, 0.9, 1.25, 0.55); }   // a cheekbone
+     }
+     { const [nx, nz] = f(0, 1.15); B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), mask, nx, g + 4.85, nz, -0.22, S.ry + Math.PI / 4, 0); }
+@@ -294,7 +294,10 @@ export function buildOldPlaces(C) {
+     fitAdd({ region: 'desert', name: 'the school mask', x: W(S.x, S.z).x, z: W(S.x, S.z).z, ry: S.ry, oy: g, w: S.w, d: S.d, base: -0.4, plinth: 0.2, floor: 0, steps: 0.6, openings: [{ side: 'front', kind: 'door', x0: -1.05, x1: 1.05, y0: 0, y1: 2.6 }] });
+     C.schoolSpot = { x: dx, z: dz };
+     // the white blocks (bodies 46) and the fallen cubes (45) on the terrace, the horned pillar (body 32) to the north
+-    for (const [bx, bz] of [[-74.7, -72.4], [-78.2, -72.7]]) { const bg = H(bx, bz); B.add(bbox(2.95, 2.95, 3.93, 0.08, 1.5), M.white, bx, bg + 1.2, bz); B.add(bbox(3.15, 0.2, 4.13, 0.04, 1), M.stone, bx, bg + 2.75, bz); col({ type: 'box', x: bx, z: bz, hw: 1.5, hd: 2.0, top: bg + 2.85 }); }
++    // (SCHOOL-LBA2d: LBA2's white blocks stand on the ledge either side of the door; ours were behind the face, inside the
++    //  canyon wall now. The same two, smaller, on the forecourt's ends, worn: twelve years of pupils sitting on them)
++    for (const bz of [-75.35, -70.05]) { const bx = -66.3, bg = Math.max(H(bx, bz), g + 0.03);   // (on the forecourt's paving)
++      B.add(bbox(1.9, 0.95, 1.0, 0.1, 1.5), M.white, bx, bg + 0.47, bz); B.add(bbox(2.0, 0.12, 1.1, 0.04, 1), M.stone, bx, bg + 1.0, bz); for (const e of [-1, 1]) B.add(cached('w80d-tip', () => new THREE.ConeGeometry(0.42, 1.5, 6)), M.white, bx + e * 0.75, bg + 1.25, bz, 0, 0, 0, 0.3, 0.3, 0.3); col({ type: 'box', x: bx, z: bz, hw: 0.95, hd: 0.5, top: bg + 1.05 }); }
+     for (const [bx, bz, ry] of [[-71.6, -75.6, 0.3], [-68.2, -77.0, 1.2], [-69.8, -78.7, 2.4]]) { const bg = H(bx, bz); B.add(bbox(1.67, 1.67, 1.67, 0.06, 1), M.stone, bx, bg + 0.7, bz, 0, ry, 0.08); col({ type: 'box', x: bx, z: bz, hw: 0.85, hd: 0.85, rot: ry, top: bg + 1.5 }); }
+     hornedPillar(-67.0, -90.6, 0, 4.25);
+     // the water channel at the mask's foot (the ground is cut by desert.js rillAt) and the arched stone bridge over it

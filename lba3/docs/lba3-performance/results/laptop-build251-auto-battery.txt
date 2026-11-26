@@ -1,0 +1,13 @@
+LBA3 benchmark — Quality Auto as played · build 0.36.0 (build 251) · 2026-10-29 06:49 · the user's Vega 8 (Ryzen 5 3500U), ON BATTERY
+Auto start (battery guess, nothing cached): Low, 4 lamps, MSAA 2×, resolution 80 %
+route        fps   frame p50/p95/p99/max   >33/>50/>100   GPU p50/p95   CPU work p50/p95   end state
+street      51.8   16.7/33.4/33.5/50       58/0/0         13.27/19.65   14.7/21.3          Low, 4 lamps, res 70 %
+interior    60     16.7/16.8/17.1/17.9     0/0/0          10.47/11.48   7.6/9.7
+combat      53.5   16.7/33.3/33.5/50.1     46/1/0         7.93/9.96     6.6/9.3            (light work, yet 12 % of frames at 33 ms; CPU probe 13.1 = clocked down)
+transition  58.5   16.7/17/33.4/49.8       6/0/0          12.15/13.33   9/15               Low, shadows, res 70 %
+arrival     48.7   16.7/33.4/33.7/116.6    82/6/1         15.13/18.35   14.7/20.6
+hamalayi    58.9   16.7/17.1/33.3/33.5     11/0/0         13.12/14.72   7.8/10
+Auto: stepped MSAA→FXAA, lamps 4→2, scale 0.8→0.7 for "CPU pressure, cpu ladder at its lowest" (street), then stepped
+shadows back UP on combat/interior room (predicted CPU 11.0 ms) just before the heavier arrival.
+→ On battery the CPU is the limit and Auto's CPU ladder is exhausted at Low: the game needs real CPU savings
+  (street/arrival CPU work 14.7 ms p50, 21 ms p95 at battery clocks). Requirement 55–60 NOT met on street, combat, arrival.

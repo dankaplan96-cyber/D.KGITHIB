@@ -1,0 +1,52 @@
+[
+ {
+  "try": 1,
+  "result": "no cylinder",
+  "hpIn": 11,
+  "hpOut": 9,
+  "maxHp": 11,
+  "dead": false,
+  "secs": 107.1,
+  "hits": 23,
+  "byKind": {
+   "gdog": 5,
+   "guardG": 18
+  },
+  "enemiesSeen": 4,
+  "beaten": 3
+ },
+ {
+  "try": 2,
+  "result": "no cylinder",
+  "hpIn": 11,
+  "hpOut": 4,
+  "maxHp": 11,
+  "dead": false,
+  "secs": 68.1,
+  "hits": 17,
+  "byKind": {
+   "guardG": 13,
+   "gdog": 2,
+   "drone": 1,
+   "?": 1
+  },
+  "enemiesSeen": 4,
+  "beaten": 3
+ },
+ {
+  "try": 3,
+  "result": "no cylinder",
+  "hpIn": 11,
+  "hpOut": 7,
+  "maxHp": 11,
+  "dead": false,
+  "secs": 91.9,
+  "hits": 29,
+  "byKind": {
+   "guardG": 27,
+   "gdog": 2
+  },
+  "enemiesSeen": 4,
+  "beaten": 4
+ }
+]

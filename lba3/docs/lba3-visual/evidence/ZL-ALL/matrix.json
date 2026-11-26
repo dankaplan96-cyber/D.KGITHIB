@@ -1,0 +1,396 @@
+{
+ "matrix": [
+  {
+   "from": "citadel_ferry",
+   "to": "desert_ferry",
+   "menu": [
+    "Desert Island: the pier"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "desert_ferry",
+   "to": "citadel_ferry",
+   "menu": [
+    "Citadel Island: the harbour"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "citadel_glider",
+   "to": "hamalayi_glider",
+   "menu": [
+    "Desert Island: the glider field",
+    "The Hamalayi: the foothills"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "hamalayi_glider",
+   "to": "desert_glider",
+   "menu": [
+    "Citadel Island: the glider field",
+    "Desert Island: the glider field"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "desert_glider",
+   "to": "hamalayi_glider",
+   "menu": [
+    "Citadel Island: the glider field",
+    "The Hamalayi: the foothills"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "hamalayi_glider",
+   "to": "citadel_glider",
+   "menu": [
+    "Citadel Island: the glider field",
+    "Desert Island: the glider field"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "citadel_glider",
+   "to": "desert_glider",
+   "menu": [
+    "Desert Island: the glider field",
+    "The Hamalayi: the foothills"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "desert_glider",
+   "to": "citadel_glider",
+   "menu": [
+    "Citadel Island: the glider field",
+    "The Hamalayi: the foothills"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "citadel_port",
+   "to": "zeelich_port",
+   "menu": [
+    "Zeelich Spaceport"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "zeelich_shuttle",
+   "to": "isle_otringal",
+   "menu": [
+    "Zeelich: the spaceport island*",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_otringal",
+   "to": "isle_knartas",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal*",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_knartas",
+   "to": "isle_mosquibee",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island*",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_mosquibee",
+   "to": "isle_celebration",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island*",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_celebration",
+   "to": "isle_undergas",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island*",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_undergas",
+   "to": "isle_cxislet",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration*",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_cxislet",
+   "to": "isle_platform",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet*",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_platform",
+   "to": "isle_liftdock",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform*",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_liftdock",
+   "to": "isle_tralu",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock*",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_tralu",
+   "to": "isle_orchard",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock*",
+    "The Nectar Orchard",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_orchard",
+   "to": "isle_oldwatch",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard*",
+    "The Old Watch"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "isle_oldwatch",
+   "to": "zeelich_shuttle",
+   "menu": [
+    "Zeelich: the spaceport island",
+    "Otringal",
+    "Knartas Island",
+    "Mosquibee Island",
+    "Celebration Island",
+    "Under Celebration",
+    "The CX Islet",
+    "The Platform",
+    "The Lift Dock",
+    "Tralu Rock",
+    "The Nectar Orchard",
+    "The Old Watch*"
+   ],
+   "ok": true,
+   "d": 0
+  },
+  {
+   "from": "zeelich_port",
+   "to": "citadel_port",
+   "menu": [
+    "Twinsun: Citadel Spaceport"
+   ],
+   "ok": true,
+   "d": 0
+  }
+ ],
+ "holo": [
+  {
+   "region": "citadel",
+   "open": true,
+   "x": 561.3904517750166,
+   "y": 424.021263146561,
+   "planet": "twinsun",
+   "dotIn": true,
+   "title": "Holomap · Twinsun · Citadel Island"
+  },
+  {
+   "region": "desert",
+   "open": true,
+   "x": 108,
+   "y": 371.52,
+   "planet": "twinsun",
+   "dotIn": true,
+   "title": "Holomap · Twinsun · Desert Island"
+  },
+  {
+   "region": "hamalayi",
+   "open": true,
+   "x": 364.92162721956805,
+   "y": 632.257436068694,
+   "planet": "twinsun",
+   "dotIn": true,
+   "title": "Holomap · Twinsun · The Hamalayi"
+  },
+  {
+   "region": "zeelich",
+   "open": true,
+   "x": 340.8,
+   "y": 484.8,
+   "planet": "zeelich",
+   "dotIn": true,
+   "title": "Holomap · Zeelich · Zeelich: the spaceport island"
+  },
+  {
+   "region": "isle_tralu",
+   "open": true,
+   "x": 327.75757034540356,
+   "y": 389.18338229245614,
+   "planet": "zeelich",
+   "dotIn": true,
+   "title": "Holomap · Zeelich · Tralu Rock"
+  },
+  {
+   "region": "isle_liftdock",
+   "open": true,
+   "x": 265.23994184393587,
+   "y": 458.4936586203004,
+   "planet": "zeelich",
+   "dotIn": true,
+   "title": "Holomap · Zeelich · The Lift Dock"
+  }
+ ]
+}

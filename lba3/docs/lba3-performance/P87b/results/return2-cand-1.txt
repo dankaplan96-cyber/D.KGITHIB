@@ -1,0 +1,16 @@
+load before 2.56 3.75 3.80; other gpu-processes 0
+P87b return probe · medium · zeelich > citadel > desert > zeelich > sewer > zeelich > isle_knartas > zeelich > c3shaft > citadel > bumaze > citadel
+zeelich   first   (was unloaded): left 68, uploads 2373 (109101 KB), worst frame 4709 ms, 152 frames, canvases sent again 0 (0 KB, mip 0) · in-use sources bumped by 1x twinOf engine/merge.js:58:54 | 1x twinOf engine/merge.js:58:212
+citadel   revisit (was built): left 0, uploads 1551 (11537 KB), worst frame 321 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+desert    first   (was unloaded): left 45, uploads 1959 (77287 KB), worst frame 189185 ms, 123 frames, canvases sent again 0 (0 KB, mip 0)
+zeelich   revisit (was cached): left 0, uploads 956 (3944 KB), worst frame 3069 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+sewer     first   (was unloaded): left 0, uploads 513 (29774 KB), worst frame 182808 ms, 93 frames, canvases sent again 0 (0 KB, mip 0)
+zeelich   revisit (was cached): left 0, uploads 719 (2141 KB), worst frame 22 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+isle_knartas first   (was unloaded): left 46, uploads 1006 (70040 KB), worst frame 91857 ms, 123 frames, canvases sent again 0 (0 KB, mip 0)
+zeelich   revisit (was cached): left 0, uploads 788 (2295 KB), worst frame 235 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+c3shaft   first   (was unloaded): left 3, uploads 628 (48135 KB), worst frame 150921 ms, 103 frames, canvases sent again 0 (0 KB, mip 0)
+citadel   revisit (was built): left 0, uploads 1223 (2583 KB), worst frame 271 ms, 83 frames, canvases sent again 0 (0 KB, mip 0)
+bumaze    first   (was unloaded): left 0, uploads 462 (14564 KB), worst frame 117900 ms, 93 frames, canvases sent again 0 (0 KB, mip 0)
+citadel   revisit (was built): left 0, uploads 1234 (2613 KB), worst frame 22 ms, 67 frames, canvases sent again 0 (0 KB, mip 0)
+TOTAL on revisits: 0 pieces left their draw batches, 25113 KB uploaded; canvases sent again over the route: 0 (0 KB, mip 0)
+exit 0 load after 3.72 4.01 3.98

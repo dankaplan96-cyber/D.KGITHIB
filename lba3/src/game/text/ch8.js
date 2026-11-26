@@ -1,0 +1,98 @@
+// Chapter 8 — "Evacuation" (Citadel Island, changed). English only.
+import { STR } from '../i18n.js';
+import '../he-text.js';   // (HE-TEXT: the Hebrew of these lines; a key missing there shows the English)
+
+Object.assign(STR.en, {
+  n_farmer1: 'Farmer Harro', n_farmer2: 'Mother Bryn', n_farmer3: 'Grull',
+  p_lever: 'Pull', p_shelter: 'Inspect',
+
+  c8_narr: 'The glider skims the cliffs and comes down on the plateau above the town. Below, Citadel is not the island Twinsen left.',
+  c8_hesk_1: "Project ships at your spaceport, and a queue down the whole bridge. I'll take the glider back south before they take her too. Good luck, Twinsen.",
+  c8_tw_1: "The heat posts are dark. And the square is fenced off. Home first.",
+
+  c8_zoe_1: 'You came back! Arthur, he came back!',
+  c8_ar_1: 'Dad! I told you he would! Did you see the snow? Did you bring me snow?',
+  c8_zoe_2: 'Snow later, Arthur. The ships take only the list, Twinsen. Vesk switched the heat posts off yesterday to feed his bore. The list is queuing at the spaceport, and the rest of us were told to wait.',
+  c8_tw_z1: "Then we take everyone else. Where's safe?",
+  c8_zoe_3: "The lighthouse cliffs are high and solid, and Doran's old boats are moored under them. I'll get the hill families there. You find somewhere for the town.",
+  c8_ar_2: 'Grandpa Gilbert says FunFrock dug tunnels under everything! He says it all the time. Nobody listens.',
+  c8_zoe_4: "This time, somebody should. And ask Mira and Pippa for help. They'll want to be asked.",
+  // (P81: the repeats)
+  c8_zoe_wait: "Gilbert knows the tunnels. Mira has the water, Pippa the supplies. Ask all three. They'll want to be asked.",
+  c8_zoe_done: "They're all up here, goats included, and I'm keeping count. Go on. I'll hear you on the relay.",
+  c8_ar_after: "So Grandpa's tunnels are real! I'm packing for the shelter: my radio, a torch, and a spare torch.",
+
+  c8_gil_1: "Twinsen! They fenced my well. MY well. I paid for that water twice.",
+  c8_tw_g1: 'Gilbert, the tunnels. FunFrock\'s tunnels. Arthur says you know them.',
+  c8_gil_2: "Know them? I dug them! Well, I carried the buckets, and I kept the surveyors' charts. Two shelters, big enough for the whole town: one under the fortress, one under the old depot.",
+  c8_gil_3: 'The fortress one opens inside the yard, by the old cistern, and its guards are down at the spaceport queue. The depot bunker has a hatch up on its frame. Rusted, last I saw. FunFrock never oiled anything.',
+  c8_gil_after: "Down the tunnels, everyone! Bring blankets. Bring cake, if you have cake.",
+
+  c8_mira_1: 'Twinsen. The project says the water office is "non-essential". I have been non-essential for two days.',
+  c8_tw_m1: 'I need you. The town is going into the shelters, and they need water.',
+  c8_mira_2: "Water I can do. Under this office is FunFrock's valve room: every valve on the island, in one place. Here is the key. There is only one, and it is older than me.",
+  c8_toast_key: 'Valve room key',
+  c8_mira_after: 'The shelters have water. My report will say "the water office saved the island". Again.',
+
+  c8_pippa_1: "Supplies? For the shelters? Potions, bread, clover leaves, all of it. I'll send Tim and Lulu with the cart. They owe me for the stone business.",
+  c8_pippa_after: 'Everything I had went down the tunnels. Best business I ever didn\'t make.',
+
+  // (PUZZLES phase 2: FunFrock's door runs on the cistern's water; the cistern is dry; the old hand pump fills it)
+  c8_lever_dry: "The lever drops, the pipes gurgle... and it springs back. The cistern's bone dry. FunFrock's door must run on water.",
+  c8_toast_pump: 'The cistern fills ({n}/3)',
+  c8_pump_full: 'Full to the brim. Now the lever.',
+  c8_lever_water: 'The lever drops, the cistern drains with a roar, and somewhere outside a door grinds open.',
+  c8_nudge_pump: 'That old hand pump beside the cistern still has its handle.',
+  c8_lever_1: "A heavy lever by the old cistern, under rust and project paint. It moves. Somewhere outside, a door grinds open.",
+  c8_shelter_fort: 'The fortress shelter is open. Steps lead down into the dark, and the air is dry.',
+  c8_wheel_hint: '(The hatch wheel is up on the frame. Too high to reach by hand.)',
+  c8_shelter_depot: 'The bunker door rolls open. Inside: benches, old lamps, and dust. It will do.',
+  // MIDDLE-VARIETY: the depot's door sticks on a bar inside; Lulu is the small one
+  c8_gap: "(The wheel turns, the door rolls a hand's width, and it sticks. Through the gap: a bar dropped across it on the inside.)",
+  c8_gap_more: "(It won't go further. The bar's down inside, and that gap is too narrow for me. Someone small could slip through.)",
+  c8_toast_bar: 'Stuck on the bar inside',
+  c8_tw_kids: "Tim, Lulu. The depot bunker's door is stuck on a bar inside, and the gap's too narrow for me.",
+  c8_lulu_q: "Too narrow? Not for me. I'm the small one.",
+  c8_tim_q: "And I'm the strong one. Come on, Lulu!",
+  c8_tw_bar: "There's a bar down inside that door. Who fits through a gap that size?",
+  c8_tim_bar: "Not me. I'm the strong one.",
+  c8_lulu_bar: "I'm the small one. Back in a second.",
+  c8_lulu_in: "There's benches! And a spider. He can stay.",
+  c8_nudge_kids: 'Tim and Lulu could fit through that gap.',
+
+  c8_tw_z2: "The shelters are open, Zoé, and the town's going down. Gilbert's leading them.",
+  c8_zoe_5: "Then it's my turn. The hill farms. Harro, Bryn and Grull won't leave their animals for anyone but me.",
+  c8_f1_1: "Zoé? At this hour? ...The cliffs? With the goats? ...All right, all right. For you.",
+  c8_f2_1: "The project said to wait for instructions. You're the instructions? Good. Children, coats!",
+  c8_f3_1: "Grull doesn't leave the farm. Grull... Grull will make an exception. Only because you asked.",
+  c8_zoe_lh: "Everyone's at the lighthouse. Let me check the old transmitter while I'm here.",
+  c8_zoe_lh2: "...That's odd. The dial memory still holds its last channel: Zeelich's council chamber. This lighthouse is the project's relay to the council.",
+  c8_zoe_lh3: "So when I broadcast, the council heard me. They know. They just haven't decided anything.",
+
+  c8_control_1: 'The control room. The screens flicker, and a face appears: Vesk, far below.',
+  c8_vesk_1: "This is Vesk, to all stations. Somebody has been opening the old vents, on Desert Island and under the Hamalayi. The pressure is falling, and it changes nothing: every watt goes to the bore. Full depth in three days. Listed personnel, keep boarding. That is all.",
+  c8_tw_c1: "He knows the vents are open. So he drills faster. Three days.",
+  c8_zoe_radio: "Twinsen, I heard. The lighthouse relays to Zeelich's council. If they order the bore reversed, the project has to obey. Go and make them listen. I'll keep everyone safe here.",
+  c8_tw_c2: "Baldino's on Zeelich. The project ships fly there all day. I'll get on one, list or no list.",
+
+  c8_obj_home: 'Go home to Zoé',
+  c8_obj_shelters: 'Get the town to safety',
+  c8_sub_gilbert: 'Ask Gilbert about the tunnels',
+  c8_sub_fort: 'Open the fortress shelter',
+  c8_sub_depot: 'Open the depot bunker',
+  c8_sub_bar: 'Someone small could slip in and lift the bar',
+  c8_sub_mira: 'Ask Mira for water',
+  c8_sub_pippa: 'Ask Pippa for supplies',
+  c8_obj_zoe: 'Tell Zoé the shelters are open',
+  c8_obj_farms: 'Zoé: bring the hill families to the lighthouse ({n}/3)',
+  c8_obj_lighthouse: 'Zoé: go to the lighthouse',
+  c8_obj_control: "Go to the station's control room",
+  c8_obj_ship: 'Board a project ship at the spaceport',
+  c8_j_home: "Zoé said the project ships take only the list, the heat posts went dark to save power for the bore, and everyone else was told to wait. She would take the hill families to the lighthouse cliffs, and I was to find shelter for the town.",
+  c8_j_shelters: "Gilbert told me about FunFrock's two shelters, under the fortress and the depot, and I opened both. Mira promised water and gave me the key to the valve room, and Pippa sent supplies.",
+  c8_j_shelters2: "Gilbert told me about FunFrock's two shelters. I opened the fortress one. The depot's door stuck on a bar inside, and Lulu slipped through the gap and lifted it. Mira promised water and gave me the key to the valve room, and Pippa sent supplies.",
+  c8_j_farms: "Zoé brought the hill families and their animals up to the lighthouse cliffs.",
+  c8_j_relay: "At the lighthouse Zoé found the transmitter still tuned to Zeelich's council chamber. The council heard her warning, but has decided nothing.",
+  c8_j_vesk: "Vesk came on the control-room screen. He knows the vents are open, and instead of stopping he sends every watt to the bore: full depth in three days. Zoé said the council can order it reversed, so I will take a project ship to Zeelich.",
+  it_valvekey: 'Valve room key', itd_valvekey: "Mira's key to FunFrock's valve control room.",
+});

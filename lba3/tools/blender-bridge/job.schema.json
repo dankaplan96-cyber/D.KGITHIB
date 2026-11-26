@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lba3/tools/blender-bridge/job.schema.json",
+  "title": "LBA3 Blender bridge job",
+  "description": "One job, or an array of jobs run in order (bridge.mjs run <file>). Relative paths are relative to the game folder (lba3/). Inputs must be inside the project; outputs only under art/blender/ or tools/blender-bridge/.work/, and never onto an input. bridge.mjs validateJob() enforces this file by hand.",
+  "oneOf": [{ "$ref": "#/$defs/job" }, { "type": "array", "items": { "$ref": "#/$defs/job" } }],
+  "$defs": {
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "op": { "enum": ["import", "inspect", "preview", "validate", "export", "script"],
+          "description": "import: polyprop/glb -> working .blend (blend). inspect: report (output .json). preview: views (output folder). validate: checks (output .json). export: candidate (output .polyprop.json or .glb). script: a project-owned Python script under tools/ run in Blender's Python (args), optionally on an input and saving blend." },
+        "name": { "type": "string", "description": "A label for logs and reports." },
+        "input": { "type": "string", "description": "A .blend, an lba3-polyprop .json, or a .glb/.gltf. Read only; never written." },
+        "output": { "type": "string", "description": "Report file, image folder, or exported file (see op)." },
+        "blend": { "type": "string", "description": "import / script: the working .blend to save (a copy; originals are never overwritten)." },
+        "script": { "type": "string", "description": "script: the .py to run (under tools/)." },
+        "args": { "type": "array", "items": { "type": "string" }, "description": "script: its sys.argv[1:]." },
+        "timeout": { "type": "number", "exclusiveMinimum": 0, "description": "Seconds before the bridge terminates this job's Blender (default 600; --timeout overrides)." },
+        "options": {
+          "type": "object",
+          "properties": {
+            "format": { "enum": ["polyprop", "glb"], "description": "export: polyprop (what the game loads) or glb (interchange only: the game has no glTF loader)." },
+            "resolution": { "type": "integer", "minimum": 64, "maximum": 2048, "description": "preview: square image size (default 512)." },
+            "modes": { "type": "array", "items": { "enum": ["neutral", "textured"] }, "description": "preview: neutral = Workbench, one grey with cavity; textured = EEVEE with the materials." },
+            "samples": { "type": "integer", "minimum": 1, "description": "preview: EEVEE samples (default 32)." },
+            "orthoScale": { "type": "number", "description": "preview: fix the framing (metres across) so two assets compare at one scale." },
+            "target": { "enum": ["polyprop", "character"], "description": "validate: which export rules apply." },
+            "expectSize": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3, "description": "validate: the game-axes size (x, y, z) in metres it must keep." },
+            "sizeTolerance": { "type": "number", "description": "validate: allowed difference from expectSize (default 0.005 m)." },
+            "minSize": { "type": "number" }, "maxSize": { "type": "number" },
+            "maxMaterials": { "type": "integer", "description": "validate: material slots allowed (one draw call each in the game)." },
+            "maxTriangles": { "type": "integer" }, "maxTexture": { "type": "integer" },
+            "groundedAtZero": { "type": "boolean", "description": "validate: the origin must be on the floor (default true)." },
+            "skeleton": { "type": "string", "description": "validate: a skeleton JSON (art/characters/skeletons.json) whose bones the armature must have." },
+            "skeletonKey": { "type": "string", "description": "validate: the entry in that file (e.g. a body name)." },
+            "expectedClips": { "type": "array", "items": { "type": "string" }, "description": "validate: action names the game expects." },
+            "reportOnly": { "type": "boolean", "description": "validate: write the report but do not fail the job." },
+            "name": { "type": "string", "description": "export: the asset name written into the polyprop." }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+ "ch10 opening lines": [
+  "Baldino's workshop, late into the night. Every bench is covered in wire.",
+  "n_baldino: Five stations. Five places where the project's old machines can still be made to talk: the mains under Citadel, the lighthouse transmitter, my mill on Zeelich, the bore on Desert Island, and Sefa's dome on the Hamalayi.",
+  "n_baldino: My relays: the test pair from my table, grown up and put on masts. When all five hear each other at once, the shaft's blast doors will hear them too.",
+  "n_baldino: Now the limits. Each relay needs a clear line to the others, so they go up high. Each runs on power from where it stands: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by.",
+  "n_hero: Then we need friends at five stations, and a way to reach them all.",
+  "n_baldino: Oh, and before I forget. Take this. My pulse tool: a little thunder in a box. It jams anything with gears or wires for a few seconds. Drones, automatons, mills, doors.",
+  "n_baldino: It does nothing at all to anything alive, and it needs a few seconds to recharge. Don't wave it at mites and expect miracles.",
+  "n_baldino: The way is already here. Listen.",
+  "n_heskradio: Hesk here! I got the council's message. The glider's moored on Zeelich, by the dock. I'll fly you anywhere with a flat bit of ground. Not into the shaft, mind. She's a glider, not a mole.",
+  "TOAST c10_toast_relays"
+ ]
+}

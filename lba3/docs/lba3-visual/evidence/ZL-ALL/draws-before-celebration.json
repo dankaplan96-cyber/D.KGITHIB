@@ -1,0 +1,23 @@
+{
+ "conditions": "headless Chromium, SwiftShader (software GL), 1280x720, default settings; arrival: enterRoom + 2 s; landmark: walked there by input (P.go), 1.5 s; renderer.info of one composed frame after two warm frames. CPU-side draw counts only, no GPU timing.",
+ "rows": [
+  {
+   "id": "isle_celebration",
+   "arrival": {
+    "calls": 179,
+    "tris": 299698
+   },
+   "walk": {
+    "word": "FESTIVAL",
+    "r": "arrived",
+    "left": 1.15,
+    "y": 9.53,
+    "state": "play"
+   },
+   "landmark": {
+    "calls": 174,
+    "tris": 311556
+   }
+  }
+ ]
+}

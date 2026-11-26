@@ -1,0 +1,34 @@
+PASS the intro ends: in play in the house, no ball yet ["play","house",true,false]
+PASS leaving without the ball: refused with a line, still in the house ["dialog","house"]
+PASS the cupboard gives the ball [true,"play"]
+PASS out of the house, in play ["play","outdoor",[-44,2.3,77.2]]
+PASS Zoé next door gives the kettle crystals (Mira's proof) [true,null]
+PASS the well looked at [true,null]
+PASS Gilbert and Mira: with the crystals, Mira gives the lid key [true,true,false]
+PASS the lid: unlocked but rusted to the rim [true,null,false]
+PASS Aggressive: the well's prompt is a kick "p_kick"
+PASS the kick opens the lid (it swings up) [true,1.78]
+PASS the ball rings the bell: Doran awake, no stamp without Xil's errand [true,null,null]
+PASS Xil met at the pier [true,null]
+PASS Doran's stamp true
+PASS Xil's rope true
+PASS the kids asked [true,null]
+PASS the kids overheard (discreet) ["dialog",true]
+PASS Tim confesses, his clover picked up [true,3]
+PASS an objective is set (the well) "Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?◆ Optional: the warm stones on the bay rocks"
+PASS the warm stones taken: kashes, the Warm Stone [true,10,true]
+PASS down the well ["play","well",true]
+PASS the well's mites beaten with the ball [4,4,"well"]
+PASS the nodes woken by the ball, the barrier down [[true,true,true],3,false]
+cutscene cutscene
+PASS Sendell's words end the prologue ["cutscene",true]
+PASS chapter 1 reached and started [1,true]
+PASS chapter 1's morning: in play, an objective set ["play","outdoor",[-40.2,2.2,-5.6],"Go home and tell Zoé"]
+PASS saved in chapter 1 with the ball {"room":null,"flags":26,"ball":true,"chapter":1}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 26 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     12 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

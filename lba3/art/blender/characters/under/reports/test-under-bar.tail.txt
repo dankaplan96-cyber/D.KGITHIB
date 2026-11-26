@@ -1,0 +1,25 @@
+PASS chapter 11, the deep installation: the bore's console reads the drill flat out, the shutter says why it is shut, the hoist says how Vesk went ahead (its lamp red) 
+PASS chapter 11: nothing down there answers the generic "Locked." 
+PASS chapter 11: up the lift by input to the station's yard; Baldino at the collar speaks to the chapter's progress (not the generic hello) 
+ISO  chapter 11 with the deep installation cooled, in the galleries; the mites set aside
+PASS chapter 11, the galleries: the crew's warning board reads from the shelf, not from the chasm floor 
+PASS chapter 11, Sendell's chamber after her words: her pool points on to the core; the relief of the two suns reads 
+ISO  chapter 12 by its flags, into the core (Vesk's scene plays, the fight starts)
+PASS chapter 12: Vesk, walked up to mid-fight, answers as himself 
+ISO  chapter 11 by its flags, saved in the deep installation; then 99 damage
+PASS a death in the deep installation: Game Over 
+PASS Retry: back in play in the deep installation, chapter 11, life full 
+ISO  the epilogue by its flags (dinner over, Vesk pulled clear), on Citadel beside the collar
+PASS the epilogue: after dinner the collar leads down by input; Guard Harl keeps the lift and talks 
+PASS the epilogue, the deep installation: Tolli of the shield crew on a round (moves with Twinsen in the room), talks of Vesk's note (he was pulled clear); no enemies 
+PASS the epilogue: the hoist's lamp is green and it reads; the console reads SHIELD; the diagram has its chalked line 
+PASS the epilogue: the galleries' stones stay raised (ISO across them), on to Sendell's chamber (her pool reads asleep), on to the core: no boss music, the bore a shield; Sala reads the field below Vesk's burnt console and talks 
+ISO  back to the deep installation by the room's own scene change (the walk back is the same rooms), then a save there
+PASS the epilogue: a save in the deep installation → Continue: back there on the floor, Tolli at work, the hoist green; out by the shaft and up the lift to Citadel 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 15 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

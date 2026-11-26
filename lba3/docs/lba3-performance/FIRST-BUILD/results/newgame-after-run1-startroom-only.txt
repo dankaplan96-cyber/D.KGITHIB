@@ -1,0 +1,13 @@
+PROBE title after 209.0 s
+New Game (stepped 60 Hz frames) · medium · battery true · title frames 30 · audio before the click: none, context made while loading (running)
+click handler: 47 ms (title frame, in view)  · state play · room house · audio running
+    0    187 ms view  play   house  shadow cache built (dropped: casters changed), +5 geometries
+    1      5 ms view  play   house  
+    2      3 ms view  play   house  
+    3      3 ms view  play   house  
+    4      4 ms view  play   house  
+    5   4487 ms view  play   house  
+    6      5 ms view  play   house  
+    7      4 ms view  play   house  
+frames in view: worst 94972 ms, mean of frames 5+ 1886.0 ms · black frames 0 ms in all (worst 0) · frames in view that made geometries 1
+state play · room house · draw batch areas 2 · shadow areas 2 · programs 83 · geometries 1056 · textures 234

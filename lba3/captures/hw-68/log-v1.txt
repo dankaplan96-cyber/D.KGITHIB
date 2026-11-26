@@ -1,0 +1,7 @@
+state cinematic audio running 0.0s
+state play audio running 88.4s
+opening ends at 88.4 s
+zoe at [-42.6,73.7,-0.550857534531716]
+minor resident ["garrick","citizens",-39.66995822933818,2.4521142980017667]
+remark {"st":"dialog","bubble":""}
+errors none

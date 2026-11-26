@@ -1,0 +1,357 @@
+{
+ "SEC": "free",
+ "W": 1280,
+ "H": 720,
+ "mode": [
+  "free",
+  "2026",
+  "free",
+  false
+ ],
+ "lines": [
+  {
+   "who": "zoe",
+   "fav": "",
+   "talk": 0,
+   "line": "Same next door. Their tap ran warm, knoc",
+   "head": {
+    "px": 35,
+    "x": 463,
+    "bottom": 345,
+    "top": 310,
+    "turn": 71
+   },
+   "other": {
+    "px": 37,
+    "x": 639,
+    "bottom": 346,
+    "top": 310,
+    "turn": 96
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 4,
+     "hits": [
+      [
+       "head",
+       3.85,
+       54.63,
+       "BufferGeometry:merged"
+      ],
+      [
+       "chest",
+       3.68,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       3.42,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       3.21,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    },
+    "zoe": {
+     "hid": 3,
+     "hits": [
+      [
+       "chest",
+       5.37,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       4.82,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       4.4,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    }
+   },
+   "mode": "free"
+  },
+  {
+   "who": "zoe",
+   "fav": "",
+   "talk": 0,
+   "line": "And look at their kettle. Furred with th",
+   "head": {
+    "px": 35,
+    "x": 467,
+    "bottom": 345,
+    "top": 309,
+    "turn": 71
+   },
+   "other": {
+    "px": 37,
+    "x": 635,
+    "bottom": 346,
+    "top": 309,
+    "turn": 98
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 4,
+     "hits": [
+      [
+       "head",
+       3.88,
+       54.63,
+       "BufferGeometry:merged"
+      ],
+      [
+       "chest",
+       3.71,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       3.45,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       3.23,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    },
+    "zoe": {
+     "hid": 3,
+     "hits": [
+      [
+       "chest",
+       5.32,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       4.78,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       4.37,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    }
+   },
+   "mode": "free"
+  },
+  {
+   "who": "hero",
+   "fav": "",
+   "talk": 0,
+   "line": "(Tiny crystals. Still warm.)",
+   "head": {
+    "px": 37,
+    "x": 635,
+    "bottom": 347,
+    "top": 310,
+    "turn": 97
+   },
+   "other": {
+    "px": 35,
+    "x": 468,
+    "bottom": 345,
+    "top": 309,
+    "turn": 71
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 4,
+     "hits": [
+      [
+       "head",
+       3.88,
+       54.63,
+       "BufferGeometry:merged"
+      ],
+      [
+       "chest",
+       3.7,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       3.44,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       3.22,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    },
+    "zoe": {
+     "hid": 3,
+     "hits": [
+      [
+       "chest",
+       5.31,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       4.78,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       4.36,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    }
+   },
+   "mode": "free"
+  },
+  {
+   "who": "zoe",
+   "fav": "",
+   "talk": 0,
+   "line": "Mira's got the well padlocked, and she's",
+   "head": {
+    "px": 35,
+    "x": 460,
+    "bottom": 345,
+    "top": 310,
+    "turn": 69
+   },
+   "other": {
+    "px": 37,
+    "x": 640,
+    "bottom": 346,
+    "top": 309,
+    "turn": 99
+   },
+   "box": 534,
+   "cover": {
+    "hero": {
+     "hid": 4,
+     "hits": [
+      [
+       "head",
+       3.85,
+       54.63,
+       "BufferGeometry:merged"
+      ],
+      [
+       "chest",
+       3.68,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       3.42,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       3.2,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    },
+    "zoe": {
+     "hid": 3,
+     "hits": [
+      [
+       "chest",
+       5.42,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "waist",
+       4.87,
+       6.59,
+       "BufferGeometry"
+      ],
+      [
+       "knees",
+       4.44,
+       6.59,
+       "BufferGeometry"
+      ]
+     ]
+    }
+   },
+   "mode": "free"
+  }
+ ],
+ "handback": {
+  "before": [
+   -51.487,
+   8.2,
+   76.182,
+   0.883,
+   -0.47,
+   0
+  ],
+  "after": [
+   -51.592,
+   7.783,
+   76.182,
+   0.902,
+   -0.431,
+   0
+  ],
+  "heroBefore": [
+   -42.91795259306421,
+   76.1816478351319,
+   3.05432619099008
+  ],
+  "heroAfter": [
+   -42.91795259306421,
+   76.1816478351319,
+   3.0141653126656216
+  ],
+  "talkAfter": 0,
+  "modeBefore": "free",
+  "modeAfter": "free",
+  "dPos": 0.43,
+  "dDir": 0.043,
+  "heroStill": true
+ },
+ "path": {
+  "frames": 1159,
+  "cuts": [],
+  "maxMovePerFrame": 0.075,
+  "solid": 0
+ }
+}

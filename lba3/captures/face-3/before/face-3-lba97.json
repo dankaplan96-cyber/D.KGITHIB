@@ -1,0 +1,178 @@
+{
+ "SEC": "lba97",
+ "W": 1280,
+ "H": 720,
+ "mode": [
+  "lba",
+  "1997",
+  "lba",
+  true
+ ],
+ "lines": [
+  {
+   "who": "zoe",
+   "fav": "",
+   "talk": 0,
+   "line": "Same next door. Their tap ran warm, knoc",
+   "head": {
+    "px": 24,
+    "x": 431,
+    "bottom": 377,
+    "top": 353,
+    "turn": 65
+   },
+   "other": {
+    "px": 24,
+    "x": 579,
+    "bottom": 383,
+    "top": 359,
+    "turn": 104
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "cuts"
+  },
+  {
+   "who": "zoe",
+   "fav": "",
+   "talk": 0,
+   "line": "And look at their kettle. Furred with th",
+   "head": {
+    "px": 24,
+    "x": 425,
+    "bottom": 376,
+    "top": 352,
+    "turn": 67
+   },
+   "other": {
+    "px": 24,
+    "x": 572,
+    "bottom": 383,
+    "top": 359,
+    "turn": 101
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "cuts"
+  },
+  {
+   "who": "hero",
+   "fav": "",
+   "talk": 0,
+   "line": "(Tiny crystals. Still warm.)",
+   "head": {
+    "px": 24,
+    "x": 575,
+    "bottom": 382,
+    "top": 358,
+    "turn": 103
+   },
+   "other": {
+    "px": 24,
+    "x": 427,
+    "bottom": 376,
+    "top": 352,
+    "turn": 62
+   },
+   "box": 552,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "cuts"
+  },
+  {
+   "who": "zoe",
+   "fav": "",
+   "talk": 0,
+   "line": "Mira's got the well padlocked, and she's",
+   "head": {
+    "px": 24,
+    "x": 430,
+    "bottom": 375,
+    "top": 351,
+    "turn": 65
+   },
+   "other": {
+    "px": 24,
+    "x": 580,
+    "bottom": 384,
+    "top": 360,
+    "turn": 102
+   },
+   "box": 534,
+   "cover": {
+    "hero": {
+     "hid": 0,
+     "hits": []
+    },
+    "zoe": {
+     "hid": 0,
+     "hits": []
+    }
+   },
+   "mode": "cuts"
+  }
+ ],
+ "handback": {
+  "before": [
+   -53.306,
+   14.077,
+   77.2,
+   0.731,
+   -0.683,
+   0
+  ],
+  "after": [
+   -53.306,
+   14.077,
+   77.2,
+   0.731,
+   -0.683,
+   0
+  ],
+  "heroBefore": [
+   -42.91795259306421,
+   76.1816478351319,
+   3.05432619099008
+  ],
+  "heroAfter": [
+   -42.91795259306421,
+   76.1816478351319,
+   3.0141653126656216
+  ],
+  "talkAfter": 0,
+  "modeBefore": "cuts",
+  "modeAfter": "cuts"
+ },
+ "path": {
+  "frames": 1159,
+  "cuts": [],
+  "maxMovePerFrame": 0,
+  "solid": 0
+ }
+}

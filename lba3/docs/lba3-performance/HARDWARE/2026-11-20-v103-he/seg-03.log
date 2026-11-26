@@ -1,0 +1,29 @@
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-40.2,2.2,-5.6] hp 10 | ללכת הביתה ולספר לזואי
+[5s +3s] home: Zoé: {"r":"talked","to":"zoe","state":"play","lines":12,"speakers":["zoe","hero","arthur"],"fail":null} | house [998.06,0,-0.5] hp 10 | לפגוש את וסק בנמל
+[7s +1s] out: {"r":"transition","from":"house","to":"citadel"} | citadel [-42.98,2.34,77.2] hp 10 | לפגוש את וסק בנמל
+[12s +4s] harbour: the ferry docks: {"arrived":true,"fail":null} | citadel [-102.4,2.29,42.11] hp 10 | לפגוש את וסק בנמל
+[15s +2s] Vesk: the task: {"r":"talked","to":"vesk","state":"play","lines":12,"speakers":["vesk","hero"],"fail":null} | citadel [-118.49,1.8,43.52] hp 10 | לפתוח את שלושת שסתומי העקיפה◆ המחסן במחנה הישן (חצר שמורה)◆ המטע (מאחורי סורגים)◆ צוקי הלחישה (המטרה הישנה)
+[21s +5s] Water Office: pipe map: {"map":true,"fail":null} | citadel [-62.58,2.33,11] hp 10 | לפתוח את שלושת שסתומי העקיפה◆ המחסן במחנה הישן (חצר שמורה)◆ המטע (מאחורי סורגים)◆ צוקי הלחישה (המטרה הישנה)
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[18.3] go: transition (citadel → citadel, trans true) at (-45.64, 76.54)
+[19.1] go → (997.7, -2.6) plan ok=true pts=6 left=0.64
+[27.2] go → (1001.2, 11.3) plan ok=true pts=5 left=0.26
+[34.3] go: transition (house → house, trans true) at (1001.37, 10.67)
+[35.2] go → (-112.0, 45.0) plan ok=true pts=11 left=0.65
+[68.7] go → (-120.5, 44.2) plan ok=true pts=3 left=0.51
+[79.1] go → (-65.5, 11.0) plan ok=true pts=10 left=0.29
+[96.2] go: transition (citadel → citadel, trans true) at (-64.77, 11.40)
+[97.3] go → (1197.0, -1.1) plan ok=true pts=2 left=0.47
+[99.8] go → (1197.0, -1.1) plan ok=true pts=2 left=0.12
+[104.4] go → (1202.7, -3.0) plan ok=true pts=3 left=0.08
+[107.8] go: transition (office → office, trans true) at (1202.22, -2.48)
+kept save-03.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     6 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

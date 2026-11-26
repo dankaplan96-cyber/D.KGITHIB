@@ -1,0 +1,97 @@
+
+PROFILE total 441134 ms sampled
+-- self --
+ 406758.7 ms  92.2%  uniformMatrix4fv :0
+  10963.1 ms   2.5%  uniformMatrix3fv :0
+   4401.0 ms   1.0%  bindTexture :0
+   3478.3 ms   0.8%  getProgramInfoLog :0
+   3093.8 ms   0.7%  uniform3f :0
+   1935.4 ms   0.4%  (program) :0
+   1508.7 ms   0.3%  drawArrays :0
+   1355.0 ms   0.3%  getShaderInfoLog :0
+    349.1 ms   0.1%  (garbage collector) :0
+    313.9 ms   0.1%  (idle) :0
+    298.7 ms   0.1%  update src/engine/shadowcull.js:308
+    279.8 ms   0.1%  shownTreeF src/engine/drawcull.js:244
+    233.7 ms   0.1%  get memory :0
+    230.4 ms   0.1%  renderer.pre src/main.js:527
+    229.6 ms   0.1%  updateWorldMatrix vendor/three/build/three.core.min.js:6
+    214.9 ms   0.0%  make src/engine/shadowcull.js:69
+    210.7 ms   0.0%  terrainAlbedo src/game/mapdraw.js:87
+    207.5 ms   0.0%  Ye vendor/three/build/three.module.min.js:6
+    165.6 ms   0.0%  build src/game/mapdraw.js:134
+    164.6 ms   0.0%  update src/engine/rig.js:979
+    146.6 ms   0.0%  updateMatrixWorld vendor/three/build/three.core.min.js:6
+    144.9 ms   0.0%  renderBufferDirect vendor/three/build/three.module.min.js:6
+    128.6 ms   0.0%  setValue vendor/three/build/three.module.min.js:6
+    117.8 ms   0.0%  (anon) vendor/three/build/three.module.min.js:6
+    111.8 ms   0.0%  bindVertexArray :0
+    102.7 ms   0.0%  frame src/main.js:3009
+    101.6 ms   0.0%  applyMatrix4 vendor/three/build/three.core.min.js:6
+     93.4 ms   0.0%  cellAt src/engine/shadowcull.js:104
+     92.1 ms   0.0%  buildSteps src/engine/shadowcull.js:132
+     91.7 ms   0.0%  poll src/engine/drawcull.js:173
+     78.7 ms   0.0%  assign src/engine/shadowcull.js:102
+     76.9 ms   0.0%  multiplyMatrices vendor/three/build/three.core.min.js:6
+     75.4 ms   0.0%  now :0
+     62.0 ms   0.0%  A vendor/three/build/three.module.min.js:6
+     59.8 ms   0.0%  update vendor/three/build/three.module.min.js:6
+     58.9 ms   0.0%  xr vendor/three/build/three.module.min.js:6
+     58.1 ms   0.0%  w src/engine/perf.js:271
+     53.3 ms   0.0%  update src/game/actors.js:926
+     52.7 ms   0.0%  now src/engine/perf.js:261
+     51.7 ms   0.0%  setFromEuler vendor/three/build/three.core.min.js:6
+     46.1 ms   0.0%  _clearance src/engine/camera.js:1808
+     45.1 ms   0.0%  drawElements :0
+     45.1 ms   0.0%  ray src/game/workhands.js:151
+     44.3 ms   0.0%  bufferSubData :0
+     39.2 ms   0.0%  bindBuffer :0
+-- inclusive --
+ 441133.5 ms 100.0%  (root) :0
+ 438526.2 ms  99.4%  (anon) :1
+ 438514.0 ms  99.4%  step :8
+ 438484.8 ms  99.4%  advance src/main.js:2939
+ 438236.6 ms  99.3%  frame src/main.js:3009
+ 436106.8 ms  98.9%  w src/engine/perf.js:271
+ 434557.4 ms  98.5%  render src/engine/renderer.js:626
+ 433607.2 ms  98.3%  render vendor/three/addons/postprocessing/EffectComposer.js:214
+ 433590.8 ms  98.3%  p.render src/engine/renderer.js:470
+ 433564.1 ms  98.3%  render src/engine/renderer.js:315
+ 433562.2 ms  98.3%  render vendor/three/addons/postprocessing/RenderPass.js:111
+ 433556.3 ms  98.3%  render vendor/three/build/three.module.min.js:6
+ 432745.3 ms  98.1%  Perf.renderer.renderBufferDirect src/engine/perf.js:40
+ 432726.7 ms  98.1%  renderBufferDirect vendor/three/build/three.module.min.js:6
+ 430905.8 ms  97.7%  (anon) vendor/three/build/three.module.min.js:6
+ 429740.1 ms  97.4%  Ke vendor/three/build/three.module.min.js:6
+ 429733.4 ms  97.4%  je vendor/three/build/three.module.min.js:6
+ 429711.4 ms  97.4%  Ze vendor/three/build/three.module.min.js:6
+ 406758.7 ms  92.2%  uniformMatrix4fv :0
+ 330205.9 ms  74.9%  upload vendor/three/build/three.module.min.js:6
+ 322534.6 ms  73.1%  $r vendor/three/build/three.module.min.js:6
+  98640.0 ms  22.4%  setValue vendor/three/build/three.module.min.js:6
+  84320.1 ms  19.1%  wr vendor/three/build/three.module.min.js:6
+  10977.8 ms   2.5%  Dr vendor/three/build/three.module.min.js:6
+  10963.1 ms   2.5%  uniformMatrix3fv :0
+   6666.5 ms   1.5%  evaluate :305
+   4870.9 ms   1.1%  R vendor/three/build/three.module.min.js:6
+   4869.5 ms   1.1%  Oi.getUniforms vendor/three/build/three.module.min.js:6
+   4500.2 ms   1.0%  Vr vendor/three/build/three.module.min.js:6
+   4499.5 ms   1.0%  w vendor/three/build/three.module.min.js:6
+   4411.7 ms   1.0%  bindTexture vendor/three/build/three.module.min.js:6
+   4401.0 ms   1.0%  bindTexture :0
+   3478.3 ms   0.8%  getProgramInfoLog :0
+   3305.6 ms   0.7%  ShadowCache.sm.render src/engine/shadowcache.js:61
+   3302.7 ms   0.7%  render src/engine/shadowcache.js:104
+   3250.8 ms   0.7%  sm.render src/engine/renderer.js:463
+   3232.2 ms   0.7%  Qi.render vendor/three/build/three.module.min.js:6
+   3162.9 ms   0.7%  live src/engine/shadowcache.js:215
+   3138.3 ms   0.7%  A vendor/three/build/three.module.min.js:6
+   3129.7 ms   0.7%  Lr vendor/three/build/three.module.min.js:6
+   3093.8 ms   0.7%  uniform3f :0
+   2376.6 ms   0.5%  updatePlay src/main.js:3155
+   1935.4 ms   0.4%  (program) :0
+   1510.5 ms   0.3%  Fn.render vendor/three/build/three.module.min.js:6
+   1508.7 ms   0.3%  drawArrays :0
+street · medium · 240 frames · frame ms p50 13.8 p95 174.7
+heap growth between collections: 0.0 KB a frame · 0 collections seen
+sections (ms a frame): ms NaN · n NaN

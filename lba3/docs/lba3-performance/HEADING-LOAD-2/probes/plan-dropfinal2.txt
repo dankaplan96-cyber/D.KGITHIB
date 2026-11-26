@@ -1,0 +1,1 @@
+dropfinal2-isle_otringal q_area.js W_AREA=isle_otringal W_FAST=1 W_DROP=1 W_SHOTS=1 W_VARS=no_characters+no_particles/blobs

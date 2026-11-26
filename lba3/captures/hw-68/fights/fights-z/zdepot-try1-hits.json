@@ -1,0 +1,163 @@
+[
+ {
+  "t": "8.0",
+  "by": "gdog:zgdog1",
+  "st": "chase",
+  "d": 5.8,
+  "hp": 10
+ },
+ {
+  "t": "9.4",
+  "by": "gdog:zgdog1",
+  "st": "windup",
+  "d": 2.4,
+  "hp": 9
+ },
+ {
+  "t": "10.7",
+  "by": "gdog:zgdog1",
+  "st": "recover",
+  "d": 2.1,
+  "hp": 8
+ },
+ {
+  "t": "13.5",
+  "by": "gdog:zgdog1",
+  "st": "chase",
+  "d": 2.9,
+  "hp": 7
+ },
+ {
+  "t": "14.6",
+  "by": "gdog:zgdog1",
+  "st": "chase",
+  "d": 2.5,
+  "hp": 6
+ },
+ {
+  "t": "16.7",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 4.9,
+  "hp": 5
+ },
+ {
+  "t": "18.1",
+  "by": "guardG:zguard1",
+  "st": "recover",
+  "d": 4.7,
+  "hp": 4
+ },
+ {
+  "t": "19.5",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 4.1,
+  "hp": 3
+ },
+ {
+  "t": "21.0",
+  "by": "guardG:zguard1",
+  "st": "recover",
+  "d": 4,
+  "hp": 2
+ },
+ {
+  "t": "22.7",
+  "by": "guardG:zguard1",
+  "st": "aim",
+  "d": 3.4,
+  "hp": 1
+ },
+ {
+  "t": "24.4",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 3.5,
+  "hp": 0
+ },
+ {
+  "t": "28.6",
+  "by": "guardG:zguard1",
+  "st": "recover",
+  "d": 3.3,
+  "hp": 10
+ },
+ {
+  "t": "30.0",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 3.2,
+  "hp": 9
+ },
+ {
+  "t": "31.4",
+  "by": "guardG:zguard1",
+  "st": "hurt",
+  "d": 3.4,
+  "hp": 8
+ },
+ {
+  "t": "34.8",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 3,
+  "hp": 7
+ },
+ {
+  "t": "37.7",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 3,
+  "hp": 6
+ },
+ {
+  "t": "39.2",
+  "by": "guardG:zguard1",
+  "st": "recover",
+  "d": 2.9,
+  "hp": 5
+ },
+ {
+  "t": "42.3",
+  "by": "guardG:zguard1",
+  "st": "recover",
+  "d": 3,
+  "hp": 4
+ },
+ {
+  "t": "45.2",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 3,
+  "hp": 3
+ },
+ {
+  "t": "48.2",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 3,
+  "hp": 2
+ },
+ {
+  "t": "49.8",
+  "by": "guardG:zguard1",
+  "st": "hurt",
+  "d": 3.3,
+  "hp": 1
+ },
+ {
+  "t": "85.4",
+  "by": "guardG:zguard1",
+  "st": "recover",
+  "d": 3,
+  "hp": 10
+ },
+ {
+  "t": "88.4",
+  "by": "guardG:zguard1",
+  "st": "chase",
+  "d": 3,
+  "hp": 9
+ }
+]

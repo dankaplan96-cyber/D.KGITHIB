@@ -1,0 +1,11 @@
+VALVE-STUCK, base 6ad111c + tests/lib/player.js fix; SwiftShader 960x540, port 8197, one chain from a new game
+(KEEP/LOAD through the game's own Save & quit), 2026-10-26, a shared loaded 4-core machine.
+01-prologue-surface  VERDICT: PASS  deaths 0  ISO assists 0
+02-prologue-cave     VERDICT: PASS  deaths 0  ISO assists 0
+03-project-a         VERDICT: PASS  deaths 0  ISO assists 0
+04-project-valves    VERDICT: PASS  deaths 0  ISO assists 0   (failed before the fix: depot step go:timeout, no movement)
+05-project-b         VERDICT: PASS  deaths 0  ISO assists 0
+06-zeelich           VERDICT: PASS  deaths 0  ISO assists 1   (the Zeelich depot fight's declared assist below 3 HP, as before)
+probe1.log: before the fix (the depot step from segment 03's save: 140 s of throws into the fence, no step taken)
+probe2.log: after the fix (the same start: both left after six wasted throws, round to the east gate, fight inside, valve used)
+04.log: segment 04 after the fix. summary.txt: combat, containers, chapter2, chapter3, stability, worldfit.

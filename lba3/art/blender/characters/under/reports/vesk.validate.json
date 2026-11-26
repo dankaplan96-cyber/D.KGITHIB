@@ -1,0 +1,459 @@
+{
+  "file": "art/blender/characters/under/work/vesk.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.68, 2.06, 0.56], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0000"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "8"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: vesk_belt -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_bootL -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_bootL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_bootR -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_bootR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_brow -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_brow",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_buckle -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_buckle",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_button -> veskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_button",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_button.001 -> veskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_button.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_button.002 -> veskRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_button.002",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_button.003 -> veskRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_button.003",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_claw -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_claw",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_claw.001 -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_claw.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_claw.002 -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_claw.002",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_coat -> veskRig",
+      "status": "pass",
+      "detail": "7 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_coat",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_collar -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_collar",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_collarEdge -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_collarEdge",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_collarIn -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_collarIn",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_crest -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_crest",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_cuffL -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_cuffL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_ear -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_ear",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_ear.001 -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_ear.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_emblem -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_emblem",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_emblemRim -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_emblemRim",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_foreL -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_foreL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_gauntlet -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_gauntlet",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_gauntletLight -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_gauntletLight",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_handL -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_head -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_lining -> veskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_lining",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_neck -> veskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_nose -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_pauldronL -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_pauldronL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_pauldronR -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_pauldronR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_placket -> veskRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_placket",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_shinL -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_shinL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_shinR -> veskRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_shinR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_upperL -> veskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_upperL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: vesk_upperR -> veskRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: vesk_upperR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "armature veskRig has the game skeleton's bones",
+      "status": "pass",
+      "detail": ""
+    }
+  ],
+  "totals": {
+    "objects": 45,
+    "meshes": 44,
+    "triangles": 1878,
+    "materials": 14,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.34,
+        0.0,
+        -0.29
+      ],
+      "max": [
+        0.34,
+        2.06,
+        0.27
+      ],
+      "size": [
+        0.68,
+        2.06,
+        0.56
+      ]
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,235 @@
+diff --git a/lba3/src/game/desert.js b/lba3/src/game/desert.js
+index 4b69e879..6b0ffa79 100644
+--- a/lba3/src/game/desert.js
++++ b/lba3/src/game/desert.js
+@@ -34,7 +34,7 @@ import { rockGeometry } from './vegetation.js';
+ import { shuttleTraffic } from './shuttle.js';
+ import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES, routeDist } from './keshlife.js';
+ import { CELL as OC, NX as ONX, NZ as ONZ, W as OW, D as OD, UNIT as OU, HEIGHTS as OHEIGHTS } from './desert-layout.js';
+-import { fitAdd } from './worldfit.js';
++import { fitAdd, FIT } from './worldfit.js';
+ import { Plume } from '../engine/softfx.js';
+ import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
+ import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
+@@ -843,6 +843,19 @@ export function* buildDesertSteps(scene, physics) {
+     for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+   }
+   // dry shrubs and cacti
++  // TREES-1 (the user, 4.11.2026: no plant may grow in a house): a dry shrub stood in two of Kesh's houses, in the big
++  // house S40 and at the condenser hall's wall. The shrubs keep out of every building the island registers (worldfit.js
++  // FIT: Kesh's houses, the post's cabins, the original's old places, built further on) and the hall: their instances
++  // are made once the old places stand (plantShrubs, after buildOldPlaces). The random draws are made as before.
++  let plantShrubs = null;
++  const inBuilding = (x, z, r) => {
++    if (Math.abs(x - RUINS.x) < 3.5 + r && Math.abs(z - (RUINS.z - 1.0)) < 2.0 + r) return true;   // (the condenser hall's block, below)
++    return FIT.some((b) => {
++      if (b.region !== 'desert') return false;
++      const dx = x + ox - b.x, dz = z + oz - b.z, c = Math.cos(b.ry), sn = Math.sin(b.ry);
++      return Math.abs(dx * c - dz * sn) < b.w / 2 + r && Math.abs(dx * sn + dz * c) < b.d / 2 + r;
++    });
++  };
+   {
+     const shrubG = cached('shrub', () => new THREE.IcosahedronGeometry(0.5, 0).scale(1, 0.55, 1));
+     const list = [];
+@@ -860,7 +873,8 @@ export function* buildDesertSteps(scene, physics) {
+       const h = H(x, z); if (h > BASE + 4) continue;
+       list.push({ x, y: h + 0.1, z, ry, s: 0.5 + sz * 0.8, color: c < 0.5 ? '#9a8a4a' : '#7a7a3a' });
+     }
+-    cullInstances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js; HEADING-LOAD-2: culled per instance in each pass, kit.js)
++    // (TREES-1: drawn once every building of the island stands, below: none in a house's walls)
++    plantShrubs = () => cullInstances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list.filter((t) => !inBuilding(t.x, t.z, 0.5 * t.s - 0.05)), { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js; HEADING-LOAD-2: culled per instance in each pass, kit.js)
+     const cactM = pm('#5a8a4a', 0.75);
+     const CB = new Batch(group);
+     for (let i = 0; i < 26; i++) {
+@@ -1462,6 +1476,7 @@ export function* buildDesertSteps(scene, physics) {
+     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
+   };
+   buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt, group });
++  plantShrubs();   // (TREES-1: every building registered now)
+   // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
+   //  post's office are the story's doors in their chapters, offered instead there: story/prologue.js)
+   for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz) });
+diff --git a/lba3/src/game/hamalayi.js b/lba3/src/game/hamalayi.js
+index 074b6622..b708a998 100644
+--- a/lba3/src/game/hamalayi.js
++++ b/lba3/src/game/hamalayi.js
+@@ -294,7 +294,7 @@ export function* buildHamalayiSteps(scene, physics) {
+     if (fp.smoke) { const [sx, sz] = loc(x, z, ry, fp.smoke[0], fp.smoke[2]); smokes.push({ x: sx, y: gy + fp.smoke[1], z: sz }); }
+     const ridge = (s) => { const [px, pz] = loc(x, z, ry, s * (fp.ridge.hx - 0.1), 0); return [px, gy + fp.ridge.y + 0.05, pz]; };
+     const cs = Math.cos(ry), sn = Math.sin(ry), dx = w * (o.door ?? 0.4) - w / 2 + 0.5;
+-    const hs = { x, z, ry, w, d, gy, ridge, door: { x: ox + x + cs * dx + sn * (d / 2 + 0.9), z: oz + z - sn * dx + cs * (d / 2 + 0.9) } };
++    const hs = { x, z, ry, w, d, hw: fp.hw ?? w / 2, hd: fp.hd ?? d / 2, gy, ridge, door: { x: ox + x + cs * dx + sn * (d / 2 + 0.9), z: oz + z - sn * dx + cs * (d / 2 + 0.9) } };
+     houses.push(hs); keep.push(['door', hs.door.x - ox, hs.door.z - oz, 1.1]);
+     return hs;
+   };
+@@ -673,6 +673,11 @@ export function* buildHamalayiSteps(scene, physics) {
+       list.push({ x, y: H(x, z) - 0.1, z, ry: (x * 7.3 + z) % 6, s, color: '#d8e4dc' });
+     }
+     for (let i = list.length - 1; i >= 0; i--) if (lba1.within(list[i].x, list[i].z, 1.2)) list.splice(i, 1);   // (the four places of LBA1's Hamalayi stand clear)
++    // TREES-1: no pine with its boughs through a house's walls (one stood 1.5 m off Lhar's third house, its lowest tiers
++    // half a metre into the wall): its trunk at least its widest tier's reach (1.67 m at scale 1, vegetation.js) from the
++    // house's eaves. Filtered like the two above: no random draw moves.
++    const eaves = (h, x, z) => { const dx = x - h.x, dz = z - h.z, c = Math.cos(h.ry), s = Math.sin(h.ry), ax = Math.abs(dx * c - dz * s) - h.hw, az = Math.abs(dx * s + dz * c) - h.hd; return ax > 0 || az > 0 ? Math.hypot(Math.max(ax, 0), Math.max(az, 0)) : Math.max(ax, az); };
++    for (let i = list.length - 1; i >= 0; i--) if (houses.some((h) => eaves(h, list[i].x, list[i].z) < 1.67 * list[i].s)) list.splice(i, 1);
+     lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
+     for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true });
+     const rocks = [];
+diff --git a/lba3/src/game/spaceport.js b/lba3/src/game/spaceport.js
+index 2bbc8e76..8ee596bd 100644
+--- a/lba3/src/game/spaceport.js
++++ b/lba3/src/game/spaceport.js
+@@ -24,7 +24,7 @@ import { mergeStatic } from '../engine/merge.js';
+ 
+ // the platform: east of the town over the bay (the shore is at x ≈ −26 at ground level 2.3 m)
+ const DECK = { x0: -14, x1: 14, z0: 26, z1: 54 };
+-const BRIDGE = { x0: -31, x1: -13.6, z: 40, hw: 2.0 };
++export const BRIDGE = { x0: -31, x1: -13.6, z: 40, hw: 2.0 };   // (world.js keeps the scatter off its deck: TREES-1)
+ const PAD = { x: 4.5, z: 41 };
+ const RAIL_H = 1.1;
+ 
+diff --git a/lba3/src/game/world.js b/lba3/src/game/world.js
+index ad6a6084..8b36aff6 100644
+--- a/lba3/src/game/world.js
++++ b/lba3/src/game/world.js
+@@ -21,6 +21,8 @@ import { culledToo } from '../engine/viewinst.js';
+ import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
+ import { lifeClear } from './townlife.js';
+ import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
++import { ASYLUM_DOOR } from './lba1places.js';
++import { BRIDGE } from './spaceport.js';
+ 
+ // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
+ // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
+@@ -894,6 +896,32 @@ export function* buildWorldSteps(parentScene) {
+   });
+   for (const t of trees) if (!t.gone && !t.orig && benchRoom(t.x, t.z, 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
+   for (const b of bushes) if (!b.gone && benchRoom(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
++  // TREES-1 (the user, 4.11.2026: a tree stood inside Twinsen's house, its crown out through the thatch). okSpot keeps
++  // the scatter out of the square's ring (exclusions: POI.village) and the original's trees 1.6 m off the houses, but
++  // nothing kept the scattered trees and bushes out of the houses beyond the square: a tall tree grew in Twinsen's
++  // house and two in the harbour wing's neighbour, bushes in the museum and the stone house, crowns through the walls
++  // of the water house, the wing and the baggage hall. Now no tree, palm or bush stands within its crown's reach of a
++  // house's walls (the farthest leaf from its trunk, measured on the sculpts, at its scale and crown width; a leaf may
++  // touch the wall's face, 0.15 m, 0.1 for a bush: the original's tree by the harbour wing keeps its place), nor in the
++  // asylum's block-house or on the spaceport's footbridge (both built later, main.js; on the bridge only the trunk
++  // counts: a crown may lean over a deck at the ground). Filtered after the scatter like the rest above: no random
++  // draw moves and every other tree keeps its place. The grass, flowers and tulips keep out of the same floors below.
++  const BLOCKS = [...W.houses.map((h) => ({ x: h.x, z: h.z, ry: h.ry, w: h.w, d: h.d })),
++    { x: ASYLUM_DOOR.x - 0.3, z: ASYLUM_DOOR.z, ry: 0, w: 3.0, d: 3.6 },   // (lba1places.js asylumDoor: its stone block)
++    { x: (BRIDGE.x0 + BRIDGE.x1) / 2, z: BRIDGE.z, ry: 0, w: BRIDGE.x1 - BRIDGE.x0, d: BRIDGE.hw * 2, deck: true }];
++  // (how far (x, z) stands outside the nearest block's walls; inside, minus its depth)
++  const blockDist = (x, z, decks = true) => {
++    let m = Infinity;
++    for (const b of BLOCKS) {
++      if (b.deck && !decks) continue;
++      const dx = x - b.x, dz = z - b.z, c = Math.cos(b.ry), s = Math.sin(b.ry), ax = Math.abs(dx * c - dz * s) - b.w / 2, az = Math.abs(dx * s + dz * c) - b.d / 2;
++      m = Math.min(m, ax > 0 || az > 0 ? Math.hypot(Math.max(ax, 0), Math.max(az, 0)) : Math.max(ax, az));
++    }
++    return m;
++  };
++  const REACH = { round: 1.9, fruit: 1.9, tall: 0.9, pine: 1.67, palm: 2.87, bush: 0.85 };   // (vegetation.js, at scale 1)
++  for (const t of trees) if (!t.gone && (blockDist(t.x, t.z, false) < REACH[t.kind] * (CROWN[t.kind] ?? 1) * t.s - 0.15 || blockDist(t.x, t.z) < 0.45 * t.s)) { t.s = 1e-4; t.gone = true; }
++  for (const b of bushes) if (!b.gone && blockDist(b.x, b.z) < REACH.bush * b.s - 0.1) { b.s = 1e-4; b.gone = true; }
+   yield 'tree spots';
+   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
+   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
+@@ -945,6 +973,7 @@ export function* buildWorldSteps(parentScene) {
+   for (const t of grass) if (!t.gone) { const [soil, rock] = wildGround(t.x, t.z); if (soil + rock > 0.4) { t.s = 1e-4; t.gone = true; } }
+   clearLife(grass); clearLife(flowers);
+   for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
++  for (const t of [...grass, ...flowers]) if (!t.gone && blockDist(t.x, t.z) < 0) { t.s = 1e-4; t.gone = true; }   // (TREES-1: none in a floor; at a wall's foot they stay)
+   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
+   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
+   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
+@@ -996,6 +1025,7 @@ export function* buildWorldSteps(parentScene) {
+   // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
+   const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7) lifeBeds.add(t.bed);
+   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
++  for (const list of beds) for (const t of list) if (blockDist(t.x, t.z) < 0) t.s = 1e-4;   // (TREES-1: a bed's tulips that stood in a house's floor)
+   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
+   fillPools();   // (PERF-CALLS: the small kinds' pools made now, with the rest of the island: uploaded behind the loading screen)
+   W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };
+diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
+index d5c8701e..2310d5ef 100644
+--- a/lba3/src/game/zislands.js
++++ b/lba3/src/game/zislands.js
+@@ -92,6 +92,7 @@ function analyse(L, S = {}) {
+   const decor = L.decor.map(([x, z, y, sx, sy, sz, beta, kind, body]) => ({ x, z, y, sx, sy, sz, beta, kind, body }));
+   for (const o of decor) o.shape = shapeOf(o, S);
+   fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks: !!L.floorAt });
++  cutPlants(decor);
+   // cells under a solid object
+   const blocked = new Uint8Array(nx * nz);
+   for (const o of decor) {
+@@ -197,6 +198,34 @@ function analyse(L, S = {}) {
+ //    its floor, the ground before its door levelled to it; where the ground still falls away, the stone plinth
+ //    goes down to it (o.bury, its depth under the floor).
+ const FIT_M = 2.6;
++// TREES-1 (the user, 4.11.2026: no tree may stand in a house): the original's trees, bushes and plants whose crown
++// reaches into one of its houses or towers as we build them (a tall tree stood in a house on Otringal, a bush across
++// two houses there, leaves through walls on Knartas and the Platform, a bush up into the Platform's deck, a nectar
++// tree in the Orchard's press house) are cut: o.cut. Each keeps its place in the build's lists, so the colours'
++// random draws (and all after them) stay as they were, but draws nothing and blocks nothing. The crown: the ellipse over the object's box (buildIsland's fit() scales
++// the sculpt to the box), more than 0.15 m into the house's footprint (a tower's circle), or into a deck's or slab's
++// above it when it grows up to its underside.
++function cutPlants(decor) {
++  const under = (o, b) => { const t = Math.max(0.12, b.sy), bottom = b.y + b.sy - t; return o.y < bottom && o.y + o.sy > bottom - 0.05; };
++  const blocks = decor.filter((o) => o.shape === 'house' || o.shape === 'tower' || o.shape === 'deck' || o.shape === 'slab');
++  for (const o of decor) {
++    if (o.shape !== 'tree' && o.shape !== 'bush' && o.shape !== 'plant' && o.shape !== 'blossom') continue;
++    // (a nectar tree's crown is wider than its box: props-esmer.js blossomTree, 0.94 m at 1.6 m tall)
++    const bl = o.shape === 'blossom' ? (0.94 * o.sy) / 1.6 : 0;
++    const rx = bl || Math.max(0.3, o.sx) / 2, rz = bl || Math.max(0.3, o.sz) / 2, R = Math.max(rx, rz), ry = (o.beta / 4096) * Math.PI * 2, c = Math.cos(ry), sn = Math.sin(ry);
++    o.cut = blocks.some((b) => {
++      if (Math.abs(o.x - b.x) > R + b.sx / 2 || Math.abs(o.z - b.z) > R + b.sz / 2) return false;
++      if ((b.shape === 'deck' || b.shape === 'slab') && !under(o, b)) return false;
++      for (let k = 0; k < 24; k++) {
++        // (the sculpt is scaled along its own axes, then turned by the object's beta: as fit() places it)
++        const a = (k / 24) * Math.PI * 2, lx = Math.cos(a) * rx, lz = Math.sin(a) * rz, x = o.x + c * lx + sn * lz, z = o.z - sn * lx + c * lz;
++        const inside = b.shape === 'tower' ? Math.min(b.sx, b.sz) * 0.48 - Math.hypot(x - b.x, z - b.z) : Math.min(b.sx / 2 - Math.abs(x - b.x), b.sz / 2 - Math.abs(z - b.z));
++        if (inside > 0.15) return true;
++      }
++      return Math.abs(o.x - b.x) < b.sx / 2 && Math.abs(o.z - b.z) < b.sz / 2;   // (the trunk's foot itself inside)
++    });
++  }
++}
+ function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }) {
+   const isH = (o) => o.shape === 'house' || o.shape === 'tower';
+   const hs = decor.filter(isH);
+@@ -1458,6 +1487,7 @@ function buildIsland(scene, physics, name, L, at) {
+       }
+       case 'figure': break;   // (a part of the figure: blocks the plan, drawn by the colossus)
+       case 'blossom': {   // a nectar tree (ours: the Nectar Orchard)
++        if (o.cut) break;   // (TREES-1: the one in the press house, cutPlants)
+         const P = new EP.Place(B, o.x, y0 - 0.05, o.z, 0); EP.blossomTree(P, { h: o.sy, seed: o.beta % 97 });
+         col({ type: 'cyl', x: o.x, z: o.z, r: 0.28, top: y0 + o.sy * 0.6, noStand: true });
+         break;
+@@ -1611,7 +1641,7 @@ function buildIsland(scene, physics, name, L, at) {
+         col({ type: 'cyl', x: o.x, z: o.z, r: 0.2, top, noStand: true });
+         break;
+       }
+-      case 'tree': trees[o.body % 2].push(o); col({ type: 'cyl', x: o.x, z: o.z, r: 0.3, top, noStand: true }); break;
++      case 'tree': trees[o.body % 2].push(o); if (!o.cut) col({ type: 'cyl', x: o.x, z: o.z, r: 0.3, top, noStand: true }); break;   // (o.cut: TREES-1, cutPlants)
+       case 'rock': rocks[o.body % 3].push(o); small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.4, hd: ez * 0.4, top: y0 + o.sy * 0.85, noStand: o.sy > 1.2 }); break;
+       case 'crate': {
+         B.add(bbox(ex * 0.9 - jy(o), o.sy, ez * 0.9 - jy(o), 0.04, 1), plankM, o.x, y0 + o.sy / 2 + jy(o), o.z);
+@@ -1641,7 +1671,7 @@ function buildIsland(scene, physics, name, L, at) {
+         small({ type: 'box', x: o.x, z: o.z, hw: Math.max(0.12, ex / 2), hd: Math.max(0.12, ez / 2), top: y0 + h, noStand: true });
+         break;
+       }
+-      case 'bush': bushes.push(o); if (Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: Math.min(ex, ez) * 0.35, top, noStand: true, seeThrough: true }); break;
++      case 'bush': bushes.push(o); if (!o.cut && Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: Math.min(ex, ez) * 0.35, top, noStand: true, seeThrough: true }); break;
+       default: plants.push(o);
+     }
+   }
+@@ -1772,7 +1802,9 @@ function buildIsland(scene, physics, name, L, at) {
+   const fit = (geo, list, mat, lo = null, ys = 1) => {
+     if (!list.length) return;
+     geo.computeBoundingBox(); const b = geo.boundingBox, gw = b.max.x - b.min.x, gh = b.max.y - b.min.y, gd = b.max.z - b.min.z;
+-    cullInstances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })), { lo }).userData.gpuGroup = 'trees';   // (benchgpu.js)
++    // (TREES-1: a cut plant's colour is drawn all the same, so the island's random stream is unchanged)
++    const items = list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })).filter((_, i) => !list[i].cut);
++    if (items.length) cullInstances(group, geo, mat, items, { lo }).userData.gpuGroup = 'trees';   // (benchgpu.js)
+   };
+   const vc = pm('#ffffff', 0.85, { vertexColors: true });
+   // (lo: the coarse sculpts of a trade-off that is off, kit.js cullInstances: never built in play)
