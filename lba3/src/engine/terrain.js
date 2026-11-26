@@ -421,10 +421,10 @@ export class Terrain {
         if (v * D[k] < 0) { v = D[k]; kept++; }   // (never across the point's own side: a strip one point wide stays)
       }
       out[k * 2] = q16(v);
-      // the soil's strength: its own share on the soil's side, the strongest soil neighbour's on the grass side, so it
-      // does not fall across the edge (the old split, now inside the cut: a faint trodden way stays faint)
+      // the soil's strength: the strongest soil share among the point and its neighbours, so it does not fall across
+      // the edge (the old split, now inside the cut: a faint trodden way stays faint, a strong soil is whole to the line)
       let st2 = ratio[k] === ratio[k] ? ratio[k] : 0;
-      if (!(st2 >= 0.5)) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+      for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
         const ii = i + c, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
         const rr = ratio[jj * n + ii]; if (rr >= 0.5 && rr > st2) st2 = rr;
       }

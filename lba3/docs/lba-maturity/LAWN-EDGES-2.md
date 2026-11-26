@@ -25,8 +25,9 @@ LAWN-EDGES' method (a per-vertex signed distance, cut per pixel at 0) applied to
   5. A point with no grass or soil (paving, sand, snow, rock: under 1 % of the two) takes the side of the nearest
      piece, or with none near, the side of its neighbours that have some. Without this, a green fringe would appear
      between a trodden way and the snow or sand beside it.
-  6. The soil's **strength** per point: its own share on the soil's side; on the grass side, its strongest soil
-     neighbour's. It does not fall across the edge.
+  6. The soil's **strength** per point: the strongest soil share (0.5 or more) among the point and its 8 neighbours,
+     else its own share. It does not fall across the edge. A first version took the point's own share on the soil
+     side; just past the line that share is ~0.5, and the camp's edges went soft again. Fixed and reshot.
 - **The `lawn` attribute**: int16 × 2, normalized: [distance over ±4 m, strength 0..1]. Every splat terrain has it when
   the switch is on, so there is still one program.
 - **The shader** (`LAWN_SPLIT`): `lk = (1 − smoothstep(−a, a, dist + wobble)) × smoothstep(0.42, 0.58, strength + wobble')`.
@@ -35,8 +36,8 @@ LAWN-EDGES' method (a per-vertex signed distance, cut per pixel at 0) applied to
   - The second factor is the old split, applied to the strength instead of the share. Strong soil (Citadel's town
     soil, its paths, the wild patches, the Hamalayi's trails: share ~1) is full soil up to the cut. Weak soil keeps
     its old faint, mottled look inside the cut: the isles' trodden routes (share ~0.5–0.55).
-  - Without the second factor (the first version), every route on the isles became a solid brown path: pictures
-    `07-isle-orchard` and `06-isle-mosquibee` changed 9 % and 2 % of their pixels. With it, 0.2 % and 0.1 %.
+  - Without the second factor (the first version), every route on the isles became a solid brown path: the Orchard
+    and Mosquibee pictures changed 9 % and 2 % of their pixels. With it, 0.2 % and 0.1 %.
   - Beside a LAWN-EDGES paving line, a point painted paving now lends its share to grass or soil by `lk` (before:
     always to soil, one source of PATHS-135's extra teeth).
 - **Switch off** (the default): no attribute, no CPU work, and the shader text is **identical** to before for all
@@ -50,12 +51,13 @@ Edge cells = grid cells whose corners lie on both sides of the 0.5 line (where t
 
 | Area | Grid | Edge cells | What changes (`?lawnedge=new`) |
 |---|---|---|---|
-| Citadel (town soil, LAWN-EDGES plots, paths, WA-12 wild patches, the camp) | 0.93 m | 2482 | the grass/soil edges are smooth lines and curves; the mottled, notched fringes and a few one-cell grass specks are gone (03z) |
-| Zeelich isles: Knartas | 1.71 m | 263 | the bare-patch and route edges are smooth (05b) |
-| Mosquibee, Orchard, Old Watch, Platform, Celebration | 1.71 m | 21, 49, 71, 5, 4 | the routes keep their old faint look inside a smooth edge (06, 07); no picture for Old Watch, Platform or Celebration (few edges, none at their arrival points) |
+| Citadel (town soil, LAWN-EDGES plots, paths, WA-12 wild patches, the camp) | 0.93 m | 2482 | the grass/soil edges are smooth lines and curves; the mottled, notched fringes and a few one-cell grass specks are gone (row 5) |
+| Zeelich isles: Knartas | 1.71 m | 263 | the bare-patch and route edges are smooth (row 7) |
+| Mosquibee, Orchard | 1.71 m | 21, 49 | the routes keep their old faint look inside a smooth edge (rows 8, 9) |
+| Old Watch, Platform, Celebration | 1.71 m | 71, 5, 4 | edge cells exist, but there was no visible grass/soil edge at the spots tried (my automatic edge search failed there, for a reason I did not find). Not pictured |
 | Otringal, Undergas, Lift Dock | 1.71 m | 0 | none: no grass/soil edge (Otringal's turf is granite) |
-| Desert Island | 1 m | 45 | where Kesh's earth meets the oasis grass: a small change (04b). The rest is sand against earth or paving, a soft blend with no saw-tooth. Unchanged. |
-| Hamalayi | 1 m | 0 | none: snow is the sand channel, the trails are earth; no grass. Picture 08: the terrain's pixels are identical (only the idling hero differs) |
+| Desert Island | 1 m | 45 | where Kesh's earth meets the oasis grass: a small change (row 6). The rest is sand against earth or paving, a soft blend with no saw-tooth. Unchanged. |
+| Hamalayi | 1 m | 0 | none: snow is the sand channel, the trails are earth; no grass. Row 10: the terrain's pixels are identical (only the idling hero differs) |
 | Zeelich (main island), Ballastra | — | — | none: no splat terrain. The grass, gravel tracks and paving are separate polygon meshes (`zeelich.js buildPaths`, `ballastra/gardens.js`) whose outlines are already smooth |
 
 
@@ -86,13 +88,24 @@ player's PC. **No frame-time claim.**
 ## Pictures
 `captures/lawn-edges-2/sheet.png`: before (default) | after (`?lawnedge=new`), the play camera (Follow, Far),
 1280 × 720 scaled to half. Same build, same spot, same frame; only the switch differs. Row 1 is the user's spot.
-- Rows: 01 the user's spot (Citadel (−60, 2), facing west-north-west: the street's foot, the bed with the cypress, the
-  bin at the flight, the sea wall); 01z its middle at full resolution; 02 Citadel's town lawns (by the spaceport sign);
-  03 Citadel's camp and wild patches; 03z its right half at full resolution; 04b Desert Island (Kesh's edge by the
-  oasis); 05b Knartas; 06 Mosquibee; 07 Orchard; 08 the Hamalayi (no change expected).
-- Pixels changed (difference > 8 of 255): 01 1.4 %, 02 1.6 %, 03 3.1 %, 04b 0.5 %, 05b 0.5 %, 06 0.1 %, 07 0.2 %,
-  08 0.1 % (08: the hero's idle pose only; the terrain is identical).
-- Hints differ between frames ("Take your magic ball…" fades in at its own time): not part of the change.
+- The rows:
+  1. The user's spot: Citadel (−60, 2), facing about west. The street's foot, the bed with the cypress, the bin at
+     the flight, the sea wall.
+  2. Its middle at full resolution.
+  3. Citadel's town lawns, by the spaceport sign.
+  4. Citadel's camp and wild patches.
+  5. Its right half at full resolution.
+  6. Desert Island: Kesh's edge by the oasis.
+  7. Knartas.
+  8. Mosquibee.
+  9. Orchard.
+  10. The Hamalayi (no change expected).
+- Pixels changed (difference > 8 of 255), rows 1, 3, 4, 6, 7, 8, 9, 10: 3.1 %, 1.7 %, 3.7 %, 0.4 %, 0.6 %, 0.1 %, 0.2 %,
+  0.1 %.
+  - Row 1 includes a tutorial hint ("Take your magic ball…") that fades in at its own time in one frame only.
+  - Row 10 is the hero's idle pose only; the terrain is identical.
+- Spots 04 (the oasis from the south) and 05 (Knartas, the other way) were also shot. They show little, so they are
+  not on the sheet.
 
 ## Checks
 - **Scatter, heights, splat: unchanged.** Every area was built (Citadel, the nine isles, Desert Island and the
@@ -111,7 +124,42 @@ player's PC. **No frame-time claim.**
   with no grass beside it keeps its old blend.
 
 ## Tests (automated runtime only, SwiftShader, SERVE=1, once each)
-TESTS
+Both suites ran **with the switch on** (`QUERY=lawnedge=new`, which `tests/lib/boot.mjs` adds to every page it opens):
+- `tests/walkers.mjs`: **PASS**, 37/37.
+- `tests/worldfit.mjs`: functional 1/1, visual 7/8.
+  - The one FAIL is (3) z-fighting on **isle_knartas**: the huts' floors, stone against plaster at y 3.06, 12 judged
+    clusters.
+  - `PATHS-135.md` records the same failure on the base. I did not rerun it on the base here.
+  - The scan reads geometry, which this change does not touch. Handed to the coordinator.
+- Neither suite ran with the switch off. The default rests on these:
+  - the shader text is identical with the switch off;
+  - with the switch off there is no attribute and no work;
+  - the switch-off pictures and digests above.
+- Not run: `tests/path-ends.mjs`. It reads the paving, which is unchanged, and the old lawn split.
+- No test pictures were overwritten (`git status` clean after both).
 
 ## Unresolved / for the user
-GAPS
+Visible changes with the switch on, for the user's pick:
+- Grass/soil edges are smooth lines and curves across Citadel, Knartas and the isles' routes, and at Kesh's edge.
+- Grass specks one cell across, where the soil's share dipped under 0.5 at a single point, are gone (row 5, by the
+  cairn).
+- Ground whose soil share is just under 0.5 used to show a little mottled earth (the old split's wobble reached it).
+  It is grass now: the cut is at 0.5.
+- **The scatter is not changed**, as asked. Its filters read the splat functions, not the shader. A tuft near an edge
+  may therefore now stand a few cm over the new line where it used to stand on a tooth. I saw none in the pictures,
+  and did not check this systematically.
+
+Not fixed (other channels, the same cause):
+- The **rock/grass** split (the bare-rock patches on Citadel's wild ground and the isles) and the **paving** split
+  outside Citadel's LAWN-EDGES streets (the isles' squares and patches) still follow the triangles. Both are visible
+  in row 5: the rock patch's ragged rim. Each would need its own distance channel, built the same way.
+- The isles' **vertex tint** (`zislands.js` colorFn: the path and earth colours lerped per vertex) still follows the
+  grid, softly, under the new edge. `zislands.js` is being changed by another worker; left alone.
+- The holomap (`mapdraw.js`) and the path scan (`tests/lib/pathends.js`) still read the old split.
+- Citadel's build time grows by 150–200 ms (SwiftShader timing). A 3 × 3 fine sample would trim it.
+
+Questions:
+1. Make `?lawnedge=new` the default? Then the switch and the old split can go.
+2. Extend the same channel to the rock/grass edge (the ragged rock patches)?
+
+Nobody played it; nothing was checked on a real GPU.
