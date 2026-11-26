@@ -247,17 +247,18 @@ shadows over ~1–3 fps on the CPU-bound street, Low-eco should be removed from 
     and noted, so it was never deeper than 2: never 30 (before P137 this game was paced at 30). Auto went
     High → Medium → Medium-lean → Low and held 60.0 fps with no interval over 20 ms. Its first runs found the two
     refresh-meter faults in §2.2.
-- `GAME_URL=… node tests/fps30.mjs` once (http.server; it does not route through `SERVE`): **59 / 60**.
+- `GAME_URL=… node tests/fps30.mjs` once (http.server; it does not route through `SERVE`): **59 / 60**, then F alone **PASS** (below).
   - A10 (30 / 60 / Unlimited on all ten rates, real loop), A11 / A11b (P101's even 50 on 100 Hz, and released) and
     parts B–E and G PASS.
-  - F1 FAIL. F1 is this headless browser's own frame clock with the draw stubbed: 12 of 113 intervals slow at 30.
-    Unlimited and 60 showed 20 slow intervals each in the same part, at load average ~17 on the shared machine. That is
-    the machine's stalls, not the scheduler. The 30 limit's path is not changed by P137. It was not run again (FEWER
-    TESTS).
+  - F1 FAILED in that run: 12 of 113 intervals slow at 30, at load average ~17, with Unlimited and 60 also at 20 slow
+    each. Run again once (`ONLY=F`, load 8.7–12): F1 and F2 PASS (30: 2 slow of 117, p50 33.3; 60: 1 of 239).
+    The 30 limit's path is not changed by P137.
 - `BOOT_TIMEOUT=900000 SERVE=1 node tests/autoquality-game.mjs`: **29 / 29 PASS**. This covers the Settings line with
   the named profile, the profiles in the renderer, the commit points, power changes and the cache. An earlier attempt
   timed out at section 7's reopen under load: the known harness issue in KNOWN-FAILING, which BOOT_TIMEOUT answers.
 - `node tests/dialogue-check.mjs` PASS (6640 / 6640 keys in Hebrew).
+- The browser suites ran before the last change (`Governor.above` side-aware, commit cf9eb3e5). That change only
+  affects steps up, and none of their scenarios steps up below Low. `tests/autoquality.mjs` (95 / 95) covers it.
 
 ## 6. The picture sheet
 
