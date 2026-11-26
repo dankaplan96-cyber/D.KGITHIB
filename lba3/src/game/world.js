@@ -144,8 +144,9 @@ const GRID_STREETS = [
   [-60.4, 2.9, -51.4, 2.9, 3.0],     // its foot, east to the square's ring
   [-55.4, -4.16, -55.4, 2.9, 4.0],   // (P135) the corner between it, its foot, the street to the flight and the block's west street (x −52) paved (a bare kerbed bed was left there)
   // (P135: it stopped square 7 m short of the footbridge, in the dirt: it ends now on a link south along the bridge's foot,
-  //  x −34…−31, flush with the bridge's west end, where its bollards and sign post stand)
-  [-63.4, 31.3, -31.0, 31.3, 3.0],   // the cross street past Chez Luc, toward the footbridge
+  //  x −34…−31, flush with the bridge's west end, where its bollards and sign post stand; and in the west it stopped
+  //  square 11 m short of the harbour's yard, on the old harbour path's dirt: it runs on to the yard's east face now)
+  [-75.5, 31.3, -31.0, 31.3, 3.0],   // the cross street past Chez Luc, toward the footbridge
   [-45.6, 31.3, -45.6, 53.1, 3.0],   // south from it along the fields' path
   [-60.4, 53.1, -44.1, 53.1, 3.0],   // the south cross street
   [-73.68, -27.0, -73.68, 17.5, 2.9],   // the promenade on the sea wall, inside its rail (FLAT-TOWN: from the wall's coping to its inland edge, on to the knoll)
