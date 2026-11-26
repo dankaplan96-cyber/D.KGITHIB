@@ -2,6 +2,7 @@
 // Generic glue lives here (states, rooms, saves, UI, combat hooks);
 // the story itself is in src/game/prologue.js.
 import { seedRandom, randomSeed } from './engine/seed.js';   // (first: ?seed=N seeds Math.random before anything uses it)
+import './engine/fastmath.js';   // (CPU-RELIEF: Math.hypot the optimiser can inline, game-wide, before anything runs)
 import * as THREE from 'three';
 import { Renderer } from './engine/renderer.js';
 import { DL } from './engine/depthlook.js';   // (DEPTH-LOOK: ?depth= candidates, off by default)
