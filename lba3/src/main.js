@@ -1553,6 +1553,7 @@ class Game {
   // a scene change: the ball comes home, shots in the air vanish, nobody may attack straight away
   resetCombat(carry = 'credit') {
     this.ball?.reset(carry); this.bolts?.clear(); this.weapons?.reset(); this.gadgets?.reset(); this.hero?.combat?.reset(); this.targeting?.release(); this.combatDir?.reset(); this.hitStop = 0;
+    this.audio?.cutHeld?.();   // (DRONE-CHARGE: a wind-up's charge left sounding stops with the scene)
   }
 
   // where the hero is on the island map (inside a room: where that room is)
