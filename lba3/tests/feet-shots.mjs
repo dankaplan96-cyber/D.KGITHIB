@@ -21,7 +21,6 @@ export const SPOTS = [
   { id: 'z3-dogyard', area: 'zeelich', x: 2370.5, z: -21.5, a: Math.PI / 2, d: 2.0, what: 'Zeelich, the dog yard\'s leaf bed and track (inside its palisade)' },
   { id: 'z2-pad', area: 'zeelich', x: 2376.9, z: 12.3, a: 0, d: 2.5, what: 'Zeelich, the shuttle pad' },
   { id: 'c1-spaceport', area: 'citadel', x: 1.0, z: 38.3, a: 0.3, d: 2.5, what: 'Citadel spaceport, the landing pad' },
-  { id: 'b1-padring', area: 'ballastra', x: 2973.5, z: -2981.4, a: 0, d: 2.5, what: 'Ballastra, the pad ring' },
   { id: 'b2-deck', area: 'bl_gardens', x: 2974.1, z: -4595.4, a: Math.PI / 2, d: 2.5, what: 'Ballastra Water Gardens, a floating deck' },
   { id: 'c2-plaza', area: 'citadel', x: -49.6, z: -9.4, a: -2.04, d: 2.5, what: 'Citadel square, the ring steps (a question, not changed)' },
 ].filter((s) => !ONLY || ONLY.split(',').some((o) => s.id.startsWith(o)));

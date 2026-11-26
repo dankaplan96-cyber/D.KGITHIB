@@ -49,24 +49,25 @@ Ballastra 27, the isles 10.
 | Where | Cause | Fix | Before → after (feet vs drawn top) |
 |---|---|---|---|
 | Hamalayi, the arch steps' top tread | the rim's snow lip (`snowLips`) ran over it: the #64 steps came after the lip's rule "no lip where a walk crosses the rim" | the arch's place is shared (`wave8world.js ARCH_AT`, `archLane()`; `story/wave8.js SPOT.arch` uses it) and the lip keeps off the steps' lane as off the trails | 19.4 cm under snow → 0 (row h1) |
-| Hamalayi gorge, 46 ice shelves | drawn boxes (top 0.805) with no collider: he stood on the bank or river bed under them | a floor at each shelf's top (box, its yaw) | 16.9 cm → 0 (row h3) |
-| Hamalayi gorge, 12 floes | drawn in the water, walked through | a low block to the drawn edge, top 1.3 (a block within 12 cm of his feet is stepped over: from a shelf the floe's 0.85 would be), the ball passes | 15 cm into it → stopped at its edge (row h4) |
-| Hamalayi glacier, crevasse lines (20) | three ribbons at 3 / 6 / 9 cm over the ice | 1.2 / 1.8 / 2.4 cm (6 mm apart); the wide ones keep their low collider | up to 9.3 cm → under 3 (suite) |
+| Hamalayi gorge, the ice shelves (46 nominated pieces, shelves and floes) | drawn boxes (top 0.805) with no collider: he stood on the bank or river bed under them | a floor at each shelf's top (box, its yaw) | 16.9 cm → 0 (row h3) |
+| Hamalayi gorge, the 12 floes | drawn in the water, walked through | a low block to the drawn edge, top 1.3 (a block within 12 cm of his feet is stepped over: from a shelf the floe's 0.85 would be), the ball passes | 15 cm into it → stopped at its edge (row h4) |
+| Hamalayi glacier, crevasse lines (20 nominated) | three ribbons at 3 / 6 / 9 cm over the ice | 1.2 / 1.8 / 2.4 cm (6 mm apart); the wide ones keep their low collider | up to 9.3 cm → under 3 (suite only, no picture) |
 | Hamalayi vent, fractures (6), wet rim | ribbons 5 cm, ring 3.5 cm over the ice | 2 cm | 5.1 / 3.7 cm → 2 |
-| Hamalayi vent seal, 40 groove strips (`ventseal.js`, the default ch7 stage) | flat boxes 1.5 cm over the ice at their middle; on the vent's slope their top stood 5–9 cm over his feet | laid on the ice, tilted with it, top 1.2 cm over it | 6.1 → 1.3 cm (row h6) |
+| Hamalayi vent seal, the groove strips (40 nominated; `ventseal.js`, the default ch7 stage) | flat boxes 1.5 cm over the ice at their middle; on the vent's slope their top stood 5–9 cm over his feet | laid on the ice, tilted with it, top 1.2 cm over it | 6.1 → 1.3 cm (row h6) |
 | Hamalayi, the lift's top ramp | a collider (top L3) with nothing drawn on it: he stood up to 0.8 m over the cliff's edge | its planks drawn at the collider's top, on two bearers | nothing drawn → 0 (row h7) |
 | Hamalayi gorge, the rock stack's snow (`story/depth.js`) | snow disc 4.5 cm over the stone he stands on | 1.5 cm | 4.5 → 1.5 cm |
 | Zeelich, all the paving (`buildPaths`): street, plaza, kerbs, star, arcade flags, depot spur, gravel tracks, the plaza's kerb ring; the depot's concrete yard; the crossing and its covers (`zeelife.js`) | slabs 3.5–10 cm thick laid *on* the island's slab, which is his floor | the tops 0.4–3.0 cm over the slab in the same order, 3.5 mm or more apart (gravel and yard 0.4, street 1.4 over the gate's planks at 1.0, arcade 1.75, kerbs 2.1, crossing 2.5, plaza 2.45, star 2.8, covers 2.9, ring 3.0); the slabs' bodies sunk into the island | street 5 → 1.4 cm (row z1); plaza 6.5, star 7.5, ring 10 → under 3 |
 | Zeelich, the dog yard's leaf bed and track | boxes 5 and 8 cm over the ground | 0.8 and 1.6 cm | 5 → 0.8 cm (row z3) |
 | Pads: Zeelich's shuttle pad, the Zeelich port's (`travel.js`), the Citadel spaceport's | drawn discs 12–24.5 cm tall with no floor; their yellow rings 8–9 cm over the disc; the spaceport's bevelled side a slope off the floor | a floor at each disc's top (to its cap's edge), the rings 1.5 cm over the disc; the spaceport pad's side upright (4.8–5.0 → 4.9) | Zeelich 24.5 → 0 (row z2); spaceport 12 → 0 (row c1) |
-| Ballastra, the pad's glazed ring | 5 cm over the pad | 2.2 cm | 5 → 2.2 |
-| Ballastra, every floating deck (`look.js deckSlab`, 'floats') | the pontoons (and the floats' crowns) reached up through a low deck: on the Water Gardens' walkways 5 cm over the boards along both sides | a pontoon's top and a float's crown 1 cm under the deck's underside at most | 5 → 0 cm (row b2) |
+| Ballastra, the pad's glazed ring | 5 cm over the pad's floor (2.5 over its paving) | 2.9 cm over the floor, 4 mm over the paving (a first try at 2.2 sank it 3 mm under the paving: caught by a column probe) | 5 → 2.9 (probe; not pictured) |
+| Ballastra, every floating deck (`look.js deckSlab`, 'floats') | the pontoons (and the floats' crowns) reached up through a low deck: on the Water Gardens' walkways 5 cm over the boards along both sides | a pontoon's top and a float's crown 1 cm under the deck's underside at most (Float Harbor's pontoon row: its pontoons unchanged, its floats 12 cm lower, their crowns were inside the deck) | 5 → 0 cm (row b2) |
 | Desert, the camp rugs | the rug 3.5 cm over the sand | 1.7 cm (its backing 1.2) | 3.5 → 1.7 |
 
-**After (this branch, the same suite): class A walked 210, ok 13, FAIL 1, handed on 122, not reached 74** (the 173
-fixed pieces are no longer nominated: nothing drawn stands 3 cm over his floor there). The one FAIL was the spaceport
-pad's bevelled edge (its slope 6.5 cm over his feet as he stepped off the floor); the pad's side is upright now and the
-Citadel re-run passes (below).
+**After (this branch, the same suite): 173 fixed, 122 handed on, 74 not reached; class B 95 and C 76 listed.** The
+all-areas run on `ae3c18d7`: class A walked 210, ok 13, FAIL 1, handed on 122, not reached 74 (the fixed pieces are no
+longer nominated: nothing drawn stands 3 cm over his floor there). The one FAIL was the spaceport pad's bevelled edge
+(6.5 cm over his feet as he stepped off the floor); the pad's side is upright now. **The PASS is by parts**: Citadel,
+Zeelich and Ballastra were re-run after their last fixes and pass; there is no single all-areas run on HEAD.
 
 ## Handed on (122 class-A pieces; the suite prints each as HANDED ON with its depth)
 
@@ -92,12 +93,15 @@ Class B (108 before, 95 after) and C (76) are listed in the run's report (REPORT
 ## Visible changes (for the user's pick)
 
 1. The Hamalayi: a gap in the rim's snow lip where the arch's steps go down (h1); planks on the lift's top ramp (h7);
-   the crevasse lines and the vent's cracks lower on the ice; the seal ring's groove strips lie with the ice.
+   the crevasse lines and the vent's cracks lower on the ice; the seal ring's groove strips lie with the ice; the rock
+   stack's snow 3 cm lower.
 2. Zeelich: the paving, kerbs, star and the plaza's kerb ring sit 2–7 cm lower (flush with the ground), the depot's
    yard and the dog yard's bed and track too.
-3. The yellow rings on the three pads lie on the pad (no raised tube).
-4. Ballastra: the floating walkways' pontoons and floats no longer show through the boards.
-5. Not visible: floors under the shelves and pads, the floes' block.
+3. The yellow rings on the three pads lie on the pad (no raised tube); the spaceport pad's edge upright (no bevel).
+4. Ballastra: the floating walkways' pontoons and floats no longer show through the boards; Float Harbor's floats 12 cm
+   lower; the pad's glazed ring 2 cm lower.
+5. The Desert's camp rugs 2 cm lower.
+6. Not visible: floors under the shelves and pads, the floes' block.
 
 ## Not covered
 
@@ -107,6 +111,13 @@ Class B (108 before, 95 after) and C (76) are listed in the run's report (REPORT
 - Character feet against the drawn surface (the rig's soles, `tests/lib/contact.js CT.feet`): the suite measures
   `hero.pos.y` (the physics' feet), not the animated soles.
 - NPCs and residents: not measured here.
+- Boarding and arriving at the three raised pads (the shuttles' prompts and landing spots) were not run; the spaceport's
+  "Board" prompt shows in the after picture (row c1). `wave8` was not run after `SPOT.arch` moved into `wave8world.js`
+  (the same numbers); instead the arch's approach was walked by keys from the far bank straight at the arch at x 4270 and
+  0.5 m to either side: up to the arch's prompt spot in 6.6 / 7.7 / 6.2 s, back down to the river in 2.6 / 2.5 / 2.6 s
+  (SMALLFIX: 5.3 and 3.1 s from its own start), none stopped. The floes' gaps to the nearest shelf, boulder or floe:
+  0 (touching), 0.3–0.53 m (to a shelf, which he steps onto from the river) or 1.0 m and more: no slot between two
+  blocks.
 
 ## Tests (each once, `SERVE=1`)
 
@@ -116,8 +127,9 @@ Class B (108 before, 95 after) and C (76) are listed in the run's report (REPORT
 | `tests/feet-on-surface.mjs` on this branch (`077d7a5c`..`ae3c18d7`, all areas) | FAIL 1 (the spaceport pad's bevel), 122 handed on, 74 not reached; water: the river 37.7 cm deep at the deepest walk, the channel 18.5, the vent's pool 7.1, the Desert's sea 14.9 |
 | the same, `ONLY=citadel`, after the pad's fix (`d1db477e`) | **PASS** (class A 85: ok 4, handed on 68, not reached 13) |
 | the same, `ONLY=zeelich`, after the paving's re-spacing (`2958282b`) | **PASS** (class A 13: ok 1, handed on 8, not reached 4) |
-| `tests/walkers.mjs` (`d1db477e`) | **PASS** 37/37, no errors |
+| `tests/walkers.mjs` (`d1db477e`, before Zeelich's re-spacing, which changed draw heights only) | **PASS** 37/37, no errors |
 | `tests/worldfit.mjs` (`d1db477e`) | FAIL 7/8 visual: z-fighting my lowering made in Zeelich (the street's west end 2 mm over the gate's planks, 0.63 m²; the crossing's covers 3 mm over it, 0.17 m² twice). The layers re-spaced 3.5 mm or more apart |
+| the same, `ONLY=ballastra`, after the ring's second height | **PASS** (handed on 2: the swing bridge) |
 | `tests/worldfit.mjs` again (`2958282b`; the result was in doubt) | **PASS** 8/8 visual, 1/1 functional (0 judged z-fights; 113 smaller listed) |
 | `tests/feet-shots.mjs` (pictures and numbers, before on the base, after here) | the table's before → after |
 
@@ -134,4 +146,4 @@ Class B (108 before, 95 after) and C (76) are listed in the run's report (REPORT
 
 `e82027d4`, `b9f987de`, `1e0d614c`, `ae3c18d7` the suite (`tests/feet-on-surface.mjs`, `tests/lib/sweep.js` SW.raw,
 `tests/feet-shots.mjs`, `tests/README.md`); `f5fb720f` the Hamalayi; `7dde9965`, `077d7a5c`, `d1db477e`, `2958282b` the
-rest; the doc and sheet last. Old saves: nothing saved changes (no ids, no flags; colliders and draws only).
+rest; `f35d4119` the doc and sheet; the Ballastra ring and these corrections last. Old saves: nothing saved changes (no ids, no flags; colliders and draws only).

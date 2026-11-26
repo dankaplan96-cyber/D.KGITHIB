@@ -232,34 +232,6 @@
   "what": "Citadel spaceport, the landing pad"
  },
  {
-  "id": "b1-padring",
-  "at": [
-   2973.5,
-   1.4,
-   -2985.4
-  ],
-  "feetPx": [
-   480,
-   335
-  ],
-  "over": [
-   {
-    "y": 1.425,
-    "what": "Buffer<ballastra"
-   },
-   {
-    "y": 1.4,
-    "what": "Buffer<ballastra"
-   },
-   {
-    "y": 1.28,
-    "what": "Buffer<ballastra"
-   }
-  ],
-  "top": 0.025,
-  "what": "Ballastra, the pad ring"
- },
- {
   "id": "b2-deck",
   "at": [
    2973.955,
