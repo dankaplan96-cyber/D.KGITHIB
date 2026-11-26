@@ -784,8 +784,15 @@ body.no-cursor, body.no-cursor * { cursor: none !important; }
    only). */
 :where(:root[lang=he]) :where(:not([dir])) { unicode-bidi: plaintext; }
 :root[lang=he] kbd { unicode-bidi: isolate; direction: ltr; }
-/* a speaker's name before the line (a story scene's subtitle): the name opens the Hebrew sentence, on its right */
-:root[lang=he] #cine-sub { direction: rtl; }
+/* a speaker's name before the line (every story film's subtitle #cine-sub: the opening, the ending, the ferry, the
+   travel films; the radio tuning's line .omline): the name opens the Hebrew sentence, on its right, the words to its
+   left. (RTL-138, P138: `direction` alone did nothing — the plaintext rule above reached the box itself, whose letters all
+   sit in isolated children (the name <b>, the words <span>), so its paragraph found no letter and fell back to left to
+   right: the name at the LEFT end, read last, mid-text on two lines. The box is an isolate of its own now: its rtl holds.) */
+:root[lang=he] #cine-sub, :root[lang=he] #omtune .omline { direction: rtl; unicode-bidi: isolate; }
+/* the dialogue box's name tag: in Hebrew at the top right, over where the Hebrew line starts (P138, the user's pick via
+   the local agent, 26.11); the box, its ▼ and everything else as in English (HE-LTR) */
+:root[lang=he] #dialog .name { inset-inline-start: auto; inset-inline-end: 20px; }
 /* a paragraph built of spans (a description's first sentence and the rest): the spans are part of its one paragraph */
 :root[lang=he] .inv-desc > span { unicode-bidi: normal; }
 /* a note's own mark (✓ done, ◆ to do) stays at the start of its words, as the tip's ✓ does: on the right of a Hebrew line */
