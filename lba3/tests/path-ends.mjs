@@ -59,7 +59,7 @@ function raster(name) {
   if (x1 < x0) return null;
   x0 -= 6; z0 -= 6; x1 += 6; z1 += 6;
   const W = Math.ceil((x1 - x0) / RES), H = Math.ceil((z1 - z0) / RES), M = new Uint8Array(W * H), src = new Uint8Array(W * H), Y = new Float32Array(W * H).fill(NaN), Dm = new Uint8Array(W * H);
-  const fs_ = Gs.map(fAtOf), ds_ = Gs.map((G) => (G.d ? fAtOf({ ...G, f: G.d }) : null));
+  const fs_ = Gs.map((G) => { if (!G.fr) return fAtOf(G); const a = fAtOf({ ...G, f: G.fr }), b = fAtOf({ ...G, f: G.fp }), ra = fAtOf({ ...G, f: G.rs }), pa = fAtOf({ ...G, f: G.ps }); return (x, z) => Math.max(ra(x, z) > 0.45 ? a(x, z) : -4, pa(x, z) > 0.5 ? b(x, z) : 0.05); }), ds_ = Gs.map((G) => (G.d ? fAtOf({ ...G, f: G.d }) : null));   // (PATHS-140B: the rock's and the paving's lines and strengths interpolated apart, as the shader cuts: pathends.js grid)
   if (fs_.length) for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const X = x0 + (x + 0.5) * RES, Z = z0 + (y + 0.5) * RES;
     for (let q = 0; q < fs_.length; q++) if (fs_[q](X, Z) < 0) {

@@ -18,6 +18,13 @@
     const re = geo?.attributes?.rockedge?.array, lw = geo?.attributes?.lawn?.array, Q = 32767;
     if (!s2) return null;
     const n = t.segs + 1, f = new Float32Array(n * n), d = new Float32Array(n * n), pk = new Uint8Array(n * n);
+    // (PATHS-140B: with the traced lines, the rock's term and the paving's apart, fr and fp: the scan takes the larger
+    //  after interpolating each across the triangle, as the shader cuts each line on its own interpolated distance. The
+    //  larger taken per point first (f) read the paving up to ~0.7 m short of the drawn edge where the two lines run
+    //  close — on the isles' patches against bare rock — so a kerb on the drawn edge was read as missing)
+    //  (and each line's strength apart, rs and ps: the shader cuts on the interpolated strength too, so a faint paving
+    //  beside its line, under half its strength, is not drawn: read as not paved)
+    const fr = re ? new Float32Array(n * n) : null, fp = re ? new Float32Array(n * n) : null, rs = re ? new Float32Array(n * n) : null, ps = re ? new Float32Array(n * n) : null;
     let paved = 0, patch = 0, under = 0, shareN = 0;   // (shareN: grid points whose paving share of the splat is over a half: the guard's count)
     // (P136: on a Zeelich isle the ground under a deck island's decks is never seen: left out. P140: WA-11's bare patches
     //  are judged now (the user's answer to P136: each patch ends at a clean edge or joins a path); counted apart too)
@@ -34,8 +41,9 @@
       //  (+1 rock, −4 deep paving) drew it as the grid's staircase)
       const rD = re && re[k * 4 + 1] / Q > 0.45 ? -(re[k * 4] / Q) * RANGE : -RANGE;   // (no rock near: no limit)
       f[k] = e < RANGE - 0.05 ? e : re ? Math.max(rD, re[k * 4 + 3] / Q > 0.5 ? (re[k * 4 + 2] / Q) * RANGE : Math.max(0.05, (0.5 - share) * 2)) : isRock ? 1 : (0.5 - share) * 2;
+      if (re) { if (e < RANGE - 0.05) { fr[k] = -RANGE; rs[k] = 0; fp[k] = e; ps[k] = 1; } else { fr[k] = -(re[k * 4] / Q) * RANGE; rs[k] = re[k * 4 + 1] / Q; fp[k] = (re[k * 4 + 2] / Q) * RANGE; ps[k] = re[k * 4 + 3] / Q; } }
       const kd = kind ? kind(lx0 + (k % n) * t.step, lz0 + Math.floor(k / n) * t.step) : null;
-      if (f[k] < 0 && kd === 'under') { f[k] = 1; under++; }
+      if (f[k] < 0 && kd === 'under') { f[k] = 1; under++; if (fr) { fr[k] = 1; rs[k] = 1; } }
       if (kd === 'patch') { pk[k] = 1; if (f[k] < 0) patch++; }
       if (f[k] < 0) paved++;
       if (share > 0.5 && kd !== 'under') shareN++;
@@ -52,7 +60,7 @@
       d[k] = dv;
     }
     const r3 = (v) => Math.round(v * 1000) / 1000;
-    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, r3), d: Array.from(d, r3), pk: kind ? Array.from(pk) : null, paved, patch, under, shareN, mode: ed && !re ? 'edge+share' : re ? 'traced' : 'share' };
+    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, r3), fr: fr && Array.from(fr, r3), fp: fp && Array.from(fp, r3), rs: rs && Array.from(rs, r3), ps: ps && Array.from(ps, r3), d: Array.from(d, r3), pk: kind ? Array.from(pk) : null, paved, patch, under, shareN, mode: ed && !re ? 'edge+share' : re ? 'traced' : 'share' };
   }
   // the outdoor area an x, z belongs to (nearest outdoor room's centre within 400 m; else Citadel near the origin)
   function areaOf(x, z) {
@@ -206,6 +214,7 @@
       if (kerbNear(x + nx * 0.12, z + nz * 0.12, 0.45)) return 'kerb';
       const g0 = groundY(P, x - nx * 0.2, z - nz * 0.2, y), hits = [], seen = new Set();
       let what = null, prev = g0;
+      solidsAt(P, x, z, g0, seen, 0, hits); if (hits.some((h) => h.kind === 'solid')) what = 'wall';   // (PATHS-140B: a wall standing on the edge itself — the paving runs on under the house — closes it too)
       for (let a = 0.1; a <= 0.8 + 1e-6 && !what; a += 0.1) {
         const px = x + nx * a, pz = z + nz * a, gy = groundY(P, px, pz, Number.isFinite(y) ? prev : NaN);
         if (Math.abs(gy - prev) >= 0.3 || Math.abs(gy - g0) >= 0.3) what = 'face';
