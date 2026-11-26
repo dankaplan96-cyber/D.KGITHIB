@@ -73,6 +73,12 @@ const chunk = (o) => ev((o) => {
   const SH = { high: [1, 1], medium: [0.56, 0.8], lean: [0.46, 0.74], low: [0.32, 0.7], loweco: [0.31, 0.63], low75: [0.29, 0.63], low65: [0.26, 0.63] };
   let t = S.t, acc = S.acc || 0, committed = null;
   const seen = S.seen ??= { caps: [], fps: [], nMax: 0, rates: [] };
+  // (one clock: Auto stamps its frames with performance.now() and the even pace with the rAF time; on this synthetic
+  //  display the two would drift apart — the display's seconds pass faster or slower than the machine's — so while it
+  //  runs, performance.now() follows the synthetic display, never going back)
+  const now0 = S.now0 ??= performance.now.bind(performance), base = Math.max(S.virt ?? 0, now0()) - S.t;
+  performance.now = () => base + S.t;
+  try {
   while (t < end) {
     if (o.pauseEvery && t - (S.lastPause ?? 0) >= o.pauseEvery && A.gov.pending().length) {
       S.lastPause = t; const a = A.gov.applied; G.state = 'pause'; S.tick(t); t += R; G.state = 'play';
@@ -89,6 +95,7 @@ const chunk = (o) => ev((o) => {
     if (drew) { acc += Math.max(gpu, cpu); const n = Math.max(1, Math.floor(acc / R + 1e-6)); acc = Math.max(0, acc - n * R); t += n * R; }
     else t += R;
   }
+  } finally { S.virt = base + t; performance.now = now0; }
   S.t = t; S.acc = acc;
   return { t: Math.round(t), committed, p: o.ids[A.gov.applied], pending: A.gov.pending().length ? o.ids[A.gov.p] : null, phase: A.gov.phase };
 }, o);

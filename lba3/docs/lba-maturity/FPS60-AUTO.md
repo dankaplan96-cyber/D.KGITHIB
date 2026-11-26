@@ -80,11 +80,17 @@ the brief's order below Low (resolution in steps, then detail). Shadows are alre
 | 1 | High | as before | |
 | 2 | Medium | as before | |
 | 3 | Medium-lean | as before (skipped on battery) | |
-| 4 | Low | the Low preset: 85 % resolution, no shadows, no MSAA (output-pass edges), 2 lamps, Low's grass and small casters | |
+| 4 | Low | the Low preset: 85 % resolution, no shadows, no MSAA (output-pass edges), 2 lamps, Low's grass and small casters | **GPU pressure only (new)** |
 | 5 | **Low-eco** | Low + far people (beyond 25 m) animated at half rate + their tiny far parts dropped | CPU pressure only |
 | 6 | **Low 75 %** | Low-eco at 75 % resolution (−22 % pixels), sharpened in the output pass | GPU pressure only |
 | 7 | **Low 65 %** | Low-eco at 65 % (−25 % pixels from 75 %): **the floor** | GPU pressure only |
 
+- **Low is now a GPU rung.** Seen from Medium-lean, it lowers resolution and turns shadows off, but it gives back
+  Medium-lean's two far-people knobs. For CPU pressure it therefore bought almost nothing: the UHD 620 street (AUTO-P95
+  S4) took Low, P95's revisit took it back, and no CPU step was allowed after that. CPU pressure at Medium-lean now goes
+  to Low-eco instead, which is Low's picture with the far-people knobs kept. GPU pressure takes
+  Medium-lean → Low → Low 75 % → Low 65 %, the same path as before plus the two new rungs. Low's picture itself is
+  unchanged.
 - **One side per rung (`Governor.below(p, kind)`).** A step down for CPU pressure never takes a resolution-only rung:
   that would cost sharpness and buy no CPU time. A step for GPU pressure steps over Low-eco, which buys almost no GPU
   time. Without this, P95's revisit (a step that bought < 7 % goes back and blocks further steps of its kind) would
@@ -101,6 +107,17 @@ the brief's order below Low (resolution in steps, then detail). Shadows are alre
   are visual only (`KNOBS`, unchanged). The resolution steps change only the scene pass's viewport (`applyScale`). No
   render target is rebuilt between Low and Low 65 % (same pixel ratio, same MSAA 0). As always, a profile changes only
   at a commit point: a scene change behind its black, or an open pause, inventory or map.
+- **The refresh meter (`pace.js` RefreshMeter).** Two cases used to read the screen as slower than it is:
+  - A GPU-bound game drawing every 5th and 6th refresh in a mix (41.7 / 50 ms on 120 Hz) has a mean interval that is no
+    whole multiple of the refresh. After ~27 such frames (~1.2 s) the meter read a "22 Hz screen". Auto's budget then
+    became 45 ms, and it held High at 22 fps (fps60-auto D, first run).
+  - A game drawing every 3rd refresh for 20 s was read as a 40 Hz screen when the 20 s memory ran out. Auto then
+    held 40 fps (second run).
+
+  Now a reading whose intervals are each a whole multiple of the remembered refresh counts as skipped refreshes. For
+  readings of 3+ refreshes, or such a mix, the memory lasts 5 min instead of 20 s. A real move to a slower screen is
+  either 2× (120 → 60 Hz, still 20 s, unchanged) or no multiple at all (at once, unchanged). Meanwhile the pace counts in
+  the old refresh, which gives the same drawn intervals.
 - **Unchanged rules.** Hysteresis, cooldowns and the step back up are as before:
   - ≥ 3 pressure windows of 1.5 s before a step;
   - a step judged at the revisit;
@@ -151,15 +168,22 @@ knobs save on the CPU (~10 % by the test truth).
 The synthetic decision table (`tests/autoquality.mjs`; each machine's truth from those reports, the new rungs' truth an
 assumption; 8 min of street / interior / street / combat):
 
-| machine | power | before P137: settles on, street fps | now |
-|---|---|---|---|
-| UHD 620 (dPR 2) | mains | Medium-lean, 44.1 | Medium-lean, 44.1 (the step to Low bought nothing and went back, so no CPU step after it) |
-| UHD 620 (dPR 2) | battery | Low, 36.6 | **Low-eco, 41.2** |
-| UHD 620 light CPU (GPU-bound) | mains / battery | Medium-lean / Low, 60 | the same, 60 |
-| UHD 620 light CPU, Frame Rate 30 by hand | battery | Low, late 0.06 | Low 65 %, late 0.05 |
+| machine | power | limit | before P137: settles on (street fps / frames shown late) | now |
+|---|---|---|---|---|
+| UHD 620 (dPR 2) | mains | 60 | Medium-lean, 44.1 (Low tried, bought nothing, went back) | **Low-eco, 54.2** |
+| UHD 620 (dPR 2) | battery | 60 | Low, 36.6 | **Low-eco, 41.2** |
+| UHD 620 (dPR 2) | battery | 30 (by hand) | Medium, late 0.52 (Low tried and went back) | Low-eco, late 0.33 |
+| UHD 620 light CPU (GPU-bound) | mains / battery | 60 | Medium-lean / Low, 60 | the same, 60 |
+| UHD 620 light CPU | battery | 30 (by hand) | Low, late 0.06 | Low 65 %, late 0.05 |
+| GTX 1050 | battery, Chrome's pacing | 60 | Medium (a try at Low went back) | Medium (a try at Low-eco went back) |
 
-The rest of the table (fast GPU, GTX 1050 mains / battery / 41 Hz / paced) is unchanged. The last row is a side
-effect: under a hand-picked 30 limit with GPU frames shown late, Auto may now go below Low by resolution too.
+The rest of the table (fast GPU, GTX 1050 mains / battery / 41 Hz) is unchanged.
+
+- **UHD 620 on mains** gains ~10 fps on the street by the model, at the cost of the shadows and 15 % of the resolution.
+  The P95 rule of keeping the sharper picture when a step buys nothing still holds: Low-eco is kept only because it
+  buys frame rate. It still does not reach 60 there.
+- **Rows marked "by hand" are side effects.** Under a hand-picked 30 limit with frames shown late, Auto now uses the new
+  rungs too.
 
 The remaining gap on the street is CPU work. That belongs to the runtime performance engineer (the street's
 simulation / submission), not to this ladder. Handed to the coordinator.
