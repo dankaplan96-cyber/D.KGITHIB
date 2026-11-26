@@ -226,8 +226,10 @@ export function zeppelinMast(P, o) {
     add(cached('zep-nac', () => tintGeo(lathe([[0.0001, 0], [0.22, 0.12], [0.3, 0.45], [0.26, 0.95], [0.12, 1.15], [0.0001, 1.2]], 10), '#6a6a6e')), mats.vc, M(ex, gy + 0.3, ez - 0.6, 0, Math.PI / 2));
     add(cached('zep-prop', () => tintGeo(bbox(0.12, 1.5, 0.05, 0.02, 1), '#4a3a30')), mats.vc, M(ex, gy + 0.3, ez - 0.66, 0, 0).multiply(new THREE.Matrix4().makeRotationZ(s * 0.5)));
   }
-  // the mooring lines from the gondola's nose down to the quay's edge, either side of the mast
-  // the mast's collider, and the hull's in the air (the camera keeps out of it: it is solid to the camera's sight,
-  // never reached on foot — it lies over the clouds)
-  return { cols: [{ type: 'cyl', lx: 0, lz: 0, r: 1.25, top: H + 1.0 }, { type: 'box', lx: 0, lz: z0 + 3.2 + (L - 3.2) / 2, hw: Rh * 0.9, hd: (L - 3.2) / 2, top: hy + Rh, bottom: hy - Rh - 1.6 }], nose: W(0, hy, z0), gondola: W(0, gy - 0.5, gz - 2.2), hy };
+  // the mast's collider, and the hull's and the gondola's in the air (the camera reads them as scenery and rises over
+  // them: roomocc.js occAuto; the hull's from its nose, over the quay too, but its underside 3 m over Twinsen's head, so
+  // he walks under the nose; the gondola's past the quay's edge, over the clouds, never reached on foot)
+  return { cols: [{ type: 'cyl', lx: 0, lz: 0, r: 1.25, top: H + 1.0 },
+    { type: 'box', lx: 0, lz: z0 + L / 2, hw: Rh * 0.95, hd: L / 2, top: hy + Rh, bottom: hy - Rh },
+    { type: 'box', lx: 0, lz: gz, hw: 2.3, hd: 2.5, top: hy - Rh + 0.2, bottom: gy - 0.8 }], nose: W(0, hy, z0), gondola: W(0, gy - 0.5, gz - 2.2), hy };
 }

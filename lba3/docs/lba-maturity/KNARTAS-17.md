@@ -31,8 +31,12 @@ its own port; ours drew the houses as square Esmer boxes with blue domes and had
   with still propellers, two mooring lines down to the quay. Scenery only.
   - It is moored low, beside the quay, on purpose: the play camera looks down on the island, so anything above its own
     height is never in frame. A first version on a 12 m mast was visible only from overhead.
-  - The hull has a collider in the air, over the clouds, out of reach on foot. It keeps the camera out of the hull when
-    Twinsen stands at the arm's end facing inland.
+  - The hull and the gondola have colliders in the air. The camera reads them as scenery (roomocc.js occAuto) and keeps
+    out of the hull. The hull's collider starts at the nose, but its underside is 3 m over Twinsen's head, so he walks
+    under the nose; the gondola's lies past the quay's edge, out of reach on foot. Checked once at the arm's tip facing
+    inland, under the nose: the camera comes in close behind him and is not inside the hull. Before this fix, a capture
+    there showed the camera inside the nose.
+  - The original's four jars at the arm's west end are left out where the mast stands, with the switch on only.
 
 ## Doors, rooms, routes and saves
 
@@ -50,21 +54,21 @@ its own port; ours drew the houses as square Esmer boxes with blue domes and had
 
 | Spot (island-local) | draw calls before → after | triangles before → after |
 |---|---:|---:|
-| village (20.6, 23.2) | 60 → 53 | 653,483 → 486,825 |
-| dig slope / gold dome (20.5, 9.5) | 54 → 50 | 513,597 → 387,367 |
-| south lanes (22.3, −16.2) | 63 → 58 | 678,537 → 549,421 |
-| harbour (−12.0, −26.1) | 72 → 71 | 530,944 → 502,168 |
-| landing (shuttle spawn) | 87 → 81 | 824,993 → 658,352 |
-| quay by the pad (−18.9, −36.6) | 67 → 66 | 455,496 → 429,084 |
-| arm's west end, by the hull (−34.5, −35.9) | 93 → 88 | 821,600 → 682,033 |
-| quay south (−20, −44) | 71 → 70 | 332,776 → 328,915 |
+| village (20.6, 23.2) | 60 → 53 | 653,483 → 488,563 |
+| dig slope / gold dome (20.5, 9.5) | 54 → 50 | 513,597 → 387,365 |
+| south lanes (22.3, −16.2) | 63 → 58 | 678,537 → 546,335 |
+| harbour (−12.0, −26.1) | 72 → 71 | 530,944 → 492,518 |
+| landing (shuttle spawn) | 87 → 81 | 824,993 → 655,118 |
+| quay by the pad (−18.9, −36.6) | 67 → 66 | 455,496 → 419,434 |
+| arm's west end, by the hull (−34.5, −35.9) | 93 → 88 | 821,600 → 672,383 |
+| quay south (−20, −44) | 71 → 70 | 332,776 → 319,265 |
 
 The island's own group, measured once when it is built:
-- triangles 322,349 → 235,336;
-- vertex and index buffers 23.9 MB → 15.8 MB;
-- materials 69 → 65, meshes 151 → 147;
-- colliders 548 → 612 (a stadium hut has three);
-- build time 17.4 s → 16.6 s (one run each on a loaded SwiftShader machine: noise, not a measured gain).
+- triangles 322,349 → 236,926;
+- vertex and index buffers 23.9 MB → 16.0 MB;
+- materials 69 → 65, meshes 151 → 148;
+- colliders 548 → 610 (a stadium hut has three);
+- build time 17.4 s → 15.1 s (one run each on a loaded SwiftShader machine: noise, not a measured gain).
 
 Nothing is added per frame: no light, no update, no new texture. The huts' walls and domes share one vertex-coloured
 plaster material, and the zeppelin uses the island's existing materials (planks, brass, stone, the vertex-colour
@@ -76,8 +80,9 @@ material). No hardware figures; frame times and GPU cost on a real GPU are unmea
   - all **20 Knartas doors** PASS: walked to on foot from the shuttle pad, entered (on the room's floor, furnished, lit),
     the room's own look read, out facing away, in again;
   - the region's shut-doors check PASS; the save-inside / Continue check PASS.
-  - One FAIL, caused by the new region filter and not by the game: the keepers check asked keepers whose regions the
-    filtered run never built ("room not built"). The test now skips those under `REGIONS`. It was not re-run.
+  - A first run, partly on an earlier build, had one FAIL caused by the new region filter: the keepers check asked
+    keepers whose regions the filtered run never built. The test now skips those under `REGIONS`. Re-run once on the
+    final code: **PASS 24/24**, no errors.
 - `tests/francos.mjs` (H-15, from the campaign's format-6 chapter-4 save): **PASS**, every step A–H. This covers:
   - the old save loads;
   - Gubb at the gold dome's wall;
@@ -110,7 +115,7 @@ then be about 68 and 64. Still open:
 - **The village shot.** In the village shot (sheet row 4) the camera stands close to a dome, which fills the left of the
   frame. It does not hide Twinsen.
 - **By the zeppelin.** At the arm's west end, facing inland, the hull fills a third of the frame (beside the camera, not
-  between it and Twinsen).
+  between it and Twinsen). Right under the nose, the camera comes in close behind him.
 - **Refinery.** The refinery is still a flat walled yard (the review asks for its machinery block).
 - **Gatehouses.** The two gatehouses over the causeway and the thin solid walls stay Esmer: their passage logic is not
   touched.
