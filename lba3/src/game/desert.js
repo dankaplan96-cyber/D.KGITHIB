@@ -364,10 +364,10 @@ function splatFn(x, z, h, slope, w) {
   const pv = Math.max(pavedAt(x, z), keshPave(x, z));
   if (pv > 0) { w[4] = 2 * pv; w[1] *= 1 - pv; }
   const td = trackDist(x, z);
-  if (td < 2.4) { const dr = 1 - keshDrift(x, z); w[3] = smoothstep(2.4, 1.2, td) * 1.6 * dr; w[1] *= 0.5 + 0.5 * (1 - dr); }   // (the drift covers the track)
+  if (td < 2.4) { const dr = 1 - keshDrift(x, z); w[3] = smoothstep(2.4, 1.2, td) * 1.6 * dr * (1 - pv); w[1] *= 0.5 + 0.5 * (1 - dr); }   // (the drift covers the track; P136: the paving wins over the track: it crossed Kesh's plaza as a dirt band)
   if (Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r - 4) { w[3] += 0.8 * (1 - keshPave(x, z)); }   // (KESH-ORIG: paving, not trodden dirt, in the core)
   const od = Math.hypot(x - OASIS.x, z - OASIS.z);
-  if (od > OASIS.r - 1 && od < OASIS.r + 4) w[0] = 0.7 * smoothstep(OASIS.r + 4, OASIS.r + 1, od);
+  if (od > OASIS.r - 1 && od < OASIS.r + 4) w[0] = 0.7 * smoothstep(OASIS.r + 4, OASIS.r + 1, od) * (1 - pv);   // (P136: nor its wet ring over Kesh's paving: a bare tongue cut into the plaza by the palms)
   if (inPost(x, z)) { w[4] = 2; w[1] = 0; w[3] = 0; }
 }
 
@@ -402,7 +402,9 @@ function groundGrid() {
       const pit = [k]; done[k] = 1;
       for (let p = 0; p < pit.length; p++) nb8(pit[p], (a) => { if (!done[a] && !open[a] && h[a] < 0.05) { done[a] = 1; pit.push(a); } });   // (and its wet rim under the sea's sheet)
       const c = pit[0], cx = x0 + (c % n) * step, cz = x0 + ((c - (c % n)) / n) * step;
-      if (pit.length > 80 || Math.hypot(cx - DIG.x, cz - DIG.z) < DIG.r + 4 || Math.hypot(cx - OASIS.x, cz - OASIS.z) < OASIS.r + 4) continue;
+      // (P136: not the School's water channel at the mask's foot, desertold.js RILL: lifted, it was a dry strip of sand
+      //  between the forecourt and the plaza under the arched bridge, the two pavings almost meeting across it)
+      if (pit.length > 80 || Math.hypot(cx - DIG.x, cz - DIG.z) < DIG.r + 4 || Math.hypot(cx - OASIS.x, cz - OASIS.z) < OASIS.r + 4 || pit.some((a) => rillAt(x0 + (a % n) * step, x0 + ((a - (a % n)) / n) * step) > 0.5)) continue;
       for (const a of pit) h[a] = 0.05;
     }
   }

@@ -972,6 +972,17 @@ export function* buildZeelichSteps(scene, physics) {
     B.add(slabGeo(star, 0.075, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, Y0, 0);
     // kerb ring of the plaza
     B.add(lathe([[PLAZA.r - 0.05, 0], [PLAZA.r + 0.18, 0], [PLAZA.r + 0.18, 0.1], [PLAZA.r - 0.05, 0.1]], 48, 1.2), tm('stone', { color: '#f2f0f2' }), PLAZA.x, Y0, PLAZA.z);
+    // P136 (the user, 26.11: paving that stops short of other paving is a fault): the council house's arcade floor ended
+    // 0.2–2.4 m short of the plaza's kerb ring, the island's bare granite in the two corners between. Its flags run on to
+    // the ring now (their edge under the ring's stone, 1 cm under the plaza's own paving), the arcade's width
+    for (const h of HOUSES) {
+      if (!h.arcade || h.ry !== 0) continue;
+      const R = PLAZA.r - 0.04, front = h.z + h.d / 2 + 2.1 - 0.1, hw = (h.w - 0.2) / 2, x0 = h.x - hw, x1 = h.x + hw;
+      if (front > PLAZA.z || Math.abs(x0 - PLAZA.x) >= R || Math.abs(x1 - PLAZA.x) >= R || PLAZA.z - Math.sqrt(R * R - (h.x - PLAZA.x) ** 2) < front) continue;
+      const P = [[x0, front], [x1, front]];
+      for (let i = 0; i <= 12; i++) { const x = x1 + (x0 - x1) * (i / 12); P.push([x, PLAZA.z - Math.sqrt(R * R - (x - PLAZA.x) ** 2)]); }
+      B.add(slabGeo(P, 0.055, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, Y0, 0);
+    }
     // depot spur and the drill-platform approach
     B.add(slabGeo([[DEPOT.gate[0] - 0.4, 3], [DEPOT.gate[1] + 0.4, 3], [DEPOT.gate[1] + 0.2, DEPOT.z0 + 0.3], [DEPOT.gate[0] - 0.2, DEPOT.z0 + 0.3]], 0.05, TILE.cobble), cobble, 0, Y0, 0);
     // dirt tracks to the mills

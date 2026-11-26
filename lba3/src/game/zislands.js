@@ -808,7 +808,7 @@ const STYLE = {
     },
   },
   undergas: {   // Under Celebration: the gas works — a gas holder and a pump engine, pipes, caged lamps, a dimmer sky
-    trees: '#d8d0e8', ground: ['#c8c8a8', '#b8bca0', '#c8b8a8'], pave: 'concrete', paveAt: (x, z) => Math.hypot(x + 17, z + 28) < 15,
+    trees: '#d8d0e8', ground: ['#c8c8a8', '#b8bca0', '#c8b8a8'], pave: 'concrete', paveAt: (x, z) => Math.hypot(x + 17, z + 28) < 15, paveSlope: 0.35,   // (P136: the yard's concrete ran up the ridge in its circle as a tongue that ended in the rock and grass: only where the ground is near level, as Celebration's plaza)
     walls: ['#d8d0d8', '#c8c8d0', '#d8c8c0'], domes: [['#4a5a6a', '#a8b8c8'], ['#2f8a9a', '#a8e8ee']],
     env: { fog: '#cdb8cc', sun: '#ffe2c8', hemiSky: '#d8cce8', hemiGround: '#5a4c62', sunI: 2.0, hemiI: 1.05, fogRange: [75, 260] },
     target: { x: -15, z: -25, word: 'GAS WORKS' }, near: 16, far: 30,
