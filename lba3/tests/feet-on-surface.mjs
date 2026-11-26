@@ -34,7 +34,7 @@ const SNOW = ['#f6f9ff'];   // (and any piece in the snow's own look, MM.snow: d
 
 const { browser, page } = await launch({ width: 960, height: 540 });
 const ev = (f, a) => page.evaluate(f, a);
-await open(page, '?nocine&allregions');
+await open(page, '?nocine&allregions&nobatch');   // (nobatch: the draw-batched pieces (Citadel's rocks) drawn as themselves, so the store holds them)
 await menu(page, 'new');
 await page.addScriptTag({ path: SWEEP });
 await ev(() => { P.settle(); Object.assign(game.flags, { prologueDone: true, intro: true }); game.hero.hasBall = true; });
@@ -136,6 +136,7 @@ for (const area of areas) {
       const put = (x, z, y) => {
         if (areaId === 'citadel') { if (G.room) { G.exitRoom({ x, z, a: 0 }, true, true); G.step(0.3); } }
         else if (G.room?.id !== areaId) { G.enterRoom(areaId, { x, z, a: 0 }, true, true); G.step(0.3); }
+        if (G.state !== 'play' || G.trans) P.settle();   // (an arrival's remark, a fade: played through as a player would, E)
         for (const e of G.enemies) if (e.present) e.present = false;
         G.doorCool = 1e6;
         h.pos.set(x, PH.groundAt(x, z, y + 0.3), z); h.vy = 0; h.onGround = true; h.resetMotion?.(); h.behaviour = 'normal'; h.hp = h.maxHp; h.dead = false; G.step(0.1);
