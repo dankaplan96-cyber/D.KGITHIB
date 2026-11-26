@@ -527,12 +527,12 @@ export function dressAsylum(R, physics) {
       papers(k, 0.2, 0, -0.15, 2, 9, 'form');
     });
     // FunFrock's old plans pinned on the back wall, a strongbox, an open crate of crystals, a cabinet
-    at(A, 40.0, 20.12, Y(40, 20.6, 5) + 1.7, 0, () => { const k = A.k; k.add(rbox(1.8, 1.1, 0.02, 0.005), MAT.flat('#cfdce8', 0.9), 0, 0, 0); k.add(plane(1.7, 1.0), MAT.map(plansTex(), 0.9), 0, 0, 0.012); });
+    at(A, 40.0, 20.12, Y(40, 20.6, 5) + 1.7, 0, () => { const k = A.k; k.add(rbox(1.8, 1.1, 0.02, 0.005), MAT.flat('#cfdce8', 0.9), 0, 0, 0); k.add(plane(1.7, 1.0), MAT.map(plansTex(), 0.9), 0, 0, 0.022); });   // (FLICKER-142: 1.2 cm off the board, not 2 mm)
     put(A, 37.9, 27.6, 5, HALF, chest, { w: 0.8, d: 0.55, h: 0.5, pal: 'dark', band: MAT.iron() });
     put(A, 42.9, 26.4, 5, -HALF, zcrate, { s: 0.7, open: true });
     put(A, 42.9, 22.8, 5, -HALF, filingCabinet, { color: '#3a3a40' });
     const fw = W(44.5, 25.0), fy = Y(43, 25, 5), fh = 10 * CH - fy + 0.05;
-    A.k.at(fw.x - o.x, fy, fw.z - o.z, 0, () => A.k.add(rbox(0.86, fh, 8.7, 0.02), MAT.stone('grey', 1), 0, fh / 2, 0));
+    A.k.at(fw.x - o.x, fy, fw.z - o.z, 0, () => A.k.add(rbox(0.84, fh, 8.7, 0.02), MAT.stone('grey', 1), 0, fh / 2, 0));   // (FLICKER-142: 1 cm in from the ceiling lid's side, 4 mm before)
     col(A, { type: 'box', x: fw.x, z: fw.z, hw: 0.43, hd: 4.35, rot: 0, top: 10 * CH + 0.05, noStand: false });
   }
   // his door (locked: shut at the start), hinged on the opening's west side, swinging into the office; under it a

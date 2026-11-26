@@ -97,8 +97,8 @@ export function buildBazooRoom(scene, physics) {
   const { CX, CZ, CW, CD } = P;
   // (FLICKER-142: the front 1 cm in from the sides' outer faces, the sides 1 cm short of the front's face, the sides' tops
   //  6 mm over the front's: the U's pieces met in shared planes)
-  k.add(rbox(CW - 0.02, 0.95, 0.5, 0.2), METAL(), CX, 0.475, CZ + CD / 2 - 0.25);
-  for (const s of [-1, 1]) k.add(rbox(0.5, 0.95, CD - 0.02, 0.2), METAL(), CX + s * (CW / 2 - 0.25), 0.475, CZ - 0.01);
+  k.add(rbox(CW - 0.04, 0.95, 0.5, 0.2), METAL(), CX, 0.475, CZ + CD / 2 - 0.25);
+  for (const s of [-1, 1]) k.add(rbox(0.5, 0.95, CD - 0.04, 0.2), METAL(), CX + s * (CW / 2 - 0.25), 0.475, CZ - 0.02);
   k.add(rbox(CW + 0.08, 0.05, 0.56, 0.02), DARK(), CX, 0.97, CZ + CD / 2 - 0.25);
   for (const s of [-1, 1]) k.add(rbox(0.56, 0.05, CD + 0.06, 0.02), DARK(), CX + s * (CW / 2 - 0.25), 0.976, CZ);
   B.col(CX, CZ + CD / 2 - 0.25, CW / 2, 0.27, 1.0, { noStand: true });

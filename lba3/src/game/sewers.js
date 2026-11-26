@@ -150,8 +150,9 @@ function railing(B, k, pts, y, { rusty = false, h = 0.95 } = {}) {
     }
     B.col((ax + bx) / 2, (az + bz) / 2, Math.abs(ux) * L / 2 + 0.08, Math.abs(uz) * L / 2 + 0.08, y + 1.3, { seeThrough: true });
   }
-  // (FLICKER-142: one post where the polyline comes back to a point it passed: two in one place flickered)
-  const posts = pts.filter(([px, pz], i) => !pts.slice(0, i).some(([qx, qz]) => Math.hypot(px - qx, pz - qz) < 0.05));
+  // (FLICKER-142: one post where two railings meet, or a polyline comes back to a point: two in one place flickered)
+  const seen = (B._railPosts ??= []);
+  const posts = pts.filter(([px, pz]) => { if (seen.some(([qx, qy, qz]) => Math.hypot(px - qx, pz - qz) < 0.05 && Math.abs(y - qy) < 0.05)) return false; seen.push([px, y, pz]); return true; });
   for (const [px, pz] of posts) { k.add(rbox(0.12, h + 0.08, 0.12, 0.02), m, px, y + (h + 0.08) / 2, pz); k.add(sphere(0.06, 8, 6), m, px, y + h + 0.12, pz); }
 }
 

@@ -79,7 +79,7 @@ function buildTempleRoom(scene, physics) {
   for (let i = 0; i < 3; i++) k.add(plane(4.2, 1.05), fz, -W / 2 + 0.04, 3.4, -4.6 + i * 4.4, Math.PI / 2);
 
   // the great relief on the back wall, on a raised dais with two steps
-  k.add(rbox(8.4, 0.3, 3.2, 0.05), rough, 5.6, 0.15, BZ + 1.6);
+  k.add(rbox(8.38, 0.3, 3.2, 0.05), rough, 5.6, 0.15, BZ + 1.6);   // (FLICKER-142: 1 cm in from the piers' outer faces)
   k.add(rbox(8.38, 0.3, 0.6, 0.05), rough, 5.6, 0.15, BZ + 3.5);   // (FLICKER-142: 1 cm in at each end: the two blocks' ends lay in one plane)
   B.col(5.6, BZ + 1.6, 4.2, 1.6, 0.3, { stair: true });
   k.add(rbox(7.4, 4.0, 0.3, 0.06), MAT.stone('lav', 1), 5.6, 2.4, BZ + 0.18);

@@ -285,7 +285,7 @@ export function buildKcMill(scene, physics) {
   R.view = 9.5;
   // Baldino's first workbench along the back wall, the tool board over it
   B.put(-0.2, BZ + 0.45, 0, (kk) => workbench(kk, { w: 2.2, d: 0.7, h: 0.88 }));
-  k.at(-0.2, 1.3, BZ + 0.03, 0, () => toolBoard(k, 1.8, 0.8));
+  k.at(-0.2, 1.3, BZ + 0.07, 0, () => toolBoard(k, 1.8, 0.8));   // (FLICKER-142: in front of the dado rail, which ran through it)
   // on the bench: the self-buttering toaster (a box with slots and a little arm), the bicycle fan, the biscuit tin
   k.add(rbox(0.32, 0.22, 0.2, 0.03), MAT.paint('#c8c0b0', 0.4), -0.9, 1.0, BZ + 0.45);
   for (const s of [-1, 1]) k.add(rbox(0.2, 0.02, 0.03, 0.005), MAT.flat('#1a1a1a'), -0.9, 1.115, BZ + 0.45 + s * 0.05);

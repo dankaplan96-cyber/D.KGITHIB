@@ -155,7 +155,7 @@ export function buildCelTempleRoom(scene, physics) {
   for (let i = 0; i < 3; i++) { const top = 0.2 * (i + 1), x = LX + 1.6 - (i + 0.5) * 0.42; k.add(rbox(0.44, top, 2.0, 0.02), g, x, top / 2, SEALZ); B.col(x, SEALZ, 0.22 + 0.12, 1.0, top, { stair: true }); }
   k.add(rbox(0.12, 3.0, 2.0, 0.03), MAT.flat('#0a0b0e', 0.95), SDX - 0.18, 0.6 + 1.5, SEALZ);
   for (const s of [-1, 1]) k.add(rbox(0.4, 3.4, 0.4, 0.04), g, SDX + 0.05, 0.6 + 1.7, SEALZ + s * 1.2);
-  k.add(rbox(0.42, 0.4, 2.8, 0.04), g, SDX + 0.05, 0.6 + 3.4, SEALZ);   // (FLICKER-142: 1 cm proud of the pillars' faces)
+  k.add(rbox(0.42, 0.4, 2.82, 0.04), g, SDX + 0.05, 0.6 + 3.4, SEALZ);   // (FLICKER-142: 1 cm proud of the pillars' faces)
   for (let i = 0; i < 4; i++) k.add(cyl(0.12, 0.12, 0.05, 12), MAT.paint('#1a1c20', 0.5), SDX + 0.27, 0.6 + 3.4, SEALZ - 0.9 + i * 0.6, 0, { rz: Math.PI / 2 });
   const leaf = k.mesh(new THREE.BoxGeometry(0.16, 3.0, 2.0), g, SDX + 0.02, 0.6 + 1.5, SEALZ);   // (the door's stone leaf: it rises into the lintel as it opens)
   const sealCol = B.col(SDX + 0.3, SEALZ, 0.2, 1.0, 3.6, { noStand: true });

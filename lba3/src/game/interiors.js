@@ -241,8 +241,9 @@ export class RoomBuilder {
       k.add(rbox(0.05, h, 0.05, 0.012), mm, a, y0 + h / 2, gz);
       // the reveal through the wall: pale plaster jambs and head, a wooden window board
       const lin = p.lining || MAT.paint('#efe4cc', 0.85);
-      for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.02, h, t), lin, a + s * (w / 2 - 0.01), y0 + h / 2, -t / 2);
-      k.add(new THREE.BoxGeometry(w, 0.02, t), lin, a, y0 + h - 0.01, -t / 2);
+      // (FLICKER-142: the lining stops 1 cm inside the wall's face: its front lay in the frame's, the wall's plane)
+      for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.02, h, t - 0.01), lin, a + s * (w / 2 - 0.01), y0 + h / 2, -t / 2 - 0.005);
+      k.add(new THREE.BoxGeometry(w, 0.02, t - 0.01), lin, a, y0 + h - 0.01, -t / 2 - 0.005);
       k.add(rbox(w + 0.04, 0.05, t + 0.02, 0.012), p.sill || fm, a, y0 + 0.01, -t / 2);
       // (FLICKER-142: the frame 6 mm under the reveal's head: their tops lay in one plane)
       for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.05, h - 0.006, t * 0.5), fm, a + s * (w / 2 - 0.025), y0 + (h - 0.006) / 2, -t * 0.25);

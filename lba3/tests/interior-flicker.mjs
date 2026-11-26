@@ -19,10 +19,11 @@
 //       enter FAILS (named), never skipped.
 //   (4) the depth range fitted to the room (src/engine/roomdepth.js): from each room camera position the floor he walks
 //       (and 2.5 m over it) at least 1.5 × the fitted near plane from the lens, the near plane far out from the room
-//       camera (> 10 m), the camera's own near plane for a lens inside the room.
+//       camera (> 10 m), and a lens 2 m from his head (a close-up) with him well beyond its near plane.
 // ROOMS=a,b: those rooms only. SHOTS=dir: per room with a cluster (or every room named in ROOMS) the frame and the
 // two-frame diff overlay (red = pixels that change between the two jittered frames) as PNG. REPORT=file.json: every
 // finding with its coordinates. SPOTS=room@x,z;...: extra render views from those room-local floor spots, with pictures.
+// NOFIT=1: the render check without the depth fit (src/engine/roomdepth.js off).
 // The game is set to chapter 1 by its flags: Zoé home at the kitchen sink (her spot), as the user saw her.
 // Automated runtime only (SwiftShader, headless Chromium).
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -359,6 +360,9 @@ await ev(async () => {
   };
 });
 
+// NOFIT=1: the render check with the camera's own near plane in rooms (engine/roomdepth.js off): what the geometry
+// fixes alone do, as before FLICKER-142's depth fit (the (4) check still measures the fit itself)
+if (process.env.NOFIT) await ev(async () => { (await import(location.origin + '/src/engine/roomdepth.js')).ROOM_DEPTH.on = false; });
 const all = await ev(() => [...game.regions.of.keys()].filter((id) => { const c = game.regions.centreOf(id); return c && !c.outdoor; }));
 const rooms = ONLY ? ONLY.filter((r) => all.includes(r)) : all;
 if (ONLY) for (const r of ONLY) if (!all.includes(r)) console.log('NOT A ROOM ' + r);
@@ -380,11 +384,12 @@ for (const id of rooms) {
     //  loosen the scan — what is fixed here holds for any camera)
     const near = G.camRig.near0 ?? G.camera.near;
     const S = FL.scan(id, cams, near);
-    // (4) the depth range fitted to the room (engine/roomdepth.js), checked with the room's own box: the floor he walks
-    // (each floor spot, at his feet and 2.5 m over them) and where he comes in inside it; from the room camera the near
-    // plane far out (the depth step far under a millimetre); a lens in the room (a close-up) keeps the camera's own
+    // (4) the depth range fitted to the room (engine/roomdepth.js): from each room camera position the floor he walks
+    // (each floor spot, at his feet and 2.5 m over them) well beyond the fitted near plane; from the room camera the near
+    // plane far out (the depth step far under a millimetre); a lens by his head (a close-up) keeps him beyond its near plane
     const RD = await import(location.origin + '/src/engine/roomdepth.js');
-    const cam = G.camera, h = G.hero, p0 = cam.position.clone(), n0 = cam.near;
+    const cam = G.camera, h = G.hero, p0 = cam.position.clone(), n0 = cam.near, fitWas = RD.ROOM_DEPTH.on;
+    RD.ROOM_DEPTH.on = true;   // (measured even under NOFIT)
     // (every floor spot, at his feet and 2.5 m over them, from each of the room camera's positions: nearer to the lens
     //  than 1.5 × the fitted near plane is a fault — what he walks on could be cut)
     FL.place(sp0.x, sp0.z);
@@ -396,9 +401,9 @@ for (const id of rooms) {
       for (const v of pts) if (v.distanceTo(cam.position) < nf * 1.5 && outside.length < 3) outside.push([+(v.x - R.center.x).toFixed(2), +v.y.toFixed(2), +(v.z - R.center.z).toFixed(2), +nf.toFixed(1)]);
     }
     cam.position.set(h.pos.x + 1.5, h.pos.y + 1.7, h.pos.z + 1.5);
-    RD.fitRoomDepth(R, cam); const nearClose = cam.near; RD.restoreRoomDepth(cam);
-    cam.position.copy(p0); cam.near = n0; cam.updateProjectionMatrix();
-    const depth = { nearIso: +nearIso.toFixed(2), stepMm: +((dIso * dIso) / (nearIso * 16777216) * 1000).toFixed(4), nearClose, base: n0, outside, box: !!box };
+    RD.fitRoomDepth(R, cam); const nearClose = cam.near, headD = cam.position.distanceTo(new V3(h.pos.x, h.pos.y + 1.5, h.pos.z)); RD.restoreRoomDepth(cam);
+    cam.position.copy(p0); cam.near = n0; cam.updateProjectionMatrix(); RD.ROOM_DEPTH.on = fitWas;
+    const depth = { nearIso: +nearIso.toFixed(2), stepMm: +((dIso * dIso) / (nearIso * 16777216) * 1000).toFixed(4), nearClose: +nearClose.toFixed(3), headD: +headD.toFixed(2), base: n0, outside, box: !!box };
     return { id, spots: spots.length, cams: cams.length, sp0, depth, ...S };
   }, { id }).catch((e) => ({ id, err: e.message.slice(0, 300) }));
   if (r.err) { failedRooms.push(r); console.log('ROOM ' + JSON.stringify({ id, err: r.err })); res.push(r); continue; }
@@ -431,7 +436,7 @@ for (const id of rooms) {
     if (v.shot) for (const k of ['plain', 'diff']) fs.writeFileSync(path.join(SHOTS, `${id}-${vi}-${k}.png`), Buffer.from(v.shot[k].split(',')[1], 'base64'));
   }
   const fail = r.findings.filter((f) => f.m2 >= FAIL_M2);
-  const dOk = r.depth.box && !r.depth.outside.length && r.depth.nearClose <= r.depth.base + 1e-6 && r.depth.nearIso > 10;
+  const dOk = r.depth.box && !r.depth.outside.length && r.depth.headD > r.depth.nearClose * 1.5 && r.depth.nearIso > 10;
   if (!dOk) depthBad.push({ id, ...r.depth });
   console.log('ROOM ' + JSON.stringify({ id, depthFit: r.depth, tris: r.tris, meshes: r.meshes, camD: r.camD, near: r.near, depthStepMm: r.dzMm, pairs: r.pairs, clusters: r.findings.length, fail: fail.length,
     render: r.views.map((v) => v.err ? { err: v.err } : { why: v.why, at: v.at, changed: v.changed, noise: v.noise, unowned: v.others.map((o) => o.px + 'px@' + o.box.join(',')) }), instSkipped: r.instSkipped || undefined }));
@@ -445,7 +450,7 @@ const small = res.flatMap((r) => (r.findings || []).filter((f) => f.m2 < FAIL_M2
 const confirmed = fails.filter((f) => f.seenPx > 0).length;
 console.log(`clusters: ${fails.length} of ${FAIL_M2} m² or more (${confirmed} seen flickering in the render check), ${small.length} smaller (listed)`);
 check(`(3) every interior room built, entered and scanned (${res.length - failedRooms.length} of ${rooms.length}${ONLY ? '' : `; registered ${all.length}`})`, failedRooms.length === 0 && (ONLY || rooms.length === all.length), failedRooms.map((r) => ({ id: r.id, err: r.err })));
-check(`(4) the depth range fitted to each room: his floor (and 2.5 m over it) well beyond the near plane from every room camera position, the near plane far out from the room camera (> 10 m), the camera's own near plane for a lens inside the room (${res.length - failedRooms.length - depthBad.length} of ${res.length - failedRooms.length})`, depthBad.length === 0, depthBad.slice(0, 8));
+check(`(4) the depth range fitted to each room: his floor (and 2.5 m over it) well beyond the near plane from every room camera position, the near plane far out from the room camera (> 10 m), a lens 2 m from his head (a close-up) clear of its near plane (${res.length - failedRooms.length - depthBad.length} of ${res.length - failedRooms.length})`, depthBad.length === 0, depthBad.slice(0, 8));
 checkVisual(`(1) no visible z-fighting in any room (same-facing faces within the depth step, ${FAIL_M2} m² or more, seen from the room camera): ${fails.length}; smaller, listed: ${small.length}`, fails.length === 0,
   fails.slice(0, 12).map((f) => ({ room: f.room, m2: f.m2, gapMm: f.gapMm, local: f.local, a: f.a, b: f.b, renderPx: f.seenPx })));
 await browser.close();

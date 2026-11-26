@@ -251,7 +251,8 @@ export function buildTraluCaveRoom(scene, physics) {
   // --- the lower cave: the railed pool at the front right, globe posts at its corners, spike clusters, boulders
   const PX0 = 3.0 * F, PX1 = 7.4 * F, PZ0 = 2.0 * F, PZ1 = 5.4 * F, kerb = 0.3;
   // (FLICKER-142: the side kerbs 6 mm higher: at the corners the four kerbs' tops lay in one plane)
-  for (const [x0, z0, x1, z1, up] of [[PX0, PZ0, PX1, PZ0 + 0.3, 0], [PX0, PZ1 - 0.3, PX1, PZ1, 0], [PX0, PZ0, PX0 + 0.3, PZ1, 0.006], [PX1 - 0.3, PZ0, PX1, PZ1, 0.006]]) k.add(rbox(x1 - x0, kerb + up, z1 - z0, 0.03), block, (x0 + x1) / 2, (kerb + up) / 2, (z0 + z1) / 2);
+  // (and each 1 cm short at its ends, inside the crossing kerb: their end faces lay in the other's outer face)
+  for (const [x0, z0, x1, z1, up] of [[PX0 + 0.01, PZ0, PX1 - 0.01, PZ0 + 0.3, 0], [PX0 + 0.01, PZ1 - 0.3, PX1 - 0.01, PZ1, 0], [PX0, PZ0 + 0.01, PX0 + 0.3, PZ1 - 0.01, 0.006], [PX1 - 0.3, PZ0 + 0.01, PX1, PZ1 - 0.01, 0.006]]) k.add(rbox(x1 - x0, kerb + up, z1 - z0, 0.03), block, (x0 + x1) / 2, (kerb + up) / 2, (z0 + z1) / 2);
   k.add(plane(PX1 - PX0 - 0.6, PZ1 - PZ0 - 0.6), waterM(), (PX0 + PX1) / 2, kerb - 0.08, (PZ0 + PZ1) / 2, 0, { rx: -Math.PI / 2 });
   k.at(0, kerb, 0, 0, () => railing(k, [[PX0 + 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ0 + 0.15]], { h: 0.9, mat: rail, step: 0.45 }));
   B.col((PX0 + PX1) / 2, (PZ0 + PZ1) / 2, (PX1 - PX0) / 2, (PZ1 - PZ0) / 2, kerb + 1.0, { seeThrough: true, noStand: true });

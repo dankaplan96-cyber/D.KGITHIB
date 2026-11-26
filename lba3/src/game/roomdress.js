@@ -36,7 +36,7 @@ export function shelfGoods(k, w, y, seed = 1, z = 0) {
 // replace the mixed goods)
 export function goodsShelf(k, { w = 1.4, h = 2.0, d = 0.38, rows = 4, pal = 'honey', seed = 1, goods = null } = {}) {
   const m = MAT.wood(pal);
-  for (const sx of [-1, 1]) k.add(rbox(0.05, h, d, 0.01), m, sx * (w / 2 - 0.025), h / 2, 0);
+  for (const sx of [-1, 1]) k.add(rbox(0.05, h - 0.006, d, 0.01), m, sx * (w / 2 - 0.025), (h - 0.006) / 2, 0);   // (FLICKER-142: the sides, like the back, 6 mm under the top board)
   k.add(rbox(w, h - 0.006, 0.03, 0.005), MAT.wood(pal === 'dark' ? 'dark' : 'honey'), 0, (h - 0.006) / 2, -d / 2 + 0.015);   // (FLICKER-142: 6 mm under the top board: their tops lay in one plane)
   k.add(rbox(w, 0.05, d, 0.01), m, 0, h - 0.025, 0);
   for (let i = 0; i < rows; i++) {
@@ -83,6 +83,6 @@ export function basket(k, { r = 0.22, fill = '#e8a030' } = {}) {
 export function hanging(k, { w = 1.0, h = 1.4, bands = ['#b0302c', '#e8dcc0', '#2f6f74', '#e8dcc0', '#b0302c'] } = {}) {
   k.add(cyl(0.02, 0.02, w + 0.16, 6), MAT.brass(), 0, h / 2 + 0.03, 0.04, 0, { rz: Math.PI / 2 });
   const bh = h / bands.length;
-  bands.forEach((c, i) => k.add(rbox(w, bh + 0.002, 0.015, 0.003), MAT.flat(c, 0.95), 0, h / 2 - bh * (i + 0.5), 0.03));
+  bands.forEach((c, i) => k.add(rbox(w, bh, 0.015, 0.003), MAT.flat(c, 0.95), 0, h / 2 - bh * (i + 0.5), 0.03));   // (FLICKER-142: edge to edge, not 2 mm over each other in one plane)
   for (let i = 0; i < 7; i++) k.add(cyl(0.006, 0.006, 0.08, 4), MAT.flat(bands[0], 0.95), -w / 2 + 0.06 + i * ((w - 0.12) / 6), -h / 2 - 0.04, 0.03);
 }

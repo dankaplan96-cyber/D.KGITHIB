@@ -1534,8 +1534,8 @@ export function noticeBoard(k, w = 0.8, h = 0.55, seed = 1) {
   k.add(plane(w, h), MAT.cloth('#b8885a', '#6a4a2a'), 0, 0, 0.042);   // (FLICKER-142: the cork 1 cm off the frame's face, the notes 1 cm off the cork)
   for (let i = 0; i < 5; i++) {
     const px = (r() - 0.5) * (w - 0.2), py = (r() - 0.5) * (h - 0.2);
-    k.add(plane(0.15, 0.2), MAT.map(CANV.doc(i % 2 ? 'form' : 'ledger'), 0.9), px, py, 0.052 + i * 0.002, 0, { rz: (r() - 0.5) * 0.3 });
-    k.add(sphere(0.012, 6, 4), MAT.flat(['#c8452f', '#3a6fb0', '#e9c46a'][i % 3], 0.4), px, py + 0.08, 0.064);
+    k.add(plane(0.15, 0.2), MAT.map(CANV.doc(i % 2 ? 'form' : 'ledger'), 0.9), px, py, 0.052 + i * 0.009, 0, { rz: (r() - 0.5) * 0.3 });   // (9 mm between notes that overlap)
+    k.add(sphere(0.012, 6, 4), MAT.flat(['#c8452f', '#3a6fb0', '#e9c46a'][i % 3], 0.4), px, py + 0.08, 0.062 + i * 0.009);
   }
 }
 export function wallClock(k, r = 0.2) {
@@ -2047,9 +2047,9 @@ export function potStove(k) {
   // firebox door with a grille in front of the fire
   k.at(0, 0.6, 0.355, 0, () => {
     k.add(lathe([[0.001, 0], [0.16, 0], [0.17, 0.02], [0.15, 0.03], [0.001, 0.03]], 18), ir, 0, 0, 0, 0, { rx: Math.PI / 2 });
-    k.add(disc(0.12, 18), fire, 0, 0, 0.032);
-    for (let i = -3; i <= 3; i++) k.add(rbox(0.014, 0.24 - Math.abs(i) * 0.025, 0.014, 0.004), ir, i * 0.034, 0, 0.04);
-    k.add(sphere(0.022, 8, 6), br, 0.13, 0, 0.05);
+    k.add(disc(0.12, 18), fire, 0, 0, 0.04);   // (FLICKER-142: the fire 1 cm off the door's ring, its grille in front of it)
+    for (let i = -3; i <= 3; i++) k.add(rbox(0.014, 0.24 - Math.abs(i) * 0.025, 0.014, 0.004), ir, i * 0.034, 0, 0.05);
+    k.add(sphere(0.022, 8, 6), br, 0.13, 0, 0.06);
   });
   k.add(rbox(0.22, 0.06, 0.03, 0.01), fire, 0, 0.36, 0.3);
   k.add(rbox(0.26, 0.1, 0.03, 0.01), ir, 0, 0.36, 0.31);
