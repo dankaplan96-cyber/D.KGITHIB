@@ -138,10 +138,10 @@ if (RUN.includes('C')) await live('C', [['ctrl+', 'F3', 'aggressive'], ['key', '
 const camD = [];
 if (RUN.includes('D')) {
   const { browser, page, ev } = await boot(false);
-  const spots = await ev(() => {
+  const spots = await ev((nD) => {
     const L = game.npcs.filter((q) => q.present !== false && q.def?.id !== 'zoe' && !q.def?.room).map((q) => [q.def.id, q.pos.x, q.pos.z, Math.hypot(q.pos.x + 44, q.pos.z + 3)]).sort((a, b) => a[3] - b[3]);
-    return L.slice(0, +(window.__nD || 3));
-  });
+    return L.slice(0, nD);
+  }, +(process.env.ND || 3));
   const presses = [];
   const k = async (code, ms = 80) => { await page.keyboard.down(code); await ev(() => game.frame(1 / 30, false)); await page.waitForTimeout(ms); await page.keyboard.up(code); };
   const run = (s, draw) => ev(([s, draw]) => { for (let i = 0, n = Math.round(s * 30); i < n; i++) game.frame(1 / 30, draw); }, [s, draw]);
