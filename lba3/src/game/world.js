@@ -142,7 +142,8 @@ const GRID_STREETS = [
   // (P135, the user's photo: the west street and its foot stopped 4 m short of the street down to the promenade's flight
   //  (x -64), a bay of dirt between: it runs on north to that street now, its end flush in it)
   [-58.9, -4.16, -58.9, 57.0, 3.0],    // the west street, from the street to the harbour south past the water office
-  [-60.4, 2.9, -51.4, 2.9, 3.0],     // its foot, east to the square's ring
+  // (P136: its rounded end stopped 2 m short of the ring's south curve, a dirt notch between: it runs on into the ring)
+  [-60.4, 2.9, -45.0, 2.9, 3.0],     // its foot, east to the square's ring
   [-55.4, -4.16, -55.4, 2.9, 4.0],   // (P135) the corner between it, its foot, the street to the flight and the block's west street (x −52) paved (a bare kerbed bed was left there)
   // (P135: it stopped square 7 m short of the footbridge, in the dirt: it ends now on a link south along the bridge's foot,
   //  x −34…−31, flush with the bridge's west end, where its bollards and sign post stand; and in the west it stopped
@@ -155,6 +156,12 @@ const GRID_STREETS = [
   // square's block to the cross street, where Pippa's shop and Fosse's office stand now. They stay: the street runs
   // 3.5 m west of LBA2's, before their west-facing doors, from the square's paved ring down to the cross street
   [-35.0, 3.6, -35.0, 31.3, 3.0],
+  // P136 (the user, 26.11, a photo by the HARBOUR · SPACEPORT · LIGHTHOUSE signpost: "the paths are still not fixed"): the
+  // south lane (town.js STREETS) left the square's ring as a kerbed stub and ended square in the dirt by the signpost,
+  // 4–5 m short of the east street's head, open dirt between. The patch between the ring, the lane and the east street
+  // is paved now: a forecourt south of the square, its west edge square on the lane's tip (x −45.6), its south edge
+  // straight past the lane's end (z 11.25), its east end flush in the east street. The tulip bed stands on it
+  [-41.75, 7.4, -35.0, 7.4, 7.7, { ea: 'square' }],
   [-32.5, 31.3, -32.5, 40.5, 3.0],   // (P135) the link from the cross street to the footbridge's foot (spaceport.js BRIDGE: x0 −31, z 38…42)
   // P42 (the user, 22.11: the north cross streets as LBA2's): LBA2 rings the square's block with streets. Ours: the
   // street along the square's north rim (tangent to its kerb ring, across the climb's paving), the block's west side
@@ -163,6 +170,11 @@ const GRID_STREETS = [
   // foot, is left out: our ground there rises and falls 3.1–4.6 m along its line, the first shelf's slope; paving it
   // read as a paved hillside)
   [-52.0, -15.8, -32.5, -15.8, 3.0],
+  // (P136: P135 listed the dirt between the north street and the ring as planted beds and kept them; from the player's
+  //  view they are two pavings that almost meet, 0.8–3.5 m of dirt between: paved, west of the climb's ramp from the
+  //  block's west street, east of it to the block's east street, both ends flush)
+  [-51.0, -11.4, -41.0, -11.4, 6.0],
+  [-39.0, -11.8, -33.0, -11.8, 5.2],
   [-52.0, -15.8, -52.0, 2.9, 3.0],
   [-32.5, -15.8, -32.5, -4.0, 3.0],
   // FLAT-TOWN: the street down to the harbour's end (town.js STREETS, x −64) on to the foot of the promenade's flight
@@ -196,7 +208,7 @@ export function gridPaveDist(x, z) {
 // The grid streets as rectangles: an end that stops on another street's edge or inside it is cut flush there, one near
 // other paving keeps its round cap (it meets the square's ring or a lane), a free end is square (LBA2's dead ends).
 const PLOT_ZONE = { x0: -76, x1: -20, z0: -17, z1: 62 };   // (the town's plots: the grid south of the square, the square's block)
-const GRID_RECTS = GRID_STREETS.map(([x0, z0, x1, z1, w], i) => {
+const GRID_RECTS = GRID_STREETS.map(([x0, z0, x1, z1, w, opt], i) => {
   const len = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / len, uz = (z1 - z0) / len, hw = w / 2;
   const other = (x, z) => {
     let d = Math.min(boxDist(x, z, HARBOUR_YARD.x0, HARBOUR_YARD.z0, HARBOUR_YARD.x1, HARBOUR_YARD.z1), boxDist(x, z, HARBOUR_SE.x0, HARBOUR_SE.z0, HARBOUR_SE.x1, HARBOUR_SE.z1));
@@ -204,7 +216,7 @@ const GRID_RECTS = GRID_STREETS.map(([x0, z0, x1, z1, w], i) => {
     return Math.min(d, streetDist(x, z), bugFootDist(x, z), Math.hypot(x - POI.village.x, z - POI.village.z) - 9.45);
   };
   const end = (x, z) => { const o = other(x, z); return o <= 0.01 ? 'flush' : o < hw + 0.3 ? 'round' : 'square'; };
-  return { x0, z0, ux, uz, len, hw, ea: end(x0, z0), eb: end(x1, z1), prom: x0 === -73.68 && x1 === -73.68 };   // (the promenade: by its line, not its place in the list)
+  return { x0, z0, ux, uz, len, hw, ea: opt?.ea || end(x0, z0), eb: opt?.eb || end(x1, z1), prom: x0 === -73.68 && x1 === -73.68 };   // (opt: an end's kind given, P136)   // (the promenade: by its line, not its place in the list)
 });
 function rectDist(x, z, R) {
   const dx = x - R.x0, dz = z - R.z0, t = dx * R.ux + dz * R.uz, p = Math.abs(dz * R.ux - dx * R.uz) - R.hw;

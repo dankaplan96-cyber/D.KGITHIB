@@ -1578,6 +1578,10 @@ function buildIsland0(scene, physics, name, L, at) {
   };
   const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, ...(S.turfRock || PAL?.granite ? { rock: graniteTex() } : { rock: TX.cliff, ...(name === 'knartas' ? {} : quietRock(TX.cliff)) }), cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite; #17b Knartas's rock too; QUIET-ROCK: on every other isle the granite on the flat, in the cliff tile's colour; ?knartaspal=old keeps Knartas's old ground whole)
   group.add(terrain.mesh);
+  // (P136, the path-ends scan, tests/lib/pathends.js: which paving a point of this ground is, island-local x, z — the
+  //  island's designed square (paveAt), its landing pad, a WA-11 bare patch, or ground under a deck island's decks, far
+  //  under the clouds and never seen. Read by the test only)
+  terrain.paveKind = (x, z) => (S.decks ? 'under' : paved(x, z) ? 'square' : Math.hypot(x - pad.x, z - pad.z) < 5.5 ? 'pad' : 'patch');
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);
   const gy = A.floorAt ? (x, z) => A.floorAt(x, z) ?? tgy(x, z) : tgy;
