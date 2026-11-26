@@ -1,4 +1,4 @@
-// P135 PATH-ENDS, the in-page half (tests/path-ends.mjs adds it with addScriptTag): window.PE.
+// P135/P136 PATH-ENDS, the in-page half (tests/path-ends.mjs adds it with addScriptTag): window.PE.
 // PE.grids(): every terrain the game has built (Citadel's own and each outdoor area's patch), its paving per grid point
 // as a signed value f (< 0 paved): the terrain's own edge distance where it has one (LAWN-EDGES: the shader cuts the
 // paving there, per pixel, at 0), else the paving's share of the splat less a half (the shader's crisp re-split at
@@ -12,16 +12,20 @@
     const s2 = geo?.attributes?.splat2?.array, sp = geo?.attributes?.splat?.array, ed = geo?.attributes?.edge?.array;
     if (!s2) return null;
     const n = t.segs + 1, f = new Float32Array(n * n);
-    let paved = 0;
+    let paved = 0, patch = 0;
+    // (P136: on a Zeelich isle only its designed paving is a way — the square (paveAt) and the landing pad; WA-11's bare
+    //  patches, and the ground under a deck island's decks, are counted apart, left out of the scan)
+    const kind = t.paveKind, lx0 = t.x0, lz0 = t.z0;
     for (let k = 0; k < n * n; k++) {
       const tot = sp[k * 4] + sp[k * 4 + 1] + sp[k * 4 + 2] + sp[k * 4 + 3] + s2[k];
       const share = tot > 1e-6 ? s2[k] / tot : 0;
       const e = ed ? (ed[k * 2] / 32767) * RANGE : RANGE;
       const rock = tot > 1e-6 ? sp[k * 4 + 2] / tot : 0;   // (the shader: rock over ~0.45 of the splat takes the pixel)
       f[k] = e < RANGE - 0.05 ? e : rock > 0.45 ? 1 : (0.5 - share) * 2;
+      if (f[k] < 0 && kind && !['square', 'pad'].includes(kind(lx0 + (k % n) * t.step, lz0 + Math.floor(k / n) * t.step))) { f[k] = 1; patch++; }
       if (f[k] < 0) paved++;
     }
-    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, (v) => Math.round(v * 1000) / 1000), paved };
+    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, (v) => Math.round(v * 1000) / 1000), paved, patch };
   }
   // the outdoor area an x, z belongs to (nearest outdoor room's centre within 400 m; else Citadel near the origin)
   function areaOf(x, z) {
@@ -63,11 +67,17 @@
     });
     return out;
   }
-  // a destination: a door's trigger, a building-size solid (a wall, a house, a stair, a parapet, a fence, a bench: ≥ 1.5 m
-  // across, standing ≥ 0.3 m), the ground's face (a jump ≥ 0.3 m between two samples 0.25 m apart: a quay's face, a
-  // stair, a cliff), the sea. A smaller solid (a bin, a lamp, a post, a tree) is listed as a prop, not a destination.
+  // P136 (the user, 26.11: "the paths are still not fixed"): from the player's view. A destination is a door's trigger, a
+  // WALL (a building, a wall, a parapet, a fence, a stair's side: a box collider ≥ 1.5 m long, standing ≥ 0.5 m, not a
+  // `block` prop; or a round solid ≥ 2.4 m across: a tower, a silo), the ground's face (a jump ≥ 0.3 m between two
+  // samples 0.25 m apart: a quay's face, a stair, a bridge's deck, a cliff), the sea. Everything else standing there is a
+  // PROP and never makes an end acceptable: a bin, a lamp, a post, a sign, a tree, a bush (round solids up to 1.5 m), a
+  // bench, a tub, a planter (`block` props), a crate.
   // (the ground he would stand on there, at the paving's own level y: a mesh floor's top, else the terrain)
   const groundY = (P, x, z, y) => (Number.isFinite(y) ? P.groundAt(x, z, y + 0.3) : P.terrain.heightAt(x, z));
+  // a floor standing over the ground here (a bridge's or a pier's deck, a house's terrace, a stair's tread)
+  const deck = (P, x, z) => { const th = P.terrain.heightAt(x, z), fy = P.groundAt(x, z, th + 0.7); return fy - th > 0.025 && fy - th < 0.7; };   // (the spaceport footbridge's deck lands 3 cm over the ground)
+  const isWall = (c, gy) => !c.block && (c.type === 'box' ? 2 * Math.max(c.hw, c.hd) >= 1.5 && c.top - gy >= 0.5 : (c.r ?? 0) >= 1.2);
   function solidsAt(P, x, z, gy, seen, a, hits) {
     for (const c of P.near(x, z)) {
       if (seen.has(c) || c.enabled === false) continue;
@@ -78,10 +88,10 @@
       if (!inside) continue;
       seen.add(c);
       const size = c.type === 'box' ? 2 * Math.max(c.hw, c.hd) : 2 * (c.r ?? 0);
-      hits.push({ kind: size >= 1.5 ? 'solid' : 'prop', a: +a.toFixed(2), size: +size.toFixed(2), top: +(c.top - gy).toFixed(2) });
+      hits.push({ kind: isWall(c, gy) ? 'solid' : 'prop', a: +a.toFixed(2), size: +size.toFixed(2), top: +(c.top - gy).toFixed(2), x: +c.x.toFixed(1), z: +c.z.toFixed(1) });
     }
   }
-  function judge(tips, ahead = 2.0) {
+  function judge(tips, ahead = 1.25) {
     const g = G(), P = g.physics, doors = (g.story?.doors?.() || []).filter((d) => Number.isFinite(d.x));
     return tips.map((t) => {
       const hits = [], nx = -t.dz, nz = t.dx, hw = Math.max(0.6, t.w / 2), seen = new Set();
@@ -95,6 +105,13 @@
           solidsAt(P, x, z, gy, seen, a, hits);
         }
       }
+      // (P136: a deck at the end — a bridge's, a pier's, a stair's tread: a floor standing over the ground — ahead, or
+      //  beside the strip's last stretch: a footbridge leaving from the side of the street that ends at it)
+      let deckAt = null;
+      for (let a = -Math.max(1, t.w); a <= ahead + 1e-6 && deckAt == null; a += 0.25) for (const s of [-1, 1]) for (let o = a > 0 ? 0 : hw + 0.25; o <= hw + 1.0 + 1e-6; o += 0.25) {
+        if (deck(P, t.x + t.dx * a + nx * o * s, t.z + t.dz * a + nz * o * s)) { deckAt = +a.toFixed(2); break; }
+      }
+      if (deckAt != null) hits.push({ kind: 'deck', a: deckAt });
       for (const d of doors) {
         const lx = d.x - t.x, lz = d.z - t.z, a = lx * t.dx + lz * t.dz, o = Math.abs(lx * nx + lz * nz);
         if (a > -1.5 && a < ahead + (d.r || 1) && o < hw + (d.r || 1)) hits.push({ kind: 'door', a: +a.toFixed(2), id: d.id || d.room || d.house || '' });
@@ -103,22 +120,54 @@
     });
   }
   // gap rays [{ id, x0, z0, x1, z1 }] (from one paving's edge to another's across bare ground): open if the ground stays
-  // within 0.45 m of the start and never jumps, and nothing solid stands across it
+  // within 0.45 m of the start and never jumps, and no WALL stands across it (P136: a bin, a bush, a tree, a bench in the
+  // gap do not make it a deliberate one)
   function gaps(rays) {
     const P = G().physics;
     return rays.map((r) => {
       const L = Math.hypot(r.x1 - r.x0, r.z1 - r.z0), h0 = groundY(P, r.x0, r.z0, r.y), hits = [], seen = new Set();
-      let prev = h0, open = true, dhMax = 0;
+      let prev = h0, open = true, dhMax = 0, by = null;
       for (let a = 0; a <= L + 1e-6; a += 0.2) {
         const x = r.x0 + ((r.x1 - r.x0) * a) / L, z = r.z0 + ((r.z1 - r.z0) * a) / L, gy = groundY(P, x, z, Number.isFinite(r.y) ? prev : NaN);
         dhMax = Math.max(dhMax, Math.abs(gy - h0));
-        if (Math.abs(gy - prev) >= 0.25 || Math.abs(gy - h0) > 0.45 || gy < 0.05) open = false;
+        if (Math.abs(gy - prev) >= 0.25 || Math.abs(gy - h0) > 0.45 || gy < 0.05) { open = false; by ||= gy < 0.05 ? 'water' : 'ground'; }
+        if (a > 0.3 && a < L - 0.3 && deck(P, x, z)) { open = false; by ||= 'deck'; }   // (P136: covered by a terrace, a deck, a stair)
         prev = gy;
         solidsAt(P, x, z, gy, seen, a, hits);
       }
-      if (hits.some((h) => h.size >= 0.6)) open = false;
-      return { id: r.id, open, dh: +dhMax.toFixed(2), props: hits.length };
+      const wall = hits.find((h) => h.kind === 'solid');
+      if (wall) { open = false; by ||= `wall ${wall.size} m × ${wall.top} m at (${wall.x}, ${wall.z})`; }
+      return { id: r.id, open, by, dh: +dhMax.toFixed(2), props: hits.length };
     });
   }
-  window.PE = { grids, meshes, judge, gaps };
+  // (P136 coverage) every up-facing outdoor surface built as a mesh near the ground (within 1.2 m of the terrain), its
+  // area by texture (map.name, else the material's name, else its colour) per area: what the scan reads, what it does not
+  async function cover() {
+    const { textures } = await import(new URL('src/engine/textures.js', location.href).href);
+    const TX = textures(), named = new Map(Object.entries(TX).filter(([, v]) => v && v.isTexture).map(([k, v]) => [v, k]));
+    const out = {}, v = [0, 0, 0].map(() => new (G().camera.position.constructor)()), T = G().physics.terrain;
+    G().scene.traverse((o) => {
+      if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.geometry?.attributes?.position) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      const geo = o.geometry, P = geo.attributes.position, I = geo.index, groups = geo.groups?.length ? geo.groups : [{ start: 0, count: I ? I.count : P.count, materialIndex: 0 }];
+      o.updateWorldMatrix(true, false);
+      for (const g of groups) {
+        const m = mats[g.materialIndex ?? 0] ?? mats[0]; if (!m) continue;
+        const key = m.map ? named.get(m.map) || m.map.name || 'map?' : m.name || (m.color ? '#' + m.color.getHexString() : '?');
+        for (let k = g.start; k < Math.min(g.start + g.count, I ? I.count : P.count); k += 3) {
+          for (let q = 0; q < 3; q++) v[q].fromBufferAttribute(P, I ? I.getX(k + q) : k + q).applyMatrix4(o.matrixWorld);
+          const ax = v[1].x - v[0].x, ay = v[1].y - v[0].y, az = v[1].z - v[0].z, bx = v[2].x - v[0].x, by = v[2].y - v[0].y, bz = v[2].z - v[0].z;
+          const nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx, nl = Math.hypot(nx, ny, nz);
+          if (nl < 1e-9 || ny / nl < 0.9) continue;
+          const cx = (v[0].x + v[1].x + v[2].x) / 3, cy = (v[0].y + v[1].y + v[2].y) / 3, cz = (v[0].z + v[1].z + v[2].z) / 3;
+          if (Math.abs(cy - T.heightAt(cx, cz)) > 1.2) continue;
+          const area = areaOf(cx, cz); if (!area) continue;
+          const A = (out[area] ||= {}); A[key] = (A[key] || 0) + nl / 2;
+        }
+      }
+    });
+    for (const a of Object.values(out)) for (const k of Object.keys(a)) { a[k] = Math.round(a[k]); if (a[k] < 20) delete a[k]; }
+    return out;
+  }
+  window.PE = { grids, meshes, judge, gaps, cover };
 })();
