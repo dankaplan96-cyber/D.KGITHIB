@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LBA3 צ'ק ליסט</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a calm, plain quest log for one person following a long project.
+   IDEA: Twinsen's adventure journal: open quests, quests waiting on the player, quests done.
+   PICTURE: the two meters toward the next version and the days to release, at the top.
+   COLOUR and TYPE: Twinsun sky blue as the field, island sand as the support, a warm orange accent; Rubik.
+   LAYOUT: one calm column of grouped checklists; meters in one row that wraps on a phone. */
+:root{color-scheme:light dark;
+--bg:light-dark(#eaf4fb,#0d1a24);--card:light-dark(#ffffff,#13263a);--ink:light-dark(#10202e,#e6eef5);
+--mut:light-dark(#4f6475,#9cb0c0);--line:light-dark(#d3e2ee,#24384c);--sky:light-dark(#2f7fc1,#5aa8e6);
+--sand:light-dark(#f3e3bf,#3a3322);--acc:light-dark(#d9661c,#ff9a4d);--ok:light-dark(#2e8a57,#5fcf8d)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Rubik,system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(24px,4vw,48px) max(5vw,16px);max-width:900px;margin:0 auto}
+header{background:var(--sky);color:#fff}
+header .band{padding-bottom:28px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.05;margin:0 0 6px;text-wrap:balance;font-weight:700}
+.sub{margin:0;opacity:.9}
+.meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px;margin-top:22px}
+.m{background:rgba(255,255,255,.14);border-radius:14px;padding:14px 16px}
+.m b{font-size:30px;line-height:1;display:block;margin-bottom:6px}
+.m span{font-size:14px;opacity:.92}
+.bar{height:10px;background:rgba(255,255,255,.25);border-radius:6px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--sand);border-radius:6px}
+h2{font-size:22px;margin:30px 0 10px;display:flex;align-items:center;gap:10px}
+h2 small{font-size:14px;color:var(--mut);font-weight:400}
+ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;padding:12px 14px;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+.box{width:22px;height:22px;border:2px solid var(--mut);border-radius:6px;margin-top:2px;display:grid;place-items:center;font-size:14px;color:#fff}
+.done .box{background:var(--ok);border-color:var(--ok)}
+.done .t{color:var(--mut)}
+.wait .box{border-color:var(--acc)}
+.t{font-weight:500}
+.n{color:var(--mut);font-size:14px;margin-top:2px}
+.tag{display:inline-block;font-size:13px;color:var(--mut);margin-inline-start:6px;white-space:nowrap}
+.empty{padding:12px 14px;color:var(--mut)}
+footer{color:var(--mut);font-size:14px}
+</style>
+</head>
+<body>
+<header><div class="band">
+<h1>LBA3: מה עשינו, מה מחכה לך</h1>
+<p class="sub" id="upd"></p>
+<div class="meters" id="meters"></div>
+</div></header>
+<main class="band" id="lists"></main>
+<footer class="band">אותו מידע מפורט נמצא בקובץ OPEN-TASKS.he.md בענף. הרשימה מתעדכנת כשמשהו נפתח, נגמר או מחכה לך.</footer>
+<script>
+{
+const D = {
+  updated: '26.11.2026, אחרי v172',
+  release: '2027-05-31',
+  sinceVersion: { small: 0, big: 0, last: 'v172' },
+  groups: [
+    { k: 'wait', title: 'מחכה להחלטה שלך', note: 'אשאל עם תמונות', items: [
+      ['14', 'אמבט הפרחים ליד החנות ועמוד החום שהוגבה למרפסת', 'להשאיר או להחזיר'],
+      ['17', 'צלליות בזיליך', 'תמונות לפני/אחרי'],
+      ['19', 'השיער של טווינסן: שלושה גוונים חומים כמו ב־LBA2', 'תמונות לבחירה'],
+    ]},
+    { k: 'work', title: 'בעבודה עכשיו', note: 'עובדים ברקע', items: [
+      ['13', 'סצנת סיום של 45–60 שניות', 'בלי תמונות אליך (ספוילר)'],
+      ['18, 28', 'פרק 7: שלב חדש במקום החזרה על הדיסקים', 'תמונות לבחירה שלך'],
+      ['58', 'צליל טעינה לכוונה של השומרים עם הרובה', 'קובץ לשמיעה'],
+    ]},
+    { k: 'pc', title: 'צריך את המחשב שלך', note: 'הסוכן המקומי', items: [
+      ['72', 'להתקין את המתקין מ־GitHub (אם Smart App Control מרשה)', 'אין תשובה עדיין'],
+      ['73', 'לבדוק את v170: העומק בקירות, הראש של זואי, התיקונים הקטנים', 'אין תשובה עדיין'],
+      ['74', 'לשחק את שני הקרבות הראשונים עם א + ג ולספור פגיעות', 'אין תשובה עדיין'],
+      ['24', 'משחק אמיתי מההתחלה ומדידת זמן בכל פרק', 'עד אז השעות הן הערכה'],
+      ['25', 'מדידת ביצועים על כרטיס מסך אמיתי', 'אין היום מספר אמיתי'],
+    ]},
+    { k: 'low', title: 'עדיפות נמוכה', note: '', items: [
+      ['66', 'בנחל הקפוא בהמלאיי הרגליים של טווינסן שוקעות כ־10 ס"מ בקרח', ''],
+      ['26', 'פרק 10 עמוס בדיבורים', ''],
+      ['27', 'פרק 14 חוזר על הטיפוס בטחנה', ''],
+      ['29', 'זיליך נראית פשוטה יותר מהמצודה', ''],
+      ['30', 'שני מקומות שבהם המצלמה נכנסת לקיר', ''],
+      ['21', 'השמות והמיתוג', 'לפני הקפאת התוכן, 15.3.2027'],
+    ]},
+    { k: 'done', title: 'נעשה לאחרונה', note: '', items: [
+      ['v172', 'צליל טעינה לכוונה של הרחפן, בכל המשחק', 'שמעת ואישרת'],
+      ['33', 'רישיון הצלילים: קובץ הודעות נוסף ונכלל באפליקציה', ''],
+      ['v171', 'הקרבות הראשונים: קו כוונה ברור, רחפנים איטיים יותר במחסנים, השומר בזליך נח אחרי מכה, לב במחסן', ''],
+      ['v171', 'הקריסטל על הדשא, שלט הקוסם, שלט NEWS, יתדות המדבר, מדרגות לקשת, שמות לכל החדרים', ''],
+      ['62', 'על לוחית זריקה הכדור הולך לאורך החץ גם עם נעילה', ''],
+      ['65', 'פערי גל 4: ארתור ברדיו, מילה וראף מגיבים למשבר', ''],
+      ['63, 15, 16', 'נסגרו: החפיפה במזרקה לא נמצאה, העיכוב בצליל לא מורגש, כרטיס הכותרת בסדר', ''],
+      ['v170', 'העומק בקירות, הראש של זואי, הפרנקוס, גלים 5 ו־8, איזון התלתן', ''],
+    ]},
+  ],
+};
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const days = Math.max(0, Math.ceil((new Date(D.release + 'T00:00:00') - new Date()) / 864e5));
+const v = D.sinceVersion;
+document.getElementById('upd').textContent = 'עודכן: ' + D.updated;
+document.getElementById('meters').innerHTML = [
+  [v.small + ' / 10', 'תיקונים קטנים שאישרת מאז ' + v.last, v.small / 10],
+  [v.big + ' / 5', 'תיקונים גדולים שאישרת מאז ' + v.last, v.big / 5],
+  [days + ' ימים', 'עד היציאה המלאה, 31.5.2027', null],
+].map(([b, s, p]) => `<div class="m"><b>${esc(b)}</b><span>${esc(s)}</span>${p == null ? '' : `<div class="bar"><i style="width:${Math.min(100, p * 100)}%"></i></div>`}</div>`).join('');
+document.getElementById('lists').innerHTML = D.groups.map((g) => `
+  <h2>${esc(g.title)} <small>${g.items.length}${g.note ? ' · ' + esc(g.note) : ''}</small></h2>
+  <ul>${g.items.length ? g.items.map(([n, t, x]) => `<li class="${g.k === 'done' ? 'done' : g.k === 'wait' ? 'wait' : ''}">
+    <span class="box" aria-hidden="true">${g.k === 'done' ? '✓' : ''}</span>
+    <div><div class="t">${esc(t)}<span class="tag">#${esc(n)}</span></div>${x ? `<div class="n">${esc(x)}</div>` : ''}</div></li>`).join('') : '<div class="empty">אין כרגע</div>'}</ul>`).join('');
+}
+</script>
+</body>
+</html>
