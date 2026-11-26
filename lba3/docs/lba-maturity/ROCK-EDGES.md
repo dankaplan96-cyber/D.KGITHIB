@@ -96,6 +96,11 @@ general "vertex tint follows the grid" below, not an earth patch gone under the 
 Not pictured; open for the coordinator, biggest on the Platform (around world 3857.7, 1810.3) and Mosquibee
 (2551.4, 1810.3). Not measured on Citadel, the desert or the Hamalayi (not isles; their colour functions are other files).
 
+**Tests** (automated runtime only, SwiftShader, SERVE=1, once each, the default build, after the last source change
+`2c875be5`; load average 15–19): `tests/worldfit.mjs` **PASS** (functional 1/1, visual 8/8); `tests/walkers.mjs`
+**PASS** (37/37). No test picture was overwritten. Not run with `?rockedge=old` (its Knartas digests match the build
+before; its shader text is the previous build's, checked when the switch was made).
+
 **Pictures**: `captures/rock-edges-2/sheet.png` (1288 px wide): Knartas from the play camera and from above, before (the
 traced edge, patches gone) | after; then the approved look (`?rockedge=old`) | after at full size. No other rows: no
 other place changed.
