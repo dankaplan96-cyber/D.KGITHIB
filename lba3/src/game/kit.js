@@ -36,7 +36,7 @@ export function ctex(key, w, h, draw, repeat = true) {
   draw(c.getContext('2d'), w, h);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  TC.set(key, t);
+  t.name = key; TC.set(key, t);   // (P135: named, so tests/path-ends.mjs finds the paving meshes)
   return t;
 }
 export const wrap9 = (S, fn) => { for (const a of [-S, 0, S]) for (const b of [-S, 0, S]) fn(a, b); };
