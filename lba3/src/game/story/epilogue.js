@@ -1,12 +1,14 @@
 // Epilogue — "Home".
 //
 // Four days later, back on Citadel Island: dinner at home with Zoé and Arthur (the prologue's "be back for
-// dinner"), then the end screen, and free roam where everyone in town has something new to say.
+// dinner"), the ending film (ending.js, #13), then the end screen, and free roam where everyone in town has something
+// new to say.
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 const LIGHTHOUSE_DOOR = { x: -107.5, z: 94.2 };   // (as network.js: the lamp room's door on the headland)
 import '../text/ch3.js';
 import { sleepersScene } from './balances.js';   // (EXP-3: the Cradle Hall before the end card, the expanded campaign)
+import { playEnding, endingOn } from './ending.js';   // (#13: the ending film before the end card)
 
 const LINES = {
   gilbert: 'ep_gilbert', mira: 'ep_mira', doran: 'ep_doran', pippa: 'ep_pippa', tim: 'ep_tim', lulu: 'ep_lulu', xil: 'ep_xil', arthur: 'ep_arthur', zoe: 'ep_zoe_idle',
@@ -75,8 +77,18 @@ export class Epilogue extends ChapterBase {
     this.chain([['narrator', 'ep_narr'], ['zoe', 'ep_zoe_1'], ['hero', 'ep_tw_1'], ['arthur', 'ep_ar_1'], ['hero', 'ep_tw_2'], ['zoe', 'ep_zoe_2'], ['zoe', 'ep_zoe_3']], () => {
       this.f.ep_dinner = true;
       g.save(false);
-      if (!sleepersScene(this, () => this.showEnd())) this.showEnd();
+      // (#13: the ending film after the dinner — and after the Cradle Hall in the expanded campaign —, then the end card)
+      const end = () => this.film(() => this.showEnd());
+      if (!sleepersScene(this, end)) end();
     });
+  }
+  // the ending film (story/ending.js), then `done` (the end card). ?nocine — developers, the tests — goes straight on. Its
+  // finish() leaves the same state played or skipped: the family at home, the camera on them; it sets no flag and saves
+  // nothing (the save is the dinner's, above: a save from before the film loads into free play as it always did)
+  film(done) {
+    if (!endingOn() || this.game.cine) { done(); return; }
+    this.ending = playEnding(this, () => { this.ending = null; this.filmed = true; done(); });
+    this.ending.start();
   }
   // The sword in his hand is only drawn (Hero.showSword); the equipped weapon is left alone, so free play has it back
   // as the player chose. Hero.update shows it again each play frame, so until the dinner is over it is hidden again
@@ -96,7 +108,12 @@ export class Epilogue extends ChapterBase {
     g.showScreen('ending');
     g.audio.setMood?.('ending');
   }
-  afterEnding() { this.f.ep_free = true; this.game.updateObjective(); }
+  afterEnding() {
+    this.f.ep_free = true;
+    // (after the film the three stood at the table under the card: Zoé and Arthur go back to their places for free play)
+    if (this.filmed) { this.filmed = false; this.story.refreshCast(); }
+    this.game.updateObjective();
+  }
 
   talk(npc) {
     if (!this.on()) return false;
