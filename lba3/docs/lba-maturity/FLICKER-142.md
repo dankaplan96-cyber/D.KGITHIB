@@ -207,3 +207,5 @@ full log is in `captures/flicker-142/before.log.gz`.
 - **Long thin seams** are cut into many 0.6 m clusters, each under 0.02 m². The suite sums each room's clusters of one
   pair of pieces and lists the sums of 0.02 m² or more, but does not judge them.
 - **Real GPUs.** Not tested. SwiftShader's depth is not a GPU's, so real-GPU flicker can differ.
+
+> 26.11 (coordinator): the sheet's last row (the underground's deep installation, chapters 15–16) was cut from `captures/flicker-142/sheet.png`: no pictures of chapters 15–16 go to the user (spoiler rule). The fix there is unchanged.
