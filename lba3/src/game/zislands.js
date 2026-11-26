@@ -1706,7 +1706,18 @@ function buildIsland0(scene, physics, name, L, at) {
     const near = new Uint8Array(N), R3 = 3;
     for (let k = 0; k < N; k++) if (comp[k] && keep[comp[k]]) { const i = k % nI, j = (k - i) / nI; for (let w = Math.max(0, j - R3); w <= Math.min(nJ - 1, j + R3); w++) for (let q = Math.max(0, i - R3); q <= Math.min(nI - 1, i + R3); q++) near[w * nI + q] = 1; }
     const nearAt = (x, z) => { const i = Math.round((x - xa) / st), j = Math.round((z - za) / st); return i >= 0 && j >= 0 && i < nI && j < nJ && near[j * nI + i] === 1; };
-    return { st, xa, za, nI, nJ, B, bAt, at, nearAt, sqNear, comp, keep, kept, all, stats };
+    // (a square's paving where it lies on the level (splatFn: SQUARE_LEVEL); a fragment of it cut off by a bank, under
+    //  30 m², goes: a few metres of paving alone in the turf. 8-connected, so a fragment is only what the rule leaves apart)
+    const sqOn = new Uint8Array(N), sqComp = new Int32Array(N), sqKeep = [0];
+    if (!S.paveFlat) for (let k = 0; k < N; k++) { if (ex[k] !== 2) continue; const x = xa + (k % nI) * st, z = za + Math.floor(k / nI) * st; if (paved(x, z) && Math.min(ptSlope(x, z), levelSlope(x, z)) < (S.paveSlope ?? SQUARE_LEVEL)) sqOn[k] = 1; }
+    for (let k0 = 0; k0 < N; k0++) {
+      if (!sqOn[k0] || sqComp[k0]) continue;
+      const id = sqKeep.length, stack = [k0]; sqComp[k0] = id; let n = 0;
+      while (stack.length) { const k = stack.pop(), i = k % nI, j = (k - i) / nI; n++; for (let w = Math.max(0, j - 1); w <= Math.min(nJ - 1, j + 1); w++) for (let q = Math.max(0, i - 1); q <= Math.min(nI - 1, i + 1); q++) { const c = w * nI + q; if (sqOn[c] && !sqComp[c]) { sqComp[c] = id; stack.push(c); } } }
+      sqKeep.push(n * st * st >= 30 ? 1 : 0);
+    }
+    const sqKeepAt = (x, z) => { const i = Math.round((x - xa) / st), j = Math.round((z - za) / st); let any = false; for (let w = j - 1; w <= j + 1; w++) for (let q = i - 1; q <= i + 1; q++) { if (q < 0 || w < 0 || q >= nI || w >= nJ) continue; const c = sqComp[w * nI + q]; if (c) { any = true; if (sqKeep[c]) return true; } } return !any; };
+    return { st, xa, za, nI, nJ, B, bAt, at, nearAt, sqNear, sqKeepAt, comp, keep, kept, all, stats };
   }
   const splatFn = (x, z, h, slope, wt) => {
     wt[0] = 1; wt[1] = 0; wt[2] = 0; wt[3] = 0; wt[4] = 0;
@@ -1715,7 +1726,7 @@ function buildIsland0(scene, physics, name, L, at) {
     if (h >= -0.5 && h < 0.8) { wt[1] = smoothstep(0.8, 0.2, h) * 0.8; }
     const pd = Math.hypot(x - pad.x, z - pad.z);
     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
-    if (rk < 0.5 && paved(x, z) && (PG && !S.paveFlat ? Math.min(slope, levelSlope(x, z)) < (S.paveSlope ?? SQUARE_LEVEL) : slope < (S.paveSlope ?? 9))) { wt[4] = 1.6; wt[0] *= 0.2; }   // (PATHS-140B: with the smoothed pieces, a square's paving too lies on the level: the point's own slope or the slope averaged over 1.5 m (levelSlope), the lower, under SQUARE_LEVEL (Celebration's own paveSlope) — so a bump in the level is paved and the flat at a rock's foot too: a single bump cut a hole in Celebration's plaza, and Under Celebration's yard ran down its bank in a tongue; not on a square levelled in terraces, S.paveFlat: Otringal's)   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
+    if (rk < 0.5 && paved(x, z) && (PG && !S.paveFlat ? Math.min(slope, levelSlope(x, z)) < (S.paveSlope ?? SQUARE_LEVEL) && PG.sqKeepAt(x, z) : slope < (S.paveSlope ?? 9))) { wt[4] = 1.6; wt[0] *= 0.2; }   // (PATHS-140B: with the smoothed pieces, a square's paving too lies on the level: the point's own slope or the slope averaged over 1.5 m (levelSlope), the lower, under SQUARE_LEVEL (Celebration's own paveSlope) — so a bump in the level is paved and the flat at a rock's foot too: a single bump cut a hole in Celebration's plaza, and Under Celebration's yard ran down its bank in a tongue; not on a square levelled in terraces, S.paveFlat: Otringal's)   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
     if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
       const [r, p] = bare(x, z);
