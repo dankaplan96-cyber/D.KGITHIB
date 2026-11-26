@@ -13,7 +13,8 @@
 // blobs): listed apart, not counted. Ballastra's districts are paved masses over water (no terrain).
 // Env: SERVE=1 (or GAME_URL), TAG=before|after, OUT=dir (default captures/paths-135/<TAG>), SHOTS=0 (no pictures),
 // ONLY=area,area, AHEAD=2.0, KNOWN=file.json ([{ area, x, z, why }]: ends/gaps accepted as deliberate, within 2.5 m),
-// MAXOPEN=n (FAIL above n not accepted; default 0).
+// MAXOPEN=n (FAIL above n not accepted; default 0). KNOWN defaults to tests/fixtures/paths-135-known.json, each entry with
+// its reason (planted beds enclosed by paving, a fork, a rill's crossing, a porch).
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -21,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 const { check, done } = checker({ info: 'always' });
 const TAG = process.env.TAG || 'scan', OUT = process.env.OUT || fileURLToPath(new URL('../captures/paths-135/' + TAG, import.meta.url));
 const SHOTS = process.env.SHOTS !== '0', ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null, AHEAD = +(process.env.AHEAD || 2.0);
-const MAXOPEN = +(process.env.MAXOPEN || 0), KNOWN = process.env.KNOWN ? JSON.parse(fs.readFileSync(process.env.KNOWN, 'utf8')) : [];
+const MAXOPEN = +(process.env.MAXOPEN || 0), KNOWN = JSON.parse(fs.readFileSync(process.env.KNOWN || fileURLToPath(new URL('./fixtures/paths-135-known.json', import.meta.url)), 'utf8'));   // (KNOWN=none: no list)
 fs.mkdirSync(OUT, { recursive: true });
 const { browser, page } = await launch({ width: 1280, height: 720 });
 const ev = (f, a) => page.evaluate(f, a);
