@@ -24,8 +24,9 @@ const LAWN_WOB = 0.1;   // (m: the edge's wobble by the grass tile's brightness,
 // the grass/soil split: the old one (the vertex shares' ratio re-split at 0.5 on a short ramp: across a ~1 m triangle,
 // the grid's saw-tooth) or LAWN-EDGES-2's cut at the lawn distance 0 (lk: the soil's share, also for EDGE_CUT below)
 const LAWN_SPLIT = LAWN_EDGE ? `          float gs = sp.x + sp.w;
-          float la = clamp(lw * 0.6, 0.004, 0.25);
-          float lk = 1.0 - smoothstep(-la, la, vLawn + (dot(gtex, vec3(0.333)) - 0.42) * ${LAWN_WOB.toFixed(3)});
+          float la = clamp(lw * 0.6, 0.004, 0.25);   // (LAWN-EDGES-2: lk, the soil's share: the cut at the lawn's edge, times the old split's on the soil's own strength)
+          float gw = dot(gtex, vec3(0.333)) - 0.42;
+          float lk = (1.0 - smoothstep(-la, la, vLawn.x + gw * ${LAWN_WOB.toFixed(3)})) * smoothstep(0.42, 0.58, vLawn.y + gw * 0.35);
           sp.x = gs * (1.0 - lk); sp.w = gs * lk;` : `          float gs = sp.x + sp.w;
           if (gs > 0.001) {
             float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
@@ -59,13 +60,13 @@ const EDGE_CUT = `
 function splatShader(S) {
   const nv = S.nrmVarying;
   const vpre = 'attribute vec4 splat; attribute float splat2; attribute vec2 edge; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
-    + (LAWN_EDGE ? 'attribute vec2 lawn; varying float vLawn;\n' : '')
+    + (LAWN_EDGE ? 'attribute vec2 lawn; varying vec2 vLawn;\n' : '')
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
   const vert = `vSplat = splat; vSplat2 = splat2; vEdge = edge * ${EDGE_RANGE}.0; vWPos = (modelMatrix * vec4(position, 1.0)).xyz;\n`
-    + (LAWN_EDGE ? `vLawn = lawn.x * ${EDGE_RANGE}.0;\n` : '')
+    + (LAWN_EDGE ? `vLawn = vec2(lawn.x * ${EDGE_RANGE}.0, lawn.y);\n` : '')
     + (nv ? 'vWNrm = normalize(mat3(modelMatrix) * normal);\n' : '#ifdef FLAT_SHADED\nvWNrm = normalize(mat3(modelMatrix) * normal);\n#endif\n');
   const fpre = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
-    + (LAWN_EDGE ? 'varying float vLawn;\n' : '')
+    + (LAWN_EDGE ? 'varying vec2 vLawn;\n' : '')
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
   // SHADE-COST: the world normal from the view-space one three interpolates anyway (vNormal), turned back by the view's
   // rotation: the same direction (a rotation commutes with the interpolation), and the weights below do not depend on
@@ -73,7 +74,7 @@ function splatShader(S) {
   const wn = nv ? 'normalize(vWNrm)' : '\n#ifdef FLAT_SHADED\nnormalize(vWNrm)\n#else\n(vec4(vNormal, 0.0) * viewMatrix).xyz\n#endif\n';
   let frag;
   if (S.diag === 'implicit') frag = `
-          vec2 tuv = vWPos.xz * 0.22; float ew = fwidth(vEdge.x);${LAWN_EDGE ? ' float lw = fwidth(vLawn);' : ''}
+          vec2 tuv = vWPos.xz * 0.22; float ew = fwidth(vEdge.x);${LAWN_EDGE ? ' float lw = fwidth(vLawn.x);' : ''}
           vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
           vec3 rock = texture2D(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14).rgb * bw.x
                     + texture2D(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14).rgb * bw.z
@@ -108,7 +109,7 @@ ${LAWN_SPLIT}${EDGE_CUT}
           // Citadel's street ~half the screen) with their weight 0 on most of them; and Direct3D cannot keep a branch
           // around implicit-gradient reads (texture2D), so the sand's branch ran everywhere too. Same pixels.
           vec3 dPx = dFdx(vWPos), dPy = dFdy(vWPos);
-          float ew = fwidth(vEdge.x);   // (LAWN-EDGES: before any branch)${LAWN_EDGE ? '\n          float lw = fwidth(vLawn);   // (LAWN-EDGES-2)' : ''}
+          float ew = fwidth(vEdge.x);   // (LAWN-EDGES: before any branch)${LAWN_EDGE ? '\n          float lw = fwidth(vLawn.x);   // (LAWN-EDGES-2)' : ''}
           vec2 gx = dPx.xz * 0.22, gy = dPy.xz * 0.22;
           vec4 sp = vSplat; float sp2 = vSplat2;
           // cliffs: triplanar rock so steep faces show undistorted strata
@@ -307,8 +308,8 @@ export class Terrain {
     return group;
   }
 
-  // LAWN-EDGES-2 (?lawnedge=new): per grid point, the signed distance (m) to the grass/soil edge: + on the grass, − on the
-  // soil, ±EDGE_RANGE far from one. The edge is the 0.5 line of the soil's share of grass + soil (splat w[3] / (w[0] + w[3]),
+  // LAWN-EDGES-2 (?lawnedge=new): per grid point, [the signed distance (m) to the grass/soil edge: + on the grass, − on
+  // the soil, ±EDGE_RANGE far from one; the soil's strength 0..1]. The edge is the 0.5 line of the soil's share of grass + soil (splat w[3] / (w[0] + w[3]),
   // the ratio the shader splits on), found in the cells whose corners lie on both sides: the splat sampled on a fine
   // grid (LE_SUB × LE_SUB a cell; the corners are the grid points themselves, so the classes agree) and its 0.5 line
   // traced (marching squares). Each grid point within LE_R m takes its distance to the nearest piece, and the distances
@@ -420,6 +421,14 @@ export class Terrain {
         if (v * D[k] < 0) { v = D[k]; kept++; }   // (never across the point's own side: a strip one point wide stays)
       }
       out[k * 2] = q16(v);
+      // the soil's strength: its own share on the soil's side, the strongest soil neighbour's on the grass side, so it
+      // does not fall across the edge (the old split, now inside the cut: a faint trodden way stays faint)
+      let st2 = ratio[k] === ratio[k] ? ratio[k] : 0;
+      if (!(st2 >= 0.5)) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+        const ii = i + c, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
+        const rr = ratio[jj * n + ii]; if (rr >= 0.5 && rr > st2) st2 = rr;
+      }
+      out[k * 2 + 1] = Math.round(Math.min(1, st2) * 32767);
     }
     this.lawnStats = { ms: +(performance.now() - t0).toFixed(1), step: +st.toFixed(3), verts: n * n, cells: cells.length / 2, samples: fine.size, pieces: nSeg, near, kept, bytes: out.byteLength };
     return out;
