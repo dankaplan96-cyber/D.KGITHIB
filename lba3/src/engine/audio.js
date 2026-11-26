@@ -886,10 +886,10 @@ export class AudioEngine {
         const sine = ctx.createOscillator(); glide(sine.frequency, 90, 270); src.push(sine);
         const saw = ctx.createOscillator(); saw.type = 'sawtooth'; glide(saw.frequency, 90, 270); src.push(saw);
         const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 3; glide(lp.frequency, 240, 1200);
-        const sg = ctx.createGain(); sg.gain.value = 0.023; sine.connect(sg);
-        const wg = ctx.createGain(); wg.gain.value = 0.01; saw.connect(lp).connect(wg);
+        const sg = ctx.createGain(); sg.gain.value = 0.019; sine.connect(sg);
+        const wg = ctx.createGain(); wg.gain.value = 0.0085; saw.connect(lp).connect(wg);
         const sub = ctx.createOscillator(); glide(sub.frequency, 45, 135); src.push(sub);   // (an octave under: the body)
-        const ug = ctx.createGain(); ug.gain.value = 0.009; sub.connect(ug);
+        const ug = ctx.createGain(); ug.gain.value = 0.0075; sub.connect(ug);
         // the swell: from the click's end to 0.4, up to full at 90 % of the aim, out by its end (the zap lands on silence)
         const eg = ctx.createGain(), e = eg.gain, rel = Math.min(0.06, dur * 0.08);
         e.setValueAtTime(0, t); e.setValueAtTime(0, t + 0.03); e.linearRampToValueAtTime(0.4 * v, t + 0.09); e.linearRampToValueAtTime(v, end - rel); e.linearRampToValueAtTime(0, end);
