@@ -141,7 +141,9 @@ function roundBoxDist(x, z, x0, z0, x1, z1, r) {
 const GRID_STREETS = [
   // (P135, the user's photo: the west street and its foot stopped 4 m short of the street down to the promenade's flight
   //  (x -64), a bay of dirt between: it runs on north to that street now, its end flush in it)
-  [-58.9, -4.16, -58.9, 57.0, 3.0],    // the west street, from the street to the harbour south past the water office
+  // (P136: it ran on 4 m past the south cross street and stopped square in the dirt, P112's free end: it ends flush in
+  //  that street now, the two one corner)
+  [-58.9, -4.16, -58.9, 53.1, 3.0],    // the west street, from the street to the harbour south past the water office
   // (P136: its rounded end stopped 2 m short of the ring's south curve, a dirt notch between: it runs on into the ring)
   [-60.4, 2.9, -45.0, 2.9, 3.0],     // its foot, east to the square's ring
   [-55.4, -4.16, -55.4, 2.9, 4.0],   // (P135) the corner between it, its foot, the street to the flight and the block's west street (x −52) paved (a bare kerbed bed was left there)
