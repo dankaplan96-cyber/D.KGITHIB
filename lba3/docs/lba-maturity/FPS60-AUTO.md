@@ -8,6 +8,14 @@ the frame pacing *decide* when frames are slow. They do not show how fast any re
 looks. No number below is from the UHD 620, the GTX 1050 or the work computer. Order 76 (already written in
 `tools/testlab/CLOUD_ORDERS.md` by the coordinator) asks for the laptop's own result.
 
+> **P137b update (26.11, `docs/lba-maturity/CPU-RELIEF.md`).** The user kept the shadows: Auto must not turn them off for
+> CPU pressure. **Low-eco is replaced by CPU-eco** (same id `loweco`, so a cached Low-eco comes back as CPU-eco): Medium-lean's
+> picture exactly (shadows, map, filter, 100 % resolution) plus far people animated at a lower rate (every other frame in
+> view from 15 m, every third beyond 25 m). It sits **above** Low in the list (index 3; Low is index 4 now). CPU pressure
+> goes Medium → Medium-lean → CPU-eco and stops: **no CPU step turns the shadows off.** The GPU rungs (Low, Low 75 %,
+> Low 65 %) and the pacing are unchanged. The tables below that name Low-eco are P137's record; the updated decision
+> table is in CPU-RELIEF.md §5. The street's CPU work itself was cut for every profile instead (CPU-RELIEF.md §3).
+
 Base: `ccr-c1c2c4b9-dep6ed` at 87b0f1a4 (P137 row). Files: `src/engine/pace.js`, `src/engine/autoquality.js`,
 `src/engine/autoapply.js` (labelText), `src/main.js` (Settings' quality line only: no loop or renderer change),
 `src/game/text/common.js` + `he/common.js` (+ `he-text.js`), `tests/autoquality.mjs`, `tests/fps60-auto.mjs` (new),
@@ -104,6 +112,10 @@ the brief's order below Low (resolution in steps, then detail). Shadows are alre
 | 5 | **Low-eco** | Low + far people (beyond 25 m) animated at half rate + their tiny far parts dropped | CPU pressure only |
 | 6 | **Low 75 %** | Low-eco at 75 % resolution (−22 % pixels), sharpened in the output pass | GPU pressure only |
 | 7 | **Low 65 %** | Low-eco at 65 % (−25 % pixels from 75 %): **the floor** | GPU pressure only |
+
+**Since P137b** the ladder is: 1 High · 2 Medium · 3 Medium-lean · **4 CPU-eco** (Medium-lean + far people at a lower
+rate; shadows kept; CPU pressure only) · 5 Low (GPU only) · 6 Low 75 % (GPU only) · 7 Low 65 % (GPU only). Low 75 % and
+Low 65 % are Low + the two far-people knobs at 75 / 65 %, exactly as above; only Low-eco's row is gone.
 
 - **Low is now a GPU rung.** Seen from Medium-lean, it lowers resolution and turns shadows off, but it gives back
   Medium-lean's two far-people knobs. For CPU pressure it therefore bought almost nothing: the UHD 620 street (AUTO-P95
@@ -215,7 +227,8 @@ The rest of the table (fast GPU, GTX 1050 mains / battery / 41 Hz) is unchanged.
 
 The remaining gap on the street is CPU work. That belongs to the runtime performance engineer (the street's
 simulation and render submission), not to this ladder. Handed to the coordinator. If the user prefers keeping the
-shadows over ~1–3 fps on the CPU-bound street, Low-eco should be removed from the CPU path. It is one line: Low-eco's
+shadows over ~1–3 fps on the CPU-bound street, Low-eco should be removed from the CPU path. (P137b: the user did; done
+as CPU-eco, CPU-RELIEF.md.) It is one line: Low-eco's
 `only`.
 
 ## 5. Tests (automated runtime only, SwiftShader)

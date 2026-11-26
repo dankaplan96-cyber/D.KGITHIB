@@ -71,7 +71,8 @@ const cmp = await ev(() => {
   G.settings.quality = 'medium'; G.settings.qualityAuto = false; G.applySettings(); out.medium = look();
   at(1); out.autoMed = look(); out.autoMedLabel = A.label();
   at(2); out.lean = look(); out.leanLabel = A.label(); out.leanEdge = G.renderer.output.uniforms.edgeAA.value; out.leanTier = G.settings.quality;   // (P95: Medium-lean)
-  at(3); out.floor = look(); out.floorLabel = A.label();   // (AUTO-FLOOR: Low is Auto's floor, reached only by measured pressure)
+  at(3); out.cpuEco = look(); out.cpuEcoLabel = A.label(); out.cpuEcoDeep = G.farCull.anim.deep; out.cpuEcoTier = G.settings.quality;   // (P137b: CPU-eco, the CPU rung: Medium-lean's picture)
+  at(4); out.floor = look(); out.floorLabel = A.label();   // (AUTO-FLOOR: Low is Auto's floor, reached only by measured pressure; index 4 since P137b)
   at(1); out.eco = look(); out.ecoLabel = A.label();
   // (LOOK-FIRST: on battery the picture stays the profile's: no battery cuts)
   G.setBattery(true); G.frame(1 / 30, true); out.ecoBat = look(); G.setBattery(false);
@@ -86,6 +87,8 @@ check('Auto\'s Low is the Low preset (AUTO-FLOOR: below Medium only when play me
 check('P95 Auto\'s Medium-lean renders Medium\'s resolution and shadows (pixel ratio, map, filter) without MSAA (edges smoothed in the output pass), 2 lamps, Low\'s far grass and small casters, far people at half rate, small far parts dropped; its tier is Medium',
   cmp.leanLabel === 'Medium-lean' && cmp.lean.pr === cmp.autoMed.pr && cmp.lean.shadows && cmp.lean.shadowMap === cmp.autoMed.shadowMap && cmp.lean.shadowFilter === cmp.autoMed.shadowFilter && cmp.lean.samples === 0 && cmp.leanEdge > 0 && !cmp.lean.bloom
     && cmp.lean.lamps <= 2 && cmp.lean.casters === 'low' && cmp.lean.smallFar === cmp.floor.smallFar && cmp.lean.eco === true && cmp.lean.partPx === 2.5 && cmp.leanTier === 'medium', { lean: cmp.lean, med: cmp.autoMed, edge: cmp.leanEdge, tier: cmp.leanTier });
+check('P137b Auto\'s CPU-eco (the CPU rung) renders exactly as Medium-lean — its shadows, map, filter, resolution, MSAA, lamps, vegetation, small casters, the same draw calls — with the far people at the lower rate (anim deep); its tier is Medium',
+  cmp.cpuEcoLabel === 'CPU-eco' && same(cmp.lean, cmp.cpuEco, [...K, 'calls', 'partPx']) && cmp.cpuEco.shadows && cmp.cpuEco.eco === true && cmp.cpuEcoDeep === true && cmp.cpuEcoTier === 'medium', { cpuEco: cmp.cpuEco, lean: cmp.lean, label: cmp.cpuEcoLabel, deep: cmp.cpuEcoDeep, tier: cmp.cpuEcoTier });
 check('... and on battery: shadows stay on and the resolution stays ≥ 85 % (only the nearly invisible battery cuts)', cmp.ecoBat.shadows && cmp.ecoBat.pr >= 0.85, { eco: cmp.eco, bat: cmp.ecoBat });
 
 // ---------------------------------------------------------------- 5. a decision waits for a commit point (nothing changes in play)
@@ -181,11 +184,11 @@ const tryUp = await ev(() => {
 await open(page, '?nocine&autoq');
 const up = await ev(() => ({ src: game.autoQ.source, p: game.autoQ.gov.applied, phase: game.autoQ.gov.phase, trial: game.autoQ.gov.trial }));
 check('... a settled profile whose session had room to spare: the next start tries one higher, evaluated', tryUp && /one higher/.test(up.src) && up.p === 0 && up.phase === 'evaluate' && !!up.trial, up);
-// P95: a cache from before the update (v4: High · Medium · Low by index) loads safely: Low stays Low (index 3 now), held
+// P95: a cache from before the update (v4: High · Medium · Low by index) loads safely: Low stays Low (index 4 since P137b), held
 await ev(() => { const k = game.autoQ.key; localStorage.removeItem('lba3_autoq_v5'); localStorage.setItem('lba3_autoq_v4', JSON.stringify({ [k]: { p: 2, src: 'settled', margin: false, noTry: 0, at: 'v4 test' }, junk: 'x', bad: { p: 9 } })); });
 await open(page, '?nocine&autoq');
 const v4 = await ev(() => ({ src: game.autoQ.source, p: game.autoQ.gov.applied, phase: game.autoQ.gov.phase, label: game.autoQ.label(), v5: JSON.parse(localStorage.getItem('lba3_autoq_v5') || '{}'), key: game.autoQ.key }));
-check('P95 an old (v4) cached Auto result loads safely: its settled Low is still Low (moved over by id, held), the broken entries dropped, the cache rewritten as v5', v4.p === 3 && v4.label === 'Low' && v4.phase === 'hold' && /settled/.test(v4.src) && v4.v5[v4.key]?.id === 'low' && v4.v5[v4.key]?.p === 3 && !v4.v5.junk && !v4.v5.bad, v4);
+check('P95 an old (v4) cached Auto result loads safely: its settled Low is still Low (moved over by id, held), the broken entries dropped, the cache rewritten as v5', v4.p === 4 && v4.label === 'Low' && v4.phase === 'hold' && /settled/.test(v4.src) && v4.v5[v4.key]?.id === 'low' && v4.v5[v4.key]?.p === 4 && !v4.v5.junk && !v4.v5.bad, v4);
 
 // ---------------------------------------------------------------- 8. the benchmark: Auto's lines and the Auto run
 await reopen('?nocine', null);
