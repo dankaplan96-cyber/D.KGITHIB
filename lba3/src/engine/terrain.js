@@ -28,19 +28,44 @@ const linMean = (t) => {
   for (let i = 0; i < d.length; i += 4) { s[0] += L[d[i]]; s[1] += L[d[i + 1]]; s[2] += L[d[i + 2]]; }
   return s.map((v) => v / (d.length / 4));
 };
+const MEANS = new Map(), linMeanOf = (t) => { if (!MEANS.has(t.uuid)) MEANS.set(t.uuid, linMean(t)); return MEANS.get(t.uuid); };   // (ROCK-EDGES)
 export function tileTint(a, b) {
   const k = a.uuid + b.uuid;
   if (!TINTS.has(k)) { let r = [1, 1, 1]; try { const ma = linMean(a), mb = linMean(b); r = ma.map((v, i) => v / mb[i]); } catch { /* unreadable: no tint */ } TINTS.set(k, r); }
   return TINTS.get(k);
 }
 export function setTerrainShade(k, v) { if (TERRAIN_SHADE[k] === v) return false; TERRAIN_SHADE[k] = v; for (const m of MATS) m.needsUpdate = true; return true; }
-const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVarying ? '-n' : '') + (S.diag ? '-' + S.diag : '') + (S.sunLambert ? '-sl' : '') + (LAWN_EDGE ? '-le' : '');
+const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVarying ? '-n' : '') + (S.diag ? '-' + S.diag : '') + (S.sunLambert ? '-sl' : '') + (LAWN_EDGE ? '-le' : '') + (ROCK_EDGE ? '-re' : '');
 // LAWN-EDGES-2 (P135, ?lawnedge=new; off by default): the grass/soil split cut per pixel by a per-vertex signed distance
-// to the lawn's edge (the `lawn` attribute, Terrain._lawnEdges), as LAWN-EDGES cuts the paving. Off: no attribute, no
+// to the lawn's edge (the `lawn` attribute, Terrain._edgeChannels), as LAWN-EDGES cuts the paving. Off: no attribute, no
 // work, the shader's text as before.
 // (LAWN-EDGES-2, the user's pick 26.11: smooth grass/soil edges are the default; ?lawnedge=old brings back the stepped edge)
 export const LAWN_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('lawnedge') !== 'old'; } catch { return true; } })();
 const LAWN_WOB = 0.1;   // (m: the edge's wobble by the grass tile's brightness, so it reads painted, not ruled)
+// ROCK-EDGES (docs/lba-maturity/ROCK-EDGES.md; ?rockedge=new, off by default): LAWN-EDGES-2's traced edge for two more
+// channels, the rock's edge (the rock's share, re-split per pixel: rk) and the paving's (its share of the ground that is
+// not rock: pk) — the `rockedge` attribute, [rock distance, rock strength, paving distance, paving strength] per grid
+// point (Terrain._edgeChannels). Off: no attribute, no work, the shader's text as before. Where LAWN-EDGES' own paving
+// line runs (Citadel's streets, vEdge), its cut (EDGE_CUT) still decides, as before.
+export const ROCK_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('rockedge') === 'new'; } catch { return false; } })();
+const ROCK_WOB = 0.25, PAVE_WOB = 0.1;   // (m: the rock's edge wobbled by the rock tile's brightness about its mean (uRockMid), the paving's by the grass tile's)
+const RB = (0.25 + ROCK_WOB).toFixed(3), PB = (0.25 + PAVE_WOB).toFixed(3);   // (m: beyond these on the outer side the cut is 0 whatever the wobble)
+// the rock's share: the old split (the share plus the tile's wobble, on a short ramp: across a ~1 m triangle the grid's
+// saw-tooth) or ROCK-EDGES' cut at the rock distance 0, times the old split on the rock's own strength (a faint rock
+// stays faint inside its edge). `rest` (the rest's share) must be set before; where it is ~0 (a triangle all rock:
+// WA-12's patches, the desert's outcrops, Otringal's turf) the rock stays whole, or the shares would sum under 1.
+const ROCK_SPLIT = (gate) => ROCK_EDGE
+  ? `float rb = dot(rock, vec3(0.333)), ra = clamp(rw.x * 0.6, 0.004, 0.25);
+          float rk = ${gate ? `vRockE.x < ${RB}` : 'true'} ? max((1.0 - smoothstep(-ra, ra, vRockE.x + (rb - uRockMid) * ${ROCK_WOB.toFixed(3)})) * smoothstep(0.38, 0.52, vRockE.y + (rb - 0.5) * 0.3), 1.0 - rest * 50.0) : 0.0;`
+  : null;
+// the paving's share of the rest (needs ns, gtex): the old split, or ROCK-EDGES' cut at the paving distance 0, times
+// the old split on the paving's own strength
+const PAVE_SPLIT = `          if (ns - sp2 > 0.001 && (sp2 > 0.001 || vRockE.z < ${PB})) {
+            float pa = clamp(rw.y * 0.6, 0.004, 0.25), pg = dot(gtex, vec3(0.333)) - 0.42;
+            float pk = (1.0 - smoothstep(-pa, pa, vRockE.z + pg * ${PAVE_WOB.toFixed(3)})) * smoothstep(0.4, 0.6, vRockE.w + pg * 0.25);
+            float ok = ns * (1.0 - pk) / (ns - sp2);
+            sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
+          }`;
 // the grass/soil split: the old one (the vertex shares' ratio re-split at 0.5 on a short ramp: across a ~1 m triangle,
 // the grid's saw-tooth) or LAWN-EDGES-2's cut at the lawn distance 0 (lk: the soil's share, also for EDGE_CUT below)
 const LAWN_SPLIT = LAWN_EDGE ? `          float gs = sp.x + sp.w;
@@ -81,12 +106,15 @@ function splatShader(S) {
   const nv = S.nrmVarying;
   const vpre = 'attribute vec4 splat; attribute float splat2; attribute vec2 edge; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
     + (LAWN_EDGE ? 'attribute vec2 lawn; varying vec2 vLawn;\n' : '')
+    + (ROCK_EDGE ? 'attribute vec4 rockedge; varying vec4 vRockE;\n' : '')
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
   const vert = `vSplat = splat; vSplat2 = splat2; vEdge = edge * ${EDGE_RANGE}.0; vWPos = (modelMatrix * vec4(position, 1.0)).xyz;\n`
     + (LAWN_EDGE ? `vLawn = vec2(lawn.x * ${EDGE_RANGE}.0, lawn.y);\n` : '')
+    + (ROCK_EDGE ? `vRockE = vec4(rockedge.x * ${EDGE_RANGE}.0, rockedge.y, rockedge.z * ${EDGE_RANGE}.0, rockedge.w);\n` : '')
     + (nv ? 'vWNrm = normalize(mat3(modelMatrix) * normal);\n' : '#ifdef FLAT_SHADED\nvWNrm = normalize(mat3(modelMatrix) * normal);\n#endif\n');
   const fpre = 'uniform sampler2D tGrass, tSand, tRock, tRockTop, tDirt, tCobble; uniform vec3 uRockTop; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec2 vEdge;\n'
     + (LAWN_EDGE ? 'varying vec2 vLawn;\n' : '')
+    + (ROCK_EDGE ? 'uniform float uRockMid; varying vec4 vRockE;\n' : '')
     + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
   // SHADE-COST: the world normal from the view-space one three interpolates anyway (vNormal), turned back by the view's
   // rotation: the same direction (a rotation commutes with the interpolation), and the weights below do not depend on
@@ -94,23 +122,24 @@ function splatShader(S) {
   const wn = nv ? 'normalize(vWNrm)' : '\n#ifdef FLAT_SHADED\nnormalize(vWNrm)\n#else\n(vec4(vNormal, 0.0) * viewMatrix).xyz\n#endif\n';
   let frag;
   if (S.diag === 'implicit') frag = `
-          vec2 tuv = vWPos.xz * 0.22; float ew = fwidth(vEdge.x);${LAWN_EDGE ? ' float lw = fwidth(vLawn.x);' : ''}
+          vec2 tuv = vWPos.xz * 0.22; float ew = fwidth(vEdge.x);${LAWN_EDGE ? ' float lw = fwidth(vLawn.x);' : ''}${ROCK_EDGE ? ' vec2 rw = fwidth(vRockE.xz);' : ''}
           vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
           vec3 rock = texture2D(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14).rgb * bw.x
                     + texture2D(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14).rgb * bw.z
                     + texture2D(tRockTop, vWPos.xz * 0.14).rgb * uRockTop * bw.y;
           vec4 sp = vSplat; float sp2 = vSplat2;
-          float rk = smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3);
-          float rest = 1.0 - sp.z;
+${ROCK_EDGE ? `          float rest = 1.0 - sp.z;
+          ${ROCK_SPLIT(false)}` : `          float rk = smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3);
+          float rest = 1.0 - sp.z;`}
           float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
           sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
           vec3 gtex = texture2D(tGrass, tuv).rgb;
           float ns = sp.x + sp.y + sp.w + sp2;
-          if (sp2 > 0.001 && ns - sp2 > 0.001) {
+${ROCK_EDGE ? PAVE_SPLIT : `          if (sp2 > 0.001 && ns - sp2 > 0.001) {
             float pk = smoothstep(0.4, 0.6, sp2 / ns + (dot(gtex, vec3(0.333)) - 0.42) * 0.25);
             float ok = ns * (1.0 - pk) / (ns - sp2);
             sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
-          }
+          }`}
 ${LAWN_SPLIT}${EDGE_CUT}
           vec3 sandT = vec3(0.0);
           if (sp.y > 0.003) {
@@ -129,14 +158,14 @@ ${LAWN_SPLIT}${EDGE_CUT}
           // Citadel's street ~half the screen) with their weight 0 on most of them; and Direct3D cannot keep a branch
           // around implicit-gradient reads (texture2D), so the sand's branch ran everywhere too. Same pixels.
           vec3 dPx = dFdx(vWPos), dPy = dFdy(vWPos);
-          float ew = fwidth(vEdge.x);   // (LAWN-EDGES: before any branch)${LAWN_EDGE ? '\n          float lw = fwidth(vLawn.x);   // (LAWN-EDGES-2)' : ''}
+          float ew = fwidth(vEdge.x);   // (LAWN-EDGES: before any branch)${LAWN_EDGE ? '\n          float lw = fwidth(vLawn.x);   // (LAWN-EDGES-2)' : ''}${ROCK_EDGE ? '\n          vec2 rw = fwidth(vRockE.xz);   // (ROCK-EDGES)' : ''}
           vec2 gx = dPx.xz * 0.22, gy = dPy.xz * 0.22;
           vec4 sp = vSplat; float sp2 = vSplat2;
           // cliffs: triplanar rock so steep faces show undistorted strata
           // (QUIET-ROCK: the read from above, the flat ground's, is tRockTop times uRockTop: by default the same tile, times 1)
           // (the rock's share below is 0 wherever the splat's rock weight is under 0.23: 0.38 minus the wobble's 0.15)
           vec3 rock = vec3(0.0);
-          if (sp.z > 0.229) {
+          if (${ROCK_EDGE ? `vRockE.x < ${RB}) {   // (ROCK-EDGES: wherever the cut can give rock: the traced line is not the interpolated share's)` : 'sp.z > 0.229) {'}
             vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
             rock = textureGrad(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14, vec2(dPx.z, dPx.y * 1.25) * 0.14, vec2(dPy.z, dPy.y * 1.25) * 0.14).rgb * bw.x
                  + textureGrad(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14, vec2(dPx.x, dPx.y * 1.25) * 0.14, vec2(dPy.x, dPy.y * 1.25) * 0.14).rgb * bw.z
@@ -145,8 +174,9 @@ ${LAWN_SPLIT}${EDGE_CUT}
           // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
           // (GFX-LOOK-2: a shorter ramp, wobbled by the rock's own strata: on a steep slope one ~1 m grid cell spans
           //  metres of screen, and 0.28–0.62 drew a soft green veil over the foot of every cliff)
-          float rk = sp.z > 0.229 ? smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3) : 0.0;
-          float rest = 1.0 - sp.z;
+${ROCK_EDGE ? `          float rest = 1.0 - sp.z;
+          ${ROCK_SPLIT(true)}` : `          float rk = sp.z > 0.229 ? smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3) : 0.0;
+          float rest = 1.0 - sp.z;`}
           float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
           sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
           // crisp soil edges too (paths and town soil): the grass/soil share is re-split per pixel with a
@@ -159,11 +189,11 @@ ${LAWN_SPLIT}${EDGE_CUT}
           if (ns - sp2 > 0.001 || sp.x > 0.0) gtex = textureGrad(tGrass, tuv, gx, gy).rgb;` : 'vec3 gtex = textureGrad(tGrass, tuv, gx, gy).rgb;'}
           // GFX-LOOK-2: the paving's edge as crisp (it faded into the grass and soil over the ~1 m grid: a green smear
           // round every street and the quay): its share re-split per pixel on the same kind of ramp, no extra read
-          if (sp2 > 0.001 && ns - sp2 > 0.001) {
+${ROCK_EDGE ? PAVE_SPLIT : `          if (sp2 > 0.001 && ns - sp2 > 0.001) {
             float pk = smoothstep(0.4, 0.6, sp2 / ns + (dot(gtex, vec3(0.333)) - 0.42) * 0.25);
             float ok = ns * (1.0 - pk) / (ns - sp2);
             sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
-          }
+          }`}
 ${LAWN_SPLIT}${EDGE_CUT}
           // sand: a second, turned and coarser sample modulates the first so the tile's ripples never line up
           // into rows or repeat at one visible interval (POLISH-AUDIT #16)
@@ -204,6 +234,15 @@ export class Terrain {
     this.tile = tile; this.squares = squares;
     this.splatFn = splatFn; this.edgeFn = edgeFn;   // (LAWN-EDGES: edgeFn(x, z, h, e) sets e = [distance to the paving's edge, band width]; none: no edge)
     this.tex = textures;
+    // ROCK-EDGES: the rock's traced line at the old split's midpoint on average: rk = 0.5 where the share plus the tile's
+    // wobble ((brightness − 0.5) × 0.3) is 0.45, so at the share 0.45 − (the flat read's mean brightness − 0.5) × 0.3
+    // (the cliff tile and the quiet granite ~0.27: 0.52; Otringal's and Knartas's granite ~0.47: 0.46). Read from the
+    // tiles this terrain is given (QUIET-ROCK's tint may change), once per tile.
+    if (ROCK_EDGE && splatFn && textures) {
+      const top = textures.rockTop || textures.rock, K = textures.rockTopK || [1, 1, 1];
+      let mid = 0.3; try { const m = linMeanOf(top); mid = (m[0] * K[0] + m[1] * K[1] + m[2] * K[2]) / 3; } catch { /* unreadable: the cliff tile's */ }
+      this.rockMid = mid; this.rockThr = Math.max(0.3, Math.min(0.6, 0.45 - (mid - 0.5) * 0.3));
+    }
     this.size = size;
     this.segs = segs;
     this.half = size / 2;
@@ -262,7 +301,7 @@ export class Terrain {
     const spl2 = new Float32Array(n * n);
     const edg = new Int16Array(n * n * 2).fill(32767), e = [EDGE_OFF, 0], q16 = (v) => Math.round(Math.max(-1, Math.min(1, v / EDGE_RANGE)) * 32767);
     const w = [0, 0, 0, 0, 0];
-    const slopes = LAWN_EDGE && this.splatFn ? new Float32Array(n * n) : null;   // (LAWN-EDGES-2: for the fine samples)
+    const slopes = (LAWN_EDGE || ROCK_EDGE) && this.splatFn ? new Float32Array(n * n) : null;   // (LAWN-EDGES-2, ROCK-EDGES: for the fine samples)
     const c = new THREE.Color();
     for (let j = 0; j < n; j++) {
       for (let i = 0; i < n; i++) {
@@ -302,7 +341,11 @@ export class Terrain {
       geo.setAttribute('splat', new THREE.BufferAttribute(spl, 4));
       geo.setAttribute('splat2', new THREE.BufferAttribute(spl2, 1));
       geo.setAttribute('edge', new THREE.BufferAttribute(edg, 2, true));   // (LAWN-EDGES; every splat terrain has it: one shader program)
-      if (slopes) geo.setAttribute('lawn', new THREE.BufferAttribute(this._lawnEdges(spl, slopes), 2, true));   // (LAWN-EDGES-2)
+      if (slopes) {
+        const E = this._edgeChannels(spl, spl2, slopes);
+        if (E.lawn) geo.setAttribute('lawn', new THREE.BufferAttribute(E.lawn, 2, true));   // (LAWN-EDGES-2)
+        if (E.rock) geo.setAttribute('rockedge', new THREE.BufferAttribute(E.rock, 4, true));   // (ROCK-EDGES)
+      }
       this._splatMaterial(mat);
     }
     // drawn in tiles of TILE × TILE cells sharing the vertex data, each with its own bounds, so the camera
@@ -340,119 +383,150 @@ export class Terrain {
   // A point with no grass or soil (paving, sand, snow, rock: under 1 % of the two) takes the side of the piece it is
   // nearest to, or with none near, its neighbours' side.
   // Nothing else changes: the splat, the heights and the scatter (which reads the splat functions, not this) as before.
-  _lawnEdges(spl, slopes) {
+  // ROCK-EDGES (?rockedge=new): the same, in one pass sharing the fine samples, for the rock's share and the paving's
+  // share of what is not rock (the `rockedge` attribute); the lawn's result is the same with it or without.
+  _edgeChannels(spl, spl2, slopes) {
     const t0 = performance.now(), n = this.segs + 1, S = LE_SUB, NF = this.segs * S + 1, st = this.step, fs = st / S;
-    const ratio = new Float32Array(n * n);
-    for (let k = 0; k < n * n; k++) { const g = spl[k * 4] + spl[k * 4 + 3]; ratio[k] = g > 0.01 ? spl[k * 4 + 3] / g : NaN; }
-    const side = (v) => (v >= 0.5 ? 1 : 0);
-    // the cells the edge crosses
-    const cells = [];
-    for (let j = 0; j < this.segs; j++) for (let i = 0; i < this.segs; i++) {
-      const a = ratio[j * n + i], b = ratio[j * n + i + 1], c = ratio[(j + 1) * n + i], d = ratio[(j + 1) * n + i + 1];
-      let s0 = 0, s1 = 0;
-      for (const v of [a, b, c, d]) if (v === v) { if (side(v)) s1++; else s0++; }
-      if (s0 && s1) cells.push(i, j);
+    // the channels: [name, threshold, the value at a grid point k, the value from a fine sample's weights w (sum: their
+    // sum), the weight of a grid point's side when it has no value (NaN), the trace's step in fine samples]
+    const C = [];
+    if (LAWN_EDGE) C.push(['lawn', 0.5, (k) => { const g = spl[k * 4] + spl[k * 4 + 3]; return g > 0.01 ? spl[k * 4 + 3] / g : NaN; },
+      (w, sum) => { const g = (w[0] + w[3]) / sum; return g > 0.01 ? w[3] / (w[0] + w[3]) : NaN; }, (k) => spl[k * 4] + spl[k * 4 + 3], 1]);
+    // ROCK-EDGES: the rock's share of all (the shader splits on it: rk), at the old split's mean midpoint for this terrain's
+    // tile (this.rockThr); the paving's share of the ground that is not rock (pk's ratio, sp2 / ns)
+    // (the rock's line on every second fine sample, 2 × 2 a cell: its sources are smooth (slopes, broad patches), it has
+    //  3× the lawn's cells on Citadel, and at 4 × 4 it tripled the build's time; the paving's at 4 × 4: its edges are
+    //  often a step (paved(), the posts), and its cells are few)
+    if (ROCK_EDGE) {
+      C.push(['rock', this.rockThr, (k) => spl[k * 4 + 2], (w, sum) => w[2] / sum, () => 1, 2]);
+      const nr = (k) => spl[k * 4] + spl[k * 4 + 1] + spl[k * 4 + 3] + spl2[k];
+      C.push(['pave', 0.5, (k) => { const g = nr(k); return g > 0.01 ? spl2[k] / g : NaN; },
+        (w, sum) => { const g = w[0] + w[1] + w[3] + w[4]; return g / sum > 0.01 ? w[4] / g : NaN; }, nr, 1]);
     }
-    // the fine samples (shared between neighbouring cells)
+    const NC = C.length, ratios = C.map(([, , gv]) => { const r = new Float32Array(n * n); for (let k = 0; k < n * n; k++) r[k] = gv(k); return r; });
+    // the fine samples, shared by the channels and by neighbouring cells: the splat at each, one value per channel
     const fine = new Map(), w = [0, 0, 0, 0, 0];
     const sl = (i, j) => slopes[Math.max(0, Math.min(this.segs, j)) * n + Math.max(0, Math.min(this.segs, i))];
-    const at = (I, J) => {
-      const key = J * NF + I; let v = fine.get(key);
-      if (v !== undefined) return v;
+    const at = (c, I, J) => {
       const i = Math.min(this.segs - 1, Math.floor(I / S)), j = Math.min(this.segs - 1, Math.floor(J / S)), fx = I / S - i, fz = J / S - j;
-      if (fx === 0 && fz === 0) v = ratio[j * n + i];
-      else {
+      if (fx === 0 && fz === 0) return ratios[c][j * n + i];
+      const key = J * NF + I; let v = fine.get(key);
+      if (v === undefined) {
         const x = this.x0 + I * fs, z = this.z0 + J * fs;
         const h00 = this._h(i, j), h10 = this._h(i + 1, j), h01 = this._h(i, j + 1), h11 = this._h(i + 1, j + 1);
         const h = fx + fz < 1 ? h00 + (h10 - h00) * fx + (h01 - h00) * fz : h11 + (h01 - h11) * (1 - fx) + (h10 - h11) * (1 - fz);
         const slope = (sl(i, j) * (1 - fx) + sl(i + 1, j) * fx) * (1 - fz) + (sl(i, j + 1) * (1 - fx) + sl(i + 1, j + 1) * fx) * fz;
         this.splatFn(x, z, h, slope, w);
-        const sum = w[0] + w[1] + w[2] + w[3] + w[4] || 1, g = (w[0] + w[3]) / sum;
-        v = g > 0.01 ? w[3] / (w[0] + w[3]) : NaN;
+        const sum = w[0] + w[1] + w[2] + w[3] + w[4] || 1;
+        v = C.map((ch) => ch[3](w, sum));
+        fine.set(key, v);
       }
-      fine.set(key, v); return v;
+      return v[c];
     };
-    // the 0.5 line's pieces, per cell: [x0, z0, x1, z1, gx, gz] (g: toward the soil)
-    const segs = new Map(), P = [];
-    let nSeg = 0;
-    for (let q = 0; q < cells.length; q += 2) {
-      const ci = cells[q], cj = cells[q + 1], list = [];
-      for (let b = 0; b < S; b++) for (let a = 0; a < S; a++) {
-        const I = ci * S + a, J = cj * S + b;
-        const v00 = at(I, J) - 0.5, v10 = at(I + 1, J) - 0.5, v01 = at(I, J + 1) - 0.5, v11 = at(I + 1, J + 1) - 0.5;
-        if (!(v00 === v00 && v10 === v10 && v01 === v01 && v11 === v11)) continue;
-        const X = this.x0 + I * fs, Z = this.z0 + J * fs;
-        P.length = 0;
-        const cut = (va, vb, xa, za, xb, zb) => { if ((va < 0) !== (vb < 0)) { const f = va / (va - vb); P.push(xa + (xb - xa) * f, za + (zb - za) * f); } };
-        cut(v00, v10, X, Z, X + fs, Z); cut(v10, v11, X + fs, Z, X + fs, Z + fs); cut(v11, v01, X + fs, Z + fs, X, Z + fs); cut(v01, v00, X, Z + fs, X, Z);
-        if (P.length < 4) continue;
-        const gx = (v10 - v00 + v11 - v01), gz = (v01 - v00 + v11 - v10);
-        list.push(P[0], P[1], P[2], P[3], gx, gz); nSeg++;
-        if (P.length === 8) { list.push(P[4], P[5], P[6], P[7], gx, gz); nSeg++; }
+    const outs = [], stats = {};
+    for (let c = 0; c < NC; c++) {
+      const [name, thr, , , wtOf, u] = C[c], ratio = ratios[c], fq = fs * u;
+      const side = (v) => (v >= thr ? 1 : 0);
+      // the cells the edge crosses
+      const cells = [];
+      for (let j = 0; j < this.segs; j++) for (let i = 0; i < this.segs; i++) {
+        const a = ratio[j * n + i], b = ratio[j * n + i + 1], cc = ratio[(j + 1) * n + i], d = ratio[(j + 1) * n + i + 1];
+        let s0 = 0, s1 = 0;
+        for (const v of [a, b, cc, d]) if (v === v) { if (side(v)) s1++; else s0++; }
+        if (s0 && s1) cells.push(i, j);
       }
-      if (list.length) segs.set(cj * n + ci, list);
-    }
-    // each grid point near a piece: its distance to the nearest, and that piece's side
-    const best = new Float32Array(n * n).fill(Infinity), sgn = new Int8Array(n * n);
-    const R = Math.max(2, Math.ceil(LE_R / st));
-    for (const [ck, L] of segs) {
-      const ci = ck % n, cj = (ck - ci) / n;
-      for (let j = Math.max(0, cj - R + 1); j <= Math.min(this.segs, cj + R); j++) for (let i = Math.max(0, ci - R + 1); i <= Math.min(this.segs, ci + R); i++) {
-        const k = j * n + i, px = this.x0 + i * st, pz = this.z0 + j * st;
-        for (let s = 0; s < L.length; s += 6) {
-          const ax = L[s], az = L[s + 1], dx = L[s + 2] - ax, dz = L[s + 3] - az, ll = dx * dx + dz * dz;
-          const f = ll > 1e-12 ? Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / ll)) : 0;
-          const ex = px - ax - dx * f, ez = pz - az - dz * f, d = Math.hypot(ex, ez);
-          if (d < best[k]) { best[k] = d; sgn[k] = ex * L[s + 4] + ez * L[s + 5] > 0 ? -1 : 1; }
+      // the line's pieces, per cell: [x0, z0, x1, z1, gx, gz] (g: toward the inner side: the soil, the rock, the paving)
+      const segs = new Map(), P = [];
+      let nSeg = 0;
+      for (let q = 0; q < cells.length; q += 2) {
+        const ci = cells[q], cj = cells[q + 1], list = [];
+        for (let b = 0; b < S; b += u) for (let a = 0; a < S; a += u) {
+          const I = ci * S + a, J = cj * S + b;
+          const v00 = at(c, I, J) - thr, v10 = at(c, I + u, J) - thr, v01 = at(c, I, J + u) - thr, v11 = at(c, I + u, J + u) - thr;
+          if (!(v00 === v00 && v10 === v10 && v01 === v01 && v11 === v11)) continue;
+          const X = this.x0 + I * fs, Z = this.z0 + J * fs;
+          P.length = 0;
+          const cut = (va, vb, xa, za, xb, zb) => { if ((va < 0) !== (vb < 0)) { const f = va / (va - vb); P.push(xa + (xb - xa) * f, za + (zb - za) * f); } };
+          cut(v00, v10, X, Z, X + fq, Z); cut(v10, v11, X + fq, Z, X + fq, Z + fq); cut(v11, v01, X + fq, Z + fq, X, Z + fq); cut(v01, v00, X, Z + fq, X, Z);
+          if (P.length < 4) continue;
+          const gx = (v10 - v00 + v11 - v01), gz = (v01 - v00 + v11 - v10);
+          list.push(P[0], P[1], P[2], P[3], gx, gz); nSeg++;
+          if (P.length === 8) { list.push(P[4], P[5], P[6], P[7], gx, gz); nSeg++; }
+        }
+        if (list.length) segs.set(cj * n + ci, list);
+      }
+      // each grid point near a piece: its distance to the nearest, and that piece's side
+      const best = new Float32Array(n * n).fill(Infinity), sgn = new Int8Array(n * n);
+      const R = Math.max(2, Math.ceil(LE_R / st));
+      for (const [ck, L] of segs) {
+        const ci = ck % n, cj = (ck - ci) / n;
+        for (let j = Math.max(0, cj - R + 1); j <= Math.min(this.segs, cj + R); j++) for (let i = Math.max(0, ci - R + 1); i <= Math.min(this.segs, ci + R); i++) {
+          const k = j * n + i, px = this.x0 + i * st, pz = this.z0 + j * st;
+          for (let s = 0; s < L.length; s += 6) {
+            const ax = L[s], az = L[s + 1], dx = L[s + 2] - ax, dz = L[s + 3] - az, ll = dx * dx + dz * dz;
+            const f = ll > 1e-12 ? Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / ll)) : 0;
+            const ex = px - ax - dx * f, ez = pz - az - dz * f, d = Math.hypot(ex, ez);
+            if (d < best[k]) { best[k] = d; sgn[k] = ex * L[s + 4] + ez * L[s + 5] > 0 ? -1 : 1; }
+          }
         }
       }
-    }
-    // (a point with no grass or soil and no piece near takes the side of its neighbours that have some, weighed by
-    //  their grass + soil: between a trodden way and the snow or sand beside it no edge is drawn, as before)
-    const D = new Float32Array(n * n);
-    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-      const k = j * n + i, r = ratio[k];
-      let cls;
-      if (r === r) cls = side(r) ? -1 : 1;
-      else if (best[k] < Infinity) cls = sgn[k];
-      else {
-        let a = 0;
-        for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
-          const ii = i + c, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
-          const kk = jj * n + ii, rr = ratio[kk]; if (rr === rr) a += (side(rr) ? -1 : 1) * (spl[kk * 4] + spl[kk * 4 + 3]);
+      // (a point with no value and no piece near takes the side of its neighbours that have one, weighed by their
+      //  share (the lawn's: grass + soil; the paving's: what is not rock): between a trodden way and the snow or sand
+      //  beside it no edge is drawn, as before)
+      const D = new Float32Array(n * n);
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const k = j * n + i, r = ratio[k];
+        let cls;
+        if (r === r) cls = side(r) ? -1 : 1;
+        else if (best[k] < Infinity) cls = sgn[k];
+        else {
+          let a = 0;
+          for (let b = -1; b <= 1; b++) for (let cc = -1; cc <= 1; cc++) {
+            const ii = i + cc, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
+            const kk = jj * n + ii, rr = ratio[kk]; if (rr === rr) a += (side(rr) ? -1 : 1) * wtOf(kk);
+          }
+          cls = a < 0 ? -1 : 1;
         }
-        cls = a < 0 ? -1 : 1;
+        D[k] = cls * Math.min(EDGE_RANGE, best[k]);
       }
-      D[k] = cls * Math.min(EDGE_RANGE, best[k]);
-    }
-    // smoothed once (1-2-1 each way) where a piece is near
-    const out = new Int16Array(n * n * 2), q16 = (v) => Math.round(Math.max(-1, Math.min(1, v / EDGE_RANGE)) * 32767);
-    let near = 0, kept = 0;
-    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-      const k = j * n + i;
-      let v = D[k];
-      if (best[k] < EDGE_RANGE) {
-        near++;
-        let a = 0, ws = 0;
-        for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
-          const ii = i + c, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
-          const wt = (2 - Math.abs(c)) * (2 - Math.abs(b)); a += D[jj * n + ii] * wt; ws += wt;
+      // smoothed once (1-2-1 each way) where a piece is near
+      const out = new Int16Array(n * n * 2), q16 = (v) => Math.round(Math.max(-1, Math.min(1, v / EDGE_RANGE)) * 32767);
+      let near = 0, kept = 0;
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+        const k = j * n + i;
+        let v = D[k];
+        if (best[k] < EDGE_RANGE) {
+          near++;
+          let a = 0, ws = 0;
+          for (let b = -1; b <= 1; b++) for (let cc = -1; cc <= 1; cc++) {
+            const ii = i + cc, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
+            const wt = (2 - Math.abs(cc)) * (2 - Math.abs(b)); a += D[jj * n + ii] * wt; ws += wt;
+          }
+          v = a / ws;
+          if (v * D[k] < 0) { v = D[k]; kept++; }   // (never across the point's own side: a strip one point wide stays)
         }
-        v = a / ws;
-        if (v * D[k] < 0) { v = D[k]; kept++; }   // (never across the point's own side: a strip one point wide stays)
+        out[k * 2] = q16(v);
+        // the inner side's strength: the strongest share among the point and its neighbours, so it does not fall across
+        // the edge (the old split, now inside the cut: a faint trodden way stays faint, a strong soil is whole to the line)
+        let st2 = ratio[k] === ratio[k] ? ratio[k] : 0;
+        for (let b = -1; b <= 1; b++) for (let cc = -1; cc <= 1; cc++) {
+          const ii = i + cc, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
+          const rr = ratio[jj * n + ii]; if (rr >= thr && rr > st2) st2 = rr;
+        }
+        out[k * 2 + 1] = Math.round(Math.min(1, st2) * 32767);
       }
-      out[k * 2] = q16(v);
-      // the soil's strength: the strongest soil share among the point and its neighbours, so it does not fall across
-      // the edge (the old split, now inside the cut: a faint trodden way stays faint, a strong soil is whole to the line)
-      let st2 = ratio[k] === ratio[k] ? ratio[k] : 0;
-      for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
-        const ii = i + c, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
-        const rr = ratio[jj * n + ii]; if (rr >= 0.5 && rr > st2) st2 = rr;
-      }
-      out[k * 2 + 1] = Math.round(Math.min(1, st2) * 32767);
+      outs.push(out);
+      stats[name] = { thr: +thr.toFixed(3), sub: S / u, cells: cells.length / 2, pieces: nSeg, near, kept, bytes: out.byteLength };
     }
-    this.lawnStats = { ms: +(performance.now() - t0).toFixed(1), step: +st.toFixed(3), verts: n * n, cells: cells.length / 2, samples: fine.size, pieces: nSeg, near, kept, bytes: out.byteLength };
-    return out;
+    const res = {};
+    if (LAWN_EDGE) res.lawn = outs[0];
+    if (ROCK_EDGE) {   // (one attribute: [rock distance, rock strength, paving distance, paving strength])
+      const r = outs[NC - 2], p = outs[NC - 1], o = new Int16Array(n * n * 4);
+      for (let k = 0; k < n * n; k++) { o[k * 4] = r[k * 2]; o[k * 4 + 1] = r[k * 2 + 1]; o[k * 4 + 2] = p[k * 2]; o[k * 4 + 3] = p[k * 2 + 1]; }
+      res.rock = o;
+    }
+    this.lawnStats = { ms: +(performance.now() - t0).toFixed(1), step: +st.toFixed(3), verts: n * n, samples: fine.size, ...stats, bytes: (res.lawn?.byteLength || 0) + (res.rock?.byteLength || 0) };
+    return res;
   }
 
   // one tile of the grid: its own index over the shared vertex data, its own bounds
@@ -519,7 +593,7 @@ export class Terrain {
   _splatMaterial(mat) {
     const T = this.tex;
     // (QUIET-ROCK: T.rockTop, the rock's tile seen from above (the flat ground; the faces keep T.rock), times T.rockTopK)
-    const uniforms = { tGrass: { value: T.grass }, tSand: { value: T.sand }, tRock: { value: T.rock }, tRockTop: { value: T.rockTop || T.rock }, uRockTop: { value: new THREE.Vector3(...(T.rockTopK || [1, 1, 1])) }, tDirt: { value: T.dirt }, tCobble: { value: T.cobble } };
+    const uniforms = { tGrass: { value: T.grass }, tSand: { value: T.sand }, tRock: { value: T.rock }, tRockTop: { value: T.rockTop || T.rock }, uRockTop: { value: new THREE.Vector3(...(T.rockTopK || [1, 1, 1])) }, uRockMid: { value: this.rockMid ?? 0.3 }, tDirt: { value: T.dirt }, tCobble: { value: T.cobble } };
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, uniforms);
       const S = splatShader(TERRAIN_SHADE);
