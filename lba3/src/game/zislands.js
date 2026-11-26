@@ -17,7 +17,7 @@
 //   R.land(x, z) → is this ground (not sea); R.sample [{x,z}] points of the main walkable area
 import { placeTag } from '../engine/placetag.js';
 import * as THREE from 'three';
-import { Terrain } from '../engine/terrain.js';
+import { Terrain, ROCK_EDGE } from '../engine/terrain.js';
 import { graniteTex, quietRock } from './quietrock.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, fbm } from '../engine/math.js';
@@ -1537,8 +1537,8 @@ function buildIsland0(scene, physics, name, L, at) {
     if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * (PAL ? PAL.pathMix * smoothstep(0.95, 0.75, slope) : 0.5));   // (#17b: no earth tint on the rock of a slope: it read pink)
     if (slope < 0.7 && paved(x, z)) c.copy(COL.pave).lerp(COL.turf, 0.15);
     if (PAL && h >= 0.8) {   // #17b: the bare patches pale rock (BG.col) and orange-brown earth (not tiles); the village square earth
-      const [r, p] = bare(x, z); if (r > 0) c.lerp(BG.col, r); if (p > 0) c.lerp(COL.earth, p * smoothstep(0.95, 0.75, slope));
-      const e = earthSq(x, z, slope); if (e > 0) c.lerp(COL.earth, e);
+      const [r, p] = bare(x, z); if (r > 0) c.lerp(BG.col, r); if (p > 0 && !PATCH) c.lerp(COL.earth, p * smoothstep(0.95, 0.75, slope));
+      const e = Math.max(earthSq(x, z, slope), earthPatch(x, z, h, slope, true)); if (e > 0) c.lerp(COL.earth, e);
     } else if (BG && h >= 0.8) { const [r, p] = bare(x, z); if (r + p > 0) c.lerp(BG.col, Math.min(1, r + p)); }   // WA-11 (proto)
   };
   // #17b: the village square's earth share at x, z (an organic edge: the ellipse wobbled by the patch noise; flat ground only)
@@ -1546,6 +1546,25 @@ function buildIsland0(scene, physics, name, L, at) {
     if (!PAL || paved(x, z)) return 0;
     const q = PAL.earthAt(x, z) + fbm(x * 0.15 + 1.7, z * 0.15 - 4.2, 2) * 0.5;
     return smoothstep(1.0, 0.85, q) * smoothstep(0.75, 0.5, slope);
+  };
+  // ROCK-EDGES (Knartas patches; ROCK-EDGES.md): the earth patches whole. In bare() the earth (p) lies only where the
+  // bare-rock patch leaves room (× (1 − r)): the slivers between rock patches, mostly a fraction of a cell wide, that the
+  // old rock split drew as the grid's diamonds (the approved #17b look). The traced rock edge drew the slivers as they
+  // are, so most patches went under the rock, and their vertex tint left an orange cast on it. Here (Knartas, with the
+  // traced edge only: ?rockedge=old keeps the approved ground as it was) the same noise field's patches are whole and lie
+  // over the bare rock, so they are blobs of a few metres with the smooth edge. Their tint is 0 at the patch's edge and
+  // whole half a cell inside (the vertex colour is interpolated over a cell: a tint whole up to the edge spread orange
+  // onto the rock beside it; a whole cell's ramp left the smaller patches a dull grey-brown). KP_T: the noise level for
+  // the share of the flat land in patches (KP_SHARE: 0.14, under the 0.18 of bare()'s field, as the blobs are whole).
+  const PATCH = !!(PAL && BARE[name] && ROCK_EDGE), KP_SHARE = 0.14, KP_T = BARE_T(KP_SHARE);
+  const kpn = (x, z) => fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3);   // (bare()'s earth field)
+  const earthPatch = (x, z, h, slope, tint) => {
+    if (!PATCH || h < 0.8 || Math.hypot(x - pad.x, z - pad.z) < 7 || paved(x, z)) return 0;
+    const n = kpn(x, z);
+    if (!tint) return smoothstep(KP_T - 0.03, KP_T + 0.03, n) * smoothstep(0.92, 0.8, slope);
+    if (n <= KP_T) return 0;
+    const d = 0.25, g = Math.hypot(kpn(x + d, z) - kpn(x - d, z), kpn(x, z + d) - kpn(x, z - d)) / (2 * d) || 1e-4;
+    return smoothstep(0, cell * 0.5, (n - KP_T) / g) * smoothstep(0.88, 0.78, slope);   // (the depth inside the patch, m: the noise over its gradient)
   };
   // WA-11 (proto): [rock, pave] shares of the island's bare patches at x,z (none on the landing pad or the paved squares)
   const BG = BARE[name] && { ...BARE[name], col: PAL ? lin(PAL.stone) : C(BARE[name].stone), tr: BARE[name].rock ? BARE_T(BARE[name].rock) : 9, tp: BARE[name].pave ? BARE_T(BARE[name].pave / (1 - BARE[name].rock)) : 9 };
@@ -1566,10 +1585,10 @@ function buildIsland0(scene, physics, name, L, at) {
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
     if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
       const [r, p] = bare(x, z);
-      if (PAL) { wt[2] = Math.max(wt[2], r * 1.2); wt[3] = Math.max(wt[3] * (1 - r), p * 1.4); wt[0] *= 1 - Math.min(1, r + p); }   // #17b: the 'paved' patches earth (the dirt tile), not tiles
+      if (PAL) { wt[2] = Math.max(wt[2], r * 1.2); wt[3] = Math.max(wt[3] * (1 - r), PATCH ? 0 : p * 1.4); wt[0] *= 1 - Math.min(1, r + (PATCH ? 0 : p)); }   // #17b: the 'paved' patches earth (the dirt tile), not tiles
       else { wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p); }
     }
-    if (PAL && rk < 0.5) { const e = earthSq(x, z, slope); if (e > 0) { wt[3] = Math.max(wt[3], e * 1.4); wt[0] *= 1 - e; wt[2] = Math.max(rk, wt[2] * (1 - e)); } }   // #17b: the village square
+    if (PAL && rk < 0.5) { const e = Math.max(earthSq(x, z, slope), earthPatch(x, z, h, slope)); if (e > 0) { wt[3] = Math.max(wt[3], e * 1.4); wt[0] *= 1 - e; wt[2] = Math.max(rk, wt[2] * (1 - e)); } }   // #17b: the village square
     // #17b: the terrain shader moves the rock's edge by the tile's brightness (terrain.js: dot(rock, 1/3) - 0.5, times 0.3);
     // the granite is paler than the cliff tile (linear mean 0.466 against 0.294: +0.052), which ate ~9 % of the turf on
     // screen. The rock's share a little less, sized to cancel that (it recovers about a third of it on screen: KNARTAS-PALETTE.md)
