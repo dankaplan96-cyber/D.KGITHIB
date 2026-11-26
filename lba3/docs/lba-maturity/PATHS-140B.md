@@ -7,6 +7,16 @@ Branch `ccr-c1c2c4b9-dep6ed` (base `3d260be0`) + this worktree's commits. Eviden
 **Result: `tests/path-ends.mjs` PASSES over every area (0 faults; it failed with 47). No known-list entry was added.
 P141: the rock's cross-edge tint is down 60–95 % on every splat terrain.**
 
+**The cost, first: the user approved P140's patches, and they changed.**
+- The Platform's patch paving is about halved (561 → 295 m²).
+- Patch pieces kept: 71 → 39; kerb stones 4019 → 2318.
+- Otringal keeps 96 % of its patch area.
+- Details under "Visible changes".
+
+**Was it the scan or the game?** The scan's read changed too (item 7 below). With the new read, the base build has
+**60** faults on the same six areas (END 7, EDGE 16, ISLAND 7, HOLE 3, PATCH 27): the new read is stricter, not looser.
+The only fault the read alone cleared is Knartas's quay (2207, 1780). Every other fix is in the game's source.
+
 ## Pictures
 `captures/paths-140b/sheet-1.png` and `sheet-2.png` (1290 × 3604 each): before | after, most visible first.
 - Sheet 1: the isles' patches (Otringal ×2, Under Celebration, the Platform), P141 (Under Celebration, Mosquibee,
@@ -72,8 +82,9 @@ Found with a probe that draws, per 0.25 m, the paving as the shader cuts it (its
      (kerbs on the drawn edge read as missing). This alone cleared Knartas's quay fault: no change there in the game.
    - A wall standing on the edge itself now meets it (Otringal: a piece runs on under a house; the wall is the edge).
    - `paveKind` says 'patch' only on and within 1.5 m of a piece. Before, every unpaved point was 'patch', so Otringal's
-     square's straight west edge (x 1871.25, 11 m) was judged as a patch's. Checked against the picture; the tally above
-     shows the samples left.
+     square's west edge (x 1871.25, 11 m) was judged as a patch's. Pictured from above (scratchpad
+     `p140b/p141-after/p141-otringal-square-top.png`): a straight edge where the raised square steps down to the
+     granite. The tally above shows the samples left.
 
 ## P141: the tint follows the traced rock edge (`terrain.js` `_rockTint`, every splat terrain, traced edge only)
 - **The cause.** The vertex colour was interpolated across each triangle the rock line crosses, so the rock beside the
@@ -82,6 +93,19 @@ Found with a probe that draws, per 0.25 m, the paving as the shader cuts it (its
 - **The fix.** As Knartas's patches do, the tint fades to 0 at the line: a point on the open side within one cell of a
   strong rock line takes its rock neighbours' colour there, its own colour whole one cell out.
 - **Knartas.** Its approved earth patches are left out (`tintKeep`). Their 200 points' colours are identical (checked).
+  The earth as drawn (the shader's formula, every 0.25 m) is 500 m² and the rock 2012 m² on both the base and the
+  branch, the earth's sample digest identical: `_restFloor` did not move the patches.
+- **Second part, the rock's own colour** (`zislands.js` colorFn, commit `cb7cb15c`; every isle but Knartas and
+  Otringal's granite turf; traced edge only):
+  - the colour's rock ramp (slope 0.7–1.4) was far softer than the rock's cut (~0.92), so rock at the rims and on banks
+    kept the turf's or the shore's sand tint;
+  - a point drawn as rock (its slope's rock share over a half) now takes the rock's colour.
+  - Not measured apart. ROCK-EDGES' "R − G over the deep rock" cannot show it on the pink-rock isles: their rock is itself
+    redder than the turf or the sand.
+  - Pictured at the two named P141 spots (from above, base | after: scratchpad `p140b/cmp-p141-pl.png`,
+    `cmp-p141-mo.png`). The change there is slight: an olive cast round Mosquibee's grass ridge is gone. The Platform
+    spot shows almost none.
+  - The Hamalayi's colour has the same soft rock ramp (snow on rock). Not changed: listed under Open.
 - **Cost.** No shader change, no draw, no memory.
 - **Switch.** `?tintramp=0` turns it off (that is the "off" column below).
 
@@ -122,7 +146,10 @@ Rock pixels coloured by a point across the line (> 0.06 in a channel), m², 4 ×
   - colliders (7111 both). One box at Citadel (−43.2, −10.4) read 1 cm lower in one run; an earlier branch run matched
     base exactly, so it is run noise;
   - heights, buildings, NPC routes, the harbour, saves;
-  - `?rockedge=old` (none of this runs without the traced edge); `?isles140=old` (P140's old patches).
+  - `?rockedge=old`: every change here is gated on the traced edge. This is from the source only; no run was made with
+    the switch.
+- `?isles140=old` shows the patches as they were before P140, not P140's approved ones. No switch brings those back; only
+  reverting this branch's `zislands.js` changes does.
 
 ## The known list: five answers (pictures: sheet 2, Q1–Q5)
 1. **Citadel camp yard (−81, −73): keep.** A fenced project yard of beaten earth with crates, pipes and a guard ("staff
@@ -133,19 +160,26 @@ Rock pixels coloured by a point across the line (> 0.06 in a channel), m², 4 ×
 3. **Desert oasis (3353, −18): keep.** The pond's damp ring and its track: natural wet ground by the water, kept off Kesh's
    paving by P136 #7.
 4. **Desert tracks (3402, 10): keep.** Trodden sand tracks crossing in the open dunes, 31 m from any paving.
-5. **Old Watch pad (5188, 1801): keep.** Turf with two worn paths reaching the pad's paving. From both cameras no bare plot
-   shows there; the scan's 38 m² is the lawn channel's soil side read around the paths.
+5. **Old Watch pad (5188, 1801): keep.** Turf with two worn paths, each about 1 m wide, reaching the pad's paving.
+   - Drawn earth within 7 m of the spot, by the shader's formula: 16 m², the two paths only, one from the north and one
+     from the east, meeting at the pad's edge.
+   - The scan reports 38 m² there. What else it counts was not traced: it reads the lawn's earth side, not the drawn
+     result.
+   - From both cameras no bare plot shows.
+   - So the entry is a true designed junction, with the scan over-reading it.
 
 ## Tests (automated runtime only, SwiftShader, `SERVE=1`, once each unless said)
 - `tests/path-ends.mjs` (all areas, default build):
   - before, on `3d260be0` (six areas): FAIL, 47 faults;
-  - final, on `75f3d579`: **PASS** (4 of 4 checks; 0 faults; 5 known, the same five);
-  - tuning runs of the same suite on the patch isles (`ONLY=…`, `SHOTS=0`) were made in between; two full runs before the
-    last two square commits also PASSED.
-- `tests/walkers.mjs`: **PASS 37/37** (on `7b9e24c9`).
-- `tests/worldfit.mjs`: **PASS** (functional 1/1, visual 8/8; z-fighting 0 visible, 112 small listed, as before), on
-  `7b9e24c9`. The last two commits change only the isles' splat (which ground is paved), not geometry; these two suites
-  were not run again.
+  - the base again with the new read (six areas, no pictures): FAIL, 60 (see the top);
+  - final, on `75f3d579`: **PASS** (4 of 4 checks; 0 faults; 5 known, the same five). The last commit, `cb7cb15c`, changes
+    vertex colours only, which the scan does not read.
+  - Tuning runs of the same suite on the patch isles (`ONLY=…`, `SHOTS=0`) were made in between. Two full runs before the
+    last square commits also PASSED.
+- On the final HEAD `cb7cb15c` (the kerbs moved with the square commits, so these were run again):
+  - `tests/walkers.mjs`: **PASS 37/37**;
+  - `tests/worldfit.mjs`: **PASS** (functional 1/1, visual 8/8; z-fighting 0 visible, 112 small listed, as before).
+  - Both also passed once on `7b9e24c9`.
 - No test picture was overwritten.
 
 ## Build time (single runs, SwiftShader, machine load 7–10; not a frame-rate measure)
@@ -168,7 +202,8 @@ the level line in a band), `Terrain.drawn` along the kerbs, and two passes over 
 | P141 tint | `terrain.js` `_rockTint` | `?tintramp=0`, or remove its call |
 | All-rock points | `terrain.js` `_restFloor` | remove its call |
 | Paving line on a rock strip | `terrain.js` `_edgeChannels`, `name === 'pave' … cls = 0` | delete that line |
-| Patch smoothing, kerbs | `zislands.js` `patchGrid`, the kerb block | `?isles140=old` shows P140's old patches |
+| Patch smoothing, kerbs | `zislands.js` `patchGrid`, the kerb block | revert this branch's `zislands.js` (`?isles140=old` shows the pre-P140 patches) |
+| The rock's own colour (P141) | `zislands.js` colorFn, the `rkS` line | delete that line |
 | Squares | `zislands.js` splatFn `SQUARE_LEVEL`, `sqKeepAt`, `sqNear` in `bare()` | the old `slope < (S.paveSlope ?? 9)` |
 | Desert shore | `desert.js` `rockAt`, `keshPave(…, 1)` | `return old` |
 | Scan read | `tests/lib/pathends.js` `fr/fp/rs/ps`; `path-ends.mjs` `fs_` | `fAtOf(G)` |
@@ -177,7 +212,7 @@ Probe hooks left in: `terrain.probe140(x, z)` (island-local; the probes only), `
 
 ## Commits
 `815d0293` (the fixes, P141, the scan), `fc64cde9` (patch tuning), `7b9e24c9` (desert gate), `5ac222e0`, `75f3d579`
-(squares), and this file with the sheets.
+(squares), `cb7cb15c` (P141: the rock's own colour), and this file with the sheets.
 
 ## Open
 - The small rock fragment by the desert pier road's north-west corner (not a paving fault; keeping the land rock 1 m off
@@ -185,3 +220,6 @@ Probe hooks left in: `terrain.probe140(x, z)` (island-local; the probes only), `
 - Short kerb runs where a patch piece touches a square's rim (Under Celebration's yard).
 - The open side's darker rim (P141), if the user wants the rock and the turf apart per pixel: a shader change.
 - The Platform's patch paving is about half what it was.
+- The Hamalayi's vertex colour ramps to rock (slope 0.75–1.4) more softly than its rock is cut (0.7–1.25), so its rock
+  edges carry some snow tint. Not changed (the same fix as the isles' colorFn would apply); not measured.
+- One more small prop and moved shadow blobs (the scatter): where, not traced.
