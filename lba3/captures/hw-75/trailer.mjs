@@ -23,7 +23,7 @@ await ev(() => { const G = game; G.settings.qualityAuto = false; G.settings.qual
 
 // ---- the in-page recorder and compositor
 await ev(() => {
-  const W = 1920, H = 1080, C = document.createElement('canvas'); C.width = W; C.height = H; C.style.cssText = 'position:fixed;left:-4000px;top:0;width:192px;height:108px;pointer-events:none'; document.body.append(C); const x = C.getContext('2d');
+  const W = 1920, H = 1080, OW = 1280, OH = 720, C = document.createElement('canvas'); C.width = OW; C.height = OH; C.style.cssText = 'position:fixed;left:-4000px;top:0;width:192px;height:108px;pointer-events:none'; document.body.append(C); const x = C.getContext('2d');
   const R = window.REC = { C, mode: 'black', card: [], cap: '', capT0: 0, capUntil: 0, fade: 1, fadeTo: 1, fadeRate: 1 / 0.35, mode2: '', chunks: [], last: performance.now() };
   const gl = () => game.renderer.renderer.domElement;
   const text = (s, px, X, Y, opts = {}) => { x.font = `${opts.w || 600} ${px}px "Segoe UI", Arial, sans-serif`; x.textAlign = opts.align || 'left'; x.textBaseline = 'alphabetic';
@@ -31,7 +31,7 @@ await ev(() => {
   const wrap = (s, px, maxW) => { x.font = `500 ${px}px "Segoe UI", Arial, sans-serif`; const out = []; let line = ''; for (const w of s.split(' ')) { const t = line ? line + ' ' + w : w; if (x.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; } if (line) out.push(line); return out; };
   const frame = (now) => { R.nf = (R.nf || 0) + 1; try { frame0(now); } catch (e) { R.err = (R.err || '') + String(e).slice(0, 200) + ' | '; } requestAnimationFrame(frame); };
   const frame0 = (now) => {
-    const dt = Math.min(0.1, (now - R.last) / 1000); R.last = now;
+    const dt = Math.min(0.1, (now - R.last) / 1000); R.last = now; x.setTransform(OW / W, 0, 0, OH / H, 0, 0); x.imageSmoothingQuality = 'high';
     R.fade += Math.sign(R.fadeTo - R.fade) * Math.min(Math.abs(R.fadeTo - R.fade), R.fadeRate * dt);
     if (R.mode === 'game') {
       x.drawImage(gl(), 0, 0, W, H);
@@ -47,6 +47,7 @@ await ev(() => {
           for (const l of L) { text(l, 34, W / 2 - 570, y + 30, { w: 500, blur: 4 }); y += 46; } } }
       // the behaviour's name while the modes are shown
       if (R.showMode) { const b = game.hero.behaviour || ''; const nm = b.charAt(0).toUpperCase() + b.slice(1); text(nm, 44, 80, H - 150, { color: '#ffd35a', w: 700 }); }
+    } else if (R.mode === 'poster' && R.poster) { x.fillStyle = '#121b2b'; x.fillRect(0, 0, W, H); const ph = H, pw = R.poster.width * H / R.poster.height; x.drawImage(R.poster, (W - pw) / 2, 0, pw, ph);
     } else { x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
       R.card.forEach(([s, px, col], i) => text(s, px, W / 2, H / 2 - (R.card.length - 1) * 38 + i * 76, { align: 'center', color: col || '#fff', w: i ? 500 : 700, blur: 0 })); }
     // the caption: lower left, in for 0.4 s, out for 0.4 s
@@ -59,7 +60,7 @@ const rec = {
   start: () => ev(() => { const R = window.REC, A = game.audio; const dest = A.ctx.createMediaStreamDestination(); A.out.connect(dest);
     const st = new MediaStream([...R.C.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
     const mt = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1.4d0028,mp4a.40.2', 'video/mp4'].find((m) => MediaRecorder.isTypeSupported(m));
-    R.mr = new MediaRecorder(st, { mimeType: mt, videoBitsPerSecond: 14e6, audioBitsPerSecond: 192000 }); R.mr.ondataavailable = (e) => { if (e.data.size) R.chunks.push(e.data); };
+    R.mr = new MediaRecorder(st, { mimeType: mt, videoBitsPerSecond: 7e6, audioBitsPerSecond: 192000 }); R.mr.ondataavailable = (e) => { if (e.data.size) R.chunks.push(e.data); };
     R.mr.start(1000); R.mr.pause(); return mt; }),
   on: async () => { await ev(() => { window.REC.mr.resume(); window.REC.fadeTo = 0; }); setTimeout(async () => log('REC', await ev(() => { const R = window.REC; return { mode: R.mode, fade: +R.fade.toFixed(2), sinceFrame: Math.round(performance.now() - R.last), frames: R.nf, vis: document.visibilityState, mr: R.mr.state }; }).catch(() => null)), 1500); },
   off: async () => { await ev(() => { window.REC.fadeTo = 1; }); await wait(420); await ev(() => window.REC.mr.pause()); },
@@ -81,7 +82,8 @@ const settle = async (k = 'KeyE') => { for (let i = 0; i < 60; i++) { if ((await
 await page.click('[data-act="new"]'); await wait(900); if (await ev(() => game.screen === 'confirmnew')) await page.click('[data-act="newyes"]');
 await page.waitForFunction(() => game.audio?.ctx && game.audio.out, null, { timeout: 60000 });
 log('recorder', await rec.start());
-await rec.card([['The Awakening', 92], ['a fan-made sequel to Little Big Adventure 2', 44, '#d8dde6']], 3600);
+await ev((b64) => new Promise((res) => { const im = new Image(); im.onload = () => { window.REC.poster = im; res(); }; im.src = 'data:image/jpeg;base64,' + b64; }), fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), 'poster.jpg')).toString('base64'));
+await ev(() => { window.REC.mode = 'poster'; }); await rec.on(); await wait(4800); await rec.off();
 // ---- 2. the island (the opening's own view as the title rises)
 await page.waitForFunction(() => { const t = document.querySelector('#cine-title'); return t && getComputedStyle(t).opacity > 0.2 && t.offsetParent; }, null, { timeout: 120000 }).catch(() => log('no title seen'));
 await rec.game(); await rec.cap('Citadel Island, twelve years later', 3800); await rec.on(); await wait(4200); await rec.off();
