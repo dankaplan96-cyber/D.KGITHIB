@@ -1,0 +1,13 @@
+{
+ "language control": "<button data-v=\"en\" lang=\"en\" dir=\"ltr\" class=\"on\" aria-pressed=\"true\">English</button>",
+ "language after relaunch": [
+  "he",
+  "he",
+  "ltr"
+ ],
+ "talk text": [
+  "זואי",
+  "אצל השכנים אותו דבר. הברז שלהם נהיה חם, דפק שלוש פעמים, ונעצר.",
+  "ltr"
+ ]
+}
