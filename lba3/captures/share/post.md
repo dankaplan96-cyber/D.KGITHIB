@@ -4,15 +4,17 @@
 
 Hi everyone!
 
-For the past months I've been working on a personal, non-commercial fan project: **The Awakening**, a fan-made sequel to Little Big Adventure 2. It is not an official game and has no connection to the original developers. It's just a love letter to Twinsen's world.
+I grew up on Little Big Adventure. I've always loved the look of these games, the colourful islands, the funny characters and that special mood. Ever since, I've dreamed of a sequel.
+
+So I decided to try to make one myself: **The Awakening**, a fan-made sequel to LBA2. I can't code, so I'm building it with Claude Code, an AI coding assistant. I describe what I want, play it, give feedback, and we fix it together. It's a personal, non-commercial project, not an official game, and it has no connection to the original developers. It's just a love letter to Twinsen's world.
 
 It takes place twelve years after LBA2. Twinsen is back home on Citadel Island, and something under the island is starting to wake up...
 
 What's in it so far:
 - 16 chapters across Citadel Island, the Zeelich islands and the Hamalayi mountains
-- The four behaviour modes, the magic ball and the classic LBA "talk to everyone" spirit
-- Two control schemes: a modern one and a classic LBA-style one
-- All models, music and code are original, made for this project (no files from the original games)
+- The four behaviour modes, the magic ball, and the classic LBA spirit of talking to everyone
+- Two control schemes, a modern one and a classic LBA-style one
+- All models, music and code were made for this project (no files from the original games)
 - English and Hebrew
 
 The pictures are real in-game screenshots. It's still a work in progress; I'm aiming for a full release on 31 May 2027.
@@ -25,15 +27,17 @@ Thanks, and long live Twinsen! 🌍
 
 שלום לכולם!
 
-בחודשים האחרונים אני עובד על פרויקט מעריצים אישי, לא מסחרי: **The Awakening**, המשך שמעריצים עשו ל־Little Big Adventure 2. זה לא משחק רשמי ואין לו קשר למפתחים המקוריים. זה פשוט מכתב אהבה לעולם של טווינסן.
+גדלתי על Little Big Adventure. תמיד אהבתי את המראה של המשחקים האלה: האיים הצבעוניים, הדמויות המצחיקות והאווירה המיוחדת. ומאז חלמתי שיהיה משחק המשך.
+
+אז החלטתי לנסות לעשות אחד בעצמי: **The Awakening**, משחק המשך של מעריצים ל־LBA2. אני לא יודע לתכנת, אז אני בונה אותו בעזרת Claude Code, עוזר תכנות של בינה מלאכותית. אני מתאר מה אני רוצה, משחק, נותן הערות, וביחד אנחנו מתקנים. זה פרויקט אישי ולא מסחרי, לא משחק רשמי, ואין לו קשר למפתחים המקוריים. זה פשוט מכתב אהבה לעולם של טווינסן.
 
 הוא מתרחש שתים עשרה שנה אחרי LBA2. טווינסן חוזר הביתה לאי המצודה, ומשהו מתחת לאי מתחיל להתעורר...
 
 מה יש בו עד עכשיו:
 - 16 פרקים באי המצודה, באיי זיליך ובהרי ההמלאיי
 - ארבעת מצבי ההתנהגות, כדור הקסם, והרוח של LBA, שמדברים עם כולם
-- שתי שיטות שליטה: מודרנית, וקלאסית בסגנון LBA
-- כל המודלים, המוזיקה והקוד מקוריים, נעשו לפרויקט (בלי קבצים מהמשחקים המקוריים)
+- שתי שיטות שליטה, מודרנית וקלאסית בסגנון LBA
+- כל המודלים, המוזיקה והקוד נעשו לפרויקט (בלי קבצים מהמשחקים המקוריים)
 - אנגלית ועברית
 
 התמונות הן צילומי מסך אמיתיים מהמשחק. הוא עדיין בעבודה, והיעד הוא יציאה מלאה ב־31 במאי 2027.
