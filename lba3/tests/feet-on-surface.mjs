@@ -128,6 +128,36 @@ for (const area of areas) {
     // (the floor under him here is a step: a stair collider's top)
     const stairAt = (x, z, s) => PH.near(x, z).some((c) => c.enabled && c.stair && Math.abs(c.top - s) < 1e-4 && PH._inside(c, x, z, 0));
     // (a) sink spots: walk the cells that hold drawn geometry
+    // (FEET-66B) where he can be at all: a flood over a 0.5 m grid from the ground he can walk on (the terrain, not steep,
+    //  not under anything that stops him) and from where he arrives in the area, step by step as physics moves him (a step
+    //  up to STEP_UP, any drop) and, generously, a hop of the hop-pack (jetpack.js JET.cap 2.4 m + a step) onto a floor
+    //  beside him; up to three floors a cell (under a bridge and on it). A drawn top over a floor no flood reaches (a
+    //  house's roof over its walls' collider, a tank's lid, a fortress wall's top) is not a place he stands: listed as
+    //  UNREACHABLE per piece, never judged.
+    const RF = (() => {
+      const C = 0.5, X0 = A.x0, Z0 = A.z0, NX = Math.ceil((A.x1 - A.x0) / C) + 1, NZ = Math.ceil((A.z1 - A.z0) / C) + 1;
+      const lv = new Float32Array(NX * NZ * 3).fill(NaN), q = [];
+      const R = 0.25, HOP = 2.4 + 0.55;
+      const add = (i, j, y) => { const k = (i * NZ + j) * 3; for (let n = 0; n < 3; n++) { const v = lv[k + n]; if (v === v) { if (Math.abs(v - y) < 0.05) return; continue; } lv[k + n] = y; q.push(i, j, y); return; } };
+      const okAt = (x, z, g) => { const gi = PH.groundInfo(x, z, g + 0.01); return !(g < -0.35 && !gi.brick) && !PH.blockedAt(x, z, g, R); };
+      for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) { const x = X0 + i * C, z = Z0 + j * C; const gi = PH.groundInfo(x, z, 1e4); if (gi.brick) continue; const g = gi.h; if (g < -0.35 || PH.steepAt(x, z, g) || PH.blockedAt(x, z, g, R)) continue; add(i, j, g); }
+      for (const h of [area.room ? G.rooms[area.room].spawn : null, ...(area.room ? G.rooms[area.room].safe || [] : [])]) { if (!h || !Number.isFinite(h.x)) continue;   // (the area's arrival spot, its safe spots)
+        const i = Math.round((h.x - X0) / C), j = Math.round((h.z - Z0) / C); if (i >= 0 && j >= 0 && i < NX && j < NZ) add(i, j, PH.groundAt(X0 + i * C, Z0 + j * C, PH.groundAt(h.x, h.z) + 0.1)); }
+      while (q.length) { const y = q.pop(), j = q.pop(), i = q.pop();
+        for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { if (!di && !dj) continue; const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= NX || b >= NZ) continue;
+          const x = X0 + a * C, z = Z0 + b * C, g = PH.groundAt(x, z, y + 0.01);
+          if (g > y + 0.05 && PH.steepAt(x, z, g)) {} else if (okAt(x, z, g)) add(a, b, g);
+          const g2 = PH.groundAt(x, z, y + HOP - 0.55 + 0.01); if (g2 > g + 0.3 && okAt(x, z, g2)) add(a, b, g2); } }
+      // (a spot's floor f reached: from a floor reached at one of the four grid points round it, a step takes him onto f)
+      return (x, z, f) => { const i0 = Math.floor((x - X0) / C), j0 = Math.floor((z - Z0) / C); for (let a = i0; a <= i0 + 1; a++) for (let b = j0; b <= j0 + 1; b++) { if (a < 0 || b < 0 || a >= NX || b >= NZ) continue; const k = (a * NZ + b) * 3; for (let n = 0; n < 3; n++) { const L = lv[k + n]; if (L === L && Math.abs(PH.groundAt(x, z, L + 0.05) - f) < 0.02) return true; } } return false; };
+    })();
+    const unreach = new Map(), RAD = G.hero.radius - 0.05;
+    // (FEET-66B: the drawn surfaces a foot rests on: up-facing tops at his x, z and 8 cm round it — a grating's bars, a
+    //  deck's planks with gaps between them: a single ray down between two bars met the ground under them)
+    const footYs = (x, z, hits, tg) => { const ys = hits.filter((h) => h.ny > 0.3).map((h) => h.y); if (tg != null) ys.push(tg);
+      for (const [dx, dz] of [[0.08, 0], [-0.08, 0], [0, 0.08], [0, -0.08]]) { const q = SW.raw.column(x + dx, z + dz); for (const h of q.hits) if (h.ny > 0.3) ys.push(h.y); } return ys; };
+    G.footYs = footYs;
+    let byRadius = 0;
     const cells = new Set();
     for (const s of S) { const b = s.box; if (b[4] - b[1] > 1.2 && b[3] - b[0] < 30) continue;   // (a tall piece: not a thing lying on the floor)
       for (let x = Math.floor(Math.max(b[0], A.x0)); x <= Math.floor(Math.min(b[3], A.x1)); x++) for (let z = Math.floor(Math.max(b[2], A.z0)); z <= Math.floor(Math.min(b[5], A.z1)); z++) cells.add(x * 100003 + z); }
@@ -145,6 +175,10 @@ for (const area of areas) {
         if (ownFloor(x, z, top.y)) continue;   // (a step's edge: its own floor is there, read 5 cm in from its edges)
         if (s < -0.35 && !PH.groundInfo(x, z, top.y + 0.02).brick) continue;   // (the sea)
         if (PH.steepAt(x, z, s) || PH.blockedAt(x, z, s, 0)) continue;
+        // (FEET-66B: his middle cannot come within his radius of what stops him: a spot there is not one he stands on —
+        //  a stone's drawn edge outside its collider; counted)
+        if (PH.blockedAt(x, z, s, RAD)) { byRadius++; continue; }
+        if (!RF(x, z, s)) { const nm = SW.raw.path(top.oi), u = unreach.get(nm) || { n: 0, at: `(${x.toFixed(2)}, ${z.toFixed(2)}) floor ${s.toFixed(2)}` }; u.n++; unreach.set(nm, u); continue; }
         const part = S[top.si], b = part.box, sheet = b[4] - b[1] < 0.03;
         if (!(sheet ? d < 0.35 : (b[1] <= s + 0.12 || b[4] - b[1] <= 0.25))) continue;   // (lying on the floor, or a thin slab over it: a floe)
         // (soft snow over a built walk — steps (stair colliders) — is not waded snow: its own candidate)
@@ -171,8 +205,9 @@ for (const area of areas) {
       for (const [x, z] of pts) {
         if (PH.groundAt(x, z, c.top + 0.01) !== c.top) continue;   // (not the floor here)
         if (PH.blockedAt(x, z, c.top, 0)) continue;
+        if (!RF(x, z, c.top)) { const nm = 'collider ' + PH.colliders.indexOf(c), u = unreach.get(nm) || { n: 0, at: `(${x.toFixed(2)}, ${z.toFixed(2)}) floor ${c.top.toFixed(2)}` }; u.n++; unreach.set(nm, u); continue; }
         const { hits, tg } = SW.raw.column(x, z); cols++;
-        const ys = hits.filter((h) => h.ny > 0.3).map((h) => h.y); if (tg != null) ys.push(tg);
+        const ys = footYs(x, z, hits, tg);
         if (ys.some((y) => Math.abs(y - c.top) <= 0.05)) continue;
         const under = ys.filter((y) => y < c.top - 0.05).sort((a, b) => b - a)[0];
         const gap = under == null ? 9 : c.top - under; if (gap >= 0.6 && under != null) continue;   // (a drop: a different fault, not his feet over a surface)
@@ -192,9 +227,10 @@ for (const area of areas) {
       cand.push({ kind: 'sink', cls: c.dSum / c.n <= 0.3 ? 'A' : 'B', th: r3(th), area: area.id, si: c.si, name: nm + (c.built ? ' over a built walk' : ''), path, look: lk.hex + (lk.tex ? '/' + lk.tex : '') + (lk.transparent ? ' (see-through)' : ''), water: WATER.test(nm) || S[c.si].box[3] - S[c.si].box[0] > 300, soft: (SOFT.test(nm) || SNOW.includes(lk.hex)) && !c.built, m2: r3(c.n * C * C), dMax: r3(c.dMax), dMean: r3(c.dSum / c.n), x: r3(c.x / c.n), z: r3(c.z / c.n), box: S[c.si].box.map(r3), pts: c.pts }); }
     for (const [ci, f] of floats) cand.push({ kind: 'float', cls: f.rock > f.n / 2 ? 'C' : 'A', area: area.id, ci, name: 'collider ' + ci + (f.c.stair ? ' (stair)' : '') + (f.c.type === 'cyl' ? ' cyl r ' + f.c.r : ` box ${r3(f.c.hw * 2)}x${r3(f.c.hd * 2)}`), top: r3(f.c.top), m2: r3(f.n * C * C), dMax: r3(f.gMax), x: r3(f.x / f.n), z: r3(f.z / f.n), pts: f.pts });
     cand.sort((a, b) => b.m2 * b.dMax - a.m2 * a.dMax);
-    return { census: res.census, decals: res.decals.length, cols, cand };
+    return { census: res.census, decals: res.decals.length, cols, cand, byRadius, unreach: [...unreach].map(([k, v]) => `${k} (${v.n} spots, one at ${v.at})`) };
   }, { area, WATERs: WATER.source, SOFTs: SOFT.source, SNOW });
   console.log(`\n== ${area.id}: ${disc.cand.length} candidates (${disc.cand.filter((c) => c.kind === 'sink').length} sink, ${disc.cand.filter((c) => c.kind === 'float').length} float); ${disc.cols} columns; store ${JSON.stringify(disc.census)}`);
+  console.log(`  left out: ${disc.byRadius} spot(s) within his radius of something that stops him; UNREACHABLE (no way there on foot or by the hop-pack): ${disc.unreach.length ? disc.unreach.join('; ') : 'none'}`);
   for (const c of disc.cand.slice(0, 60)) console.log(`  ${c.cls} ${c.kind} ${c.water ? '[water] ' : ''}${c.soft ? '[soft] ' : ''}${c.m2} m2 max ${c.dMax} at (${c.x}, ${c.z}) ${c.name} | ${c.path || ''} ${c.look || ''} ${c.top != null ? 'top ' + c.top : ''}`);
   all.areas[area.id] = { census: disc.census, decals: disc.decals, cand: disc.cand, walks: [] };
   if (disc.decals) all.notCovered.push(`${area.id}: ${disc.decals} see-through decal mesh(es) not in the store`);
@@ -230,7 +266,7 @@ for (const area of areas) {
       const measure = (x, z, y) => {
         const { hits, tg } = SW.raw.column(x, z);
         if (c.kind === 'sink') { const t = hits.find((q) => q.si === c.si && q.ny > 0.85); return !t || PH.near(x, z).some((q) => q.enabled && !q.noStand && Math.abs(q.top - t.y) < 0.015 && PH._inside(q, x, z, 0.08)) ? null : t.y - y; }   // (a step's edge: as discovery's ownFloor)
-        const ys = hits.filter((q) => q.ny > 0.3).map((q) => q.y); if (tg != null) ys.push(tg);
+        const ys = G.footYs(x, z, hits, tg);   // (FEET-66B: as discovery's: a foot on a grating's bars)
         if (ys.some((v) => Math.abs(v - y) <= 0.03)) return 0;
         const under = ys.filter((v) => v < y).sort((a, b) => b - a)[0];
         return under == null ? null : -(y - under);   // (negative: floating by that much)

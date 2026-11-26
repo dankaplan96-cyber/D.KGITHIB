@@ -964,7 +964,8 @@ export function* buildDesertSteps(scene, physics) {
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     // (Kesh's places stay clear: filtered after the draw, so the island's other rocks keep their places)
     for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s) || courtClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
-    for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+    // (FEET-66B: every stone an obstacle (block): a boulder's flat top held him up to 0.5 m over its dome, and the small ones, with no collider, he walked through; as drawn, neither is stood on)
+    for (const r of rocks) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true, block: true });
     // CLOUD_ORDERS 13: scree on the steep grey slopes (rockAt's outcrops, outside our places and off the tracks), from
     // its own draws after every other (rng 4313), so nothing else moves. Drawn with the rocks above, in the same three
     // batches, once the old places stand (none in a house's walls: inBuilding, as the shrubs); the larger ones block
@@ -997,7 +998,7 @@ export function* buildDesertSteps(scene, physics) {
         }
         B.build();
       }
-      for (const r of more.concat(yard)) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+      for (const r of more.concat(yard)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true, block: true });   // (FEET-66B: the scree and the yard's stones obstacles too, as the rocks above)
       R.rockCount = { old: rocks.length, scree: more.length };   // (for the Test Lab's measurements)
     };
   }

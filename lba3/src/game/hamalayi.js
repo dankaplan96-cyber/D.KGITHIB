@@ -982,7 +982,8 @@ export function* buildHamalayiSteps(scene, physics) {
       || Math.hypot(q.x - GOATS.x, q.z - GOATS.z) < 3.4 + q.s || Math.hypot(q.x - SHUT.x, q.z - SHUT.z) < 1.4 + q.s;   // (THE SECOND SHIFT: the goats' house, the shutter)
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((r, i) => i % 3 === v && !r.off && !lba1.within(r.x, r.z, 0.8)));
-    for (const r of rocks) if (r.s > 0.6 && !r.off && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });
+    // (FEET-66B: every stone an obstacle (block): a boulder's flat top held him up to 0.5 m over its dome, and the small ones, with no collider, he walked through; as drawn, neither is stood on)
+    for (const r of rocks) if (!r.off && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true, block: true });
   }
 
   // ---- chimney smoke and falling snow

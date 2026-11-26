@@ -2412,7 +2412,7 @@ export function* buildZeelichSteps(scene, physics) {
       const s = 0.25 + r() * 0.5, it = { x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#eeece8').multiplyScalar(0.95 + r() * 0.15) };
       if (zlClear(x, z, 1) || liftClear(x, z, 1)) continue;
       rocks[i % 3].push(it);
-      if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
+      col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true, block: true });   // (FEET-66B: every stone in the grass an obstacle (block): a boulder's flat top held him up to 0.5 m over its dome, and the small ones, with no collider, he walked through; as drawn, neither is stood on)
     }
     const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#2a2a2c', emissiveIntensity: 0.4 });
     rocks.forEach((list, v) => { if (list.length) cullInstances(group, rockGeometry(v + 1), rockMat, list).userData.gpuGroup = 'trees'; });

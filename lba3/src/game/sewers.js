@@ -767,7 +767,12 @@ function buildHatch(scene, physics, world, def) {
   const { F, DEPTH, DECK } = LIFT;
   // the frame: dressed stone, its inner edge 3 cm over the opening (it covers the seam with the shaft)
   const I = S - 0.03, W = F + 0.03;
-  for (const [px, pz, w, d] of [[0, -I - W / 2, 2 * (I + W), W], [0, I + W / 2, 2 * (I + W), W], [-I - W / 2, 0, W, 2 * I], [I + W / 2, 0, W, 2 * I]]) k.add(rbox(w, 0.26, d, 0.03), capM(), px, -0.08, pz);
+  for (const [px, pz, w, d] of [[0, -I - W / 2, 2 * (I + W), W], [0, I + W / 2, 2 * (I + W), W], [-I - W / 2, 0, W, 2 * I], [I + W / 2, 0, W, 2 * I]]) {
+    k.add(rbox(w, 0.26, d, 0.03), capM(), px, -0.08, pz);
+    physics.add({ type: 'box', x: x + px, z: z + pz, hw: w / 2, hd: d / 2 + (w < d ? 0.05 : 0), top: y + 0.05, seeThrough: true });   // (FEET-66B: the frame's top a floor; he walked 5 cm into it)
+  }
+  // (FEET-66B: and the shut lid's bars, 8.5 cm over the street, over the opening: a floor while it is shut)
+  const lidCol = physics.add({ type: 'box', x, z, hw: S + 0.02, hd: S + 0.02, top: y + 0.085, seeThrough: true });
   // the lift's pulleys, east and west on the frame: an iron wheel between two cheeks, the chain over it
   for (const s of [-1, 1]) {
     for (const zz of [-0.05, 0.05]) k.add(rbox(0.05, 0.17, 0.03, 0.01), ironM(), s * (S - 0.01), 0.12, zz);
@@ -860,7 +865,7 @@ function buildHatch(scene, physics, world, def) {
     id: def.id, entry: def.entry, exit: def.exit, x, z, y, S,
     open: false,
     deckY: 0,   // the deck's drop below the street (m, 0 at the top)
-    setOpen(b) { this.open = b; hinge.rotation.x = b ? -1.7 : 0; this.setDeck(0); this.setLever(0); show(b); },
+    setOpen(b) { this.open = b; hinge.rotation.x = b ? -1.7 : 0; lidCol.enabled = !b; this.setDeck(0); this.setLever(0); show(b); },
     // the deck (and whoever rides it) `d` m down the shaft; the iron darker the deeper it goes
     setDeck(d) {
       this.deckY = d; deck.position.y = -d;

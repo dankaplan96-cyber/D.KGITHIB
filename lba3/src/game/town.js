@@ -567,6 +567,7 @@ export function buildTown(scene, W) {
     built[i].group.rotation.y = hd.ry;
     scene.add(built[i].group);
     for (const c of built[i].colliders) physics.add({ type: 'box', x: hd.x, z: hd.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g + c.top, camSkip: true });   // (the camera reads the house's shape below)
+    for (const c of built[i].steps) physics.add({ type: 'box', x: hd.x + Math.cos(hd.ry) * c.x + Math.sin(hd.ry) * c.z, z: hd.z - Math.sin(hd.ry) * c.x + Math.cos(hd.ry) * c.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g - 0.05 + c.top, seeThrough: true });   // (FEET-66B: the door step, architecture.js)
     const dz = built[i].door.z, dx = built[i].door.x;
     const door = { x: hd.x + Math.sin(hd.ry) * dz + Math.cos(hd.ry) * dx, z: hd.z + Math.cos(hd.ry) * dz - Math.sin(hd.ry) * dx };
     const info = { x: hd.x, z: hd.z, ry: hd.ry, w: hd.w, d: hd.d, g, door, id: hd.id };
