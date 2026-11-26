@@ -3,7 +3,7 @@
 Branch `ccr-c1c2c4b9-dep6ed` + this worktree's commits. Evidence: **automated runtime only (SwiftShader, headless
 Chromium)**. Nobody played it; nothing was checked on a real GPU.
 
-**Result: Citadel is clean (0 faults, from 17). The isles are not: 45 faults are left, all on Otringal, the Platform,
+**Result: Citadel is clean (0 faults, from 17). The isles are not: 47 faults are left, all on Otringal, the Platform,
 Under Celebration, Celebration, Knartas, plus one on the desert's shore (table below). `path-ends` still FAILs.**
 
 ## The user's spot (`captures/paths-140/user-report.jpg`)
@@ -25,8 +25,12 @@ Under Celebration, Celebration, Knartas, plus one on the desert's shore (table b
   - ROCK-EDGES is not the default yet. The user decided it on 26.11, and another worker flips it (with Knartas's earth
     patches). So the suite runs with `Q=rockedge=new`.
   - **Under today's default**, the isles', the desert's and the Hamalayi's paving edges still follow the terrain grid
-    (the old per-vertex split) until that flip lands. The isles' new kerbs follow the smooth line, so until then they
-    can sit up to half a grid cell (≈ 0.85 m) off the drawn edge.
+    (the old per-vertex split) until that flip lands. Looked at from above with no query: the new patches' paving
+    zig-zagged on the 1.7 m grid while their kerbs followed the smooth line, standing off it. So **the new patches and
+    their kerbs are built only when ROCK-EDGES is on** (`zislands.js` `OLD_PATCHES = !ROCK_EDGE || …`). Until the flip,
+    the default game shows the isles as before; `?rockedge=new` shows this work. Everything measured or pictured here
+    for the isles is in that mode. Citadel's 0 is also measured in that mode only (its streets' line is the same in
+    both: LAWN-EDGES).
   - A guard prints, per area, the paved m² as read and by the splat's own share. They agree within 10 %. A first version
     of the traced read lost the middle of every paving; the guard would have shown it.
 - **The bare earth** (new in `pathends.js`): the lawn's traced soil side (LAWN-EDGES-2) and Citadel's 2 m band of earth
@@ -62,7 +66,7 @@ Under Celebration, Celebration, Knartas, plus one on the desert's shore (table b
 | Run | END/GAP (P136) | EDGE | ISLAND | HOLE | PATCH | LOT | Verdict |
 |---|---|---|---|---|---|---|---|
 | before | 101 (80 ends, 21 gaps) | 67 | 11 | 4 | 232 | 15 | **FAIL**, 4 of 4 checks |
-| after | 3 (3 ends) | 16 | 4 | 2 | 20 | 0 (5 known) | **FAIL**, 3 of 4 checks (LOT passes) |
+| after | 3 (3 ends) | 17 | 4 | 2 | 21 | 0 (5 known) | **FAIL**, 3 of 4 checks (LOT passes) |
 
 By area, before → after (faults):
 
@@ -71,9 +75,9 @@ By area, before → after (faults):
 | Citadel | 17 (EDGE 1, HOLE 1, LOT 15; END/GAP 0) + 1 LOT known | **0** |
 | Desert Island with Kesh | 1 EDGE (+ 2 LOTs known) | 1 EDGE (the same) |
 | Zeelich, the Hamalayi, Ballastra | 0 (Zeelich's 3 mesh edges meet walls) | 0 |
-| Otringal | 232 (END/GAP 50, EDGE 35, ISLAND 7, HOLE 2, PATCH 138) | 22 (EDGE 6, ISLAND 3, HOLE 1, PATCH 12) |
+| Otringal | 232 (END/GAP 50, EDGE 35, ISLAND 7, HOLE 2, PATCH 138) | 23 (EDGE 6, ISLAND 3, HOLE 1, PATCH 13) |
 | The Platform | 114 (END/GAP 26, EDGE 22, ISLAND 3, PATCH 63) | 10 (END 1, EDGE 5, PATCH 4) |
-| Under Celebration | 60 (END/GAP 25, EDGE 6, ISLAND 1, PATCH 28) | 10 (END 2, EDGE 3, ISLAND 1, PATCH 4) |
+| Under Celebration | 60 (END/GAP 25, EDGE 6, ISLAND 1, PATCH 28) | 11 (END 2, EDGE 4, ISLAND 1, PATCH 4) |
 | Celebration | 5 (EDGE 1, HOLE 1, PATCH 3) | 1 (the same HOLE) |
 | Knartas | 1 EDGE | 1 EDGE (the same) |
 | Mosquibee, Orchard, Old Watch, Lift Dock | 0 (+ 1 LOT known on Old Watch) | 0 |
@@ -91,22 +95,27 @@ By area, before → after (faults):
 | 8 | Citadel (−44, 13), (−74, 35) | LOT | trodden ways (`world.js` PATHS[7], PATHS[6]: NPC routes) left the streets as 4 m of earth, reading as lots | Through the town's lawns a trodden way is drawn 2.4 m wide (splat only; the routes are untouched). (−44, 13) is gone. 13 m² remain at (−74, 35), on the known list. |
 | 9 | Otringal, the Platform, Under Celebration, Celebration | PATCH, EDGE, END, GAP | **the user's WA-11 answer**: the paving patches were patch noise faded again by each point's own slope, so the edges were ragged along every bump and stopped in the rock or turf with nothing | **`zislands.js` `patchGrid`, kerbs after the pad.** A patch is the patch noise's smooth line, the bare rock's, and a smooth level line (the slope averaged over 1.5 m on the data grid's heights, bilinear, land only; `PATCH_LEVEL` 0.35, the old fade's middle). Pieces under 6 m² go. **Kerb stones** (the island's stone colour, 18 % lighter; no collider, as Citadel's) run round each piece, except where a worn path joins, the square's or the pad's paving goes on, a wall or a house stands (≥ 1.5 m, not a lamp or a bush), or the ground drops 0.3 m. Kept pieces run on to the pad's paving (they join it). Stones: Otringal 2656, the Platform 937, Under Celebration 389, Celebration 35 (4017 in all). **Paving as drawn, m²: Otringal 4705 → 4134 (−12 %), the Platform 1282 → 1011 (−21 %), Under Celebration 896 → 838, Celebration 337 → 331**: the pieces on slopes by the cliffs and those under 6 m² are gone (the sheet's Otringal rows show it). On the Platform's dark ground the kerbs read as pale lines. |
 
-## True edges and designed earth (known list, each looked at)
-- **Citadel (−81, −73)**: the camp's fenced work yard on the northern plateau (`POI.camp`, a designed box of earth with
-  the depot's crates and fences), outside the town.
-- **Citadel (−74, 35)**: the trodden way to the harbour where it leaves the cross street (an NPC route).
-- **Desert (3353, −18)**: the oasis's damp ring round the pond and the track beside it (P136 #7 keeps both off Kesh's
-  paving).
-- **Desert (3402, 10)**: the sand tracks where they cross in the dunes, far from any town. The scan joined them to paving
-  tens of metres away.
-- **Old Watch (5188, 1801)**: the island's worn paths where they reach the pad from three sides.
+## The known list: five questions for you (LOT passes only because of these)
+Each is bare earth the scan joined to paving. The point is the earth's deepest spot; the nearest paving to it is given.
+1. **Citadel (−81, −73)**, nearest paving 36 m away: the camp's fenced work yard on the northern plateau (`POI.camp`, a
+   designed box of earth with the depot's crates and fences). The scan reached paving through the trodden ways from it.
+   Keep it bare?
+2. **Citadel (−74, 35)**, paving 2 m away: the trodden way to the harbour (an NPC route) where it leaves the cross
+   street. 13 m² of earth at the junction, after the narrowing (#8). Keep it?
+3. **Desert (3353, −18)**, paving 7 m away: the oasis's damp ring round the pond and the track beside it. P136 #7 keeps
+   both off Kesh's paving. Keep it?
+4. **Desert (3402, 10)**, paving 31 m away: the sand tracks where they cross in the dunes. The scan joined them to paving
+   through the tracks. Keep it?
+5. **Old Watch (5188, 1801)**, paving 2 m away: the island's worn paths where they reach the pad's paving from three
+   sides. The top picture of that place shows the tower, not this ground; it was judged from the scan's plan only.
+   Keep it?
 
 ## Not fixed (open; pictures on the sheet and in the session's scratchpad)
-- **Otringal 22, the Platform 10, Under Celebration 10, Celebration 1:**
-  - **EDGE 14**: stretches of a patch's outline where the kerb is interrupted (a wall, a path, a drop) and the line
+- **Otringal 23, the Platform 10, Under Celebration 11, Celebration 1:**
+  - **EDGE 15**: stretches of a patch's outline where the kerb is interrupted (a wall, a path, a drop) and the line
     itself wiggles.
-  - **PATCH 20**: stretches of 2–4 m with no kerb, mostly where the builder stopped for a path or a drop that the scan
-    does not count. Otringal (1871, 1790) is 10 m.
+  - **PATCH 21**: stretches of 2–4 m with no kerb (Otringal (1871, 1790) is 10 m). Why the builder left them out
+    (a path, a drop, a wall the scan does not count) was not counted.
   - **ISLAND 4, HOLE 2**: specks under 2.2 m².
   - **END 3**: narrow patch tips that end in turf.
 - **Desert (3309, 1.6)**: 2.75 m of the pier's shore paving, half against the shore's face. Not looked at closer.
@@ -115,10 +124,21 @@ By area, before → after (faults):
   tried and taken back, because it was made while the scan misread the isles.
 - These are why `path-ends` still FAILs.
 
+## Build time (single runs, SwiftShader, machine load 10–13; not a frame-rate measure)
+| Isle | `?rockedge=new&isles140=old` | `?rockedge=new` (this work) |
+|---|---|---|
+| Otringal | 1563 ms | 1929 ms |
+| The Platform | 26312 ms | 29464 ms |
+| Under Celebration | 891 ms | 1170 ms |
+
+The Platform's build is slow with or without this work (it was 22.7 s with no query too). The kerb tracing reads the
+level line only inside the patch noise.
+
 ## Not covered
 - **Interiors**: not checked (not outdoor paving).
 - **Zeelich and Ballastra**: built from meshes, no terrain splat. LOT cannot be read there (no earth channel). Their
-  mesh paving edges were scanned: Zeelich's three meet walls; Ballastra's speck is a mesh piece (a step), not splat noise.
+  mesh paving edges were scanned: Zeelich's three meet walls. Ballastra's speck is a mesh piece of the paving's texture
+  (not splat noise; what it is was not looked at).
 - **The expansion's other districts**: not built by this scan.
 - **Today's default shader** (ROCK-EDGES off): not judged. See the rule.
 
@@ -132,7 +152,7 @@ By area, before → after (faults):
 | #6 east street | `world.js` GRID_STREETS `[-35.0, 0.0, …, { ea: 'flush' }]` | back to `[-35.0, 3.6, -35.0, 31.3, 3.0]` |
 | #7 pockets | `world.js` the two pockets' x −40 | back to −41 and −39 |
 | #8 narrow ways | `world.js` `islandSplat`: `pw` | `pw = 0` |
-| #9 isle patches and kerbs | `zislands.js`: `?isles140=old` shows the old patches with no kerbs; in code, `PG` null | `OLD_PATCHES` true, or delete `patchGrid` and the kerb block |
+| #9 isle patches and kerbs | `zislands.js`: built only with ROCK-EDGES on; `?isles140=old` shows the old patches with no kerbs | `OLD_PATCHES` true, or delete `patchGrid` and the kerb block |
 
 Commits (this worktree): `5caa4a30` (the rule), `5ef38879` (Citadel), `07a8e154` (isles, the scan's traced read),
 `a0864eed` (the scan's sign fix, kerbs count as clean, the kerb builder aligned, narrow ways), and the last commit with
@@ -141,7 +161,10 @@ this file and the sheet.
 ## Tests (automated runtime only, SwiftShader, `SERVE=1`)
 - `tests/path-ends.mjs` with `Q=rockedge=new SHOTS136=0`:
   - before (base src): **FAIL** 4/4. Counts as above.
-  - after: **FAIL** 3/4. LOT passes; the counts are as above.
+  - after (all areas, with pictures): **FAIL** 3/4, LOT passes.
+  - The kerb tracing was then made cheaper (the level line read only inside the patch noise), and the four patch isles
+    were scanned again (`ONLY=…`, no pictures): **FAIL** 3/4, the isle counts above (Otringal one PATCH more, Under
+    Celebration one EDGE more, the rest the same as the full run). The other areas do not use that code.
   - Tuning runs of the same suite (isles only, no pictures) were made in between; the first four of them read the isles
     wrongly (see the guard).
 - `tests/walkers.mjs`: **PASS 37/37**.
@@ -160,6 +183,6 @@ this file and the sheet.
 ## Pictures
 - `captures/paths-140/sheet.png` (1286 px wide): before / after. Your spot first (from above, from the play camera, in
   P136's own frames), then Citadel, then the isles' patches from above. Isle befores from above are the same build with
-  `?isles140=old` (the old patches, no kerbs); every other before is the base build.
+  `?isles140=old` (the old patches, no kerbs); every other before is the base build. The isle rows are `?rockedge=new`.
 - Every place's play-camera and top picture, before and after, is in the session's scratchpad (`paths140/before`,
   `paths140/final`). They are not committed.

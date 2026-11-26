@@ -17,7 +17,7 @@
 //   R.land(x, z) → is this ground (not sea); R.sample [{x,z}] points of the main walkable area
 import { placeTag } from '../engine/placetag.js';
 import * as THREE from 'three';
-import { Terrain } from '../engine/terrain.js';
+import { Terrain, ROCK_EDGE } from '../engine/terrain.js';
 import { graniteTex, quietRock } from './quietrock.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, fbm } from '../engine/math.js';
@@ -1425,10 +1425,12 @@ const COL0 = { turf: C('#f4ecb8'), turf2: C('#e4e8a8'), rock: C('#d8b4c4'), rock
 // patches of bare rock and of paving across the flat land, in the island's own stone colour. rock / pave: the share of
 // the flat land; t: the noise level above which a patch lies, for that share (the patch noise is ~N(0, 0.3)).
 const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
-// (P140: ?isles140=old brings back WA-11's paving patches as they were: cut again by the slope, no kerbs)
+// (P140: ?isles140=old brings back WA-11's paving patches as they were: cut again by the slope, no kerbs. The new ones
+//  are built only with ROCK-EDGES' traced lines (?rockedge=new, the user's decided default, its flip queued): under the
+//  old per-vertex split the paving's edge follows the 1.7 m grid, and the kerbs, on the smooth line, stood off it)
 const PATCH_LEVEL = 0.35;   // (P140: a WA-11 paving patch lies where the ground's averaged slope is under this: the old fade's middle, smoothstep(0.45, 0.25))
 const PAD_JOIN = 4.6;   // (P140: a kept paving piece reaches this near the pad's middle, under the edge of the pad's own paving (~4.85 m))
-const OLD_PATCHES = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('isles140') === 'old'; } catch { return false; } })();
+const OLD_PATCHES = !ROCK_EDGE || (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('isles140') === 'old'; } catch { return false; } })();
 function erfinv(y) { const a = 0.147, l = Math.log(1 - y * y), b = 2 / (Math.PI * a) + l / 2; return Math.sign(y) * Math.sqrt(Math.sqrt(b * b - l / a) - b); }
 const BARE = {
   otringal: { rock: 0.15, pave: 0.5, stone: '#c4bccc' },     // pale lavender-grey paving and stone
@@ -2378,7 +2380,7 @@ function buildIsland0(scene, physics, name, L, at) {
   // kerb 0.1 m high is stepped over, as Citadel's.
   if (PG) {
     const f = 0.5, x0 = cx(0), z0 = cz(0), nI = Math.ceil((cx(L.nx - 1) - x0) / f) + 1, nJ = Math.ceil((cz(L.nz - 1) - z0) / f) + 1;
-    const sv = (x, z) => Math.min(PG.pv(x, z), PG.rv(x, z), PG.lv(x, z)), S = new Float32Array(nI * nJ);   // (the smooth fields whose zero lines bound a piece: the shader's line lies on them, bare's ramps being narrow)
+    const sv = (x, z) => { const a = PG.pv(x, z); if (a <= 0) return a; const b = PG.rv(x, z); return b <= 0 ? b : Math.min(a, b, PG.lv(x, z)); }, S = new Float32Array(nI * nJ);   // (the smooth fields whose zero lines bound a piece: the shader's line lies on them; the level line, ~110 height reads, only inside the patch noise)
     for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) S[j * nI + i] = sv(x0 + i * f, z0 + j * f);
     const stones = [];
     const onPiece = (x, z) => land(x, z) && heightFn(x, z) >= 0.8 && sv(x, z) > 0 && bare(x, z)[1] > 0.5;
