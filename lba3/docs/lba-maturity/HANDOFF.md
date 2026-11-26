@@ -20,7 +20,7 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
   The test bot's dodge (`tests/lib/player.js P.meleeThreat`) now reads a guard's own wind-up (0.9 s at Zeelich).
   Merged-branch tests 26.11 (automated runtime only, SwiftShader): tester-fixes 10/10, wave7 E+S 12/12, wave4 B+D+E
   20/20, combat 84/84 (after the #58 merge), dialogue-check PASS.
-- **Published:** **v172** (26.11), artifact version **`1795681304-c03b`** = the next `base_version`. v171 = v170 +
+- **Published:** **v173** (26.11), artifact version **`1795698735-32af`** = the next `base_version` (see NEXT-SESSION for its contents). Before it: **v172** `1795681304-c03b`. v171 = v170 +
   the small fixes, #65, #58 a + c + the Citadel heart; v172 = v171 + the drone's charge-up sound (all picked 26.11).
   - Slug `6f31d0d2-efe4-4413-a370-7d95a7f5785b`.
   - URL https://claude.ai/artifact/EjPMQXPwbmre2kDevMC4tA.
