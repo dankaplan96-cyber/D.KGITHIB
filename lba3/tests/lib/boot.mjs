@@ -97,6 +97,8 @@ export async function open(page, query = '', { freeze = true } = {}) {
   // (the navigation's own wait follows BOOT_TIMEOUT like the boot's below, never under 180 s: a reopen at load 10–12
   //  took longer than 180 s to fire 'load' — FULL-TEST-22-11, autoquality-game section 7)
   const navT = Math.max(180000, +process.env.BOOT_TIMEOUT || 0);
+  // (QUERY=knartas=new: a suite run once with a URL switch on, e.g. #17's ?knartas=new; added to the suite's own query)
+  if (process.env.QUERY) query += (query.includes('?') ? '&' : '?') + process.env.QUERY;
   for (let i = 0; ; i++) {
     try { await page.goto(URL0 + query, { waitUntil: 'load', timeout: navT }); break; }
     catch (e) { if (i >= 2 || !/ERR_ABORTED|frame was detached/.test(e.message)) throw e; await page.waitForLoadState('load').catch(() => {}); await page.waitForTimeout(1500); }
