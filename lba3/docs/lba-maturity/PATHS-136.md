@@ -3,7 +3,6 @@
 Branch `ccr-c1c2c4b9-dep6ed` + this worktree's commits. Evidence: **Automated runtime only (SwiftShader, headless
 Chromium)**. Nobody played it; nothing was checked on a real GPU.
 
-STATUS: in progress (resume point at the end).
 
 ## The user's spot
 - The photo: Citadel, south edge of the square's ring, by the signpost `HARBOUR · SPACEPORT · LIGHTHOUSE`
@@ -54,7 +53,8 @@ STATUS: in progress (resume point at the end).
 | 7 | Desert, Kesh (3355.2, −7.6) | GAP 2 m | the track's dirt and the oasis's wet ring crossed Kesh's paved plaza (a bare tongue by the palms, a dirt band across it) | **Paving wins** inside Kesh's paving (as P135 did on the Hamalayi): the track and the wet ring start at its edge. |
 | 8 | Zeelich (2374.5, −8.6) | GAP 0.2–2.4 m | P135 "noted, not changed": the council house's arcade floor stopped short of the plaza's kerb ring, bare granite in the two corners | **Paved**: the arcade's flags run on to the ring (`zeelich.js`), the arcade's width. |
 | 9 | isle_liftdock (4192, 1810), (4193, 1819) | END | the terrain's landing pad under the deck island, far under the clouds (never seen) | Not a way: left out (deck island). |
-| 10 | isle_undergas (3214.7, 1781.6) | END | a tongue of the gas works' round concrete yard where the hillside's rock rises | **True end** (rock slope): the yard's rim where the ground turns to rock. Cosmetic raggedness noted, not a path. |
+| 10 | isle_undergas (3214.7, 1781.6) | END | the gas works' round concrete yard meets the rock ridge that rises inside its circle | **True end** (known list): the yard's rim at a rock slope, no way on. Laying the concrete only on level ground (`paveSlope 0.35`) was tried: no visible difference from above or from the play camera (pixel diff: seams and shadows only), so it was not kept. |
+| 11 | Zeelich (2371.7, −6.8) | GAP 0.4 m | (after #8) the scan saw the new arcade flags stop 0.1 m outside the plaza's own paving, under the kerb ring | The flags now reach 4 cm inside the ring's inner edge, 1 cm under the plaza's paving. It was never visible. |
 
 Not changed:
 - The harbour, Twinsen's hair, NPC routes (`town.js` STREETS, `world.js` PATHS: untouched).
@@ -66,23 +66,92 @@ Not changed:
 | Citadel (−31.6, −49.3) | the station's door and walls | ok |
 | Citadel (−23.8, −43.4) | the station's forecourt: its parapet and rail; its east side on the lawn | ok (an area before a door, not a way) |
 | Citadel (−32.7, −35.2) | the climb's stone stair | ok |
+| Citadel (−32.7, 41.8) | the spaceport footbridge, leaving from its side (#5) | ok |
 | Citadel (−73.7, −28.4) | the promenade's north end at the rock and the pipe | ok |
 | Citadel (−67.4, −4.2) | the promenade's 20-step flight | ok |
 | Citadel (−73.7, 18.8) | the promenade's south end, closed by its rail at the wall's end | ok (a viewpoint on the wall) |
 | Citadel (−109.7, 53.6) | the quay's end at the harbour wall's drop | ok |
 | Desert (3306.6, 4.4) | the pier | ok |
-| Desert (3334.3, −76.4) | the School's walls | ok |
-| Otringal (1872, 1823), (1887, 1825) | the square's edge at the rock's drop | ok |
-| Zeelich (2370.5, −9.6), (2378.3, −9.6) | the council house's walls | ok |
+| Desert (3334.3, −76.4) | the School's walls and now the channel's water | ok |
+| Otringal (1872, 1823), (1887, 1825) | the square's edge at the rock's drop (a 0.34 m face) | ok |
 | Zeelich (2350.5, −0.1) | the street's west end at the cliff over the clouds | ok |
 | Zeelich (2436.0, −0.1) | the drill platform's gate | ok |
 | Zeelich (2412.3, 9.1) | the depot's gate | ok |
 | Ballastra (2996.4, −2990.6), (3004.7, −2988.1) | piers and a stair over the water | ok |
 
-## Resume point
-- Next:
-  1. The full scan after the fixes (`after`).
-  2. `tests/walkers.mjs` once, `tests/worldfit.mjs` once.
-  3. The collider and instance dump diff (scratchpad `dump.mjs`).
-  4. The sheet: `captures/paths-136/sheet.png`.
-- Scratchpad outputs: `<scratchpad>/paths136/{before,after}`.
+## Counts (same scan, same build except the fixes)
+| Run | Strip ends | Gap rays (open) | Faults | Accepted as true ends | Isle WA-11 / deck ground left out (grid points) |
+|---|---|---|---|---|---|
+| before (`4deddff5`'s world, strict scan) | 24 | 753 (342) | **16**: 6 END, 10 GAP. FAIL | 0 | 1250 |
+| after (this branch) | 18 | 452 (63) | **0**: PASS | 1 (Under Celebration's yard rim, #10) | 1282 |
+
+- Under P135's own rules the same build showed 8 findings, and all 8 were accepted.
+- The strict rule found 16. Of these:
+  - 12 were fixed: #1 (one END and one GAP), #2–#3 (5 GAPs), #4, #6 (2 GAPs), #7 and #8.
+  - 2 were true ends: #5, which the scan now recognises (the bridge's deck), and #10, which is on the known list.
+  - 2 were a pad under a deck island, never seen (#9).
+- The fix for #8 led to #11, which was also fixed.
+- Of the 18 ends that remain:
+  - 17 reach a door, a wall, a stair, a face, a deck or the water.
+  - The 18th is #10.
+  - Each one was looked at in its play-camera picture (table above).
+
+## What the scan cannot see, and was looked at by eye instead
+- **Ballastra's Arch District and Water Gardens.** Stone masses over water; the `stone` texture is shared with walls.
+  Inspected from above (`captures/paths-136/plans.png` has the Float Harbor only). Every walk is masonry over water
+  (quays, piers, stairs, terraces); none ends in open ground.
+- **The Hamalayi's trodden ways.** Earth, not paving. The only paving there is Lhar's square and the monastery yard
+  (P135 #4, #5); both are whole.
+- **Paving built from other textures.** Citadel's spaceport is a plank deck on the water, reached by the footbridge.
+  Also looked at from above: the fort's yard (inside its walls), the lighthouse islet, and the isles' stone plinths
+  and steps. None of this paving ends in open ground.
+- **Citadel outside the town.** The lighthouse path, Twinsen's house and the cliffs have no paving, only trodden
+  earth.
+- **Not checked:** the expansion's other districts and rooms, and every interior. These are not outdoor paving.
+
+## Visible changes (for the user's pick)
+1. Citadel: the paved forecourt south of the square, with kerbs on its west and south edges. The signpost's arrows
+   are turned toward the east street.
+2. Citadel: the west street's foot reaches the ring.
+3. Citadel: the dirt north of the square is paved.
+   - One tree is gone: the collider dump before and after differs by one trunk, at (−38, −12).
+   - The kerbs changed: 660 → 616 stones, following the new edges.
+4. Citadel: the west street's 4 m stub past the south cross street is gone. **Own commit `c1a59f78`** (P112's free end).
+5. Desert Island: water in the School's channel under the arched bridge. The hero cannot wade in, so it is crossed on
+   the bridge, as it was built to be.
+6. Kesh: its plaza's paving runs whole. No dirt band or bare tongue crosses it.
+7. Zeelich: the council house's arcade flags reach the plaza's ring.
+
+Unchanged:
+- The colliders and instanced placements in Citadel, Desert Island, Zeelich and Under Celebration, apart from the
+  tree and the kerbs above. Each was dumped and compared before and after.
+- Hidden scatter (bushes, grass) is filtered by scale, which the dump does not record. The before and after pictures
+  show no other plant gone or come back.
+- The harbour.
+- NPC routes: `town.js` STREETS and `world.js` PATHS are untouched.
+- Twinsen's hair.
+
+## Tests (automated runtime only, SwiftShader, SERVE=1, once each)
+- `tests/path-ends.mjs` (strict), every area:
+  - before: FAIL (16).
+  - after: **PASS**, 0 open, run with Under Celebration's trial change in place.
+  - When that change was reverted, Under Celebration was run again alone (`ONLY=isle_undergas`): **PASS**, its end on
+    the known list.
+- `tests/walkers.mjs`: **PASS 37/37**.
+- `tests/worldfit.mjs`: **PASS**, functional 1/1, visual 8/8.
+  - (3) z-fighting: 0 visible; 112 small ones are listed, unjudged.
+  - The desert's fit notes (the pool mask, Kesh's cabins and others) are listed by the test as before; none FAILs.
+  - The kernel reported a process killed for memory during this run. The verdict printed in full.
+
+## Pictures
+- `captures/paths-136/sheet.png`: before and after. The user's spot comes first.
+- `captures/paths-136/plans.png`: the final plan of each area.
+- The play-camera picture of every end and gap, before and after, is in the session's scratchpad
+  (`paths136/{before,after,final}`). Those are not committed.
+
+## Questions for the user
+1. Keep the forecourt by the signpost (#1), with the arrows turned to the east street? Or should the lane instead go
+   on south through the block to the cross street? The south house stands in its old line, so it would have to pass
+   east of the house, beside the east street.
+2. Keep the west street's corner (#4, commit `c1a59f78`)? It changes P112's free end.
+3. Water in the School's channel (#6): yes? It had been dry since AUDIT-FIX on 17.11, probably by accident.
