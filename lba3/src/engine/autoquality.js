@@ -109,8 +109,10 @@ export const TOP = PRESET_KNOBS.high;
 // CPU cost is Low's or a little more), so the list stays ordered on both sides. CPU pressure goes Medium → Medium-lean →
 // CPU-eco and stops there: no rung below it is a CPU rung, so CPU pressure never takes the shadows. GPU pressure goes
 // Medium-lean → Low → Low 75 % → Low 65 % exactly as in P137 (Low, Low 75 % and Low 65 % unchanged). What CPU-eco buys was
-// measured small (docs/lba-maturity/CPU-RELIEF.md: on the Citadel street most people a frame poses are near and in view):
-// if it buys < 7 % where it was taken, P95's revisit gives Medium-lean back and stops CPU steps, as for any step.
+// measured small (docs/lba-maturity/CPU-RELIEF.md: ~2 % of a street frame with the follow camera, ~0 with the orbit).
+// Like any step it is judged by P95's revisit only when play comes back to a scene measured at Medium-lean before it:
+// then, under 7 %, Medium-lean comes back and no further CPU step is taken. Otherwise (no such revisit during the
+// evaluation) CPU-eco is held: the UHD 620 model on mains settles on it (tests/autoquality.mjs).
 // The CPU work no profile removes was cut for every profile instead (CPU-RELIEF: Math.hypot, …).
 // Low itself is now a GPU rung (`only: 'gpu'`): from Medium-lean it lowers the resolution and turns the shadows off, but
 // gives back the far-people knobs Medium-lean had, so for CPU pressure it bought ~nothing (P95's revisit took it back:

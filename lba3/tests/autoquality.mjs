@@ -161,8 +161,8 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
   const { applied } = run(G, { cpu: 45, gpu: 30, display: 16.67, scene: 30000 }, 400);
   // (P137: CPU-bound — CPU 45 ms, GPU 30 at High: down the CPU side only, never a resolution-only rung for CPU pressure.
   //  P137b: the CPU side ends at CPU-eco, which keeps the shadows; by this test's truth it buys ~3 % over Medium-lean
-  //  (anim deep, CPU-RELIEF.md), under P95's 7 %, so the revisit gives Medium-lean back and no further CPU step is taken:
-  //  held at Medium-lean or CPU-eco, the shadows on, never Low or below)
+  //  (anim deep, CPU-RELIEF.md), under P95's 7 %: a revisit in a scene measured at Medium-lean gives Medium-lean back,
+  //  without one CPU-eco is held (here it is). Held at Medium-lean or CPU-eco, the shadows on, never Low or below)
   console.log('       P137b CPU-bound below even Low:', JSON.stringify({ p: name(G.applied), phase: G.phase, steps: steps(G).map((e) => e.what) }));
   check('a machine below even Low (CPU-bound): walks down the CPU side only (P137b: Medium → Medium-lean → CPU-eco, which keeps the shadows; never Low, Low 75 % or Low 65 %), settles, no oscillation, every change at a commit point',
     (G.applied === 2 || G.applied === 3) && knobsAt(G.applied).shadows === 1 && G.phase === 'hold' && !steps(G).some((e) => /→ Low/.test(e.what)) && steps(G).filter((e) => e.kind === 'up').length <= 1 && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });

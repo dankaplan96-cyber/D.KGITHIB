@@ -20,6 +20,14 @@ doc and the sheet.
 
 ## 0. In short
 
+**For the user to decide: CPU-eco itself.** It buys about 0.3 ms a frame (~2 %, follow camera, this machine) by
+animating far people at a half or third rate. Their feet are also not planted from 15 m (sheet: §4). On mains, by the
+model, Auto settles on it and keeps it.
+
+- AUTO-2 records the user dropping Medium-eco for "~1 fps, and it looked worse".
+- The alternative is to remove the rung. The CPU side would then end at Medium-lean (shadows kept as well): a
+  one-line change (CPU-eco's entry in PROFILES).
+
 | what | where | effect (this machine, relative) | visible? |
 |---|---|---|---|
 | ARM-CLEAR's depth test out of a V8 deopt loop | `src/engine/rig.js` acDepth | its garbage **534 KB → 0 a frame**; the people's animation section **−28 to −54 %** (block medians) | no |
@@ -58,14 +66,17 @@ Extra tools in the same folder:
 - **A microbenchmark of ARM-CLEAR's solve:** `acbench.mjs`.
 - **Garbage per frame:** PERF-CPU's `alloc.mjs`, a sampling heap profiler.
 
+The garbage per frame comes from V8's sampling heap profiler. It does not scale with the load the way milliseconds do,
+but which functions V8 has optimised at a given moment changes it from run to run (§4).
+
 Conditions: 1280×720, dPR 1, Medium and Medium-lean. The routes are the benchmark's Citadel **street**: Twinsen walks
 the square, seen from the benchmark's free orbit (as the laptop's benchmark ran it) and from the player's follow camera
 at Far (as it is played). 240 frames of warm-up, then 256 measured.
 
 **The machine was shared and loaded** (load average 9–18 on 4 cores). A frame's total varied 2–3× from block to block.
 Each figure is therefore the **min / median of 32-frame block means**. Comparisons across two boots (before / after) are
-indicative; within one boot (A/B) they are better. The garbage per frame and the deopt trace do not depend on the load,
-and those are the firm evidence.
+indicative; within one boot (A/B) they are better. The firm evidence is two load-independent results: the deopt trace,
+and `acDepth`'s garbage (534 KB → 0 a frame).
 
 ## 2. What costs what (before, the street at Medium)
 
@@ -98,7 +109,8 @@ Exclusive sections, ms a frame (p50 of frames, the free-orbit street, one boot; 
 - **Rig updates (census).** With the free orbit, most people a frame poses are near and in view (5.4 within 12 m)
   or already posed at a quarter rate out of view. With the **follow camera**: 7.6 a frame in view at 12–25 m, 4.3 in
   view beyond 50 m, 3 within 12 m.
-- **Zeelich and Desert Island (Kesh) are not CPU-heavy.**
+- **Zeelich and Desert Island (Kesh), in a new game, are not CPU-heavy.** Their people are placed by chapter; later
+  chapters were not measured.
   - The busiest spot found within 600 m of each arrival had 3 people within 15 m (Zeelich, by n_ilo) and none
     (Desert).
   - Their frames were 10 and 5.5 ms here.
@@ -180,8 +192,12 @@ comparison is indicative only, because physics call counts differed between the 
 - **What it buys.** In the A/B (Medium-lean vs CPU-eco, follow camera, the street, same boot), the animation section fell
   **1.23 → 0.94 ms** (block medians), about 2 % of the frame. The frame total was within noise. With the free orbit it
   buys about nothing: few people are far and in view.
-- **What Auto then does.** If CPU-eco buys under P95's 7 %, the revisit gives Medium-lean back and takes no further CPU
-  step. Either way the shadows stay.
+- **What Auto then does.**
+  - P95's revisit judges a step only when play comes back to a scene measured at the profile above. Then CPU-eco,
+    buying under 7 %, gives Medium-lean back and no further CPU step is taken.
+  - Without such a revisit during the evaluation, CPU-eco is held. By the model, the UHD 620 on mains settles on it;
+    on battery it tried CPU-eco and went back (§5).
+  - Either way the shadows stay.
 - **Text.** Settings shows "Auto (CPU-eco)", in Hebrew `חסכונית במעבד`. `q_prof_loweco` changed in English and Hebrew;
   `he-bundle` was run; `dialogue-check` PASS (6640 / 6640).
 
@@ -201,13 +217,35 @@ branch (A side of its A/B: CPU-eco's knob off). The two are separate boots, so t
 | street, CPU-eco, follow (same boot as the row above) | people's animation | | 0.78 / 0.94 |
 | | frame (all) | | 9.55 / 14.21 |
 
-- Garbage on the street at Medium (`alloc.mjs`, 120 frames, sampled):
+The other sections, block medians, before → after (the same three views). None of them was changed. Their moves are the
+load: the after boot ran heavier, and its untouched sections mostly rose.
+
+| section | Medium, orbit | Medium, follow | Medium-lean, follow |
+|---|---|---|---|
+| three's per-draw work | 4.01 → 4.86 | 4.74 → 4.21 | 2.80 → 3.67 |
+| three's render (cull, sort, state) | 1.63 → 2.94 | 1.71 → 2.28 | 1.22 → 1.48 |
+| world matrices | 1.19 → 1.18 | 1.32 → 1.71 | 1.08 → 1.15 |
+| shadow culling | 0.77 → 1.00 | 0.81 → 0.71 | 0.55 → 0.70 |
+| the shadow pass's culling | 0.42 → 0.52 | 0.49 → 0.63 | 0.28 → 0.52 |
+| the people's simulation | 0.77 → 0.76 | 0.88 → 0.76 | 0.40 → 0.45 |
+| physics | 0.42 → 1.21 | 0.38 → 0.87 | 0.32 → 0.52 |
+| **the people's animation** | **3.68 → 2.10** | **3.57 → 1.63** | **1.71 → 1.23** |
+
+Normalised by the same boot's submission (animation ÷ (per-draw work + render)), a ratio the load moves less: Medium
+orbit **0.65 → 0.27**, Medium follow **0.55 → 0.25**, Medium-lean follow **0.43 → 0.24**.
+
+- Garbage on the street at Medium (`alloc.mjs`, 120 frames, sampled, one run each):
   - before: 1 592 KB a frame;
   - the hypot patch alone: 1 347;
-  - both changes: **1 292**;
-  - `acDepth`: 534 → 483 → **0**.
-- The other entries moved from run to run (`poll` / `shownTreeF` 20–170 KB) with which functions V8 had optimised at
-  that moment.
+  - both changes: 1 292.
+- The firm part is **`acDepth`: 534 → 483 → 0 KB**.
+- About 140 KB of the "hypot alone" drop is the arm profiles' background job (`acRun`, 190 → 52 KB). `alloc.mjs` does
+  not finish that job before measuring, so it is not this change.
+- `poll` and `shownTreeF` (the shown-world update) rose in the last run (25 → 173 KB and 20 → 110 KB). In the run
+  before they were 9 KB each.
+  - Unexplained: no deopt trace was taken in the runs where they were low.
+  - The street trace after the change shows `shownTreeF` re-optimised after ~24 lazy deopts in 600 frames.
+  - A candidate for a next pass.
 - A minor collection costs a few ms on a battery-clocked laptop CPU (PERF-CPU §2.5). Less garbage means fewer of them,
   not a lower p50.
 
@@ -284,8 +322,9 @@ See the report's list; filled in below as run.
   (§6).
 - The frame totals here are within this shared machine's noise. Only the animation section, the garbage and the
   deopt trace are firm.
-- CPU-eco's value is small (≈ 2 % of a frame with the follow camera, ~0 with the orbit). P95's revisit will often take it
-  back on a CPU-bound street; then Medium-lean is the CPU floor.
+- CPU-eco's value is small (≈ 2 % of a frame with the follow camera, ~0 with the orbit).
+  - Where Auto revisits the scene, P95 takes it back; there Medium-lean is the CPU floor.
+  - Where it does not (the model's UHD 620 on mains), it stays, with its visible far-animation trade.
 - The truths in `tests/autoquality.mjs` for CPU-eco on machines other than this one are assumptions.
 - Old saves: the settings format is unchanged (qv 4). A cached Auto entry with id `loweco` now means CPU-eco, with
   shadows. A cached `low` is read by id (index 4 now).
