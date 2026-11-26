@@ -4,7 +4,7 @@
 
 > **Twinsen's hair: do not touch (the user, 26.11).** The spline ponytail with its brass tie (default since 23.11) stays as it is; no hair candidates, no questions about it.
 
-> **The user's main checklist is `docs/lba-maturity/CHECKLIST.he.md` (26.11: "that's what matters to me")**: the app's side panel has no task section, so the file is sent with SendUserFile **with display: 'render'** (the user wants it shown open, 26.11) and shows under Outputs there. Update it (and re-send it) whenever something opens, finishes or waits for the user; keep the TaskCreate list in step too. The artifact page below is secondary.
+> **The user's main checklist is `docs/lba-maturity/CHECKLIST.he.md` (26.11: "that's what matters to me")**: the app's side panel has no task section, so the file is turned into `CHECKLIST.html` (`python3 tools/checklist-html.py docs/lba-maturity/CHECKLIST.he.md docs/lba-maturity/CHECKLIST.html`) and the HTML is sent with SendUserFile **with display: 'render'** (an .md does not open in the panel) (the user wants it shown open, 26.11) and shows under Outputs there. Update it (and re-send it) whenever something opens, finishes or waits for the user; keep the TaskCreate list in step too. The artifact page below is secondary.
 
 > **The user's checklist page (26.11):** `docs/lba-maturity/checklist/index.html`, published as artifact slug `98d80407-2559-4868-8915-406317b81b85` (https://claude.ai/artifact/KsgUvrHqD21dbJrMarozzx, version 1795682265-bf5c). Update its data array (and the 'since version' counters) whenever OPEN-TASKS changes, with a cheap edit_version / publish_files of that one file.
 
