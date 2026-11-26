@@ -1576,7 +1576,7 @@ function buildIsland0(scene, physics, name, L, at) {
     if (PAL?.granite) wt[2] *= 0.81;
     if (S.turfRock) { wt[2] += wt[0]; wt[0] = 0; }   // (ZEELICH-2: no grass: the turf is the island's granite)
   };
-  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, ...(S.turfRock || PAL?.granite ? { rock: graniteTex() } : { rock: TX.cliff, ...(name === 'knartas' ? {} : quietRock(TX.cliff)) }), cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite; #17b Knartas's rock too; QUIET-ROCK: on every other isle the granite on the flat, in the cliff tile's colour; ?knartaspal=old keeps Knartas's old ground whole)
+  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, ...(S.turfRock || PAL?.granite ? { rock: graniteTex() } : { rock: TX.cliff, ...(name === 'knartas' ? {} : quietRock(TX.cliff, name)) }), cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite; #17b Knartas's rock too; QUIET-ROCK: on every other isle the granite on the flat, in the cliff tile's colour; ?knartaspal=old keeps Knartas's old ground whole)
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);
