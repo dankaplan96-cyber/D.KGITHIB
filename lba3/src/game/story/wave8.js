@@ -45,7 +45,7 @@
 // w8q_nudge, w8q_done; w8n_seen ('id,id,…'); w8t_<npc> (thanked). A dog awake or a hatch lifting is not saved.
 import { t, STR } from '../i18n.js';
 import { ChapterBase } from './base.js';
-import { W8, buildHatch, buildArch, buildLedge, buildSlate, buildPapers, turn } from '../wave8world.js';
+import { W8, buildHatch, buildArch, buildLedge, buildSlate, buildPapers, turn, ARCH_AT } from '../wave8world.js';
 import { ARMS } from '../weapons.js';
 import { NEAR_K, suspect, calm as calmMark, seen as seenMark, draw as drawMark } from '../noticemark.js';
 import '../text/wave8.js';
@@ -58,7 +58,7 @@ export const SPOT = {
   hatch: { x: 2360.6, z: -13.9, ry: Math.PI },                       // behind the first house's back wall (its face at z -13.2), west of the dog yard's lane
   // the Hamalayi: the valley floor south of Lhar (2.67 m) and Lhar's terrace above it (11.93 m), 6 m apart across the cliff;
   // the walk round between them is ~126 m (measured with the test planner, 25.11)
-  arch: { foot: { x: 4270, z: 33.4, ry: 0 }, top: { x: 4270, z: 27.5, ry: Math.PI } },
+  arch: ARCH_AT,   // (wave8world.js: the Hamalayi's snow lips keep off its steps)
   ledge: { x: 3412, z: 38, ry: Math.PI / 2 },                        // north of the ruins on Desert Island, the ledge to the east
   slate: { x: -94.0, z: -68.3, ry: Math.PI / 2 + 0.3 },              // Citadel: before the Weather Wizard's tent, beside its name board, facing the way in
 };

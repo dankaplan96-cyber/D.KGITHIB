@@ -178,12 +178,15 @@ export function deckSlab(P, w, d, { top = 0, thick = 0.22, mat = BM.deck(), fasc
     }
   } else if (under === 'floats') {
     // pontoon boxes along both long sides at the waterline, ceramic floats between them
-    const fy = water - wy + 0.12;
+    // (FEET-66: under the deck: a pontoon's top and a float's crown 1 cm under the deck's underside at most; on a low
+    //  deck (the Water Gardens' walkways, 0.32 over the water) the pontoons stood 5 cm up through the boards along both
+    //  sides, the floats' crowns 17 cm)
+    const fy = Math.min(water - wy + 0.12, top - thick - 0.26), fp = Math.min(fy + 0.05, top - thick - 0.33);
     for (const s of [-1, 1]) P.add(bbox(w - 0.3, 0.5, 0.7, 0.08, 1.4), BM.deckOld(), 0, fy, s * (d / 2 - 0.45));
     const n = Math.max(1, Math.round(w / 1.6));
     for (let i = 0; i < n; i++) for (const s of [-1, 1]) {
       const x = -w / 2 + 0.8 + (i * (w - 1.6)) / Math.max(1, n - 1);
-      P.add(cached('blfloatpot', () => lathe([[0, -0.32], [0.3, -0.26], [0.4, 0], [0.34, 0.24], [0.16, 0.32], [0, 0.32]], 10)), i % 3 === 1 ? BM.terracotta() : BM.celadon(), x, fy + 0.05, s * (d / 2 - 0.05));
+      P.add(cached('blfloatpot', () => lathe([[0, -0.32], [0.3, -0.26], [0.4, 0], [0.34, 0.24], [0.16, 0.32], [0, 0.32]], 10)), i % 3 === 1 ? BM.terracotta() : BM.celadon(), x, fp, s * (d / 2 - 0.05));
     }
   }
   return P;

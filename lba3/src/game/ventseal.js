@@ -48,7 +48,10 @@ export function ventSeal(env) {
     const a = aD + k * STEP, s = Math.sin(a), c = Math.cos(a), live = k === LIVE;
     for (let d = R0 + 0.45; d < R1; d += 0.85) {
       const x = VENT.x + s * d, z = VENT.z + c * d;
-      B.add(segGeo, live ? liveM : deadM, x, H(x, z) + 0.015, z, 0, a, 0);
+      // (FEET-66: the strip laid on the ice, tilted with it, its top 1.2 cm over it; it lay flat 1.5 cm over the ice at its
+      //  middle, and on the vent's slope its top stood 5-8 cm over his feet)
+      const hc = (u, v) => H(x + u * c + v * s, z - u * s + v * c), su = (hc(0.39, 0) - hc(-0.39, 0)) / 0.78, sv = (hc(0, 0.45) - hc(0, -0.45)) / 0.9;
+      B.add(segGeo, live ? liveM : deadM, x, H(x, z) + 0.012 - 0.035, z, -Math.atan(sv), a, Math.atan(su));
     }
     for (let d = R0 + 0.2; d < R1 + 0.1; d += 0.75) for (const side of [-1, 1]) {
       const j = (r() - 0.5) * 0.12, x = VENT.x + s * d + c * side * (0.55 + j), z = VENT.z + c * d - s * side * (0.55 + j);

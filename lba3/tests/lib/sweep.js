@@ -257,6 +257,8 @@ SW.scan = async (area, opt = {}) => {
   if (opt.slabGround) for (const S of solids) { const b = S.box; if (b[3] - b[0] > 25 && b[5] - b[2] > 25 && b[4] - b[1] < 8) S.ground = true; }
   clusterSolids();
   const t1 = performance.now();
+  // (FEET-66: opt.buildOnly — the store is built and kept, no analysis: SW.raw reads it; default off)
+  if (opt.buildOnly) { SW.last = { A }; return { area, A, census: { meshes: stats.meshes, tris: stats.tris, parts: solids.length, terrains: terrains.length, decals: decals.length, foliage: foliage.length, skipped: stats.skipped, ms: Math.round(t1 - t0) }, decals: decals.map((o) => pathOf(o)) }; }
 
   // ------------------------------------------------ the rays
   const step = opt.step ?? 0.25, tol = opt.tol ?? 0.02, jx = 0.0731, jz = 0.1173;
@@ -477,6 +479,15 @@ SW.scan = async (area, opt = {}) => {
   return { area, A: { x0: r2(A.x0), x1: r2(A.x1), z0: r2(A.z0), z1: r2(A.z1) }, census, zf, interp, floats, sunk, buried, plants, decals: dec, rockIn, rockCut, D };
 };
 
+// (FEET-66) the store read raw after a scan (opt.buildOnly): every surface on the vertical line at x, z, top down, with
+// its part, object, look and side, and the terrain's height; parts (solids) with their boxes; an object's path and mesh
+SW.raw = {
+  column(x, z) { const a = []; const r = column(x, z, a); return { tg: r.tg, hits: a.map((h) => ({ y: h.y, ny: h.ny, si: h.si, oi: h.oi, lk: h.lk, side: SD[h.t] })) }; },
+  solids: () => solids,
+  obj: (oi) => objs[oi],
+  path: (oi) => pathOf(objs[oi].o),
+  look: (lk) => looks[lk],
+};
 // the store let go (the next area starts afresh; a picture needs it kept)
 SW.free = () => { N = 0; CAP = 0; P = NRM = OB = LK = SD = SL = null; objs = []; bins = new Map(); terrains = []; solids = []; compCache.clear(); };
 

@@ -1,0 +1,297 @@
+[
+ {
+  "id": "h1-arch-top",
+  "at": [
+   4270,
+   2.739,
+   37.078
+  ],
+  "feetPx": [
+   480,
+   323
+  ],
+  "over": [
+   {
+    "y": 2.933,
+    "what": "hlip--1,0<hamalayi"
+   },
+   {
+    "y": 2.739,
+    "what": "Buffer<wave8 arch steps<wave8 arch<hamalayi"
+   }
+  ],
+  "top": 0.194,
+  "what": "Hamalayi, the arch steps' top tread under the rim's snow lip (walked up from the steps)"
+ },
+ {
+  "id": "h2-arch-foot",
+  "at": [
+   4270,
+   0.281,
+   39.545
+  ],
+  "feetPx": [
+   480,
+   337
+  ],
+  "over": [
+   {
+    "y": 0.715,
+    "what": "hchannel<hamalayi"
+   },
+   {
+    "y": 0.7,
+    "what": "hriver<hamalayi"
+   }
+  ],
+  "top": 0.434,
+  "what": "Hamalayi, the foot of the arch steps in the gorge river (water: he wades)"
+ },
+ {
+  "id": "h3-shelf",
+  "at": [
+   4218.155,
+   0.636,
+   44.1
+  ],
+  "feetPx": [
+   480,
+   332
+  ],
+  "over": [
+   {
+    "y": 0.805,
+    "what": "Buffer<hamalayi"
+   },
+   {
+    "y": 0.791,
+    "what": "Buffer<hamalayi"
+   },
+   {
+    "y": 0.715,
+    "what": "hchannel<hamalayi"
+   },
+   {
+    "y": 0.7,
+    "what": "hriver<hamalayi"
+   }
+  ],
+  "top": 0.169,
+  "what": "Hamalayi gorge, an ice shelf along the bank"
+ },
+ {
+  "id": "h4-floe",
+  "at": [
+   4239.555,
+   0.699,
+   41.1
+  ],
+  "feetPx": [
+   480,
+   336
+  ],
+  "over": [
+   {
+    "y": 0.849,
+    "what": "Buffer<hamalayi"
+   },
+   {
+    "y": 0.715,
+    "what": "hchannel<hamalayi"
+   },
+   {
+    "y": 0.7,
+    "what": "hriver<hamalayi"
+   }
+  ],
+  "top": 0.15,
+  "what": "Hamalayi gorge, a floe in the river (walked at)"
+ },
+ {
+  "id": "h6-groove",
+  "at": [
+   4242.955,
+   16.165,
+   -48.55
+  ],
+  "feetPx": [
+   480,
+   328
+  ],
+  "over": [
+   {
+    "y": 16.226,
+    "what": "Buffer<hamalayi"
+   }
+  ],
+  "top": 0.061,
+  "what": "Hamalayi vent, the seal ring's groove strip"
+ },
+ {
+  "id": "z1-street",
+  "at": [
+   2398.155,
+   6,
+   0
+  ],
+  "feetPx": [
+   480,
+   335
+  ],
+  "over": [
+   {
+    "y": 6.05,
+    "what": "Buffer<zeelich"
+   },
+   {
+    "y": 6,
+    "what": "Extrude<zeelich"
+   }
+  ],
+  "top": 0.05,
+  "what": "Zeelich, the paved street"
+ },
+ {
+  "id": "z2-pad",
+  "at": [
+   2376.9,
+   6,
+   12.155
+  ],
+  "feetPx": [
+   480,
+   409
+  ],
+  "over": [
+   {
+    "y": 6.245,
+    "what": "Cylinder<zeelich"
+   },
+   {
+    "y": 6,
+    "what": "Extrude<zeelich"
+   }
+  ],
+  "top": 0.245,
+  "what": "Zeelich, the shuttle pad"
+ },
+ {
+  "id": "c1-spaceport",
+  "at": [
+   0.957,
+   2.33,
+   38.161
+  ],
+  "feetPx": [
+   480,
+   335
+  ],
+  "over": [
+   {
+    "y": 2.45,
+    "what": "merged<spaceport<Group"
+   },
+   {
+    "y": 2.33,
+    "what": "Buffer<spaceport<Group"
+   },
+   {
+    "y": 1.835,
+    "what": "Buffer<spaceport<Group"
+   }
+  ],
+  "top": 0.12,
+  "what": "Citadel spaceport, the landing pad"
+ },
+ {
+  "id": "b2-deck",
+  "at": [
+   2973.955,
+   5.14,
+   -4595.4
+  ],
+  "feetPx": [
+   480,
+   335
+  ],
+  "over": [
+   {
+    "y": 5.19,
+    "what": "Buffer<bl_floating0<bl_gardens"
+   },
+   {
+    "y": 5.14,
+    "what": "Buffer<bl_floating0<bl_gardens"
+   },
+   {
+    "y": 4.7,
+    "what": "bl_bed0<bl_gardens"
+   },
+   {
+    "y": 4.68,
+    "what": "Buffer<bl_gardens"
+   }
+  ],
+  "top": 0.05,
+  "what": "Ballastra Water Gardens, a floating deck"
+ },
+ {
+  "id": "c2-plaza",
+  "at": [
+   -49.471,
+   2.536,
+   -9.334
+  ],
+  "feetPx": [
+   480,
+   342
+  ],
+  "over": [
+   {
+    "y": 2.735,
+    "what": "Buffer<flat-town<Group"
+   }
+  ],
+  "top": 0.199,
+  "what": "Citadel square, the ring steps (a question, not changed)"
+ },
+ {
+  "id": "h7-lifttop",
+  "at": [
+   4324,
+   22,
+   -27.545
+  ],
+  "feetPx": [
+   480,
+   328
+  ],
+  "over": [],
+  "top": null,
+  "what": "Hamalayi, the lift's top: the ramp to the platform (a collider with nothing drawn on it before)"
+ },
+ {
+  "id": "z3-dogyard",
+  "at": [
+   2370.322,
+   6,
+   -21.492
+  ],
+  "feetPx": [
+   480,
+   335
+  ],
+  "over": [
+   {
+    "y": 6.05,
+    "what": "Box<zeelich"
+   },
+   {
+    "y": 6,
+    "what": "Extrude<zeelich"
+   }
+  ],
+  "top": 0.05,
+  "what": "Zeelich, the dog yard's leaf bed and track (inside its palisade)"
+ }
+]

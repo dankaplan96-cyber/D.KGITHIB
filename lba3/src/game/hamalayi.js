@@ -38,6 +38,7 @@ import { Plume } from '../engine/softfx.js';
 import { Kit, MAT, barrel, crate, handCart } from './props.js';
 import { oldGate, waystone } from './props-lba1hamalayi.js';
 import { gridCapture, snowLips, iceTint, basinDress, ventDress, gorgeRiver } from './hamalayi-finish.js';
+import { archLane } from './wave8world.js';   // (FEET-66: the arch's steps, a walk the snow lips keep off)
 import { makeTree } from './hamalayi-tree.js';
 import { CH7_NEW } from './ch7stage.js';
 import { ventSeal } from './ventseal.js';
@@ -209,9 +210,12 @@ export function* buildHamalayiSteps(scene, physics) {
   physics.terrain.addPatch(terrain, ox, oz);
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   GRID = null;   // (the finish below reads the terrain itself)
+  // (FEET-66: and the wave-8 arch's steps down the bank to the gorge: the lip over the ledge's rim lay over their top
+  //  treads, 20 cm of drawn snow over his feet there)
+  const AL = archLane(), ARCH_STEPS = [[AL.a.x - ox, AL.a.z - oz], [AL.b.x - ox, AL.b.z - oz]];
   const lips = snowLips(terrain, group, { levels: [L0, L1, LB, L3, 24, 26, L4],
     // (no lip where a trail or a walk crosses the rim)
-    fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(...PATHS.map(([P, hw]) => seg(P, x, z) - hw))) });
+    fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(seg(ARCH_STEPS, x, z) - AL.hw, ...PATHS.map(([P, hw]) => seg(P, x, z) - hw))) });
   const H = (x, z) => terrain.heightAt(x, z);
   const R = {
     id: 'hamalayi', outdoor: true, grade: 1.0, gradeTint: null,   // (WA-13b: no frame grade; the snow and the sky light are cyan at the source, as LBA1's ice)
@@ -663,7 +667,13 @@ export function* buildHamalayiSteps(scene, physics) {
     if (Math.abs(platGoal - platY) < 0.001) { const cb = liftDone; liftDone = null; riders = []; cb?.(); }
   });
   // at the top the platform swings to the terrace edge: a plank ramp joins it to L3
+  // (FEET-66: the ramp was only its collider: at the terrace's edge he stood up to 0.8 m over the drawn ground. Its
+  //  planks now drawn at the collider's top, on two bearers; where the terrace stands higher it hides them)
   col({ type: 'box', x: LIFT.x, z: -26.0, hw: 1.4, hd: 2.4, top: L3, seeThrough: true });
+  { const RB = new Batch(group), pl = tm('planks', { color: '#b88a5a' });
+    RB.add(bbox(2.8, 0.08, 4.8, 0.02, 1), pl, LIFT.x, L3 - 0.04, -26.0);
+    for (const dx of [-1.1, 1.1]) RB.add(bbox(0.16, 0.18, 4.8, 0.02, 1), darkWood, LIFT.x + dx, L3 - 0.17, -26.0);
+    RB.build(); }
   // a working station: the bell to call it, a lantern, freight waiting to go up, a crank at the top, signs
   put('lift', 'bell', 21.2, -23.6, 0.2, (k) => bellPost(k));
   put('lift', 'liftLantern', 18.6, -22.4, 0.3, (k) => lanternPost(k));

@@ -238,7 +238,9 @@ export function travelRegion(game, id) {
     for (const [x0, x1] of [[TB.x0 - 0.15, TB.x0], [TB.x1, TB.x1 + 0.15]]) wbox(x0, x1, TB.z0, p.z0, Y + 1.1, { noStand: true, seeThrough: true });
     // the pad and the starship (a bigger Esmer craft, for the long crossing), lamps, the board
     const pd = new THREE.Mesh(cached('zppad', () => new THREE.CylinderGeometry(5.6, 5.8, 0.14, 32)), pm('#8a8f9a', 0.7, { metalness: 0.2 })); pd.position.set(p.pad.x, Y + 0.07, p.pad.z); pd.receiveShadow = true; Z.group.add(pd);
-    const ring = new THREE.Mesh(cached('zpring', () => new THREE.TorusGeometry(5.1, 0.08, 6, 40)), pm('#e8c040', 0.5)); ring.rotation.x = Math.PI / 2; ring.position.set(p.pad.x, Y + 0.15, p.pad.z); Z.group.add(ring);
+    // (FEET-66: the pad is walked on: a floor at its top, Y + 0.14; he stood 14 cm in it; its ring 1.5 cm over it, was 9)
+    const ring = new THREE.Mesh(cached('zpring', () => new THREE.TorusGeometry(5.1, 0.08, 6, 40)), pm('#e8c040', 0.5)); ring.rotation.x = Math.PI / 2; ring.position.set(p.pad.x, Y + 0.075, p.pad.z); Z.group.add(ring);
+    P.add({ type: 'cyl', x: o.x + p.pad.x, z: o.z + p.pad.z, r: 5.68, top: Y + 0.14, seeThrough: true });   // (to 5.63 under him: the cap's edge 5.6, its side 2 cm under there)
     const ship = esmerShuttle({ landed: true, scale: 1.4 }); ship.position.set(p.pad.x, Y + 0.14, p.pad.z); ship.rotation.y = Math.PI; Z.group.add(ship); T.vehicles.zeelich_port = ship;
     P.add({ type: 'cyl', x: o.x + p.pad.x, z: o.z + p.pad.z, r: 4.4, top: Y + 6, noStand: true });
     for (const [lx, lz] of [[p.x0 + 0.6, p.z0 + 0.6], [p.x1 - 0.6, p.z0 + 0.6], [p.x0 + 0.6, p.z1 - 0.6], [p.x1 - 0.6, p.z1 - 0.6]]) {

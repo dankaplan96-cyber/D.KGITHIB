@@ -202,7 +202,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
   {
     const BB = new Batch(broken, { cast: false });
     for (const [dx, dz, ry, rz] of [[-0.3, 0.1, 0.4, 0.2], [0.25, -0.2, -0.7, 0], [0.05, 0.35, 1.3, -0.15], [-0.1, -0.4, 2.2, 0.1]]) BB.add(cached('zlboard', () => tint(bbox(0.62, 0.04, 0.14, 0.01, 1), '#c89a5a')), C.VC, BROKEN.x + dx, Y0 + 0.03, BROKEN.z + dz, 0, ry, rz);
-    BB.add(cached('zlpuddle', () => tint(new THREE.CircleGeometry(0.85, 18).rotateX(-Math.PI / 2).scale(1.3, 1, 0.8), '#e8a020')), pm('#ffffff', 0.12, { vertexColors: true, metalness: 0.1, emissive: '#5a3000', emissiveIntensity: 0.25 }), BROKEN.x - 0.1, Y0 + 0.012, BROKEN.z + 0.05);
+    BB.add(cached('zlpuddle', () => tint(new THREE.CircleGeometry(0.85, 18).rotateX(-Math.PI / 2).scale(1.3, 1, 0.8), '#e8a020')), pm('#ffffff', 0.12, { vertexColors: true, metalness: 0.1, emissive: '#5a3000', emissiveIntensity: 0.25 }), BROKEN.x - 0.1, Y0 + 0.018, BROKEN.z + 0.05);   // (FEET-66: over the street's new top, 1.4 cm)
     BB.add(crateGeo(true), C.VC, BROKEN.x + 0.35, Y0 + 0.16, BROKEN.z - 0.15, 0.3, 0.6, 1.2);
     BB.build();
     broken.visible = false;
@@ -249,8 +249,8 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
       for (let d = 0.6; d < len; d += 2) LF.add(cached('zlclamp', () => tint(new THREE.TorusGeometry(pipeR + 0.025, 0.022, 5, 10, Math.PI).rotateZ(0), '#4a4650')), C.VC, ax + (bx - ax) * d / len, Y0 + pipeR - 0.01, az + (bz - az) * d / len, 0, ry + Math.PI / 2, 0);
     }
     // fresh cobbles across the street (lighter than the old), two iron covers
-    LF.add(boxUV(bbox(1.1, 0.06, 7.3, 0.02, 1), 1.6), tm('cobble', { color: '#fff4ea', rough: 0.8 }), CROSS.x, Y0 + 0.035, 0);   // (AUDIT-FIX: its top 5 mm over the kerbs' tops, where it crosses them: level with them it flickered)
-    for (const z of [-2.2, 2.2]) LF.add(cached('zlcover', () => tint(cyl(0.38, 0.38, 0.03, 16), '#4a4650')), C.VC, CROSS.x, Y0 + 0.07, z);
+    LF.add(boxUV(bbox(1.1, 0.06, 7.3, 0.02, 1), 1.6), tm('cobble', { color: '#fff4ea', rough: 0.8 }), CROSS.x, Y0 - 0.005, 0);   // (AUDIT-FIX: its top 5 mm over the kerbs' tops, where it crosses them: level with them it flickered; FEET-66: the paving's tops lowered, the kerbs' to 2.1 cm, this one's to 2.5)
+    for (const z of [-2.2, 2.2]) LF.add(cached('zlcover', () => tint(cyl(0.38, 0.38, 0.03, 16), '#4a4650')), C.VC, CROSS.x, Y0 + 0.014, z);   // (FEET-66: its top 4 mm over the crossing's (2.5 cm), was 2 cm over its old top)
     // the junction at the depot fence: a teal box with a valve wheel and the project's violet stripe
     L.add(tint(bbox(0.6, 0.7, 0.46, 0.04, 1), TEAL), C.MVC, CROSS.x + 0.1, Y0 + 0.35, 8.55);
     L.add(cached('zlwheel', () => tint(new THREE.TorusGeometry(0.17, 0.025, 6, 16), '#b02a2a')), C.VC, CROSS.x + 0.1, Y0 + 0.82, 8.55, Math.PI / 2, 0, 0);

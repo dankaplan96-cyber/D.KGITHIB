@@ -1546,7 +1546,7 @@ export class Depth extends ChapterBase {
       k.add(rockGeometry(37 + i * 5), rockM, S.x + ox, (y0 + y1) / 2, S.z + oz, ry, { sx, sy: (y1 - y0) / 1.7, sz });
     }
     k.add(cyl(1.15, 1.25, 0.2, 14), MM.stone('#cfc6b8'), S.x, S.y - 0.1, S.z);
-    k.add(cyl(1.0, 1.0, 0.05, 14), MAT.flat('#f4f8fc', 0.9), S.x + 0.1, S.y + 0.02, S.z);
+    k.add(cyl(1.0, 1.0, 0.05, 14), MAT.flat('#f4f8fc', 0.9), S.x + 0.1, S.y - 0.01, S.z);   // (FEET-66: the snow 1.5 cm over the stone he stands on, was 4.5)
     P.add({ type: 'cyl', x: o.x + S.x, z: o.z + S.z, r: 1.15, top: S.y });
     // the ice arch: from the stack's shoulder up and over to the north bank, the rings frozen into its crown and its foot
     const pts = [new THREE.Vector3(S.x - 0.6, S.y + 0.2, S.z - 0.5), new THREE.Vector3(S.x - 0.4, S.y + 2.6, S.z - 1.8), new THREE.Vector3((S.x + foot.x) / 2, S.y + 3.0, (S.z + foot.z) / 2 + 0.6), new THREE.Vector3(foot.x, foot.y + 1.8, foot.z + 0.6), new THREE.Vector3(foot.x, foot.y - 0.3, foot.z)];

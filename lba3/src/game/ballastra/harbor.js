@@ -166,7 +166,7 @@ export function* buildBallastraSteps(scene, physics) {
   B.add(bbox(6, 1.8, 1.2, 0.04, 1.6), BM.wet(), 0, -1.6, CH.z0 - 0.6);
   // the pad: a stone platform, its glazed landing ring
   mass(PAD.x0, PAD.z0, PAD.x1, PAD.z1, PD, { paveM: tm('stone', { color: '#e8dcc2', rough: 0.88 }) });
-  B.add(cached('blpadring', () => cyl(6.4, 6.4, 0.04, 48, 0)), pm('#ffffff', 0.55, { map: padTex() }), PAD.cx, PD + 0.03, PAD.cz);
+  B.add(cached('blpadring', () => cyl(6.4, 6.4, 0.04, 48, 0)), pm('#ffffff', 0.55, { map: padTex() }), PAD.cx, PD + 0.009, PAD.cz);   // (FEET-66: its top 2.9 cm over the pad's floor, 4 mm over the paving's (2.5 cm); was 5)
   // the shortcut's pivot pier (a stone drum)
   B.add(cached('bldrum', () => lathe([[0.001, -2.6], [1.6, -2.6], [1.55, 0.5], [1.5, FL - 0.1], [1.62, FL - 0.1], [1.62, FL], [0.001, FL]], 20)), BM.stone(), SC.piv.x, 0, SC.piv.z);
   col({ type: 'cyl', x: SC.piv.x, z: SC.piv.z, r: 1.55, top: FL });
