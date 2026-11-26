@@ -115,7 +115,7 @@ export function buildTavCellarRoom(scene, physics) {
   B.ccol(7.1 * F, -0.4 * F, 0.2, SH + 1.0);
   // round lamps in niches along the back wall, stone pillars with white globes at the store's front corners
   for (const x of [-4.0 * F, 0.5 * F, 4.5 * F]) { k.add(rbox(0.6, 0.7, 0.12, 0.05), cap, x, 4.0, BZ + 0.06); k.add(sphere(0.16, 12, 8), MAT.glow('#fff4e0', '#ffd890', 1.1), x, 4.0, BZ + 0.12); B.light('#ffe8c8', 2.8, 8, x, 3.8, BZ + 0.6); }
-  for (const x of [SX1 + 0.05, W / 2 - 0.35]) { k.add(rbox(0.6, SH + 2.0, 0.6, 0.05), stone, x, (SH + 2.0) / 2, D / 2 - 0.3); k.add(sphere(0.26, 14, 10), MAT.glow('#fff8ee', '#ffe8c0', 1.0), x, SH + 2.25, D / 2 - 0.3); B.col(x, D / 2 - 0.3, 0.3, 0.3, SH + 2.3, { noStand: true }); }
+  for (const x of [SX1 + 0.05, W / 2 - 0.35]) { k.add(rbox(0.6, SH + 2.0, 0.6, 0.05), stone, x, (SH + 2.0) / 2, D / 2 - 0.29);   /* (FLICKER-142: 1 cm proud of the platform's face) */ k.add(sphere(0.26, 14, 10), MAT.glow('#fff8ee', '#ffe8c0', 1.0), x, SH + 2.25, D / 2 - 0.3); B.col(x, D / 2 - 0.3, 0.3, 0.3, SH + 2.3, { noStand: true }); }
   // twelve years on: the project's copper heat pipe along the back wall
   k.add(cyl(0.06, 0.06, W - 0.4, 10), MAT.copper(), 0, 4.6, BZ + 0.15, 0, { rz: Math.PI / 2 });
   for (const x of [-9, -3, 3, 9]) k.add(rbox(0.06, 0.2, 0.12, 0.01), MAT.iron(), x * F / 1.5, 4.6, BZ + 0.1);

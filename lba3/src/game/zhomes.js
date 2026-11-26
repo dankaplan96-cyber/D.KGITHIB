@@ -116,7 +116,7 @@ function pelleck(scene, physics) {
   k.at(0.2, 0, 0.4, 0, () => rug(k, 2.4, 1.7, ['#2f6f78', '#e8dcc0', '#7a3a6a', '#1f4a50', '#f2ead6'], 9));
   // the middle: the table with the tile samples, violet (none left) and blue (ordered)
   B.put(0.0, 0.6, 0, (kk) => table(kk, { w: 1.3, d: 0.85, pal: 'honey' }));
-  for (let i = 0; i < 6; i++) k.add(rbox(0.24, 0.02, 0.24, 0.004), MAT.paint(i < 2 ? '#7a4aa8' : '#3a7ac8', 0.35), -0.4 + i * 0.16, 0.79, 0.55 + (i % 2) * 0.12);
+  for (let i = 0; i < 6; i++) k.add(rbox(0.24, 0.02, 0.24, 0.004), MAT.paint(i < 2 ? '#7a4aa8' : '#3a7ac8', 0.35), -0.4 + i * 0.16, 0.79 + (i % 2) * 0.004, 0.55 + (i % 2) * 0.12);   // (FLICKER-142: every other one 4 mm up, on the one under it)
   k.add(rbox(0.24, 0.02, 0.24, 0.004), MAT.paint('#7a4aa8', 0.35), 0.45, 0.79, 0.85, 0, { rz: 0.0 });
   look(o, 0.0, 1.5, 'zh_pel_tiles');
   look(o, 0.95, BZ + 1.6, 'zh_pel_forms');

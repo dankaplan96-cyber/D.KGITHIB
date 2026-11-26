@@ -113,7 +113,7 @@ export function buildKcTunnel(scene, physics) {
   k.add(plane(1.0, 0.36), decal(stencil(['SHELTER'], { bg: '#e8c84a', ink: '#1a1410', size: 92, h: 160 })), SH, 2.42, -D / 2 + 0.03);
   B.col(SH, -D / 2 + 0.1, 0.6, 0.12, 2.2, { noStand: true });
   // the side niche: an arched recess, a stone step, the clover box on it
-  k.add(plane(1.1, 1.5), dark, NICHE, 0.95, -D / 2 + 0.005);
+  k.add(plane(1.1, 1.5), dark, NICHE, 0.95, -D / 2 + 0.012);   // (FLICKER-142: 1.2 cm off the wall, not 5 mm)
   k.add(rbox(1.4, 0.18, 0.2, 0.03), MAT.stone('sand', 1), NICHE, 1.78, -D / 2 + 0.1);
   for (const s of [-1, 1]) k.add(rbox(0.16, 1.7, 0.2, 0.03), MAT.stone('sand', 1), NICHE + s * 0.63, 0.85, -D / 2 + 0.1);
   B.put(NICHE, -D / 2 + 0.42, 0, () => { k.add(rbox(1.0, 0.24, 0.5, 0.03), MAT.stone('sand', 1), 0, 0.12, 0); return { hw: 0.5, hd: 0.25, top: 0.24 }; });
@@ -285,7 +285,7 @@ export function buildKcMill(scene, physics) {
   R.view = 9.5;
   // Baldino's first workbench along the back wall, the tool board over it
   B.put(-0.2, BZ + 0.45, 0, (kk) => workbench(kk, { w: 2.2, d: 0.7, h: 0.88 }));
-  k.at(-0.2, 1.3, BZ + 0.03, 0, () => toolBoard(k, 1.8, 0.8));
+  k.at(-0.2, 1.3, BZ + 0.07, 0, () => toolBoard(k, 1.8, 0.8));   // (FLICKER-142: in front of the dado rail, which ran through it)
   // on the bench: the self-buttering toaster (a box with slots and a little arm), the bicycle fan, the biscuit tin
   k.add(rbox(0.32, 0.22, 0.2, 0.03), MAT.paint('#c8c0b0', 0.4), -0.9, 1.0, BZ + 0.45);
   for (const s of [-1, 1]) k.add(rbox(0.2, 0.02, 0.03, 0.005), MAT.flat('#1a1a1a'), -0.9, 1.115, BZ + 0.45 + s * 0.05);

@@ -130,7 +130,7 @@ export function buildPumpRoom(scene, physics) {
   k.add(torus(0.24, 0.04, 6, 16), MAT.paint('#4a3a2a', 0.8), LX + 0.14, 1.5, 0.9, Math.PI / 2);
   // the wall diagram over the pipes' way in
   k.add(rbox(2.16, 1.4, 0.05, 0.02), MAT.wood('dark'), -3.6, 2.05, BZ + 0.03);
-  k.add(plane(2.0, 1.25), MAT.map(diagramTex()), -3.6, 2.05, BZ + 0.062);
+  k.add(plane(2.0, 1.25), MAT.map(diagramTex()), -3.6, 2.05, BZ + 0.067);   // (FLICKER-142: 1.2 cm off its board, not 7 mm)
 
   // ---- three pipes out of the back wall: each a riser, an elbow and a run east along the wall, behind the pier
   const PZ = BZ + 0.42, RUN1 = 5.25;
@@ -181,7 +181,7 @@ export function buildPumpRoom(scene, physics) {
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.06, 10), iron); hub.rotation.x = Math.PI / 2; piv.add(hub);
     // the stamped tag on the pipe's leg under it, in the diagram's words
     k.add(rbox(0.36, 0.13, 0.02, 0.01), brass, x, 0.86, PZ + r + 0.012);
-    k.add(plane(0.32, 0.1), MAT.map(signTex([tag], { bg: '#c9a94e', ink: '#2a1a10', w: 256, h: 80, size: 46 })), x, 0.86, PZ + r + 0.024);
+    k.add(plane(0.32, 0.1), MAT.map(signTex([tag], { bg: '#c9a94e', ink: '#2a1a10', w: 256, h: 80, size: 46 })), x, 0.86, PZ + r + 0.034);   // (FLICKER-142: 1.2 cm off its plate, not 2 mm)
     B.ccol(x, PZ, 0.2, 1.4, { noStand: true });
     // (his hand on the wheel's rim at its right, at the hub's height; the wheel 0.4 m across, to read from the room camera)
     const S = { a: 0, to: 0, k: 6 }; cockSpin.push([piv, S]);

@@ -150,7 +150,10 @@ function railing(B, k, pts, y, { rusty = false, h = 0.95 } = {}) {
     }
     B.col((ax + bx) / 2, (az + bz) / 2, Math.abs(ux) * L / 2 + 0.08, Math.abs(uz) * L / 2 + 0.08, y + 1.3, { seeThrough: true });
   }
-  for (const [px, pz] of pts) { k.add(rbox(0.12, h + 0.08, 0.12, 0.02), m, px, y + (h + 0.08) / 2, pz); k.add(sphere(0.06, 8, 6), m, px, y + h + 0.12, pz); }
+  // (FLICKER-142: one post where two railings meet, or a polyline comes back to a point: two in one place flickered)
+  const seen = (B._railPosts ??= []);
+  const posts = pts.filter(([px, pz]) => { if (seen.some(([qx, qy, qz]) => Math.hypot(px - qx, pz - qz) < 0.05 && Math.abs(y - qy) < 0.05)) return false; seen.push([px, y, pz]); return true; });
+  for (const [px, pz] of posts) { k.add(rbox(0.12, h + 0.08, 0.12, 0.02), m, px, y + (h + 0.08) / 2, pz); k.add(sphere(0.06, 8, 6), m, px, y + h + 0.12, pz); }
 }
 
 // ------------------------------------------------------------------ the hall (scene 17)
@@ -207,10 +210,12 @@ function buildHall(scene, physics) {
   R.updaters.push((dt, t) => { wm.map.offset.set(t * 0.012, t * 0.007); });
 
   // ---- stone masses: a block from under the water up to `top`, paved on top with a coping lip round it
+  let massN = 0;
   const mass = (x0, z0, x1, z1, top, { pave = true, col = true, lip = true, stair = false } = {}) => {
     const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, h = top - 0.1 - BASE;
     k.add(new THREE.BoxGeometry(w, h, d), rubbleM(), cx, BASE + h / 2, cz);
-    if (lip) k.add(rbox(w + 0.08, 0.12, d + 0.08, 0.035), capM(), cx, top - 0.07, cz);
+    // (FLICKER-142: neighbouring masses' lips 4 mm apart in height: where they overlap their tops lay in one plane)
+    if (lip) k.add(rbox(w + 0.08, 0.12, d + 0.08, 0.035), capM(), cx, top - 0.07 + (massN++ % 3) * 0.004, cz);
     if (pave) k.add(new THREE.BoxGeometry(w - 0.06, 0.04, d - 0.06), paveM(), cx, top - 0.005, cz);
     if (col) B.col(cx, cz, w / 2, d / 2, top, stair ? { stair: true } : {});
   };
@@ -263,7 +268,7 @@ function buildHall(scene, physics) {
       wallBox(a.x - a.w / 2, a.x + a.w / 2, Z0 - T, Z0, a.h, H);
       x = a.x + a.w / 2;
     }
-    wallBox(x, X1 + T, Z0 - T, Z0, BASE, H);
+    wallBox(x, X1 + T - 0.01, Z0 - T, Z0, BASE, H);   // (FLICKER-142: 1 cm short of the east rim's outer face, which its end lay in)
     for (const a of ARCHES) {
       k.add(torus(a.w / 2 + 0.06, 0.11, 5, 16, Math.PI), capM(), a.x, a.h - a.w / 2 + 0.05, Z0 + 0.04);
       for (const s of [-1, 1]) k.add(rbox(0.22, a.h - a.w / 2 + 0.05, 0.16, 0.03), capM(), a.x + s * (a.w / 2 + 0.06), (a.h - a.w / 2 + 0.05) / 2, Z0 + 0.04);
@@ -282,7 +287,7 @@ function buildHall(scene, physics) {
     wallBox(X0 - T, X0, g0, g1, GATE.h, H);
     wallBox(X0 - T, X0, g1, w0, BASE, H);
     wallBox(X0 - T, X0, w0, w1, WEST.h, H);
-    wallBox(X0 - T, X0, w1, Z1 + T, BASE, H);
+    wallBox(X0 - T, X0, w1, Z1 + T - 0.01, BASE, H);   // (FLICKER-142: 1 cm short of the south rim's outer face)
     // the gate's arch and jambs; the passage behind it (its floor, its sides, the dark at its end)
     k.add(torus(GATE.w / 2 + 0.06, 0.11, 5, 16, Math.PI), capM(), X0 + 0.04, GATE.h - GATE.w / 2 + 0.05, GATE.z, Math.PI / 2);
     for (const s of [-1, 1]) k.add(rbox(0.16, GATE.h - GATE.w / 2 + 0.05, 0.22, 0.03), capM(), X0 + 0.04, (GATE.h - GATE.w / 2 + 0.05) / 2, GATE.z + s * (GATE.w / 2 + 0.06));
@@ -316,7 +321,7 @@ function buildHall(scene, physics) {
   k.add(rbox(W + T, 0.16, 0.18, 0.04), capM(), 0, 3.4, Z0 + 0.09);
   k.add(rbox(0.18, 0.16, D + T, 0.04), capM(), X0 + 0.09, 3.4, 0);
   k.add(rbox(W + 2 * T + 0.1, 0.2, T + 0.14, 0.05), capM(), 0, H + 0.08, Z0 - T / 2);
-  k.add(rbox(T + 0.14, 0.2, D + 2 * T + 0.1, 0.05), capM(), X0 - T / 2, H + 0.08, 0);
+  k.add(rbox(T + 0.14, 0.2, D + 2 * T + 0.1, 0.05), capM(), X0 - T / 2, H + 0.086, 0);   // (FLICKER-142: 6 mm over the north cap where they cross)
   // the corner pillars with their gargoyles (the far corners tall, the near ones short)
   const garg = gargoyleGeo();
   const corner = (x, z, top, face) => {
