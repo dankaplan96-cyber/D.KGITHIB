@@ -1,0 +1,25 @@
+{
+ "app-update.yml in resources": false,
+ "fullscreen at first launch": true,
+ "title version text": "v0.50.0 (build 725) · Updated 24.11.2026 21:02",
+ "devtools open after Ctrl+Shift+I": false,
+ "fullscreen after F11": true,
+ "alt-tab: before / away / back (state, audio, focus)": [
+  [
+   "loading",
+   "running"
+  ],
+  [
+   "loading",
+   "running",
+   true
+  ],
+  [
+   "loading",
+   "running",
+   true
+  ]
+ ],
+ "fullscreen at relaunch after leaving it": true,
+ "prefs file": []
+}

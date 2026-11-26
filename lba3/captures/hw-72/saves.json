@@ -1,0 +1,25 @@
+{
+ "before saving": {
+  "room": "house",
+  "x": 999.23,
+  "z": -1.17,
+  "state": "play"
+ },
+ "pause buttons": [
+  "resume:Resume",
+  "journal:Journal",
+  "savegame:Save Game",
+  "settings:Settings",
+  "controls:Controls",
+  "quit:Save & Quit"
+ ],
+ "buttons after save & quit": [],
+ "Quit Game closed the app": false,
+ "Continue offered after relaunch": true,
+ "after Continue": {
+  "room": "house",
+  "x": 999.23,
+  "z": -1.17,
+  "state": "play"
+ }
+}
