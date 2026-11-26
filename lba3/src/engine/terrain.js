@@ -38,7 +38,8 @@ const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVary
 // LAWN-EDGES-2 (P135, ?lawnedge=new; off by default): the grass/soil split cut per pixel by a per-vertex signed distance
 // to the lawn's edge (the `lawn` attribute, Terrain._lawnEdges), as LAWN-EDGES cuts the paving. Off: no attribute, no
 // work, the shader's text as before.
-export const LAWN_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('lawnedge') === 'new'; } catch { return false; } })();
+// (LAWN-EDGES-2, the user's pick 26.11: smooth grass/soil edges are the default; ?lawnedge=old brings back the stepped edge)
+export const LAWN_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('lawnedge') !== 'old'; } catch { return true; } })();
 const LAWN_WOB = 0.1;   // (m: the edge's wobble by the grass tile's brightness, so it reads painted, not ruled)
 // the grass/soil split: the old one (the vertex shares' ratio re-split at 0.5 on a short ramp: across a ~1 m triangle,
 // the grid's saw-tooth) or LAWN-EDGES-2's cut at the lawn distance 0 (lk: the soil's share, also for EDGE_CUT below)
