@@ -156,6 +156,21 @@ In node's default tiers, scavenges for 23 000 solves fell from 679 to 25. In the
 (builtin vs patch, Medium, orbit) gave an animation p50 of 3.0 → 2.5 ms and a frame p50 of 19.3 → 15.7 ms. That
 comparison is indicative only, because physics call counts differed between the sides.
 
+### 3.2b The sweep (the same fault elsewhere)
+
+- **V8's deopt trace.** `deopt.mjs`: each route warmed for 300 frames, then 600 frames traced.
+  - Street and interior, after the change: no function bails repeatedly at one place. The most is 5 times in 600
+    frames: `shownTreeF` at one offset (lazy deopts as field types generalise), then `get`, `acArmPoints` (the arm
+    profiles' background job), `play`, `hide`, `findInteractable` at 3–4 each. These are ordinary warm-up and
+    polymorphism, not a loop like `acDepth`'s.
+  - The combat and arrival routes were still being traced at hand-back: untested.
+- **`Math.round` feeding an index.** A grep of `src` for `[Math.round(` and `= Math.round(` used as an index found no
+  other typed-array index.
+  - `walknav.js` `cellOf` and its planner use rounded cells as Map keys through `K(ix, iz)`, where −0 and +0 give
+    the same key.
+  - The others are timeline stamps and one-off builds.
+- **Math.hypot.** Every call in the game, and in three.js (which uses none), goes through `fastmath.js`.
+
 ### 3.3 Not changed (looked at, left)
 
 - **Draw count.** It is the largest block. The remaining unbatched draws are the poodle's 7 parts (14 draws: moving
@@ -314,7 +329,31 @@ Please measure on the UHD 620 laptop, Chrome, with this branch's build:
 
 ## 8. Tests (once each, automated runtime only)
 
-See the report's list; filled in below as run.
+- `node tests/autoquality.mjs`: **97 / 97 PASS**.
+  - New checks: CPU-eco is Medium-lean + anim deep, shadows on; no profile CPU pressure can reach turns the shadows
+    off.
+  - A CPU-bound machine goes down the CPU side only.
+  - The ladder's indices and sides: up from Low is Medium-lean; GPU pressure steps over CPU-eco.
+  - A cached `loweco` reads as CPU-eco; a cached v4 Low is index 4.
+  - The table in §5 is its output.
+- `SERVE=1 node tests/fps60-auto.mjs`: **6 / 6 PASS**.
+  - B: GPU-bound, High → Medium → Medium-lean → Low → Low 75 %, CPU-eco stepped over; 57.4 fps held, as in P137.
+  - C: CPU-bound, High → Medium → Medium-lean → CPU-eco, then back to Medium-lean (P95's revisit). Held with the
+    shadows and 100 % resolution, no limit.
+  - D: 120 Hz, as in P137.
+- `BOOT_TIMEOUT=900000 SERVE=1 node tests/autoquality-game.mjs`: **30 / 30 PASS**. The new check: CPU-eco renders
+  exactly as Medium-lean (every renderer setting and the same draw calls), anim deep on, tier Medium. A v4 cache's
+  Low loads as Low (index 4).
+- `BOOT_TIMEOUT=900000 SERVE=1 node tests/walkers.mjs`: **37 / 37 PASS**. Its own cost note: ten residents in full
+  1.126 ms a frame; at the quay, most far off, 0.265 ms a frame.
+- `SERVE=1 node tests/worldfit.mjs`: **PASS** (1 functional, 8 visual).
+- `BOOT_TIMEOUT=900000 SERVE=1 node tests/opening-tutorial.mjs`: **48 / 48 PASS** (14 captures written, not judged;
+  restored after).
+- `BOOT_TIMEOUT=900000 SERVE=1 node tests/arm-clear.mjs` (covers `rig.js`'s acDepth): **PASS**. 79 bodies × 26 poses; no
+  hand or forearm buried more than 3 cm; worst 2.4 cm (doran / setDown).
+- `node tests/dialogue-check.mjs`: PASS (6640 / 6640).
+- The artifact bundle (`tools/bundle-artifact.mjs`, built once to a scratch file) keeps `fastmath.js`, evaluated
+  right after `seed.js`, before every other module.
 
 ## 9. Untested / uncertain
 
