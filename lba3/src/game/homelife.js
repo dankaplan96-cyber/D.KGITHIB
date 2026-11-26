@@ -103,8 +103,9 @@ export function dressHomeLife(B, R) {
       const hub = new THREE.Mesh(cyl(0.02, 0.02, 0.07, 8), MAT.brass()); hub.rotation.x = Math.PI / 2; wheel.add(hub);
       k.add(lathe([[0.001, 0], [0.04, 0], [0.04, 0.06], [0.001, 0.06]], 10), MAT.flat('#f2ecdc', 0.5), 0.55, 0.78, -0.12);
       // plans on the wall above: a boat in side view with a paddle wheel
-      k.add(plane(0.5, 0.36), MAT.map(noteTex(['PADDLE BOAT', 'v3 (faster)', 'beat Lulu!']), 0.9), -0.25, 1.45, -0.3);
-      k.add(plane(0.36, 0.28), MAT.map(noteTex(['rudder:', 'needs pin', '(pliers?)']), 0.9), 0.3, 1.5, -0.3);
+      // (FLICKER-142: 2 cm off the wall's star paper, which hangs 12 mm out: they were 8 mm apart and flickered)
+      k.add(plane(0.5, 0.36), MAT.map(noteTex(['PADDLE BOAT', 'v3 (faster)', 'beat Lulu!']), 0.9), -0.25, 1.45, -0.29);
+      k.add(plane(0.36, 0.28), MAT.map(noteTex(['rudder:', 'needs pin', '(pliers?)']), 0.9), 0.3, 1.5, -0.29);
     });
     L.bench = B.world(x + 0.8, z);
   }

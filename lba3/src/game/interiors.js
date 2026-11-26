@@ -115,8 +115,11 @@ export class RoomBuilder {
     // the floor to stand on (around a stairwell, whose steps the room adds)
     for (const [x0, z0, x1, z1] of slabs(-W / 2, -D / 2, W / 2, D / 2)) this.col(cx0 + (x0 + x1) / 2, cz0 + (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, 0, { seeThrough: true, bottom: -1 });
     // far walls
-    k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t, -1));
-    k.at(-W / 2, 0, D / 2 + t, Math.PI / 2, () => this.wallRun(D + t, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - p.at })), t, 0, 1));
+    // (FLICKER-142: each far wall's near end stops 1 cm short of the rim's outer face: the end face and the rim's face
+    //  stood in one plane, two materials over the rim's height, and flickered at the room camera's 90 m)
+    const E = 0.01;
+    k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t - E, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t - E, -1));
+    k.at(-W / 2, 0, D / 2 + t - E, Math.PI / 2, () => this.wallRun(D + t - E, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - E - p.at })), t - E, 0, 1));
     // near rims
     const rh = o.rimH ?? 0.45, rm = o.rimMat || o.slab;
     if (rh > 0) {
@@ -151,7 +154,8 @@ export class RoomBuilder {
       if (rail) for (const s of [-1, 1]) k.add(rbox(alongX ? l : 0.05, 0.14, alongX ? 0.05 : l, 0.015), rail, cx + (alongX ? 0 : s * (t / 2 + 0.02)), 0.07, cz + (alongX ? s * (t / 2 + 0.02) : 0));
       k.add(rbox(sx + 0.1, 0.1, sz + 0.1, 0.045), cap, cx, h + 0.04, cz);
       // rounded ends where the wall stops (a doorway or a free end)
-      for (const e of [s0, s1]) k.add(cyl(t / 2 + 0.05, t / 2 + 0.05, h + 0.09, 14), cap, x0 + ux * e, (h + 0.09) / 2, z0 + uz * e);
+      // (FLICKER-142: their tops 1 cm under the cap's: the two lay in one plane, the grain crossing, and flickered)
+      for (const e of [s0, s1]) k.add(cyl(t / 2 + 0.05, t / 2 + 0.05, h + 0.08, 14), cap, x0 + ux * e, (h + 0.08) / 2, z0 + uz * e);
       this.col(cx, cz, sx / 2, sz / 2, h + 0.1);
     };
     for (const d of ds) { piece(a, d.at - d.w / 2); a = d.at + d.w / 2; }
@@ -404,7 +408,9 @@ function buildHouse(scene, physics) {
   const stX = -3.35;
   k.at(stX, 0, BZ + 0.36, 0, () => P.stove(k));
   B.col(stX, BZ + 0.36, 0.66, 0.38, 0.9, { noStand: true });
-  k.add(rbox(1.5, 0.75, 0.03, 0.01), MAT.tiles('#3a78b8', '#f2ecdc', '#d8d0c0', true, 8), stX, 1.27, BZ + 0.015);
+  // (FLICKER-142, the user: the wall behind Zoé flickered: the tiles' face lay in the wainscot's face, BZ + 0.03, over the
+  //  wainscot's top 15 cm. Now 1.5 cm in front of it, still behind the dado rail)
+  k.add(rbox(1.5, 0.75, 0.03, 0.01), MAT.tiles('#3a78b8', '#f2ecdc', '#d8d0c0', true, 8), stX, 1.27, BZ + 0.03);
   k.add(rbox(1.56, 0.05, 0.06, 0.015), rail, stX, 1.66, BZ + 0.03);
   k.add(pipe([[stX - 0.4, 0.9, BZ + 0.18], [stX - 0.4, 2.35, BZ + 0.18], [stX - 0.4, 2.55, BZ - 0.1]], 0.075, 0.2, 12), MAT.iron(), 0, 0, 0);
   k.add(torus(0.085, 0.015, 5, 14), MAT.iron(), stX - 0.4, 1.6, BZ + 0.18, 0, { rx: Math.PI / 2 });
@@ -702,8 +708,9 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
     const tileM = MAT.tiles('#e9e2d2', '#d8cdb6', '#8a7a62', true, 6), white = MAT.flat('#f4f2ec', 0.3), brass = MAT.brass();
     const ix0 = X0 + 0.11, ix1 = X1 - 0.11, iz0 = Z0 + 0.11;
     k.add(plane(ix1 - ix0, ZS - iz0), tileM, (ix0 + ix1) / 2, 0.012, (iz0 + ZS) / 2, 0, { rx: -Math.PI / 2 });
-    k.add(plane(ZS - iz0, 1.15), tileM, ix0 + 0.002, 0.575, (iz0 + ZS) / 2, Math.PI / 2);                     // tiles to the low walls' height
-    k.add(plane(DL - ix0, 1.15), tileM, (ix0 + DL) / 2, 0.575, iz0 + 0.002, 0);
+    // (FLICKER-142: 1 cm off the walls, not 2 mm: they flickered with the wallpaper; still behind the wainscot, 2 cm out)
+    k.add(plane(ZS - iz0, 1.15), tileM, ix0 + 0.01, 0.575, (iz0 + ZS) / 2, Math.PI / 2);                     // tiles to the low walls' height
+    k.add(plane(DL - ix0, 1.15), tileM, (ix0 + DL) / 2, 0.575, iz0 + 0.01, 0);
     // the door: a wooden leaf as high as the walls, on a hinge at the doorway's east side, swinging in
     const pivot = new THREE.Group(); pivot.position.set(DR, 0, Z0); B.group.add(pivot);
     const leafLo = new THREE.Mesh(rbox(DR - DL - 0.04, 1.15, 0.05, 0.01), MAT.planks('honey')); leafLo.position.set(-(DR - DL) / 2, 0.575, 0); pivot.add(leafLo);
@@ -729,7 +736,7 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
       k.add(cyl(0.02, 0.02, 0.18, 8), brass, 0, 0.95, -0.15);
       k.add(cyl(0.015, 0.015, 0.12, 8), brass, 0, 1.03, -0.09, 0, { rx: Math.PI / 2 });
       k.add(rbox(0.06, 0.62, 0.05, 0.01), woodD, 0, 1.2, -0.2);                                        // the mirror's stand
-      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.017); });
+      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.025); });   // (FLICKER-142: the glass 1 cm off its board, not 2 mm)
     });
     B.col(ix0 + 0.25, 9.5, 0.24, 0.42, 0.9, { noStand: true });
     // the toilet against the north wall, facing into the room: its pan, a wooden seat, the lid up, the cistern
