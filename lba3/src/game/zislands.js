@@ -1544,6 +1544,10 @@ function buildIsland0(scene, physics, name, L, at) {
     else if (slope > 0.7) c.lerp(COL.rock, smoothstep(0.7, 1.4, slope));
     if (h > 12) c.lerp(COL.rockHi, smoothstep(12, 26, h) * 0.5);
     if (h < 0.8) c.lerp(COL.dust, smoothstep(0.8, 0.1, h) * 0.6);
+    // (P141, PATHS-140B: a point the splat draws as rock (its slope's rock over a half: smoothstep(0.65, 1.2)) takes the
+    //  rock's colour, not the turf's or the shore's sand tint: the colour's own ramp (0.7–1.4) was far softer than the
+    //  rock's cut, so the rock at the rims and on the banks read warm or green. With the traced edge only)
+    if (ROCK_EDGE && !PAL && !S.turfRock && h >= -0.5) { const rkS = smoothstep(0.65, 1.2, slope); if (rkS > 0.4) c.lerp(COL.rock, smoothstep(0.4, 0.6, rkS)); }
     const k = atData(x, z);
     if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * (PAL ? PAL.pathMix * smoothstep(0.95, 0.75, slope) : 0.5));   // (#17b: no earth tint on the rock of a slope: it read pink)
     if (slope < 0.7 && paved(x, z)) c.copy(COL.pave).lerp(COL.turf, 0.15);
