@@ -1,5 +1,7 @@
 # Next session — where we stand and what comes next (written 17.11.2026, updated 18.11)
 
+> **Publishing cadence (the user, 26.11):** publish a new version only after 10 small fixes or 5 big ones have been approved, or when the user asks. Don't publish after every approval (it wastes tokens). Keep a running count in OPEN-TASKS.he.md.
+
 > **Start here: `docs/lba-maturity/HANDOFF.md`** (25.11, after v170; updated 26.11 after v171): the ordered handoff (state, next tasks, the local agent, how we work). The worker preamble is `docs/lba-maturity/AGENT-PREAMBLE.md`.
 - **RELEASE TARGET (the user, 24.11): full public release 31.5.2027, 30 years after LBA2.** Content complete 31.12.2026, content freeze 15.3.2027, 1.0 RC 1.5.2027, final freeze 17.5.2027. The private-tester exe is a step on the way. See RELEASE-2027.he.md.
 

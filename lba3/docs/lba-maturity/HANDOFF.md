@@ -125,6 +125,7 @@ Not done in v170, recorded for later (none blocks):
     3. `git worktree remove --force --force …`, `git worktree prune`, then `git branch -D`.
     4. Run the covering suite once on the merged branch.
     5. Show the sheet, and the user picks.
+- **Publishing cadence (the user, 26.11):** only after 10 approved small fixes or 5 big ones, or when the user asks.
 - **Publishing:**
   1. Make a scratch worktree of the approved commit, and symlink `tools/node_modules` from the main checkout.
   2. Run `node tools/he-bundle.mjs`, `sh tools/stamp-build.sh`, `python3 tools/artifact-page.py <S>/vNNN-index.html`
