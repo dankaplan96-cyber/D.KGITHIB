@@ -202,9 +202,31 @@ simulation / submission), not to this ladder. Handed to the coordinator.
   - 75 Hz never 37.5.
 
   The P95 / GPU-TIMER-KA tables print before and after with `BEFORE=<old autoquality.js>`.
-- `tests/fps60-auto.mjs` (new, the real `Game.loop`, synthetic display, modelled frame cost, the governor on with
-  `?autoq`; RESULTS-B-D)
-- `tests/fps30.mjs` and `tests/autoquality-game.mjs` once: RESULTS-OTHER
+- `SERVE=1 node tests/fps60-auto.mjs` (new): **6 / 6 PASS**, the final run, all parts. It uses the real `Game.loop`, a
+  synthetic display and a modelled frame cost, with the governor on (`?autoq`). The cost model is pipelined: the next
+  callback comes on the refresh where the accumulated cost ends. Auto's clock follows the display.
+  - **A (saves).** As in §3.
+  - **B (59.9 Hz, GPU 60 ms at High).** The steps were High → Medium → Medium-lean → Low → Low 75 %, each at a pause,
+    with Low-eco stepped over. Held at Low 75 %: 57.4 fps, 20 of 459 intervals over 20 ms (4.4 %). There was never a
+    limit; the Frame Rate stayed Unlimited (also as stored), and the even pace stayed off.
+  - **C (59.9 Hz, CPU 26 ms at High).** The steps were High → Medium → Medium-lean → Low-eco, with no resolution rung.
+    Held, no limit. This model's CPU reaches 60 there (26 × 0.63 = 16.4 ms). A real street whose CPU work stays past
+    16.7 ms does not (§4).
+  - **D (120 Hz, GPU 45 ms at High).** The even pace took every 2nd refresh (60) at once. Every 3rd (40) was refused
+    and noted, so it was never deeper than 2: never 30 (before P137 this game was paced at 30). Auto went
+    High → Medium → Medium-lean → Low and held 60.0 fps with no interval over 20 ms. Its first runs found the two
+    refresh-meter faults in §2.2.
+- `GAME_URL=… node tests/fps30.mjs` once (http.server; it does not route through `SERVE`): **59 / 60**.
+  - A10 (30 / 60 / Unlimited on all ten rates, real loop), A11 / A11b (P101's even 50 on 100 Hz, and released) and
+    parts B–E and G PASS.
+  - F1 FAIL. F1 is this headless browser's own frame clock with the draw stubbed: 12 of 113 intervals slow at 30.
+    Unlimited and 60 showed 20 slow intervals each in the same part, at load average ~17 on the shared machine. That is
+    the machine's stalls, not the scheduler. The 30 limit's path is not changed by P137. It was not run again (FEWER
+    TESTS).
+- `BOOT_TIMEOUT=900000 SERVE=1 node tests/autoquality-game.mjs`: **29 / 29 PASS**. This covers the Settings line with
+  the named profile, the profiles in the renderer, the commit points, power changes and the cache. An earlier attempt
+  timed out at section 7's reopen under load: the known harness issue in KNOWN-FAILING, which BOOT_TIMEOUT answers.
+- `node tests/dialogue-check.mjs` PASS (6640 / 6640 keys in Hebrew).
 
 ## 6. The picture sheet
 
@@ -212,7 +234,18 @@ simulation / submission), not to this ladder. Handed to the coordinator.
 benchmark's `street` route start, play camera, time held), with a 2× inset of the middle of the view. Made with
 `SERVE=1 ONLY=S node tests/fps60-auto.mjs` and `python3 tools/fps60-sheet.py`. It is SwiftShader at dPR 1, 960×540.
 On the laptop every profile is drawn at 1.25× this pixel ratio. The far-people knobs (Low-eco: half-rate far
-animation, tiny far parts) do not show in a still. SHEET-NOTES
+animation, tiny far parts) do not show in a still, so Low-eco looks like Low.
+
+What the sheet shows (inspected, crops compared at 1:1):
+
+- **High → Medium-lean.** The differences are hard to see at this size: MSAA, bloom and lamps change, and the shadows
+  stay.
+- **Low.** The sun's shadows are gone: the stall's shadow on the paving and the lamp post's shadow vanish, so objects
+  lose their contact with the ground. The picture is a little softer at 85 %.
+- **Low 75 % and Low 65 %.** Progressively softer. At 65 % the stall's fruit, the paving joints and the people's faces
+  are visibly blurred, though still readable; the output pass's sharpening keeps edges from going mushy.
+
+At every step the silhouettes, the HUD and the objective text stay sharp (HTML, not scaled).
 
 ## 7. For order 76 (the laptop)
 
