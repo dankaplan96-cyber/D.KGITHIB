@@ -47,7 +47,7 @@ numbers with care.
 | The bolt | 9 m/s straight at where he stands when it fires, 1 damage; 0.67 s to cover 6 m; hits within 0.55 m of him |
 | Accuracy at 6 m | a standing or throwing Twinsen: every bolt hits (no spread, no lead); walking across its line at Normal's 2.0 m/s from the moment it fires: 1.3 m off by arrival, a miss |
 | The tell, seen | a red aim line **1.6–1.8 px wide** at 1366×768 from the play camera (11.5 m), 0.63 opacity at 80 % of the wind-up (*automated*, `captures/fights58/sheet.png`); the arms raise; a 7–10 cm spark under the drone; the eye brightens |
-| The tell, heard | `zap` as the wind-up starts — **the same sound as the shot itself**, so the ear can't tell "aiming" from "fired" |
+| The tell, heard | `zap` as the wind-up starts — **the same sound as the shot itself**, so the ear can't tell "aiming" from "fired" (26.11: its own charge sound since, DRONE-CHARGE-SOUND.md) |
 | Cover | the yards have it: the Citadel yard's 2 m crate stack beside the valve, the Zeelich yard's containers and shed; a crate stack under 1.6 m is seen over |
 
 A person can dodge a bolt (the dodge's invulnerable hop, or walking across its line during the wind-up), but only if
