@@ -157,7 +157,9 @@ const GRID_STREETS = [
   // CITADEL-ORIG-2 (the user, 16.11: "excellent" to the grid past the square): LBA2's east street runs at x −31 from the
   // square's block to the cross street, where Pippa's shop and Fosse's office stand now. They stay: the street runs
   // 3.5 m west of LBA2's, before their west-facing doors, from the square's paved ring down to the cross street
-  [-35.0, 3.6, -35.0, 31.3, 3.0],
+  // (P140: its rounded head stopped short of the ring's curve, a bite of dirt between the ring, the street and the
+  //  corner house: it starts inside the ring now, square, its corners under the ring's paving)
+  [-35.0, 0.0, -35.0, 31.3, 3.0, { ea: 'flush' }],
   // P136 (the user, 26.11, a photo by the HARBOUR · SPACEPORT · LIGHTHOUSE signpost: "the paths are still not fixed"): the
   // south lane (town.js STREETS) left the square's ring as a kerbed stub and ended square in the dirt by the signpost,
   // 4–5 m short of the east street's head, open dirt between. The patch between the ring, the lane and the east street
@@ -171,12 +173,15 @@ const GRID_STREETS = [
   // Pippa's street by her shop's north wall. (LBA2's second cross street, 3.5 m further north along the terraces'
   // foot, is left out: our ground there rises and falls 3.1–4.6 m along its line, the first shelf's slope; paving it
   // read as a paved hillside)
-  [-52.0, -15.8, -32.5, -15.8, 3.0],
+  // (P140: its west end ran to the block's west street only, a 4.7 × 2.8 m bay of dirt left between the corner, the
+  //  street to the harbour below it and the house's east wall: it runs on to that wall now)
+  [-58.2, -15.8, -32.5, -15.8, 3.0, { ea: 'flush' }],
   // (P136: P135 listed the dirt between the north street and the ring as planted beds and kept them; from the player's
   //  view they are two pavings that almost meet, 0.8–3.5 m of dirt between: paved, west of the climb's ramp from the
   //  block's west street, east of it to the block's east street, both ends flush)
-  [-51.0, -11.4, -41.0, -11.4, 6.0],
-  [-39.0, -11.8, -33.0, -11.8, 5.2],
+  // (P140: the two ended 2 m apart under the climb's paving, flush; a bare fleck was left between them: both run to x −40)
+  [-51.0, -11.4, -40.0, -11.4, 6.0],
+  [-40.0, -11.8, -33.0, -11.8, 5.2],
   [-52.0, -15.8, -52.0, 2.9, 3.0],
   [-32.5, -15.8, -32.5, -4.0, 3.0],
   // FLAT-TOWN: the street down to the harbour's end (town.js STREETS, x −64) on to the foot of the promenade's flight
@@ -209,7 +214,7 @@ export function gridPaveDist(x, z) {
 // for the map, the probes and the scatter filters. (gridPaveDist above stays as it was: the scatter's filters use it.)
 // The grid streets as rectangles: an end that stops on another street's edge or inside it is cut flush there, one near
 // other paving keeps its round cap (it meets the square's ring or a lane), a free end is square (LBA2's dead ends).
-const PLOT_ZONE = { x0: -76, x1: -20, z0: -17, z1: 62 };   // (the town's plots: the grid south of the square, the square's block)
+const PLOT_ZONE = { x0: -76, x1: -20, z0: -20, z1: 62 };   // (P140: z0 −17 → −20: the north street's north side has its band and kerb where it is level; the band east of the block's east street ended in a diagonal at −17)   // (the town's plots: the grid south of the square, the square's block)
 const GRID_RECTS = GRID_STREETS.map(([x0, z0, x1, z1, w, opt], i) => {
   const len = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / len, uz = (z1 - z0) / len, hw = w / 2;
   const other = (x, z) => {
@@ -217,7 +222,16 @@ const GRID_RECTS = GRID_STREETS.map(([x0, z0, x1, z1, w, opt], i) => {
     GRID_STREETS.forEach(([a, b, c, e, ww], j) => { if (j !== i) d = Math.min(d, distToSegment(x, z, a, b, c, e) - ww / 2); });
     return Math.min(d, streetDist(x, z), bugFootDist(x, z), Math.hypot(x - POI.village.x, z - POI.village.z) - 9.45);
   };
-  const end = (x, z) => { const o = other(x, z); return o <= 0.01 ? 'flush' : o < hw + 0.3 ? 'round' : 'square'; };
+  // (P140, the user: "still not complete!!!" — the ragged corner north-east of the square: two streets that end at the
+  //  same point (an L corner: the north street and the block's west and east streets) were each cut flush on the other's
+  //  middle line, so the corner's outer quadrant was never paved, a notch the shader drew as a ragged diagonal. Such
+  //  ends are square now: each runs on its half-width, and the two close the corner)
+  const corner = (x, z) => GRID_STREETS.some(([a, b, c, e], j) => {
+    if (j === i) return false;
+    const L = Math.hypot(c - a, e - b), dot = Math.abs(((c - a) * ux + (e - b) * uz) / L);
+    return dot < 0.5 && (Math.hypot(a - x, b - z) < 0.05 || Math.hypot(c - x, e - z) < 0.05);
+  });
+  const end = (x, z) => { if (corner(x, z)) return 'square'; const o = other(x, z); return o <= 0.01 ? 'flush' : o < hw + 0.3 ? 'round' : 'square'; };
   return { x0, z0, ux, uz, len, hw, ea: opt?.ea || end(x0, z0), eb: opt?.eb || end(x1, z1), prom: x0 === -73.68 && x1 === -73.68 };   // (opt: an end's kind given, P136)   // (the promenade: by its line, not its place in the list)
 });
 function rectDist(x, z, R) {
@@ -259,6 +273,19 @@ function townBandW(x, z, h, parts) {
   const [d, pr] = parts || townPaveParts(x, z, h);
   if (pr < d) return 0;
   return x > STRIP.x0 && x < STRIP.x1 && z > STRIP.z0 - 0.5 && z < STRIP.z1 ? STRIP.band : 2.0;
+}
+// P140 (the user, 26.11: "still not complete!!!" — a kerb facing a big open dirt lot, a kerbed bare rectangle in the
+// paving): the town's ground between the streets was townSoil's noise (bare soil with lawn blobs, within 36 m of the
+// square) and, from 40 m off the square, WA-12's wild soil — bare lots boxed in by the paving. LBA2's blocks (P112, the
+// user's pick b) are a lawn behind a 2 m band of earth along the kerb. The share of the ground that is a lawn by design
+// (0..1): in the town's plots at the street's level (where the band is, townBandW), and within 4 m of any of the town's
+// paving off that level (the square's and the streets' banks), easing out to 7 m. The splat only: the scatter's filters
+// read townSoil and wildGround as before, so no random draw moves.
+function townLawn(x, z, h) {
+  if (x < PLOT_ZONE.x0 - 8 || x > PLOT_ZONE.x1 + 8 || z < PLOT_ZONE.z0 - 12 || z > PLOT_ZONE.z1 + 8) return 0;
+  const inPlots = x > PLOT_ZONE.x0 && x < PLOT_ZONE.x1 && z > PLOT_ZONE.z0 && z < PLOT_ZONE.z1 ? 1 - smoothstep(0.3, 0.45, Math.abs(h - TOWN_FLAT)) : 0;
+  const d = townPaveDist(x, z, h);
+  return Math.max(inPlots, d < 0 ? 0 : smoothstep(7, 4, d));
 }
 // on the band (for the scatter's filters: no tufts, wild flowers or bushes on it)
 function onTownBand(x, z, h, pad = 0) {
@@ -841,9 +868,13 @@ function islandSplat(x, z, h, slope, w) {
   //  wider band no longer reads as a smear)
   w[2] = smoothstep(0.9, 1.25, slope + n * 0.08) * (1.6 - beach * 1.6);
   w[3] = 0; w[4] = 0;
+  const lawn = townLawn(x, z, h);   // (P140: the town's plots and the paving's banks are lawn behind the band)
   if (h > 0.8) {
     const pd = pathDist(x, z);
-    w[3] = smoothstep(2.05, 1.55, pd + n * 0.35) * 2.4; // (a fairly clean edge, as LBA2's paths)
+    // (P140: through the town's lawns a trodden way is a garden path, 2.4 m of earth, not 4: at 4 m, where it left the
+    //  streets it read as a bare lot beside the paving — the middle block's, by the forecourt, and the harbour's)
+    const pw = 0.85 * smoothstep(0.3, 0.7, lawn);
+    w[3] = smoothstep(2.05 - pw, 1.55 - pw, pd + n * 0.35) * 2.4; // (a fairly clean edge, as LBA2's paths)
     const cd = boxDist(x, z, POI.camp.x - 11, POI.camp.z - 8, POI.camp.x + 11, POI.camp.z + 8);
     w[3] = Math.max(w[3], smoothstep(1.5, -1.5, cd + n * 2) * 2);
   }
@@ -855,12 +886,12 @@ function islandSplat(x, z, h, slope, w) {
   if (townPaveDist(x, z, h) < 0) w[4] = 3;
   // in town the ground between the streets is brown soil with lawns (Citadel Island)
   if (vd < 36 && h > 0.8) {
-    const soil = townSoil(x, z, n) * (1 - Math.min(1, w[4] / 1.5)); // never on the paving
+    const soil = townSoil(x, z, n) * (1 - Math.min(1, w[4] / 1.5)) * (1 - lawn); // never on the paving
     w[3] = Math.max(w[3], soil * 2.5);
     w[0] *= 1 - soil * 0.95;
   }
   if (h > 1.2) {   // WA-12 (proto)
-    const [soil, rock] = wildGround(x, z, n);
+    const [soil0, rock] = wildGround(x, z, n), soil = soil0 * (1 - lawn);
     w[3] = Math.max(w[3], soil * 2.5); w[0] *= 1 - soil * 0.95;
     w[2] = Math.max(w[2], rock * 1.2);
   }
