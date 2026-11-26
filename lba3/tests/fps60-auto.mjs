@@ -62,7 +62,7 @@ async function boot() {
 }
 // a start at High, in force (as a commit point), the programs made
 async function startAt(p) {
-  await ev((p) => { const G = game, A = G.autoQ; A.gov.setProfile(p, 'test: start', { commitNow: true, t: performance.now() }); A.applyAll(); G.warmGraphics(); G.evenPace.reset('test'); G.evenPace.log = []; A.gov.log.length = 0; }, p);
+  await ev((p) => { const G = game, A = G.autoQ; A.gov.noHelp = {}; A.gov.rec.clear(); A.gov.setProfile(p, 'test: start', { commitNow: true, t: performance.now() }); A.applyAll(); G.warmGraphics(); G.evenPace.reset('test'); G.evenPace.log = []; A.gov.log.length = 0; }, p);
   await page.waitForFunction(() => !game.gfxHold, null, { timeout: 600000 });
 }
 const IDS = ['high', 'medium', 'lean', 'low', 'loweco', 'low75', 'low65'];
@@ -111,7 +111,8 @@ async function scenario({ hz, gpu, cpu, secs, tail = 8000, pauseEvery = 5000 }) 
     const fps = iv.length ? +(1000 * iv.length / iv.reduce((a, b) => a + b, 0)).toFixed(1) : 0;
     return { commits, p: IDS[A.gov.applied], phase: A.gov.phase, scale: G.renderer.knobs?.scale ?? null, eco: G.farCull.anim.eco, fps, long: iv.filter((x) => x > 20).length, n: iv.length,
       caps: [...new Set(S.seen.caps)], fpsSet: [...new Set(S.seen.fps)], nMax: S.seen.nMax, paceLog: G.evenPace.log.map((e) => e.why || e.probe || (e.denied ? `denied ${e.denied}` : '')),
-      steps: A.gov.log.filter((e) => e.kind === 'down' || e.kind === 'up').map((e) => `${e.kind}${e.revert ? ' (back)' : ''}: ${e.what} — ${String(e.why).slice(0, 90)}`), stored: JSON.parse(localStorage.getItem('sunshard_settings_v1') || '{}').fps };
+      steps: A.gov.log.filter((e) => e.kind === 'down' || e.kind === 'up').map((e) => `${e.kind}${e.revert ? ' (back)' : ''}: ${e.what} — ${String(e.why).slice(0, 90)}`), stored: JSON.parse(localStorage.getItem('sunshard_settings_v1') || '{}').fps,
+      govLog: A.gov.log.slice(-6).map((e) => `${e.kind}: ${String(e.why || '').slice(0, 140)}`), last: A.gov.lastWindow, pace: G.evenPace.state() };
   }, [commits, IDS]);
 }
 
@@ -132,7 +133,7 @@ if (ONLY.includes('C')) {
   log('C 59.9 Hz, CPU-bound (CPU 26 ms at High)', r);
   check('C 59.9 Hz, CPU-bound: down to the CPU rung below Low (Low-eco), never a resolution rung for CPU pressure; no limit, the Frame Rate Unlimited',
     r.p === 'loweco' && !r.commits.some((c) => c.to === 'low75' || c.to === 'low65') && r.scale === 0.85 && r.eco === true && noCap(r) && r.nMax === 1, r);
-  console.log(`       C (not a check): at Low-eco this modelled CPU draws ${r.fps} fps — a CPU-bound street that no picture setting brings to 60 stays below it (FPS60-AUTO.md §4)`);
+  console.log(`       C (not a check): at Low-eco this modelled CPU (26 ms at High, × 0.63 there by the cost model) draws ${r.fps} fps; a real street whose CPU work stays past 16.7 ms there stays below 60 (FPS60-AUTO.md §4)`);
 }
 if (ONLY.includes('D')) {
   await startAt(0);

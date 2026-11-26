@@ -98,6 +98,11 @@ export const TOP = PRESET_KNOBS.high;
 //            integrated GPU on a dPR 2 screen) 0.81 of the screen's pixels across; on a dPR 1 screen 0.65 — never under
 //            minDyn's 0.6. (Steps of ~−22 % pixels, not smaller: P95's revisit keeps a step that bought ≥ 7 %, and a GPU
 //            pays for only part of its time by the pixel, so −11 % pixels would buy ~6 % and be taken back.)
+// Low itself is now a GPU rung (`only: 'gpu'`): from Medium-lean it lowers the resolution and turns the shadows off, but
+// gives back the far-people knobs Medium-lean had, so for CPU pressure it bought ~nothing (P95's revisit took it back:
+// the UHD 620's street, AUTO-P95 S4) and then blocked every CPU step after it. CPU pressure at Medium-lean goes to
+// Low-eco instead: Low's picture with Medium-lean's far-people knobs kept, the shadows off (the CPU side's biggest
+// lever left). GPU pressure goes Medium-lean → Low → Low 75 % → Low 65 % as before.
 // No rung below Low turns anything else off: the shadows are already off at Low; lamps stay 2 (night streets and
 // interiors need them to read), the vegetation and small casters are already at Low's distances; nothing a rung
 // changes touches the simulation, collision, aim or timing (visual knobs only). The gpu / cpu shares of the three are
@@ -108,7 +113,7 @@ export const PROFILES = [
   { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
   { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
   { id: 'lean', name: 'Medium-lean', tier: 'medium', K: { ...PRESET_KNOBS.medium, msaa: 0, lamps: 2, veg: 'low', casters: 'low', anim: 'eco', detail: 'near' }, gpu: 0.46, cpu: 0.74 },
-  { id: 'low', name: 'Low', tier: 'low', K: { ...PRESET_KNOBS.low }, gpu: 0.32, cpu: 0.7 },
+  { id: 'low', name: 'Low', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low }, gpu: 0.32, cpu: 0.7 },
   { id: 'loweco', name: 'Low-eco', tier: 'low', only: 'cpu', K: { ...PRESET_KNOBS.low, anim: 'eco', detail: 'near' }, gpu: 0.31, cpu: 0.63 },
   { id: 'low75', name: 'Low 75 %', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low, scale: 0.75, anim: 'eco', detail: 'near' }, gpu: 0.29, cpu: 0.63 },
   { id: 'low65', name: 'Low 65 %', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low, scale: 0.65, anim: 'eco', detail: 'near' }, gpu: 0.26, cpu: 0.63 },

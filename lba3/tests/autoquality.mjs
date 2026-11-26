@@ -61,7 +61,7 @@ const name = (p) => PROFILES[p].name;
   { const L = knobsAt(3), d = (p) => KNOBS.filter((k) => knobsAt(p)[k] !== L[k]).join();
     check('P137 the rungs below Low: Low-eco (CPU: anim, detail), Low 75 % and Low 65 % (GPU: + resolution 0.75 / 0.65); lamps, vegetation, casters as Low; for one side each',
       d(4) === 'anim,detail' && d(5) === 'scale,anim,detail' && d(6) === 'scale,anim,detail' && knobsAt(5).scale === 0.75 && knobsAt(6).scale === 0.65
-      && PROFILES[4].only === 'cpu' && PROFILES[5].only === 'gpu' && PROFILES[6].only === 'gpu' && PROFILES.slice(0, 4).every((x) => !x.only), [d(4), d(5), d(6)]); }
+      && PROFILES[3].only === 'gpu' && PROFILES[4].only === 'cpu' && PROFILES[5].only === 'gpu' && PROFILES[6].only === 'gpu' && PROFILES.slice(0, 3).every((x) => !x.only), [d(4), d(5), d(6)]); }
   { const M = knobsAt(1), Ln = knobsAt(2), diff = KNOBS.filter((k) => M[k] !== Ln[k]);
     check('P95 Medium-lean is Medium at full resolution with its shadows (map, filter), minus MSAA (output-pass edges), 2 lamps, Low\'s far grass and small shadows, far people at half rate and their tiny far parts',
       Ln.scale === 1 && Ln.shadows === 1 && Ln.filter === M.filter && Ln.map === M.map && Ln.bloom === 0 && diff.join() === 'lamps,msaa,veg,casters,anim,detail' && Ln.msaa === 0 && Ln.lamps === 2, { diff, Ln }); }
@@ -474,9 +474,13 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
     let k = 0; while (k < 60 && Math.abs(M.push(16.667, (t += 16.667)) - 16.667) > 0.05) k++;
     const N = new RefreshMeter(); t = 0; for (let i = 0; i < 120; i++) N.push(8.333, (t += 8.333));
     let held = 0, got = 0; const t1 = t; while (t - t1 < MEM_MS + 2000) { got = N.push(16.667, (t += 16.667)); if (Math.abs(got - 8.333) < 0.05) held = t - t1; }
-    const R = { slowR: +slowR.toFixed(2), to60: k + 1, held120: Math.round(held), after: +got.toFixed(2) };
+    // (P137: a GPU-bound game drawing every 5th and 6th refresh in a mix on 120 Hz — 41.7 / 50 ms, a mean that is no
+    //  multiple — after a light second: still 120 Hz while the memory lasts, not a 22 Hz screen)
+    const Q = new RefreshMeter(); t = 0; for (let i = 0; i < 120; i++) Q.push(8.333, (t += 8.333));
+    let mixR = 0; for (let i = 0; i < 200; i++) mixR = Q.push(i % 3 ? 41.67 : 50, (t += 45));
+    const R = { slowR: +slowR.toFixed(2), to60: k + 1, held120: Math.round(held), after: +got.toFixed(2), mix56: +mixR.toFixed(2) };
     console.log('       PACE-ALL refresh meter:', JSON.stringify(R));
-    check('PACE-ALL refresh meter: every frame 2–3 refreshes on 144 Hz still reads 144 Hz; 144 → 60 Hz within 32 callbacks (half a second); 120 → 60 Hz (a multiple) after the 20 s memory', near(slowR, 6.944, 0.05) && R.to60 <= 32 && held >= MEM_MS - 1000 && held <= MEM_MS + 1000 && near(got, 16.667, 0.05), R);
+    check('PACE-ALL refresh meter: every frame 2–3 refreshes on 144 Hz still reads 144 Hz; 144 → 60 Hz within 32 callbacks (half a second); 120 → 60 Hz (a multiple) after the 20 s memory; a 5 / 6-refresh mix on 120 Hz still 120 Hz (P137)', near(slowR, 6.944, 0.05) && R.to60 <= 32 && held >= MEM_MS - 1000 && held <= MEM_MS + 1000 && near(got, 16.667, 0.05) && near(mixR, 8.333, 0.05), R);
   }
   // EvenPace driven by a modelled game: a drawn frame needs need(t) ms (the next callback comes at the first refresh at or
   // after its start + need), a skipped refresh calls back at the next one; drawn frames' intervals are fed as main.js does

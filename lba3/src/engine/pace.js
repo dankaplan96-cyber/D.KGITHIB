@@ -55,7 +55,12 @@ export class RefreshMeter {
     else if (r < M) { this.mem = r; this.memT = t; }
     else {
       const k = Math.round(r / M);
-      if (k >= 2 && k <= 6 && Math.abs(r - k * M) <= 0.04 * k * M && t - this.memT < MEM_MS) r = M;
+      let whole = k >= 2 && k <= 6 && Math.abs(r - k * M) <= 0.04 * k * M;
+      // (P137: a slower reading whose intervals are each a whole multiple of the remembered refresh — a game drawing every
+      //  5th and 6th refresh in a mix, 41.7 / 50 ms on 120 Hz, whose mean is no multiple — is skipped refreshes too, not a
+      //  22 Hz screen: read as one, Auto's budget became 45 ms and a GPU-bound game held its picture at 22 fps)
+      if (!whole && r > 1.5 * M) { let c = 0; for (let i = 0; i < this.n; i++) { const q = this.a[i] / M, kk = Math.round(q); if (kk >= 2 && kk <= 12 && Math.abs(q - kk) <= 0.04 * kk) c++; } whole = c >= 0.8 * this.n; }
+      if (whole && t - this.memT < MEM_MS) r = M;
       else { this.mem = r; this.memT = t; }
     }
     this.R = r;
