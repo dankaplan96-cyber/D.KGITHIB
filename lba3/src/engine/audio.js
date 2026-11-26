@@ -54,6 +54,9 @@ const SND = {
   lever: { pri: 3, gap: 0.2, vary: [0.02, 0.5] }, valve: { pri: 3, gap: 0.2, vary: [0.02, 0.5] }, valveShut: { pri: 3, gap: 0.2, vary: [0.02, 0.5] },
   paper: { gap: 0.2, vary: [0.04, 1] }, radio: { pri: 3, gap: 0.3, vary: FIXED },
   diveRise: { pri: 3, gap: 0.5, vary: FIXED }, diveLock: { pri: 3, gap: 0.5, vary: FIXED }, diveDrop: { pri: 3, gap: 0.2, vary: FIXED }, diveImpact: { pri: 3, gap: 0.3, vary: FIXED },
+  // (DRONE-CHARGE, #58: a drone's wind-up, its own sound, as long as its tell and cut when the tell is: held(). gap 0:
+  //  the drone asks once per wind-up; two drones winding up in one step are two sounds)
+  droneCharge: { pri: 3, gap: 0, vary: [0.015, 0.5] },
   alert: { pri: 3, gap: 0.15, vary: FIXED }, zap: { pri: 3, gap: 0.06, vary: [0.02, 0.5] }, slam: { pri: 3, gap: 0.15, vary: [0.02, 0.5] }, pulse: { gap: 0.1, vary: FIXED },
   rumble: { gap: 0.3, vary: FIXED }, thunder: { pri: 3, gap: 1, vary: FIXED }, horn: { pri: 3, gap: 1, vary: FIXED },
   blip: { pri: 1, gap: 0.025, vary: FIXED }, select: { pri: 3, gap: 0.04, vary: FIXED }, mode: { gap: 0.05, vary: FIXED },
@@ -549,6 +552,43 @@ export class AudioEngine {
   // leave it out). Returns true if it sounded. A second call for the same event (two contacts in one step, a sound a
   // frame asks for again) falls inside the sound's gap and is merged; a crowd of small sounds is thinned before an
   // important one is ever skipped (SND: pri). The counts are in sfxStats, the last takes in sfxRecent (tests).
+  // held(name, at, opt): play() for a sound that may have to stop early (DRONE-CHARGE: a drone's wind-up lasts its tell
+  // and stops with it). Returns { stop(fade), place(at) } or null when it did not sound. The sound runs through a gain
+  // and a panner of its own: stop() fades that gain out (25 ms: no click), place() follows the source as it moves (a
+  // new target only when the level or side has really moved: AUDIO-CRACKLE-2). cutHeld() stops every one (a scene change)
+  held(name, at = null, opt = null) {
+    this._holdReq = true;
+    try { return this.play(name, at, opt) ? this._held : null; } finally { this._holdReq = false; this._held = null; }
+  }
+  cutHeld() { for (const h of [...(this._helds || [])]) h.stop(); }
+  _hold(sp) {
+    const ctx = this.ctx, vg = ctx.createGain(), pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    const g0 = sp ? sp.gain : 1;   // (the level the sound was built at: place() scales from it)
+    if (pan) { pan.pan.value = sp ? sp.pan : 0; vg.connect(pan).connect(this._in()); } else vg.connect(this._in());
+    const S = (this._helds ??= new Set()), last = { g: 1, p: sp ? sp.pan : 0 };
+    const h = {
+      live: 0,
+      stop: (fade = 0.025) => {
+        if (h.done) return;
+        h.done = true; S.delete(h);
+        const t = ctx.currentTime, p = vg.gain;
+        if (p.cancelAndHoldAtTime) p.cancelAndHoldAtTime(t); else { p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); }
+        p.linearRampToValueAtTime(0, t + fade);
+        const i = (this._live || []).indexOf(h.live); if (i >= 0) this._live[i] = t + fade;   // (no longer counted once it is cut)
+        setTimeout(() => { vg.disconnect(); pan?.disconnect(); }, (fade + 0.1) * 1000);
+      },
+      place: (at) => {
+        if (h.done || !at) return;
+        const s = this._space(at); if (!s) return;
+        const g = s.gain / (g0 || 1), t = ctx.currentTime;
+        if (Math.abs(g - last.g) > 0.03) { last.g = g; vg.gain.setTargetAtTime(g, t, 0.05); }
+        if (pan && Math.abs(s.pan - last.p) > 0.03) { last.p = s.pan; pan.pan.setTargetAtTime(s.pan, t, 0.05); }
+      },
+    };
+    S.add(h); this._held = h; this._dest = vg;
+    return h;
+  }
+
   play(name, at = null, opt = null) {
     if (!this.ctx || this.ctx.state !== 'running') return false;
     const m = SND[name] || DEF, ctx = this.ctx, pri = m.pri ?? DEF.pri;
@@ -570,8 +610,9 @@ export class AudioEngine {
     const [pv, gv] = m.vary ?? DEF.vary;
     this._pv = (1 + (Math.random() * 2 - 1) * pv) * (name === 'coin' ? this._coinStep(now) : 1);
     this._gv = Math.pow(10, ((Math.random() * 2 - 1) * gv) / 20) * (sp ? sp.gain : 1);
-    let chain = null;
-    if (sp && (Math.abs(sp.pan) > 0.04) && ctx.createStereoPanner) {
+    let chain = null, hold = null;
+    if (this._holdReq) hold = this._hold(sp);
+    else if (sp && (Math.abs(sp.pan) > 0.04) && ctx.createStereoPanner) {
       chain = ctx.createStereoPanner(); chain.pan.value = sp.pan; chain.connect(this._in()); this._dest = chain;
     }
     this._end = 0; this._nodes = take.nodes; this._delay = m.yield ? 0.02 : 0;
@@ -581,6 +622,7 @@ export class AudioEngine {
     // (a sound that fails to build must never stop the game: it is skipped and named once)
     try { this._synth(name); } catch (e) { if (!this._synthErr) { this._synthErr = true; console.warn('sound', name, e.message); } } finally { this._pv = 1; this._gv = 1; this._dest = null; this._nodes = null; this._delay = 0; this._rrF = 1; this._opt = null; }
     this._live.push(tc + this._end + 0.03);
+    if (hold) { hold.live = tc + this._end + 0.03; const h = hold; setTimeout(() => { if (!h.done) { h.done = true; this._helds.delete(h); } }, (this._end + 0.6) * 1000); }
     if (chain) setTimeout(() => chain.disconnect(), (this._end + 0.6) * 1000);
     S.played++;
     const R = (this.sfxRecent ??= []);
@@ -799,6 +841,32 @@ export class AudioEngine {
       case 'trickle': for (let i = 0; i < 6; i++) this._tone({ f0: 900 + ((i * 397) % 500), f1: 1300 + ((i * 251) % 400), dur: 0.04, vol: 0.02, at: i * 0.09 }); this._burst({ dur: 0.7, vol: 0.05, f: 2200, f1: 1800, type: 'bandpass', q: 1.5, atk: 0.08 }); break;
       // ---- enemies and danger
       case 'alert': this._tone({ type: 'triangle', f0: 660, dur: 0.08, vol: 0.07 }); this._tone({ type: 'triangle', f0: 990, dur: 0.12, vol: 0.07, at: 0.09 }); break;
+      // DRONE-CHARGE (#58): a drone charging its bolt, the tell's own sound (the shot keeps 'zap'). A buzzing hum that
+      // climbs an octave and a fifth through the tell (opt.dur, s) while its flutter quickens (16 → 38 a second), a thin
+      // whine a twelfth above it and a faint crackle in the prongs; it swells to the end of the tell and is gone as the
+      // bolt leaves. Rising where the zap falls; buzzing where the hero's own charge is a smooth sine. opt.low: the
+      // bore's guardian, a bigger body (a fourth lower)
+      case 'droneCharge': {
+        const ctx = this.ctx, dur = Math.max(0.15, this._opt?.dur ?? 0.75), pv = (this._pv || 1) * (this._opt?.low ? 0.75 : 1);
+        const v = this._gv ?? 1, t = ctx.currentTime, end = t + dur, out = this._dest || this._in(), src = [];
+        const osc = (type, f0, f1) => { const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0 * pv, t); o.frequency.exponentialRampToValueAtTime(f1 * pv, end); src.push(o); return o; };
+        const am = ctx.createGain(); am.gain.value = 0.62;   // (the flutter: 0.62 ± 0.38)
+        const lfo = ctx.createOscillator(); lfo.frequency.setValueAtTime(16, t); lfo.frequency.exponentialRampToValueAtTime(38, end); src.push(lfo);
+        const lg = ctx.createGain(); lg.gain.value = 0.38; lfo.connect(lg).connect(am.gain);
+        const hum = osc('triangle', 170, 510), hg = ctx.createGain(); hg.gain.value = 0.06; hum.connect(hg).connect(am);
+        const wh = osc('sine', 510, 1530), wg = ctx.createGain(); wg.gain.setValueAtTime(0.004, t); wg.gain.linearRampToValueAtTime(0.02, end); wh.connect(wg).connect(am);
+        const n = ctx.createBufferSource(); n.buffer = this.noiseBuf; src.push(n);
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 6; bp.frequency.setValueAtTime(1500 * pv, t); bp.frequency.exponentialRampToValueAtTime(3200 * pv, end);
+        const ng = ctx.createGain(); ng.gain.value = 0.05; n.connect(bp).connect(ng).connect(am);
+        // the swell: in over 40 ms to a third, up to full at 85 % of the tell, out by its end (the zap lands on silence)
+        const eg = ctx.createGain(), e = eg.gain, rel = Math.min(0.08, dur * 0.12);
+        e.setValueAtTime(0, t); e.linearRampToValueAtTime(0.33 * v, t + 0.04); e.linearRampToValueAtTime(v, end - rel); e.linearRampToValueAtTime(0, end);
+        am.connect(eg).connect(out);
+        for (const s of src) { if (s === n) s.start(t, Math.random() * 1.5); else s.start(t); s.stop(end + 0.02); }
+        this._nodes?.push(eg);
+        this._end = Math.max(this._end || 0, dur);
+        break;
+      }
       case 'zap': this._tone({ type: 'triangle', f0: 1100, f1: 260, dur: 0.18, vol: 0.06 }); this._burst({ dur: 0.14, vol: 0.05, f: 2000, f1: 700, type: 'bandpass', q: 3 }); break;
       case 'break': this._burst({ dur: 0.28, vol: 0.24, f: 2400, f1: 200 }); this._tone({ f0: 120, f1: 50, dur: 0.2, vol: 0.17 }); break;
       case 'pulse': this._tone({ type: 'sawtooth', f0: 90, f1: 60, dur: 0.35, vol: 0.08 }); this._tone({ f0: 1600, f1: 300, dur: 0.3, vol: 0.05 }); this._burst({ dur: 0.25, vol: 0.15, f: 2600, f1: 400, type: 'bandpass', q: 2 }); break;
