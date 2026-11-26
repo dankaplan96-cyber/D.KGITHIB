@@ -14,7 +14,8 @@ import * as THREE from 'three';
 import { tm, cached, bbox, cyl, lathe, panelGeo, frameGeo, fillGeo, rod, member } from './kit.js';
 
 const q = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('knartas') || ''; } catch { return ''; } })();
-export const KNARTAS_NEW = q === 'new';
+// (#17, the user's pick 26.11: the Franco huts and the moored zeppelin are Knartas's look; ?knartas=old shows the old houses)
+export const KNARTAS_NEW = q !== 'old';
 
 // the huts' two materials (plaster with the colour in the vertices)
 // (one material for both: the walls and the domes are one draw; the domes are darker by their vertices)
