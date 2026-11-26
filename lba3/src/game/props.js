@@ -1347,7 +1347,7 @@ TEX.hazard = () => tex('hazard', () => {
 });
 MAT.hazard = () => M('hazard', () => std({ map: TEX.hazard(), roughness: 0.6, metalness: 0.2 }, 0.5));
 // (FLICKER-142: a screen is a decal on its bezel or desk: drawn a little toward the lens, never fighting the face it lies on)
-MAT.screen = (t, k = 1.3) => M('scr' + t.uuid + k, () => std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: k, roughness: 0.25, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }, 0, { noShadow: true }));
+MAT.screen = (t, k = 1.3) => M('scr' + t.uuid + k, () => std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: k, roughness: 0.25, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }, 0, { noShadow: true, noBatch: true }));   // (noBatch: a draw batch's twin would drop the offset: drawbatch.js eligible)
 MAT.leather = (c = '#7a2a22') => M('lea' + c, () => std({ map: TEX.fabric(c, '#000000'), roughness: 0.55 }, 0.5));
 
 // ---- furniture ---------------------------------------------------------

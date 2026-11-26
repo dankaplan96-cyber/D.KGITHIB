@@ -13,6 +13,9 @@ import * as THREE from 'three';
 
 // (on: false — the camera's own near plane in rooms too, as before FLICKER-142: the tests' A/B)
 export const ROOM_DEPTH = { on: true };
+// the room camera stands ~90 m from its focus (~80 m from the room's box); a lens further than this from the box is not
+// looking at the room (the rooms lie ~1000 m from Citadel)
+const FAR = 130;
 const _b = new THREE.Box3();
 let saved = null;
 
@@ -26,9 +29,11 @@ function boxOf(R) {
 export function fitRoomDepth(R, cam) {
   saved = null;
   if (!ROOM_DEPTH.on || !R || R.outdoor || !R.group || !cam?.isPerspectiveCamera) return;
+  if (!R.group.visible) return;   // (the room not drawn: a shot of the world with the room still current)
   const b = boxOf(R);
   if (b.isEmpty()) return;
   const d = _b.copy(b).distanceToPoint(cam.position);
+  if (d > FAR) return;   // (a lens far from the room looks at something else: its own near plane)
   const n = Math.max(cam.near, d * 0.5);
   if (n <= cam.near * 1.5) return;
   saved = cam.near;

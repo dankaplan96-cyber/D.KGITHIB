@@ -19,7 +19,8 @@
 //       enter FAILS (named), never skipped.
 //   (4) the depth range fitted to the room (src/engine/roomdepth.js): from each room camera position the floor he walks
 //       (and 2.5 m over it) at least 1.5 × the fitted near plane from the lens, the near plane far out from the room
-//       camera (> 10 m), and a lens 2 m from his head (a close-up) with him well beyond its near plane.
+//       camera (> 10 m), a lens 2 m from his head (a close-up) with him well beyond its near plane, and a lens over
+//       Citadel (a film's shot of the world while the room is current) with the camera's own near plane.
 // ROOMS=a,b: those rooms only. SHOTS=dir: per room with a cluster (or every room named in ROOMS) the frame and the
 // two-frame diff overlay (red = pixels that change between the two jittered frames) as PNG. REPORT=file.json: every
 // finding with its coordinates. SPOTS=room@x,z;...: extra render views from those room-local floor spots, with pictures.
@@ -402,8 +403,10 @@ for (const id of rooms) {
     }
     cam.position.set(h.pos.x + 1.5, h.pos.y + 1.7, h.pos.z + 1.5);
     RD.fitRoomDepth(R, cam); const nearClose = cam.near, headD = cam.position.distanceTo(new V3(h.pos.x, h.pos.y + 1.5, h.pos.z)); RD.restoreRoomDepth(cam);
+    // (a lens over Citadel while the room is still current — a film's shot of the world: the camera's own near plane)
+    cam.position.set(-76, 40, 16); RD.fitRoomDepth(R, cam); const nearFar = cam.near; RD.restoreRoomDepth(cam);
     cam.position.copy(p0); cam.near = n0; cam.updateProjectionMatrix(); RD.ROOM_DEPTH.on = fitWas;
-    const depth = { nearIso: +nearIso.toFixed(2), stepMm: +((dIso * dIso) / (nearIso * 16777216) * 1000).toFixed(4), nearClose: +nearClose.toFixed(3), headD: +headD.toFixed(2), base: n0, outside, box: !!box };
+    const depth = { nearIso: +nearIso.toFixed(2), stepMm: +((dIso * dIso) / (nearIso * 16777216) * 1000).toFixed(4), nearClose: +nearClose.toFixed(3), headD: +headD.toFixed(2), nearFar, base: n0, outside, box: !!box };
     return { id, spots: spots.length, cams: cams.length, sp0, depth, ...S };
   }, { id }).catch((e) => ({ id, err: e.message.slice(0, 300) }));
   if (r.err) { failedRooms.push(r); console.log('ROOM ' + JSON.stringify({ id, err: r.err })); res.push(r); continue; }
@@ -436,7 +439,7 @@ for (const id of rooms) {
     if (v.shot) for (const k of ['plain', 'diff']) fs.writeFileSync(path.join(SHOTS, `${id}-${vi}-${k}.png`), Buffer.from(v.shot[k].split(',')[1], 'base64'));
   }
   const fail = r.findings.filter((f) => f.m2 >= FAIL_M2);
-  const dOk = r.depth.box && !r.depth.outside.length && r.depth.headD > r.depth.nearClose * 1.5 && r.depth.nearIso > 10;
+  const dOk = r.depth.box && !r.depth.outside.length && r.depth.headD > r.depth.nearClose * 1.5 && r.depth.nearIso > 10 && r.depth.nearFar <= r.depth.base + 1e-6;
   if (!dOk) depthBad.push({ id, ...r.depth });
   console.log('ROOM ' + JSON.stringify({ id, depthFit: r.depth, tris: r.tris, meshes: r.meshes, camD: r.camD, near: r.near, depthStepMm: r.dzMm, pairs: r.pairs, clusters: r.findings.length, fail: fail.length,
     render: r.views.map((v) => v.err ? { err: v.err } : { why: v.why, at: v.at, changed: v.changed, noise: v.noise, unowned: v.others.map((o) => o.px + 'px@' + o.box.join(',')) }), instSkipped: r.instSkipped || undefined }));
@@ -448,9 +451,17 @@ if (process.env.REPORT) fs.writeFileSync(process.env.REPORT, JSON.stringify(res,
 const fails = res.flatMap((r) => (r.findings || []).filter((f) => f.m2 >= FAIL_M2));
 const small = res.flatMap((r) => (r.findings || []).filter((f) => f.m2 < FAIL_M2));
 const confirmed = fails.filter((f) => f.seenPx > 0).length;
+// (a long thin seam is cut into many small 0.6 m clusters: the same two pieces' clusters in a room, summed, listed when
+//  they come to 0.02 m² or more — not judged; FLICKER-142.md)
+const strip = (d) => d.replace(/ \{.*\}/, '').replace(/ part \d+/, '');
+const seams = new Map();
+for (const r of res) for (const f of r.findings || []) { if (f.m2 >= FAIL_M2) continue; const k = r.id + ' | ' + [strip(f.a), strip(f.b)].sort().join(' | '); const q = seams.get(k) || { m2: 0, n: 0 }; q.m2 += f.m2; q.n++; seams.set(k, q); }
+const longSeams = [...seams].filter(([, q]) => q.m2 >= FAIL_M2).sort((a, b) => b[1].m2 - a[1].m2);
+for (const [k, q] of longSeams) console.log(`  seam    ${(Math.round(q.m2 * 1000) / 1000)} m² in ${q.n} small clusters: ${k}`);
+console.log(`small clusters of one pair of pieces summing to ${FAIL_M2} m² or more (listed, not judged): ${longSeams.length}`);
 console.log(`clusters: ${fails.length} of ${FAIL_M2} m² or more (${confirmed} seen flickering in the render check), ${small.length} smaller (listed)`);
 check(`(3) every interior room built, entered and scanned (${res.length - failedRooms.length} of ${rooms.length}${ONLY ? '' : `; registered ${all.length}`})`, failedRooms.length === 0 && (ONLY || rooms.length === all.length), failedRooms.map((r) => ({ id: r.id, err: r.err })));
-check(`(4) the depth range fitted to each room: his floor (and 2.5 m over it) well beyond the near plane from every room camera position, the near plane far out from the room camera (> 10 m), a lens 2 m from his head (a close-up) clear of its near plane (${res.length - failedRooms.length - depthBad.length} of ${res.length - failedRooms.length})`, depthBad.length === 0, depthBad.slice(0, 8));
+check(`(4) the depth range fitted to each room: his floor (and 2.5 m over it) well beyond the near plane from every room camera position, the near plane far out from the room camera (> 10 m), a lens 2 m from his head (a close-up) clear of its near plane, a lens over Citadel with its own (${res.length - failedRooms.length - depthBad.length} of ${res.length - failedRooms.length})`, depthBad.length === 0, depthBad.slice(0, 8));
 checkVisual(`(1) no visible z-fighting in any room (same-facing faces within the depth step, ${FAIL_M2} m² or more, seen from the room camera): ${fails.length}; smaller, listed: ${small.length}`, fails.length === 0,
   fails.slice(0, 12).map((f) => ({ room: f.room, m2: f.m2, gapMm: f.gapMm, local: f.local, a: f.a, b: f.b, renderPx: f.seenPx })));
 await browser.close();
