@@ -1430,7 +1430,7 @@ const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
 //  old per-vertex split the paving's edge follows the 1.7 m grid, and the kerbs, on the smooth line, stood off it)
 const PATCH_LEVEL = 0.35;   // (P140: a WA-11 paving patch lies where the ground's averaged slope is under this: the old fade's middle, smoothstep(0.45, 0.25))
 const PATCH_BLUR = 0.9;   // (PATHS-140B: the pieces' outline blurred over this, m (the Gaussian's sigma): nothing finer than the terrain's 1.7 m grid can be drawn)
-const SQUARE_LEVEL = 0.6;   // (PATHS-140B: a square's paving where the slope averaged over 1.5 m is under this)
+const SQUARE_LEVEL = 0.6;   // (PATHS-140B: a square's paving where its slope, the point's or averaged over 1.5 m, the lower, is under this)
 const PATCH_GROW = 0.1;   // (PATHS-140B: the patch noise's level lowered by this for the smoothed pieces: the smoothing takes their necks, tips and specks; this gives the pieces back most of their share (Otringal's paving as drawn 4134 m² before, 4115 after))
 const PAD_JOIN = 4.6;   // (P140: a kept paving piece reaches this near the pad's middle, under the edge of the pad's own paving (~4.85 m))
 const OLD_PATCHES = !ROCK_EDGE || (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('isles140') === 'old'; } catch { return false; } })();
@@ -1715,7 +1715,7 @@ function buildIsland0(scene, physics, name, L, at) {
     if (h >= -0.5 && h < 0.8) { wt[1] = smoothstep(0.8, 0.2, h) * 0.8; }
     const pd = Math.hypot(x - pad.x, z - pad.z);
     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
-    if (rk < 0.5 && paved(x, z) && (PG && !S.paveFlat ? levelSlope(x, z) < (S.paveSlope ?? SQUARE_LEVEL) : slope < (S.paveSlope ?? 9))) { wt[4] = 1.6; wt[0] *= 0.2; }   // (PATHS-140B: with the smoothed pieces, a square's paving too lies on the level: the slope averaged over 1.5 m (levelSlope) under SQUARE_LEVEL (Celebration's own paveSlope), not the point's own slope: a single bump cut a hole in Celebration's plaza, and Under Celebration's yard ran down its bank in a tongue; not on a square levelled in terraces, S.paveFlat: Otringal's)   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
+    if (rk < 0.5 && paved(x, z) && (PG && !S.paveFlat ? Math.min(slope, levelSlope(x, z)) < (S.paveSlope ?? SQUARE_LEVEL) : slope < (S.paveSlope ?? 9))) { wt[4] = 1.6; wt[0] *= 0.2; }   // (PATHS-140B: with the smoothed pieces, a square's paving too lies on the level: the point's own slope or the slope averaged over 1.5 m (levelSlope), the lower, under SQUARE_LEVEL (Celebration's own paveSlope) — so a bump in the level is paved and the flat at a rock's foot too: a single bump cut a hole in Celebration's plaza, and Under Celebration's yard ran down its bank in a tongue; not on a square levelled in terraces, S.paveFlat: Otringal's)   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
     if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
       const [r, p] = bare(x, z);
