@@ -169,6 +169,17 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
   check('P137 a GPU-bound machine Low cannot hold at 60: steps on below Low by resolution (Low 75 %, Low 65 %), steps over Low-eco, holds ≥ 55 fps at the end, every change at a commit point',
     G.applied >= 5 && G.phase === 'hold' && !steps(G).some((e) => /→ Low-eco/.test(e.what)) && f >= 55 && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), fps: f, steps: steps(G).map((e) => e.what) });
 }
+// ---------------------------------------------------------------- 9c. P137: no GPU timer, a clean 60 at Low 65 %: never up into Low-eco
+{
+  // (GPU 70 ms at High, no timer query: Low 65 % draws ~14.4 ms — a clean 60 with room. The model's room for the profile
+  //  above is then judged on the frame time alone; up from a GPU rung is the GPU rung above it (Low 75 %), never Low-eco,
+  //  whose GPU cost is Low's)
+  const G = new Governor();
+  const { applied } = run(G, { cpu: 6, gpu: 70, display: 16.67, scene: 30000 }, 900, { timer: false });
+  const ups = steps(G).filter((e) => e.kind === 'up').map((e) => e.what);
+  console.log('       P137 no timer, clean 60 at the bottom:', JSON.stringify({ p: name(G.applied), phase: G.phase, steps: steps(G).map((e) => e.what), above: G.above(6) }));
+  check('P137 up from a GPU rung below Low is the GPU rung above it (Low 65 % → Low 75 % → Low), never Low-eco; no timer, 15 min: no step into Low-eco, held', G.above(6) === 5 && G.above(5) === 3 && G.above(4) === 2 && !ups.some((x) => /→ Low-eco/.test(x)) && !steps(G).some((e) => /→ Low-eco/.test(e.what)) && G.phase === 'hold' && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });
+}
 // ---------------------------------------------------------------- 10. a 30 fps limit: 33 ms frames are on time
 {
   const G = new Governor({ budget: () => 1000 / 30 });
@@ -238,9 +249,10 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
       bat: { gpu: 1.25, cpu: 1.2, cuts: 0.9 } },
   };
   // (P137: the rungs below Low, for every machine — an assumption, not a measurement: Low's share × the far-people knobs
-  //  (GPU 0.98, CPU 0.95 · 0.94) and the resolution's pixel share at the GPU (0.55 + 0.45 · s², as TRUTH above))
+  //  (GPU 0.98; CPU: what Medium → Medium-lean saves on that machine, whose six knobs include these two — an upper
+  //  bound) and the resolution's pixel share at the GPU (0.55 + 0.45 · s², as TRUTH above))
   for (const M of Object.values(MACH)) { const g = M.gpuF.low, c = M.cpuF.low, px = (sc) => (0.55 + 0.45 * sc * sc) / (0.55 + 0.45 * 0.85 * 0.85);
-    Object.assign(M.gpuF, { loweco: g * 0.98, low75: g * 0.98 * px(0.75), low65: g * 0.98 * px(0.65) }); Object.assign(M.cpuF, { loweco: c * 0.89, low75: c * 0.89, low65: c * 0.89 }); }
+    Object.assign(M.gpuF, { loweco: g * 0.98, low75: g * 0.98 * px(0.75), low65: g * 0.98 * px(0.65) }); Object.assign(M.cpuF, { loweco: c * M.cpuF.lean / M.cpuF.medium, low75: c * M.cpuF.lean / M.cpuF.medium, low65: c * M.cpuF.lean / M.cpuF.medium }); }
   // power states: mains; battery on a 60 Hz panel; battery with the panel at 41 Hz (GTX1050-BATTERY: 24.4 ms with nothing
   // drawn; the GPU clocks down and its timer reads ~1.4× longer); battery with Chrome's pacing (12 % of the callbacks a
   // refresh late: FPS30-PRESENT, rAF p95 33.4) — the browser's, not the game's

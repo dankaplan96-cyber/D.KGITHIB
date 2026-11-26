@@ -13,6 +13,25 @@ Base: `ccr-c1c2c4b9-dep6ed` at 87b0f1a4 (P137 row). Files: `src/engine/pace.js`,
 `src/game/text/common.js` + `he/common.js` (+ `he-text.js`), `tests/autoquality.mjs`, `tests/fps60-auto.mjs` (new),
 `tools/fps60-sheet.py` (new), `captures/fps60-auto/steps.png`.
 
+## 0. Decisions for the coordinator / the user (read first)
+
+1. **Auto's bar for "holding 60" is unchanged (P95): ≥ 55 fps with < 6 % of intervals over 20 ms.** In fps60-auto B,
+   Auto settled at Low 75 % with 57.4 fps and 4.4 % doubled frames, about one hitch every 23 frames, on a 59.9 Hz panel.
+   That is exactly the kind of picture the user calls bad. A stricter bar (for example ≥ 59 fps, < 1 %) would make
+   Auto go one rung lower more often, on every machine. It is not changed here: that is the user's trade.
+2. **Unlimited's even pace on 90 / 100 / 165 Hz may still go to 45 / 50 / 55** (§2.1: the even rate nearest 60 on
+   that screen; 100 Hz → 50 is P101's protected fix). On 75 Hz it no longer paces at 37.5.
+3. **The refresh-meter change touches protected PACE-ALL code beyond the brief** (§2.2). The evidence for it is this
+   test's synthetic display, which assumes that a busy browser calls back only when a frame is done; it was not seen
+   on a real browser. The residual risk: a real 3× switch of a panel's rate (120 → 40, 144 → 48 Hz) now reads as the
+   fast screen for 5 min instead of 20 s, and without a GPU timer Auto may step down meanwhile.
+4. **The user's laptop.**
+   - It very likely still holds Frame Rate 30, picked by hand (§3).
+   - If it has a settled Auto profile cached, Auto starts held there. The new rungs then come only through the hold
+     rule (a sustained problem over 30 s across scenes) and at commit points.
+   - Order 76 says "Frame Rate Auto"; the chip reads **Unlimited**.
+   - §7 lists what order 76 should record.
+
 ## 1. Where 30 came from (what the code did before)
 
 The Frame Rate setting has three chips: 30 / 60 / **Unlimited**. The stored value of Unlimited is `fps: 'auto'`, and
@@ -66,7 +85,8 @@ paced deeper; the refusal is noted once in the log.
   - 75 Hz now never paces at 37.5. Before, it did for a game under ~47 fps.
 
   If the user wants "never under 60" literally on 90 / 100 / 165 Hz, the alternative is to leave those screens unpaced
-  (an uneven mix at 60–100 fps). That is one constant to change.
+  (an uneven mix at 60–100 fps). That is a rule change in `floorRefreshes`: the slowest pace would be the fastest rate
+  ≥ ~58 instead of the rate nearest 60.
 
 ### 2.2 Auto's ladder: three rungs below Low (`autoquality.js` PROFILES)
 
@@ -91,6 +111,10 @@ the brief's order below Low (resolution in steps, then detail). Shadows are alre
   to Low-eco instead, which is Low's picture with the far-people knobs kept. GPU pressure takes
   Medium-lean → Low → Low 75 % → Low 65 %, the same path as before plus the two new rungs. Low's picture itself is
   unchanged.
+- **Up from a rung is the rung above it on the same side (`Governor.above`).** Up from Low 75 % is Low, not
+  Low-eco: Low-eco's GPU cost is Low's, so a GPU-bound game would step up into the load it just left and down again.
+  Up from Low-eco is Medium-lean. The next start's "try one up" (`fromCache`, `margin`) uses the same rule.
+  (`tests/autoquality.mjs` 9c: no GPU timer, a clean 60 at Low 65 % for 15 min, never a step into Low-eco.)
 - **One side per rung (`Governor.below(p, kind)`).** A step down for CPU pressure never takes a resolution-only rung:
   that would cost sharpness and buy no CPU time. A step for GPU pressure steps over Low-eco, which buys almost no GPU
   time. Without this, P95's revisit (a step that bought < 7 % goes back and blocks further steps of its kind) would
@@ -104,8 +128,9 @@ the brief's order below Low (resolution in steps, then detail). Shadows are alre
   - Shadows are off from Low down. Lamps stay at 2, because night streets and interiors need them to read. Silhouettes,
     the HUD and the menus (HTML) are never scaled.
 - **What the rungs do not change.** Nothing below Low touches the simulation, collision, aim or any timing: the knobs
-  are visual only (`KNOBS`, unchanged). The resolution steps change only the scene pass's viewport (`applyScale`). No
-  render target is rebuilt between Low and Low 65 % (same pixel ratio, same MSAA 0). As always, a profile changes only
+  are visual only (`KNOBS`, unchanged). The resolution steps change only the scene pass's viewport (`applyScale`). By
+  reading the code (not measured), no render target is rebuilt between Low and Low 65 %: same pixel ratio, same
+  MSAA 0, and `resize()`'s key does not include the scale. As always, a profile changes only
   at a commit point: a scene change behind its black, or an open pause, inventory or map.
 - **The refresh meter (`pace.js` RefreshMeter).** Two cases used to read the screen as slower than it is:
   - A GPU-bound game drawing every 5th and 6th refresh in a mix (41.7 / 50 ms on 120 Hz) has a mean interval that is no
@@ -170,27 +195,33 @@ assumption; 8 min of street / interior / street / combat):
 
 | machine | power | limit | before P137: settles on (street fps / frames shown late) | now |
 |---|---|---|---|---|
-| UHD 620 (dPR 2) | mains | 60 | Medium-lean, 44.1 (Low tried, bought nothing, went back) | **Low-eco, 54.2** |
-| UHD 620 (dPR 2) | battery | 60 | Low, 36.6 | **Low-eco, 41.2** |
-| UHD 620 (dPR 2) | battery | 30 (by hand) | Medium, late 0.52 (Low tried and went back) | Low-eco, late 0.33 |
+| UHD 620 (dPR 2) | mains | 60 | Medium-lean, 44.1 (Low tried, bought nothing, went back) | **Low-eco, 47.4** |
+| UHD 620 (dPR 2) | battery | 60 | Low, 36.6 | **Low-eco, 37.7** |
+| UHD 620 (dPR 2) | battery | 30 (by hand) | Medium, late 0.52 (Low tried and went back) | Low-eco, late 0.40 |
 | UHD 620 light CPU (GPU-bound) | mains / battery | 60 | Medium-lean / Low, 60 | the same, 60 |
 | UHD 620 light CPU | battery | 30 (by hand) | Low, late 0.06 | Low 65 %, late 0.05 |
 | GTX 1050 | battery, Chrome's pacing | 60 | Medium (a try at Low went back) | Medium (a try at Low-eco went back) |
 
 The rest of the table (fast GPU, GTX 1050 mains / battery / 41 Hz) is unchanged.
 
-- **UHD 620 on mains** gains ~10 fps on the street by the model, at the cost of the shadows and 15 % of the resolution.
-  The P95 rule of keeping the sharper picture when a step buys nothing still holds: Low-eco is kept only because it
-  buys frame rate. It still does not reach 60 there.
+- **The truth assumed for Low-eco's CPU share is an upper bound.** Each machine's Medium → Medium-lean CPU ratio
+  stands in for the two far-people knobs (Medium-lean's six knobs include them). On the UHD 620 that is −4 %.
+- **On mains the street gains ~3 fps by the model (44.1 → 47.4)**, at the cost of the shadows and 15 % of the
+  resolution. The revisit kept the step because it bought ≥ 7 %, from Medium.
+- **On battery the gain is ~1 fps (36.6 → 37.7).** Neither is close to 60. Low-eco is a poor trade on that street; the
+  new rungs mainly help GPU-bound places.
 - **Rows marked "by hand" are side effects.** Under a hand-picked 30 limit with frames shown late, Auto now uses the new
   rungs too.
 
 The remaining gap on the street is CPU work. That belongs to the runtime performance engineer (the street's
-simulation / submission), not to this ladder. Handed to the coordinator.
+simulation and render submission), not to this ladder. Handed to the coordinator. If the user prefers keeping the
+shadows over ~1–3 fps on the CPU-bound street, Low-eco should be removed from the CPU path. It is one line: Low-eco's
+`only`.
 
 ## 5. Tests (automated runtime only, SwiftShader)
 
-- `node tests/autoquality.mjs`, updated to the new rule: **94 / 94 PASS**. Changed or new checks:
+- `node tests/autoquality.mjs`, updated to the new rule: **95 / 95 PASS** (its last run, after `above` and the
+  CPU truth). Changed or new checks:
   - seven profiles, with TIER_AT.low by id;
   - the three rungs' knobs and sides;
   - a CPU-bound machine goes down to Low-eco, never a resolution rung;
@@ -259,6 +290,12 @@ Order 76 is already written. These points would make its result readable:
   p90, on the street and in an interior, tells "the floor is too high" (GPU) from "CPU-bound" (§4).
 
 ## 8. Untested / uncertain
+
+- Not tested:
+  - a relaunch with a new rung cached as settled (for example Low 65 % under `?autoq`);
+  - the Hebrew Settings line with "רזולוציה של 75%" as it renders in the menu (dialogue-check only checks that the key
+    exists);
+  - what the far-people knobs look like in motion.
 
 - No real hardware: whether the laptop holds 60 anywhere at Low 65 % is order 76's to answer.
 - The new rungs' cost shares are estimates.

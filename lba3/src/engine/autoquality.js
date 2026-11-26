@@ -4,7 +4,7 @@
 // settings after thinking a little, and then NOT change every few seconds — it jumps"; "if the game runs well on battery
 // there's no reason it won't on mains".
 //
-// Quality: Auto chooses between complete, named profiles (PROFILES, best first): High · Medium (AUTO-2) · Medium-lean (P95) · Low (AUTO-FLOOR, below). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
+// Quality: Auto chooses between complete, named profiles (PROFILES, best first): High · Medium (AUTO-2) · Medium-lean (P95) · Low (AUTO-FLOOR, below) · Low-eco · Low 75 % · Low 65 % (P137). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
 // and small-caster distances, the people's animation rate, the far detail); Auto moves one profile at a time, never a
 // single knob. Low / Medium / High chosen by hand are exactly the presets they always were (renderer.knobs stays null).
 //
@@ -267,7 +267,9 @@ export class Governor {
   // the next profile below / above p on the ladder (skipping what adds nothing now); null at the end. kind: the pressure a
   // step down answers ('cpu' | 'gpu'): a rung for the other side only (P137's rungs below Low) is stepped over
   below(p = this.applied, kind = null) { for (let q = p + 1; q < N_PROFILES; q++) if (!this.skip(q) && !(kind && PROFILES[q].only && PROFILES[q].only !== kind)) return q; return null; }
-  above(p = this.applied) { for (let q = p - 1; q >= 0; q--) if (!this.skip(q)) return q; return null; }
+  // (P137: up from a rung for one side, the rungs for the other side are stepped over — up from Low 75 % is Low, not
+  //  Low-eco, whose GPU cost is Low's: a GPU-bound game would go up into the load it just left and down again)
+  above(p = this.applied) { const o = PROFILES[p]?.only; for (let q = p - 1; q >= 0; q--) if (!this.skip(q) && !(PROFILES[q].only && PROFILES[q].only !== o)) return q; return null; }
   // ---- where it stands: wanted (queued) and in force (applied at the last commit point)
   wanted() { return knobsAt(this.p); }
   knobs() { return knobsAt(this.applied); }
