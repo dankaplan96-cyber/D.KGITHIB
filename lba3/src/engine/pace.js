@@ -42,7 +42,7 @@ export function refreshOf(a, n, s) {
 // refreshes, not a slower screen. A faster reading replaces it at once (a move to a faster screen); a reading that is no
 // multiple (144 → 60 Hz) at once too; a multiple (120 → 60 Hz) when the memory is MEM_MS old — meanwhile the pace counts
 // in refreshes of the old rate, which come out at the same drawn intervals (every 2nd 120 Hz refresh is every 60 Hz one).
-export const MEM_MS = 20000;
+export const MEM_MS = 20000, MEM_LONG = 300000;
 export class RefreshMeter {
   constructor() { this.a = new Float32Array(REFRESH_N); this.s = new Float32Array(REFRESH_N); this.n = 0; this.k = 0; this.R = 0; this.mem = 0; this.memT = -1e9; }
   // d: the interval since the last callback (ms), t: the callback's timestamp; returns the refresh (ms, 0 until measured)
@@ -59,8 +59,13 @@ export class RefreshMeter {
       // (P137: a slower reading whose intervals are each a whole multiple of the remembered refresh — a game drawing every
       //  5th and 6th refresh in a mix, 41.7 / 50 ms on 120 Hz, whose mean is no multiple — is skipped refreshes too, not a
       //  22 Hz screen: read as one, Auto's budget became 45 ms and a GPU-bound game held its picture at 22 fps)
-      if (!whole && r > 1.5 * M) { let c = 0; for (let i = 0; i < this.n; i++) { const q = this.a[i] / M, kk = Math.round(q); if (kk >= 2 && kk <= 12 && Math.abs(q - kk) <= 0.04 * kk) c++; } whole = c >= 0.8 * this.n; }
-      if (whole && t - this.memT < MEM_MS) r = M;
+      let mix = false;
+      if (!whole && r > 1.5 * M) { let c = 0; for (let i = 0; i < this.n; i++) { const q = this.a[i] / M, kk = Math.round(q); if (kk >= 2 && kk <= 12 && Math.abs(q - kk) <= 0.04 * kk) c++; } whole = mix = c >= 0.8 * this.n; }
+      // (P137: and such a reading of 3 or more refreshes, or a mix, keeps the memory for MEM_LONG, not MEM_MS: a GPU-bound
+      //  game drawing every 3rd refresh on 120 Hz for 20 s — Auto still stepping down to fit 60 — was read as a 40 Hz
+      //  screen, and Auto's budget became 25 ms: held at 40 fps. A real move to a slower screen is a 2× one (120 → 60,
+      //  still MEM_MS) or no multiple (at once); counting in the old refresh meanwhile gives the same drawn intervals)
+      if (whole && t - this.memT < (mix || k >= 3 ? MEM_LONG : MEM_MS)) r = M;
       else { this.mem = r; this.memT = t; }
     }
     this.R = r;

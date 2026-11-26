@@ -478,9 +478,10 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
     //  multiple — after a light second: still 120 Hz while the memory lasts, not a 22 Hz screen)
     const Q = new RefreshMeter(); t = 0; for (let i = 0; i < 120; i++) Q.push(8.333, (t += 8.333));
     let mixR = 0; for (let i = 0; i < 200; i++) mixR = Q.push(i % 3 ? 41.67 : 50, (t += 45));
+    for (let i = 0; i < 1600; i++) mixR = Math.max(mixR, Q.push(25, (t += 25)));   // (then every 3rd refresh for 40 s: still 120 Hz)
     const R = { slowR: +slowR.toFixed(2), to60: k + 1, held120: Math.round(held), after: +got.toFixed(2), mix56: +mixR.toFixed(2) };
     console.log('       PACE-ALL refresh meter:', JSON.stringify(R));
-    check('PACE-ALL refresh meter: every frame 2–3 refreshes on 144 Hz still reads 144 Hz; 144 → 60 Hz within 32 callbacks (half a second); 120 → 60 Hz (a multiple) after the 20 s memory; a 5 / 6-refresh mix on 120 Hz still 120 Hz (P137)', near(slowR, 6.944, 0.05) && R.to60 <= 32 && held >= MEM_MS - 1000 && held <= MEM_MS + 1000 && near(got, 16.667, 0.05) && near(mixR, 8.333, 0.05), R);
+    check('PACE-ALL refresh meter: every frame 2–3 refreshes on 144 Hz still reads 144 Hz; 144 → 60 Hz within 32 callbacks (half a second); 120 → 60 Hz (a multiple) after the 20 s memory; a 5 / 6-refresh mix on 120 Hz, then every 3rd refresh for 40 s, still 120 Hz (P137)', near(slowR, 6.944, 0.05) && R.to60 <= 32 && held >= MEM_MS - 1000 && held <= MEM_MS + 1000 && near(got, 16.667, 0.05) && near(mixR, 8.333, 0.05), R);
   }
   // EvenPace driven by a modelled game: a drawn frame needs need(t) ms (the next callback comes at the first refresh at or
   // after its start + need), a skipped refresh calls back at the next one; drawn frames' intervals are fed as main.js does
