@@ -82,7 +82,19 @@ export class Guard extends Actor {
   get aimY() { return this.grobo ? 1.3 : 1.15; }
   get markY() { return this.grobo ? 2.6 : 2.25; }
   // (a guard going down finishes its fall whatever the story does with the cast meanwhile: death.js)
-  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  // GUARD-CHARGE (the user's pick 26.11): the aim's own sound ('guardCharge', audio.js: the rifle powering up), as the
+  // drone's wind-up has its own (enemies.js _chargeSync). Started once as the aim begins, as long as the tell (what is
+  // left of it), following the guard; cut the moment the aim ends by any way (the shot, lost sight, jammed, no clear
+  // shot, a hit, the pulse, beaten, stood down, sent away). Called where the state changes outside update() and at both
+  // ends of update(), so a change made anywhere is heard within the step
+  tellLen() { return this.tune.tell * (this.game.combatDir?.diff?.windup ?? 1); }
+  _chargeSync() {
+    const on = this.state === 'aim' && this.present && !this.gone && !koActive(this);
+    if (on && !this._charging) { this._charging = true; this._chargeV = this.game.audio?.held?.('guardCharge', this.pos, { dur: Math.max(0.15, this.tellLen() - this.stateT), low: this.grobo }) || null; }
+    else if (!on && this._charging) { this._charging = false; this._chargeV?.stop(); this._chargeV = null; }
+    else if (on) this._chargeV?.place(this.pos);
+  }
+  setPresent(on) { this.present = on; this._chargeSync(); if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.def.calm?.()) return; if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
   // P93 (the Zeelich depot, story/chapter2.js): a noise over there. From his calm round only: he turns to `to` and looks
   // for `look` s, then goes on with his round; walk: first he walks to `stand` (a place to look it over from), and after the
@@ -118,7 +130,7 @@ export class Guard extends Actor {
   // ---- hits (LBA1's HitObj: armour, two reactions)
   melee(D, h) { return this.take(D.dmg + (D.heavy ? 1 : 0), h.pos); }
   ballHit(ball, p) { return this.take(ball.damage, p); }
-  pulse(C) { if (!this.alive) return; this.jamT = C.stun || 2.6; this.rifle.userData.glow.emissiveIntensity = 0.1; if (this.state === 'aim') { this.state = 'chase'; this.stateT = 0; this.game.combatDir?.done(this); } }
+  pulse(C) { if (!this.alive) return; this.jamT = C.stun || 2.6; this.rifle.userData.glow.emissiveIntensity = 0.1; if (this.state === 'aim') { this.state = 'chase'; this.stateT = 0; this.game.combatDir?.done(this); } this._chargeSync(); }
   take(force, from) {
     if (!this.alive) return 'hit';
     const g = this.game;
@@ -156,9 +168,11 @@ export class Guard extends Actor {
       g.audio.play('hit', this.pos); g.camRig.shake(0.15);
       new KnockOut(this, 'human', from);   // the fall (death.js); its bonus comes out when it hits the ground
       g.onEnemyKilled(this);   // (LBA1's GiveExtraBonus: one bonus where it fell)
+      this._chargeSync();
       return;
     }
     this.state = 'hurt'; this.stateT = 0; this.coolT = Math.max(this.coolT, 0.6);
+    this._chargeSync();
   }
   // COMBAT-2: would the rifle's bolt get to him? Not through a chain-link fence or a railing (Bolts.update; as his ball)
   clearShot(hero) { return !this.game.physics.ballFenceBetween(this.pos.x, this.pos.y + 1.35, this.pos.z, hero.pos.x, hero.pos.y + 0.9, hero.pos.z); }
@@ -180,6 +194,7 @@ export class Guard extends Actor {
     this.state = 'yield'; this.stateT = 0; this.yieldTo = to || this.home;
     this.aimLine.visible = false; this.rifle.userData.glow.emissiveIntensity = 0.2;
     this.game.combatDir?.done(this);
+    this._chargeSync();
   }
   updateYield(dt) {
     const P = this.game.physics, to = this.yieldTo;
@@ -197,6 +212,7 @@ export class Guard extends Actor {
   }
 
   update(dt) {
+    this._chargeSync();
     if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (beaten: death.js; then gone)
     if (this.state === 'yield') { if (this.present && !this.gone) this.updateYield(dt); return; }
     if (!this.present || !this.alive) return;
@@ -227,7 +243,7 @@ export class Guard extends Actor {
         face = this.angleTo(hero); anim = 'walk';
         const T = this.tune, close = d < T.close;
         if (close && this.coolT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; if (T.windCue) g.audio.play('alert', this.pos); break; }
-        if (!close && d >= T.shotMin && d < T.shotRange && sees && this.coolT <= 0 && this.jamT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'aim'; this.stateT = 0; break; }
+        if (!close && d >= T.shotMin && d < T.shotRange && sees && this.coolT <= 0 && this.jamT <= 0 && this.clearShot(hero) && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'aim'; this.stateT = 0; break; }   // (its sound: _chargeSync)
         // (a guard that keeps his rifle for range — shotMin — walks right into the baton's reach instead of standing off)
         const stop = T.shotMin > T.close ? T.close - 0.15 : T.close + 0.3;
         sp = d > 4.5 ? 2.4 : d > stop ? 1.6 : 0;
@@ -303,5 +319,6 @@ export class Guard extends Actor {
     this.placeRig();
     this.rig.update(dt, sp);
     this.sync();
+    this._chargeSync();
   }
 }
