@@ -44,7 +44,7 @@ for k, label in V:
     pts = [(x0 + (x1 - x0) * i / max(1, n - 1), y1 - (y1 - y0) * (r['hip'] - lo) / (hi - lo)) for i, r in enumerate(rows)]
     for a, b in zip(pts, pts[1:]): d.line((a, (b[0], a[1]), b), fill=cols[k], width=2)   # (a step: the pose held until the next)
     for q in pts: d.ellipse((q[0] - 3, q[1] - 3, q[0] + 3, q[1] + 3), fill=cols[k])
-    d.text((x1 - 330, y0 + 4 + 16 * (k == 'loweco')), label.split(':')[0], fill=cols[k], font=small)
+    d.text((x0 + 300, y1 - 36 + 16 * (k == 'loweco')), label.split(':')[0], fill=cols[k], font=small)
 d.text((pad, y1 + 6), f'{lo:+.2f}', fill=(170, 170, 170), font=small); d.text((pad, y0), f'{hi:+.2f}', fill=(170, 170, 170), font=small)
 sheet.save(os.path.join(D, 'sheet.png'))
 print('wrote', os.path.join(D, 'sheet.png'), sheet.size)

@@ -1,12 +1,12 @@
 // CPU-RELIEF (P137b): what CPU-eco changes on screen — a walking person 15-25 m from the camera, in view, on the
 // Citadel street, posed every frame (Medium-lean) and at CPU-eco's lower rate (every other frame there), 10 frames
 // of 1/60 s each: crops of each frame and the swing of the person's left hip per frame. Twinsen stands still, the
-// follow camera behind him, the clock stepped by hand (automated runtime only, SwiftShader). Writes OUT/frames-*.png and
-// OUT/anim.json for tools/cpu-relief-sheet.py.
-//   GAME_URL=http://localhost:8347/ OUT=captures/cpu-relief node animsheet.mjs
+// follow camera behind him, the clock stepped by hand (automated runtime only, SwiftShader). Writes SHEET_DIR/frames-*.png and
+// SHEET_DIR/anim.json for tools/cpu-relief-sheet.py.
+//   GAME_URL=http://localhost:8347/ SHEET_DIR=captures/cpu-relief node animsheet.mjs
 import { launch, open } from '../../../../tests/lib/boot.mjs';
 import fs from 'node:fs';
-const E = process.env, OUT = E.OUT || 'captures/cpu-relief', N = +(E.N || 10);
+const E = process.env, OUT = E.SHEET_DIR || "captures/cpu-relief", N = +(E.N || 10);
 fs.mkdirSync(OUT, { recursive: true });
 const { browser, page } = await launch({ width: 1280, height: 720 });
 const ev = (f, a) => page.evaluate(f, a);
@@ -55,7 +55,7 @@ for (const id of ['lean', 'loweco']) {
     });
     const s = Math.max(60, Math.round(f.hgt * 1.5)), clip = { x: Math.max(0, Math.round(f.x - s / 2)), y: Math.max(0, Math.round(f.y - s / 2)), width: s, height: s };
     const file = `${OUT}/frames-${id}-${k}.png`;
-    await page.screenshot({ path: file, clip });
+    await page.screenshot({ path: file, clip, timeout: 600000 });
     rows.push({ ...f, file });
   }
   out.variants[id] = rows;

@@ -11,11 +11,15 @@ await page.goto(URL0 + '?nocine', { waitUntil: 'load', timeout: 600000 });
 await page.waitForFunction(() => window.game && game.screen === 'title' && !game.preparing && !game.gfxHold, null, { timeout: 900000, polling: 1000 });
 await page.evaluate(() => { document.querySelector('[data-act="new"]').click(); game.testFreeze = true; game.step(0.3); game.setState('play'); });
 await page.evaluate(() => game.bench.prepareAreas());
-console.error('DEOPT-PROBE: street');
-await page.evaluate(() => {
-  const G = game, route = G.bench.routes().find((x) => x.id === 'street');
-  G.state = 'play'; route.setup(); G.state = 'play';
-  let t = 0; for (let i = 0; i < 600; i++) { t += 1 / 60; route.drive(t, 1 / 60); G.frame(1 / 60, i % 2 === 0); }
-});
+// (ROUTES=street,interior,combat,arrival: each route warmed 300 frames, then 600 traced after its mark)
+for (const id of (process.env.ROUTES || 'street').split(',')) {
+  await page.evaluate((id) => {
+    const G = game, route = G.bench.routes().find((x) => x.id === id);
+    G.state = 'play'; route.setup(); G.state = 'play'; window.__r = route; window.__t = 0;
+    for (let i = 0; i < 300; i++) { window.__t += 1 / 60; route.drive(window.__t, 1 / 60); G.frame(1 / 60, i % 2 === 0); }
+  }, id);
+  console.error('DEOPT-PROBE: ' + id);
+  await page.evaluate(() => { const G = game; for (let i = 0; i < 600; i++) { window.__t += 1 / 60; window.__r.drive(window.__t, 1 / 60); G.frame(1 / 60, i % 2 === 0); } });
+}
 console.error('DEOPT-PROBE: done');
 await browser.close();
