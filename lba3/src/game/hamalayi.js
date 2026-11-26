@@ -22,6 +22,8 @@
 //   R.ventDiscs [{i, x,y,z, warm, free, breathing, setFree(b)}] five carved discs round the vent's seal (three warm: they
 //   steam once the cap is melted; two choked under ice: PUZZLES P-B); a choked one's ball target {…, disc:i} calls
 //   R.onDisc(i) (story/observatory.js); R.ventPuff(i, s) jets a disc's steam for s seconds
+//   R.ventRing (only with ?ch7stage=new, and then no discs: R.ventDiscs is empty) the seal's turning ring and its five
+//   grooves (ventseal.js)
 //   R.snow {setLevel(0..1)}
 import * as THREE from 'three';
 import { gemGeo, coreOfGem, linkedCore, asShell } from './crystallook.js';
@@ -36,6 +38,8 @@ import { Kit, MAT, barrel, crate, handCart } from './props.js';
 import { oldGate, waystone } from './props-lba1hamalayi.js';
 import { gridCapture, snowLips, iceTint, basinDress, ventDress, gorgeRiver } from './hamalayi-finish.js';
 import { makeTree } from './hamalayi-tree.js';
+import { CH7_NEW } from './ch7stage.js';
+import { ventSeal } from './ventseal.js';
 import { roomOcc, occCollider } from './roomocc.js';
 import { buildWinchLine } from './winchline.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
@@ -839,7 +843,9 @@ export function* buildHamalayiSteps(scene, physics) {
   // are breathing already. Two are choked: a lump of clear ice over each, no steam. The seal stays frozen until all five
   // breathe. The ice breaks to the ball (the dome's frozen slit taught it) or to a blow; a ball on a breathing disc only
   // rings (story/observatory.js says so). Each on bare ice just outside the vent's collider.
-  {
+  // (#18/#28, ?ch7stage=new: no discs; the seal sits in a turning ring, five grooves round it: ventseal.js, story/ventring.js)
+  if (CH7_NEW) { R.ventDiscs = []; R.ventRing = ventSeal({ group, H, col, VENT, descent: DESCENT[DESCENT.length - 1], updaters, W }); }
+  else {
     const WARM = [0, 2, 3], discs = [], stoneM = tm('stone', { color: '#a89c8c' });
     const iceM = new THREE.MeshStandardMaterial({ color: '#d4ecf8', roughness: 0.12, metalness: 0.05, transparent: true, opacity: 0.86, emissive: '#7ab8e0', emissiveIntensity: 0.18 });
     const steams = [];

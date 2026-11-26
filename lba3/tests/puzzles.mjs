@@ -34,7 +34,7 @@ const ev = (f, a) => page.evaluate(f, a);
 const is = (label, v, ok) => { if (BEFORE) { console.log('(before) ' + label, JSON.stringify(v)); return v; } check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => { game.step(0.05); game.renderer.render(); }); await page.screenshot({ path: OUT + (BEFORE ? 'before-' : 'after-') + n + '.jpg', type: 'jpeg', quality: 82, timeout: 180000 }); };
 const boot = async (mode) => {
-  await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
+  await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine&ch7stage=old', { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
   await page.evaluate(() => { game.testFreeze = true; });
   if (mode) await page.click(`[data-act="${mode}"]`, { timeout: 180000 });

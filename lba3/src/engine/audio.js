@@ -57,6 +57,9 @@ const SND = {
   // (DRONE-CHARGE, #58: a drone's wind-up, its own sound, as long as its tell and cut when the tell is: held(). gap 0:
   //  the drone asks once per wind-up; two drones winding up in one step are two sounds)
   droneCharge: { pri: 3, gap: 0, vary: [0.015, 0.5] },
+  // (GUARD-CHARGE, the user's pick 26.11: a guard's rifle coming up, its aim's own sound, held() the same way: every guard
+  //  with a rifle, quieter than the shot's zap)
+  guardCharge: { pri: 3, gap: 0, vary: [0.012, 0.5] },
   alert: { pri: 3, gap: 0.15, vary: FIXED }, zap: { pri: 3, gap: 0.06, vary: [0.02, 0.5] }, slam: { pri: 3, gap: 0.15, vary: [0.02, 0.5] }, pulse: { gap: 0.1, vary: FIXED },
   rumble: { gap: 0.3, vary: FIXED }, thunder: { pri: 3, gap: 1, vary: FIXED }, horn: { pri: 3, gap: 1, vary: FIXED },
   blip: { pri: 1, gap: 0.025, vary: FIXED }, select: { pri: 3, gap: 0.04, vary: FIXED }, mode: { gap: 0.05, vary: FIXED },
@@ -863,6 +866,35 @@ export class AudioEngine {
         e.setValueAtTime(0, t); e.linearRampToValueAtTime(0.33 * v, t + 0.04); e.linearRampToValueAtTime(v, end - rel); e.linearRampToValueAtTime(0, end);
         am.connect(eg).connect(out);
         for (const s of src) { if (s === n) s.start(t, Math.random() * 1.5); else s.start(t); s.stop(end + 0.02); }
+        this._nodes?.push(eg);
+        this._end = Math.max(this._end || 0, dur);
+        break;
+      }
+      // GUARD-CHARGE (the user's pick 26.11): a guard's stun rifle powering up through its aim (opt.dur, s: the tell), the
+      // aim's own sound (the shot keeps 'zap'). A dry two-part click as the rifle is brought up (the catch, then the cell
+      // seating), then a smooth, low rising tone: a sine with a soft sawtooth under a low-pass that opens as it climbs,
+      // 90 → 270 Hz on a charging curve (fast at first, settling toward the top: a cell filling, where the drone's buzz
+      // climbs evenly and flutters). No flutter, no crackle. It swells to the end of the aim and is gone as the bolt
+      // leaves. opt.low: the heavier Grobo and FunFrock troopers, a tone lower
+      case 'guardCharge': {
+        const ctx = this.ctx, dur = Math.max(0.15, this._opt?.dur ?? 0.8), pv = (this._pv || 1) * (this._opt?.low ? 0.89 : 1);
+        const v = this._gv ?? 1, t = ctx.currentTime, end = t + dur, out = this._dest || this._in(), src = [];
+        // the click: a short bright tick, then a lower one 45 ms later (one-shots through the same held gain: cut with it)
+        this._burst({ dur: 0.018, vol: 0.07, f: 3400, f1: 2200, type: 'bandpass', q: 5 }); this._tone({ type: 'triangle', f0: 2300, f1: 1500, dur: 0.016, vol: 0.018 });
+        this._burst({ dur: 0.025, vol: 0.05, f: 1700, f1: 1100, type: 'bandpass', q: 4, at: 0.045 }); this._tone({ f0: 620, f1: 420, dur: 0.03, vol: 0.025, at: 0.045 });
+        const glide = (p, f0, f1) => { p.setValueAtTime(f0 * pv, t + 0.03); p.setTargetAtTime(f1 * pv * 1.06, t + 0.03, dur / 2.6); };   // (≈ f1 at the end)
+        const sine = ctx.createOscillator(); glide(sine.frequency, 90, 270); src.push(sine);
+        const saw = ctx.createOscillator(); saw.type = 'sawtooth'; glide(saw.frequency, 90, 270); src.push(saw);
+        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 3; glide(lp.frequency, 240, 1200);
+        const sg = ctx.createGain(); sg.gain.value = 0.019; sine.connect(sg);
+        const wg = ctx.createGain(); wg.gain.value = 0.0085; saw.connect(lp).connect(wg);
+        const sub = ctx.createOscillator(); glide(sub.frequency, 45, 135); src.push(sub);   // (an octave under: the body)
+        const ug = ctx.createGain(); ug.gain.value = 0.0075; sub.connect(ug);
+        // the swell: from the click's end to 0.4, up to full at 90 % of the aim, out by its end (the zap lands on silence)
+        const eg = ctx.createGain(), e = eg.gain, rel = Math.min(0.06, dur * 0.08);
+        e.setValueAtTime(0, t); e.setValueAtTime(0, t + 0.03); e.linearRampToValueAtTime(0.4 * v, t + 0.09); e.linearRampToValueAtTime(v, end - rel); e.linearRampToValueAtTime(0, end);
+        sg.connect(eg); wg.connect(eg); ug.connect(eg); eg.connect(out);
+        for (const s of src) { s.start(t); s.stop(end + 0.02); }
         this._nodes?.push(eg);
         this._end = Math.max(this._end || 0, dur);
         break;

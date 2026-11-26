@@ -9,7 +9,8 @@
 // (PUZZLES P-B, which replaced CHAPTER-BALANCE's "wake the three warm discs": chapter 4's decision again): three steam,
 // breathing already; two are choked under ice. The ice breaks to the ball or a blow (flags c7_free1, c7_free4); a ball
 // on a breathing one only rings. With the drone down and all five breathing, the seal turns and the vent breathes.
-// Arthur calls: the
+// #18/#28 (?ch7stage=new): the seal is "the mountain's pulse" instead (story/ventring.js): the arrow on its ring turned
+// to the groove where the snow jumps with each kick. Arthur calls: the
 // project is evacuating Citadel by its list. Hesk has the glider ready on the monastery slope. → chapter 8.
 import * as THREE from 'three';
 import { ChapterBase } from './base.js';
@@ -19,6 +20,8 @@ import { stepWalk } from './zeelift.js';
 import { storyJourney } from '../travelfilm.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
 import { PassThread } from './passline.js';
+import { VentRing } from './ventring.js';
+import { CH7_NEW } from '../ch7stage.js';
 
 // (WC-1) the glider on the monks' slope for its departure film, from the monastery's gate, and where it is watched from
 // (on the terrace's lip east of the gate, clear of the rope lift's winch, nose south over the drop to Lhar; REV-HAM: on chapter
@@ -254,6 +257,8 @@ class RoofThread {
 export class Observatory extends ChapterBase {
   get M() { return this.game.rooms.hamalayi; }
   get roof() { return (this._roof ||= new RoofThread(this)); }
+  // #18/#28: the vent's seal as the mountain's pulse (?ch7stage=new; story/ventring.js)
+  get ring() { return (this._ring ||= new VentRing(this)); }
   // CAMPAIGN-5: the snow fields' shaking and the telescope's fourth setting (passline.js; one thread for 6 and 7)
   get ps() { return (this.story._ps ||= new PassThread(this.story)); }
   get O() { return this.game.rooms.obsv; }
@@ -316,13 +321,15 @@ export class Observatory extends ChapterBase {
       if (f.c7_sendell && !f.c7_scope && this.ps.scopeOK()) consider(dist(O.telescope.x, O.telescope.z), 1.8, { kind: 'c7scope', label: 'p_scope' });
     } else if (r === 'hamalayi') {
       const V = this.M.vent;
-      if (f.c7_droneDown && !f.c7_vent) consider(dist(V.x, V.z), 4.2, { kind: 'c7vent', label: 'p_vent' });
+      if (CH7_NEW) this.ring.interactables(consider, dist);   // (#18/#28: the ring, not the discs)
+      else if (f.c7_droneDown && !f.c7_vent) consider(dist(V.x, V.z), 4.2, { kind: 'c7vent', label: 'p_vent' });
     }
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
     if (this.ps.interact7(it)) return true;
     if (this.roof.interact(it)) return true;
+    if (CH7_NEW && this.ring.interact(it)) return true;
     switch (it.kind) {
       case 'c7mirror': {
         const m = it.mirror;
@@ -344,15 +351,18 @@ export class Observatory extends ChapterBase {
       case 'c7vent':
         // (PUZZLES P-B: the seal turns only with all five of its channels breathing)
         if (this.breathing() < 5) { f.c7_sealSeen = true; this.chain([['hero', this.breathing() > 3 ? 'c7_seal_more' : 'c7_seal_stuck']], () => g.updateObjective()); return true; }
-        h.act('use', 1.0, () => {
-          f.c7_vent = true; this.M.vent.setOpen(true); g.audio.play('horn'); g.camRig.shake(0.5);
-          this.story.refreshCast({ walk: true });
-          // (P81: the seal described once: a player who has already looked at it hears only the narration of its turning)
-          this.chain([...(f.c7_sealSeen ? [] : [['hero', 'c7_vent_seal']]), ['narrator', 'c7_vent_open'], ['hero', 'c7_tw_v1'], ['arthurradio', 'c7_arthur_1'], ['hero', 'c7_tw_ar1'], ['arthurradio', 'c7_arthur_2'], ['hero', 'c7_tw_ar2'], ['heskradio', 'c7_hesk_radio']], () => { g.updateObjective(); g.save(false); });
-        }, 0.6);
+        h.act('use', 1.0, () => this.openVent(), 0.6);
         return true;
     }
     return false;
+  }
+  // the seal turns and the vent breathes (the discs' seal turned by hand; #18/#28's ring at a kick, with its own line first)
+  openVent(pre = []) {
+    const g = this.game, f = this.f;
+    f.c7_vent = true; this.M.vent.setOpen(true); this.M.ventRing?.setOpen(true); g.audio.play('horn'); g.camRig.shake(0.5);
+    this.story.refreshCast({ walk: true });
+    // (P81: the seal described once: a player who has already looked at it hears only the narration of its turning)
+    this.chain([...pre, ...(f.c7_sealSeen ? [] : [['hero', 'c7_vent_seal']]), ['narrator', 'c7_vent_open'], ['hero', 'c7_tw_v1'], ['arthurradio', 'c7_arthur_1'], ['hero', 'c7_tw_ar1'], ['arthurradio', 'c7_arthur_2'], ['hero', 'c7_tw_ar2'], ['heskradio', 'c7_hesk_radio']], () => { g.updateObjective(); g.save(false); });
   }
   // the ball breaks the ice over the second sun's slit (obsroom.js R.ice's ball target)
   breakIce() {
@@ -476,6 +486,7 @@ export class Observatory extends ChapterBase {
     if (!this.isCur() || !M) return;
     this.ps.update(dt);
     this.roof.update(dt);
+    if (CH7_NEW) this.ring.update(dt);
     M.snow.focus = h.pos;
     // (the frozen slit's ball target answers to this chapter, however it began: a load, or chapter 6 played on)
     const O = g.regions?.built('obsv');
@@ -493,7 +504,7 @@ export class Observatory extends ChapterBase {
     }
     if (f.c7_vent && !f.c7_done && g.state === 'play' && this.room() === 'hamalayi' && Math.hypot(h.pos.x - M.monastery.gate.x, h.pos.z - M.monastery.gate.z) < 4) this.leave();
     // (PUZZLES P-B: the seal tried, a while with nothing struck: first the two that don't steam, later the ice; HINTS-LESS)
-    const stuck = this.room() === 'hamalayi' && !!f.c7_sealSeen && !f.c7_vent && this.breathing() < 5 && g.time - (this.discAt ?? -1e9) > 20;
+    const stuck = !CH7_NEW && this.room() === 'hamalayi' && !!f.c7_sealSeen && !f.c7_vent && this.breathing() < 5 && g.time - (this.discAt ?? -1e9) > 20;
     this.nudge(dt, 'c7_steam', stuck, 45, 'c7_nudge_steam');
     this.nudge(dt, 'c7_ice', stuck, 90, 'c7_nudge_ice');
   }
@@ -502,6 +513,7 @@ export class Observatory extends ChapterBase {
     if (!this.reached()) return;
     this.ps.applyFlags();   // (CAMPAIGN-5: the line's pulse, the telescope's setting as the flags have them)
     this.roof.applyFlags();   // (THE SECOND SHIFT: the shutter's aim; nothing in hand)
+    if (CH7_NEW) this.ring.applyFlags();   // (#18/#28: the ring's arrow on its rest, or on the live groove once open)
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     RG.whenBuilt('obsv', (O) => {
@@ -536,7 +548,8 @@ export class Observatory extends ChapterBase {
     if (!f.c7_started) return '';
     { const ro = this.roof.objective(); if (ro) return ro; }   // (THE SECOND SHIFT: the shutter; then in to the mirrors)
     if (f.c7_vent) return this.goal('c7_obj_home');
-    if (f.c7_droneDown && f.c7_sealSeen && this.breathing() < 5) return this.goal('c7_obj_free', { n: this.breathing() });
+    if (CH7_NEW) { const vo = this.ring.objective(); if (vo) return vo; }   // (#18/#28: the arrow to the live groove)
+    else if (f.c7_droneDown && f.c7_sealSeen && this.breathing() < 5) return this.goal('c7_obj_free', { n: this.breathing() });
     if (f.c7_droneDown) return this.goal('c7_obj_vent');
     if (f.c7_scope) return this.goal('c7_obj_drone');
     { const po = this.ps.objective7(); if (po) return po; }   // (CAMPAIGN-5: the fourth setting)

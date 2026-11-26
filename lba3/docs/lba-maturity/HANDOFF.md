@@ -20,8 +20,8 @@ rows of `status.md` (the user's reports, P1–P134). This file is the short, ord
   The test bot's dodge (`tests/lib/player.js P.meleeThreat`) now reads a guard's own wind-up (0.9 s at Zeelich).
   Merged-branch tests 26.11 (automated runtime only, SwiftShader): tester-fixes 10/10, wave7 E+S 12/12, wave4 B+D+E
   20/20, combat 84/84 (after the #58 merge), dialogue-check PASS.
-- **Published:** **v171** (26.11), artifact version **`1795680746-f8e8`** = the next `base_version`. v171 = v170 +
-  the small fixes, #65, #58 a + c + the Citadel heart (all picked 26.11).
+- **Published:** **v172** (26.11), artifact version **`1795681304-c03b`** = the next `base_version`. v171 = v170 +
+  the small fixes, #65, #58 a + c + the Citadel heart; v172 = v171 + the drone's charge-up sound (all picked 26.11).
   - Slug `6f31d0d2-efe4-4413-a370-7d95a7f5785b`.
   - URL https://claude.ai/artifact/EjPMQXPwbmre2kDevMC4tA.
 - **v170 contents** (all approved by the user on 25.11):
@@ -125,6 +125,7 @@ Not done in v170, recorded for later (none blocks):
     3. `git worktree remove --force --force …`, `git worktree prune`, then `git branch -D`.
     4. Run the covering suite once on the merged branch.
     5. Show the sheet, and the user picks.
+- **Publishing cadence (the user, 26.11):** only after 10 approved small fixes or 5 big ones, or when the user asks.
 - **Publishing:**
   1. Make a scratch worktree of the approved commit, and symlink `tools/node_modules` from the main checkout.
   2. Run `node tools/he-bundle.mjs`, `sh tools/stamp-build.sh`, `python3 tools/artifact-page.py <S>/vNNN-index.html`
@@ -144,6 +145,8 @@ Not done in v170, recorded for later (none blocks):
 - **Release goal:** a full public release on 31.5.2027 (`RELEASE-2027.he.md`).
 
 ## 5. Where things are
+**The user's checklist page (26.11):** `docs/lba-maturity/checklist/index.html`, published as artifact slug `98d80407-2559-4868-8915-406317b81b85` (https://claude.ai/artifact/KsgUvrHqD21dbJrMarozzx, version 1795682265-bf5c). Update its data array (and the 'since version' counters) whenever OPEN-TASKS changes, with a cheap edit_version / publish_files of that one file.
+
 | What | File |
 |---|---|
 | The user's reports | `docs/lba-maturity/status.md` (P1–P134) |
