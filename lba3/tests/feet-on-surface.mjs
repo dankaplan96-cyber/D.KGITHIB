@@ -7,8 +7,8 @@
 //      standable collider top with no drawn surface within 5 cm of it but one 5 cm - 0.6 m under it (an invisible
 //      floor): "float" spots. Spots of one piece (one part, or one collider) are one candidate; candidates under
 //      0.36 m^2 (a pebble, a collider's rim) are left out. Discovery only nominates: the verdict is the walk's.
-//      Classes: A (judged) — a piece up to 30 cm thick lying no more than 30 cm (on average) over his floor, a sheet, or a
-//      floor with nothing drawn at its top; B (listed) — a thicker or higher piece walked through (a missing collider);
+//      Classes: A (judged) — a piece whose top lies no more than 30 cm (on average) over his floor, or a floor with
+//      nothing drawn at its top; B (listed) — a higher piece walked through (a missing collider);
 //      C (listed) — a standable collider over a rock's domed top.
 //   2. the walk: Twinsen placed 3 m off each candidate (ISO, logged: hero.pos set on standable ground in its area) and
 //      walked across it by input (Classic: face it, ArrowUp held, as tests/lib/player.js does); every frame on the
@@ -39,7 +39,59 @@ const SNOW = ['#f6f9ff'];   // (and any piece in the snow's own look, MM.snow: d
 // class-A findings left for their owners (not this suite's to fix: another worker's file, a protected change, a question
 // for the coordinator): { area, path (RegExp on the piece's path or name), x, z, r (m), why }. Printed as HANDED ON with
 // the measured depth, never dropped; they do not fail the run.
-const HANDED = [];
+// (FEET-66, 26.11: what its after-run still found, not fixed in that round; FEET-66.md lists them with the owners)
+const HANDED = [
+  { area: 'citadel', path: /collider/, x: -36.6, z: 69.9, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'citadel', path: /merged<townMerged<Group/, x: -71.0, z: 42.5, r: 1.0, why: "Citadel, the town's merged pieces (town.js / townbits.js): door steps and kerbs; 1 piece(s), sink up to 29 cm" },
+  { area: 'citadel', path: /collider/, x: -112.3, z: 53.3, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 20 cm" },
+  { area: 'citadel', path: /collider/, x: -110.3, z: 38.1, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'citadel', path: /collider/, x: -109.0, z: 48.3, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'citadel', path: /Buffer<station<Group/, x: -24.6, z: -70.0, r: 3.8, why: "Citadel, the project's station yard (island.js buildStation); 2 piece(s), sink up to 25 cm" },
+  { area: 'citadel', path: /merged<harbour<Group/, x: -111.1, z: 38.0, r: 2.4, why: "Citadel, the harbour's quay pieces (island.js / harbourshed.js); 3 piece(s), sink up to 24 cm" },
+  { area: 'citadel', path: /collider/, x: -39.2, z: 8.8, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'citadel', path: /collider/, x: -94.3, z: 32.8, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'citadel', path: /collider/, x: -52.3, z: 49.7, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'citadel', path: /collider/, x: -50.3, z: 44.7, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'citadel', path: /Buffer<asylum\-climb/, x: -32.0, z: -41.2, r: 6.1, why: "Citadel, the climb to the asylum (lba1places.js); 7 piece(s), sink up to 22 cm" },
+  { area: 'citadel', path: /Buffer<old\-door\-passageS<Group/, x: -27.7, z: -61.7, r: 1.5, why: "Citadel, the old cellar hatch (island.js cellarHatch); 2 piece(s), sink up to 9 cm" },
+  { area: 'citadel', path: /Buffer<harbour<Group/, x: -122.0, z: 44.3, r: 1.0, why: "Citadel, the harbour's quay pieces (island.js / harbourshed.js); 1 piece(s), sink up to 7 cm" },
+  { area: 'citadel', path: /Buffer<old\-door\-passageS<Group/, x: -27.8, z: -61.2, r: 1.0, why: "Citadel, the old cellar hatch (island.js cellarHatch); 1 piece(s), sink up to 8 cm" },
+  { area: 'citadel', path: /Buffer<station<Group/, x: -30.3, z: -64.2, r: 8.7, why: "Citadel, the project's station yard (island.js buildStation); 9 piece(s), sink up to 6 cm" },
+  { area: 'citadel', path: /Buffer<asylum\-front/, x: -26.5, z: -50.7, r: 1.5, why: "Citadel, the asylum's front (lba1places.js); 2 piece(s), sink up to 46 cm" },
+  { area: 'citadel', path: /Buffer<Group<Group<harbour<Group/, x: -124.8, z: 51.2, r: 3.5, why: "Citadel, the harbour's quay pieces (island.js / harbourshed.js); 2 piece(s), sink up to 7 cm" },
+  { area: 'citadel', path: /collider/, x: -106.0, z: 43.3, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 20 cm" },
+  { area: 'citadel', path: /collider/, x: -25.9, z: -86.1, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 23 cm" },
+  { area: 'citadel', path: /merged<townMerged<Group/, x: -56.9, z: 8.9, r: 43.1, why: "Citadel, the town's merged pieces (town.js / townbits.js): door steps and kerbs; 7 piece(s), sink up to 13 cm" },
+  { area: 'citadel', path: /Buffer<station<Group/, x: -23.5, z: -65.0, r: 12.9, why: "Citadel, the project's station yard (island.js buildStation); 3 piece(s), sink up to 10 cm" },
+  { area: 'citadel', path: /Buffer<pipeline<Group/, x: -45.8, z: -60.4, r: 17.6, why: "Citadel, the water main lying on the ground (island.js; a pipe, not a floor); 3 piece(s), sink up to 10 cm" },
+  { area: 'citadel', path: /Buffer<lanegate<Group/, x: -45.8, z: 61.8, r: 1.0, why: "Citadel, the lane gate (lanegate.js); 1 piece(s), sink up to 5 cm" },
+  { area: 'citadel', path: /Buffer<Group<sewerhatch\-terrace<Group/, x: -25.0, z: -31.6, r: 1.8, why: "Citadel, the sewer hatch on the terrace (sewers.js); 4 piece(s), sink up to 11 cm" },
+  { area: 'citadel', path: /Buffer<Group<harbour<Group/, x: -116.2, z: 47.3, r: 1.0, why: "Citadel, the harbour's quay pieces (island.js / harbourshed.js); 1 piece(s), sink up to 10 cm" },
+  { area: 'zeelich', path: /Buffer<Group<zeelich/, x: 2388.9, z: 12.7, r: 1.0, why: "Zeelich (zeelich.js / zeelife.js): a porch, a step or a cover; 1 piece(s), sink up to 12 cm" },
+  { area: 'zeelich', path: /collider/, x: 2361.2, z: -7.0, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 35 cm" },
+  { area: 'zeelich', path: /Buffer<Group<zeelich/, x: 2389.2, z: 0.6, r: 9.1, why: "Zeelich (zeelich.js / zeelife.js): a porch, a step or a cover; 2 piece(s), sink up to 14 cm" },
+  { area: 'zeelich', path: /Buffer<zeelich/, x: 2450.2, z: -0.0, r: 1.0, why: "Zeelich (zeelich.js / zeelife.js): a porch, a step or a cover; 1 piece(s), sink up to 6 cm" },
+  { area: 'zeelich', path: /merged<Group<zeelich/, x: 2387.8, z: 23.2, r: 1.0, why: "Zeelich (zeelich.js / zeelife.js): a porch, a step or a cover; 1 piece(s), sink up to 6 cm" },
+  { area: 'desert', path: /Buffer<desert/, x: 3359.0, z: -38.5, r: 1.0, why: "Desert Island (desert.js / desertdress.js); 1 piece(s), sink up to 32 cm" },
+  { area: 'desert', path: /merged<Group<desert/, x: 3423.1, z: -24.8, r: 1.0, why: "Desert Island (desert.js / desertdress.js); 1 piece(s), sink up to 19 cm" },
+  { area: 'desert', path: /collider/, x: 3304.7, z: -45.7, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 30 cm" },
+  { area: 'desert', path: /Buffer<desert/, x: 3311.3, z: 4.0, r: 1.0, why: "Desert Island (desert.js / desertdress.js); 1 piece(s), sink up to 8 cm" },
+  { area: 'desert', path: /Buffer<desert/, x: 3387.3, z: -43.2, r: 1.0, why: "Desert Island (desert.js / desertdress.js); 1 piece(s), sink up to 6 cm" },
+  { area: 'hamalayi', path: /collider/, x: 4361.8, z: -50.2, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 38 cm" },
+  { area: 'hamalayi', path: /collider/, x: 4274.8, z: 83.7, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'hamalayi', path: /collider/, x: 4276.0, z: 75.8, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 114 cm" },
+  { area: 'hamalayi', path: /collider/, x: 4273.6, z: 82.0, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'hamalayi', path: /collider/, x: 4273.4, z: 80.6, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 92 cm" },
+  { area: 'hamalayi', path: /collider/, x: 4278.4, z: 83.9, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 10 cm" },
+  { area: 'ballastra', path: /Buffer<bl_swingBridge<ballastra/, x: 2972.2, z: -3013.4, r: 1.0, why: "Ballastra (ballastra/*.js); 1 piece(s), sink up to 8 cm" },
+  { area: 'bl_arches', path: /collider/, x: 3008.0, z: -3800.0, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 29 cm" },
+  { area: 'bl_arches', path: /Buffer<bl_gangwayS<bl_arches/, x: 2994.5, z: -3804.2, r: 1.0, why: "Ballastra (ballastra/*.js); 1 piece(s), sink up to 4 cm" },
+  { area: 'bl_gardens', path: /Buffer<bl_gardens/, x: 3000.2, z: -4602.9, r: 44.0, why: "Ballastra (ballastra/*.js); 3 piece(s), sink up to 18 cm" },
+  { area: 'isle_otringal', path: /collider/, x: 1894.9, z: 1802.1, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 48 cm" },
+  { area: 'isle_otringal', path: /collider/, x: 1864.2, z: 1786.6, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 48 cm" },
+  { area: 'isle_otringal', path: /collider/, x: 1908.8, z: 1836.9, r: 1.0, why: "a floor with less drawn at its top (a coping, a planter's rim, a wall top): the collider's owner; 1 piece(s), float up to 11 cm" },
+  { area: 'isle_knartas', path: /Buffer<francos\ dig\ earth<francos\ dig<isle_knartas/, x: 2250.7, z: 1806.7, r: 1.0, why: "the isles (zislands.js / francos: another worker's file now); 1 piece(s), sink up to 19 cm" },
+];
 const handed = (c) => HANDED.find((h) => h.area === c.area && h.path.test((c.path || '') + ' ' + c.name) && Math.hypot(c.x - h.x, c.z - h.z) < h.r);
 
 const { browser, page } = await launch({ width: 960, height: 540 });
@@ -68,6 +120,9 @@ for (const area of areas) {
     if (area.room) area.bounds = { x0: A.x0, x1: A.x1, z0: A.z0, z1: A.z1 };
     const nameOf = (oi) => { const o = SW.raw.obj(oi).o; return o.name || o.parent?.name || ''; };
     const sinks = new Map(), floats = new Map();
+    // (a floor at this drawn top within 8 cm: the piece has its collider; physics.js reads a brick 5 cm in from its edges,
+    //  so on the last 5 cm of a step he is on the step below for a frame: not a missing floor)
+    const ownFloor = (x, z, y) => PH.near(x, z).some((c) => c.enabled && !c.noStand && Math.abs(c.top - y) < 0.015 && PH._inside(c, x, z, 0.08));
     // (the floor under him here is a step: a stair collider's top)
     const stairAt = (x, z, s) => PH.near(x, z).some((c) => c.enabled && c.stair && Math.abs(c.top - s) < 1e-4 && PH._inside(c, x, z, 0));
     // (a) sink spots: walk the cells that hold drawn geometry
@@ -85,6 +140,7 @@ for (const area of areas) {
         if (!top || top.ny < 0.85) continue;
         const s = PH.groundAt(x, z, top.y + 0.02), d = top.y - s;
         if (d <= 0.03 || d >= 0.6) continue;
+        if (ownFloor(x, z, top.y)) continue;   // (a step's edge: its own floor is there, read 5 cm in from its edges)
         if (s < -0.35 && !PH.groundInfo(x, z, top.y + 0.02).brick) continue;   // (the sea)
         if (PH.steepAt(x, z, s) || PH.blockedAt(x, z, s, 0)) continue;
         const part = S[top.si], b = part.box, sheet = b[4] - b[1] < 0.03;
@@ -128,9 +184,10 @@ for (const area of areas) {
     const cand = [];
     for (const c of sinks.values()) { if (c.n < MIN_N) continue; const nm = nameOf(c.oi), path = SW.raw.path(c.oi), lk = SW.raw.look(S[c.si].lk);
       const th = c.th.sort((a, b) => a - b)[c.th.length >> 1];
-      // (A: up to 30 cm thick and on average no more than 30 cm over his floor — a sheet, a slab, a pad, a step; deeper
-      //  is a thing at knee height walked through, a bench's seat or a table: B)
-      cand.push({ kind: 'sink', cls: th <= 0.3 && c.dSum / c.n <= 0.3 ? 'A' : 'B', th: r3(th), area: area.id, si: c.si, name: nm + (c.built ? ' over a built walk' : ''), path, look: lk.hex + (lk.tex ? '/' + lk.tex : '') + (lk.transparent ? ' (see-through)' : ''), water: WATER.test(nm) || S[c.si].box[3] - S[c.si].box[0] > 300, soft: (SOFT.test(nm) || SNOW.includes(lk.hex)) && !c.built, m2: r3(c.n * C * C), dMax: r3(c.dMax), dMean: r3(c.dSum / c.n), x: r3(c.x / c.n), z: r3(c.z / c.n), box: S[c.si].box.map(r3), pts: c.pts }); }
+      // (A: its top on average no more than 30 cm over his floor — a sheet, a slab, a pad, a step, snow over a step, a low
+      //  stone; higher is a thing at knee height walked through, a bench's seat, a table, a boulder: B. Its thickness is
+      //  kept for the report: a snow lip or a step runs on down into the ground under him)
+      cand.push({ kind: 'sink', cls: c.dSum / c.n <= 0.3 ? 'A' : 'B', th: r3(th), area: area.id, si: c.si, name: nm + (c.built ? ' over a built walk' : ''), path, look: lk.hex + (lk.tex ? '/' + lk.tex : '') + (lk.transparent ? ' (see-through)' : ''), water: WATER.test(nm) || S[c.si].box[3] - S[c.si].box[0] > 300, soft: (SOFT.test(nm) || SNOW.includes(lk.hex)) && !c.built, m2: r3(c.n * C * C), dMax: r3(c.dMax), dMean: r3(c.dSum / c.n), x: r3(c.x / c.n), z: r3(c.z / c.n), box: S[c.si].box.map(r3), pts: c.pts }); }
     for (const [ci, f] of floats) cand.push({ kind: 'float', cls: f.rock > f.n / 2 ? 'C' : 'A', area: area.id, ci, name: 'collider ' + ci + (f.c.stair ? ' (stair)' : '') + (f.c.type === 'cyl' ? ' cyl r ' + f.c.r : ` box ${r3(f.c.hw * 2)}x${r3(f.c.hd * 2)}`), top: r3(f.c.top), m2: r3(f.n * C * C), dMax: r3(f.gMax), x: r3(f.x / f.n), z: r3(f.z / f.n), pts: f.pts });
     cand.sort((a, b) => b.m2 * b.dMax - a.m2 * a.dMax);
     return { census: res.census, decals: res.decals.length, cols, cand };
@@ -170,7 +227,7 @@ for (const area of areas) {
       // nearest drawn surface under them (the terrain counts) with none within 3 cm of them
       const measure = (x, z, y) => {
         const { hits, tg } = SW.raw.column(x, z);
-        if (c.kind === 'sink') { const t = hits.find((q) => q.si === c.si && q.ny > 0.85); return t ? t.y - y : null; }
+        if (c.kind === 'sink') { const t = hits.find((q) => q.si === c.si && q.ny > 0.85); return !t || PH.near(x, z).some((q) => q.enabled && !q.noStand && Math.abs(q.top - t.y) < 0.015 && PH._inside(q, x, z, 0.08)) ? null : t.y - y; }   // (a step's edge: as discovery's ownFloor)
         const ys = hits.filter((q) => q.ny > 0.3).map((q) => q.y); if (tg != null) ys.push(tg);
         if (ys.some((v) => Math.abs(v - y) <= 0.03)) return 0;
         const under = ys.filter((v) => v < y).sort((a, b) => b - a)[0];

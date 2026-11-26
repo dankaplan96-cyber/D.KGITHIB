@@ -15,7 +15,6 @@ export const SPOTS = [
   { id: 'h2-arch-foot', area: 'hamalayi', x: 4270, z: 39.4, a: Math.PI, d: 2.5, what: 'Hamalayi, the foot of the arch steps in the gorge river (water: he wades)' },
   { id: 'h3-shelf', area: 'hamalayi', x: 4218.3, z: 44.1, a: Math.PI / 2, d: 2.5, what: 'Hamalayi gorge, an ice shelf along the bank' },
   { id: 'h4-floe', area: 'hamalayi', x: 4239.7, z: 41.1, a: Math.PI / 2, d: 2.5, what: 'Hamalayi gorge, a floe in the river (walked at)' },
-  { id: 'h5-crevasse', area: 'hamalayi', x: 4262.82, z: -34.51, a: Math.PI / 2, d: 2.5, what: 'Hamalayi glacier basin, a crevasse line' },
   { id: 'h6-groove', area: 'hamalayi', x: 4243.1, z: -48.55, a: Math.PI / 2, d: 2.5, what: 'Hamalayi vent, the seal ring\'s groove strip' },
   { id: 'h7-lifttop', area: 'hamalayi', x: 4324, z: -27.4, a: 0, d: 2.5, what: 'Hamalayi, the lift\'s top: the ramp to the platform (a collider with nothing drawn on it before)' },
   { id: 'z1-street', area: 'zeelich', x: 2398.3, z: 0, a: Math.PI / 2, d: 2.5, what: 'Zeelich, the paved street' },
