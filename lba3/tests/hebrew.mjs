@@ -5,7 +5,7 @@
 //      right; the choice is kept after a reload
 //   2. a new game in Hebrew: the house's tip panel where English has it (left), its goal read right to left, its key
 //      hint laid out as in English (the key caps on the left, ← before →)
-//   3. Arthur and Zoé: Hebrew boxes, the name tag where English has it, the line read right to left, nothing spills at
+//   3. Arthur and Zoé: Hebrew boxes, the name tag at the top right (P138, the user's pick 26.11: over where the Hebrew line starts), the line read right to left, nothing spills at
 //      1280×720 and 1920×1080; the cupboard and the rest of the yard (P.openingYard)
 //   4. the voice speaks the English line (a spy on the voice's line), none in Hebrew
 //   5. the objective (HUD and pause), the settings page (tabs and choices in English's order; → takes the next choice
@@ -136,10 +136,10 @@ const ar = await ev(() => {
   const pe = document.querySelector('#prompt.show'), prompt = pe?.textContent || '', pk = HE.x(pe?.querySelector('kbd')), pt = HE.x(pe?.querySelector('.kt'));
   P.tap('KeyE', 0.05); game.step(1.6);
   const D = document.querySelector('#dialog'), N = D.querySelector('.name');
-  return { prompt, promptKeyLeft: pk != null && pt != null && pk < pt, state: game.state, name: N?.textContent, text: D.querySelector('.text')?.textContent, reads: HE.reads('#dialog .text'), tagLeft: N.getBoundingClientRect().left < D.getBoundingClientRect().left + D.getBoundingClientRect().width / 3, dir: getComputedStyle(D).direction, fit: HE.fit('#dialog'), textFit: HE.fit('#dialog .text') };
+  return { prompt, promptKeyLeft: pk != null && pt != null && pk < pt, state: game.state, name: N?.textContent, text: D.querySelector('.text')?.textContent, reads: HE.reads('#dialog .text'), tagRight: N.getBoundingClientRect().right > D.getBoundingClientRect().right - D.getBoundingClientRect().width / 3, dir: getComputedStyle(D).direction, fit: HE.fit('#dialog'), textFit: HE.fit('#dialog .text') };
 });
 check('Arthur in the house: the prompt "לדבר" with its key on the left (English\'s order)', /לדבר/.test(ar.prompt) && ar.promptKeyLeft, ar);
-check('Arthur: a Hebrew box, his name ארתור on the name tag where English has it (left), the line read right to left, inside the screen', ar.state === 'dialog' && ar.name === 'ארתור' && HEB.test(ar.text || '') && ar.reads === 'rtl' && ar.tagLeft && ar.dir === 'ltr' && ar.fit.ok && ar.textFit.ok, ar);
+check('Arthur: a Hebrew box, his name ארתור on the name tag at the top right (P138), the box itself as in English, the line read right to left, inside the screen', ar.state === 'dialog' && ar.name === 'ארתור' && HEB.test(ar.text || '') && ar.reads === 'rtl' && ar.tagRight && ar.dir === 'ltr' && ar.fit.ok && ar.textFit.ok, ar);
 if (SHOTS) await big(() => shot(PRE ? '01-dialogue' : '01-house-dialogue'));
 const cup = await ev(() => {
   P.settle();

@@ -1,5 +1,8 @@
 # PATHS-135 (P135, the user, 26.11: "make sure all the paths are complete and not cut off in the middle like here")
 
+> Superseded by `PATHS-136.md` (26.11). The rule is strict now, and the test reads
+> `tests/fixtures/paths-136-known.json`. All eight cases accepted below were judged again there.
+
 Branch `ccr-c1c2c4b9-dep6ed` + this worktree's commits. Evidence: **automated runtime only (SwiftShader, headless
 Chromium)**. Nobody played it, and nothing here was checked on a real GPU.
 

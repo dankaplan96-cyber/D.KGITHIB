@@ -112,3 +112,5 @@ language itself nothing changes, only the language itself RTL".
   by left 50%) do not move.
 - Automated runtime only (Chromium): the Hebrew font file fetched and loaded (`document.fonts`), the minimap's computed
   place. `tests/hebrew.mjs` not rerun (the user: keep tests minimal).
+
+> 26.11: the Hebrew dialogue name tag now sits top right (RTL-138, the user confirmed); the left-side item above is superseded.

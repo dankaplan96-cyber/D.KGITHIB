@@ -106,6 +106,8 @@ export class AutoApply {
   on() { const s = this.G.settings; return !!s.qualityAuto && s.visual !== '1997'; }
   tier() { return describe(this.gov.knobs()).tier; }
   label() { return describe(this.gov.knobs()).text; }
+  // (P137: Settings' line in the player's language — the profile's name by id, q_prof_<id>; the benchmark keeps label())
+  labelText(t) { const D = describe(this.gov.knobs()), k = 'q_prof_' + D.id, s = t ? t(k) : k; return s && s !== k && !D.diffs.length ? s : D.text; }
   // the timer query in play, every other frame (the benchmark sets its own)
   timer() { const T = this.G.perf?.gpuTimer; if (!T || !this.on() || this.test) return null; T.stride = 2; return T; }
 

@@ -27,7 +27,7 @@ const heading = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
 // and the seat's front edge, the way the sitter faces (walkers.js seatPose: a resident sits on the seat, not inside it)
 const WAITING_BENCH = { seatY: 0.47, back: -0.24, front: 0.235 };
 // destinations as the walker goes from each junction (first leg of the real route)
-const TO = { square: [-42, -4], lane: [-44.6, 12], harbour: [-60, 33], spaceport: [-31, 40], lighthouse: [-58, 73], laneS: [-45.6, 60] };
+const TO = { square: [-42, -4], lane: [-44.6, 12], forecourt: [-36, 11], harbour: [-60, 33], spaceport: [-31, 40], lighthouse: [-58, 73], laneS: [-45.6, 60] };
 
 export function buildCityDressing(root, physics, W) {
   const g = new THREE.Group(); g.name = 'citydress'; root.add(g);
@@ -153,7 +153,9 @@ export function buildCityDressing(root, physics, W) {
   binEnd(-49, -7.4, 1);
   binEnd(-35.8, 2.6, -1);
   const sqx = -44.6, sqz = 6.6;   // where the south lane leaves the square
-  post(sqx, sqz, [{ text: 'HARBOUR', a: heading(sqx, sqz, ...TO.lane), color: '#2a8a7a' }, { text: 'SPACEPORT', a: heading(sqx, sqz, ...TO.lane), color: '#7a52b0' }, { text: 'LIGHTHOUSE', a: heading(sqx, sqz, ...TO.lane), color: '#c8452f' }]);
+  // (P136: the lane's stub ends in the paved forecourt south of the square now, world.js GRID_STREETS; the way on is the
+  //  east street from its far end, so the three arrows point across it there, not south into the block's lawn)
+  post(sqx, sqz, [{ text: 'HARBOUR', a: heading(sqx, sqz, ...TO.forecourt), color: '#2a8a7a' }, { text: 'SPACEPORT', a: heading(sqx, sqz, ...TO.forecourt), color: '#7a52b0' }, { text: 'LIGHTHOUSE', a: heading(sqx, sqz, ...TO.forecourt), color: '#c8452f' }]);
   board(-36.4, -15.2, 0.35);                      // a notice board at the square's north-east corner, read from the square
   place('infostand', (k) => P.infoStand(k), -51.2, -1.6, Math.PI / 2 + 0.2, FP.info);
   // ---------------------------------------------------------------- flower tubs either side of front doors
