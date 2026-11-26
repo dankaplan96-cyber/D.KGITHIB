@@ -58,3 +58,9 @@ And a peek inside: every building with a door can be entered, the classic LBA wa
 
 ## המשך 2 (בפנים) — עברית
 והצצה פנימה: לכל בניין עם דלת אפשר להיכנס, כמו ב־LBA, עם הגג שמורם. מלון עם בריכה, בר באיים, הטברנה של המצודה, המערה הזוהרת מתחת לבאר, סדנה קטנה, טרמינל מעבורות, מקדש, משרד הכרטיסים ומשרד באי. עדיין בעבודה!
+
+## Edit for the original post (26.11) — English, add at the end
+EDIT: Thank you all for the comments, including the critical ones, I read every one. I understand that LBA means a lot to many of us and that a fan project can feel strange. I'm not trying to replace the originals; nothing can. I'm a fan who grew up on these games and is building this out of passion, for free. If something feels wrong or "not LBA" to you, please tell me what. That's exactly the feedback that helps.
+
+## עריכה לפוסט המקורי — עברית
+עריכה: תודה לכולם על התגובות, גם הביקורתיות, אני קורא כל אחת. אני מבין ש־LBA חשוב להרבה מאיתנו ושפרויקט של מעריץ יכול להרגיש מוזר. אני לא מנסה להחליף את המקוריים; שום דבר לא יכול. אני מעריץ שגדל על המשחקים האלה ובונה את זה מתשוקה, בחינם. אם משהו מרגיש לכם לא נכון או "לא LBA", תגידו לי מה. זה בדיוק הפידבק שעוזר.
