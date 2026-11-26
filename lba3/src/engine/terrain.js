@@ -42,12 +42,13 @@ const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVary
 // (LAWN-EDGES-2, the user's pick 26.11: smooth grass/soil edges are the default; ?lawnedge=old brings back the stepped edge)
 export const LAWN_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('lawnedge') !== 'old'; } catch { return true; } })();
 const LAWN_WOB = 0.1;   // (m: the edge's wobble by the grass tile's brightness, so it reads painted, not ruled)
-// ROCK-EDGES (docs/lba-maturity/ROCK-EDGES.md; ?rockedge=new, off by default): LAWN-EDGES-2's traced edge for two more
+// ROCK-EDGES (docs/lba-maturity/ROCK-EDGES.md): LAWN-EDGES-2's traced edge for two more
 // channels, the rock's edge (the rock's share, re-split per pixel: rk) and the paving's (its share of the ground that is
 // not rock: pk) — the `rockedge` attribute, [rock distance, rock strength, paving distance, paving strength] per grid
 // point (Terrain._edgeChannels). Off: no attribute, no work, the shader's text as before. Where LAWN-EDGES' own paving
 // line runs (Citadel's streets, vEdge), its cut (EDGE_CUT) still decides, as before.
-export const ROCK_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('rockedge') === 'new'; } catch { return false; } })();
+// (ROCK-EDGES, the user's pick 26.11: smooth rock and paving edges are the default; ?rockedge=old brings back the old split)
+export const ROCK_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('rockedge') !== 'old'; } catch { return true; } })();
 const ROCK_WOB = 0.1, PAVE_WOB = 0.1;   // (m: the rock's edge wobbled by the rock tile's brightness about its mean (uRockMid), the paving's by the grass tile's; 0.25 drew the granite's dark specks as a dotted fringe outside the line)
 const RB = (0.25 + ROCK_WOB).toFixed(3), PB = (0.25 + PAVE_WOB).toFixed(3);   // (m: beyond these on the outer side the cut is 0 whatever the wobble)
 // the rock's share: the old split (the share plus the tile's wobble, on a short ramp: across a ~1 m triangle the grid's
@@ -383,7 +384,7 @@ export class Terrain {
   // A point with no grass or soil (paving, sand, snow, rock: under 1 % of the two) takes the side of the piece it is
   // nearest to, or with none near, its neighbours' side.
   // Nothing else changes: the splat, the heights and the scatter (which reads the splat functions, not this) as before.
-  // ROCK-EDGES (?rockedge=new): the same, in one pass sharing the fine samples, for the rock's share and the paving's
+  // ROCK-EDGES (default; ?rockedge=old: off): the same, in one pass sharing the fine samples, for the rock's share and the paving's
   // share of what is not rock (the `rockedge` attribute); the lawn's result is the same with it or without.
   _edgeChannels(spl, spl2, slopes) {
     const t0 = performance.now(), n = this.segs + 1, S = LE_SUB, NF = this.segs * S + 1, st = this.step, fs = st / S;
