@@ -52,3 +52,9 @@ Thanks so much for all the interest! Here are a few more places from further int
 
 ## המשך (עברית, לך)
 תודה רבה על כל ההתעניינות! הנה עוד כמה מקומות מהמשך ההרפתקה: עיר הנמל ובתי הכלונסאות של בלסטרה, איי זיליך (קנרטאס עם הבקתות העגולות והצפלין העוגן, מטע הפריחה, מפעל הגז הישן), שער העיר של זיליך, נווה המדבר קש באי המדבר, והבית של טווינסן. כולם צילומי מסך אמיתיים מהמשחק, שעדיין בעבודה.
+
+## Follow-up 2 (inside, 26.11) — English
+And a peek inside: every building with a door can be entered, the classic LBA way, with the roof lifted off. A hotel with a pool, a bar on the islands, the Citadel tavern, the glowing cave under the well, a little workshop, a shuttle terminal, a temple, the ticket office and an island office. Still a work in progress!
+
+## המשך 2 (בפנים) — עברית
+והצצה פנימה: לכל בניין עם דלת אפשר להיכנס, כמו ב־LBA, עם הגג שמורם. מלון עם בריכה, בר באיים, הטברנה של המצודה, המערה הזוהרת מתחת לבאר, סדנה קטנה, טרמינל מעבורות, מקדש, משרד הכרטיסים ומשרד באי. עדיין בעבודה!
