@@ -1460,16 +1460,16 @@ const BARE = {
 //     before light: about the quay paving's value, so its lit facets stay under white). Over 1, as the tile needs, but
 //     modest, so the one-cell blend into the turf beside a cliff reads as a lit lip, not a glow;
 //   - turf: a softer, greyer moss green (the grass tile under a pale sage), so it reads as moss on the rock;
-//   - earth: the bare patches that were dark paving tiles are orange-brown earth (the dirt tile #8a6a50, warmed to
-//     ~#a86c44: darker than the huts' walls #c9a074, lighter and redder than their domes), and so are the worn paths and
-//     the village's square (earthAt: the open ground round (23, 26), between the huts 73, 76 and 79);
+//   - earth: the bare patches that were dark paving tiles are orange-brown earth (the dirt tile #8a6a50, warmed to a
+//     brown ~#9c6843: darker than the huts' walls #c9a074, lighter than their domes, browner than the terracotta jars),
+//     and so are the worn paths and the village's square (earthAt: the open ground round (23, 26), between the huts 73, 76 and 79);
 //   - the quay's paving a pale warm stone, the shore's rim a sand colour; the scattered rocks the same pale grey.
 // (Every branch below reads S.pal, which only this sets: without the switch every island's ground is as before.)
 const KNA_PAL = KNARTAS_PAL && {
   ground: ['#d4dab0', '#c6cea0', '#f0e0c0'],   // (moss, moss, the sand rim)
   rock: [1.42, 1.5, 1.07],                      // (linear multipliers on the cliff tile: ~#a6a29a)
   stone: [1.2, 1.27, 0.92],                     // (the bare-rock patches on the flat: darker, as they face the sun)
-  earth: [1.5, 1.02, 0.72],                     // (on the dirt tile: ~#a86c44)
+  earth: [1.3, 0.96, 0.7],                      // (on the dirt tile: ~#9c6843; a first #a86c44 read as near the jars' terracotta)
   paveCol: '#f2ece2', pathMix: 0.8,
   rockProp: [1.45, 1.45, 1.35],                 // (the rocks' instance colour: their grey-brown sculpt (#9a9182) to pale grey)
   earthAt: (x, z) => Math.hypot((x - 23) / 6.5, (z - 26) / 5.5),   // (the village square: < 1 inside)

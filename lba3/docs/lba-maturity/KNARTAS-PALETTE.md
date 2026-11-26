@@ -21,10 +21,14 @@ texture, material, shader variant or draw.
   they face the sun) and the brink's skirt under the clouds.
   - Measured on the captures, in boxes of sunlit rock: the mean pixel goes from (89, 82, 79) to (134, 130, 122) at the
     dig slope, and from (77, 70, 76) to (136, 132, 127) in the south lanes. Red is at or above blue in both.
-  - No pixel in those boxes reaches 250.
+  - Counted: 0 of 96,000 and 0 of 84,000 pixels in those boxes reach 250.
 - **Turf.** A greyer moss green (#d4dab0 and #c6cea0, where before it was #e8f0b0 and #dce8a4).
-- **Earth.** The bare patches that used to be dark paving tiles are now orange-brown earth (the dirt tile, warmed to
-  ~#a86c44).
+- **Earth.** The bare patches that used to be dark paving tiles are now orange-brown earth (the dirt tile, warmed to a
+  brown ~#9c6843).
+  - On screen, lit, it measures about (126, 87, 60) in the square. The terracotta jars beside it measure (128, 72, 55),
+    so the jars are redder.
+  - A first, redder earth (~#a86c44, (135, 90, 63) on screen) sat too close to the jars, which are searchable
+    containers. Citadel's soil was also toned down twice for reading orange (textures.js).
   - The worn paths are the same earth, at 0.8 instead of 0.5.
   - The village square is earth too: the open ground between the huts round (23, 26), with a noise-wobbled edge and on
     flat ground only.
@@ -35,6 +39,8 @@ texture, material, shader variant or draw.
 - **Rock ramp.** The turf-to-rock colour change is sharper (smoothstep 0.8–1.1 instead of 0.7–1.4). The turf beside a
   cliff takes less of the rock's lift.
 - **The scattered rocks** (`rockGeometry` instances) take a pale grey instance colour instead of the turf's bluish tint.
+  - Knartas draws only one. Its instance colour is (1.42, 1.42, 1.32) in the buffer, so it is not clamped.
+  - It is not in any capture.
 - **The quay's paving and the sand rim:** #f2ece2 and #f0e0c0.
   - The harbour hardly changes. The quay reads a shade greyer: its mean goes from (129, 118, 105) to (122, 113, 101).
 
@@ -55,10 +61,10 @@ Both runs used the same order of spots.
 | village square (22.6, 31.2) | 85 → 85 | 662,478 → 662,478 | 1403 → 1403 | 471 → 471 | 95 → 95 |
 | dig slope / gold dome (20.5, 9.5) | 50 → 50 | 387,365 → 387,365 | 1405 → 1405 | 471 → 471 | 96 → 96 |
 | south lanes (22.3, −16.2) | 58 → 58 | 546,335 → 546,335 | 1408 → 1408 | 471 → 471 | 96 → 96 |
-| harbour (−12.0, −26.1) | 71 → 72* | 492,518 → 492,520* | 1409 → 1409 | 471 → 471 | 96 → 96 |
+| harbour (−12.0, −26.1) | 71 → 71* | 492,518 → 492,518* | 1409 → 1409 | 471 → 471 | 96 → 96 |
 
-\* A 2-triangle draw that comes and goes from run to run. A first run with the switch on gave 71 / 492,518 at the same
-spot.
+\* This is the final run. One earlier run with the switch on gave 72 / 492,520 at this spot: a 2-triangle draw that
+comes and goes from run to run.
 
 The island's group, measured when it is built: 148 meshes, 65 materials, 236,926 triangles, 16.04 MB of vertex and
 index buffers, 610 colliders. All are the same with and without the switch.
@@ -67,15 +73,30 @@ Build time of `isle_knartas`, alternating fresh pages in one browser: off 11.4 s
 This is noise. Two earlier single runs on a busier machine gave 14.8 s off and 23.5 s on; the alternating run shows
 that gap was load. The colour work per vertex is a little arithmetic and one 2-octave noise call, once at build time.
 
-Nothing runs per frame, and nothing is added to the GPU. The fragment cost is the same shader on the same splat
-weights, but renderer.info cannot measure fragment cost, and frame time on a real GPU is unmeasured.
+Nothing runs per frame, and nothing is added to the GPU: the same shader program, textures and geometry. The splat
+weights do change in places:
+- where tiles became earth, the shader reads the dirt tile instead of the paving tile;
+- in the village square, a dirt read is added where there was grass;
+- the rock area is the same (`BARE` unchanged).
+
+renderer.info cannot see fragment cost, so the GPU cost of those reads is unmeasured, as is frame time on a real GPU.
+
+**Switch off = as before.** Captures from before the change and from the final code with the switch off (same spots)
+were compared pixel by pixel. They differ only in a box round Twinsen (his idle pose) and the "Search" prompt. The rock
+boxes' means are identical: (89.4, 82.2, 78.9) and (77.2, 69.6, 75.8).
 
 ## Tests (each run once, with the switch on: `QUERY=knartaspal=new`, SERVE=1)
 
 - `tests/island-doors.mjs` with `REGIONS=isle_knartas`: **PASS 24/24, no errors**. All 20 Knartas doors were walked to
-  on foot and entered; the keepers' check and the save-inside / Continue check also passed.
-- Not run: the other island suites. Nothing but terrain colours and the rocks' instance colours changes, so no
-  collider, door, route or save is touched.
+  on foot and entered; the keepers' check and the save-inside / Continue check also passed. This ran before the last
+  change, which only made the earth browner (one colour constant), so it was not run again.
+- Not run: the other island suites. Nothing but terrain colours, terrain splat weights and the rocks' instance colours
+  changes, so no collider, door, route or save is touched.
+- Untested:
+  - `?knartas=old` together with `?knartaspal=new` (the palette does not read the huts' switch);
+  - the in-game map (mapdraw.js reads the terrain's vertex colours and splat weights; values over 1 are now among
+    them);
+  - chapter or lighting states other than the new game's.
 
 ## Captures
 
@@ -103,7 +124,7 @@ at four spots, plus one overview from a free camera. They are automated runtime 
 
 1. Keep the new palette? These are the values to tune:
    - the rock's lightness (now ~#a6a29a before light);
-   - the earth's colour (~#a86c44);
+   - the earth's colour (~#9c6843, about (126, 87, 60) lit on screen);
    - how green the moss is.
 2. Should the rock be a quieter, paler tile (Otringal's granite, already in the game) at the cost of one shared
    texture?
