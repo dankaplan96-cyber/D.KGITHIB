@@ -1,19 +1,77 @@
 # #17b Knartas's palette (the user's pick, 26.11) — pale grey rock and orange-brown earth
 
-Status: **Implemented, automated runtime only** (SwiftShader, headless Chromium). It is behind the URL switch
-**`?knartaspal=new`**, which is off by default. Without the switch the island's ground is exactly as before: the code
-path is unchanged, and the draw calls, triangles, geometries, textures and programs are the same at every capture spot.
-No one has looked at it on a real GPU or played it.
+Status: **Implemented, on by default** (the user approved it 26.11). **`?knartaspal=old`** gives the previous ground
+(the old colours on the cliff tile). Automated runtime only (SwiftShader, headless Chromium). No one has looked at it on a
+real GPU or played it.
 
 Why: the resemblance review (resemblance-zeelich.md §C, world.md §5, KNARTAS-17.md "Unresolved gaps") scored Knartas's
 palette at 6–7/15. It describes LBA2's Knartas as "pale grey-white rock with green moss, an orange-brown earth square,
 sand rims". Ours had dark violet-grey rock, bright green turf and dark grey tiles.
 
-## What changed (with `?knartaspal=new`; Knartas only)
+## A quieter rock (the user's request, 26.11: the approved palette's rock read busy)
+
+The cliff tile's light facets and dark cracks were drawn for Citadel's darker cliffs. Lifted to a pale grey they read
+busy, like crazy paving, most of all on the flat bare patches.
+
+- **The rock is Otringal's pale granite tile** (`graniteTex`, `isle-granite`: already in the game). It is a speckled
+  neutral grey with soft lighter and darker blotches and fine cracks. Knartas only: every other island keeps its tile.
+  - `KNA_PAL.granite`; the terrain reads `graniteTex()` for its rock where `S.turfRock || PAL?.granite`.
+  - With `?knartaspal=old`, `PAL` is null, so the old ground on the cliff tile comes back by construction.
+- **The same lit grey as before.** The granite is paler than the cliff tile. Measured in the page, the mean in linear
+  light is (0.494, 0.476, 0.430) against (0.291, 0.263, 0.329). So the vertex-colour multipliers now darken it instead
+  of lifting it:
+  - rock: (0.76, 0.76, 0.75), where before it was (1.42, 1.5, 1.07);
+  - the bare patches on the flat: (0.72, 0.72, 0.73), where before it was (1.2, 1.27, 0.92).
+  - No multiplier is over 1 any more. The in-game map, which reads vertex colours, sees no rock values over 1.
+- **The rock's edge is kept in place.** The terrain shader moves the rock/turf edge by the tile's own brightness
+  (`terrain.js`: `dot(rock, 1/3) − 0.5`, times 0.3). The paler granite moved the edge out by about 0.052 of splat
+  weight, and on screen it ate about 9 % of the turf. On Knartas the rock's splat weight is now × 0.81 (in `splatFn`,
+  before normalisation), which puts the edge back where the approved palette had it.
+  - Turf-green pixels per frame, approved → granite without the fix → final:
+    - south lanes 24.98 → 22.78 → 23.38 %;
+    - dig slope 17.15 → 15.56 → 16.08 %;
+    - square 16.59 → 15.30 → 15.32 %;
+    - harbour 7.51 → 7.48 → 7.50 %.
+  - The edges sit in the same places (inspected on crops). The turf that is left counts a little less "green" because
+    the one-cell vertex-colour blend beside the rock now leans to a neutral grey (0.76), where it used to be lifted
+    (1.42, 1.5, 1.07). This also softens the "lit lip" noted below.
+
+**Measured on the captures** (1280×720, play camera Far, the same spots and settings, before = the approved palette at
+its final revision, after = this change). The boxes are sunlit rock. "Fine" is the standard deviation of luminance after
+a 6 px Gaussian high-pass, which is how busy the pattern reads.
+
+| Box | mean RGB before → after | luminance SD | fine SD | pixels ≥ 250 |
+|---|---|---:|---:|---:|
+| south lanes, flat bare patch (850–1250, 560–700) | (138, 134, 129) → (139, 136, 131) | 36.9 → 17.2 | 26.7 → 11.5 | 0 → 0 |
+| south lanes, rock mound (80–260, 90–200) | (95, 92, 89) → (95, 92, 88) | 28.9 → 25.2 | 16.7 → 8.8 | 0 → 0 |
+| dig slope (800–1200, 420–620) | (131, 128, 120) → (135, 133, 123) | 30.1 → 13.9 | 19.4 → 7.8 | 0 → 0 |
+| village square, rock beside the jars (975–1140, 560–700) | (139, 134, 128) → (137, 133, 127) | 37.6 → 16.4 | 27.0 → 10.9 | 0 → 0 |
+
+The rock keeps its value (within 4 levels) and loses about half its contrast. The fine pattern drops to 40–50 %.
+
+**Cost.** renderer.info at the four spots below: calls, triangles, geometries and programs are the same; **textures
+are 471 → 472**. That is the granite tile: one 512² canvas texture with mipmaps, about 1.4 MB of GPU memory (an
+estimate: 512 × 512 × 4 bytes × 4/3). It is shared with Otringal (the same `ctex` key), so once Otringal is built it costs
+nothing more. Nothing runs per frame, and the shader program is the same. The texture is drawn once, on the first
+build of Knartas or Otringal. For build time, see the A/B in "Cost" below.
+
+**Captures:** `captures/knartas-pal/rock-sheet.png` has before (the approved palette, the cliff tile) and after (the
+granite) pairs from the play camera (Far) at the south lanes, the dig slope and the village square. Automated runtime
+only (SwiftShader).
+
+What the granite does not do:
+- On the steep faces it reads flatter than the cliff tile. The cliff tile's lit facets and strata gave the faces a carved
+  look. The granite's blotches stretch into soft vertical streaks under the triplanar projection (as on Otringal). The
+  cliffs still read as cliffs by their light and their edge.
+- The granite's fine flecks (1–3 px dots on the tile) show as a light speckle at the play camera. This is the granite's
+  own look; it is much quieter than the facets were.
+
+## What changed (Knartas only; `?knartaspal=old` gives the old ground)
 
 Everything is done with the terrain's vertex colours (`zislands.js` `KNA_PAL`, used where `PAL` is set in
-`buildIsland0`). The terrain still reads its existing tiles: cliff, grass, dirt and sand. Nothing new is added: no
-texture, material, shader variant or draw.
+`buildIsland0`). The terrain reads the game's existing tiles: grass, dirt, sand and, since the quieter-rock change above,
+Otringal's granite instead of the cliff tile. No material, shader variant or draw is added. The rock values in the
+first bullet below are those of the approved version on the cliff tile. The section above gives the granite's values.
 
 - **Rock.** The cliff tile is grey-violet (mean ~#8e8796). The rock's vertex colour is now a multiplier in linear light
   of (1.42, 1.5, 1.07), where before it was pink #d8b4c4. This takes the violet out and gives a pale warm grey (~#a6a29a
@@ -53,7 +111,27 @@ Not changed:
 
 ## Cost (automated runtime only: SwiftShader, 1280×720, default quality, play camera Far)
 
-renderer.info for one frame, main and shadow passes. "Before" is the build with the switch off; "after" has it on.
+### The quieter rock (26.11): the approved palette → the granite
+
+renderer.info for one frame, main and shadow passes, at the same four spots in the same order.
+
+| Spot (island-local) | calls | triangles | geometries | textures | programs |
+|---|---:|---:|---:|---:|---:|
+| village square (22.6, 31.2) | 85 → 85 | 662,478 → 662,478 | 1403 → 1403 | 471 → **472** | 95 → 95 |
+| dig slope / gold dome (20.5, 9.5) | 50 → 50 | 387,365 → 387,365 | 1405 → 1405 | 471 → **472** | 96 → 96 |
+| south lanes (22.3, −16.2) | 58 → 58 | 546,335 → 546,335 | 1408 → 1408 | 471 → **472** | 96 → 96 |
+| harbour (−12.0, −26.1) | 71 → 71 | 492,518 → 492,518 | 1409 → 1409 | 471 → **472** | 96 → 96 |
+
+- One intermediate run gave 72 / 492,520 at the harbour: the same 2-triangle draw that comes and goes (below).
+- The island's group is unchanged: 148 meshes, 65 materials, 236,926 triangles, 16.04 MB of vertex and index buffers,
+  610 colliders.
+- Build time of `isle_knartas`, alternating fresh pages in one browser: `?knartaspal=old` (the cliff tile) 10.4 s and
+  12.7 s; the default (the granite) 10.9 s and 8.7 s. This is noise: the machine was shared. The granite is drawn once
+  on a 512² canvas (160 blobs, 50 cracks, 2,600 flecks), a small part of that.
+
+### The palette itself (with and without the old `?knartaspal=new` switch)
+
+renderer.info for one frame, main and shadow passes. "Before" was the build with the switch off; "after" had it on.
 Both runs used the same order of spots.
 
 | Spot (island-local) | calls | triangles | geometries | textures | programs |
@@ -81,40 +159,48 @@ weights do change in places:
 
 renderer.info cannot see fragment cost, so the GPU cost of those reads is unmeasured, as is frame time on a real GPU.
 
-**Switch off = as before.** Captures from before the change and from the final code with the switch off (same spots)
+**Switch off = as before** (then the default; now `?knartaspal=old`). Captures from before the change and from the final code with the switch off (same spots)
 were compared pixel by pixel. They differ only in a box round Twinsen (his idle pose) and the "Search" prompt. The rock
 boxes' means are identical: (89.4, 82.2, 78.9) and (77.2, 69.6, 75.8).
 
-## Tests (each run once, with the switch on: `QUERY=knartaspal=new`, SERVE=1)
+## Tests (each run once, SERVE=1)
 
-- `tests/island-doors.mjs` with `REGIONS=isle_knartas`: **PASS 24/24, no errors**. All 20 Knartas doors were walked to
-  on foot and entered; the keepers' check and the save-inside / Continue check also passed. This ran before the last
-  change, which only made the earth browner (one colour constant), so it was not run again.
-- Not run: the other island suites. Nothing but terrain colours, terrain splat weights and the rocks' instance colours
-  changes, so no collider, door, route or save is touched.
+- The quieter rock, at the default URL (the palette is now on by default): `tests/island-doors.mjs` with
+  `REGIONS=isle_knartas`: **PASS 24/24, no errors** (all 20 Knartas doors walked to on foot and entered, the
+  keepers' check, and save inside / Continue).
+- Earlier, for the palette (with `QUERY=knartaspal=new`): **PASS 24/24, no errors**. All 20 Knartas doors were walked to
+  on foot and entered; the keepers' check and the save-inside / Continue check also passed.
+- Not run: the other island suites. Only Knartas's terrain colours, splat weights, rock tile and the rocks' instance
+  colours change, so no collider, door, route or save is touched. Otringal reads the same `graniteTex()` as before.
 - Untested:
-  - `?knartas=old` together with `?knartaspal=new` (the palette does not read the huts' switch);
-  - the in-game map (mapdraw.js reads the terrain's vertex colours and splat weights; values over 1 are now among
-    them);
-  - chapter or lighting states other than the new game's.
+  - `?knartaspal=old` only checked in the build A/B: it builds, and its terrain reads the cliff tile. It was not
+    captured since this change;
+  - `?knartas=old` together with the palette (the palette does not read the huts' switch);
+  - the in-game map (mapdraw.js reads the terrain's vertex colours and splat weights). The palette now reaches every
+    player by default;
+  - chapter or lighting states other than the new game's;
+  - any real GPU, and frame time.
 
 ## Captures
 
-`captures/knartas-pal/sheet.png` has before (switch off) and after (`?knartaspal=new`) pairs from the play camera (Far)
-at four spots, plus one overview from a free camera. They are automated runtime only (SwiftShader).
-- Spots: the village square, the dig slope by the gold dome, the south lanes and the harbour quay.
-- Capture script: `<session scratchpad>/knartaspal/cap.mjs` (not committed).
+- `captures/knartas-pal/rock-sheet.png`: the quieter rock. It has before (the approved palette on the cliff tile) and
+  after (the granite) pairs from the play camera (Far) at the south lanes, the dig slope and the village square.
+- `captures/knartas-pal/sheet.png`: the palette itself. It has before (the old ground) and after (the palette) pairs
+  from the play camera (Far) at four spots, plus one overview from a free camera.
+- Both are automated runtime only (SwiftShader).
+- Scripts, not committed: `<session scratchpad>/knartasrock/cap.mjs` (captures and renderer.info), `meas.py` (box
+  statistics), `turf.py` (turf share), `texmean.mjs` (the tiles' linear means), `abbuild.mjs` (build-time A/B).
 
 ## Unresolved gaps toward 85 (estimates, not re-scored)
 
-- **The rock's pattern.** The cliff tile's light facets and dark cracks were drawn for Citadel's darker cliffs. Lifted
-  to a pale grey, they read busy on the flat bare patches, like crazy paving. A paler, quieter rock would need either
-  of these:
-  - the existing `isle-granite` tile (Otringal's pale rock, 512², shared with Otringal once that is built);
-  - a lower-contrast variant of the cliff tile.
-  Either is a texture choice, so it is not made here.
+- **The rock's pattern** (done 26.11: Otringal's granite, above). Left open:
+  - the steep faces read flatter than the cliff tile's carved facets did;
+  - the granite's fine flecks show as a light speckle.
+  If the faces want more carving, a lower-contrast variant of the cliff tile for the faces only is the next step. That
+  would be a second texture read or a second tile, so it is not done here.
 - **A lit lip.** Where turf meets a cliff, the vertex colour blends over one grid cell (1.7 m), so the turf's edge takes
-  a little of the rock's lift. It shows at the dig slope as a slightly yellower band, which was there before too.
+  a little of the rock's colour. With the granite this is a neutral grey (0.76), no longer a lift. The yellower band at
+  the dig slope is the grass tile's own dry patch, which was there before too.
 - **The square's place.** The LBA2 top-down reference (R-TOP) is not in this checkout, so the square is placed on the
   open ground between the huts rather than on the original's footprint.
 - **Moss on the rock.** LBA2's moss lies in patches on the rock. Ours is still turf in the old layout's places.
@@ -122,10 +208,7 @@ at four spots, plus one overview from a free camera. They are automated runtime 
 
 ## Questions for the user
 
-1. Keep the new palette? These are the values to tune:
-   - the rock's lightness (now ~#a6a29a before light);
-   - the earth's colour (~#9c6843, about (126, 87, 60) lit on screen);
-   - how green the moss is.
-2. Should the rock be a quieter, paler tile (Otringal's granite, already in the game) at the cost of one shared
-   texture?
+1. The rock's lightness (~#a6a29a before light, kept from the approved palette), the earth's colour (~#9c6843) and how
+   green the moss is: tune any of them?
+2. Is the granite quiet enough, or should the steep faces keep more of a carved look (see the gaps above)?
 3. Should the village square be bigger, or move to where you remember it?
