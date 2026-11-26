@@ -30,13 +30,36 @@ export const graniteTex = () => ctex('isle-granite', 512, 512, (x, S) => {
   for (let i = 0; i < 2600; i++) { const t = r(); x.fillStyle = t < 0.45 ? '#f2f0ea' : t < 0.8 ? '#6a6860' : '#7c8270'; x.fillRect(r() * S, r() * S, 1 + r() * 2, 1 + r() * 2); }
 });
 
+// the granite with more of its own variation: each channel stretched about its mean by `c` (sRGB, clamped). For a place
+// whose rock is so dark that the plain granite's speckle all but vanishes (Under Celebration); its tint is worked out
+// from it as for the plain one (tileTint), so its mean colour in linear light is the same
+export const graniteVivid = (c) => ctex('isle-granite-v' + c, 512, 512, (x, S) => {
+  x.drawImage(graniteTex().image, 0, 0);
+  const im = x.getImageData(0, 0, S, S), d = im.data, m = [0, 0, 0], n = d.length / 4;
+  for (let i = 0; i < d.length; i += 4) { m[0] += d[i]; m[1] += d[i + 1]; m[2] += d[i + 2]; }
+  for (let k = 0; k < 3; k++) m[k] /= n;
+  for (let i = 0; i < d.length; i += 4) for (let k = 0; k < 3; k++) d[i + k] = Math.max(0, Math.min(255, Math.round(m[k] + (d[i + k] - m[k]) * c)));
+  x.putImageData(im, 0, 0);
+});
+
 // the terrain's textures with the quiet flat rock over `rock` (the cliff tile): { rockTop, rockTopK }, or nothing
 // with ?quietrock=old. SCREEN: the tint times 0.9. At the same mean in linear light the quieter tile read brighter on
 // screen (the tone curve and the sRGB encoding are concave: less contrast, a higher mean), by 3–10 levels in boxes of
 // flat rock at the play camera (QUIET-ROCK.md); times 0.9 brings them back to within a few levels.
 const SCREEN = 0.9;
-export function quietRock(rock) {
+// PLACE (the user, 26.11: "brighten the places that came out darker"): the 0.9 was fitted to the bright places (Citadel's
+// grey, the desert, Mosquibee); the dark ones came out darker than their old rock. Per place (`place`: the terrain's
+// caller's name), a factor per channel on the tint, fitted to the sunlit flat rock's mean colour on the captures
+// (QUIET-ROCK.md "Brightness per place"), and for Under Celebration more of the granite's own variation (`vivid`).
+// Anything else: times 1. Only the read from above changes (the faces keep the cliff tile).
+const PLACE = {
+  citadel: { k: [1.045, 1.04, 1.055] },
+  celebration: { k: [1.19, 1.19, 1.2] },
+  undergas: { k: [1.08, 1.08, 1.08], vivid: 1.7 },
+  platform: { k: [1.27, 1.27, 1.27] },
+};
+export function quietRock(rock, place) {
   if (!QUIET_ROCK) return {};
-  const g = graniteTex();
-  return { rockTop: g, rockTopK: tileTint(rock, g).map((v) => v * SCREEN) };
+  const P = PLACE[place] || {}, g = P.vivid ? graniteVivid(P.vivid) : graniteTex(), k = P.k || [1, 1, 1];
+  return { rockTop: g, rockTopK: tileTint(rock, g).map((v, i) => v * SCREEN * k[i]) };
 }

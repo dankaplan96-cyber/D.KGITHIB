@@ -204,7 +204,7 @@ export function* buildHamalayiSteps(scene, physics) {
   const updaters = [];
   const TX = textures();
   GRID = gridCapture(heightFn, SIZE, SEGS);
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), squares: BATCH.on ? 25 : 0, heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, ...quietRock(TX.cliff), sand: snowTex(), cobble: TX.cobble } });   // (QUIET-ROCK: the flat rock by the cliffs the quiet granite, in the cliff tile's colour)
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), squares: BATCH.on ? 25 : 0, heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, ...quietRock(TX.cliff, 'hamalayi'), sand: snowTex(), cobble: TX.cobble } });   // (QUIET-ROCK: the flat rock by the cliffs the quiet granite, in the cliff tile's colour)
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)

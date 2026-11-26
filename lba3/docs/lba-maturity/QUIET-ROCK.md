@@ -1,7 +1,8 @@
 # QUIET-ROCK — the quiet granite on every terrain's flat rock (the user, 26.11)
 
-Status: **Implemented, on by default.** **`?quietrock=old`** gives the cliff tile on the flat as before. Automated
-runtime only (SwiftShader, headless Chromium). No one has looked at it on a real GPU or played it.
+Status: **Implemented, on by default; approved game-wide by the user (26.11).** The four places that came out darker
+are brightened per place: see "Brightness per place". **`?quietrock=old`** gives the cliff tile on the flat as
+before. Automated runtime only (SwiftShader, headless Chromium). No one has looked at it on a real GPU or played it.
 
 The user approved Knartas's quieter rock (KNARTAS-PALETTE.md, "A quieter rock") and asked to apply it game-wide:
 every island's flat bare-rock patches, each in its own colour.
@@ -94,9 +95,121 @@ desert, Mosquibee). The dark ones end up darker:
 - Celebration's corner is −5;
 - Citadel's blue is −7 over all its changed pixels (−3 in its box).
 
-A per-place screen factor would fix that, but was not done.
+A per-place factor now fixes that: see the next section.
+
+## Brightness per place (the user, 26.11: "brighten the places that came out darker")
+
+The user approved the quiet granite game-wide and asked to brighten Under Celebration (the darkest and flattest), the
+Platform, Celebration and Citadel's blue. Automated runtime only (SwiftShader); no one has looked at it on a real GPU.
+
+**How.** `quietrock.js` `PLACE`: a factor per channel on the tint, per place. Each terrain's call names its place:
+`quietRock(TX.cliff, place)`, where place is `'citadel'`, the isle's name, `'desert'` or `'hamalayi'`.
+- Only the read from above changes (`uRockTop`). The faces, the shader text, the vertex colours and the splat are
+  untouched, so nothing in `terrain.js` changed.
+- Under Celebration also takes `graniteVivid(1.7)`: the same granite with each channel stretched about its mean by 1.7
+  (sRGB). That is more of the tile's own variation; its tint comes from `tileTint`, as for the plain one.
+
+| Place | factor (R, G, B) |
+|---|---|
+| Citadel | 1.045, 1.04, 1.055 |
+| Celebration | 1.19, 1.19, 1.2 |
+| Under Celebration | 1.08 (each), and the vivid granite |
+| The Platform | 1.27 (each) |
+| every other place (Mosquibee, the desert, the Hamalayi, the Old Watch, the Orchard) | 1: unchanged |
+
+The factors were fitted by setting the uniform in the page (a ladder of 3–4 values a place), then hard-coded. They are
+checked here by one capture of the final code.
+
+**Why the dark places needed so much more.** Two reasons, both inferred from the ladders:
+- The × 0.9 was fitted to the bright places.
+- On the Platform's lip and Celebration's patches the rock is partly a slope, so the read from above is only part of
+  the pixel: × 1.3 there moved the box by only 5 levels.
+
+### Measured (1280×720, play camera Far; the same boxes and measure as above)
+
+"old" = `?quietrock=old` on the current code, which matches the "before" column above exactly. "approved" = the quiet
+granite as approved (factor 1). "now" = this change.
+
+| Box (x0, y0, x1, y1) | old | approved | now | fine SD old → approved → now |
+|---|---|---|---|---|
+| Citadel, flat rock (200, 450, 560, 650) | (112, 108, 120) | (110, 106, 117) | **(112, 108, 120)** | 24.7 → 14.2 → 14.3 |
+| Celebration, lower left (0, 600, 220, 720) | (61, 46, 29) | (56, 43, 26) | **(60, 45, 28)** | 5.8 → 3.3 → 3.5 |
+| Celebration, the sunlit patch above it (0, 520, 300, 600) | (63, 45, 32) | (59, 42, 29) | **(65, 47, 33)** | 11.5 → 4.1 → 4.8 |
+| Celebration, the rock by (2913.1, 1814.6) (1000, 220, 1260, 400) | (37, 17, 19) | (37, 15, 18) | **(40, 18, 21)** | 9.1 → 5.5 → 5.9 |
+| Under Celebration, the yard (860, 420, 1270, 680) | (40, 25, 32) | (41, 26, 32) | **(42, 28, 34)** | 9.6 → 3.7 → **5.8** |
+| Platform, the lip (300, 640, 900, 710) | (99, 64, 41) | (93, 59, 37) | **(98, 63, 41)** | 9.6 → 7.9 → 8.0 |
+| Platform, flat rock by the mine sign, (3912.5, 1789.7) (1060, 480, 1270, 690) | (60, 37, 24) | (54, 32, 18) | **(61, 37, 24)** | 9.8 → 5.3 → 6.1 |
+
+The pixels the quiet rock changes (old against approved by more than 12, dilated 4 px), over the whole frame, one
+mask per place for all three columns:
+
+| Place | old | approved | now | turf share at 4 (old · approved · now) |
+|---|---|---|---|---|
+| Citadel | (113, 109, 117) | (110, 106, 114) | (112, 109, 117) | 7.42 · 7.43 · 7.42 % |
+| Celebration | (63, 47, 36) | (63, 46, 35) | (68, 50, 39) | 7.84 · 7.92 · 7.83 % |
+| Under Celebration | (48, 34, 39) | (45, 31, 36) | (47, 33, 38) | 11.95 · 12.07 · 11.98 % |
+| The Platform | (86, 56, 36) | (82, 53, 33) | (85, 56, 36) | 0.09 · 0.09 · 0.09 % |
+| The Platform, by the mine sign | (58, 36, 21) | (56, 35, 19) | (61, 38, 22) | 0.95 · 0.95 · 0.96 % |
+| Celebration, by (2913.1, 1814.6) | (51, 28, 28) | (49, 26, 26) | (53, 30, 30) | 0.37 · 0.40 · 0.39 % |
+
+Citadel's approved deficit is −3 on this mask, on the current code (after P135's paths). The −7 in blue above was
+measured against `768cb2a2`, before them.
+
+- **Citadel:** the box matches exactly, and its changed pixels are within 1 level (they were −3).
+- **The Platform** matches within 1 level on its lip and on its flat rock's box. Over the changed pixels by the mine
+  sign it is +2 to +3.
+- **Celebration** is within 1 level on the doc's box (half of it is in a tree's shade). It is +1 to +3 on its sunlit
+  patches. Over all its changed pixels it is +3 to +5, because those include slopes the old tile kept dark.
+  - This compromise is a judgment call. A factor of 1.12 would match the sunlit patch exactly, and leave the doc's box
+    at −3.
+- **Under Celebration: its mean was already equal** (the box +1 level, the changed pixels −3). It read darker because
+  the old tile's light facets were gone, and the speckle on so dark a rock was almost invisible. Its fine pattern was
+  38 % of the old one.
+  - Now its box is +2 to +3 levels, its changed pixels −1 to −2, and its fine pattern is 60 % of the old one (5.8
+    against 9.6). It is still well under the cliff tile's crazy paving.
+  - In the captures it reads lighter, with soft blotches and speckle (bright-sheet.png, row 3).
+  - **The vivid granite is a pick of its own**: one entry in `PLACE` (`vivid: 1.7`), removable without touching the
+    brightening. Without it, only the brighter tint gives the box (41, 26, 32) at × 1 and (44, 29, 36) at × 1.15,
+    with a fine SD of 3.7 and 4.1. With it, the fine SD is 5.8.
+- **The fine-detail reduction is kept.** On flat rock the fine SDs above are 42–65 % of the old ones. On the Platform's
+  lip, a slope, the figure is 83 %, as it was (82 %) before this change.
+
+**Sheet:** `captures/quiet-rock/bright-sheet.png`. It has three columns (old cliff tile · quiet as approved · brightened),
+at Citadel, Celebration, Under Celebration and the Platform (its lip, and its flat rock by the mine sign).
+
+**Cost.**
+- One more 512² texture, the vivid granite, made only when Under Celebration is built (about 1.4 MB of GPU memory, an
+  estimate).
+- One more pass over a 512² canvas at that build, plus `tileTint`'s read of it. Not timed.
+- Nothing per frame, and no new program.
+- Every other place: no change in cost.
+
+**Edge wobble.** The rock's edge wobble reads the tile's brightness.
+- An estimate: on the Platform, the read from above is now 1.14 × the cliff tile's linear mean (0.9 × 1.27), where it
+  was 0.9 ×. That moves the rock's edge about 0.013 of splat weight toward more rock, where it was 0.009 toward less.
+- Under Celebration's vivid tile also widens the wobble's swing.
+- Measured on the captures, the turf-green share (the table above) moved by 0.1 point at most in every frame, the
+  same as with the approved rock.
+
+**Visible changes (for the user's pick):**
+- The flat rock is brighter on the four places above, by the amounts in the table.
+- Under Celebration's rock shows more speckle and blotches (the vivid granite, a separate pick).
+
+**The other places are left at × 1**, with their residuals from the first measurement (against `768cb2a2`):
+- Mosquibee (+3, +3, +2 in its box) and the desert (+4, +4, +3) stay on the bright side. They were untouched, as the
+  × 0.9 was fitted to them.
+- The Hamalayi's changed pixels (the walls' tops) were −3, −1, −2. It has no flat-rock box and was not re-measured.
+- The Old Watch (0, 0, −1) is within a level.
+- The Orchard shows no rock at its spawn.
+
+**Tools (not committed):** `<session scratchpad>/qrbright/fit.mjs` (captures with the uniform scaled in the page),
+`fitbox.py` (the ladder fit per box) and `meas2.py` (the box and changed-pixel means).
 
 ## Cost (automated runtime only: SwiftShader)
+
+(The table is from before the brightness per place. Since then, Under Celebration's build adds one more texture, the
+vivid granite. That is by construction; it was not read from renderer.info. From Under Celebration on, the counts are
+one higher.)
 
 renderer.info for one frame (main and shadow passes), one page, the spots in this order, before → after:
 
@@ -152,6 +265,28 @@ Final code, with the branch head (P135) merged:
   captures: (112, 108, 120) and (80, 62, 44), the same SDs. The textures are 450 and 467, as before. Mosquibee differs
   only round Twinsen (1,114 pixels). Citadel also differs in the paths P135 changed and in the tutorial prompt.
 
+### After the brightness per place, and the island-doors fixes (26.11, later)
+- `tests/island-doors.mjs` (all regions): **PASS, 89 of 89** (automated runtime only (SwiftShader)). The three failures
+  above were in the suite, not the game:
+  - **The pump house's door** (`otringal-16-6`) is the KEYS-CLOVER lock, as the story says (KEYS-CLOVER.md K2). The
+    suite now expects `kc_lock` (door `pump`, no key held) for that door. It presses E on it like on the other shut
+    doors, so its own line ("locked", `kc_pump_locked`) is heard. Without the key the lock changes nothing.
+  - **The keepers:** every keeper talked, but the suite heard only 2 lines for 6 keepers.
+    - The cause: since P116 (walkers.js Remarks) the keepers are minor residents (story/index.js MINOR: `ihomes`). A
+      short line of theirs goes over their head, with `game.say` held, so the suite's `said()` never heard it.
+    - The suite now reads a keeper's overhead line from the remark itself (`G.remarks.cur.text`).
+    - The log line now names the failing keepers first, then the counts, the passing ones (box or overhead) and the
+      skipped ones. Before, the whole list was cut off at 600 characters.
+  - **"Knartas … reached on foot"** is asked only when Knartas is toured. A `REGIONS` run without it always failed.
+  - `REGIONS=desert` (6 rooms) before the full run: 9 of 9 PASS.
+- `tests/worldfit.mjs` (whole), on the final code: **PASS**, functional 1/1, visual 8/8 ((3) z-fighting: 0 judged, 115 smaller listed).
+- The sweep of the keepers' fault: other suites that hear lines through a `game.say` wrapper and talk to minor residents
+  may count short of the same way. Candidates (not run, FEWER TESTS):
+  - suites with such a wrapper, `P.talk`, a minor module named, and no "remark" in them: `desert-life`,
+    `interior-life`, `isles-bar`, `hamalayi-life`, `zeelich-doors`;
+  - `wave4`, `wave5`, `depth-wave3` and `townlife` already mention remarks.
+  - Handed to the coordinator.
+
 ## The huts' door sills (the coordinator's item, 26.11)
 `worldfit` (3) failed on Knartas with 12 clusters, one per hut door. The cause is `franco.js` `francoHut`: the portal's
 plaster panel has its arched opening at its foot, so `ExtrudeGeometry` gives the opening a plaster floor facing up at
@@ -161,8 +296,13 @@ colliders are unchanged.
 
 ## Files
 - `src/engine/terrain.js`: `tRockTop`, `uRockTop` and `tileTint`. This is a shared engine file.
-- `src/game/quietrock.js` (new): `graniteTex` (moved from `zislands.js`, byte-identical), `quietRock`, `?quietrock=old`.
-- `src/game/zislands.js`, `world.js`, `desert.js`, `hamalayi.js`: each terrain's textures take `...quietRock(TX.cliff)`.
+- `src/game/quietrock.js` (new): `graniteTex` (moved from `zislands.js`, byte-identical), `graniteVivid`, `PLACE`,
+  `quietRock(rock, place)`, `?quietrock=old`.
+- `src/game/zislands.js`, `world.js`, `desert.js`, `hamalayi.js`: each terrain's textures take
+  `...quietRock(TX.cliff, place)`.
+- `captures/quiet-rock/bright-sheet.png`: the brightness per place, in three columns.
+- `tests/island-doors.mjs`: the pump house's lock, the keepers' overhead lines, the log line, and Knartas's walk only
+  when it is toured.
 - `captures/quiet-rock/sheet.png`: before/after pairs at the play camera (Far), one per place changed (not the Orchard,
   which shows no flat rock at its spawn). Scripts are not committed: `<session scratchpad>/quietrock/cap.mjs`, `meas.py`,
   `find.mjs` (spots from the splat data).
