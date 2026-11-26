@@ -16,6 +16,9 @@ import { tm, cached, bbox, cyl, lathe, panelGeo, frameGeo, fillGeo, rod, member 
 const q = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('knartas') || ''; } catch { return ''; } })();
 // (#17, the user's pick 26.11: the Franco huts and the moored zeppelin are Knartas's look; ?knartas=old shows the old houses)
 export const KNARTAS_NEW = q !== 'old';
+// (#17b, docs/lba-maturity/KNARTAS-PALETTE.md: ?knartaspal=new, default off: Knartas's ground in LBA2's palette, pale grey
+//  rock and orange-brown earth; zislands.js KNA_PAL. Without it the island's ground is as before)
+export const KNARTAS_PAL = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('knartaspal') === 'new'; } catch { return false; } })();
 
 // the huts' two materials (plaster with the colour in the vertices)
 // (one material for both: the walls and the domes are one draw; the domes are darker by their vertices)
