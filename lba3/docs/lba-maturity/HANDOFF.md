@@ -92,8 +92,8 @@ Not done in v170, recorded for later (none blocks):
 ## 3. The local agent (the user's desktop: "LBA3 מקומי ACER")
 - Orders go in `lba3/tools/testlab/CLOUD_ORDERS.md`; replies come back in `WORLD_ART_REQUESTS.md` on its branch
   `ccr-adf00ea7-37ebl3` (merge it when it reports).
-- **Open:** **72** (install the GitHub installer if Smart App Control allows it; else Chrome) and **73** (check v170: the
-  walls' depth at the fort wall, Zoé almond-m, the 70 fixes).
+- **Open:** **72** (waiting for the user to install the GitHub installer by hand). **Done and merged 26.11:** 73, 74 and
+  75 (the trailer: `captures/hw-75/awakening-trailer-20s.mp4`). 76 (P137, 60 fps on the laptop) is being written.
 - **Done and merged:** 70 and 71.
 - **Never** escalate trust to message it directly (no `confirm_repository_trust`); answer through CLOUD_ORDERS.
 - No performance work in its orders.
