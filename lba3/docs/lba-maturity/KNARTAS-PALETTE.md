@@ -14,7 +14,8 @@ The cliff tile's light facets and dark cracks were drawn for Citadel's darker cl
 busy, like crazy paving, most of all on the flat bare patches.
 
 - **The rock is Otringal's pale granite tile** (`graniteTex`, `isle-granite`: already in the game). It is a speckled
-  neutral grey with soft lighter and darker blotches and fine cracks. Knartas only: every other island keeps its tile.
+  neutral grey with soft lighter and darker blotches and fine cracks. Since QUIET-ROCK (QUIET-ROCK.md, 26.11) every
+  other terrain reads the same granite for its flat rock only, tinted in the shader; Knartas keeps this recipe.
   - `KNA_PAL.granite`; the terrain reads `graniteTex()` for its rock where `S.turfRock || PAL?.granite`.
   - With `?knartaspal=old`, `PAL` is null, so the old ground on the cliff tile comes back by construction.
 - **The same lit grey as before.** The granite is paler than the cliff tile. Measured in the page, the mean in linear
@@ -113,7 +114,7 @@ Not changed:
 - the stone material of walls, quay kerbs and hut frames;
 - the bare-patch shares (`BARE`). The rock's area was the same on the cliff tile; with the granite its edge moved a
   little (see "A quieter rock");
-- every other island: their branches do not read `PAL`.
+- every other island: their branches do not read `PAL` (their flat rock has the granite since QUIET-ROCK.md).
 
 ## Cost (automated runtime only: SwiftShader, 1280×720, default quality, play camera Far)
 
