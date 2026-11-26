@@ -31,7 +31,7 @@
 // glider field and the condenser hall at the original's level there.
 import * as THREE from 'three';
 import { crystalMats, gemGeo } from './crystallook.js';
-import { Terrain } from '../engine/terrain.js';
+import { Terrain, ROCK_EDGE } from '../engine/terrain.js';
 import { quietRock } from './quietrock.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
@@ -329,7 +329,7 @@ function dryRock(seed, lo = 0) {
 function rockAt(x, z, h, slope) {
   const old = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
   const unpaved = 1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z)));
-  if (h < 0.6) return old * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z, 1))));   // (PATHS-140B: by the water too, no slope's rock on the paving, nor within 1 m of it, as no outcrop: the shore's rock cut notches into the pier road's corners)
+  if (h < 0.6) return ROCK_EDGE ? old * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z, 1)))) : old;   // (PATHS-140B: by the water too, no slope's rock on the paving, nor within 1 m of it, as no outcrop: on the traced edge the shore's rock cut notches into the pier road's corners; ?rockedge=old as before)
   const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * unpaved * (1 - courtAt(x, z));   // (P83: Tali's court is sand)
   if (clear <= 0) return old;
   // (near a place the outcrops shrink, their edge kept crisp, rather than fading: a half weight smeared the texture)
