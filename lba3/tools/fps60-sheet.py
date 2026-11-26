@@ -17,7 +17,8 @@ cols, pad, head = 2, 12, 56
 rows = (len(shots) + cols - 1) // cols
 sheet = Image.new('RGB', (cols * (W + pad) + pad, rows * (H + head + pad) + pad + 40), (24, 24, 28))
 d = ImageDraw.Draw(sheet)
-d.text((pad, 10), 'Auto quality steps (P137), best first. Same frame of the Citadel street, play camera. SwiftShader, dPR 1, 960x540 (the UHD 620 laptop draws each 1.25x sharper). Inset: middle of the view, 2x.', fill=(230, 230, 230), font=small)
+d.text((pad, 4), 'Auto quality steps (P137), best first: the same frame of the Citadel street, play camera. Inset: the middle of the view, 2x.', fill=(230, 230, 230), font=small)
+d.text((pad, 22), 'Automated runtime only: SwiftShader, dPR 1, 960x540. The UHD 620 laptop draws every step at 1.25x this pixel ratio.', fill=(230, 230, 230), font=small)
 for i, s in enumerate(shots):
     im = Image.open(s['file'] if os.path.isabs(s['file']) else os.path.join(D, os.path.basename(s['file']))).convert('RGB')
     cw, ch = im.size

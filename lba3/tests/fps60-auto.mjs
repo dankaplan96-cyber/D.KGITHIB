@@ -162,7 +162,7 @@ if (ONLY.includes('S')) {
     const info = await ev(() => { const G = game, r = G.bench.routes().find((x) => x.id === 'street'); G.state = 'play'; r.setup(); G.state = 'play'; for (let i = 0; i < 3; i++) G.frame(1e-4, true); r.setup(); G.frame(1e-4, true);
       return { label: G.autoQ.label(), scale: G.renderer.effScale(), pr: G.renderer.pixelRatio(), cfg: G.graphicsConfig() }; });
     const file = `${dir}step-${p}-${IDS[p]}.png`;
-    await page.screenshot({ path: file });
+    await page.screenshot({ path: file, timeout: 600000 });
     shots.push({ p, id: IDS[p], file, ...info, cfg: undefined, shadows: info.cfg.shadows, msaa: info.cfg.msaa, lamps: info.cfg.lamps });
   }
   fs.writeFileSync(`${dir}steps.json`, JSON.stringify(shots, null, 1));
