@@ -7,25 +7,45 @@
 (() => {
   const G = () => window.game;
   const RANGE = 4;   // (terrain.js EDGE_RANGE)
+  // (P140: the line the shader draws. Citadel's streets: the edge attribute (LAWN-EDGES). Elsewhere: with ROCK-EDGES on
+  //  (?rockedge=new, the user's decided default, 26.11) the traced paving and rock lines (the `rockedge` attribute), else
+  //  the interpolated share, as before. And d, the bare earth (> 0 on it): the lawn's traced soil side (LAWN-EDGES-2, the
+  //  `lawn` attribute; without it the soil's share of grass + soil), and LAWN-EDGES' earth band along the paving; not
+  //  where rock or sand (the desert's sand, the Hamalayi's snow) takes the ground)
   function grid(t, ox, oz, name) {
     const geo = t.mesh?.userData?.full || t.mesh?.geometry;
     const s2 = geo?.attributes?.splat2?.array, sp = geo?.attributes?.splat?.array, ed = geo?.attributes?.edge?.array;
+    const re = geo?.attributes?.rockedge?.array, lw = geo?.attributes?.lawn?.array, Q = 32767;
     if (!s2) return null;
-    const n = t.segs + 1, f = new Float32Array(n * n);
-    let paved = 0, patch = 0;
-    // (P136: on a Zeelich isle only its designed paving is a way — the square (paveAt) and the landing pad; WA-11's bare
-    //  patches, and the ground under a deck island's decks, are counted apart, left out of the scan)
+    const n = t.segs + 1, f = new Float32Array(n * n), d = new Float32Array(n * n), pk = new Uint8Array(n * n);
+    let paved = 0, patch = 0, under = 0;
+    // (P136: on a Zeelich isle the ground under a deck island's decks is never seen: left out. P140: WA-11's bare patches
+    //  are judged now (the user's answer to P136: each patch ends at a clean edge or joins a path); counted apart too)
     const kind = t.paveKind, lx0 = t.x0, lz0 = t.z0;
     for (let k = 0; k < n * n; k++) {
       const tot = sp[k * 4] + sp[k * 4 + 1] + sp[k * 4 + 2] + sp[k * 4 + 3] + s2[k];
       const share = tot > 1e-6 ? s2[k] / tot : 0;
-      const e = ed ? (ed[k * 2] / 32767) * RANGE : RANGE;
+      const e = ed ? (ed[k * 2] / Q) * RANGE : RANGE;
       const rock = tot > 1e-6 ? sp[k * 4 + 2] / tot : 0;   // (the shader: rock over ~0.45 of the splat takes the pixel)
-      f[k] = e < RANGE - 0.05 ? e : rock > 0.45 ? 1 : (0.5 - share) * 2;
-      if (f[k] < 0 && kind && !['square', 'pad'].includes(kind(lx0 + (k % n) * t.step, lz0 + Math.floor(k / n) * t.step))) { f[k] = 1; patch++; }
+      const isRock = re ? re[k * 4] < 0 && re[k * 4 + 1] / Q > 0.45 : rock > 0.45;
+      f[k] = e < RANGE - 0.05 ? e : isRock ? 1 : re ? (re[k * 4 + 3] / Q > 0.5 ? (re[k * 4 + 2] / Q) * RANGE : Math.max(0.05, (0.5 - share) * 2)) : (0.5 - share) * 2;
+      const kd = kind ? kind(lx0 + (k % n) * t.step, lz0 + Math.floor(k / n) * t.step) : null;
+      if (f[k] < 0 && kd === 'under') { f[k] = 1; under++; }
+      if (kd === 'patch') { pk[k] = 1; if (f[k] < 0) patch++; }
       if (f[k] < 0) paved++;
+      // the bare earth
+      const g = sp[k * 4], sand = sp[k * 4 + 1], soil = sp[k * 4 + 3];
+      let dv = -1;
+      if (!isRock && g + soil > sand) {
+        if (lw) dv = lw[k * 2 + 1] / Q > 0.5 ? -(lw[k * 2] / Q) * RANGE : -1;
+        else dv = g + soil > 0.01 ? (soil / (g + soil) - 0.5) * 2 : -1;
+        const bw = ed ? (ed[k * 2 + 1] / Q) * RANGE : 0;
+        if (bw > 0.05 && e > -0.5) dv = Math.max(dv, bw - e);   // (the earth band: from the paving's edge to its width)
+      }
+      d[k] = dv;
     }
-    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, (v) => Math.round(v * 1000) / 1000), paved, patch };
+    const r3 = (v) => Math.round(v * 1000) / 1000;
+    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, r3), d: Array.from(d, r3), pk: kind ? Array.from(pk) : null, paved, patch, under, mode: ed && !re ? 'edge+share' : re ? 'traced' : 'share' };
   }
   // the outdoor area an x, z belongs to (nearest outdoor room's centre within 400 m; else Citadel near the origin)
   function areaOf(x, z) {
@@ -169,5 +189,49 @@
     for (const a of Object.values(out)) for (const k of Object.keys(a)) { a[k] = Math.round(a[k]); if (a[k] < 20) delete a[k]; }
     return out;
   }
-  window.PE = { grids, meshes, judge, gaps, cover };
+  // P140 EDGE: what a paving's edge meets, per sample [x, z, nx, nz, y] (a point on the edge, its outward normal, the
+  // paving's level): a wall (a non-prop solid), a face in the ground (≥ 0.3 m), the sea, or a floor over the ground (a
+  // deck, a house's floor) within 0.8 m outward. A prop, a lawn or bare ground there is no clean end for a ragged edge.
+  function edgeMeet(samples) {
+    const P = G().physics;
+    return samples.map(([x, z, nx, nz, y]) => {
+      const g0 = groundY(P, x - nx * 0.2, z - nz * 0.2, y), hits = [], seen = new Set();
+      let what = null, prev = g0;
+      for (let a = 0.1; a <= 0.8 + 1e-6 && !what; a += 0.1) {
+        const px = x + nx * a, pz = z + nz * a, gy = groundY(P, px, pz, Number.isFinite(y) ? prev : NaN);
+        if (Math.abs(gy - prev) >= 0.3 || Math.abs(gy - g0) >= 0.3) what = 'face';
+        else if (gy < 0.05 && g0 >= 0.05 && !Number.isFinite(y)) what = 'water';
+        else if (deck(P, px, pz)) what = 'deck';
+        prev = gy;
+        solidsAt(P, px, pz, gy, seen, a, hits);
+        if (!what && hits.some((h) => h.kind === 'solid')) what = 'wall';
+      }
+      return what;
+    });
+  }
+  // P140: a small bare hole inside a paving: hidden if anything solid stands over it (a statue's base, a well, a stall)
+  function holeCovered(pts) {
+    const P = G().physics;
+    return pts.map(([x, z]) => { const gy = P.terrain.heightAt(x, z); for (const c of P.near(x, z)) { if (c.enabled === false || c.top < gy + 0.05 || c.bottom > gy + 1.8) continue; if (c.type === 'box') { const lx = x - c.x, lz = z - c.z, u = lx * c.cos - lz * c.sin, v = lx * c.sin + lz * c.cos; if (Math.abs(u) < c.hw && Math.abs(v) < c.hd) return true; } else if (Math.hypot(x - c.x, z - c.z) < (c.r ?? 0)) return true; } return deck(P, x, z); });
+  }
+  // P140: the kerb stones in the world (Citadel's, the isles' around their WA-11 paving pieces): [x, z] each
+  let KERBS = null;
+  function kerbs() {
+    if (KERBS) return KERBS;
+    const m = new (G().camera.matrix.constructor)(); KERBS = new Map();
+    G().scene.traverse((o) => {
+      if (!o.isInstancedMesh || !/kerb/i.test(o.name || '')) return;
+      o.updateWorldMatrix(true, false);
+      for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); m.premultiply(o.matrixWorld); const e = m.elements, k = Math.floor(e[12]) + ',' + Math.floor(e[14]); (KERBS.get(k) || KERBS.set(k, []).get(k)).push(e[12], e[14]); }
+    });
+    return KERBS;
+  }
+  const kerbNear = (x, z, r) => { const K = kerbs(); for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const L = K.get((Math.floor(x) + i) + ',' + (Math.floor(z) + j)); if (L) for (let q = 0; q < L.length; q += 2) if (Math.hypot(L[q] - x, L[q + 1] - z) < r) return true; } return false; };
+  // P140 (the user's answer to P136): a WA-11 paving piece's outline, per sample [x, z, nx, nz]: a kerb stone on it,
+  // else what it meets (edgeMeet), else null
+  function patchEnds(samples) {
+    const met = edgeMeet(samples.map(([x, z, nx, nz]) => [x, z, nx, nz, NaN]));
+    return samples.map(([x, z, nx, nz], i) => (kerbNear(x + nx * 0.12, z + nz * 0.12, 0.45) ? 'kerb' : met[i]));
+  }
+  window.PE = { grids, meshes, judge, gaps, cover, edgeMeet, holeCovered, kerbNear: (pts, r) => pts.map(([x, z]) => kerbNear(x, z, r)), patchEnds };
 })();
