@@ -19,7 +19,8 @@
 //       enter FAILS (named), never skipped.
 // ROOMS=a,b: those rooms only. SHOTS=dir: per room with a cluster (or every room named in ROOMS) the frame and the
 // two-frame diff overlay (red = pixels that change between the two jittered frames) as PNG. REPORT=file.json: every
-// finding with its coordinates. HOUSE_ZOE=1: the house is scanned in chapter 1 with Zoé at the sink (her spot).
+// finding with its coordinates. SPOTS=room@x,z;...: extra render views from those room-local floor spots, with pictures.
+// The game is set to chapter 1 by its flags: Zoé home at the kitchen sink (her spot), as the user saw her.
 // Automated runtime only (SwiftShader, headless Chromium).
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
@@ -30,6 +31,9 @@ const ev = (f, a) => page.evaluate(f, a);
 const SHOTS = process.env.SHOTS || null; if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const ONLY = process.env.ROOMS ? process.env.ROOMS.split(',') : null;
 const FAIL_M2 = 0.02;
+// SPOTS=room@x,z;room@x,z (room-local floor spots): extra render views with pictures (a before/after pair from one spot)
+const SPOTS = {};
+for (const e of (process.env.SPOTS || '').split(';').filter(Boolean)) { const [id, xz] = e.split('@'); (SPOTS[id] ??= []).push(xz.split(',').map(Number)); }
 
 await open(page, '?nocine'); await menu(page, 'new');
 // chapter 1 (the project) by its flags: Zoé home at the sink (chapter1.js: R.house.npcSpots.zoe), the opening's
@@ -351,7 +355,7 @@ for (const id of rooms) {
   if (r.err) { failedRooms.push(r); console.log('ROOM ' + JSON.stringify({ id, err: r.err })); res.push(r); continue; }
   // the render check: where he comes in, then the floor nearest each cluster not yet in a view
   const want = !!SHOTS && (r.findings.length > 0 || !!ONLY);
-  const views = await ev(({ id, findings, sp0, want }) => {
+  const views = await ev(({ id, findings, sp0, want, extra }) => {
     const G = game, R = G.room, spots = FL.floorSpots(R), out = [], left = findings.map((f, i) => i);
     const inView = (p) => { const v = new (G.camera.position.constructor)(p[0], p[1], p[2]).project(G.camera); return Math.abs(v.x) < 0.85 && Math.abs(v.y) < 0.85 && v.z < 1; };
     const shoot = (s, why) => {
@@ -362,13 +366,15 @@ for (const id of rooms) {
       for (const i of idx) { const k = left.indexOf(i); if (k >= 0) left.splice(k, 1); }
     };
     shoot(sp0, 'spawn');
+    // (SPOTS: the pictures of an earlier run again, from the same floor spots, its views' `at`)
+    for (const [x, z] of extra) shoot({ x: R.center.x + x, z: R.center.z + z }, 'spot');
     while (left.length && out.length < 4 && spots.length) {
       const f = findings[left[0]];
       const s = spots.reduce((a, b) => (Math.hypot(b.x - f.at[0], b.z - f.at[2]) < Math.hypot(a.x - f.at[0], a.z - f.at[2]) ? b : a));
       shoot(s, 'cluster ' + left[0]); if (left[0] === findings.indexOf(f)) left.shift();
     }
     return out;
-  }, { id, findings: r.findings, sp0: r.sp0, want }).catch((e) => [{ err: e.message.slice(0, 300) }]);
+  }, { id, findings: r.findings, sp0: r.sp0, want: want || !!SPOTS[id], extra: SPOTS[id] || [] }).catch((e) => [{ err: e.message.slice(0, 300) }]);
   r.views = views.map((v) => ({ ...v, shot: undefined }));
   for (const [vi, v] of views.entries()) {
     if (v.err) { console.log('  render error', v.err); continue; }
