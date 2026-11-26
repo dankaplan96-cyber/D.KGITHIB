@@ -154,9 +154,9 @@ level line only inside the patch noise.
 | #8 narrow ways | `world.js` `islandSplat`: `pw` | `pw = 0` |
 | #9 isle patches and kerbs | `zislands.js`: built only with ROCK-EDGES on; `?isles140=old` shows the old patches with no kerbs | `OLD_PATCHES` true, or delete `patchGrid` and the kerb block |
 
-Commits (this worktree): `5caa4a30` (the rule), `5ef38879` (Citadel), `07a8e154` (isles, the scan's traced read),
-`a0864eed` (the scan's sign fix, kerbs count as clean, the kerb builder aligned, narrow ways), and the last commit with
-this file and the sheet.
+Commits (this worktree): `5caa4a30` (the rule), `5ef38879` (Citadel #1–#6), `07a8e154` (isles #9, pockets #7, the
+scan's traced read), `a0864eed` (the scan's sign fix, kerbs count as clean, the kerb builder aligned, narrow ways #8),
+`6f81da22` (this file, the sheet, the known list), `13f9e9fd` (#9 only with ROCK-EDGES on, cheaper kerb tracing).
 
 ## Tests (automated runtime only, SwiftShader, `SERVE=1`)
 - `tests/path-ends.mjs` with `Q=rockedge=new SHOTS136=0`:
