@@ -63,28 +63,31 @@ Ballastra 27, the isles 10.
 | Ballastra, every floating deck (`look.js deckSlab`, 'floats') | the pontoons (and the floats' crowns) reached up through a low deck: on the Water Gardens' walkways 5 cm over the boards along both sides | a pontoon's top and a float's crown 1 cm under the deck's underside at most | 5 → 0 cm (row b2) |
 | Desert, the camp rugs | the rug 3.5 cm over the sand | 1.7 cm (its backing 1.2) | 3.5 → 1.7 |
 
-**After (this branch, the same suite): see "Tests" below.**
+**After (this branch, the same suite): class A walked 210, ok 13, FAIL 1, handed on 122, not reached 74** (the 173
+fixed pieces are no longer nominated: nothing drawn stands 3 cm over his floor there). The one FAIL was the spaceport
+pad's bevelled edge (its slope 6.5 cm over his feet as he stepped off the floor); the pad's side is upright now and the
+Citadel re-run passes (below).
 
-## Handed on (123 class-A pieces, by owner; the suite lists each as HANDED ON with its depth)
+## Handed on (122 class-A pieces; the suite prints each as HANDED ON with its depth)
 
-The list is in the test (`HANDED`, `OWNERS`): each piece by the discovery's middle of it, so a fix shows as `ok` and a
-new fault elsewhere still fails. By owner (count, worst):
+The list is in the test (`HANDED`, `OWNERS`), each piece by the discovery's middle of it (0.5 m): a fix shows as `ok`,
+a new fault elsewhere still fails. By owner (pieces, depth measured by the walk):
 
-- Citadel: the project's station yard (`island.js buildStation`): plates and pieces 5–25 cm (15); the town's merged
-  pieces (door steps, kerbs; `town.js`/`townbits.js`) 13–29 cm (8); the asylum's front (`lba1places.js`) up to 46 cm (3);
-  the harbour's quay pieces 7–24 cm (6); the old cellar hatch 8–9 cm (3); the sewer hatch on the terrace 7–11 cm (4); the
-  water main lying on the ground (a pipe, 10 cm; 3); the lane gate 5 cm; low stones and beds (`world.js`,
-  `citydress.js`) 25–33 cm (11); the cliff rocks walked into, 15–70 cm (4); standable colliders over less drawn (copings,
-  planters' rims: he floats 10–23 cm; 10). **The square's ring steps (FLAT-TOWN, protected): 26 cm**, a question below.
-- Zeelich: a porch, a step, low stones 6–62 cm (8); a collider 35 cm over the drawn.
-- Desert: low rocks and a slab 6–47 cm (19); a collider 30 cm over the drawn.
-- The Hamalayi: the landing's dry-stone fold walls and the LBA1 place's platform (standable tops 10–114 cm over the drawn
-  edge; 6); low rocks, the gorge's shore stones, the dead tree's root plate (4).
-- Ballastra: the swing bridge 8–10 cm, a gangway 4 cm, a bed's edge 18 cm (4); the Arch District's stair cylinder
-  (he floats 29 cm).
-- The isles (`zislands.js`, owned by another worker now; Franco's dig): 10 pieces, 7–58 cm.
+- Citadel: the project's station yard (`island.js buildStation`), plates and pieces 3–25 cm (15); low stones and beds
+  (`world.js`, `citydress.js`) 15–32 cm (12); the town's merged pieces (door steps, kerbs; `town.js`, `townbits.js`)
+  7–29 cm (8); the cliff rocks walked into, 15–70 cm (4); the harbour's quay pieces 7–10 cm (4); the sewer hatch on the
+  terrace 7–11 cm (4); the asylum's front (`lba1places.js`) 26–46 cm (3); the old cellar hatch 8–9 cm (3); the water main
+  lying on the ground (a pipe) 8–10 cm (3); the lane gate 5 cm (1). **The square's ring steps (FLAT-TOWN, protected):
+  26 cm (1)**, a question below.
+- Standable colliders over less drawn, every area (copings, planters' rims, a wall top, the Arch District's stair drum):
+  he floats 8–48 cm (18).
+- Zeelich: a porch, a step, low stones 6–62 cm (7). Desert: low rocks and a slab 6–47 cm (20).
+- The Hamalayi: the landing's dry-stone fold walls and the LBA1 place's platform (standable tops over the drawn edge,
+  10–114 cm; 6); low rocks, the gorge's shore stones, the dead tree's root plate 13–38 cm (3).
+- Ballastra: the swing bridge 8–10 cm, a gangway 4 cm, a bed's edge 18 cm (4).
+- The isles (`zislands.js`, another worker's now; Franco's dig) 7–58 cm (6).
 
-Class B (108) and C (76) are listed in the run's report, not judged.
+Class B (108 before, 95 after) and C (76) are listed in the run's report (REPORT=), not judged.
 
 ## Visible changes (for the user's pick)
 
@@ -110,7 +113,8 @@ Class B (108) and C (76) are listed in the run's report, not judged.
 | Suite | Result |
 |---|---|
 | `tests/feet-on-surface.mjs` on the base (`a68358be`, the same test copied in) | **FAIL**: class A 296 FAIL (above) |
-| `tests/feet-on-surface.mjs` on this branch | (below) |
+| `tests/feet-on-surface.mjs` on this branch (`077d7a5c`..`ae3c18d7`, all areas) | FAIL 1 (the spaceport pad's bevel), 122 handed on, 74 not reached; water: the river 37.7 cm deep at the deepest walk, the channel 18.5, the vent's pool 7.1, the Desert's sea 14.9 |
+| the same, `ONLY=citadel`, after the pad's fix (`d1db477e`) | **PASS** (class A 85: ok 4, handed on 68, not reached 13) |
 | `tests/walkers.mjs` | (below) |
 | `tests/worldfit.mjs` | (below) |
 | `tests/feet-shots.mjs` (pictures and numbers, before on the base, after here) | the table's before → after |
