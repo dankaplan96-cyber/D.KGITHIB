@@ -695,7 +695,10 @@ export function* buildZeelichSteps(scene, physics) {
       const [px, pz] = pad, gy = physics.groundAt(px + ox, pz + oz);
       const deckM = MAT_PAD();
       const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.8, 0.25, 24), deckM); disc.position.set(px, gy + 0.12, pz); disc.receiveShadow = true; group.add(disc);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(4.1, 0.08, 6, 32), new THREE.MeshStandardMaterial({ color: '#e8c040', roughness: 0.5 })); ring.rotation.x = Math.PI / 2; ring.position.set(px, gy + 0.26, pz); group.add(ring);
+      // (FEET-66: the pad is walked on: a floor at its top, gy + 0.245; he stood on the slab under it, 24.5 cm in it; its
+      //  yellow ring 1.5 cm over the pad, was 9.5)
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(4.1, 0.08, 6, 32), new THREE.MeshStandardMaterial({ color: '#e8c040', roughness: 0.5 })); ring.rotation.x = Math.PI / 2; ring.position.set(px, gy + 0.18, pz); group.add(ring);
+      col({ type: 'cyl', x: px, z: pz, r: 4.65, top: gy + 0.245, seeThrough: true });
       const sh = esmerShuttle({ landed: true }); sh.position.set(px, gy + 0.25, pz); sh.rotation.y = 0.6; group.add(sh);
       col({ type: 'cyl', x: px, z: pz, r: 3.5, top: gy + 4.4, noStand: true });
       keepClear(px - 5, pz - 5, px + 5, pz + 5);
@@ -718,7 +721,8 @@ export function* buildZeelichSteps(scene, physics) {
       const [yx, yz] = yard, gy = physics.groundAt(yx + ox, yz + oz);
       const HW = 5.5, HD = 3.4;   // the palisade's half-size
       const flat = (w, d, hex, y, x = yx, z = yz, ry = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95 })); m.position.set(x, y, z); m.rotation.y = ry; m.receiveShadow = true; group.add(m); return m; };
-      flat(HW * 2, HD * 2, '#a8582a', gy + 0.02);
+      // (FEET-66: the leaf bed's top 0.8 cm over the ground he walks on, the track's 1.6; they were 5 and 8 cm: his feet in them)
+      flat(HW * 2, HD * 2, '#a8582a', gy - 0.022);
       // the track: a rounded loop of pale planks-and-sand, 1.1 m wide
       const path = [];
       const TW = HW - 1.6, TD = HD - 1.4;
@@ -729,7 +733,7 @@ export function* buildZeelichSteps(scene, physics) {
       }
       for (let i = 0; i < path.length; i++) {
         const [ax, az] = path[i], [bx, bz] = path[(i + 1) % path.length];
-        flat(1.15, Math.hypot(bx - ax, bz - az) + 0.25, '#d4cec6', gy + 0.05, (ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az));
+        flat(1.15, Math.hypot(bx - ax, bz - az) + 0.25, '#d4cec6', gy - 0.014, (ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az));
       }
       const wood = new THREE.MeshStandardMaterial({ color: '#7a5434', roughness: 0.9 }), woodD = new THREE.MeshStandardMaterial({ color: '#5a3c24', roughness: 0.9 });
       const box = (w, h, d, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; group.add(o); return o; };
@@ -954,37 +958,42 @@ export function* buildZeelichSteps(scene, physics) {
   }
 
   // ================================================================ paths: paved street + plaza, dirt tracks to the mills
+  // (FEET-66: the paving lies on the island's slab, which is his floor (Y0): each layer's top now 0.8-2.8 cm over it, in
+  //  the same order as before and 4 mm apart (gravel 0.8, street 1.2, arcade 1.6, kerbs 2.0, plaza 2.4, star 2.8, the
+  //  plaza's kerb ring 3.0), the slabs' bodies sunk into the island. Before, the street's top stood 5 cm over his feet,
+  //  the plaza's 6.5, the star's 7.5, the kerb ring's 10: he walked in the paving, not on it)
+  function PV(thick, top) { return Y0 + top - thick; }
   function buildPaths() {
     const cobble = tm(paveTex(), { color: '#ffffff', rough: 0.85 });   // (ZEELICH-2: lavender grey, as LBA2's Zeelich paving; ZSTYLE-2: its pale flags)
     const street = [[-49.6, -3.4], [-34, -3.6], [-16, -3.4], [0, -3.6], [16, -3.3], [30, -3.5], [36.2, -2.9], [36.2, 2.9], [30, 3.5], [16, 3.3], [0, 3.6], [-16, 3.4], [-34, 3.6], [-49.6, 3.4]];
-    B.add(slabGeo(street, 0.05, TILE.cobble), cobble, 0, Y0, 0);
+    B.add(slabGeo(street, 0.05, TILE.cobble), cobble, 0, PV(0.05, 0.012), 0);
     const plaza = []; for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; plaza.push([PLAZA.x + Math.sin(a) * PLAZA.r, PLAZA.z + Math.cos(a) * PLAZA.r]); }
-    B.add(slabGeo(plaza, 0.065, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, Y0, 0);
+    B.add(slabGeo(plaza, 0.065, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, PV(0.065, 0.024), 0);
     // ZSTYLE-2: the street's lighter borders, a pale kerb stone along both edges (under the plaza's paving where it crosses)
     {
       const N = street.slice(0, 6), Sd = street.slice(8);   // (the north edge west → east, the south edge east → west; not the gate's end)
       // (AUDIT-FIX A-7: its outer edge 1 cm outside the street's: on the same line the two edges' faces flickered, worldfit)
-      for (const [edge, s] of [[N, 1], [Sd, -1]]) B.add(slabGeo(edge.map(([x, z]) => [x, z - s * 0.01]).concat(edge.map(([x, z]) => [x, z + s * 0.5]).reverse()), 0.06, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, Y0, 0);
+      for (const [edge, s] of [[N, 1], [Sd, -1]]) B.add(slabGeo(edge.map(([x, z]) => [x, z - s * 0.01]).concat(edge.map(([x, z]) => [x, z + s * 0.5]).reverse()), 0.06, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, PV(0.06, 0.02), 0);
     }
     // a mosaic star in the plaza
     const star = []; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? 3.2 : 5.6; star.push([PLAZA.x + Math.sin(a) * rr, PLAZA.z + Math.cos(a) * rr]); }
     // (ZSTYLE-1: in pale border stone, LBA2's lavender-grey paving with lighter borders; it was rose and blue star tiles)
-    B.add(slabGeo(star, 0.075, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, Y0, 0);
+    B.add(slabGeo(star, 0.075, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, PV(0.075, 0.028), 0);
     // kerb ring of the plaza
-    B.add(lathe([[PLAZA.r - 0.05, 0], [PLAZA.r + 0.18, 0], [PLAZA.r + 0.18, 0.1], [PLAZA.r - 0.05, 0.1]], 48, 1.2), tm('stone', { color: '#f2f0f2' }), PLAZA.x, Y0, PLAZA.z);
+    B.add(lathe([[PLAZA.r - 0.05, 0], [PLAZA.r + 0.18, 0], [PLAZA.r + 0.18, 0.1], [PLAZA.r - 0.05, 0.1]], 48, 1.2), tm('stone', { color: '#f2f0f2' }), PLAZA.x, PV(0.1, 0.03), PLAZA.z);
     // P136 (the user, 26.11: paving that stops short of other paving is a fault): the council house's arcade floor ended
     // 0.2–2.4 m short of the plaza's kerb ring, the island's bare granite in the two corners between. Its flags run on to
-    // the ring now (their edge under the ring's stone, 1 cm under the plaza's own paving), the arcade's width
+    // the ring now (their edge under the ring's stone, 8 mm under the plaza's own paving), the arcade's width
     for (const h of HOUSES) {
       if (!h.arcade || h.ry !== 0) continue;
       const R = PLAZA.r - 0.04, front = h.z + h.d / 2 + 2.1 - 0.1, hw = (h.w - 0.2) / 2, x0 = h.x - hw, x1 = h.x + hw;
       if (front > PLAZA.z || Math.abs(x0 - PLAZA.x) >= R || Math.abs(x1 - PLAZA.x) >= R || PLAZA.z - Math.sqrt(R * R - (h.x - PLAZA.x) ** 2) < front) continue;
       const P = [[x0, front], [x1, front]];
       for (let i = 0; i <= 12; i++) { const x = x1 + (x0 - x1) * (i / 12); P.push([x, PLAZA.z - Math.sqrt(R * R - (x - PLAZA.x) ** 2)]); }
-      B.add(slabGeo(P, 0.055, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, Y0, 0);
+      B.add(slabGeo(P, 0.055, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, PV(0.055, 0.016), 0);
     }
     // depot spur and the drill-platform approach
-    B.add(slabGeo([[DEPOT.gate[0] - 0.4, 3], [DEPOT.gate[1] + 0.4, 3], [DEPOT.gate[1] + 0.2, DEPOT.z0 + 0.3], [DEPOT.gate[0] - 0.2, DEPOT.z0 + 0.3]], 0.05, TILE.cobble), cobble, 0, Y0, 0);
+    B.add(slabGeo([[DEPOT.gate[0] - 0.4, 3], [DEPOT.gate[1] + 0.4, 3], [DEPOT.gate[1] + 0.2, DEPOT.z0 + 0.3], [DEPOT.gate[0] - 0.2, DEPOT.z0 + 0.3]], 0.05, TILE.cobble), cobble, 0, PV(0.05, 0.012), 0);
     // dirt tracks to the mills
     const dirt = tm(gravelTex(), { color: '#ffffff', rough: 0.95 });   // (ZSTYLE-1/2: a grey-ochre gravel, not orange earth)
     const track = (pts, w) => {
@@ -994,7 +1003,7 @@ export function* buildZeelichSteps(scene, physics) {
         const ww = w * (0.9 + Math.sin(i * 2.1) * 0.12);
         L.push([pts[i][0] - (tz / l) * ww, pts[i][1] + (tx / l) * ww]); Rr.push([pts[i][0] + (tz / l) * ww, pts[i][1] - (tx / l) * ww]);
       }
-      B.add(slabGeo(L.concat(Rr.reverse()), 0.035, TILE.dirt), dirt, 0, Y0, 0);
+      B.add(slabGeo(L.concat(Rr.reverse()), 0.035, TILE.dirt), dirt, 0, PV(0.035, 0.008), 0);
     };
     track([[-4, -3], [-3.6, -8], [-2.8, -12.5], [-2.2, -15.6]], 1.25);
     track([[19, -3], [20.2, -8], [21.4, -12.5], [21.9, -14.2]], 1.2);
