@@ -162,8 +162,16 @@ not a player's PC. **No frame-time claim.**
   Platform's paving.
 
 ## Tests (automated runtime only, SwiftShader, SERVE=1, once each, both with `QUERY=rockedge=new`)
-- `tests/worldfit.mjs`: (pending)
-- `tests/walkers.mjs`: (pending)
+- `tests/walkers.mjs`: **PASS**, 37/37.
+- `tests/worldfit.mjs`: **PASS**, functional 1/1, visual 8/8.
+  - The first run did not finish: the page was killed by the shared machine's memory limit. The kernel's OOM log names
+    a page renderer at 3 GB, with two other agents' browsers running. It was run again when they were lighter.
+  - The scan reads geometry, which this change does not touch. LAWN-EDGES-2's Knartas hut-floor z-fight (fixed since,
+    `f07e693f`) did not recur.
+- Neither suite ran with the switch off. The default rests on three things: the shader text is identical with the switch
+  off, there is no attribute and no work, and the digests above match.
+- Not run: `tests/path-ends.mjs` (it reads the old splits, which are unchanged).
+- No test pictures were overwritten (`git status` clean after both).
 
 ## Unresolved / for the user
 - Make `?rockedge=new` the default? Then the switch and the old splits can go.
