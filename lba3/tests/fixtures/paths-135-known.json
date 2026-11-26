@@ -1,0 +1,10 @@
+[
+ { "area": "citadel", "x": -46.9, "z": -14.4, "why": "a planted bed (a tree, bushes) between the square's ring and the north cross street (P42): enclosed by paving, no way cut" },
+ { "area": "citadel", "x": -36.0, "z": -14.4, "why": "a planted bed (a tree) between the climb's ramp, the north cross street and the block's east street: enclosed by paving" },
+ { "area": "citadel", "x": -33.9, "z": -11.9, "why": "the same bed, from its east side" },
+ { "area": "citadel", "x": -35.7, "z": -10.9, "why": "the same bed, from its south side" },
+ { "area": "citadel", "x": -36.4, "z": 5.7, "why": "the fork of the south lane and the east street below the square: both go on" },
+ { "area": "desert", "x": 3337.4, "z": -75.4, "why": "the School's two walks either side of the water channel at the mask's foot (desertold.js RILL, x -65…-62.4), crossed by its arched stone bridge" },
+ { "area": "desert", "x": 3337.4, "z": -70.0, "why": "the same channel, further south" },
+ { "area": "zeelich", "x": 2372.3, "z": -8.6, "why": "most likely a house's arcade floor (zeelich.js arcades are paved with the street's flags) north of the round plaza, 1.4 m of ground between: a porch, not a way; by the picture, not confirmed in source coordinates (noted, not changed)" }
+]

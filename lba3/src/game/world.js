@@ -139,9 +139,15 @@ function roundBoxDist(x, z, x0, z0, x1, z1, r) {
 // wing's yard, paved in front of the long hall and Nell's as LBA2's harbour platform is. The square and its streets
 // (town.js STREETS) stay as they are. [x0, z0, x1, z1, width]
 const GRID_STREETS = [
-  [-58.9, 2.9, -58.9, 57.0, 3.0],    // the west street, from the street to the harbour south past the water office
+  // (P135, the user's photo: the west street and its foot stopped 4 m short of the street down to the promenade's flight
+  //  (x -64), a bay of dirt between: it runs on north to that street now, its end flush in it)
+  [-58.9, -4.16, -58.9, 57.0, 3.0],    // the west street, from the street to the harbour south past the water office
   [-60.4, 2.9, -51.4, 2.9, 3.0],     // its foot, east to the square's ring
-  [-63.4, 31.3, -30.0, 31.3, 3.0],   // the cross street past Chez Luc, toward the footbridge
+  [-55.4, -4.16, -55.4, 2.9, 4.0],   // (P135) the corner between it, its foot, the street to the flight and the block's west street (x −52) paved (a bare kerbed bed was left there)
+  // (P135: it stopped square 7 m short of the footbridge, in the dirt: it ends now on a link south along the bridge's foot,
+  //  x −34…−31, flush with the bridge's west end, where its bollards and sign post stand; and in the west it stopped
+  //  square 11 m short of the harbour's yard, on the old harbour path's dirt: it runs on to the yard's east face now)
+  [-75.5, 31.3, -31.0, 31.3, 3.0],   // the cross street past Chez Luc, toward the footbridge
   [-45.6, 31.3, -45.6, 53.1, 3.0],   // south from it along the fields' path
   [-60.4, 53.1, -44.1, 53.1, 3.0],   // the south cross street
   [-73.68, -27.0, -73.68, 17.5, 2.9],   // the promenade on the sea wall, inside its rail (FLAT-TOWN: from the wall's coping to its inland edge, on to the knoll)
@@ -149,6 +155,7 @@ const GRID_STREETS = [
   // square's block to the cross street, where Pippa's shop and Fosse's office stand now. They stay: the street runs
   // 3.5 m west of LBA2's, before their west-facing doors, from the square's paved ring down to the cross street
   [-35.0, 3.6, -35.0, 31.3, 3.0],
+  [-32.5, 31.3, -32.5, 40.5, 3.0],   // (P135) the link from the cross street to the footbridge's foot (spaceport.js BRIDGE: x0 −31, z 38…42)
   // P42 (the user, 22.11: the north cross streets as LBA2's): LBA2 rings the square's block with streets. Ours: the
   // street along the square's north rim (tangent to its kerb ring, across the climb's paving), the block's west side
   // from it down past the square to the west street's foot (LBA2's x −52), its east side on LBA2's line from it down to
@@ -197,7 +204,7 @@ const GRID_RECTS = GRID_STREETS.map(([x0, z0, x1, z1, w], i) => {
     return Math.min(d, streetDist(x, z), bugFootDist(x, z), Math.hypot(x - POI.village.x, z - POI.village.z) - 9.45);
   };
   const end = (x, z) => { const o = other(x, z); return o <= 0.01 ? 'flush' : o < hw + 0.3 ? 'round' : 'square'; };
-  return { x0, z0, ux, uz, len, hw, ea: end(x0, z0), eb: end(x1, z1), prom: i === 5 };
+  return { x0, z0, ux, uz, len, hw, ea: end(x0, z0), eb: end(x1, z1), prom: x0 === -73.68 && x1 === -73.68 };   // (the promenade: by its line, not its place in the list)
 });
 function rectDist(x, z, R) {
   const dx = x - R.x0, dz = z - R.z0, t = dx * R.ux + dz * R.uz, p = Math.abs(dz * R.ux - dx * R.uz) - R.hw;

@@ -176,8 +176,11 @@ function splatFn(x, z, h, slope, w) {
   for (const [P, hw] of PATHS) { const d = seg(P, x, z) - hw * (0.55 + 0.18 * Math.sin(x * 0.7 + z * 0.43) + 0.1 * Math.sin(z * 1.9 - x * 0.3)); if (d < pd) { pd = d; pw = hw; } }
   if (pd < 0.8 && slope < 0.9) { const k = smoothstep(0.8, -0.2, pd); w[3] = Math.max(w[3], k * 1.1); w[1] *= 1 - k * 0.45; }
   const a = Math.atan2(z - LHAR.z - 1, x - LHAR.x), rr = 8.6 + Math.sin(a * 3 + 1) * 1.1 + Math.sin(a * 7 + 2) * 0.45;
-  if (Math.abs(h - L1) < 1) { const k = smoothstep(rr + 0.6, rr - 0.6, Math.hypot(x - LHAR.x, z - LHAR.z - 1)); if (k > 0) { w[4] = Math.max(w[4], 0.95 * k); w[1] *= 1 - k * 0.5; } }
-  if (x > MONAST.x - 8.6 && x < MONAST.x + 8.6 && z > MONAST.z - 1.4 && z < MONAST.z + 9.6) { const e = Math.min(x - MONAST.x + 8.6, MONAST.x + 8.6 - x, z - MONAST.z + 1.4, MONAST.z + 9.6 - z) + Math.sin(x * 1.3 + z) * 0.25; const k = smoothstep(0.0, 1.2, e); w[4] = Math.max(w[4], 0.95 * k); w[1] *= 1 - k * 0.6; }
+  // (P135: the trodden ways stop at the paving's edge: inside the square and the yard the paving wins over them. They
+  //  crossed both as earth — the square a broken ring round its shrine, open on the east; the yard's flags stopped 3 m
+  //  short of its gate — read as paving cut off)
+  if (Math.abs(h - L1) < 1) { const k = smoothstep(rr + 0.6, rr - 0.6, Math.hypot(x - LHAR.x, z - LHAR.z - 1)); if (k > 0) { w[4] = Math.max(w[4], 0.95 * k); w[1] *= 1 - k * 0.5; w[3] *= 1 - k; } }
+  if (x > MONAST.x - 8.6 && x < MONAST.x + 8.6 && z > MONAST.z - 1.4 && z < MONAST.z + 9.6) { const e = Math.min(x - MONAST.x + 8.6, MONAST.x + 8.6 - x, z - MONAST.z + 1.4, MONAST.z + 9.6 - z) + Math.sin(x * 1.3 + z) * 0.25; const k = smoothstep(0.0, 1.2, e); w[4] = Math.max(w[4], 0.95 * k); w[1] *= 1 - k * 0.6; w[3] *= 1 - k; }
 }
 
 // powder snow: soft drifts and a sparkle of blue-white grains
