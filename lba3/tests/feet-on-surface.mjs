@@ -34,65 +34,25 @@ const iso = (s) => console.log('ISO  ' + s);
 const WATER = /^(hriver|hchannel|hripples|hfoam|hventwater|water|sea|ocean|bl_basinWater\d*)$/;
 // soft snow: waded through as snow (the Hamalayi's rim lips and drifts)
 const SOFT = /^(hlip-|.*drift)/;
-const SNOW = ['#f6f9ff'];   // (and any piece in the snow's own look, MM.snow: drifts and caps in the dressing kits)
+const SNOW = ['#f6f9ff', '#f4f6fa'];   // (FEET-66B: and the wave-5 tin stacks' snow pad)   // (and any piece in the snow's own look, MM.snow: drifts and caps in the dressing kits)
 
-// class-A findings left for their owners (not this suite's to fix: another worker's file, a protected change, a question
-// for the coordinator, or not reached in FEET-66's round). Printed as HANDED ON with the measured depth, never dropped;
-// they do not fail the run.
-// (FEET-66, 26.11: what the before-run found and FEET-66 did not fix, each piece by its place (the discovery's middle of
-// it, deterministic): [area, x, z, owner, depth measured (m; negative: floating)]; FEET-66.md lists them by owner)
+// class-A findings left for their owners (not this suite's to fix: another worker's file, or a true exception). Printed
+// as HANDED ON with the measured depth, never dropped; they do not fail the run.
+// (FEET-66B, 27.11: FEET-66 handed on 122; FEET-66B fixed every one outside the isles (FEET-66B.md). Left: the isles'
+// pieces, zislands.js being PATHS-140B's file until it lands, and one true exception. Each [area, x, z, owner, depth
+// measured by the discovery (m; negative: floating)], by the discovery's middle of the piece (0.5 m))
 const OWNERS = {
-  o0: "Citadel, the square's ring steps (island.js buildFlatTown, FLAT-TOWN: protected; a question)",
-  o1: "a standable collider over less drawn (a coping, a planter's rim, a wall top): its builder",
-  o2: "Citadel, the town's merged pieces (town.js, townbits.js)",
-  o3: "Citadel, the project's station yard (island.js buildStation)",
-  o4: "Citadel, the cliff rocks (cliffs.js): low rocks walked into",
-  o5: "Citadel, the asylum's front (lba1places.js)",
-  o6: "Citadel, the old cellar hatch (island.js cellarHatch)",
-  o7: "Citadel, the harbour's quay pieces (island.js, harbourshed.js)",
-  o8: "Citadel, low stones and beds (world.js, citydress.js)",
-  o9: "Citadel, the water main lying on the ground (island.js; a pipe)",
-  o10: "Citadel, the lane gate (lanegate.js)",
-  o11: "Citadel, the sewer hatch on the terrace (sewers.js)",
-  o12: "Zeelich (zeelich.js, zeelife.js): a porch, a step, a low stone",
-  o13: "Desert Island (desert.js, desertdress.js): low rocks, a slab",
-  o14: "the Hamalayi: a standable wall top or a platform's collider over less drawn (hamalayi.js)",
-  o15: "the Hamalayi's low rocks, the gorge's shore stones, the dead tree's root plate (hamalayi.js, hamalayi-finish.js, hamalayi-tree.js)",
-  o16: "Ballastra (ballastra/*.js): the swing bridge, a gangway, a bed edge",
-  o17: "the isles (zislands.js, francos: another worker's file now)",
+  x1: "a house's roof eave, 7 cm over the house's wall collider: reached only by the hop-pack from the promenade (2.24 m below); a pitched roof is not a floor (a true exception)",
+  o17: "the isles (zislands.js, francosworld.js: PATHS-140B's files until it lands; FEET-66B.md lists each)",
 };
 const HANDED = [
-  ['citadel', -42.90, -4.48, 'o0', 0.257], ['citadel', -36.59, 69.86, 'o1', -0.103], ['citadel', -71.00, 42.49, 'o2', 0.289], ['citadel', -112.27, 53.29, 'o1', -0.200],
-  ['citadel', -110.25, 38.12, 'o1', -0.103], ['citadel', -108.97, 48.31, 'o1', -0.100], ['citadel', -24.50, -72.83, 'o3', 0.250], ['citadel', -123.95, -69.23, 'o4', 0.696],
-  ['citadel', -24.72, -67.17, 'o3', 0.250], ['citadel', -39.20, 8.81, 'o1', -0.097], ['citadel', -26.50, -51.51, 'o5', 0.259], ['citadel', -94.33, 32.81, 'o1', -0.097],
-  ['citadel', -52.33, 49.66, 'o1', -0.097], ['citadel', -50.33, 44.71, 'o1', -0.097], ['citadel', -71.25, -31.50, 'o4', 0.497], ['citadel', -27.77, -62.19, 'o6', 0.090],
-  ['citadel', -122.00, 44.33, 'o7', 0.070], ['citadel', -27.84, -61.17, 'o6', 0.080], ['citadel', -41.84, 90.58, 'o4', 0.309], ['citadel', -35.51, -65.00, 'o3', 0.055],
-  ['citadel', -26.00, -63.59, 'o3', 0.055], ['citadel', -27.73, -61.17, 'o6', 0.090], ['citadel', -37.57, 18.30, 'o8', 0.293], ['citadel', -30.84, -65.00, 'o3', 0.050],
-  ['citadel', -24.42, -62.66, 'o3', 0.050], ['citadel', -26.00, -50.67, 'o5', 0.458], ['citadel', -27.00, -50.67, 'o5', 0.444], ['citadel', -74.37, 61.76, 'o8', 0.300],
-  ['citadel', -124.17, 48.80, 'o7', 0.070], ['citadel', -105.96, 43.29, 'o1', -0.200], ['citadel', -25.91, -86.07, 'o1', -0.230], ['citadel', -29.25, -64.84, 'o3', 0.055],
-  ['citadel', -32.34, -65.00, 'o3', 0.055], ['citadel', -26.67, 9.16, 'o8', 0.284], ['citadel', -86.00, 92.33, 'o8', 0.325], ['citadel', -23.01, -61.69, 'o3', 0.055],
-  ['citadel', -28.75, 61.16, 'o8', 0.310], ['citadel', -34.01, -65.00, 'o3', 0.050], ['citadel', -113.34, -81.67, 'o8', 0.293], ['citadel', -64.42, 50.49, 'o8', 0.283],
-  ['citadel', -68.00, -30.89, 'o4', 0.151], ['citadel', -53.59, 38.49, 'o8', 0.278], ['citadel', -109.67, -75.67, 'o8', 0.281], ['citadel', -55.51, -76.67, 'o8', 0.251],
-  ['citadel', -30.34, 52.66, 'o8', 0.252], ['citadel', -37.51, -65.00, 'o3', 0.050], ['citadel', -125.50, 53.66, 'o7', 0.070], ['citadel', -56.84, -13.51, 'o2', 0.130],
-  ['citadel', -58.51, -8.84, 'o2', 0.130], ['citadel', -66.50, 41.16, 'o2', 0.130], ['citadel', -88.84, 30.16, 'o2', 0.130], ['citadel', -26.84, -20.50, 'o2', 0.130],
-  ['citadel', -69.50, 12.49, 'o2', 0.072], ['citadel', -19.84, -60.70, 'o3', 0.101], ['citadel', -41.34, 47.66, 'o8', 0.148], ['citadel', -31.50, 21.50, 'o2', 0.130],
-  ['citadel', -53.77, -67.37, 'o9', 0.100], ['citadel', -31.50, -55.51, 'o3', 0.070], ['citadel', -45.84, 61.83, 'o10', 0.050], ['citadel', -25.00, -30.84, 'o11', 0.106],
-  ['citadel', -116.17, 47.33, 'o7', 0.100], ['citadel', -25.00, -31.50, 'o11', 0.093], ['citadel', -25.00, -31.84, 'o11', 0.085], ['citadel', -50.34, -64.34, 'o9', 0.082],
-  ['citadel', -33.34, -49.34, 'o9', 0.090], ['citadel', -25.00, -32.17, 'o11', 0.073], ['citadel', -31.34, -74.00, 'o3', 0.077], ['citadel', -19.30, -60.30, 'o3', 0.031],
-  ['zeelich', 2389.10, -10.50, 'o12', 0.615], ['zeelich', 2368.09, 25.79, 'o12', 0.330], ['zeelich', 2388.90, 12.71, 'o12', 0.120], ['zeelich', 2361.23, -6.99, 'o1', -0.350],
-  ['zeelich', 2389.49, 8.66, 'o12', 0.140], ['zeelich', 2450.16, -0.01, 'o12', 0.060], ['zeelich', 2388.99, -7.50, 'o12', 0.140], ['zeelich', 2387.83, 23.16, 'o12', 0.055],
-  ['desert', 3358.95, -38.54, 'o13', 0.315], ['desert', 3336.49, -72.67, 'o13', 0.319], ['desert', 3423.12, -24.76, 'o13', 0.191], ['desert', 3304.73, -45.66, 'o1', -0.300],
-  ['desert', 3305.06, -45.66, 'o13', 0.227], ['desert', 3349.64, 15.99, 'o13', 0.070], ['desert', 3297.33, -71.00, 'o13', 0.092], ['desert', 3317.09, 44.63, 'o13', 0.388],
-  ['desert', 3336.88, -64.93, 'o13', 0.250], ['desert', 3355.33, 28.00, 'o13', 0.395], ['desert', 3407.58, -26.50, 'o13', 0.470], ['desert', 3311.33, 4.00, 'o13', 0.076],
-  ['desert', 3327.49, -64.89, 'o13', 0.250], ['desert', 3349.66, -120.67, 'o13', 0.360], ['desert', 3333.16, -65.00, 'o13', 0.250], ['desert', 3327.41, -58.59, 'o13', 0.250],
-  ['desert', 3336.91, -58.59, 'o13', 0.250], ['desert', 3329.33, -65.00, 'o13', 0.250], ['desert', 3331.33, -65.00, 'o13', 0.250], ['desert', 3334.99, -65.00, 'o13', 0.250],
-  ['desert', 3329.98, -78.93, 'o13', 0.091], ['desert', 3387.33, -43.17, 'o13', 0.055], ['hamalayi', 4361.82, -50.21, 'o14', -0.382], ['hamalayi', 4369.49, -49.67, 'o15', 0.378],
-  ['hamalayi', 4330.33, 43.66, 'o15', 0.294], ['hamalayi', 4241.33, 38.49, 'o15', 0.444], ['hamalayi', 4274.85, 83.65, 'o14', -0.097], ['hamalayi', 4275.97, 75.80, 'o14', -1.139],
-  ['hamalayi', 4273.58, 82.02, 'o14', -0.104], ['hamalayi', 4273.43, 80.56, 'o14', -0.922], ['hamalayi', 4293.74, 37.24, 'o15', 0.127], ['hamalayi', 4278.43, 83.92, 'o14', -0.098],
-  ['ballastra', 2971.02, -3013.47, 'o16', 0.100], ['ballastra', 2972.24, -3013.41, 'o16', 0.080], ['bl_arches', 3008.00, -3800.00, 'o1', -0.290], ['bl_arches', 2994.49, -3804.18, 'o16', 0.040],
-  ['bl_gardens', 2959.66, -4617.18, 'o16', 0.180], ['isle_otringal', 1946.23, 1860.24, 'o17', 0.453], ['isle_otringal', 1894.94, 1802.06, 'o1', -0.476], ['isle_otringal', 1864.22, 1786.63, 'o1', -0.476],
-  ['isle_otringal', 1908.85, 1836.92, 'o1', -0.113], ['isle_otringal', 1891.16, 1765.63, 'o17', 0.070], ['isle_otringal', 1864.16, 1786.99, 'o17', 0.081], ['isle_knartas', 2250.66, 1806.66, 'o17', 0.191],
-  ['isle_celebration', 2893.77, 1790.99, 'o17', 0.582], ['isle_oldwatch', 5196.23, 1807.29, 'o17', 0.475], ['isle_oldwatch', 5186.91, 1793.83, 'o17', 0.253],
+  ['citadel', -69.505, 12.495, 'x1', 0.072],
+  ['isle_otringal', 1946.233, 1860.236, 'o17', 0.48], ['isle_otringal', 1894.87, 1802.06, 'o17', -0.476], ['isle_otringal', 1891.165, 1765.627, 'o17', 0.391],
+  ['isle_otringal', 1908.825, 1837.161, 'o17', 0.08], ['isle_otringal', 1864.165, 1786.995, 'o17', 0.067],
+  ['isle_knartas', 2250.66, 1806.66, 'o17', 0.23], ['isle_knartas', 2198.961, 1764.429, 'o17', 0.055],
+  ['isle_celebration', 2893.638, 1790.685, 'o17', 0.487], ['isle_celebration', 2883.131, 1812.708, 'o17', 0.085], ['isle_celebration', 2886.199, 1810.384, 'o17', 0.087],
+  ['isle_celebration', 2880.495, 1809.495, 'o17', 0.086],
+  ['isle_oldwatch', 5196.235, 1807.291, 'o17', 0.472], ['isle_oldwatch', 5186.913, 1793.827, 'o17', 0.243],
 ];
 const handed = (c) => { const h = HANDED.find(([a, x, z]) => a === c.area && Math.hypot(c.x - x, c.z - z) < 0.5); return h && { why: OWNERS[h[3]] }; };
 
@@ -130,14 +90,14 @@ for (const area of areas) {
     // (a) sink spots: walk the cells that hold drawn geometry
     // (FEET-66B) where he can be at all: a flood over a 0.5 m grid from the ground he can walk on (the terrain, not steep,
     //  not under anything that stops him) and from where he arrives in the area, step by step as physics moves him (a step
-    //  up to STEP_UP, any drop) and, generously, a hop of the hop-pack (jetpack.js JET.cap 2.4 m + a step) onto a floor
+    //  up to STEP_UP, any drop) and, generously, a hop of the hop-pack (jetpack.js JET.cap 2.4 m, landing 0.25 m up) onto a floor
     //  beside him; up to three floors a cell (under a bridge and on it). A drawn top over a floor no flood reaches (a
     //  house's roof over its walls' collider, a tank's lid, a fortress wall's top) is not a place he stands: listed as
     //  UNREACHABLE per piece, never judged.
     const RF = (() => {
       const C = 0.5, X0 = A.x0, Z0 = A.z0, NX = Math.ceil((A.x1 - A.x0) / C) + 1, NZ = Math.ceil((A.z1 - A.z0) / C) + 1;
       const lv = new Float32Array(NX * NZ * 3).fill(NaN), q = [];
-      const R = 0.25, HOP = 2.4 + 0.55;
+      const R = 0.25, HOP = 2.4 + 0.25;   // (the highest floor a hop lands on: the pack's lift over the take-off ground, and the 0.25 m physics lets a falling actor land up onto)
       const add = (i, j, y) => { const k = (i * NZ + j) * 3; for (let n = 0; n < 3; n++) { const v = lv[k + n]; if (v === v) { if (Math.abs(v - y) < 0.05) return; continue; } lv[k + n] = y; q.push(i, j, y); return; } };
       const okAt = (x, z, g) => { const gi = PH.groundInfo(x, z, g + 0.01); return !(g < -0.35 && !gi.brick) && !PH.blockedAt(x, z, g, R); };
       for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) { const x = X0 + i * C, z = Z0 + j * C; const gi = PH.groundInfo(x, z, 1e4); if (gi.brick) continue; const g = gi.h; if (g < -0.35 || PH.steepAt(x, z, g) || PH.blockedAt(x, z, g, R)) continue; add(i, j, g); }
@@ -157,7 +117,12 @@ for (const area of areas) {
     const footYs = (x, z, hits, tg) => { const ys = hits.filter((h) => h.ny > 0.3).map((h) => h.y); if (tg != null) ys.push(tg);
       for (const [dx, dz] of [[0.08, 0], [-0.08, 0], [0, 0.08], [0, -0.08]]) { const q = SW.raw.column(x + dx, z + dz); for (const h of q.hits) if (h.ny > 0.3) ys.push(h.y); } return ys; };
     G.footYs = footYs;
-    let byRadius = 0;
+    // (FEET-66B: his feet inside a layer of soft snow — between a snow piece's underside and its top: a wall's snow cap, a
+    //  drift — are in the snow, as he wades the drifts: not floating over the stone under it)
+    const SOFTr = SOFT, inSnow = (hits, y) => hits.some((q) => { if (q.ny <= 0.3 || !(SOFTr.test(nameOf(q.oi)) || SNOW.includes(SW.raw.look(q.lk).hex))) return false;
+      const u = hits.find((h2) => h2.si === q.si && h2.ny < -0.3 && h2.y < q.y); return !!u && y >= u.y - 0.05 && y <= q.y + 0.05; });
+    G.inSnow = inSnow;
+    let byRadius = 0, narrow = 0;
     const cells = new Set();
     for (const s of S) { const b = s.box; if (b[4] - b[1] > 1.2 && b[3] - b[0] < 30) continue;   // (a tall piece: not a thing lying on the floor)
       for (let x = Math.floor(Math.max(b[0], A.x0)); x <= Math.floor(Math.min(b[3], A.x1)); x++) for (let z = Math.floor(Math.max(b[2], A.z0)); z <= Math.floor(Math.min(b[5], A.z1)); z++) cells.add(x * 100003 + z); }
@@ -178,6 +143,10 @@ for (const area of areas) {
         // (FEET-66B: his middle cannot come within his radius of what stops him: a spot there is not one he stands on —
         //  a stone's drawn edge outside its collider; counted)
         if (PH.blockedAt(x, z, s, RAD)) { byRadius++; continue; }
+        // (FEET-66B: a top narrower than a foot — a rail, a bar, a pipe's crown, 18 cm or less across — is stepped over, not
+        //  stood on: the same part's top missing 9 cm to both sides of the spot, along x or along z; counted)
+        { const has = (dx, dz) => SW.raw.column(x + dx, z + dz).hits.some((q) => q.si === top.si && q.ny > 0.3 && Math.abs(q.y - top.y) < 0.05);
+          if ((!has(0.09, 0) && !has(-0.09, 0)) || (!has(0, 0.09) && !has(0, -0.09))) { narrow++; continue; } }
         if (!RF(x, z, s)) { const nm = SW.raw.path(top.oi), u = unreach.get(nm) || { n: 0, at: `(${x.toFixed(2)}, ${z.toFixed(2)}) floor ${s.toFixed(2)}` }; u.n++; unreach.set(nm, u); continue; }
         const part = S[top.si], b = part.box, sheet = b[4] - b[1] < 0.03;
         if (!(sheet ? d < 0.35 : (b[1] <= s + 0.12 || b[4] - b[1] <= 0.25))) continue;   // (lying on the floor, or a thin slab over it: a floe)
@@ -208,7 +177,7 @@ for (const area of areas) {
         if (!RF(x, z, c.top)) { const nm = 'collider ' + PH.colliders.indexOf(c), u = unreach.get(nm) || { n: 0, at: `(${x.toFixed(2)}, ${z.toFixed(2)}) floor ${c.top.toFixed(2)}` }; u.n++; unreach.set(nm, u); continue; }
         const { hits, tg } = SW.raw.column(x, z); cols++;
         const ys = footYs(x, z, hits, tg);
-        if (ys.some((y) => Math.abs(y - c.top) <= 0.05)) continue;
+        if (ys.some((y) => Math.abs(y - c.top) <= 0.05) || inSnow(hits, c.top)) continue;
         const under = ys.filter((y) => y < c.top - 0.05).sort((a, b) => b - a)[0];
         const gap = under == null ? 9 : c.top - under; if (gap >= 0.6 && under != null) continue;   // (a drop: a different fault, not his feet over a surface)
         if (!f) f = { c, n: 0, gMax: 0, x: 0, z: 0, pts: [], rock: 0 };
@@ -227,10 +196,10 @@ for (const area of areas) {
       cand.push({ kind: 'sink', cls: c.dSum / c.n <= 0.3 ? 'A' : 'B', th: r3(th), area: area.id, si: c.si, name: nm + (c.built ? ' over a built walk' : ''), path, look: lk.hex + (lk.tex ? '/' + lk.tex : '') + (lk.transparent ? ' (see-through)' : ''), water: WATER.test(nm) || S[c.si].box[3] - S[c.si].box[0] > 300, soft: (SOFT.test(nm) || SNOW.includes(lk.hex)) && !c.built, m2: r3(c.n * C * C), dMax: r3(c.dMax), dMean: r3(c.dSum / c.n), x: r3(c.x / c.n), z: r3(c.z / c.n), box: S[c.si].box.map(r3), pts: c.pts }); }
     for (const [ci, f] of floats) cand.push({ kind: 'float', cls: f.rock > f.n / 2 ? 'C' : 'A', area: area.id, ci, name: 'collider ' + ci + (f.c.stair ? ' (stair)' : '') + (f.c.type === 'cyl' ? ' cyl r ' + f.c.r : ` box ${r3(f.c.hw * 2)}x${r3(f.c.hd * 2)}`), top: r3(f.c.top), m2: r3(f.n * C * C), dMax: r3(f.gMax), x: r3(f.x / f.n), z: r3(f.z / f.n), pts: f.pts });
     cand.sort((a, b) => b.m2 * b.dMax - a.m2 * a.dMax);
-    return { census: res.census, decals: res.decals.length, cols, cand, byRadius, unreach: [...unreach].map(([k, v]) => `${k} (${v.n} spots, one at ${v.at})`) };
+    return { census: res.census, decals: res.decals.length, cols, cand, byRadius, narrow, unreach: [...unreach].map(([k, v]) => `${k} (${v.n} spots, one at ${v.at})`) };
   }, { area, WATERs: WATER.source, SOFTs: SOFT.source, SNOW });
   console.log(`\n== ${area.id}: ${disc.cand.length} candidates (${disc.cand.filter((c) => c.kind === 'sink').length} sink, ${disc.cand.filter((c) => c.kind === 'float').length} float); ${disc.cols} columns; store ${JSON.stringify(disc.census)}`);
-  console.log(`  left out: ${disc.byRadius} spot(s) within his radius of something that stops him; UNREACHABLE (no way there on foot or by the hop-pack): ${disc.unreach.length ? disc.unreach.join('; ') : 'none'}`);
+  console.log(`  left out: ${disc.byRadius} spot(s) within his radius of something that stops him; ${disc.narrow} on a top narrower than a foot (a rail, a bar); UNREACHABLE (no way there on foot or by the hop-pack): ${disc.unreach.length ? disc.unreach.join('; ') : 'none'}`);
   for (const c of disc.cand.slice(0, 60)) console.log(`  ${c.cls} ${c.kind} ${c.water ? '[water] ' : ''}${c.soft ? '[soft] ' : ''}${c.m2} m2 max ${c.dMax} at (${c.x}, ${c.z}) ${c.name} | ${c.path || ''} ${c.look || ''} ${c.top != null ? 'top ' + c.top : ''}`);
   all.areas[area.id] = { census: disc.census, decals: disc.decals, cand: disc.cand, walks: [] };
   if (disc.decals) all.notCovered.push(`${area.id}: ${disc.decals} see-through decal mesh(es) not in the store`);
@@ -266,8 +235,8 @@ for (const area of areas) {
       const measure = (x, z, y) => {
         const { hits, tg } = SW.raw.column(x, z);
         if (c.kind === 'sink') { const t = hits.find((q) => q.si === c.si && q.ny > 0.85); return !t || PH.near(x, z).some((q) => q.enabled && !q.noStand && Math.abs(q.top - t.y) < 0.015 && PH._inside(q, x, z, 0.08)) ? null : t.y - y; }   // (a step's edge: as discovery's ownFloor)
-        const ys = G.footYs(x, z, hits, tg);   // (FEET-66B: as discovery's: a foot on a grating's bars)
-        if (ys.some((v) => Math.abs(v - y) <= 0.03)) return 0;
+        const ys = G.footYs(x, z, hits, tg);   // (FEET-66B: as discovery's: a foot on a grating's bars; in soft snow)
+        if (ys.some((v) => Math.abs(v - y) <= 0.03) || G.inSnow(hits, y)) return 0;
         const under = ys.filter((v) => v < y).sort((a, b) => b - a)[0];
         return under == null ? null : -(y - under);   // (negative: floating by that much)
       };

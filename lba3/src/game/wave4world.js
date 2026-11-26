@@ -166,7 +166,7 @@ export function buildRaphSeat(parent, id, x, z, y, a, physics) {
   k.add(lathe([[0.001, 0], [0.08, 0], [0.09, 0.04], [0.085, 0.15], [0.065, 0.19], [0.07, 0.21], [0.06, 0.21]], 12), MAT.glass('#cfe8e0', 0.5), jx, y, jz);
   for (let i = 0; i < 3; i++) k.add(cyl(0.025, 0.025, 0.006, 10), MAT.brass(), jx + (i - 1) * 0.02, y + 0.012 + i * 0.008, jz + (i % 2) * 0.015, 0, { rx: 0.3 * i });
   k.flush();
-  physics?.add({ type: 'box', x, z, hw: 0.27, hd: 0.27, rot: a, top: y + 0.5, noStand: true });
+  physics?.add({ type: 'box', x, z, hw: 0.27, hd: 0.27, rot: a, top: y + 0.5, noStand: true, block: true });   // (FEET-66B: block: the seat, 0.5 m, was walked through)
   // the instruments, on his lap (across his thighs, the neck to his left), each its own group
   const lap = { x: x + fx * 0.3, y: y + 0.64, z: z + fz * 0.3 };
   const inst = (build) => { const ig = new THREE.Group(); ig.position.set(lap.x, lap.y, lap.z); ig.rotation.y = a; g.add(ig); const ik = new Kit(ig); build(ik); ik.flush(); ig.visible = false; return ig; };

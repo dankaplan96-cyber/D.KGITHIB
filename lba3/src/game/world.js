@@ -16,7 +16,7 @@ import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R, HARB
 import { buildDinoFly, DINO_AT } from './dinofly.js';
 import { buildLighthouse, LH_STEPS, LH_STEP_W, LH_ANNEX } from './lighthouse.js';
 import { buildStatue } from './statue.js';
-import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry, ROCKS_OLD } from './cliffs.js';
+import { buildCliffRocks, stoneColumnGeometry, plateauStonesGeometry, ROCKS_OLD, rockFootColliders } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
 import { mergeStatic } from '../engine/merge.js';
@@ -852,7 +852,9 @@ function dropRocks(mesh, inside, [x0, z0, x1, z1], along = 0) {
 export function rocksOutOfMasonry(W) {
   if (ROCKS_OLD || !W_cliffs) return 0;
   const P = W.physics, inBox = (c, x, z) => { const dx = x - c.x, dz = z - c.z, lx = dx * c.cos + dz * c.sin, lz = -dx * c.sin + dz * c.cos; return Math.min(c.hw - Math.abs(lx), c.hd - Math.abs(lz)); };
-  return (W_cliffs.mesh.userData.masonryDropped = dropRocks(W_cliffs.mesh, (x, z, y) => P.near(x, z).some((c) => c.type === 'box' && c.enabled && !c.camOnly && y > c.bottom && y < c.top - 0.1 && inBox(c, x, z) > 0.1), [-220, -130, 70, 160], 0.1));
+  const dropped = (W_cliffs.mesh.userData.masonryDropped = dropRocks(W_cliffs.mesh, (x, z, y) => P.near(x, z).some((c) => c.type === 'box' && c.enabled && !c.camOnly && y > c.bottom && y < c.top - 0.1 && inBox(c, x, z) > 0.1), [-220, -130, 70, 160], 0.1));
+  W_cliffs.mesh.userData.footColliders = rockFootColliders(W_cliffs.mesh, W.terrain, P);   // (FEET-66B: the rocks' toes on walkable ground, obstacles)
+  return dropped;
 }
 
 // Splat weights: [grass, sand, rock, dirt, cobbles]
@@ -1543,7 +1545,8 @@ export function* buildWorldSteps(parentScene) {
     const S = SIGHT[t.kind];
     physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false, ...(S ? { sight: { r: S[0] * t.s * (CROWN[t.kind] ?? 1), y0: t.h + S[1] * t.s, y1: t.h + S[2] * t.s, soft: t.kind === 'round' || t.kind === 'fruit', bulb: !!S[3] } } : {}) });
   }
-  for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
+  // (FEET-66B: block: a small bush's top within a step of the ground let him walk through its middle, as drawn a solid clump)
+  for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true, block: true });
   W.trees = trees;
 
   yield 'trees';

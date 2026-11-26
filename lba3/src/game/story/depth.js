@@ -798,7 +798,9 @@ export class Depth extends ChapterBase {
     const handle = new THREE.Mesh(rbox(0.22, 0.04, 0.04, 0.01), iron); handle.position.set(0, 0.04, 0.82); hinge.add(handle);
     // the spoil: two small heaps of the dug sand either side
     const spoil = [-1, 1].map((s) => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.55, 0.28, 0.45), sand); m.position.set(s * 1.15, -0.04, 0.15 * s); grp.add(m); return m; });
-    const col = P.add({ type: 'box', x: DRIFT.x, z: DRIFT.z, hw: 1.3, hd: 0.9, rot: 0.4, top: gy + 0.3 });
+    // (FEET-66B: the drift a mound he digs from beside, block: its flat top at 0.3 held him 30 cm over its foot and 10 cm
+    //  under its crown; dug, the collar round the hole, block as well: noStand alone, 0.45 m, let him walk into the hole)
+    const col = P.add({ type: 'box', x: DRIFT.x, z: DRIFT.z, hw: 1.3, hd: 0.9, rot: 0.4, top: gy + 0.4, block: true });
     this.gz = { R, figs, grp, drift, hatch, hinge, spoil, col, gy, digT: 0, openT: 0, x: DRIFT.x, z: DRIFT.z };
   }
   setGaze() {
@@ -807,7 +809,7 @@ export class Depth extends ChapterBase {
     Z.drift.visible = !dug; Z.drift.scale.set(1, 1, 1);
     Z.hatch.visible = dug; Z.spoil.forEach((m) => { m.visible = dug; });
     Z.hinge.rotation.x = f.dx_gaze_open ? -1.95 : 0;
-    Object.assign(Z.col, dug ? { top: Z.gy + 0.45, noStand: true, hw: 0.6, hd: 0.6 } : { top: Z.gy + 0.3, noStand: false, hw: 1.3, hd: 0.9 });
+    Object.assign(Z.col, dug ? { top: Z.gy + 0.45, noStand: true, block: true, hw: 0.6, hd: 0.6 } : { top: Z.gy + 0.4, noStand: true, block: true, hw: 1.3, hd: 0.9 });
     this.game.physics.update(Z.col);
   }
   gazeOpen() { return this.at('dig') && this.able() && this.here() === 'desert' && !!this.gz; }

@@ -554,7 +554,7 @@ export function* buildArchesSteps(scene, physics) {
     for (let i = 1; i < 6; i++) gB.add(cached('blw2cleat' + w, () => bbox(w - 0.3, 0.04, 0.06, 0.01)), BM.post(), 0, 0.02, dir * i * L / 6);
     gB.add(cached('blw2roller', () => cyl(0.1, 0.1, 1.9, 10).rotateZ(Math.PI / 2)), BM.bronze(), 0, -0.12, dir * (L - 0.1));
     gB.build();
-    const N = 9, segs = [];
+    const N = 24, segs = [];   // (FEET-66B: 24 steps under the tilted deck: 9 left him up to 4 cm off it)
     for (let i = 0; i < N; i++) segs.push(physics.add({ type: 'box', x: (G.x0 + G.x1) / 2 + ox, z: G.zA + dir * (L * (i + 0.5) / N) + oz, hw: w / 2, hd: L / N / 2 + 0.07, top: 0, seeThrough: true, stair: true }));
     // the side rails (fixed: the gangway turns about its hinge only)
     for (const s of [-1, 1]) col({ type: 'box', x: (G.x0 + G.x1) / 2 + s * (w / 2 + 0.02), z: (G.zA + G.zB) / 2, hw: 0.08, hd: L / 2, top: 4.2, seeThrough: true, noStand: true });

@@ -105,7 +105,9 @@ const mergePlain = (geos) => {
 // as a chain of short segments; a station on every crossed lattice edge (shared, so the lip is watertight) carries a
 // rounded profile (back on the flat, a crest, an overhang, a curl under) whose thickness and overhang wander with a
 // smooth noise, thinning to almost nothing in places. Visual only: no collider, no shadow cast.
-export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) {
+// (FEET-66B, taper: where a designed walk meets the rim (the arch's steps), the lip is kept as it thins toward the walk —
+//  down to a fade of 0.12, no thickness floor — so it ends in a taper, not a cut)
+export function snowLips(T, parent, { levels, cell = 46, fade = () => 1, taper = null } = {}) {
   const n = T.segs + 1, h = T.heights, x0 = T.x0, z0 = T.z0, st = T.step;
   const H = (x, z) => T.heightAt(x, z);
   const smap = new Map();
@@ -155,7 +157,8 @@ export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) 
   };
   // keep the runs that matter: no segment where a trail or a walk crosses the rim or where the lip would be a film, and no
   // run shorter than 8 segments (a few metres of lip beside a trail's cut read as torn paper)
-  const keep = segs.filter(([a, b]) => { rim(a); rim(b); return !(a.fade < 0.8 || b.fade < 0.8 || a.thick < 0.17 || b.thick < 0.17); });
+  const keep = segs.filter(([a, b]) => { rim(a); rim(b); const lo = taper && (taper(a.x, a.z) || taper(b.x, b.z));
+    return lo ? !(a.fade < 0.12 || b.fade < 0.12) : !(a.fade < 0.8 || b.fade < 0.8 || a.thick < 0.17 || b.thick < 0.17); });
   const par = new Map(); const find = (i) => { while (par.get(i) !== i) { par.set(i, par.get(par.get(i))); i = par.get(i); } return i; };
   for (const [a, b] of keep) { if (!par.has(a.id)) par.set(a.id, a.id); if (!par.has(b.id)) par.set(b.id, b.id); par.set(find(a.id), find(b.id)); }
   const runLen = new Map(); for (const [a] of keep) { const r = find(a.id); runLen.set(r, (runLen.get(r) || 0) + 1); }

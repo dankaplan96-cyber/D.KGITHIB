@@ -242,7 +242,7 @@ function kit({ group, H, col, ox, oz, updaters, y0 }) {
         rod(K, [x, y + 1.25, z], [x, y + 0.95, z], 0.01, iron, 4);
         K.add(potGeo, '#26221f', x, y + 0.66, z);
       }
-      col({ type: 'cyl', x, z, r: r + 0.12, top: y + 0.2, noStand: true });
+      col({ type: 'cyl', x, z, r: r + 0.12, top: y + 0.2, noStand: true, block: true });   // (FEET-66B: block: noStand alone, 0.2 m, let him walk through the stones and into the coals)
       if (smoke) {
         const sm = new Plume({ rate: 3.2, rise: 1.1, h: 4.2, w0: 0.3, w1: 1.5, a: 0.2, add: 0, color: '#d8d0c4', drift: 1.0, spread: 0.2 });
         updaters.push((dt, t, fx) => { sm.tick(fx, dt, ox + x, y + 0.5, oz + z, 1); });

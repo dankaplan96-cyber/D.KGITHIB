@@ -215,7 +215,9 @@ export function* buildHamalayiSteps(scene, physics) {
   const AL = archLane(), ARCH_STEPS = [[AL.a.x - ox, AL.a.z - oz], [AL.b.x - ox, AL.b.z - oz]];
   const lips = snowLips(terrain, group, { levels: [L0, L1, LB, L3, 24, 26, L4],
     // (no lip where a trail or a walk crosses the rim)
-    fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(seg(ARCH_STEPS, x, z) - AL.hw, ...PATHS.map(([P, hw]) => seg(P, x, z) - hw))) });
+    fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(seg(ARCH_STEPS, x, z) - AL.hw, ...PATHS.map(([P, hw]) => seg(P, x, z) - hw))),
+    // (FEET-66B: beside the arch's steps the lip tapers out, ending 0.8 m off the steps' edge, as the user asked)
+    taper: (x, z) => seg(ARCH_STEPS, x, z) - AL.hw < 2.6 });
   const H = (x, z) => terrain.heightAt(x, z);
   const R = {
     id: 'hamalayi', outdoor: true, grade: 1.0, gradeTint: null,   // (WA-13b: no frame grade; the snow and the sky light are cyan at the source, as LBA1's ice)
@@ -256,7 +258,7 @@ export function* buildHamalayiSteps(scene, physics) {
     if (o.col !== false && (fp.hw != null || fp.r != null)) {
       const top = gy + (fp.top ?? 1);
       const c = fp.r != null && o.col !== 'box' ? { type: 'cyl', x, z, r: fp.r, top } : { type: 'box', x, z, hw: fp.hw ?? fp.r, hd: fp.hd ?? fp.r, rot: ry, top };
-      if (!o.stand) c.noStand = true;
+      if (!o.stand) { c.noStand = true; c.block = true; }   // (FEET-66B: block, as SOLID-NPC's props: a low one, a trough, a sledge, within a step, was walked through)
       if (o.see) c.seeThrough = true;
       col(c);
     }

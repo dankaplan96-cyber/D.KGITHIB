@@ -118,7 +118,7 @@ export function buildAsylumFront(scene, physics) {
   //  and the architrave's and the pilasters' cream trim cut across the frame)
   physics.add({ type: 'box', x: F.x, z: wz(zc + 0.04), hw: ow / 2 + 0.05, hd: D / 2 + 0.08, rot: 0, top: gy + H + 1.4, bottom: gy + oh, noStand: true });   // (noStand: nothing is put on its top)
   physics.add({ type: 'box', x: F.x, z: wz(1.06), hw: ow / 2 + 0.5, hd: 0.86, rot: 0, top: gy + 0.13 });
-  for (const s of [-1, 1]) physics.add({ type: 'cyl', x: wx(s * (ow / 2 + 0.95)), z: wz(zf + 0.55), r: 0.3, top: gy + 0.5, noStand: true });
+  for (const s of [-1, 1]) physics.add({ type: 'cyl', x: wx(s * (ow / 2 + 0.95)), z: wz(zf + 0.55), r: 0.3, top: gy + 0.5, noStand: true, block: true });   // (FEET-66B: block: the pots, 0.5 m, were walked through)
   return { door: { x: F.x, z: wz(z0 + 1.05) }, out: { x: F.x, z: wz(zf + 1.35), a: F.a } };
 }
 

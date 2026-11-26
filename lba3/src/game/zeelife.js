@@ -344,7 +344,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     for (const s of [-1, 1]) rodT(L, [lx + s * 0.24, Y0, lz0], [lx + s * 0.24, top + 0.6, lz1], 0.035, WOOD, C.VC, 6);
     for (let i = 1; i < 11; i++) { const t = i / 11; L.add(cached('zlrung', () => tint(cyl(0.025, 0.025, 0.5, 5).rotateZ(Math.PI / 2), WOOD)), C.VC, lx, Y0 + (top + 0.6 - Y0) * t, lz0 + (lz1 - lz0) * t); }
     col({ type: 'box', x: lx, z: (lz0 + PH.front) / 2, hw: 0.3, hd: 0.55, rot: 0, top: Y0 + 1.6, noStand: true, seeThrough: true });
-    col({ type: 'box', x: x + 1.95, z: PH.front + 0.65, hw: 0.45, hd: 0.35, rot: 0, top: Y0 + 0.35, seeThrough: true });
+    col({ type: 'box', x: x + 1.95, z: PH.front + 0.65, hw: 0.45, hd: 0.35, rot: 0, top: Y0 + 0.35, seeThrough: true, block: true });   // (FEET-66B: the two tile stacks an obstacle: its top as a floor held him up to 35 cm over the slab beside them)
     scaffold = W(lx, PH.front + 1.4);
   }
   const nowParts = [...L.build(), ...LF.build()];   // (U-4: the twelve years' additions on one batch: hidden in Ysel's old pictures)

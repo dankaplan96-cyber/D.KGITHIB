@@ -2159,6 +2159,10 @@ function buildStation(W0, root, r) {
     mesh(grp, new THREE.CircleGeometry(0.98, 32).rotateX(-Math.PI / 2), emit, BP.x, padTop + 0.012, BP.z, 0, { cast: false });
     P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 2.5, top: padTop, seeThrough: true });
     P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 3.1, top: g + 0.26, seeThrough: true });
+    // (FEET-66B: the emitter's brass ring lies 11 cm over the pad and the edge's torus 4 cm: rings he steps over, each a
+    //  ring collider at its top (physics.js ri))
+    P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 1.09, ri: 0.91, top: padTop + 0.11, seeThrough: true, stair: true });
+    P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 2.49, ri: 2.35, top: padTop + 0.04, seeThrough: true, stair: true });
     // the arch stands across the pad: its ring faces west, toward the gate
     const arch = mesh(grp, archGeo(), VC(), BP.x, padTop - 0.12, BP.z, 0);
     void arch;
@@ -3208,7 +3212,7 @@ function plateauStair(W, root, o) {
     const ym = line(lm) + up, [px, pz] = f(lm, lz), sh = (g) => g.clone().applyMatrix4(new THREE.Matrix4().makeShear(k, 0, 0, 0, 0, 0));
     B.add(sh(bbox(L + 0.02, D + 0.3, 0.3, 0.03, 1)), stoneM, px, ym - (D + 0.3) / 2, pz, 0, o.ry, 0);
     B.add(sh(bbox(L + 0.06, 0.08, 0.38, 0.02, 1)), trimM, px, ym + 0.04, pz, 0, o.ry, 0);
-    for (const st of steps) { const [cx, cz] = f(st.m, lz); P.add({ type: 'box', x: cx, z: cz, hw: run / 2 + 0.02, hd: 0.15, rot: o.ry, top: line(st.m) + up + 0.15, noStand: true, seeThrough: true }); }
+    for (const st of steps) { const [cx, cz] = f(st.m, lz); P.add({ type: 'box', x: cx, z: cz, hw: run / 2 + 0.02, hd: 0.15, rot: o.ry, top: line(st.m) + up + 0.15, noStand: true, block: true, seeThrough: true }); }   // (FEET-66B: block: a cheek 0.35-0.48 m over the treads was walked through)
     return up;
   };
   const upN = cheek(oN, (st) => st.top + 0.45);

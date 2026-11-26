@@ -163,6 +163,7 @@ export function buildOldPlaces(C) {
     if (o.shut && !o.lived) piece(D.side, D.u, 0.04, bbox(1.2, 2.1, 0.08, 0, 0.6), M.plank, gy + 1.05);   // (DESERT-BAR: `lived`, a door that leads in: ajar)
     else { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u - 0.15, 0.28); add(bbox(0.95, 1.95, 0.08, 0, 0.6), M.plank, lx, gy + 1.0, lz, S.yaw - 0.55); }
     piece(D.side, D.u, 0.32, bbox(1.7, 0.16, 0.6, 0, 1), M.stone, gy + 0.02);   // the sill's step
+    { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u, 0.32), [sx, sz] = at(lx, lz); col({ type: 'box', x: sx, z: sz, hw: 0.85, hd: 0.3, rot: o.ry + S.yaw, top: gy + 0.1, seeThrough: true }); }   // (FEET-66B: its top a floor: 5-10 cm into it)
     // windows: small, deep, with a wooden sill and one open shutter; the upper storey's higher
     for (const w of o.windows || []) {
       const y = gy + (w.up ? o.h * 0.52 + 1.3 : 2.0);
@@ -172,7 +173,8 @@ export function buildOldPlaces(C) {
     }
     for (let k = 0; k < 3; k++) add(lathe([[0.01, 0], [0.22, 0.04], [0.3, 0.3], [0.18, 0.55], [0.15, 0.62], [0.17, 0.66]], 12, 0), pm(['#c86a3a', '#d8a050', '#a85030'][k], 0.85), -o.w / 2 + 0.7 + k * 0.6, gy + o.h + 0.07, -o.d / 2 + 0.7);
     // a paved stoop before the door (S40's: body 28, a 3 m slab)
-    if (o.stoop) { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u, o.stoop / 2 + 0.1); add(bbox(o.stoop, 0.3, o.stoop, 0, 1.5), M.stone, lx, gy - 0.1, lz, S.yaw); }
+    if (o.stoop) { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u, o.stoop / 2 + 0.1); add(bbox(o.stoop, 0.3, o.stoop, 0, 1.5), M.stone, lx, gy - 0.1, lz, S.yaw);
+      const [sx, sz] = at(lx, lz); col({ type: 'box', x: sx, z: sz, hw: o.stoop / 2, hd: o.stoop / 2, rot: o.ry + S.yaw, top: gy + 0.05, seeThrough: true }); }   // (FEET-66B: the stoop's top a floor: he walked up to 33 cm into it)
     const [cx, cz] = at(0, 0);
     col({ type: 'box', x: cx, z: cz, hw: o.w / 2, hd: o.d / 2, rot: o.ry, top: gy + o.h + 0.6 });
     fitAdd({ region: 'desert', name: o.name, x: W(cx, cz).x, z: W(cx, cz).z, ry: o.ry, oy: gy, w: o.w, d: o.d, base: low - gy, plinth: 0.1, floor: 0.02, steps: 0.6,
@@ -210,6 +212,7 @@ export function buildOldPlaces(C) {
   const hornedPillar = (x, z, ry, h) => {
     const fg = H(x, z), w = 0.3 + h * 0.12;
     B.add(bbox(w + 0.5, 0.5, w + 0.5, 0.04, 1), M.grey, x, fg + 0.1, z, 0, ry, 0);
+    col({ type: 'box', x, z, hw: (w + 0.5) / 2, hd: (w + 0.5) / 2, rot: ry, top: fg + 0.35, seeThrough: true });   // (FEET-66B: the plinth's top a floor, a step round the shaft: he walked through its corners)
     B.add(lathe([[0, 0], [w / 2, 0], [w / 2 * 0.78, h - 1.1], [w / 2 * 0.95, h - 0.95], [w / 2 * 0.95, h - 0.7], [0, h - 0.7]], 4, TILE.stone), M.stone, x, fg + 0.3, z, 0, ry + Math.PI / 4, 0);
     const f = frame(x, z, ry);
     for (const s of [-1, 1]) { const [hx, hz] = f(s * w * 0.42, 0); B.add(cached('w80d-horn', () => new THREE.ConeGeometry(0.17, 1.1, 7)), M.stone, hx, fg + h - 0.25, hz, 0, 0, -s * 0.55); }
@@ -265,14 +268,19 @@ export function buildOldPlaces(C) {
     fitAdd({ region: 'desert', name: 'the pool mask', x: W(S.x, S.z).x, z: W(S.x, S.z).z, ry: S.ry, oy: g, w: S.w, d: S.d, base: -0.4, plinth: 0.2, floor: 0, steps: 0.6, openings: [] });
     // the white blocks (bodies 46) and the fallen cubes (45) on the terrace, the horned pillar (body 32) to the north
     for (const [bx, bz] of [[-74.7, -72.4], [-78.2, -72.7]]) { const bg = H(bx, bz); B.add(bbox(2.95, 2.95, 3.93, 0.08, 1.5), M.white, bx, bg + 1.2, bz); B.add(bbox(3.15, 0.2, 4.13, 0.04, 1), M.stone, bx, bg + 2.75, bz); col({ type: 'box', x: bx, z: bz, hw: 1.5, hd: 2.0, top: bg + 2.85 }); }
-    for (const [bx, bz, ry] of [[-71.6, -75.6, 0.3], [-68.2, -77.0, 1.2], [-69.8, -78.7, 2.4]]) { const bg = H(bx, bz); B.add(bbox(1.67, 1.67, 1.67, 0.06, 1), M.stone, bx, bg + 0.7, bz, 0, ry, 0.08); col({ type: 'box', x: bx, z: bz, hw: 0.85, hd: 0.85, rot: ry, top: bg + 1.5 }); }
+    // (FEET-66B: each fallen cube's top tilts 0.08 rad: its collider four strips across the tilt, each at the top's height
+    //  at its middle (within 1.7 cm of it); the one box at 1.5 m stood 3.5 cm under its middle and 10 cm off its high edge)
+    for (const [bx, bz, ry] of [[-71.6, -75.6, 0.3], [-68.2, -77.0, 1.2], [-69.8, -78.7, 2.4]]) { const bg = H(bx, bz); B.add(bbox(1.67, 1.67, 1.67, 0.06, 1), M.stone, bx, bg + 0.7, bz, 0, ry, 0.08);
+      for (let k = 0; k < 4; k++) { const u = (k - 1.5) * 0.4175; col({ type: 'box', x: bx + Math.cos(ry) * u, z: bz - Math.sin(ry) * u, hw: 0.26, hd: 0.85, rot: ry, top: bg + 0.7 + 0.835 * Math.cos(0.08) + u * Math.sin(0.08) }); } }
     hornedPillar(-67.0, -90.6, 0, 4.25);
     // the water channel at the mask's foot (the ground is cut by desert.js rillAt) and the arched stone bridge over it
     // before the door, from the forecourt (1.3 m) down two steps onto the plaza (0.3 m)
     {
       const x0 = FORECOURT.x1, x1 = RILL.x1 + 0.5, cz = S.z, L = x1 - x0, y = g + 0.02;
       B.add(bbox(L + 0.2, 0.34, 2.6, 0.04, 1.5), M.stone, (x0 + x1) / 2, y - 0.17, cz);
-      B.add(cyl(1.25, 1.25, 2.4, 14, TILE.stone, true), M.stone, (x0 + x1) / 2, y - 0.9, cz, 0, 0, Math.PI / 2);   // the arch's barrel under the deck
+      // the arch's barrel under the deck (FEET-66B: its top 1 cm under the deck's: at y − 0.9 it stood 0.35 m out of the
+      //  deck as a hump along the bridge's middle, walked through; a look change, the hump gone)
+      B.add(cyl(1.25, 1.25, 2.4, 14, TILE.stone, true), M.stone, (x0 + x1) / 2, y - 1.26, cz, 0, 0, Math.PI / 2);
       for (const s of [-1, 1]) { B.add(bbox(L + 0.2, 0.5, 0.26, 0, 1), M.stone, (x0 + x1) / 2, y + 0.25, cz + s * 1.17); col({ type: 'box', x: (x0 + x1) / 2, z: cz + s * 1.17, hw: L / 2 + 0.1, hd: 0.13, top: y + 0.5, noStand: true, seeThrough: true }); }
       col({ type: 'box', x: (x0 + x1) / 2, z: cz, hw: L / 2 + 0.1, hd: 1.05, top: y });
       const pg = H(x1 + 1.2, cz);   // the plaza's ground east of the bridge
