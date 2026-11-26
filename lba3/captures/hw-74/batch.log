@@ -1,0 +1,33 @@
+== ch2 modern none 10:23:47
+SUMMARY {"try":1,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":130,"hits":0,"byKind":{},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":2,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":105.8,"hits":0,"byKind":{},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":3,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":122.5,"hits":0,"byKind":{},"enemiesSeen":4,"beaten":3}
+== ch2 modern default 10:30:46
+SUMMARY {"try":1,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":117.4,"hits":0,"byKind":{},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":2,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":120.6,"hits":0,"byKind":{},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":3,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":115.2,"hits":0,"byKind":{},"enemiesSeen":4,"beaten":3}
+== ch2 classic none 10:37:39
+SUMMARY {"try":1,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":7,"maxHp":10,"dead":false,"secs":93.8,"hits":3,"byKind":{"gdog":1,"bolt":2},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":2,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":8,"maxHp":10,"dead":false,"secs":89.9,"hits":2,"byKind":{"gdog":1,"bolt":1},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":3,"result":"valve shut","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":501.1,"hits":0,"byKind":{},"enemiesSeen":0,"beaten":0}
+== ch2 classic default 10:50:04
+SUMMARY {"try":1,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":7,"maxHp":10,"dead":false,"secs":89.9,"hits":3,"byKind":{"gdog":1,"bolt":2},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":2,"result":"valve open","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":8,"maxHp":10,"dead":false,"secs":90.4,"hits":2,"byKind":{"gdog":1,"bolt":1},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":3,"result":"valve shut","cloversIn":2,"cloversOut":2,"hpIn":10,"hpOut":10,"maxHp":10,"dead":false,"secs":500.6,"hits":0,"byKind":{},"enemiesSeen":0,"beaten":0}
+== zdepot modern none 11:02:24
+SUMMARY {"try":1,"result":"no cylinder","cloversIn":2,"cloversOut":2,"hpIn":11,"hpOut":8,"maxHp":11,"dead":false,"secs":37.7,"hits":4,"byKind":{"bolt":3,"drone":1},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":2,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":11,"maxHp":11,"dead":false,"secs":566.9,"hits":13,"byKind":{"bolt":2,"guardG":11},"enemiesSeen":4,"beaten":4}
+SUMMARY {"try":3,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":0,"maxHp":11,"dead":true,"secs":103.5,"hits":33,"byKind":{"bolt":9,"gdog":13,"guardG":11},"enemiesSeen":4,"beaten":2}
+== zdepot modern default 11:15:19
+SUMMARY {"try":1,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":5,"maxHp":11,"dead":false,"secs":118.1,"hits":23,"byKind":{"bolt":7,"guardG":15,"drone":1},"enemiesSeen":4,"beaten":3}
+SUMMARY {"try":2,"result":"no cylinder","cloversIn":2,"cloversOut":1,"hpIn":11,"hpOut":3,"maxHp":11,"dead":false,"secs":771.2,"hits":16,"byKind":{"bolt":5,"gdog":1,"guardG":9,"drone":1},"enemiesSeen":4,"beaten":1}
+SUMMARY {"try":3,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":2.5,"maxHp":11,"dead":false,"secs":155.7,"hits":29,"byKind":{"bolt":5,"guardG":15,"gdog":9},"enemiesSeen":4,"beaten":2}
+== zdepot classic none 11:33:53
+SUMMARY {"try":1,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":0,"maxHp":11,"dead":true,"secs":63.9,"hits":26,"byKind":{"bolt":10,"gdog":1,"guardG":15},"enemiesSeen":4,"beaten":1}
+SUMMARY {"try":2,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":0,"maxHp":11,"dead":true,"secs":89.1,"hits":32,"byKind":{"bolt":14,"gdog":1,"guardG":17},"enemiesSeen":4,"beaten":2}
+SUMMARY {"try":3,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":0,"maxHp":11,"dead":true,"secs":68.9,"hits":27,"byKind":{"gdog":2,"bolt":7,"guardG":18},"enemiesSeen":4,"beaten":2}
+== zdepot classic default 11:38:41
+SUMMARY {"try":1,"result":"no cylinder","cloversIn":2,"cloversOut":1,"hpIn":11,"hpOut":9,"maxHp":11,"dead":false,"secs":909.7,"hits":14,"byKind":{"bolt":8,"guardG":6},"enemiesSeen":4,"beaten":2}
+SUMMARY {"try":2,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":0,"maxHp":11,"dead":true,"secs":71.2,"hits":19,"byKind":{"bolt":2,"guardG":17},"enemiesSeen":4,"beaten":1}
+SUMMARY {"try":3,"result":"no cylinder","cloversIn":2,"cloversOut":0,"hpIn":11,"hpOut":0,"maxHp":11,"dead":true,"secs":70.4,"hits":19,"byKind":{"bolt":1,"guardG":18},"enemiesSeen":4,"beaten":0}
+BATCH-DONE
