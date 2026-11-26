@@ -213,8 +213,13 @@ export class Story {
   decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.kit2b.decorate(); this.citizens.decorate(); this.depth.decorate(); this.ferry.decorate(); this.oneplace.decorate(); this.offwall.decorate(); this.tyl.decorate(); this.qc.decorate(); this.lb.decorate(); this.kc.decorate(); this.w4.decorate(); this.w7.decorate(); this.fr.decorate(); this.w8.decorate(); }
 
   // ---- flow
+  // (#24, the local agent's ask 26.11: the play time (game.played, s) at each chapter's start, set once and kept in the save,
+  //  so a real playthrough's minutes per chapter can be read from the save; no UI. Old saves have none, and a game loaded
+  //  from a save that did not count time (played null) records nothing)
+  stampChapter(key) { const p = this.game.played; if (p == null || !key) return; const T = (this.f.ch_t ||= {}); if (T[key] == null) T[key] = Math.round(p); }
   start() {
     this.f.chapter = 0; this.f.chapterKey = ORDER[0];
+    this.stampChapter(ORDER[0]);
     this.f.exp = 1; delete this.f.exp_base;   // (a new game plays the expanded campaign)
     this.refreshCast();
     this.chapters[0].start();
@@ -246,6 +251,7 @@ export class Story {
     const g = this.game;
     const i = this.nextIndex();
     this.f.chapter = i; this.f.chapterKey = ORDER[i];
+    this.stampChapter(ORDER[i]);
     const c = this.cur;
     for (const id of CHAPTER_AREAS[c.key] || []) g.regions?.ensure(id, 'chapter');   // (built already when a scene change led here)
     this.magic.catchUp();   // (MAGIC-LEVELS: a step behind him that he hasn't had — normally none)
