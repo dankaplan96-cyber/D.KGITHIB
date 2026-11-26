@@ -67,6 +67,15 @@ whenever the lens is in or near the room. From the room camera the near plane is
 - The near plane is more than 10 m out from the room camera.
 - A lens 2 m from his head keeps him well beyond its near plane.
 
+A/B probe, 7 rooms (scratch script, not a suite): house, c3gallery, asylum, sewer, tavern, ih_knartas_28_29, bl_pump.
+The same frame was rendered with the fit off and on. The near plane was 0.1 → 26–42 m.
+
+- 293–1055 pixels differ per room, all at depth ties: seam and edge dots, and in no room a missing object or a shadow
+  change. I looked at the house's diff picture.
+- A lens 1.5 m from his head inside the room rendered with 0.1. The camera's near plane after each render was 0.1 again.
+- Nothing in the game is parented to the camera (a grep for `camera.add`). The item close-up and the behaviour menu use
+  their own cameras.
+
 This is a system change for the coordinator to accept or drop. The geometry fixes stand on their own: the suite judges
 the geometry at the old 0.1 m near plane.
 
@@ -119,8 +128,9 @@ the geometry at the old 0.1 m near plane.
   - What is left is mostly edge pixels from the 2 cm lens move, and character layers.
 - **Clusters under 0.02 m² whose overlap (all pairs, seen or not) is 0.02 m² or more:** 96 before, 12 after. The scan
   weighs only a cluster's 16 largest pairs by sight, so these were checked by hand. The long asylum seam (lid against the
-  filler wall, 0.39 m² over 0.6 m cells) was fixed. The 12 left are hidden or tiny: a ledger under papers, a console
-  strip, a window frame against the cornice, the house's partition rail against its end post.
+  filler wall, 0.39 m² over 0.6 m cells) was fixed. The 12 left each show 0.001–0.019 m² and
+  0 render pixels: the house's partition rails against their end posts, a control-room pillar against its frame, console
+  strips, an asylum lid's own two faces, a shelf's side, ledgers under papers, a kiln lintel.
 - **(3) coverage:** 137 of 137 rooms. **(4) depth fit:** 137 of 137 PASS.
 
 The kitchen wall behind Zoé (house, the splashback over the wainscot): before, 0.081 m² at gap 0 mm, with 141 of 331
@@ -132,6 +142,19 @@ Before/after pictures: `captures/flicker-142/sheet.png` (more in `sheet-2.png` i
 diff overlay, red marking the pixels that change between the two jittered frames, next to the after from the same floor
 spot. The kitchen with Zoé in place comes first. A still cannot show flicker; the red is the evidence. The before run's
 full log is in `captures/flicker-142/before.log.gz`.
+
+## Other suites, run once each (automated runtime only, SwiftShader)
+
+- `interior-flicker`:
+  - before (35ba477f): FAIL, 597 clusters.
+  - after (c8f4cda1): FAIL, 1 cluster (bazoo). That one was fixed in a later commit, and `ROOMS=house,bazoo` then
+    PASSED.
+  - A last full run after the bazoo fix was not made. The machine was shared, and a full run takes ~25 min.
+- `worldfit`: PASS. Its outdoor z-fight scan (3) found 0 clusters of 0.15 m² or more and listed 113 smaller ones in
+  Citadel, Zeelich and the islands. Ballastra, the Desert and the Hamalayi are listed, not judged. This change touches
+  none of them.
+- `walkers`: PASS (37/37).
+- `opening-tutorial`: PASS (48/48). The house is in the opening.
 
 ## Visible changes (each small; listed for the user's pick)
 
