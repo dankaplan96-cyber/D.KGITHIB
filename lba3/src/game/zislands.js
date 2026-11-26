@@ -2382,7 +2382,7 @@ function buildIsland0(scene, physics, name, L, at) {
     for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) S[j * nI + i] = sv(x0 + i * f, z0 + j * f);
     const stones = [];
     const onPiece = (x, z) => land(x, z) && heightFn(x, z) >= 0.8 && sv(x, z) > 0 && bare(x, z)[1] > 0.5;
-    const standing = (x, z, y) => { for (const c of physics.near(ox + x, oz + z)) if (c.enabled !== false && c.top > y + 0.05 && (c.bottom ?? -1e9) < y + 1.2 && physics._inside(c, ox + x, oz + z, 0.12)) return true; return false; };
+    const standing = (x, z, y) => { for (const c of physics.near(ox + x, oz + z)) if (c.enabled !== false && !c.block && c.top > y + 0.5 && (c.bottom ?? -1e9) < y + 1.2 && (c.type === 'box' ? 2 * Math.max(c.hw, c.hd) >= 1.5 : (c.r ?? 0) >= 1.2) && physics._inside(c, ox + x, oz + z, 0.12)) return true; return false; };   // (a wall, a house, the brink: the edge ends there; a lamp or a bush stands on the kerb's line, as in Citadel)
     for (let j = 0; j < nJ - 1; j++) for (let i = 0; i < nI - 1; i++) {
       const a = S[j * nI + i], b = S[j * nI + i + 1], c = S[(j + 1) * nI + i + 1], d = S[(j + 1) * nI + i];
       if ((a > 0) === (b > 0) && (b > 0) === (c > 0) && (c > 0) === (d > 0)) continue;
@@ -2396,8 +2396,8 @@ function buildIsland0(scene, physics, name, L, at) {
         const e = 0.05, gx = sv(mx + e, mz) - sv(mx - e, mz), gz = sv(mx, mz + e) - sv(mx, mz - e), gl = Math.hypot(gx, gz) || 1, nx = gx / gl, nz = gz / gl;
         if (!onPiece(mx + nx * 0.3, mz + nz * 0.3)) continue;
         const qx = mx - nx * 0.45, qz = mz - nz * 0.45, k = atData(qx, qz), y = gy(mx, mz);
-        if (!land(qx, qz) || paved(qx, qz) || Math.hypot(qx - pad.x, qz - pad.z) < 5.6 || (k >= 0 && route[k] < 1.6)) continue;   // (the paving goes on, or a path joins it)
-        if (Math.abs(gy(qx, qz) - y) > 0.25 || Math.abs(gy(mx + nx * 0.3, mz + nz * 0.3) - y) > 0.25 || standing(mx, mz, y)) continue;   // (a drop, a bank: a clean end already; something stands there)
+        if (!land(qx, qz) || paved(qx, qz) || Math.hypot(qx - pad.x, qz - pad.z) < 5.6 || (k >= 0 && route[k] < 1.2)) continue;   // (the paving goes on, or a path joins it)
+        if (Math.abs(gy(qx, qz) - y) > 0.3 || Math.abs(gy(mx + nx * 0.3, mz + nz * 0.3) - y) > 0.3 || standing(mx, mz, y)) continue;   // (a drop, a bank: a clean end already; something stands there)
         stones.push([mx - nx * 0.1, y, mz - nz * 0.1, Math.atan2(bx - ax, bz - az), len + 0.02]);
       }
     }

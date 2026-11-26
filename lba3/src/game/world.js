@@ -868,9 +868,13 @@ function islandSplat(x, z, h, slope, w) {
   //  wider band no longer reads as a smear)
   w[2] = smoothstep(0.9, 1.25, slope + n * 0.08) * (1.6 - beach * 1.6);
   w[3] = 0; w[4] = 0;
+  const lawn = townLawn(x, z, h);   // (P140: the town's plots and the paving's banks are lawn behind the band)
   if (h > 0.8) {
     const pd = pathDist(x, z);
-    w[3] = smoothstep(2.05, 1.55, pd + n * 0.35) * 2.4; // (a fairly clean edge, as LBA2's paths)
+    // (P140: through the town's lawns a trodden way is a garden path, 2.4 m of earth, not 4: at 4 m, where it left the
+    //  streets it read as a bare lot beside the paving — the middle block's, by the forecourt, and the harbour's)
+    const pw = 0.85 * smoothstep(0.3, 0.7, lawn);
+    w[3] = smoothstep(2.05 - pw, 1.55 - pw, pd + n * 0.35) * 2.4; // (a fairly clean edge, as LBA2's paths)
     const cd = boxDist(x, z, POI.camp.x - 11, POI.camp.z - 8, POI.camp.x + 11, POI.camp.z + 8);
     w[3] = Math.max(w[3], smoothstep(1.5, -1.5, cd + n * 2) * 2);
   }
@@ -881,7 +885,6 @@ function islandSplat(x, z, h, slope, w) {
   // cuts it straight per pixel (the edge attribute); this copy is for the map, the probes and the scatter's filters
   if (townPaveDist(x, z, h) < 0) w[4] = 3;
   // in town the ground between the streets is brown soil with lawns (Citadel Island)
-  const lawn = townLawn(x, z, h);   // (P140: the town's plots and the paving's banks are lawn behind the band)
   if (vd < 36 && h > 0.8) {
     const soil = townSoil(x, z, n) * (1 - Math.min(1, w[4] / 1.5)) * (1 - lawn); // never on the paving
     w[3] = Math.max(w[3], soil * 2.5);

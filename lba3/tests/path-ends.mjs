@@ -207,6 +207,9 @@ for (const name of names) {
   const pat = (x, z) => { const i = Math.floor((x - R.X0) / RES), j = Math.floor((z - R.Z0) / RES); return i >= 0 && j >= 0 && i < R.W && j < R.H && (R.src[j * R.W + i] & 4) > 0; };
   for (const r of A.rays) gapRays.push({ area: name, ...r, notPath, patch: pat(r.x0, r.z0) || pat(r.x1 - r.nx * 0.2, r.z1 - r.nz * 0.2), id: gapRays.length });
   // (P140: the edges and the lots, on the paving as drawn, specks kept)
+  // (P140 guard: the paving read from the drawn lines against the splat's own share, per area: a misread line shows as a
+  //  large difference — the traced read once lost the middle of every paving; Citadel's band and the meshes add to the first)
+  { let n = 0; for (let p = 0; p < R.W * R.H; p++) if (R.M0[p] && (R.src[p] & 1)) n++; const sh = grids.filter((g) => g.name === name).reduce((a, g) => a + (g.shareN || 0) * g.step * g.step, 0); if (sh) console.log(`paved m² ${name}: ${Math.round(n * RES * RES)} as drawn, ${Math.round(sh)} by the splat's share`); }
   R.patchLine = [];
   f140.push(...edgeScan(R, name), ...lotScan(R, name));
   // (the patch outline's outer side bare earth: a worn path joins the piece there)

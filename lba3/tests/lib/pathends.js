@@ -18,7 +18,7 @@
     const re = geo?.attributes?.rockedge?.array, lw = geo?.attributes?.lawn?.array, Q = 32767;
     if (!s2) return null;
     const n = t.segs + 1, f = new Float32Array(n * n), d = new Float32Array(n * n), pk = new Uint8Array(n * n);
-    let paved = 0, patch = 0, under = 0;
+    let paved = 0, patch = 0, under = 0, shareN = 0;   // (shareN: grid points whose paving share of the splat is over a half: the guard's count)
     // (P136: on a Zeelich isle the ground under a deck island's decks is never seen: left out. P140: WA-11's bare patches
     //  are judged now (the user's answer to P136: each patch ends at a clean edge or joins a path); counted apart too)
     const kind = t.paveKind, lx0 = t.x0, lz0 = t.z0;
@@ -38,6 +38,7 @@
       if (f[k] < 0 && kd === 'under') { f[k] = 1; under++; }
       if (kd === 'patch') { pk[k] = 1; if (f[k] < 0) patch++; }
       if (f[k] < 0) paved++;
+      if (share > 0.5 && kd !== 'under') shareN++;
       // the bare earth
       const g = sp[k * 4], sand = sp[k * 4 + 1], soil = sp[k * 4 + 3];
       let dv = -1;
@@ -51,7 +52,7 @@
       d[k] = dv;
     }
     const r3 = (v) => Math.round(v * 1000) / 1000;
-    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, r3), d: Array.from(d, r3), pk: kind ? Array.from(pk) : null, paved, patch, under, mode: ed && !re ? 'edge+share' : re ? 'traced' : 'share' };
+    return { name, x0: t.x0 + ox, z0: t.z0 + oz, step: t.step, n, f: Array.from(f, r3), d: Array.from(d, r3), pk: kind ? Array.from(pk) : null, paved, patch, under, shareN, mode: ed && !re ? 'edge+share' : re ? 'traced' : 'share' };
   }
   // the outdoor area an x, z belongs to (nearest outdoor room's centre within 400 m; else Citadel near the origin)
   function areaOf(x, z) {
@@ -198,9 +199,11 @@
   // P140 EDGE: what a paving's edge meets, per sample [x, z, nx, nz, y] (a point on the edge, its outward normal, the
   // paving's level): a wall (a non-prop solid), a face in the ground (≥ 0.3 m), the sea, or a floor over the ground (a
   // deck, a house's floor) within 0.8 m outward. A prop, a lawn or bare ground there is no clean end for a ragged edge.
+  // (P140: and a kerb: the brief's "kerbed or a straight/smooth designed line" — a kerbed edge is clean whatever its course)
   function edgeMeet(samples) {
     const P = G().physics;
     return samples.map(([x, z, nx, nz, y]) => {
+      if (kerbNear(x + nx * 0.12, z + nz * 0.12, 0.45)) return 'kerb';
       const g0 = groundY(P, x - nx * 0.2, z - nz * 0.2, y), hits = [], seen = new Set();
       let what = null, prev = g0;
       for (let a = 0.1; a <= 0.8 + 1e-6 && !what; a += 0.1) {
@@ -236,8 +239,7 @@
   // P140 (the user's answer to P136): a WA-11 paving piece's outline, per sample [x, z, nx, nz]: a kerb stone on it,
   // else what it meets (edgeMeet), else null
   function patchEnds(samples) {
-    const met = edgeMeet(samples.map(([x, z, nx, nz]) => [x, z, nx, nz, NaN]));
-    return samples.map(([x, z, nx, nz], i) => (kerbNear(x + nx * 0.12, z + nz * 0.12, 0.45) ? 'kerb' : met[i]));
+    return edgeMeet(samples.map(([x, z, nx, nz]) => [x, z, nx, nz, NaN]));
   }
   window.PE = { grids, meshes, judge, gaps, cover, edgeMeet, holeCovered, kerbNear: (pts, r) => pts.map(([x, z]) => kerbNear(x, z, r)), patchEnds };
 })();
