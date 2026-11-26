@@ -22,19 +22,24 @@ busy, like crazy paving, most of all on the flat bare patches.
   of lifting it:
   - rock: (0.76, 0.76, 0.75), where before it was (1.42, 1.5, 1.07);
   - the bare patches on the flat: (0.72, 0.72, 0.73), where before it was (1.2, 1.27, 0.92).
-  - No multiplier is over 1 any more. The in-game map, which reads vertex colours, sees no rock values over 1.
-- **The rock's edge is kept in place.** The terrain shader moves the rock/turf edge by the tile's own brightness
+  - No rock multiplier is over 1 any more. The earth (1.3, …) and the scattered rocks' instance colour (1.45, …) still
+    are.
+- **The rock's edge, partly held in place.** The terrain shader moves the rock/turf edge by the tile's own brightness
   (`terrain.js`: `dot(rock, 1/3) − 0.5`, times 0.3). The paler granite moved the edge out by about 0.052 of splat
-  weight, and on screen it ate about 9 % of the turf. On Knartas the rock's splat weight is now × 0.81 (in `splatFn`,
-  before normalisation), which puts the edge back where the approved palette had it.
+  weight (estimated from the tiles' means), and on screen it took about 9 % of the turf. On Knartas the rock's splat
+  weight is now × 0.81 (in `splatFn`, before normalisation), sized to cancel that shift. On screen it recovers about a
+  third of the loss at the south lanes and the dig slope, and none in the square.
   - Turf-green pixels per frame, approved → granite without the fix → final:
     - south lanes 24.98 → 22.78 → 23.38 %;
     - dig slope 17.15 → 15.56 → 16.08 %;
     - square 16.59 → 15.30 → 15.32 %;
     - harbour 7.51 → 7.48 → 7.50 %.
-  - The edges sit in the same places (inspected on crops). The turf that is left counts a little less "green" because
-    the one-cell vertex-colour blend beside the rock now leans to a neutral grey (0.76), where it used to be lifted
-    (1.42, 1.5, 1.07). This also softens the "lit lip" noted below.
+  - A looser test (G over R and B by 4) gives the same picture: 26.46 → 25.26 %, 21.31 → 19.99 %, 18.60 → 17.67 %.
+  - Inspected on crops, the edges look to be in about the same places. The cause of the remaining 1–1.3 points is not
+    established. Two candidates:
+    - the one-cell vertex-colour blend beside the rock now leans to a neutral grey (0.76), where it used to be lifted;
+    - the granite's flatter tone smooths the edge's wobble.
+  - Not retuned further: the brief asks for a quieter rock, not a fixed edge.
 
 **Measured on the captures** (1280×720, play camera Far, the same spots and settings, before = the approved palette at
 its final revision, after = this change). The boxes are sunlit rock. "Fine" is the standard deviation of luminance after
@@ -47,7 +52,7 @@ a 6 px Gaussian high-pass, which is how busy the pattern reads.
 | dig slope (800–1200, 420–620) | (131, 128, 120) → (135, 133, 123) | 30.1 → 13.9 | 19.4 → 7.8 | 0 → 0 |
 | village square, rock beside the jars (975–1140, 560–700) | (139, 134, 128) → (137, 133, 127) | 37.6 → 16.4 | 27.0 → 10.9 | 0 → 0 |
 
-The rock keeps its value (within 4 levels) and loses about half its contrast. The fine pattern drops to 40–50 %.
+The rock keeps its value (within 5 levels per channel) and loses about half its contrast. The fine pattern drops to 40–53 %.
 
 **Cost.** renderer.info at the four spots below: calls, triangles, geometries and programs are the same; **textures
 are 471 → 472**. That is the granite tile: one 512² canvas texture with mipmaps, about 1.4 MB of GPU memory (an
@@ -106,7 +111,8 @@ Not changed:
 - the sky: Knartas has no sky of its own and keeps Zeelich's pale overcast;
 - the huts and the zeppelin;
 - the stone material of walls, quay kerbs and hut frames;
-- the bare-patch shares (`BARE`), so the area of rock the shader reads is the same;
+- the bare-patch shares (`BARE`). The rock's area was the same on the cliff tile; with the granite its edge moved a
+  little (see "A quieter rock");
 - every other island: their branches do not read `PAL`.
 
 ## Cost (automated runtime only: SwiftShader, 1280×720, default quality, play camera Far)
@@ -155,7 +161,7 @@ Nothing runs per frame, and nothing is added to the GPU: the same shader program
 weights do change in places:
 - where tiles became earth, the shader reads the dirt tile instead of the paving tile;
 - in the village square, a dirt read is added where there was grass;
-- the rock area is the same (`BARE` unchanged).
+- the rock area was the same (`BARE` unchanged). The granite moved its edge a little (see "A quieter rock").
 
 renderer.info cannot see fragment cost, so the GPU cost of those reads is unmeasured, as is frame time on a real GPU.
 

@@ -1588,7 +1588,7 @@ function buildIsland0(scene, physics, name, L, at) {
     if (PAL && rk < 0.5) { const e = earthSq(x, z, slope); if (e > 0) { wt[3] = Math.max(wt[3], e * 1.4); wt[0] *= 1 - e; wt[2] = Math.max(rk, wt[2] * (1 - e)); } }   // #17b: the village square
     // #17b: the terrain shader moves the rock's edge by the tile's brightness (terrain.js: dot(rock, 1/3) - 0.5, times 0.3);
     // the granite is paler than the cliff tile (linear mean 0.466 against 0.294: +0.052), which ate ~9 % of the turf on
-    // screen. The rock's share a little less, so its edge stays where the approved palette had it
+    // screen. The rock's share a little less, sized to cancel that (it recovers about a third of it on screen: KNARTAS-PALETTE.md)
     if (PAL?.granite) wt[2] *= 0.81;
     if (S.turfRock) { wt[2] += wt[0]; wt[0] = 0; }   // (ZEELICH-2: no grass: the turf is the island's granite)
   };
