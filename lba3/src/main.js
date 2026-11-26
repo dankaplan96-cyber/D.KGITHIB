@@ -4,7 +4,8 @@
 import { seedRandom, randomSeed } from './engine/seed.js';   // (first: ?seed=N seeds Math.random before anything uses it)
 import * as THREE from 'three';
 import { Renderer } from './engine/renderer.js';
-import { DL } from './engine/depthlook.js';   // (DEPTH-LOOK: ?depth= candidates, off by default)
+import { DL } from './engine/depthlook.js';
+import { fitRoomDepth, restoreRoomDepth } from './engine/roomdepth.js';   // (FLICKER-142)   // (DEPTH-LOOK: ?depth= candidates, off by default)
 import { loadBake } from './engine/sculpt.js';
 import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
@@ -585,6 +586,7 @@ class Game {
     //  main pass — the actors here, the draws in mid; a caster through its layers, which the sun's shadow camera also sees)
     this.env.sun.shadow.camera.layers.enable(CASTER_ONLY);
     this.renderer.pre = () => {
+      fitRoomDepth(this.room, this.renderer.camera);   // (FLICKER-142: the depth range fitted to the room on screen: engine/roomdepth.js)
       setFogCull(this.scene, this.renderer.camera); this.farCull.hide();
       if (this.state === 'loading' || this.state === 'title') this.farCull.hideUnplaced(this.hero, this.enemies);   // (TITLE-LOAD: the bodies play has not placed yet)
       this.blobBatch.hide();
@@ -604,7 +606,7 @@ class Game {
       this.boxCull.hideFar(this.scene, root, this.renderer.camera, FOGCULL.far, this.renderer.renderer.shadowMap.enabled);
     };
     // (PERF-SUBMIT: the frame's caster list serves this render only: a later render in the frame (a warm-up) walks the scene)
-    this.renderer.post = () => { MW.castersF = -1; FOGCULL.cam = null; FOGCULL.far = Infinity; this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
+    this.renderer.post = () => { restoreRoomDepth(this.renderer.camera); MW.castersF = -1; FOGCULL.cam = null; FOGCULL.far = Infinity; this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
     this.regionsLive = true;  // (from here on an area's build brings its part of the story, the cast and travel: regionBuilt)
     L.story = Math.round(performance.now() - ts);
