@@ -53,9 +53,15 @@ const name = (p) => PROFILES[p].name;
 
 // ---------------------------------------------------------------- the profiles and the labels
 {
-  check('four named profiles, best first: High · Medium · Medium-lean · Low (AUTO-2, P95, AUTO-FLOOR)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium · Medium-lean · Low', PROFILES.map((x) => x.name));
+  check('seven named profiles, best first: High · Medium · Medium-lean · Low (AUTO-2, P95, AUTO-FLOOR) · Low-eco · Low 75 % · Low 65 % (P137)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium · Medium-lean · Low · Low-eco · Low 75 % · Low 65 %', PROFILES.map((x) => x.name));
   const eq = (a, b) => KNOBS.every((k) => a[k] === b[k]);
-  check('High, Medium and Low are the presets exactly (every knob); nothing below Low', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && eq(knobsAt(3), PRESET_KNOBS.low) && PROFILES.length === 4, {});
+  check('High, Medium and Low are the presets exactly (every knob); TIER_AT.low is Low', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && eq(knobsAt(3), PRESET_KNOBS.low) && TIER_AT.low === 3, {});
+  // P137: below Low, only far-people detail and resolution: Low-eco (CPU) = Low + far people at half rate + tiny far parts
+  // dropped; Low 75 % / 65 % (GPU) = Low-eco at 75 / 65 % resolution; nothing else (shadows already off, lamps 2 kept)
+  { const L = knobsAt(3), d = (p) => KNOBS.filter((k) => knobsAt(p)[k] !== L[k]).join();
+    check('P137 the rungs below Low: Low-eco (CPU: anim, detail), Low 75 % and Low 65 % (GPU: + resolution 0.75 / 0.65); lamps, vegetation, casters as Low; for one side each',
+      d(4) === 'anim,detail' && d(5) === 'scale,anim,detail' && d(6) === 'scale,anim,detail' && knobsAt(5).scale === 0.75 && knobsAt(6).scale === 0.65
+      && PROFILES[4].only === 'cpu' && PROFILES[5].only === 'gpu' && PROFILES[6].only === 'gpu' && PROFILES.slice(0, 4).every((x) => !x.only), [d(4), d(5), d(6)]); }
   { const M = knobsAt(1), Ln = knobsAt(2), diff = KNOBS.filter((k) => M[k] !== Ln[k]);
     check('P95 Medium-lean is Medium at full resolution with its shadows (map, filter), minus MSAA (output-pass edges), 2 lamps, Low\'s far grass and small shadows, far people at half rate and their tiny far parts',
       Ln.scale === 1 && Ln.shadows === 1 && Ln.filter === M.filter && Ln.map === M.map && Ln.bloom === 0 && diff.join() === 'lamps,msaa,veg,casters,anim,detail' && Ln.msaa === 0 && Ln.lamps === 2, { diff, Ln }); }
@@ -148,7 +154,20 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
 {
   const G = new Governor();
   const { applied } = run(G, { cpu: 45, gpu: 30, display: 16.67, scene: 30000 }, 400);
-  check('a machine below even Low: walks down to Low, settles there, no oscillation', G.applied === N_PROFILES - 1 && G.phase === 'hold' && steps(G).every((e) => e.kind === 'down') && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });
+  // (P137: CPU-bound — CPU 45 ms, GPU 30 at High: the CPU rung below Low (Low-eco), never a resolution-only rung for CPU
+  //  pressure; then held at the lowest profile for CPU pressure)
+  check('a machine below even Low (CPU-bound): walks down to Low-eco (P137: the CPU rung, no resolution rung for CPU pressure), settles there, no oscillation', G.applied === 4 && G.phase === 'hold' && steps(G).every((e) => e.kind === 'down') && !steps(G).some((e) => /Low 75|Low 65/.test(e.what)) && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), steps: steps(G).map((e) => e.what) });
+}
+// ---------------------------------------------------------------- 9b. P137: GPU-bound below Low: the resolution rungs
+{
+  // (GPU 60 ms at High, CPU 6: Low draws ~19 ms by this test's truth — past 60 — and Low 65 % ~15.7: the resolution
+  //  rungs, Low-eco stepped over (it buys almost no GPU time), and 60 held at the end)
+  const G = new Governor();
+  const { trace, applied } = run(G, { cpu: 6, gpu: 60, display: 16.67, scene: 30000 }, 600);
+  const f = fpsOf(trace, trace[trace.length - 1].t - 120000);
+  console.log('       P137 GPU-bound below Low:', JSON.stringify({ p: name(G.applied), phase: G.phase, fps: +f.toFixed(1), steps: steps(G).map((e) => e.what) }));
+  check('P137 a GPU-bound machine Low cannot hold at 60: steps on below Low by resolution (Low 75 %, Low 65 %), steps over Low-eco, holds ≥ 55 fps at the end, every change at a commit point',
+    G.applied >= 5 && G.phase === 'hold' && !steps(G).some((e) => /→ Low-eco/.test(e.what)) && f >= 55 && applied.every((a) => a.at !== 'IN PLAY'), { p: name(G.applied), fps: f, steps: steps(G).map((e) => e.what) });
 }
 // ---------------------------------------------------------------- 10. a 30 fps limit: 33 ms frames are on time
 {
@@ -181,7 +200,7 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
   let r = null, t = 0;
   for (let i = 0; i < 400 && !r; i++) { t += 16.7; cal.gpu(4); r = cal.frame(t, 16.7, 5); }
   check('the title calibration finishes after ~2 s of frames and reports what it measured', r && r.p === 0 && r.gpuMs === 4 && r.cpuMs === 5 && t < 2600, { r, t });
-  check('nextProfile: a power change without a cached profile moves one profile', nextProfile(0, -1) === 1 && nextProfile(1, -1) === 2 && nextProfile(3, -1) === 3 && nextProfile(1, +1) === 0 && nextProfile(0, +1) === 0, {});
+  check('nextProfile: a power change without a cached profile moves one profile', nextProfile(0, -1) === 1 && nextProfile(1, -1) === 2 && nextProfile(3, -1) === 4 && nextProfile(N_PROFILES - 1, -1) === N_PROFILES - 1 && nextProfile(1, +1) === 0 && nextProfile(0, +1) === 0, {});
 }
 // ---------------------------------------------------------------- 14. what the profiles never touch
 check('the knobs are rendering and far-detail only (resolution, bloom, shadows, lamps, MSAA, grass, small casters, far people\'s animation rate, far small parts): no simulation, physics or hero knob',
@@ -218,6 +237,10 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
       gpuF: { high: 1, medium: 0.46, lean: 0.39, low: 0.32 }, cpuF: { high: 1, medium: 0.75, lean: 0.72, low: 0.71 },
       bat: { gpu: 1.25, cpu: 1.2, cuts: 0.9 } },
   };
+  // (P137: the rungs below Low, for every machine — an assumption, not a measurement: Low's share × the far-people knobs
+  //  (GPU 0.98, CPU 0.95 · 0.94) and the resolution's pixel share at the GPU (0.55 + 0.45 · s², as TRUTH above))
+  for (const M of Object.values(MACH)) { const g = M.gpuF.low, c = M.cpuF.low, px = (sc) => (0.55 + 0.45 * sc * sc) / (0.55 + 0.45 * 0.85 * 0.85);
+    Object.assign(M.gpuF, { loweco: g * 0.98, low75: g * 0.98 * px(0.75), low65: g * 0.98 * px(0.65) }); Object.assign(M.cpuF, { loweco: c * 0.89, low75: c * 0.89, low65: c * 0.89 }); }
   // power states: mains; battery on a 60 Hz panel; battery with the panel at 41 Hz (GTX1050-BATTERY: 24.4 ms with nothing
   // drawn; the GPU clocks down and its timer reads ~1.4× longer); battery with Chrome's pacing (12 % of the callbacks a
   // refresh late: FPS30-PRESENT, rAF p95 33.4) — the browser's, not the game's
@@ -493,20 +516,43 @@ check('the knobs are rendering and far-detail only (resolution, bloom, shadows, 
     check('PACE-ALL never on 50 / 59.9 / 60 Hz screens (every refresh stays the target; Auto handles quality)', Object.values(out).every((x) => x.n === 1 && x.log === 0), out);
   }
   {
-    // the smallest whole count that holds
+    // the smallest whole count that holds, at most the screen's ~60 class (P137: floorRefreshes)
     const out = {};
     for (const [hz, w] of [[144, 16], [240, 6], [165, 8], [120, 11], [90, 13]]) { const EP = new EvenPace(); const r = drive(EP, hz, 6, (t) => (Math.floor(t / 7) % 3 ? w : w * 0.6)); out[hz] = { n: EP.n, fps: +(hz / EP.n).toFixed(1), tail: [...new Set(r.iv.slice(-30))] }; }
     console.log('       PACE-ALL counts:', JSON.stringify(out));
-    check('PACE-ALL the smallest whole count that holds: 144 Hz / 16 ms → every 3rd (48), 240 / 6 ms → every 2nd (120), 165 / 8 ms → every 2nd (82.5), 120 / 11 ms → every 2nd (60), 90 / 13 ms → every 2nd (45); each then one even interval',
-      out[144].n === 3 && out[240].n === 2 && out[165].n === 2 && out[120].n === 2 && out[90].n === 2 && Object.values(out).every((x) => x.tail.length === 1), out);
+    check('PACE-ALL the smallest whole count that holds, within the ~60 class (P137): 144 Hz / 16 ms → every 2nd (72; 48 is below the class — Auto\'s to fit), 240 / 6 ms → every 2nd (120), 165 / 8 ms → every 2nd (82.5), 120 / 11 ms → every 2nd (60), 90 / 13 ms → every 2nd (45); each then one even interval',
+      out[144].n === 2 && out[240].n === 2 && out[165].n === 2 && out[120].n === 2 && out[90].n === 2 && Object.values(out).every((x) => x.tail.length === 1), out);
   }
   {
-    // 75 Hz: every 2nd refresh is 37.5 fps — not for a game drawing ~60 there; yes for one already under ~47
+    // P137 (the user, 26.11: "whatever we do, 30 fps just looks bad"; picked: always 60, lower the quality instead): the
+    // deepest even pace on each screen is its ~60 class; a game drawing ~30 (frames of 22–27 ms) on 120 / 144 Hz was
+    // paced every 4th / 5th refresh (30 / 28.8 fps) — now never below the class, Auto quality's to make room.
+    // BEFORE_PACE=<path to an older pace.js> also runs that module (the doc's before / after)
+    const { floorRefreshes } = await import('../src/engine/pace.js');
+    const FL = Object.fromEntries(RATES.map((hz) => [hz, +(hz / floorRefreshes(hz)).toFixed(2)]));
+    const flips = []; for (const hz of RATES) for (const e of [-0.005, 0.005]) if (floorRefreshes(hz * (1 + e)) !== floorRefreshes(hz)) flips.push(`${hz}${e > 0 ? '+' : ''}${e * 100}%`);
+    console.log('       P137 the slowest even pace per screen (fps):', JSON.stringify(FL));
+    check('P137 the slowest even pace Unlimited may take: 50 / 59.9 / 60 / 75 Hz every refresh, 90 → 45, 100 → 50 (P101 kept), 120 → 60, 144 → 72, 165 → 55, 240 → 60; never 30; steady at ±0.5 %',
+      JSON.stringify(FL) === JSON.stringify({ 50: 50, 60: 60, 75: 75, 90: 45, 100: 50, 120: 60, 144: 72, 165: 55, 240: 60, 59.9: 59.9 }) && !flips.length, { FL, flips });
+    const old = process.env.BEFORE_PACE ? await import(new URL(process.env.BEFORE_PACE, 'file://' + process.cwd() + '/').href) : null;
+    const slow30 = {}, mins = {};
+    for (const hz of [75, 90, 100, 120, 144, 165, 240]) for (const [tag, M] of [['now', { EvenPace }], ['before', old]]) {
+      if (!M) continue;
+      const EP = new M.EvenPace(); drive(EP, hz, 20, (t) => (Math.floor(t / 9) % 4 ? 27 : 22));
+      const rates = [hz, ...EP.log.filter((e) => e.to).map((e) => hz / e.to)];
+      (slow30[hz] ??= {})[tag] = +(hz / EP.n).toFixed(1); if (tag === 'now') mins[hz] = +Math.min(...rates).toFixed(1);
+    }
+    console.log('       P137 a game drawing ~37–45 fps, Unlimited, 20 s (the even pace at the end: now / before):', JSON.stringify(slow30));
+    check('P137 a game drawing ~37–45 fps on 75–240 Hz screens: the even pace never goes below the screen\'s ~60 class at any moment (120 → 60, 144 → 72, 240 → 60; never 30)', Object.entries(mins).every(([hz, m]) => m >= +(hz / floorRefreshes(+hz)).toFixed(1) - 0.05 && m > 40), { mins, slow30 });
+    if (old) console.log(`       (before P137 the same game was paced ${Object.entries(slow30).map(([hz, x]) => `${hz} Hz → ${x.before}`).join(', ')})`);
+  }
+  {
+    // 75 Hz: every 2nd refresh is 37.5 fps — below the ~60 class (P137; before, allowed for a game already under ~47)
     const a = new EvenPace(); const ra = drive(a, 75, 8, (t) => (Math.floor(t / 13.3) % 4 ? 12 : 15));
     const b = new EvenPace(); const rb = drive(b, 75, 8, (t) => (Math.floor(t / 13.3) % 4 ? 20 : 12));
     const fa = +(1000 * ra.iv.length / ra.iv.reduce((x, y) => x + y, 0)).toFixed(1), fb = +(1000 * rb.iv.slice(0, 100).length / rb.iv.slice(0, 100).reduce((x, y) => x + y, 0)).toFixed(1);
     console.log('       PACE-ALL 75 Hz:', JSON.stringify({ a: { n: a.n, fps: fa, log: a.log }, b: { n: b.n, fpsBefore: fb } }));
-    check('PACE-ALL 75 Hz: no 37.5 fps pace for a game drawing ~60 there (the rate floor: ≥ 45 fps or ≥ 80 % of what it draws now); a game under ~47 fps is paced every 2nd refresh', a.n === 1 && a.log.some((e) => e.denied) && b.n === 2, { a: a.log, an: a.n, bn: b.n, fa, fb });
+    check('PACE-ALL 75 Hz: never a 37.5 fps pace (P137: under the ~60 class), for a game drawing ~60 there or one under ~47 — every refresh, Auto quality makes the room; the denial noted once', a.n === 1 && b.n === 1 && a.log.filter((e) => e.denied).length === 1 && b.log.filter((e) => e.denied).length === 1, { a: a.log, an: a.n, bn: b.n, fa, fb });
   }
   {
     // not counted (menus, scene changes): no engagement; a scene change while paced brings the probe forward
