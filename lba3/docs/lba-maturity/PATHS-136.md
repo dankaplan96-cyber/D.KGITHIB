@@ -39,6 +39,10 @@ Chromium)**. Nobody played it; nothing was checked on a real GPU.
 - **Known list.** `tests/fixtures/paths-136-known.json`: true ends only, each with its reason.
   P135's eight "deliberate" cases were all re-judged (below).
 - **Pictures.** A play-camera picture of every end, reached or not, and every gap. `ONLY=area` builds only that area.
+- **Closed gaps.** Gaps closed by a wall or a deck are listed as `CLOSED GAP`, with what closed them (`closed.json`), so
+  each closing is looked at, not trusted. A "wall" is any non-prop box, and a "deck" is any floor 2.5 cm over the
+  ground.
+- **This supersedes PATHS-135's question 1.** The test now reads `paths-136-known.json`, not `paths-135-known.json`.
 
 ## Found and done
 | # | Area, at | Kind | Before | Decision / done (visible changes, for the user's pick) |
@@ -55,6 +59,7 @@ Chromium)**. Nobody played it; nothing was checked on a real GPU.
 | 9 | isle_liftdock (4192, 1810), (4193, 1819) | END | the terrain's landing pad under the deck island, far under the clouds (never seen) | Not a way: left out (deck island). |
 | 10 | isle_undergas (3214.7, 1781.6) | END | the gas works' round concrete yard meets the rock ridge that rises inside its circle | **True end** (known list): the yard's rim at a rock slope, no way on. Laying the concrete only on level ground (`paveSlope 0.35`) was tried: no visible difference from above or from the play camera (pixel diff: seams and shadows only), so it was not kept. |
 | 11 | Zeelich (2371.7, −6.8) | GAP 0.4 m | (after #8) the scan saw the new arcade flags stop 0.1 m outside the plaza's own paving, under the kerb ring | The flags now reach 4 cm inside the ring's inner edge, 1 cm under the plaza's paving. It was never visible. |
+| 12 | Desert, the School's bridge (3338–3340, −72.7) | broken stair | found when #6's water made the bridge the only crossing. **Probe on the base build:** from the forecourt down to the plaza he crosses; from the plaza up he stops at x 3339.0. The two steps stood 1 m apart, 0.52 m deep, with ground between them; he climbed the first, dropped into the gap and met the second 0.68 m up. | **Fixed** (`desertold.js`): five touching steps, six rises of about 0.17 m from the plaza to the deck. Their colliders overlap 0.14 m: the ground is read 5 cm inside a brick's edge, so bricks that only touch left a crack he fell into (a first try with two 1 m steps failed on that crack). |
 
 Not changed:
 - The harbour, Twinsen's hair, NPC routes (`town.js` STREETS, `world.js` PATHS: untouched).
@@ -108,6 +113,20 @@ Not changed:
 - **Citadel outside the town.** The lighthouse path, Twinsen's house and the cliffs have no paving, only trodden
   earth.
 - **Not checked:** the expansion's other districts and rooms, and every interior. These are not outdoor paving.
+- **Rounded street ends near other paving** (the kind of #1b). The scan's gap rays fan out from a rounded end and do
+  not cluster, so the scan misses these. Every street that meets the square's ring was checked from above
+  (`ends.png`). The others in the town meet at T-junctions, flush (`world.js` GRID_RECTS).
+- **Gaps closed by a wall or a deck** (final scan, `CLOSED GAP`). All three were looked at from above (`ends.png`):
+  - (−27.3, −52.2) and (−27.2, −50.1): the station's wall, between its forecourt and the fort's yard. True.
+  - (−72.4, −4.2): the promenade's 20-step flight. True.
+- **The isles' WA-11 bare patches. Not judged; a question for the user** (`captures/paths-136/isle-patches.png`).
+  - On Otringal and the Platform these patches are drawn with the island's paving: lavender flags, grey concrete.
+  - They are noise blobs on the rock and turf. From the play camera some read as paving that ends raggedly in the
+    grass or the rock.
+  - Grid points left out: Otringal 909, the Platform 267, Under Celebration 74, the Lift Dock 25 (under its decks),
+    Celebration 7.
+  - Changing them is a big visual decision for every isle, so it was not made here.
+  - **The isles are covered for their designed paving only.**
 
 ## Visible changes (for the user's pick)
 1. Citadel: the paved forecourt south of the square, with kerbs on its west and south edges. The signpost's arrows
@@ -117,8 +136,11 @@ Not changed:
    - One tree is gone: the collider dump before and after differs by one trunk, at (−38, −12).
    - The kerbs changed: 660 → 616 stones, following the new edges.
 4. Citadel: the west street's 4 m stub past the south cross street is gone. **Own commit `c1a59f78`** (P112's free end).
-5. Desert Island: water in the School's channel under the arched bridge. The hero cannot wade in, so it is crossed on
-   the bridge, as it was built to be.
+5. Desert Island: water in the School's channel under the arched bridge. It is crossed on the bridge, as built.
+   **Probe** (Automated runtime): walking into it from the plaza, he stops at its edge (x 3337.2, feet 0.34 m under
+   the waterline, as on a beach), and his life is unchanged (10 → 10).
+5b. Desert Island: the bridge's stair has five steps instead of two (#12). **Probe:** plaza → forecourt over the
+    bridge, and forecourt → plaza, both pass.
 6. Kesh: its plaza's paving runs whole. No dirt band or bare tongue crosses it.
 7. Zeelich: the council house's arcade flags reach the plaza's ring.
 
@@ -137,7 +159,14 @@ Unchanged:
   - after: **PASS**, 0 open, run with Under Celebration's trial change in place.
   - When that change was reverted, Under Celebration was run again alone (`ONLY=isle_undergas`): **PASS**, its end on
     the known list.
+- `tests/path-ends.mjs`: a last full run with the closed-gap listing, `SHOTS=0`. **PASS**, 1 accepted (#10), 3 closed
+  gaps listed (above).
 - `tests/walkers.mjs`: **PASS 37/37**.
+- `tests/worldfit.mjs` with `AREAS=desert`, after #12's stair: **PASS**. The desert's z-fight scan finds 29 visible
+  candidates (27 before), all under 0.15 m².
+  - Of the new ones, two are the stair's side faces, coplanar with its side walls' outer faces at z ±1.30 m, about
+    0.1 m² each.
+  - They are listed, not judged, and were not changed.
 - `tests/worldfit.mjs`: **PASS**, functional 1/1, visual 8/8.
   - (3) z-fighting: 0 visible; 112 small ones are listed, unjudged.
   - The desert's fit notes (the pool mask, Kesh's cabins and others) are listed by the test as before; none FAILs.
@@ -146,8 +175,24 @@ Unchanged:
 ## Pictures
 - `captures/paths-136/sheet.png`: before and after. The user's spot comes first.
 - `captures/paths-136/plans.png`: the final plan of each area.
+- `captures/paths-136/ends.png`: every remaining end from the play camera, the closed gaps, the ring's junctions, and
+  the School's new stair.
+- `captures/paths-136/isle-patches.png`: question 5.
 - The play-camera picture of every end and gap, before and after, is in the session's scratchpad
   (`paths136/{before,after,final}`). Those are not committed.
+
+## Revert handles (each change on its own)
+| Change | Where | To revert | Then add to `paths-136-known.json` |
+|---|---|---|---|
+| #1 forecourt | `world.js` GRID_STREETS `[-41.75, 7.4, -35.0, 7.4, 7.7, { ea: 'square' }]` | delete the line | (−44.8, 10.9) and (−36.4, 6.7) |
+| #1 the arrows | `citydress.js` `TO.forecourt` in the square's `post(...)` | back to `TO.lane` | — |
+| #1b foot | `world.js` GRID_STREETS[1] x1 −45.0 | back to −51.4 | — (not flagged by the scan) |
+| #2–#3 pockets | `world.js` the two lines after the north street | delete them | the five GAPs in #2–#3 |
+| #4 west street | commit `c1a59f78` | `git revert c1a59f78` | (−58.9, 58.3) |
+| #6 water | `desert.js` the `rillAt` term in the pit lift | delete the term | (3337.4, −75.4), (3337.4, −70) |
+| #7 Kesh | `desert.js` splatFn, the two `(1 - pv)` factors | delete them | (3355.2, −7.6) |
+| #8 Zeelich | `zeelich.js` the `for (const h of HOUSES)` apron loop in buildPaths | delete it | (2374.5, −8.6) |
+| #12 stair | `desertold.js` the five-step loop | back to the two steps | — (a broken stair, not a path end) |
 
 ## Questions for the user
 1. Keep the forecourt by the signpost (#1), with the arrows turned to the east street? Or should the lane instead go
@@ -155,3 +200,7 @@ Unchanged:
    east of the house, beside the east street.
 2. Keep the west street's corner (#4, commit `c1a59f78`)? It changes P112's free end.
 3. Water in the School's channel (#6): yes? It had been dry since AUDIT-FIX on 17.11, probably by accident.
+4. Under Celebration (#10): is the yard's rim against the rock ridge a true end, or a fault? P135 got this kind of
+   call wrong. A level-ground cut made no visible difference; a real fix would redraw the yard's edge.
+5. The isles' WA-11 bare patches (`isle-patches.png`): should those drawn as paving (Otringal, the Platform) become
+   bare rock or earth, or have clean edges? Not changed.

@@ -276,7 +276,10 @@ export function buildOldPlaces(C) {
       for (const s of [-1, 1]) { B.add(bbox(L + 0.2, 0.5, 0.26, 0, 1), M.stone, (x0 + x1) / 2, y + 0.25, cz + s * 1.17); col({ type: 'box', x: (x0 + x1) / 2, z: cz + s * 1.17, hw: L / 2 + 0.1, hd: 0.13, top: y + 0.5, noStand: true, seeThrough: true }); }
       col({ type: 'box', x: (x0 + x1) / 2, z: cz, hw: L / 2 + 0.1, hd: 1.05, top: y });
       const pg = H(x1 + 1.2, cz);   // the plaza's ground east of the bridge
-      [[0.0, 0.66], [0.5, 0.33]].forEach(([dx2, t]) => { const sy = pg + (y - pg) * t, sx = x1 + 0.25 + dx2 * 2; B.add(bbox(0.52, sy - pg + 0.3, 2.6, 0, 1), M.stone, sx, (sy + pg - 0.3) / 2, cz); col({ type: 'box', x: sx, z: cz, hw: 0.26, hd: 1.3, top: sy }); });
+      // (P136: the two steps stood 1 m apart, 0.52 m deep, ground between them and 0.34 m rises: from the plaza he climbed
+      //  the first, dropped into the gap and met the second 0.68 m up; the bridge was one-way, down only. Now five
+      //  touching steps of 0.42 m, six rises of ~0.17 m from the plaza up to the deck, between the stair's side walls)
+      for (let k = 0; k < 5; k++) { const sy = y - ((k + 1) * (y - pg)) / 6, sx = x1 + 0.1 + 0.21 + k * 0.42; B.add(bbox(0.42, sy - pg + 0.3, 2.6, 0, 1), M.stone, sx, (sy + pg - 0.3) / 2, cz); col({ type: 'box', x: sx, z: cz, hw: 0.28, hd: 1.3, top: sy }); }   // (the colliders overlap by 0.14 m: the ground under the feet is read 5 cm inside a brick's edge, and touching bricks left a crack he fell into)
       B.add(bbox(2.4, 0.5, 0.26, 0, 1), M.stone, x1 + 1.0, y - 0.1, cz + 1.17); B.add(bbox(2.4, 0.5, 0.26, 0, 1), M.stone, x1 + 1.0, y - 0.1, cz - 1.17);
     }
     // the plaza: low tiled walls along its east edge, a palm, the signpost; two horned pillars flanking the bridge's foot

@@ -211,6 +211,18 @@ for (const r of openRays) {
   const nx = m('nx'), nz = m('nz'), nl = Math.hypot(nx, nz);
   gapsFound.push({ type: 'GAP', area: r.area, x: +m('x0').toFixed(2), z: +m('z0').toFixed(2), dx: +(nx / nl).toFixed(3), dz: +(nz / nl).toFixed(3), L: +m('L').toFixed(2), edge: +(cl.length * RES).toFixed(2), notPath: r.notPath });
 }
+// (P136: the gaps a wall or a deck closed, clustered the same way and listed for review by eye: a wall is any
+//  non-prop box, a deck any floor over the ground, so each closing is looked at, not trusted)
+const closedRays = gapRays.filter((r) => !r.open && r.by && (r.by === 'deck' || r.by.startsWith('wall'))), usedC = new Set(), closed = [];
+for (const r of closedRays) {
+  if (usedC.has(r)) continue;
+  const cl = [r]; usedC.add(r);
+  for (let i = 0; i < cl.length; i++) for (const q of closedRays) if (!usedC.has(q) && q.area === cl[i].area && Math.hypot(q.x0 - cl[i].x0, q.z0 - cl[i].z0) < 1.0 && q.nx * r.nx + q.nz * r.nz > 0.86) { usedC.add(q); cl.push(q); }
+  if (cl.length < 6) continue;
+  const m = (k) => cl.reduce((s2, q) => s2 + q[k], 0) / cl.length;
+  closed.push({ area: r.area, x: +m('x0').toFixed(1), z: +m('z0').toFixed(1), L: +m('L').toFixed(2), edge: +(cl.length * RES).toFixed(2), by: r.by });
+}
+for (const c of closed) console.log(`CLOSED GAP ${c.area.padEnd(14)} (${c.x}, ${c.z}) ${c.L} m across ${c.edge} m of edge, closed by ${c.by}`);
 // (the two sides of one gap are one fault: the second listed within 6 m of the first's far side, facing back, is dropped)
 const gaps = [];
 for (const g of gapsFound) { if (gaps.some((h) => h.area === g.area && h.dx * g.dx + h.dz * g.dz < -0.8 && Math.hypot(h.x + h.dx * h.L - g.x, h.z + h.dz * h.L - g.z) < 6)) continue; gaps.push(g); }
@@ -242,6 +254,7 @@ if (SHOTS) for (const t of [...all, ...found.filter((g) => g.type === 'GAP')]) {
   t.shot = `${t.type === 'GAP' ? 'gap' : t.dead ? 'dead' : 'end'}-${t.area}-${Math.round(t.x)}_${Math.round(t.z)}.png`;
   await page.screenshot({ path: path.join(OUT, t.shot), timeout: 180000 });
 }
+fs.writeFileSync(path.join(OUT, 'closed.json'), JSON.stringify(closed, null, 1));
 fs.writeFileSync(path.join(OUT, 'found.json'), JSON.stringify(found.map(({ hits, ...t }) => t), null, 1));
 fs.writeFileSync(path.join(OUT, 'ends.json'), JSON.stringify(all, null, 1));
 check(`paths cut off: dead ends and gaps on paths (≤ ${MAXOPEN} not accepted)`, open_.length <= MAXOPEN, open_.map((t) => `${t.type} ${t.area} (${t.x}, ${t.z})`));

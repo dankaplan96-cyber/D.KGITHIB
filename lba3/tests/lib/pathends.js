@@ -126,17 +126,18 @@
     const P = G().physics;
     return rays.map((r) => {
       const L = Math.hypot(r.x1 - r.x0, r.z1 - r.z0), h0 = groundY(P, r.x0, r.z0, r.y), hits = [], seen = new Set();
-      let prev = h0, open = true, dhMax = 0;
+      let prev = h0, open = true, dhMax = 0, by = null;
       for (let a = 0; a <= L + 1e-6; a += 0.2) {
         const x = r.x0 + ((r.x1 - r.x0) * a) / L, z = r.z0 + ((r.z1 - r.z0) * a) / L, gy = groundY(P, x, z, Number.isFinite(r.y) ? prev : NaN);
         dhMax = Math.max(dhMax, Math.abs(gy - h0));
-        if (Math.abs(gy - prev) >= 0.25 || Math.abs(gy - h0) > 0.45 || gy < 0.05) open = false;
-        if (a > 0.3 && a < L - 0.3 && deck(P, x, z)) open = false;   // (P136: covered by a terrace, a deck, a stair)
+        if (Math.abs(gy - prev) >= 0.25 || Math.abs(gy - h0) > 0.45 || gy < 0.05) { open = false; by ||= gy < 0.05 ? 'water' : 'ground'; }
+        if (a > 0.3 && a < L - 0.3 && deck(P, x, z)) { open = false; by ||= 'deck'; }   // (P136: covered by a terrace, a deck, a stair)
         prev = gy;
         solidsAt(P, x, z, gy, seen, a, hits);
       }
-      if (hits.some((h) => h.kind === 'solid')) open = false;
-      return { id: r.id, open, dh: +dhMax.toFixed(2), props: hits.length };
+      const wall = hits.find((h) => h.kind === 'solid');
+      if (wall) { open = false; by ||= `wall ${wall.size} m × ${wall.top} m at (${wall.x}, ${wall.z})`; }
+      return { id: r.id, open, by, dh: +dhMax.toFixed(2), props: hits.length };
     });
   }
   // (P136 coverage) every up-facing outdoor surface built as a mesh near the ground (within 1.2 m of the terrain), its
