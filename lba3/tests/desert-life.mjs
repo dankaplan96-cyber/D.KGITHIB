@@ -9,6 +9,7 @@
 // the pump's three gears (chapter 4) and the vent (chapter 5) are set by flags; a fresh flag set for the second
 // order. Screenshots: SHOTS=1 writes them to captures/desert-ty/.
 import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
+import { hearer } from './lib/heard.mjs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +27,9 @@ const shot = async (name, spec) => {
     h.onGround = true; h.vy = 0; G.camRig.lba.init = false; G.step(1.2); G.renderer.render(); }, spec);
   await page.screenshot({ path: path.join(SHOTS, name + '.png'), timeout: 180000 });
 };
-const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
+// (#67, SMALLFIX-27-11: tests/lib/heard.mjs hears the box and a minor resident's overhead remark (P116); game.say alone
+//  missed the remarks. Kesh's people here are chapter 4's cast (story/dig.js), not minor: HEARD at the end shows the ways)
+const H = hearer(() => page), said = H.said;
 const toasts = () => ev(() => (game.hud.toastLog || []).slice());
 
 await open(page, '?nocine'); await menu(page, 'new');
@@ -204,6 +207,7 @@ await shot('07-loom-sail', { x: -61.5, z: 3.0, a: Math.PI * 0.75 });
 await shot('08-poles-drift', { x: -2, z: 11, a: Math.PI / 2 + 0.15 });
 await shot('09-screens', { x: -62, z: -14, a: -Math.PI / 2 - 0.5 });
 
+H.report();
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);

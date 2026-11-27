@@ -35,6 +35,12 @@ await ev(async () => {
   const RL = await import('/src/game/roomlife.js');
   window.RL = RL;
   window.said = []; const sv = game.say; game.say = function (n, lines, ...a) { window.said.push({ n, lines: [...lines] }); return sv.call(this, n, lines, ...a); };
+  // (#67, SMALLFIX-27-11: a minor resident's one short line goes over its head (P116, walkers.js Remarks: the rooms'
+  //  people are minor, story/index.js MINOR interiors), not through game.say (Remarks.talk swaps it for a recorder): heard
+  //  here too, under the same name, so "a line of their own" counts it; window.heardWay tallies box / overhead)
+  window.heardWay = {}; const way = (n, w, k) => { const t = (window.heardWay[n] ||= { box: 0, remark: 0 }); t[w] += k; };
+  { const sv2 = game.say; game.say = function (n, lines, ...a) { way(n, 'box', [].concat(lines).length); return sv2.call(this, n, lines, ...a); }; }
+  { const R = game.remarks, sh = R.show; R.show = function (n, rec) { window.said.push({ n: rec[0], lines: [].concat(rec[1]) }); way(rec[0], 'remark', 1); return sh.call(this, n, rec); }; }
   window.setChapter = (key, extra = {}) => { const G = game, f = G.flags; P.settle(); Object.assign(f, { prologueDone: key !== 'well', intro: true, chapterKey: key }, extra); f.chapter = G.story.chapters.findIndex((c) => c.key === key); G.hero.hasBall = true; G.story.applyFlags(); G.step(0.2); };
   window.people = (place) => (game.roomWalkers?.res || []).filter((r) => r.def.room === place);
   // where everyone of a place stands, and whether it is right
@@ -118,7 +124,7 @@ for (const [label, key, extra] of STATES) {
     for (const [id, n] of Object.entries(live.logs)) visits[id] = (visits[id] || 0) + n;
     if (walkIn && key === 'project') await shot(room);   // (the room with its people, the hero by the door)
     if (walkIn) {
-      const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const r = P.talk(id); const shop = game.state === 'shop'; if (shop) { P.tap('Escape', 0.1); P.settle(); } out[id] = { r: r.r, to: r.to, sp: r.speakers, ...(r.skipped ? { sk: r.skipped } : {}), said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')), ...(shop ? { shop } : {}) }; } return out; }, [live.here]);   // (SHOPS-1: a keeper's talk ends in their shop: left with Esc before the next talk)
+      const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const r = P.talk(id); const shop = game.state === 'shop'; if (shop) { P.tap('Escape', 0.1); P.settle(); } out[id] = { r: r.r, to: r.to, sp: r.speakers, ...(r.skipped ? { sk: r.skipped } : {}), said: window.said.filter((s) => s.n === 'n_' + id || s.n === game.npcs.find((q) => q.def.id === id)?.def.name).map((s) => s.lines.join(' ')), ...(shop ? { shop } : {}) }; } return out; }, [live.here]);   // (SHOPS-1: a keeper's talk ends in their shop: left with Esc before the next talk)
       check(`${label}, ${room}: each answers a talk with a line of their own (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
       if (key === 'project') console.log(`  ${room} lines: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
       if (key === 'evacuation' && live.here.length) await shot(room + '-evacuation');
@@ -159,7 +165,7 @@ const portCheck = async (label, key, extra, want, talk) => {
   check(`Citadel Spaceport, ${label}: the right people are there (${want.join(', ') || 'nobody'})`, JSON.stringify([...r.here].sort()) === JSON.stringify([...want].sort()), r.here);
   check(`Citadel Spaceport, ${label}: each on the deck, off the furniture, facing sensibly; nobody stands on the walkway, in the pad's ring or on the board's reading spot`, r.bad.length === 0 && r.clear.length === 0, { bad: r.bad, clear: r.clear });
   if (talk && want.length) {
-    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === nm || s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
     check(`Citadel Spaceport, ${label}: each answers a talk (INPUT), the line fits the flights (${key})`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
     console.log(`  port ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
     await ev(() => { const G = game; G.exitRoom({ x: -4.5, z: 39.5, a: Math.PI / 2 + 0.3 }, true, true); for (let i = 0; i < 10; i++) G.step(0.5); });
@@ -185,7 +191,7 @@ for (const [label, key] of [['chapter 3 (flights grounded)', 'zeelich'], ['chapt
     const clear = people('port_zeelich').filter((q) => q.present && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: Math.abs(q.pos.x - S.pad.x) < 2.2 && q.pos.z < S.landing.z + 0.5, ring: Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 6.0 })).filter((q) => q.walkway || q.ring);
     return { here: people('port_zeelich').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, all: a }; });
   check(`Zeelich Spaceport, ${label}: its two Esmer travellers are there, on the deck, clear of the walkway and the pad's ring`, r.here.length === 2 && r.bad.length === 0 && r.clear.length === 0, r);
-  const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+  const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === 'n_' + id || s.n === game.npcs.find((q) => q.def.id === id)?.def.name).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
   check(`Zeelich Spaceport, ${label}: each answers a talk (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
   console.log(`  zeelich port ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
   if (key === 'council') { await ev(() => { const G = game, S = G.regions.built('zeelich').spaceport; G.enterRoom('zeelich', { x: S.landing.x - 3, z: S.landing.z + 2, a: Math.PI * 0.8 }, true); for (let i = 0; i < 10; i++) G.step(0.5); }); await shot('spaceport-zeelich'); }
@@ -236,7 +242,7 @@ for (const [room, label, key, extra, want, notice] of TERM) {
   check(`${room}, ${label}: the notice ${notice ? `is up and reads ${notice === 'grounded' ? 'GROUNDED' : notice === 'list' ? 'the project\'s boarding by its list' : 'the council\'s order'}` : 'is down'} (the GROUNDED one ${notice === 'grounded' ? 'up' : 'down'})`, r.notice === notice && r.grounded === (notice === 'grounded'), { kind: r.notice, grounded: r.grounded });
   for (const [id, n] of Object.entries(r.logs)) visits[id] = (visits[id] || 0) + n;
   if (want.length) {
-    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === nm).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const nm = game.npcs.find((q) => q.def.id === id)?.def.name || 'n_' + id; const q = P.talk(id); out[id] = { r: q.r, to: q.to, sp: q.speakers, ...(q.skipped ? { sk: q.skipped } : {}), said: window.said.filter((s) => s.n === nm || s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
     check(`${room}, ${label}: each answers a talk with a line of their own (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
     console.log(`  ${room} ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
     await ev(() => { for (let i = 0; i < 6; i++) game.step(0.5); });
@@ -325,5 +331,6 @@ const office = await ev(() => {
 check('Gilbert and Mira: their rounds at the Water Office in chapter 2 (counter, pipes, the far end of the counter; desk, plant, north wall), never through the furniture, none of them by the pipe map\'s reading place', office.gilbert.length >= 2 && office.mira.length >= 2 && office.hits.length === 0 && office.nearMap.length === 0, office);
 await shot('office-gilbert-mira');
 
+console.log('HEARD ' + Object.entries(await ev(() => window.heardWay)).map(([k, t]) => `${k} ${t.box}${t.remark ? ' +' + t.remark + ' overhead' : ''}`).join(', '));
 await browser.close();
 done();

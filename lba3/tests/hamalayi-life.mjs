@@ -13,6 +13,7 @@
 //   - a death in the Hamalayi: Game Over, Retry, back in play in the Hamalayi with full life
 // ISO (logged): chapters by their flags; he is put 2.6 m before each door (the walk in and out is by input).
 import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
+import { hearer, linesOf } from './lib/heard.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -20,7 +21,9 @@ const { check, done } = checker();
 let { browser, context, page } = await launch();
 const ev = (f, a) => page.evaluate(f, a);
 const iso = (s) => console.log('ISO  ' + s);
-const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...[].concat(lines)); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
+// (#67, SMALLFIX-27-11: tests/lib/heard.mjs hears the box and a minor resident's overhead remark (P116: the Hamalayi's
+//  people at home are minor, story/index.js MINOR hlife); game.say alone missed a remark. HEARD at the end shows the ways)
+const H = hearer(() => page), said = H.said;
 const DONE6 = { c6_started: true, c6_bridge: true, c6_lhar: true, c6_yorna: true, c6_heat: true, c6_thawed: true, c6_liftReady: true, c6_sword: true, c6_rope: true, c6_trip1: true, c6_trip2: true, c6_up: true, c6_done: true };
 const DONE7 = { c7_started: true, c7_keeper: true, c7_lit: true, c7_sendell: true, c7_scope: true, c7_droneDown: true, c7_vent: true, c7_done: true };
 
@@ -76,7 +79,7 @@ const h1 = await ev(() => {
 });
 const l1 = await said();
 check('chapter 6: the monastery hall\'s door leads in by input (on its floor, furnished, lit, its own music)', h1.room === 'ham_hall' && h1.floor && h1.meshes >= 20 && h1.lights >= 2 && h1.music === 'mountain', h1);
-check('chapter 6: Brother Tenpa keeps the hall, on a round (he moves with Twinsen in the room), and talks', h1.monk && h1.talk === 'talked' && h1.roundM > 1.5 && l1.some((l) => /soup is on/.test(l)), { h1, l1: l1.slice(0, 4) });
+check('chapter 6: Brother Tenpa keeps the hall, on a round (he moves with Twinsen in the room), and talks', h1.monk && h1.talk === 'talked' && h1.roundM > 1.5 && linesOf(l1, 'hl_monk').some((l) => /soup is on/.test(l)), { h1, l1: l1.slice(0, 4) });
 check('chapter 6: the hall\'s tea gives life back, the wheel turns, the altar reads (each its own line)', h1.hp1 === Math.min(h1.hp0 + 2, 99) && h1.hp1 > h1.hp0 && h1.tea === 'used' && h1.wheel === 'used' && h1.altar === 'used' && l1.some((l) => /Butter tea/.test(l)) && l1.some((l) => /big wheel/.test(l)) && l1.some((l) => /Sendell's shrine/.test(l)), { h1, l1 });
 check('chapter 6: out of the hall he stands before its door on the porch, facing the yard, on the ground', h1.out === 'hamalayi' && h1.near < 2.8 && h1.away > 0.3 && h1.ground, h1);
 const p1 = await ev(() => {
@@ -131,7 +134,7 @@ const l4 = await said();
 for (const id of ['hl_bero', 'hl_sana', 'hl_lhamo']) check(`chapter 8: ${id.slice(3)} is at home (in the room among the mending's things, at work on a round, talks); the outdoor self is away; one dress indoors and out`, c8[id].set === 'mend' && c8[id].room && c8[id].here && c8[id].moved > 0.5 && c8[id].talk === 'talked' && c8[id].outAway && c8[id].dress, c8[id]);
 check('chapter 8: Yorna sits in her own house, Sefa in his (both talk)', c8.yorna.here && c8.yorna.talk === 'talked' && c8.keeper.here && c8.keeper.talk === 'talked', { yorna: c8.yorna, keeper: c8.keeper });
 check('chapter 8: the observatory\'s door is shut with its own line and a slate on it (no story door to it)', c8.obs.kind === 'hl_obs' && c8.obs.sign && !c8.obs.door && l4.some((l) => /SEFA, NEXT DOOR/.test(l)) && !l4.some((l) => /^Locked\.?$/.test(l)), { obs: c8.obs, l4: l4.slice(-3) });
-check('chapter 8: the lines are their own (Bero\'s mending, Sana\'s flags, Lhamo\'s menders, Yorna\'s ledger, Sefa\'s crystal)', [/Grandfather built well|home a bit/, /New flags|knots/, /Menders|own stove/, /packing up|ledger/, /crystal|snow stays/].every((re) => l4.some((l) => re.test(l))), l4);
+check('chapter 8: the lines are their own (Bero\'s mending, Sana\'s flags, Lhamo\'s menders, Yorna\'s ledger, Sefa\'s crystal)', [['hl_bero', /Grandfather built well|home a bit/], ['hl_sana', /New flags|knots/], ['hl_lhamo', /Menders|own stove/], ['yorna', /packing up|ledger/], ['keeper', /crystal|snow stays/]].every(([id, re]) => linesOf(l4, id).some((l) => re.test(l))), { l4, by: l4.by.map((e) => `${e.id} (${e.via}): ${e.lines.join(' ').slice(0, 60)}`) });   // (#67: each line from its own speaker, box or overhead)
 
 // a save inside Bero's house comes back there, Bero in it, and the door leads out
 await ev(() => { inBy('ih_ham_lhar3'); P.settle(); game.save(false); });
@@ -139,7 +142,7 @@ const file = path.join(os.tmpdir(), 'hamalayi-life-' + process.pid + '.json');
 await quitAndKeep(page, context, file);
 await browser.close();
 ({ browser, context, page } = await launch({ storageState: file }));
-await open(page, '?nocine'); await menu(page, 'continue');
+await open(page, '?nocine'); await menu(page, 'continue'); await H.install();
 const back = await ev(() => { const G = game, h = G.hero.pos; P.settle(); for (let i = 0; i < 30; i++) G.step(0.1);
   const n = G.npcs.find((q) => q.def.id === 'hl_bero'), R = G.room;
   const r = { room: R?.id, chapter: G.flags.chapterKey, floor: Math.abs(h.y - G.physics.groundAt(h.x, h.z, h.y + 0.5)) < 0.15, bero: !!n?.present && !!R && Math.hypot(n.pos.x - R.center.x, n.pos.z - R.center.z) < 8 };
@@ -189,7 +192,7 @@ const ep = await ev(() => {
   return { smoke, room: i.room, dorje: here('hl_dorje'), talk: t, outAway: old?.away === 'story' || !old?.present };
 });
 const l5 = await said();
-check('the epilogue: Lhar lived in again (every chimney); Old Dorje in his own corner (not outdoors as well), talking', ep.smoke.every(Boolean) && ep.room === 'ih_ham_lhar2' && ep.dorje && ep.talk === 'talked' && ep.outAway && l5.some((l) => /My own fire/.test(l)), { ep, l5 });
+check('the epilogue: Lhar lived in again (every chimney); Old Dorje in his own corner (not outdoors as well), talking', ep.smoke.every(Boolean) && ep.room === 'ih_ham_lhar2' && ep.dorje && ep.talk === 'talked' && ep.outAway && linesOf(l5, 'hl_dorje').some((l) => /My own fire/.test(l)), { ep, l5 });
 
 // ---------------------------------------------------------------- a death in the Hamalayi, Retry
 iso('chapter 7 by its flags; saved at the monastery yard; then 99 damage');
@@ -203,5 +206,6 @@ await page.addScriptTag({ path: new URL('./lib/player.js', import.meta.url).path
 const rt = await ev(() => { game.testFreeze = true; P.settle(); return { state: game.state, room: game.room?.id, hp: game.hero.hp, maxHp: game.hero.maxHp, chapter: game.flags.chapterKey }; });
 check('Retry: back in play in the Hamalayi, chapter 7, life full', rt.state === 'play' && rt.room === 'hamalayi' && rt.chapter === 'observatory' && rt.hp === rt.maxHp, rt);
 
+H.report();
 done();
 await browser.close();
