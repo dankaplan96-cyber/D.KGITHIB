@@ -230,6 +230,7 @@ v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOO
 | P149 | 27.11 | Citadel: at a paving corner by a blue lamp post the kerb stops short and the paving ends square in the dirt (the corner not closed; the lamp's base sits on the kerb's end) | the user's photo | open: next session; path-ends' EDGE/END rules missed a corner with a lamp; fix game-wide |
 | P150 | 27.11 | The square's statue of Twinsen and Zoé: his raised arm with the ball over his head reads as an obscene shape from the square (the pilot is live) | the user's photo | IN BRANCH, NOT VERIFIED, NOT PUBLISHED: statue.js pose lowered (the arm at his side, the ball smaller and low); the render probe came out black (the probe, not the game) — verify with a picture, then publish and rebuild the itch zip |
 | P151 | 27.11 | A character's face sank into his head for a moment (the user could not photograph it; the photo shows a resident on the pier in a talk, Hebrew subtitle) | the user | open: find which face rig/morph can move inside the head (a talk expression?), game-wide |
+| P152 | 27.11 | Chapter 2's start, Twinsen by the well: characters vanish, and he talks with Gilbert, but Gilbert is not there (a talk with an absent speaker) | the user (pilot build) | open: next session, urgent (chapter 2 is in the pilot); trace who is present at chapter 2's start and the talk's speaker check, game-wide (no talk with an absent or invisible speaker) |
 
 ## Waves (cloud)
 
