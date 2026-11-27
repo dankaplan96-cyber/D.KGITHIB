@@ -84,3 +84,10 @@ PC / browser:
 - **Rights:** the rights holders of LBA are active (they make their own LBA game). A fan game that is free, says clearly it is unofficial, and stays a closed pilot carries less risk, but a takedown request is always possible. The game includes layout **numbers measured** from the user's own copies of LBA1/LBA2 (`ASSET_MANIFEST.md`: the asylum and Temple of Bù rooms, Zeelich's island heights and object places), no original graphics or sounds. For a wider public release later, consider replacing those with our own layouts.
 - **Saves** are per browser and per computer; a tester who changes browser starts over.
 - Tested: the zip unpacked and served locally boots to the title with no errors (automated runtime only, SwiftShader).
+
+## 6. Automatic upload (27.11)
+`.github/workflows/itch-pilot.yml`: a push to `ccr-c1c2c4b9-dep6ed` whose commit message contains **`[itch]`** builds the
+English-only pilot zip and pushes it with butler to `dankaplan96-cyber/the-awakening-fan`, channel `html5`. The key is
+the repository secret `BUTLER_API_KEY` (the user's). The coordinator adds `[itch]` only to a commit the user approved
+(the same moment the web page is published). Once, on itch.io: the `html5` channel's upload must be ticked "This file
+will be played in the browser", and the old hand-uploaded file deleted.
