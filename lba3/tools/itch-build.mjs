@@ -24,6 +24,8 @@ for (const [, src] of Object.entries(gameFiles())) {
 mkdirSync(join(OUT, 'src'), { recursive: true });
 execFileSync('node', [join(ROOT, 'tools/bundle-artifact.mjs'), join(OUT, 'src/main.js')], { cwd: ROOT, stdio: ['ignore', 'ignore', 'inherit'] });
 n++; bytes += statSync(join(OUT, 'src/main.js')).size;
+// the build's own time on the title screen and in the pause menu (the repo's build-stamp.js is only stamped on publish)
+writeFileSync(join(OUT, 'src/build-stamp.js'), readFileSync(join(ROOT, 'src/build-stamp.js'), 'utf-8').replace(/BUILT = '[^']*'/, `BUILT = '${new Date().toISOString().slice(0, 19)}Z'`));
 let html = readFileSync(join(ROOT, 'index.html'), 'utf-8');
 if (existsSync(join(ROOT, 'assets', 'fonts', 'rubik.css'))) {
   html = html.replace(/<link rel="preconnect"[^>]*>\s*/g, '').replace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="stylesheet" href="assets/fonts/rubik.css">');
