@@ -2774,7 +2774,7 @@ class Game {
     // him wrongly is fixed at its cause. The speaker is never pulled to Twinsen: a line on the radio has a real person
     // far away. (A cut-away that shows the speaker — the camera on him — counts as there.)
     if (speaker && speaker !== this.hero && speaker.def && !this.speakerHere(speaker)) {
-      const why = !speaker.present ? 'hidden' : !speaker.rig?.root?.visible ? 'not shown' : 'elsewhere';
+      const why = !speaker.rig?.root?.visible || !speaker.present ? 'hidden' : 'elsewhere';
       (this.absentTalks ??= []).push({ name, id: speaker.def.id, why, line: String(lines[0] ?? '').slice(0, 60) });
       console.log(`[talk] absent speaker ${speaker.def.id} (${why}): ${String(lines[0] ?? '').slice(0, 60)}`);
       color ??= speaker.def.color;
@@ -2794,7 +2794,9 @@ class Game {
 
   // P152: the speaker is where Twinsen (or the camera) is: present, shown, and in his scene or in view
   speakerHere(n) {
-    if (!n.present || !n.rig?.root?.visible || !n.pos) return false;
+    // (an NPC off his place is hidden; an enemy's `present` is its own mind — the depot's guard, called off, still
+    //  stands there and speaks — so for him only whether he is drawn counts)
+    if (!n.rig?.root?.visible || !n.pos || (this.npcs.includes(n) && !n.present)) return false;
     const R = this.regions, h = this.hero;
     if (!R || R.sceneOf(n.pos.x, n.pos.z) === R.sceneOf(h.pos.x, h.pos.z)) return true;
     return !!this.story?.seen?.(n.pos);

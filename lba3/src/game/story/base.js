@@ -66,6 +66,8 @@ export class ChapterBase {
   speaker(id) {
     const g = this.game;
     if (id === 'hero') return g.hero;
+    // (P152: while the player plays her — Zoé's segments — her lines are his body's: her own NPC is hidden meanwhile)
+    if (g.hero?.body && g.hero.body === id) return g.hero;
     return g.npcs.find((n) => n.def.id === id && n.present) || g.npcs.find((n) => n.def.id === id) || null;
   }
   npc(id) { return this.game.npcs.find((n) => n.def.id === id); }

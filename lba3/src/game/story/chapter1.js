@@ -138,6 +138,10 @@ export class Chapter1 extends ChapterBase {
         // marks, npcDefs in prologue.js); once it is over they walk to the office's door and go in (walkOn's `via`).
         // (`morning` is not saved: a load in that window plays on from the office, applyFlags)
         if (this.morning) { const w = W.well; return id === 'gilbert' ? { x: w.x + 2.4, z: w.z + 1.6, a: Math.atan2(-1.2, 1.3), anim: 'talk' } : { x: w.x + 1.2, z: w.z + 2.9, a: Math.atan2(1.2, -1.3), anim: 'talk' }; }
+        // (P152: "the project's chief engineer lands today; let him explain the bill to me" — Gilbert goes down to the
+        //  quay to meet the ferry, and answers Vesk's speech there (c1_gil_speech, said from the office before); once
+        //  Vesk has given the task he goes back to the water office)
+        if (id === 'gilbert' && !f.c1_task) return { x: ps.x - 3.0, z: ps.z + 3.4, a: Math.atan2(pe.x - ps.x, pe.z - ps.z) };
         const o = R.office?.npcSpots?.[id];
         if (!o) return undefined;
         const h = W.houses.find((q) => q.id === 'water'), d = h?.door;
