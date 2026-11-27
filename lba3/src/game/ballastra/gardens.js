@@ -322,7 +322,7 @@ export function* buildGardensSteps(scene, physics) {
     B.add(sb(AQ.w - 0.6, 0.12, L, 1.4), BM.wet(), AQ.x, AQ.bed - 0.06, (AQ.z0 + AQ.z1) / 2);
     box(AQ.x - AQ.w / 2, PLAZA.z0 - 0.4, AQ.x + AQ.w / 2, HOUSE.z - HOUSE.d / 2, AQ.bed + 0.6, { block: true });
     // where it comes from: a rocky islet to the north, the channel's head cut into it
-    B.add(cached('blw3islet', () => { const g = lathe([[0.001, 13], [5, 12.2], [9, 9.5], [12, 5], [15, 1], [17, -2], [0.001, -2]], 14, 3); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), y = p.getY(i); const k = 1 + (fbm(x * 0.2 + 3, z * 0.2 - 1, 2) - 0.5) * 0.35; p.setXYZ(i, x * k, y * (0.9 + (fbm(z * 0.2, x * 0.2, 2) - 0.5) * 0.3), z * k); } g.computeVertexNormals(); return g; }), BM.rubble(), AQ.x + 2, 0, AQ.z0 - 9);
+    B.add(cached('blw3islet', () => { const g = lathe([[0.001, -2], [17, -2], [15, 1], [12, 5], [9, 9.5], [5, 12.2], [0.001, 13]], 14, 3); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), y = p.getY(i); const k = 1 + (fbm(x * 0.2 + 3, z * 0.2 - 1, 2) - 0.5) * 0.35; p.setXYZ(i, x * k, y * (0.9 + (fbm(z * 0.2, x * 0.2, 2) - 0.5) * 0.3), z * k); } g.computeVertexNormals(); return g; }), BM.rubble(), AQ.x + 2, 0, AQ.z0 - 9);
   }
   // the splitter house: stone below, glazed tiles above, a glazed hip roof; the aqueduct's mouth in its north wall
   {

@@ -93,7 +93,7 @@ function scales(k, x, y, z) {
 }
 function herbs(k, x, y, z) {
   k.add(cyl(0.005, 0.005, 0.12, 4), MAT.flat('#8a6a3a', 0.95), x, y, z);
-  k.add(lathe([[0.001, 0], [0.05, -0.04], [0.07, -0.2], [0.001, -0.26]], 6), MAT.flat(['#5e7a3a', '#7a8a4a', '#8a6a4a'][Math.abs(Math.round(x * 3)) % 3], 0.95), x, y - 0.05, z);
+  k.add(lathe([[0.001, -0.26], [0.07, -0.2], [0.05, -0.04], [0.001, 0]], 6), MAT.flat(['#5e7a3a', '#7a8a4a', '#8a6a4a'][Math.abs(Math.round(x * 3)) % 3], 0.95), x, y - 0.05, z);
 }
 
 export function buildPharmacyRoom(scene, physics) {

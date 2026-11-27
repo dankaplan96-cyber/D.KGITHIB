@@ -158,7 +158,7 @@ export class Prologue extends ChapterBase {
     mergeStatic(post, { recolor: true });
     // the bell swings from the arm's end (kept apart from the merge: it moves)
     const swing = new THREE.Group(); swing.position.set(BELL.x, gy + BELL.h - 0.05, BELL.z + BELL.arm); swing.scale.setScalar(1.5); W.root.add(swing);
-    const prof = [[0.001, 0.02], [0.05, 0.02], [0.085, -0.03], [0.11, -0.16], [0.17, -0.28], [0.21, -0.33], [0.2, -0.345], [0.001, -0.345]].map(([a, b]) => new THREE.Vector2(a, b));
+    const prof = [[0.001, -0.345], [0.2, -0.345], [0.21, -0.33], [0.17, -0.28], [0.11, -0.16], [0.085, -0.03], [0.05, 0.02], [0.001, 0.02]].map(([a, b]) => new THREE.Vector2(a, b));
     const bell = new THREE.Mesh(new THREE.LatheGeometry(prof, 16), brass); swing.add(bell);
     const clap = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), brass); clap.position.y = -0.33; swing.add(clap);
     // what is left of the rope: a short frayed stub

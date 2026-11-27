@@ -120,7 +120,7 @@ export function buildPumpRoom(scene, physics) {
   //  and the shade's shadow from above lay on the floor under it as a dark disc the user took for something there)
   k.at(-3.0, 0, -0.6, 0, () => {
     k.add(cyl(0.008, 0.008, H - 2.35 - 0.3, 4), MAT.iron(), 0, (H + 2.35 + 0.3) / 2, 0);
-    k.add(P.lathe([[0.001, 0.3], [0.04, 0.29], [0.06, 0.25], [0.24, 0.06], [0.28, 0.0], [0.27, -0.01], [0.23, 0.04], [0.05, 0.24], [0.001, 0.26]], 18), MAT.glow('#8a5a2a', '#3a2410', 0.6), 0, 2.35, 0);
+    k.add(P.lathe([[0.001, 0.26], [0.05, 0.24], [0.23, 0.04], [0.27, -0.01], [0.28, 0.0], [0.24, 0.06], [0.06, 0.25], [0.04, 0.29], [0.001, 0.3]], 18), MAT.glow('#8a5a2a', '#3a2410', 0.6), 0, 2.35, 0);
     k.add(P.lathe([[0.001, 0.3], [0.03, 0.3], [0.03, 0.36], [0.001, 0.36]], 8), MAT.brass(), 0, 2.35, 0);
     k.add(sphere(0.09, 12, 8), MAT.glow('#fff4d8', '#ffd890', 2.4), 0, 2.41, 0);
   });

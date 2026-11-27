@@ -12,6 +12,7 @@
 // SHOTS=dir writes a picture of each room and of each street door.
 // ISO (logged): the chapters are reached by their flags (as tests/zeelich-life.mjs does).
 import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
+import { hearer, linesOf } from './lib/heard.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,7 +23,10 @@ const iso = (s) => console.log('ISO  ' + s);
 const SHOTS = process.env.SHOTS || null;
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const shot = async (name) => { if (!SHOTS) return; await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, name + '.jpg'), type: 'jpeg', quality: 78 }); };
-const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...[].concat(lines)); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
+// (#67, SMALLFIX-27-11: tests/lib/heard.mjs hears the box and a minor resident's overhead remark (P116: Zeelich's people
+//  at home are minor, story/index.js MINOR zlife); game.say alone missed a remark, and "tl.length >= 2" counted the
+//  rooms' own lines with theirs. Each of the two is now heard in her own words. HEARD at the end shows the ways)
+const H = hearer(() => page), said = H.said;
 
 await open(page, '?nocine'); await menu(page, 'new');
 iso('chapter 2 finished by flags: story.nextChapter() starts chapter 3 on Zeelich');
@@ -108,7 +112,7 @@ const insideTalk = await ev(() => {
   return { a: a.r, b: b.r, room: G.room?.id };
 });
 const tl = await said();
-check('Lissa and Wenna talk (their own lines)', insideTalk.a === 'talked' && insideTalk.b === 'talked' && tl.length >= 2, { insideTalk, tl });
+check('Lissa and Wenna talk (their own lines)', insideTalk.a === 'talked' && insideTalk.b === 'talked' && linesOf(tl, 'zh_lissa').length > 0 && linesOf(tl, 'zh_wenna').length > 0, { insideTalk, tl, by: tl.by.map((e) => `${e.id} (${e.via}): ${e.lines.join(' ').slice(0, 60)}`) });
 const held3 = await ev(async () => { const { ZH } = await import(location.origin + '/src/game/zhomes.js'); return { held: !!ZH.zh_nara && game.story.zlife._held, hot: game.story.zlife._hot }; });
 check('chapter 3: the crates for Citadel stand HELD in the flower house; the bakery oven is cold (the crate on the flue)', held3.held === true && held3.hot === false, held3);
 
@@ -118,7 +122,7 @@ const file = path.join(os.tmpdir(), 'zeelich-doors-' + process.pid + '.json');
 await quitAndKeep(page, context, file);
 await browser.close();
 ({ browser, context, page } = await launch({ storageState: file }));
-await open(page, '?nocine'); await menu(page, 'continue');
+await open(page, '?nocine'); await menu(page, 'continue'); await H.install();
 const back = await ev(() => { const G = game, h = G.hero.pos; P.settle(); return { room: G.room?.id, floor: Math.abs(h.y - G.physics.groundAt(h.x, h.z, h.y + 0.5)) < 0.15 }; });
 check('Save inside Mr Pelleck\'s house → Continue: back in it, on the floor', back.room === 'zh_pelleck' && back.floor, back);
 fs.rmSync(file, { force: true });
@@ -131,5 +135,6 @@ for (const r of t5) check(`chapter 5: the door into ${r.room} leads in and back 
 check('chapter 5: Baldino\'s workshop is open (it was "Locked." in chapters 4–8)', t5.some((r) => r.room === 'workshop'), t5.map((r) => r.room));
 const held5 = await ev(() => ({ held: game.story.zlife._held }));
 check('chapter 5: most of Nara\'s crates have gone out on the shuttles', held5.held === false, held5);
+H.report();
 done();
 await browser.close();

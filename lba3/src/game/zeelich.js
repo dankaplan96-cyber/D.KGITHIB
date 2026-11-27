@@ -2139,7 +2139,7 @@ export function* buildZeelichSteps(scene, physics) {
     mesh(drive, boxUV(bbox(1.2, 1.4, 1.0, 0.1, 1), TILE.teal), tealM(), 0, 0.2, 0);
     mesh(drive, cached('drvcap', () => lathe([[0, 0], [0.5, 0], [0.3, 0.4], [0, 0.45]], 12)), brassM(), 0, 0.9, 0);
     mesh(drive, cyl(0.16, 0.16, 1.4, 12, 1), tm('pipe', { rough: 0.5, metal: 0.35 }), 0, -1.1, 0);
-    mesh(drive, cached('drbit', () => lathe([[0.16, 0], [0.32, -0.1], [0.36, -0.4], [0.12, -0.75], [0, -0.85]], 12)), brassM(), 0, -1.8, 0);
+    mesh(drive, cached('drbit', () => lathe([[0, -0.85], [0.12, -0.75], [0.36, -0.4], [0.32, -0.1], [0.16, 0]], 12)), brassM(), 0, -1.8, 0);
     // pipe rack, drill motor housing, tanks, a control hut, floodlight masts, the big emblem
     for (let k = 0; k < 7; k++) PB.add(cyl(0.16, 0.16, 6.5, 10, 1).rotateZ(Math.PI / 2), tm('pipe', { rough: 0.5, metal: 0.35 }), 52.5, DECK + 0.62 + Math.floor(k / 4) * 0.3, 7.2 + (k % 4) * 0.34 + Math.floor(k / 4) * 0.17);
     for (const x of [49.6, 55.4]) PB.add(boxUV(bbox(0.3, 0.5, 1.8, 0.04, 1), 1), darkSteel(), x, DECK + 0.25, 7.7);

@@ -12,6 +12,7 @@
 // ISO (logged): the chapters are set by their flags (as tests/world-consistency.mjs); he is put on an island's spawn
 // or a few metres before a door, and walks the rest. SwiftShader: SHOTS=dir writes a few pictures.
 import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
+import { hearer, linesOf } from './lib/heard.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,7 +23,9 @@ const iso = (s) => console.log('ISO  ' + s);
 const SHOTS = process.env.SHOTS || null;
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const shot = async (n) => { if (!SHOTS) return; await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, n + '.jpg'), type: 'jpeg', quality: 72, timeout: 240000 }); };
-const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...[].concat(lines)); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
+// (#67, SMALLFIX-27-11: tests/lib/heard.mjs hears the box and a minor resident's overhead remark (P116: the isles' people
+//  are minor, story/index.js MINOR islife); game.say alone missed a remark. HEARD at the end shows the ways)
+const H = hearer(() => page), said = H.said;
 const has = (lines, re) => lines.some((l) => re.test(l));
 const helpers = () => ev(async () => {
   const ZI = await import('/src/game/zislands.js'); window.ZI = ZI;
@@ -81,8 +84,9 @@ const hoist = await ev(() => { const G = game, R = toIsle('mosquibee'), H = R.ho
   const down = loc('mosquibee'); const w = walkIn('ih_mosquibee_26_15'); const n = P.npc('il_zuzz'); const tk = n?.present ? P.talk('il_zuzz').r : null; const o = walkOut();
   const g2 = P.go(H.foot.x, H.foot.z, { tol: 0.6 }); const u2 = P.use(H.foot.x, H.foot.z, { kind: 'il_hoist', near: 1.0 }); for (let i = 0; i < 90 && G.trans; i++) G.step(1 / 30); P.settle(); G.step(0.5);
   return { go: g.r, ride: u.r, down, hall: w.room, zuzz: !!n?.present, tk, out: o.to, back: g2.r, ride2: u2.r, up: loc('mosquibee') }; });
-await said();
-check('Mosquibee (INPUT): the honey hoist at the meadow\'s edge rides down the cliff to the ledge; the hive keepers\' hall leads in, Zuzz works there and talks; out, and the hoist rides back up', hoist.go === 'arrived' && hoist.ride === 'used' && hoist.down[1] < 7 && hoist.hall === 'ih_mosquibee_26_15' && hoist.zuzz && hoist.tk === 'talked' && hoist.out === 'isle_mosquibee' && hoist.ride2 === 'used' && hoist.up[1] > 16, hoist);
+const hoistL = await said();   // (#67: Zuzz's line was never read: 'talked' alone passed)
+hoist.zuzzSaid = linesOf(hoistL, 'il_zuzz');
+check('Mosquibee (INPUT): the honey hoist at the meadow\'s edge rides down the cliff to the ledge; the hive keepers\' hall leads in, Zuzz works there and talks (a line of his own); out, and the hoist rides back up', hoist.go === 'arrived' && hoist.ride === 'used' && hoist.down[1] < 7 && hoist.hall === 'ih_mosquibee_26_15' && hoist.zuzz && hoist.tk === 'talked' && hoist.zuzzSaid.length > 0 && hoist.out === 'isle_mosquibee' && hoist.ride2 === 'used' && hoist.up[1] > 16, hoist);
 
 // ---------------------------------------------------------------- Otringal's bar: in, in front of the bar
 const bar = await ev(() => { const G = game; toIsle('otringal'); const d = G.story.doors().find((q) => q.room === 'otrbar'), e = G.story.exitTo('otrbar-out'); before(d.x, d.z, e.x - d.x, e.z - d.z, 2.4); const t = P.through(d.x, d.z); P.settle(); G.step(0.5);
@@ -135,5 +139,6 @@ await ev(() => setChapter('network', { c10_started: true }));
 const fav = await ev(() => { const G = game; toIsle('knartas'); const n = P.npc('kn_kid'); const a = G.story.ipeople.linesFor(n); G.flags.pp_light = true; const b = G.story.ipeople.linesFor(n); delete G.flags.pp_light; return { dark: a, lit: b }; });
 check('chapter 10: Tem tells of the quay light blinking only once it is fitted (the favour); before that, that it is still dark', fav.dark.includes('ip_kn_kid_after_dark') && !fav.dark.includes('ip_kn_kid_after') && fav.lit.includes('ip_kn_kid_after') && fav.lit.includes('ip_kn_kid_1_lit'), fav);
 
+H.report();
 await done();
 await browser.close();

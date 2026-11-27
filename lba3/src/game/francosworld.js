@@ -133,15 +133,19 @@ export function buildField(game, R, L) {
   const g = worldGroup(R.group, 'francos dig'), k = new Kit(g);
   // (the holes and heaps of earth in their own group: tests/overlap-sweep.mjs knows them by name, set into the ground)
   const eg = new THREE.Group(); eg.name = 'francos dig earth'; g.add(eg); const ke = new Kit(eg);
-  for (const [x, z, ry] of L.open) { const y = gy(x, z); openHole(ke, x, y, z, ry, tilt(P, x, z, y)); P.add({ type: 'cyl', x, z, r: 0.42, top: y + 0.32, block: true, noStand: true }); }
-  for (const [x, z, ry] of L.filled) { const y = gy(x, z); filledHole(ke, x, y, z, ry, tilt(P, x, z, y, 0.5)); }
+  // (SMALLFIX-27-11: the spoil heaped beside an open hole, 22 cm high, is an obstacle as the hole is: he walked into it; the
+  //  heap's middle as openHole puts it, at local (0.7, 0.12) turned by ry)
+  for (const [x, z, ry] of L.open) { const y = gy(x, z); openHole(ke, x, y, z, ry, tilt(P, x, z, y)); P.add({ type: 'cyl', x, z, r: 0.42, top: y + 0.32, block: true, noStand: true });
+    P.add({ type: 'cyl', x: x + Math.cos(ry) * 0.7 + Math.sin(ry) * 0.12, z: z - Math.sin(ry) * 0.7 + Math.cos(ry) * 0.12, r: 0.3, top: y + 0.22, block: true, noStand: true }); }
+  // (SMALLFIX-27-11: a filled hole's mound, up to 23 cm over the ground on a slope, is an obstacle too: he walked into it)
+  for (const [x, z, ry] of L.filled) { const y = gy(x, z); filledHole(ke, x, y, z, ry, tilt(P, x, z, y, 0.5)); P.add({ type: 'cyl', x, z, r: 0.42, top: y + 0.25, block: true, noStand: true }); }
   ke.flush();
   for (const [x, z, ry] of L.spades) spade(k, x, gy(x, z), z, ry);
   // the seat: on the ground at its middle, its blocks down to the lowest corner
   const S = L.seat, sy = gy(S.x, S.z);
   const low = Math.min(...[[-0.7, -0.3], [0.7, -0.3], [-0.7, 0.3], [0.7, 0.3]].map(([a, b]) => gy(S.x + Math.cos(S.ry) * a + Math.sin(S.ry) * b, S.z - Math.sin(S.ry) * a + Math.cos(S.ry) * b)));
   seat(k, S.x, sy, S.z, S.ry, low);
-  P.add({ type: 'box', x: S.x - Math.sin(S.ry) * 0.04, z: S.z - Math.cos(S.ry) * 0.04, hw: 0.68, hd: 0.3, rot: S.ry, top: sy + 0.5, noStand: true });
+  P.add({ type: 'box', x: S.x - Math.sin(S.ry) * 0.04, z: S.z - Math.cos(S.ry) * 0.04, hw: 0.68, hd: 0.3, rot: S.ry, top: sy + 0.5, noStand: true, block: true });   // (SMALLFIX-27-11: block: at 0.5 m it was walked through)
   k.flush();
   FW.field = g; FW.seat = { x: S.x, z: S.z, y: sy, ry: S.ry };
   // the relic's box (shown in its hole the moment it is dug up) and the shrine (once the Francos have it back)

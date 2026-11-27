@@ -141,7 +141,7 @@ export function buildOffWall(game, D) {
     k.flush(); }
   const swing = new THREE.Group(); swing.position.set(0, 1.83, 0); swing.scale.setScalar(1.6); bellG.add(swing);   // (a big school bell: it reads from the play camera)
   { const brass = MAT.brass();
-    const bellGeo = lathe([[0.001, 0], [0.03, 0], [0.05, -0.03], [0.075, -0.13], [0.11, -0.22], [0.118, -0.235], [0.112, -0.24], [0.1, -0.225], [0.07, -0.14], [0.042, -0.035], [0.001, -0.03]], 18);
+    const bellGeo = lathe([[0.001, -0.03], [0.042, -0.035], [0.07, -0.14], [0.1, -0.225], [0.112, -0.24], [0.118, -0.235], [0.11, -0.22], [0.075, -0.13], [0.05, -0.03], [0.03, 0], [0.001, 0]], 18);
     const b = new THREE.Mesh(bellGeo, brass); b.position.y = -0.08; b.castShadow = true; swing.add(b);
     const loop = new THREE.Mesh(cyl(0.012, 0.012, 0.09, 6), MAT.iron()); loop.position.y = -0.04; swing.add(loop);
     const clap = new THREE.Mesh(sphere(0.028, 8, 6), MAT.iron()); clap.position.y = -0.31; swing.add(clap);

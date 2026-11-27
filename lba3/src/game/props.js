@@ -557,7 +557,7 @@ const std = (o, tile = 0, extra = {}) => { const m = new THREE.MeshStandardMater
 // extras) as one vertex-coloured mesh instead of one mesh per colour (see Kit.flush). Cached MAT materials are
 // shared by every builder, so they are never changed at runtime; emissive or see-through ones keep their own.
 const PLAIN = (x) => !Object.keys(x).some((k) => /emissive|transparent|opacity|map|alpha|blending|depth|visible/i.test(k));
-const vcTwin = (m) => M('vc:' + m.userData.vcKey, () => {
+const vcTwin = (m) => M('vc:' + m.userData.vcKey + (m.side ? ':side' + m.side : ''), () => {   // (SMALLFIX-27-11: twoSided(MAT.paint(...)) keeps its side; the twin was keyed without it and drew one-sided)
   const v = m.clone(); v.color.set('#ffffff'); v.vertexColors = true; v.userData = { ...m.userData }; delete v.userData.vcKey; return v;
 });
 export const MAT = {
