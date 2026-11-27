@@ -135,3 +135,9 @@ probes (colliders and their builders, the reach sets, the slides). The pictures 
 - `inside-out`: profiles built in code for things not in the scene at a new game (enemies, items, pickups); the open
   list is not judged; the 1.91 m rig part is unidentified.
 - Interiors' and NPCs' feet: not measured (as FEET-66B).
+- The Platform house `ih_platform_27_m38`: a fence is drawn across its door (3906.9, 1757.2) and walked through (things
+  on steep ground have no collider); a layout fault for the isles' owner.
+- `zeelich-doors`' terminal check (chapters 3 and 5) wants the old street-door landing; the terminal leads out by its
+  gate since `2183c93a`: the suite's check to update (or the landing), not this branch's.
+- `hamalayi-life`: Pim in Lhar in a chapter 7 save, and Retry still loading after 120 s: not this branch's; to rerun on
+  the base when the machine is quiet.
