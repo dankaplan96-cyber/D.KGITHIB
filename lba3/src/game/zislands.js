@@ -1926,16 +1926,17 @@ function buildIsland0(scene, physics, name, L, at) {
     const top = y0 + o.sy;
     if (o.shape === 'skip' || S.open?.(o)) continue;   // (drawn by the style's own piece, or left out: a rail, a beam; S.open: a way through, ISLES-BAR)
     if (!o.solid && o.shape !== 'deck' && Math.hypot(o.x - pad.x, o.z - pad.z) < 4.2 + Math.max(o.sx, o.sz) / 2) continue;   // (under the shuttle's pad)
-    // (a small thing standing on a steep slope: it had no collider (a slide held against it); now a block, below)
+    // (a small thing standing on a steep slope gets no collider (a slide held against it); a rock or a block one, below)
     const gi = Math.round(gx(o.x)), gj = Math.round(gz(o.z));
     let onSteep = false; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const ii = gi + a, jj = gj + b; if (ii >= 0 && jj >= 0 && ii < L.nx && jj < L.nz && A.steep[jj * L.nx + ii]) onSteep = true; }
     // (KNARTAS-GATE: a small thing resting on a roof, well over the ground, blocks only from its own foot up. Its block
     // reached down to the ground: the slab on Knartas's gatehouse roof filled the arch under it, and the harbour with
     // its shuttle pad was cut off from the diggers' village)
-    // (SMALLFIX-27-11: on a steep slope it is an obstacle too (block, never stood on): with none he walked through the
-    //  fallen blocks and rocks lying at a slope's edge (Oldwatch, Celebration, the Platform); a slide held against one is
-    //  SLIDE-RESCUE's (actors.js), as against any rock)
-    const small = (c) => { const c1 = c.bottom == null && y0 - gy(o.x, o.z) > 1.2 ? { ...c, bottom: y0 - 0.05 } : c; col(onSteep ? { ...c1, block: true } : c1); };
+    // (SMALLFIX-27-11: a rock or a fallen block on a steep slope is an obstacle too (block, never stood on): with none he
+    //  walked through those lying at a slope's edge (Oldwatch, Celebration, the Platform); a slide held against one is
+    //  SLIDE-RESCUE's (actors.js), as against any rock. Other small things there keep none: a fence drawn across the
+    //  Platform house's door (3906.9, 1757.2), walked through, closed the door to him when it was given one)
+    const small = (c) => { if (onSteep && shape !== 'rock' && shape !== 'block') return; const c1 = c.bottom == null && y0 - gy(o.x, o.z) > 1.2 ? { ...c, bottom: y0 - 0.05 } : c; col(onSteep ? { ...c1, block: true } : c1); };
     const shape = o.shape === 'house' && o.sy > 3 && landFrac(o) < 0.35 ? 'hulk'
       : o.shape === 'house' && G && o.x - ex / 2 < G.x1 && o.x + ex / 2 > G.x0 && o.z - ez / 2 < G.z0 && o.z + ez / 2 > G.z1 ? 'gate' : o.shape;
     placeTag(shape);   // (PLACE-2: each object a piece of its shape, for tests/place-scan.mjs; nothing in play)
