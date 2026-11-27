@@ -233,7 +233,9 @@ export function* buildArchesSteps(scene, physics) {
       B.add(cached('blw2seat', () => compose([[bbox(1.3, 0.12, 0.5, 0.03), 0, 0.42, 0], [bbox(0.24, 0.4, 0.4, 0.03), -0.45, 0.2, 0], [bbox(0.24, 0.4, 0.4, 0.03), 0.45, 0.2, 0]])), BM.cap(), sx, QY, sz, 0, a);
       col({ type: 'box', x: sx, z: sz, hw: 0.65, hd: 0.25, rot: a, top: QY + 0.48, block: true });
     }
-    B.add(cached('blw2dais', () => lathe([[0.001, 0.32], [1.1, 0.32], [1.2, 0.26], [1.25, 0], [0.001, 0]], 24, 1)), BM.cap(), x, QY, z);
+    // (FEET-66B: the profile runs up from the axis at the bottom, as a lathe's outward faces need; it ran down from the
+    //  top, so the dais was inside out: its top culled from above, his feet 29 cm over the paving seen through it)
+    B.add(cached('blw2dais', () => lathe([[0.001, 0], [1.25, 0], [1.2, 0.26], [1.1, 0.32], [0.001, 0.32]], 24, 1)), BM.cap(), x, QY, z);
     B.add(cached('blw2daisring', () => new THREE.TorusGeometry(1.15, 0.05, 5, 32).rotateX(Math.PI / 2)), BM.bronze(), x, QY + 0.3, z);
     col({ type: 'cyl', x, z, r: 1.25, top: QY + 0.32, stair: true });
     col({ type: 'cyl', x, z, r, top: QY });
