@@ -16,7 +16,8 @@ export function buildArena(scene, physics) {
   B.shell({ floor: MAT.tiles('#c8c0b0', '#a8a090', '#7a7468', true, 2), slab: MAT.stone('grey'), body: MAT.stone('sand', 2), low: MAT.stone('slate', 1), rail: MAT.iron(), cap: MAT.stone('grey'), W, D, H, t: 0.5, dado: 1.0, rimH: 0.5 });
   R.spawn = { x: B.cx - 10, z: B.cz + 8, a: Math.PI };
   // a wall with a corner (cover, line of sight, ricochets)
-  for (const [x, z, w, d] of [[-2, 2, 6, 0.4], [1, 0, 0.4, 4.4]]) { k.add(rbox(w, 2.2, d, 0.04), MAT.stone('grey'), x, 1.1, z); B.col(x, z, w / 2, d / 2, 2.2); }
+  // (FLICKER-142: the short wall 6 mm higher and 1 cm shorter at each end: the two walls' tops and ends lay in one plane)
+  for (const [x, z, w, d, hh] of [[-2, 2, 6, 0.4, 2.2], [1, 0, 0.4, 4.38, 2.206]]) { k.add(rbox(w, hh, d, 0.04), MAT.stone('grey'), x, hh / 2, z); B.col(x, z, w / 2, d / 2, 2.2); }
   // a raised platform (1.2 m) with two steps
   k.add(rbox(6, 1.2, 5, 0.05), MAT.stone('sand'), 10, 0.6, -7); B.col(10, -7, 3, 2.5, 1.2);
   for (const [i, h] of [[0, 0.4], [1, 0.8]]) { k.add(rbox(2, h, 0.8, 0.03), MAT.stone('sand'), 10, h / 2, -4.1 + (1 - i) * 0.8); B.col(10, -4.1 + (1 - i) * 0.8, 1, 0.4, h); }

@@ -434,7 +434,9 @@ export class FarCull {
   // actors(): lists of the actors that may be drawn; fog: the scene's THREE.Fog
   // anim (PERF-CPU): the people's animation rate — every `off`-th frame out of the view, every `far`-th beyond the fog,
   // and with `eco` (Auto's lowest profiles) every `inView`-th frame in the view beyond `near` m
-  constructor(actors, camera, fog) { PLANT_VIEW.cam = camera.position; this.partPx = SUB_PX; this.partNear = 30; this.anim = { on: true, off: 4, far: 8, eco: false, inView: 2, near: 25, hold: null }; this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.view = true; this.n = 0; this.nView = 0; this.parts = new WeakMap(); this.bounds = new WeakMap(); this.tick = 0; }
+  // (CPU-RELIEF, P137b: with `deep` as well — Auto's CPU rung, which keeps the shadows — every `inView`-th frame in the
+  //  view from `mid` m and every `inViewFar`-th beyond `near` m)
+  constructor(actors, camera, fog) { PLANT_VIEW.cam = camera.position; this.partPx = SUB_PX; this.partNear = 30; this.anim = { on: true, off: 4, far: 8, eco: false, inView: 2, near: 25, deep: false, mid: 15, inViewFar: 3, hold: null }; this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.view = true; this.n = 0; this.nView = 0; this.parts = new WeakMap(); this.bounds = new WeakMap(); this.tick = 0; }
   // (PERF-HIGH) a rig's bounds about its root's position (where the game or a story scene has put it this frame): the
   // height of their centre and a radius, from its box at first sight (with a margin); and whether any of it casts a
   // sun shadow (looked at again every 120 frames: a part may be added or start casting)
@@ -490,7 +492,7 @@ export class FarCull {
       if (rig.plantLite) { rig.inView = false; rig.viewTick = PLANT_VIEW.tick; }
       if (!r.visible) { rig.lodN = 0; continue; }
       const dx = a.pos.x - p.x, dy = a.pos.y - p.y, dz = a.pos.z - p.z, d2 = dx * dx + dy * dy + dz * dz;
-      rig.lodN = lod && AN.eco && d2 > AN.near * AN.near ? AN.inView : 0;
+      rig.lodN = !(lod && AN.eco) ? 0 : d2 > AN.near * AN.near ? (AN.deep ? AN.inViewFar : AN.inView) : AN.deep && d2 > AN.mid * AN.mid ? AN.inView : 0;
       if (d2 >= far * far) {
         if (lod) rig.lodN = AN.far;
         r.visible = false; this.off.push(r);

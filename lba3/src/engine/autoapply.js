@@ -120,7 +120,7 @@ export class AutoApply {
     G.syncLamps();
     if (G.world?.detail?.q !== K.veg) { G.world?.setDetail?.(K.veg); if (G.world?.detail) G.world.detail.q = K.veg; }
     if (G.shadowCull) { G.shadowCull.quality = K.casters; G.shadowCull.setCell(cellFor('high')); }
-    if (G.farCull) { G.farCull.anim.eco = K.anim === 'eco'; G.farCull.partPx = K.detail === 'near' ? 2.5 : 0.75; G.farCull.partNear = K.detail === 'near' ? 12 : 30; }
+    if (G.farCull) { G.farCull.anim.eco = K.anim === 'eco' || K.anim === 'deep'; G.farCull.anim.deep = K.anim === 'deep'; G.farCull.partPx = K.detail === 'near' ? 2.5 : 0.75; G.farCull.partNear = K.detail === 'near' ? 12 : 30; }
     G.settings.quality = describe(K).tier;
     if (G._applied) G._applied.quality = G.settings.quality;   // (the tier moved with the knobs: nothing for applySettings to redo)
   }
@@ -192,7 +192,9 @@ export class AutoApply {
     if (!this.on() || this.test || old === this.key) return;
     const t = performance.now();
     if (!this.fromCache(this.cache[this.key], t)) {
-      let p = Math.min(Math.max(START_FLOOR, this.gov.applied), nextProfile(this.gov.applied, bat ? -1 : +1));   // (AUTO-FLOOR: a guess never below Medium; already lower stays)
+      // (AUTO-FLOOR: a guess never below Medium; already lower stays. P137b: one higher on mains is the rung above on the
+      //  same side, Governor.above — from Low, Medium-lean, not the CPU rung between them, as before P137b)
+      let p = bat ? Math.max(START_FLOOR, this.gov.applied) : this.gov.above(this.gov.applied) ?? this.gov.applied;
       if (this.gov.skip(p)) p = this.gov.above(p) ?? p;   // (P95: Medium-lean adds nothing on battery: the sharper neighbour)
       this.gov.setProfile(p, `${bat ? 'on battery: one profile lower' : 'plugged in: one profile higher'} (nothing settled for this power source yet), evaluated`, { commitNow: true, t });
       this.source = 'power change';

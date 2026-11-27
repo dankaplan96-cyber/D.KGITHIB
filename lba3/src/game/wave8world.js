@@ -140,6 +140,10 @@ export function buildHatch(parent, physics, x, y, z, ry) {
 // Local frame (the arch): origin on the ground at the arch's foot, its face toward +z (the arch stands against the cliff
 // at -z). 1.3 m wide opening, 2.1 m high; the piers 0.35 wide. The grate: origin on the shelf's ground, flush.
 export const ARCH = { w: 1.3, h: 2.1, pier: 0.35, d: 0.6 };
+// where the arch stands (world coordinates; story/wave8.js SPOT.arch), and its steps' lane: from the arch's foot out to
+// the far end of the steps, its half-width (FEET-66: the Hamalayi's snow lips keep off it, as off the trails)
+export const ARCH_AT = { foot: { x: 4270, z: 33.4, ry: 0 }, top: { x: 4270, z: 27.5, ry: Math.PI } };
+export function archLane(at = ARCH_AT) { const f = at.foot, p = (lz) => turn(f.x, f.z, f.ry, 0, lz); return { a: p(0), b: p(STEPS.to + 0.5), hw: STEPS.w / 2 }; }
 // #64 (25.11): the arch faces the frozen stream across a 2 m ledge, and the bank from the ice up to that ledge was a
 // 1.5-2.4 m scramble (walked straight at the arch, he stopped at the bank's foot; the planner found a way up a metre
 // to the side after two tries). Old stone steps now go down the bank from the ledge to the ice, in line with the arch:

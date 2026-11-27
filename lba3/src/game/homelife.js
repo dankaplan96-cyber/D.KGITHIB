@@ -71,7 +71,7 @@ export function dressHomeLife(B, R) {
     // the board on its little easel at the back of the desk
     const boardM = [0, 1, 2].map((st) => MAT.map(boardTex(st), 0.8));
     const board = new THREE.Mesh(plane(0.8, 0.54), boardM[0]);
-    board.position.set(wx(0, -0.18), 0.78 + 0.38, wz(0, -0.18)); board.rotation.order = 'YXZ'; board.rotation.set(-0.12, ry, 0); B.group.add(board);
+    board.position.set(wx(0, -0.17), 0.78 + 0.38, wz(0, -0.17)); board.rotation.order = 'YXZ'; board.rotation.set(-0.12, ry, 0); B.group.add(board);   // (FLICKER-142: 1.5 cm off its backing, not 5 mm)
     stageFns.push((st) => { board.material = boardM[Math.min(2, st)]; });
     k.at(x, 0, z, ry, () => {
       k.add(rbox(0.86, 0.6, 0.03, 0.01), MAT.wood('dark'), 0, 0.78 + 0.38, -0.2, 0, { rx: -0.12 });
@@ -103,8 +103,9 @@ export function dressHomeLife(B, R) {
       const hub = new THREE.Mesh(cyl(0.02, 0.02, 0.07, 8), MAT.brass()); hub.rotation.x = Math.PI / 2; wheel.add(hub);
       k.add(lathe([[0.001, 0], [0.04, 0], [0.04, 0.06], [0.001, 0.06]], 10), MAT.flat('#f2ecdc', 0.5), 0.55, 0.78, -0.12);
       // plans on the wall above: a boat in side view with a paddle wheel
-      k.add(plane(0.5, 0.36), MAT.map(noteTex(['PADDLE BOAT', 'v3 (faster)', 'beat Lulu!']), 0.9), -0.25, 1.45, -0.3);
-      k.add(plane(0.36, 0.28), MAT.map(noteTex(['rudder:', 'needs pin', '(pliers?)']), 0.9), 0.3, 1.5, -0.3);
+      // (FLICKER-142: 2 cm off the wall's star paper, which hangs 12 mm out: they were 8 mm apart and flickered)
+      k.add(plane(0.5, 0.36), MAT.map(noteTex(['PADDLE BOAT', 'v3 (faster)', 'beat Lulu!']), 0.9), -0.25, 1.45, -0.29);
+      k.add(plane(0.36, 0.28), MAT.map(noteTex(['rudder:', 'needs pin', '(pliers?)']), 0.9), 0.3, 1.5, -0.29);
     });
     L.bench = B.world(x + 0.8, z);
   }
@@ -138,7 +139,7 @@ export function dressHomeLife(B, R) {
     k.add(cyl(0.05, 0.05, 1.2, 10), MAT.copper(), x, 0.6, z);
     k.add(cyl(0.12, 0.12, 0.06, 18), MAT.brass(), x, 1.15, z + 0.07, 0, { rx: Math.PI / 2 });
     const dialM = [MAT.map(dialTex(false), 0.6), MAT.map(dialTex(true), 0.6)];
-    const dial = new THREE.Mesh(plane(0.18, 0.18), dialM[0]); dial.position.set(x, 1.15, z + 0.105); B.group.add(dial);
+    const dial = new THREE.Mesh(plane(0.18, 0.18), dialM[0]); dial.position.set(x, 1.15, z + 0.112); B.group.add(dial);   // (FLICKER-142: 1.2 cm off the brass, not 5 mm)
     // Zoé's note goes up once the heat is on and the needle jumps
     const note = new THREE.Mesh(plane(0.16, 0.12), MAT.map(noteTex(['jumps when', 'ground hums', '-Z']), 0.9)); note.position.set(x, 0.88, z + 0.06); B.group.add(note);
     stageFns.push((st) => { dial.material = dialM[st >= 1 ? 1 : 0]; note.visible = st >= 1; });

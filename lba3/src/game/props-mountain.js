@@ -345,7 +345,11 @@ export function dryWall(k, pts, { h = 1.0, bw = 0.7, tw = 0.48, seed = 1, coping
           k.add(rbox(sl - 0.1, 0.1, tw + 0.04, 0.05), MM.snow(), 0, 0.15 + r() * 0.03, 0);
         }
       });
-      out.push({ x: cx, z: cz, hw: sl / 2, hd: bw / 2, rot: ry, top: gy + hh + 0.1 });
+      // (FEET-66B: stood on only over its top's width, at the snow's foot (he is in the snow, as on the drifts); its battered
+      //  sides, wider at the foot, a wall to the wall's top that is not stood on: the one box of the foot's width held him
+      //  up to 1.1 m over the batter's face)
+      out.push({ x: cx, z: cz, hw: sl / 2, hd: tw / 2 + 0.05, rot: ry, top: gy + hh + 0.1 });
+      out.push({ x: cx, z: cz, hw: sl / 2, hd: bw / 2, rot: ry, top: gy + hh, noStand: true });
     }
   }
   return out;

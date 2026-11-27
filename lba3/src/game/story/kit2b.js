@@ -260,7 +260,7 @@ export class Kit2b extends ChapterBase {
     if (cr) {
       k.add(rockGeometry(41), rockM, cr.x, cr.y - 0.1, cr.z, 0.6, { sx: 1.2, sy: 0.55, sz: 0.9 });
       k.add(rbox(0.9, 0.3, 0.12, 0.04), MAT.flat('#141414', 1), cr.x, cr.y + 0.32, cr.z, 0.6);
-      P.add({ type: 'cyl', x: cr.x, z: cr.z, r: 0.95, top: cr.y + 0.45, noStand: true });
+      P.add({ type: 'cyl', x: cr.x, z: cr.z, r: 0.95, top: cr.y + 0.45, noStand: true, block: true });   // (FEET-66B: block: 0.45 m is within a step, and noStand alone let him walk through the slab)
       this.crack = { room: 'hamalayi', ...cr, wispT: 0 };
     }
     // the monastery yard: the monks' brazier, and an old chest frozen into the ice by the wall a few steps off

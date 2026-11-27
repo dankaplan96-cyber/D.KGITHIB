@@ -242,7 +242,7 @@ export class Depth extends ChapterBase {
       const s = L.binS, hh = L.binH, b = new THREE.Group(); b.position.set(L[k].x, 0, F.BZ + 0.04 + s / 2 + 0.02); grp.add(b);
       const floor = new THREE.Mesh(rbox(s, 0.04, s, 0.01), wood); floor.position.y = 0.02; b.add(floor);
       for (const [sx, sz, w, d] of [[0, -1, s, 0.04], [0, 1, s, 0.04], [-1, 0, 0.04, s], [1, 0, 0.04, s]]) { const m = new THREE.Mesh(rbox(w, hh, d, 0.01), wood); m.position.set(sx * (s / 2 - 0.02), hh / 2, sz * (s / 2 - 0.02)); m.castShadow = true; b.add(m); }
-      const board = new THREE.Mesh(plane(0.42, 0.14), label(word, bg)); board.position.set(0, hh * 0.55, s / 2 + 0.005); b.add(board);
+      const board = new THREE.Mesh(plane(0.42, 0.14), label(word, bg)); board.position.set(0, hh * 0.55, s / 2 + 0.012); b.add(board);   // (FLICKER-142: 1.2 cm off the bin's front, not 5 mm)
       let lamp = null;
       if (k === 'P') { lamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), new THREE.MeshStandardMaterial({ color: '#552222', emissive: '#ff2a1a', emissiveIntensity: 0, roughness: 0.4 })); lamp.position.set(s / 2 - 0.06, hh + 0.03, s / 2 - 0.02); b.add(lamp); }
       P.add({ type: 'box', x: X(L[k].x), z: Z(b.position.z), hw: s / 2, hd: s / 2, rot: 0, top: hh, noStand: true });
@@ -798,7 +798,9 @@ export class Depth extends ChapterBase {
     const handle = new THREE.Mesh(rbox(0.22, 0.04, 0.04, 0.01), iron); handle.position.set(0, 0.04, 0.82); hinge.add(handle);
     // the spoil: two small heaps of the dug sand either side
     const spoil = [-1, 1].map((s) => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.55, 0.28, 0.45), sand); m.position.set(s * 1.15, -0.04, 0.15 * s); grp.add(m); return m; });
-    const col = P.add({ type: 'box', x: DRIFT.x, z: DRIFT.z, hw: 1.3, hd: 0.9, rot: 0.4, top: gy + 0.3 });
+    // (FEET-66B: the drift a mound he digs from beside, block: its flat top at 0.3 held him 30 cm over its foot and 10 cm
+    //  under its crown; dug, the collar round the hole, block as well: noStand alone, 0.45 m, let him walk into the hole)
+    const col = P.add({ type: 'box', x: DRIFT.x, z: DRIFT.z, hw: 1.3, hd: 0.9, rot: 0.4, top: gy + 0.4, block: true });
     this.gz = { R, figs, grp, drift, hatch, hinge, spoil, col, gy, digT: 0, openT: 0, x: DRIFT.x, z: DRIFT.z };
   }
   setGaze() {
@@ -807,7 +809,7 @@ export class Depth extends ChapterBase {
     Z.drift.visible = !dug; Z.drift.scale.set(1, 1, 1);
     Z.hatch.visible = dug; Z.spoil.forEach((m) => { m.visible = dug; });
     Z.hinge.rotation.x = f.dx_gaze_open ? -1.95 : 0;
-    Object.assign(Z.col, dug ? { top: Z.gy + 0.45, noStand: true, hw: 0.6, hd: 0.6 } : { top: Z.gy + 0.3, noStand: false, hw: 1.3, hd: 0.9 });
+    Object.assign(Z.col, dug ? { top: Z.gy + 0.45, noStand: true, block: true, hw: 0.6, hd: 0.6 } : { top: Z.gy + 0.4, noStand: true, block: true, hw: 1.3, hd: 0.9 });
     this.game.physics.update(Z.col);
   }
   gazeOpen() { return this.at('dig') && this.able() && this.here() === 'desert' && !!this.gz; }
@@ -1546,7 +1548,7 @@ export class Depth extends ChapterBase {
       k.add(rockGeometry(37 + i * 5), rockM, S.x + ox, (y0 + y1) / 2, S.z + oz, ry, { sx, sy: (y1 - y0) / 1.7, sz });
     }
     k.add(cyl(1.15, 1.25, 0.2, 14), MM.stone('#cfc6b8'), S.x, S.y - 0.1, S.z);
-    k.add(cyl(1.0, 1.0, 0.05, 14), MAT.flat('#f4f8fc', 0.9), S.x + 0.1, S.y + 0.02, S.z);
+    k.add(cyl(1.0, 1.0, 0.05, 14), MAT.flat('#f4f8fc', 0.9), S.x + 0.1, S.y - 0.01, S.z);   // (FEET-66: the snow 1.5 cm over the stone he stands on, was 4.5)
     P.add({ type: 'cyl', x: o.x + S.x, z: o.z + S.z, r: 1.15, top: S.y });
     // the ice arch: from the stack's shoulder up and over to the north bank, the rings frozen into its crown and its foot
     const pts = [new THREE.Vector3(S.x - 0.6, S.y + 0.2, S.z - 0.5), new THREE.Vector3(S.x - 0.4, S.y + 2.6, S.z - 1.8), new THREE.Vector3((S.x + foot.x) / 2, S.y + 3.0, (S.z + foot.z) / 2 + 0.6), new THREE.Vector3(foot.x, foot.y + 1.8, foot.z + 0.6), new THREE.Vector3(foot.x, foot.y - 0.3, foot.z)];

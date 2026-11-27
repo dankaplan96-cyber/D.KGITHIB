@@ -166,7 +166,7 @@ export function* buildBallastraSteps(scene, physics) {
   B.add(bbox(6, 1.8, 1.2, 0.04, 1.6), BM.wet(), 0, -1.6, CH.z0 - 0.6);
   // the pad: a stone platform, its glazed landing ring
   mass(PAD.x0, PAD.z0, PAD.x1, PAD.z1, PD, { paveM: tm('stone', { color: '#e8dcc2', rough: 0.88 }) });
-  B.add(cached('blpadring', () => cyl(6.4, 6.4, 0.04, 48, 0)), pm('#ffffff', 0.55, { map: padTex() }), PAD.cx, PD + 0.03, PAD.cz);
+  B.add(cached('blpadring', () => cyl(6.4, 6.4, 0.04, 48, 0)), pm('#ffffff', 0.55, { map: padTex() }), PAD.cx, PD + 0.009, PAD.cz);   // (FEET-66: its top 2.9 cm over the pad's floor, 4 mm over the paving's (2.5 cm); was 5)
   // the shortcut's pivot pier (a stone drum)
   B.add(cached('bldrum', () => lathe([[0.001, -2.6], [1.6, -2.6], [1.55, 0.5], [1.5, FL - 0.1], [1.62, FL - 0.1], [1.62, FL], [0.001, FL]], 20)), BM.stone(), SC.piv.x, 0, SC.piv.z);
   col({ type: 'cyl', x: SC.piv.x, z: SC.piv.z, r: 1.55, top: FL });
@@ -566,9 +566,14 @@ export function* buildBallastraSteps(scene, physics) {
   const BR_OPEN = 0, BR_SHUT = -Math.PI / 2;
   const bridgeCol = physics.add({ type: 'box', x: 0, z: 0, hw: 1.2, hd: SC.len / 2, rot: 0, top: FL, seeThrough: true });
   const bridgeRails = [-1, 1].map(() => physics.add({ type: 'box', x: 0, z: 0, hw: 0.09, hd: SC.len / 2 - 0.3, rot: 0, top: FL + 1.3, seeThrough: true, noStand: true }));
+  // (FEET-66B: the bronze turntable, 8 cm over the pier, and the counterweight behind the pivot, 10 cm, their tops floors:
+  //  he walked into them; the counterweight's turns with the bridge)
+  physics.add({ type: 'cyl', x: ox + SC.piv.x, z: oz + SC.piv.z, r: 1.0, top: FL + 0.08, seeThrough: true });
+  const cwCol = physics.add({ type: 'box', x: 0, z: 0, hw: 0.9, hd: 0.6, rot: 0, top: FL + 0.1, seeThrough: true });
   const placeBridgeCols = (a) => {
     const dx = -Math.sin(a), dz = -Math.cos(a), cx = ox + SC.piv.x + dx * SC.len / 2, cz = oz + SC.piv.z + dz * SC.len / 2;
     Object.assign(bridgeCol, { x: cx, z: cz, rot: a }); physics.update(bridgeCol);
+    Object.assign(cwCol, { x: ox + SC.piv.x + Math.sin(a) * 1.0, z: oz + SC.piv.z + Math.cos(a) * 1.0, rot: a }); physics.update(cwCol);
     [-1, 1].forEach((s, i) => { const R = bridgeRails[i]; Object.assign(R, { x: cx + Math.cos(a) * s * 1.15, z: cz - Math.sin(a) * s * 1.15, rot: a }); physics.update(R); });
   };
 

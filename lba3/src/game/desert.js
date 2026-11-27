@@ -31,7 +31,7 @@
 // glider field and the condenser hall at the original's level there.
 import * as THREE from 'three';
 import { crystalMats, gemGeo } from './crystallook.js';
-import { Terrain } from '../engine/terrain.js';
+import { Terrain, ROCK_EDGE } from '../engine/terrain.js';
 import { quietRock } from './quietrock.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
@@ -61,10 +61,10 @@ export const DESERT_DOCK = { x: DESERT.x + DOCK.x - 2, z: DESERT.z + DOCK.z, a: 
 const VILLAGE = { x: -50, z: 2, r: 19 };
 // (KESH-ORIG, MAP-ORIG: LBA2's Kesh has paved grey streets and a paved plaza, and a paved strip along the quay: the
 //  plaza's core and the street west to the quay (the first track's stretch), 0..1)
-function keshPave(x, z) {
-  const core = smoothstep(VILLAGE.r - 3, VILLAGE.r - 7, Math.hypot(x - VILLAGE.x, z - VILLAGE.z));
+function keshPave(x, z, m = 0) {   // (m: the paving grown by m metres, PATHS-140B: the shore's rock kept that far off it)
+  const core = smoothstep(VILLAGE.r - 3 + m, VILLAGE.r - 7 + m, Math.hypot(x - VILLAGE.x, z - VILLAGE.z));
   let street = 0;
-  if (x > -94 && x < -54) { const ax = -94, az = 4, bx = -58, bz = 3, t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2))); street = smoothstep(2.8, 1.8, Math.hypot(x - ax - t * (bx - ax), z - az - t * (bz - az))); }
+  if (x > -94 - m && x < -54) { const ax = -94, az = 4, bx = -58, bz = 3, t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2))); street = smoothstep(2.8 + m, 1.8 + m, Math.hypot(x - ax - t * (bx - ax), z - az - t * (bz - az))); }
   return Math.max(core, street);
 }
 const OASIS = { x: -40, z: -15, r: 7.5 };
@@ -328,8 +328,9 @@ function dryRock(seed, lo = 0) {
 }
 function rockAt(x, z, h, slope) {
   const old = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
-  if (h < 0.6) return old;
-  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z)))) * (1 - courtAt(x, z));   // (P83: Tali's court is sand)
+  const unpaved = 1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z)));
+  if (h < 0.6) return ROCK_EDGE ? old * (1 - smoothstep(0, 0.2, Math.max(pavedAt(x, z), keshPave(x, z, 1)))) : old;   // (PATHS-140B: by the water too, no slope's rock on the paving, nor within 1 m of it, as no outcrop: on the traced edge the shore's rock cut notches into the pier road's corners; ?rockedge=old as before)
+  const clear = smoothstep(0, 6, keepNear(x, z)) * smoothstep(3, 7, trackDist(x, z)) * smoothstep(0.6, 1.4, h) * unpaved * (1 - courtAt(x, z));   // (P83: Tali's court is sand)
   if (clear <= 0) return old;
   // (near a place the outcrops shrink, their edge kept crisp, rather than fading: a half weight smeared the texture)
   const out = outcropNoise(x, z) + 0.3 * smoothstep(1, 8, h) + 0.45 * smoothstep(0.15, 0.7, slope) - 0.35 - 1.5 * (1 - clear);
@@ -605,7 +606,8 @@ export function* buildDesertSteps(scene, physics) {
     for (let x = x0 + 0.5; x < x1; x += 3.2) for (const s of [-1, 1]) B.add(cyl(0.16, 0.18, 4.5, 8, 1), darkWood, x, y - 2.2, z + s * 1.7);
     for (const s of [-1, 1]) for (let x = x0 + 0.5; x < x1 - 1; x += 3.2) rod(B, [x, y, z + s * 1.75], [x, y + 0.9, z + s * 1.75], 0.05, darkWood);
     for (const s of [-1, 1]) B.add(tube([[x0 + 0.5, y + 0.85, z + s * 1.75], [(x0 + x1) / 2, y + 0.75, z + s * 1.75], [x1 - 2, y + 0.85, z + s * 1.75]], 0.03, 6, 1), rope, 0, 0, 0);
-    col({ type: 'box', x: (x0 + x1) / 2, z, hw: (x1 - x0) / 2, hd: 1.8, top: y, seeThrough: true });
+    { const xe = x0 + Math.ceil((x1 - x0) / 1.1 - 1e-9) * 1.1;   // (FEET-66B: to the last plank's end, 0.6 m past x1 over the sand: he walked 4 cm into it)
+      col({ type: 'box', x: (x0 + xe) / 2, z, hw: (xe - x0) / 2, hd: 1.8, top: y, seeThrough: true }); }
     for (const s of [-1, 1]) col({ type: 'box', x: (x0 + x1) / 2, z: z + s * 1.85, hw: (x1 - x0) / 2, hd: 0.08, top: y + 1, noStand: true, seeThrough: true });
     // a sign
     const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex('KESH'), roughness: 0.8 }));
@@ -700,7 +702,7 @@ export function* buildDesertSteps(scene, physics) {
     // colliders (body, stair)
     const cs = Math.cos(hd.ry), sn = Math.sin(hd.ry);
     const wpos = (lx, lz) => ({ x: hd.x + cs * lx + sn * lz, z: hd.z - sn * lx + cs * lz });
-    col({ type: 'box', ...wpos(0, 0), hw: hd.w / 2, hd: hd.d / 2, rot: hd.ry, top: gy + hd.h + 0.8 });
+    col({ type: 'box', ...wpos(0, 0), hw: hd.w / 2, hd: hd.d / 2, rot: hd.ry, top: gy + hd.h + 0.87 });   // (FEET-66B: at the parapet's drawn top: 7 cm under it, where the stair's roof lets him onto it)
     if (hd.stair) {
       const s = hd.stair, n = 6;
       for (let k = 0; k < n; k++) {
@@ -964,7 +966,8 @@ export function* buildDesertSteps(scene, physics) {
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     // (Kesh's places stay clear: filtered after the draw, so the island's other rocks keep their places)
     for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s) || courtClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
-    for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+    // (FEET-66B: every stone an obstacle (block): a boulder's flat top held him up to 0.5 m over its dome, and the small ones, with no collider, he walked through; as drawn, neither is stood on)
+    for (const r of rocks) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true, block: true });
     // CLOUD_ORDERS 13: scree on the steep grey slopes (rockAt's outcrops, outside our places and off the tracks), from
     // its own draws after every other (rng 4313), so nothing else moves. Drawn with the rocks above, in the same three
     // batches, once the old places stand (none in a house's walls: inBuilding, as the shrubs); the larger ones block
@@ -997,7 +1000,7 @@ export function* buildDesertSteps(scene, physics) {
         }
         B.build();
       }
-      for (const r of more.concat(yard)) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
+      for (const r of more.concat(yard)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true, block: true });   // (FEET-66B: the scree and the yard's stones obstacles too, as the rocks above)
       R.rockCount = { old: rocks.length, scree: more.length };   // (for the Test Lab's measurements)
     };
   }
@@ -1023,7 +1026,7 @@ export function* buildDesertSteps(scene, physics) {
       if (coastDist(x, z) < 5 || trackDist(x, z) < 2.5 || inPost(x, z, 2) || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 1) continue;
       const h = H(x, z); if (h > BASE + 4) continue;
       const it = { x, y: h + 0.1, z, ry: rr() * 6, s: 0.5 + rr() * 0.8, color: rr() < 0.5 ? '#9a8a4a' : '#7a7a3a' };
-      if (!keshClear(x, z)) list.push(it);
+      if (!keshClear(x, z)) { list.push(it); col({ type: 'cyl', x, z, r: 0.45 * it.s, top: it.y + 0.275 * it.s, seeThrough: true, block: true }); }   // (FEET-66B: a shrub an obstacle, as Citadel's bushes: he walked through them, 24-46 cm)
     }
     const r3 = rng(4244), wide = () => (r3() - 0.5) * 280;
     for (let i = 0; i < 520; i++) {

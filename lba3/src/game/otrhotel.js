@@ -68,7 +68,7 @@ function deckChair(k) {
 }
 function coinMachine(k, kind) {
   k.add(rbox(0.8, 1.7, 0.55, 0.1), MAT.paint(kind === 'life' ? '#a8302a' : '#2a5ab0', 0.4), 0, 0.85, 0);
-  k.add(plane(0.5, 0.5), MAT.glow(kind === 'life' ? '#ffb0a0' : '#a0c8ff', kind === 'life' ? '#ff5a3a' : '#4a8aff', 0.9), 0, 1.2, 0.28);
+  k.add(plane(0.5, 0.5), MAT.glow(kind === 'life' ? '#ffb0a0' : '#a0c8ff', kind === 'life' ? '#ff5a3a' : '#4a8aff', 0.9), 0, 1.2, 0.287);   // (FLICKER-142: 1.2 cm off the cabinet, not 5 mm)
   k.add(rbox(0.12, 0.2, 0.04, 0.02), GOLD(), 0.2, 0.7, 0.29);
   return { hw: 0.42, hd: 0.3, top: 1.7 };
 }
@@ -120,7 +120,7 @@ export function buildOtrHotelRoom(scene, physics) {
 
   // --- the pool at the front right behind a low kerb, deck chairs beside it
   const PX0 = 0.4, PX1 = W / 2 - 0.4, PZ0 = 2.8, PZ1 = D / 2 - 0.4;
-  for (const [x0, z0, x1, z1] of [[PX0, PZ0, PX1, PZ0 + 0.3], [PX0, PZ0, PX0 + 0.3, PZ1]]) k.add(rbox(x1 - x0, 0.4, z1 - z0, 0.03), cap, (x0 + x1) / 2, 0.2, (z0 + z1) / 2);
+  for (const [x0, z0, x1, z1, up] of [[PX0, PZ0, PX1, PZ0 + 0.3, 0], [PX0, PZ0, PX0 + 0.3, PZ1, 0.006]]) k.add(rbox(x1 - x0, 0.4 + up, z1 - z0, 0.03), cap, (x0 + x1) / 2, (0.4 + up) / 2, (z0 + z1) / 2);   // (FLICKER-142: the side kerb 6 mm higher where they meet)
   k.add(plane(PX1 - PX0 - 0.3, PZ1 - PZ0 - 0.3), MAT.glass('#4a9ab8', 0.85), (PX0 + PX1) / 2 + 0.15, 0.05, (PZ0 + PZ1) / 2 + 0.15, 0, { rx: -Math.PI / 2 });
   k.add(plane(PX1 - PX0 - 0.3, PZ1 - PZ0 - 0.3), MAT.tiles('#5aa8c4', '#4a98b4', '#2a5a6a', false, 6), (PX0 + PX1) / 2 + 0.15, 0.02, (PZ0 + PZ1) / 2 + 0.15, 0, { rx: -Math.PI / 2 });
   B.col((PX0 + PX1) / 2, (PZ0 + PZ1) / 2, (PX1 - PX0) / 2, (PZ1 - PZ0) / 2, 1.0, { seeThrough: true, noStand: true });

@@ -107,7 +107,7 @@ const CAUSE = { z0: 20.6, z1: 25.4 };
 // the rafts in each basin (relative to its centre x, absolute z) and the floating walkways
 const RAFT_DX = [-6.2, -2.7, 2.7, 6.2], RAFT_Z = [-1.7, 1.6, 7.4, 10.7], RAFT = { w: 3.0, d: 2.6 };
 const WALK = { z0: -3.5, z1: 12.5, w: 2.0, cz: 4.5, cw: 1.6, cx: 8.4 };
-const GANG = { w: 2.0, run: 3.5, n: 9 };   // the hinged gangways from the paths down to the walkways' ends
+const GANG = { w: 2.0, run: 3.5, n: 24 };   // the hinged gangways from the paths down to the walkways' ends (FEET-66B: 24 steps under the tilted deck, 9 left him up to 5 cm off it)
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const ease = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));

@@ -124,10 +124,10 @@ export function buildObsRoom(scene, physics) {
   };
   void cr;
   // the light slit in the left wall where the beam enters
-  k.add(plane(0.3, 1.2), MAT.glow('#fff8e0', '#fff0c0', 2.5), -W / 2 + 0.03, 1.4, START.z, Math.PI / 2);
+  k.add(plane(0.3, 1.2), MAT.glow('#fff8e0', '#fff0c0', 2.5), -W / 2 + 0.04, 1.4, START.z, Math.PI / 2);   // (FLICKER-142: 1 cm off the wainscot's face, not in it)
   // the second sun's slit in the back wall, frozen over: a plug of blue-white ice bulging out of it (the ball breaks it)
   const slit2 = new THREE.Mesh(plane(0.3, 1.2), new THREE.MeshStandardMaterial({ color: '#9fb4c8', emissive: '#fff0c0', emissiveIntensity: 0, roughness: 0.6 }));
-  slit2.position.set(START2.x, 1.4, -D / 2 + 0.03); B.group.add(slit2);
+  slit2.position.set(START2.x, 1.4, -D / 2 + 0.04); B.group.add(slit2);   // (FLICKER-142: 1 cm off the wainscot's face, not in it)
   const iceM = new THREE.MeshStandardMaterial({ color: '#dff2ff', emissive: '#8fc8ff', emissiveIntensity: 0.25, roughness: 0.15, metalness: 0.05, transparent: true, opacity: 0.88, flatShading: true });
   const ice = new THREE.Group(); ice.position.set(START2.x, 1.4, -D / 2 + 0.12); B.group.add(ice);
   for (const [x, y, z, s] of [[0, 0, 0, 0.32], [0.05, 0.42, 0.03, 0.24], [-0.04, -0.4, 0.02, 0.26], [0.1, -0.12, 0.12, 0.18], [-0.12, 0.2, 0.1, 0.16]]) {

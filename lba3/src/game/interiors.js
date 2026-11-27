@@ -115,8 +115,11 @@ export class RoomBuilder {
     // the floor to stand on (around a stairwell, whose steps the room adds)
     for (const [x0, z0, x1, z1] of slabs(-W / 2, -D / 2, W / 2, D / 2)) this.col(cx0 + (x0 + x1) / 2, cz0 + (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, 0, { seeThrough: true, bottom: -1 });
     // far walls
-    k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t, -1));
-    k.at(-W / 2, 0, D / 2 + t, Math.PI / 2, () => this.wallRun(D + t, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - p.at })), t, 0, 1));
+    // (FLICKER-142: each far wall's near end stops 1 cm short of the rim's outer face: the end face and the rim's face
+    //  stood in one plane, two materials over the rim's height, and flickered at the room camera's 90 m)
+    const E = 0.01;
+    k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t - E, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t - E, -1));
+    k.at(-W / 2, 0, D / 2 + t - E, Math.PI / 2, () => this.wallRun(D + t - E, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - E - p.at })), t - E, 0, 1));
     // near rims
     const rh = o.rimH ?? 0.45, rm = o.rimMat || o.slab;
     if (rh > 0) {
@@ -149,9 +152,11 @@ export class RoomBuilder {
       k.add(new THREE.BoxGeometry(sx, h, sz), body, cx, h / 2, cz);
       if (low && h > dado + 0.2) for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(alongX ? l : 0.02, dado, alongX ? 0.02 : l), low, cx + (alongX ? 0 : s * (t / 2 + 0.01)), dado / 2, cz + (alongX ? s * (t / 2 + 0.01) : 0));
       if (rail) for (const s of [-1, 1]) k.add(rbox(alongX ? l : 0.05, 0.14, alongX ? 0.05 : l, 0.015), rail, cx + (alongX ? 0 : s * (t / 2 + 0.02)), 0.07, cz + (alongX ? s * (t / 2 + 0.02) : 0));
-      k.add(rbox(sx + 0.1, 0.1, sz + 0.1, 0.045), cap, cx, h + 0.04, cz);
+      // (FLICKER-142: a wall running along z has its cap 6 mm higher: where two meet, the caps' tops lay in one plane)
+      k.add(rbox(sx + 0.1, 0.1, sz + 0.1, 0.045), cap, cx, h + 0.04 + (alongX ? 0 : 0.006), cz);
       // rounded ends where the wall stops (a doorway or a free end)
-      for (const e of [s0, s1]) k.add(cyl(t / 2 + 0.05, t / 2 + 0.05, h + 0.09, 14), cap, x0 + ux * e, (h + 0.09) / 2, z0 + uz * e);
+      // (FLICKER-142: their tops 1 cm under the cap's: the two lay in one plane, the grain crossing, and flickered)
+      for (const e of [s0, s1]) k.add(cyl(t / 2 + 0.05, t / 2 + 0.05, h + 0.08, 14), cap, x0 + ux * e, (h + 0.08) / 2, z0 + uz * e);
       this.col(cx, cz, sx / 2, sz / 2, h + 0.1);
     };
     for (const d of ds) { piece(a, d.at - d.w / 2); a = d.at + d.w / 2; }
@@ -236,11 +241,13 @@ export class RoomBuilder {
       k.add(rbox(0.05, h, 0.05, 0.012), mm, a, y0 + h / 2, gz);
       // the reveal through the wall: pale plaster jambs and head, a wooden window board
       const lin = p.lining || MAT.paint('#efe4cc', 0.85);
-      for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.02, h, t), lin, a + s * (w / 2 - 0.01), y0 + h / 2, -t / 2);
-      k.add(new THREE.BoxGeometry(w, 0.02, t), lin, a, y0 + h - 0.01, -t / 2);
+      // (FLICKER-142: the lining stops 1 cm inside the wall's face: its front lay in the frame's, the wall's plane)
+      for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.02, h, t - 0.01), lin, a + s * (w / 2 - 0.01), y0 + h / 2, -t / 2 - 0.005);
+      k.add(new THREE.BoxGeometry(w, 0.02, t - 0.01), lin, a, y0 + h - 0.01, -t / 2 - 0.005);
       k.add(rbox(w + 0.04, 0.05, t + 0.02, 0.012), p.sill || fm, a, y0 + 0.01, -t / 2);
-      for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.05, h, t * 0.5), fm, a + s * (w / 2 - 0.025), y0 + h / 2, -t * 0.25);
-      k.add(new THREE.BoxGeometry(w, 0.05, t * 0.5), fm, a, y0 + h - 0.025, -t * 0.25);
+      // (FLICKER-142: the frame 6 mm under the reveal's head: their tops lay in one plane)
+      for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.05, h - 0.006, t * 0.5), fm, a + s * (w / 2 - 0.025), y0 + (h - 0.006) / 2, -t * 0.25);
+      k.add(new THREE.BoxGeometry(w, 0.05, t * 0.5), fm, a, y0 + h - 0.031, -t * 0.25);
       if (p.curtain) {
         k.add(cyl(0.015, 0.015, w + 0.7, 8), MAT.brass(), a, y0 + h + 0.18, 0.12, 0, { rz: Math.PI / 2 });
         for (const s of [-1, 1]) k.add(sphere(0.035, 8, 6), MAT.brass(), a + s * (w / 2 + 0.36), y0 + h + 0.18, 0.12);
@@ -253,7 +260,8 @@ export class RoomBuilder {
   roundWindow(p, o, t) {
     const k = this.k, fm = p.frame || MAT.brass(), a = p.at, w = p.w, h = p.h, rr = p.r, cy = p.y0 + h / 2;
     k.add(slab(`rwin${w}|${h}|${rr}|${t}`, (s) => { s.moveTo(-w / 2, -h / 2); s.lineTo(w / 2, -h / 2); s.lineTo(w / 2, h / 2); s.lineTo(-w / 2, h / 2); s.lineTo(-w / 2, -h / 2); const hp = new THREE.Path(); hp.absarc(0, 0, rr, 0, Math.PI * 2, true); s.holes.push(hp); }, t, 0), o.body, a, cy, -t / 2);
-    k.add(cyl(rr, rr, t, 28, true), MAT.flat(p.reveal || '#d8cce4', 0.9, { side: THREE.DoubleSide }), a, cy, -t / 2, 0, { rx: Math.PI / 2 });
+    // (FLICKER-142: the reveal 1 cm inside the plate's hole: the two curves, of different segments, crossed 3 mm apart)
+    k.add(cyl(rr - 0.01, rr - 0.01, t, 28, true), MAT.flat(p.reveal || '#d8cce4', 0.9, { side: THREE.DoubleSide }), a, cy, -t / 2, 0, { rx: Math.PI / 2 });
     k.add(torus(rr + 0.035, 0.045, 8, 32), fm, a, cy, 0.015);
     k.add(torus(rr + 0.1, 0.018, 5, 32), fm, a, cy, 0.01);
     for (let i = 0; i < 4; i++) { const b = (i / 4) * Math.PI * 2 + Math.PI / 4; k.add(sphere(0.022, 6, 4), fm, a + Math.cos(b) * (rr + 0.1), cy + Math.sin(b) * (rr + 0.1), 0.03); }
@@ -374,7 +382,7 @@ function buildHouse(scene, physics) {
   // the front door, cut away like the rest of the near wall (as LBA2 draws a door in a near wall): the low wall
   // opens, a jamb with a rounded cap on each side, a stone threshold and a step outside, daylight on the floor
   for (const sx of [-1, 1]) {
-    k.add(rbox(0.2, 0.62, 0.48, 0.04), capM, doorX + sx * 0.75, 0.31, HZ1 + 0.2);
+    k.add(rbox(0.22, 0.62, 0.48, 0.04), capM, doorX + sx * 0.75, 0.31, HZ1 + 0.2);   // (FLICKER-142: 1 cm past the rim's cut end: their faces lay in one plane)
     k.add(rbox(0.26, 0.1, 0.54, 0.045), capM, doorX + sx * 0.75, 0.66, HZ1 + 0.2);
   }
   k.add(rbox(1.3, 0.06, 0.46, 0.02), MAT.stone('sand', 1.0), doorX, 0.02, HZ1 + 0.2);
@@ -404,7 +412,9 @@ function buildHouse(scene, physics) {
   const stX = -3.35;
   k.at(stX, 0, BZ + 0.36, 0, () => P.stove(k));
   B.col(stX, BZ + 0.36, 0.66, 0.38, 0.9, { noStand: true });
-  k.add(rbox(1.5, 0.75, 0.03, 0.01), MAT.tiles('#3a78b8', '#f2ecdc', '#d8d0c0', true, 8), stX, 1.27, BZ + 0.015);
+  // (FLICKER-142, the user: the wall behind Zoé flickered: the tiles' face lay in the wainscot's face, BZ + 0.03, over the
+  //  wainscot's top 15 cm. Now 1.5 cm in front of it, still behind the dado rail)
+  k.add(rbox(1.5, 0.75, 0.03, 0.01), MAT.tiles('#3a78b8', '#f2ecdc', '#d8d0c0', true, 8), stX, 1.27, BZ + 0.03);
   k.add(rbox(1.56, 0.05, 0.06, 0.015), rail, stX, 1.66, BZ + 0.03);
   k.add(pipe([[stX - 0.4, 0.9, BZ + 0.18], [stX - 0.4, 2.35, BZ + 0.18], [stX - 0.4, 2.55, BZ - 0.1]], 0.075, 0.2, 12), MAT.iron(), 0, 0, 0);
   k.add(torus(0.085, 0.015, 5, 14), MAT.iron(), stX - 0.4, 1.6, BZ + 0.18, 0, { rx: Math.PI / 2 });
@@ -702,8 +712,9 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
     const tileM = MAT.tiles('#e9e2d2', '#d8cdb6', '#8a7a62', true, 6), white = MAT.flat('#f4f2ec', 0.3), brass = MAT.brass();
     const ix0 = X0 + 0.11, ix1 = X1 - 0.11, iz0 = Z0 + 0.11;
     k.add(plane(ix1 - ix0, ZS - iz0), tileM, (ix0 + ix1) / 2, 0.012, (iz0 + ZS) / 2, 0, { rx: -Math.PI / 2 });
-    k.add(plane(ZS - iz0, 1.15), tileM, ix0 + 0.002, 0.575, (iz0 + ZS) / 2, Math.PI / 2);                     // tiles to the low walls' height
-    k.add(plane(DL - ix0, 1.15), tileM, (ix0 + DL) / 2, 0.575, iz0 + 0.002, 0);
+    // (FLICKER-142: 1 cm off the walls, not 2 mm: they flickered with the wallpaper; still behind the wainscot, 2 cm out)
+    k.add(plane(ZS - iz0, 1.15), tileM, ix0 + 0.01, 0.575, (iz0 + ZS) / 2, Math.PI / 2);                     // tiles to the low walls' height
+    k.add(plane(DL - ix0, 1.15), tileM, (ix0 + DL) / 2, 0.575, iz0 + 0.01, 0);
     // the door: a wooden leaf as high as the walls, on a hinge at the doorway's east side, swinging in
     const pivot = new THREE.Group(); pivot.position.set(DR, 0, Z0); B.group.add(pivot);
     const leafLo = new THREE.Mesh(rbox(DR - DL - 0.04, 1.15, 0.05, 0.01), MAT.planks('honey')); leafLo.position.set(-(DR - DL) / 2, 0.575, 0); pivot.add(leafLo);
@@ -729,7 +740,7 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
       k.add(cyl(0.02, 0.02, 0.18, 8), brass, 0, 0.95, -0.15);
       k.add(cyl(0.015, 0.015, 0.12, 8), brass, 0, 1.03, -0.09, 0, { rx: Math.PI / 2 });
       k.add(rbox(0.06, 0.62, 0.05, 0.01), woodD, 0, 1.2, -0.2);                                        // the mirror's stand
-      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.017); });
+      k.at(0, 1.42, -0.17, 0, () => { k.add(rbox(0.56, 0.66, 0.03, 0.02), woodD, 0, 0, 0); k.add(plane(0.48, 0.58), MAT.flat('#c8dde6', 0.08, { metalness: 0.6 }), 0, 0, 0.025); });   // (FLICKER-142: the glass 1 cm off its board, not 2 mm)
     });
     B.col(ix0 + 0.25, 9.5, 0.24, 0.42, 0.9, { noStand: true });
     // the toilet against the north wall, facing into the room: its pan, a wooden seat, the lid up, the cistern
@@ -839,7 +850,8 @@ function buildCellar(scene, physics) {
   const TGT = { x: -1.5, y: 1.55, z: BZ + 0.05 }, DUM = { x: -1.5, z: BZ + 2.4 };
   const tg = new THREE.Group(); tg.position.set(TGT.x, TGT.y + 0.5, TGT.z); B.group.add(tg);   // (hung from its top: it swings out from the wall)
   { const tk = new Kit(tg);
-    for (const [r, c] of [[0.5, '#f2ead6'], [0.4, '#2a2420'], [0.3, '#f2ead6'], [0.2, '#2a2420'], [0.1, '#e03a3a']]) tk.add(P.disc(r, 28), MAT.paint(c, 0.7), 0, -0.5, 0.01 + (0.5 - r) * 0.01);
+    // (FLICKER-142: the rings side by side in one plane, each its own band — five discs stacked 1 mm apart flickered)
+    for (const [r, c] of [[0.5, '#f2ead6'], [0.4, '#2a2420'], [0.3, '#f2ead6'], [0.2, '#2a2420'], [0.1, '#e03a3a']]) tk.add(r > 0.1 ? new THREE.RingGeometry(r - 0.1, r, 28) : P.disc(r, 28), MAT.paint(c, 0.7), 0, -0.5, 0.012);
     tk.add(torus(0.51, 0.04, 6, 28), MAT.wood('dark'), 0, -0.5, 0.02);
     tk.add(cyl(0.012, 0.012, 0.12, 6), MAT.iron(), 0, 0.03, 0.02, 0, { rx: Math.PI / 2 });   // (its peg)
     tk.flush(); }
@@ -907,14 +919,14 @@ function buildCellar(scene, physics) {
   const mem = (w, h, draw) => MAT.map(canvasTex(w, h, draw), 0.85);
   k.at(2.2, 1.95, BZ + 0.03, 0, () => {
     k.add(rbox(1.36, 0.84, 0.04, 0.01), MAT.wood('dark'), 0, 0, 0);
-    k.add(plane(1.26, 0.74), MAT.flat('#b8885a', 0.95), 0, 0, 0.022);
+    k.add(plane(1.26, 0.74), MAT.flat('#b8885a', 0.95), 0, 0, 0.032);   // (FLICKER-142: the cork 1.2 cm off the board, the map and photos 1 cm on the cork)
     k.add(plane(0.56, 0.42), mem(224, 168, (x, W2, H2) => {   // the map: two islands in a blue sea, a red route between them
       x.fillStyle = '#e8dcb8'; x.fillRect(0, 0, W2, H2); x.fillStyle = '#8fb8c8'; x.fillRect(6, 6, W2 - 12, H2 - 12);
       x.fillStyle = '#d8c08a'; x.beginPath(); x.ellipse(64, 70, 42, 30, 0.3, 0, 7); x.fill(); x.beginPath(); x.ellipse(168, 112, 30, 22, -0.4, 0, 7); x.fill();
       x.fillStyle = '#6a9a58'; x.beginPath(); x.ellipse(58, 66, 18, 12, 0.3, 0, 7); x.fill();
       x.strokeStyle = '#c0302a'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath(); x.moveTo(78, 82); x.quadraticCurveTo(120, 140, 152, 108); x.stroke();
       x.setLineDash([]); x.font = 'bold 22px serif'; x.fillStyle = '#c0302a'; x.fillText('X', 160, 118);
-    }), -0.3, 0.05, 0.026, 0, { rz: -0.04 });
+    }), -0.3, 0.05, 0.042, 0, { rz: -0.04 });
     const shots = [['#f6d27a', '#4a7aa8', 'tower'], ['#a8d8f0', '#e8e4dc', 'sail'], ['#2a3050', '#f2e8c0', 'moon']];
     shots.forEach(([sky, fg, kind], i) => {
       k.add(plane(0.24, 0.19), mem(96, 76, (x, W2, H2) => {
@@ -922,9 +934,9 @@ function buildCellar(scene, physics) {
         if (kind === 'tower') { x.fillRect(40, 22, 14, 44); x.fillStyle = '#c0302a'; x.fillRect(38, 16, 18, 8); }
         else if (kind === 'sail') { x.beginPath(); x.moveTo(30, 60); x.lineTo(70, 60); x.lineTo(50, 18); x.closePath(); x.fill(); x.fillStyle = '#6a4a2a'; x.fillRect(24, 60, 50, 6); }
         else { x.beginPath(); x.arc(48, 36, 16, 0, 7); x.fill(); x.fillStyle = sky; x.beginPath(); x.arc(56, 32, 14, 0, 7); x.fill(); }
-      }), 0.2 + (i % 2) * 0.26, 0.17 - Math.floor(i / 2) * 0.25, 0.026, 0, { rz: (i - 1) * 0.06 });
+      }), 0.2 + (i % 2) * 0.26, 0.17 - Math.floor(i / 2) * 0.25, 0.042 + i * 0.002, 0, { rz: (i - 1) * 0.06 });
     });
-    for (const [px, py] of [[-0.55, 0.24], [-0.05, 0.24], [0.2, 0.26], [0.46, 0.26], [0.2, 0.01]]) k.add(sphere(0.012, 6, 5), MAT.paint('#c0302a', 0.5), px, py, 0.03);
+    for (const [px, py] of [[-0.55, 0.24], [-0.05, 0.24], [0.2, 0.26], [0.46, 0.26], [0.2, 0.01]]) k.add(sphere(0.012, 6, 5), MAT.paint('#c0302a', 0.5), px, py, 0.05);
   });
   for (const [z, h] of [[-2.2, 0.26], [-1.0, 0.2]]) k.at(LX + 0.3, 1.92, z, Math.PI / 2, () => {   // the cups on the bookcases
     k.add(lathe([[0.001, 0], [0.07, 0], [0.07, 0.025], [0.022, 0.04], [0.018, h * 0.45], [0.075, h * 0.62], [0.085, h], [0.07, h], [0.001, h * 0.66]], 14), MAT.brass(), 0, 0, 0);
@@ -944,8 +956,8 @@ function buildCellar(scene, physics) {
     k.add(cyl(0.035, 0.035, 0.45, 8), cu, LX + 0.34, 0.85 + 0.0, tz, 0, { rz: Math.PI / 2 });
     k.at(LX + 0.06, 1.35, BZ + 1.25, Math.PI / 2, () => {   // the meter on the wall beside the pipe
       k.add(rbox(0.26, 0.26, 0.1, 0.02), MAT.iron(), 0.0, 0, 0.05);
-      k.add(P.disc(0.095, 20), MAT.flat('#f2ead6', 0.6), 0, 0, 0.102);
-      k.add(rbox(0.012, 0.08, 0.004, 0), MAT.flat('#1a1a1a'), 0.01, 0.025, 0.106, 0, { rz: -0.6 });
+      k.add(P.disc(0.095, 20), MAT.flat('#f2ead6', 0.6), 0, 0, 0.112);   // (FLICKER-142: its face 1.2 cm off the box, not 2 mm)
+      k.add(rbox(0.012, 0.08, 0.004, 0), MAT.flat('#1a1a1a'), 0.01, 0.025, 0.116, 0, { rz: -0.6 });
     });
     k.add(cyl(0.07, 0.07, 0.12, 10), MAT.brass(), LX + 0.12, 1.0, BZ + 1.25);                                                  // the stopcock's body
     k.add(torus(0.11, 0.018, 6, 16), MAT.paint('#c0302a', 0.45), LX + 0.24, 1.0, BZ + 1.25, 0, { rz: Math.PI / 2 });          // its wheel
@@ -1360,11 +1372,11 @@ function buildOffice(scene, physics) {
   k.at(0.2, 1.15, pz + 0.075, 0, () => P.valveWheel(k, { r: 0.17 }));
   B.col(0.2, pz, 0.1, 0.1, 2.7);
   k.add(rbox(1.45, 0.6, 0.04, 0.02), MAT.wood('dark'), -1.0, 1.62, BZ + 0.02);
-  k.add(rbox(1.35, 0.5, 0.01, 0.01), MAT.wainscot('dark'), -1.0, 1.62, BZ + 0.042);
+  k.add(rbox(1.35, 0.5, 0.01, 0.01), MAT.wainscot('dark'), -1.0, 1.62, BZ + 0.045);   // (FLICKER-142: 1 cm proud of its board, not 7 mm)
   [[-1.45, 0.12, '#c8452f'], [-1.0, 0.08, '#c8452f'], [-0.55, 0.15, '#3a6fb0']].forEach(([x, v, z], i) => {
     k.at(x, 1.66, BZ + 0.04, 0, () => P.gauge(k, { r: 0.13, v, zone: z, stem: false }));
     k.add(pipe([[x, 2.62, pz], [x, 2.2, pz], [x, 1.82, BZ + 0.1]], 0.022, 0.08, 6), MAT.copper(), 0, 0, 0);
-    k.add(rbox(0.16, 0.05, 0.01, 0.004), MAT.brass(), x, 1.42, BZ + 0.05);
+    k.add(rbox(0.16, 0.05, 0.01, 0.004), MAT.brass(), x, 1.42, BZ + 0.06);
   });
 
   // --- the big painted map of the island's pipes, with its picture lamp
@@ -1372,7 +1384,7 @@ function buildOffice(scene, physics) {
   k.at(LX, 1.88, mapZ, Math.PI / 2, () => {
     P.frame(k, 2.5, 1.55, P.CANV.pipemap(), { mat: MAT.wood('dark'), prof: 0.08 });
     for (const [px, py] of [[-1.13, 0.66], [1.13, 0.66], [-1.13, -0.66], [1.13, -0.66]]) k.add(sphere(0.022, 8, 6), MAT.brass(), px, py, 0.06);
-    k.add(rbox(0.5, 0.08, 0.015, 0.006), MAT.brass(), 0, -0.86, 0.02);
+    k.add(rbox(0.5, 0.08, 0.015, 0.006), MAT.brass(), 0, -0.86, 0.045);   // (FLICKER-142: its plate stood in the wainscot's face)
     k.add(pipe([[0, 0.92, 0.02], [0, 1.0, 0.18], [0, 0.98, 0.3]], 0.012, 0.05, 6), MAT.brass(), 0, 0, 0);
     k.add(rbox(0.62, 0.07, 0.12, 0.03), MAT.brass(), 0, 0.99, 0.32, 0, { rx: 0.4 });
     k.add(rbox(0.56, 0.02, 0.05, 0.006), MAT.glow('#fff4d8', '#ffd890', 2.2), 0, 0.95, 0.32);

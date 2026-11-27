@@ -4,7 +4,7 @@
 // settings after thinking a little, and then NOT change every few seconds — it jumps"; "if the game runs well on battery
 // there's no reason it won't on mains".
 //
-// Quality: Auto chooses between complete, named profiles (PROFILES, best first): High · Medium (AUTO-2) · Medium-lean (P95) · Low (AUTO-FLOOR, below) · Low-eco · Low 75 % · Low 65 % (P137). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
+// Quality: Auto chooses between complete, named profiles (PROFILES, best first): High · Medium (AUTO-2) · Medium-lean (P95) · CPU-eco (P137b) · Low (AUTO-FLOOR, below) · Low 75 % · Low 65 % (P137). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
 // and small-caster distances, the people's animation rate, the far detail); Auto moves one profile at a time, never a
 // single knob. Low / Medium / High chosen by hand are exactly the presets they always were (renderer.knobs stays null).
 //
@@ -44,7 +44,7 @@
 
 // ---------------------------------------------------------------- knobs and profiles
 // anim: the people's animation rate in view beyond 25 m ('eco': every other frame; out of the view it is always lower:
-// drawcull.js FarCull.anim). detail: far detail ('near': people's small parts — eyes, buttons, a brooch — dropped under
+// drawcull.js FarCull.anim; 'deep', P137b: every other frame from 15 m and every third beyond 25 m). detail: far detail ('near': people's small parts — eyes, buttons, a brooch — dropped under
 // 2.5 px instead of 0.75; drawcull.js FarCull.partPx).
 export const KNOBS = ['scale', 'bloom', 'filter', 'map', 'lamps', 'msaa', 'shadows', 'veg', 'casters', 'anim', 'detail'];
 export const PRESET_KNOBS = {
@@ -92,18 +92,34 @@ export const TOP = PRESET_KNOBS.high;
 // (it would cost sharpness and buy no CPU time), and one for GPU pressure steps over the CPU rung (it buys almost no GPU
 // time, so P95's revisit would take it back and block every GPU step after it). Governor.below(p, kind).
 //   Low-eco  (CPU) Low + far people animated at half rate beyond 25 m + their tiny far parts dropped (Medium-lean's two
-//            CPU knobs, which Low, the preset, does not have). The picture at the play camera: as Low.
-//   Low 75 % (GPU) Low-eco at 75 % resolution (Low's 85 → 75: −22 % pixels), the output pass's sharpening on.
-//   Low 65 % (GPU) Low-eco at 65 % (−25 % pixels from 75). The floor: at the UHD 620 laptop's pixel ratio 1.25 (an
+//            CPU knobs, which Low, the preset, does not have). The picture at the play camera: as Low. (P137b: replaced
+//            by CPU-eco, which keeps the shadows: the next paragraph.)
+//   Low 75 % (GPU) Low + the two far-people knobs at 75 % resolution (Low's 85 → 75: −22 % pixels), the output pass's sharpening on.
+//   Low 65 % (GPU) the same at 65 % (−25 % pixels from 75). The floor: at the UHD 620 laptop's pixel ratio 1.25 (an
 //            integrated GPU on a dPR 2 screen) 0.81 of the screen's pixels across; on a dPR 1 screen 0.65 — never under
 //            minDyn's 0.6. (Steps of ~−22 % pixels, not smaller: P95's revisit keeps a step that bought ≥ 7 %, and a GPU
 //            pays for only part of its time by the pixel, so −11 % pixels would buy ~6 % and be taken back.)
+// P137b (the user, 26.11, the same laptop's street: CPU-bound, "relieve the processor", and keep the shadows: Auto must not
+// turn them off for CPU pressure): Low-eco (CPU: Low's picture, shadows OFF, + the two far-people knobs) is replaced by
+// CPU-eco, the CPU side's only rung below Medium-lean. It is Medium-lean's picture exactly — its shadows (map, filter,
+// casters), its full resolution, its lamps, grass and edges — with one knob more, the only visible trade the user allowed:
+// far people animated at a lower rate (anim 'deep': every other frame in view from 15 m, every third beyond 25 m; out of
+// the view as before). Its id stays 'loweco', so a machine that settled on Low-eco (the user's laptop after P137) comes
+// back to CPU-eco: the same rung, with its shadows. It sits above Low (its GPU cost is Medium-lean's, Low's is lower; its
+// CPU cost is Low's or a little more), so the list stays ordered on both sides. CPU pressure goes Medium → Medium-lean →
+// CPU-eco and stops there: no rung below it is a CPU rung, so CPU pressure never takes the shadows. GPU pressure goes
+// Medium-lean → Low → Low 75 % → Low 65 % exactly as in P137 (Low, Low 75 % and Low 65 % unchanged). What CPU-eco buys was
+// measured small (docs/lba-maturity/CPU-RELIEF.md: ~2 % of a street frame with the follow camera, ~0 with the orbit).
+// Like any step it is judged by P95's revisit only when play comes back to a scene measured at Medium-lean before it:
+// then, under 7 %, Medium-lean comes back and no further CPU step is taken. Otherwise (no such revisit during the
+// evaluation) CPU-eco is held: the UHD 620 model on mains settles on it (tests/autoquality.mjs).
+// The CPU work no profile removes was cut for every profile instead (CPU-RELIEF: Math.hypot, …).
 // Low itself is now a GPU rung (`only: 'gpu'`): from Medium-lean it lowers the resolution and turns the shadows off, but
 // gives back the far-people knobs Medium-lean had, so for CPU pressure it bought ~nothing (P95's revisit took it back:
-// the UHD 620's street, AUTO-P95 S4) and then blocked every CPU step after it. CPU pressure at Medium-lean goes to
+// the UHD 620's street, AUTO-P95 S4) and then blocked every CPU step after it. CPU pressure at Medium-lean went to
 // Low-eco instead: Low's picture with Medium-lean's far-people knobs kept, the shadows off (the CPU side's biggest
-// lever left). GPU pressure goes Medium-lean → Low → Low 75 % → Low 65 % as before.
-// No rung below Low turns anything else off: the shadows are already off at Low; lamps stay 2 (night streets and
+// lever left; P137b: CPU-eco instead, its shadows kept, above). GPU pressure goes Medium-lean → Low → Low 75 % → Low 65 % as before.
+// No rung below Low turns anything else off: the shadows are already off at Low (CPU-eco, above Low, keeps them); lamps stay 2 (night streets and
 // interiors need them to read), the vegetation and small casters are already at Low's distances; nothing a rung
 // changes touches the simulation, collision, aim or timing (visual knobs only). The gpu / cpu shares of the three are
 // ESTIMATES (no hardware measured them): Low's × the pixel share at the GPU (0.55 + 0.45 · s², the test machines'
@@ -113,8 +129,8 @@ export const PROFILES = [
   { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
   { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
   { id: 'lean', name: 'Medium-lean', tier: 'medium', K: { ...PRESET_KNOBS.medium, msaa: 0, lamps: 2, veg: 'low', casters: 'low', anim: 'eco', detail: 'near' }, gpu: 0.46, cpu: 0.74 },
+  { id: 'loweco', name: 'CPU-eco', tier: 'medium', only: 'cpu', K: { ...PRESET_KNOBS.medium, msaa: 0, lamps: 2, veg: 'low', casters: 'low', anim: 'deep', detail: 'near' }, gpu: 0.46, cpu: 0.72 },
   { id: 'low', name: 'Low', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low }, gpu: 0.32, cpu: 0.7 },
-  { id: 'loweco', name: 'Low-eco', tier: 'low', only: 'cpu', K: { ...PRESET_KNOBS.low, anim: 'eco', detail: 'near' }, gpu: 0.31, cpu: 0.63 },
   { id: 'low75', name: 'Low 75 %', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low, scale: 0.75, anim: 'eco', detail: 'near' }, gpu: 0.29, cpu: 0.63 },
   { id: 'low65', name: 'Low 65 %', tier: 'low', only: 'gpu', K: { ...PRESET_KNOBS.low, scale: 0.65, anim: 'eco', detail: 'near' }, gpu: 0.26, cpu: 0.63 },
 ];
@@ -133,7 +149,7 @@ const WORD = {
   msaa: { 4: 'MSAA 4×', 2: 'MSAA 2×', 0: 'no MSAA (edges smoothed in the output pass)' }, shadows: { 1: 'shadows', 0: 'no shadows' },
   veg: { high: "High's grass distance", medium: "Medium's grass distance", low: "Low's grass" },
   casters: { high: "High's small shadows", medium: "Medium's small shadows", low: "Low's small shadows" },
-  anim: { full: 'full-rate animation', eco: 'far people animated at half rate' }, detail: { normal: 'full far detail', near: 'far small parts dropped' },
+  anim: { full: 'full-rate animation', eco: 'far people animated at half rate', deep: 'far people animated at half rate from 15 m, a third beyond 25 m' }, detail: { normal: 'full far detail', near: 'far small parts dropped' },
 };
 export function describe(K) {
   const P = PROFILES.find((x) => KNOBS.every((k) => x.K[k] === K[k]));
@@ -268,7 +284,8 @@ export class Governor {
   // step down answers ('cpu' | 'gpu'): a rung for the other side only (P137's rungs below Low) is stepped over
   below(p = this.applied, kind = null) { for (let q = p + 1; q < N_PROFILES; q++) if (!this.skip(q) && !(kind && PROFILES[q].only && PROFILES[q].only !== kind)) return q; return null; }
   // (P137: up from a rung for one side, the rungs for the other side are stepped over — up from Low 75 % is Low, not
-  //  Low-eco, whose GPU cost is Low's: a GPU-bound game would go up into the load it just left and down again)
+  //  Low-eco, whose GPU cost was Low's: a GPU-bound game would go up into the load it just left and down again;
+  //  P137b: up from Low is Medium-lean, never CPU-eco, for the same reason)
   above(p = this.applied) { const o = PROFILES[p]?.only; for (let q = p - 1; q >= 0; q--) if (!this.skip(q) && !(PROFILES[q].only && PROFILES[q].only !== o)) return q; return null; }
   // ---- where it stands: wanted (queued) and in force (applied at the last commit point)
   wanted() { return knobsAt(this.p); }

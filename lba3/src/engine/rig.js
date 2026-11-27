@@ -2349,7 +2349,11 @@ function acDepth(D, s, sh, sgn, dz, dx, Mel, Mhand, Mtorso) {
       for (let i = 0; i < pts.length; i += 3) {
         const px = pts[i], py = pts[i + 1], pz = pts[i + 2];
         const x = e[0] * px + e[4] * py + e[8] * pz + e[12], y = e[1] * px + e[5] * py + e[9] * pz + e[13], z = e[2] * px + e[6] * py + e[10] * pz + e[14];
-        const yb = Math.round((y - y0) / AC_DY);
+        // (CPU-RELIEF: floor(x + 0.5), not Math.round, which gives -0 for x in [-0.5, 0): a point a centimetre under the
+        //  lowest row made the optimised code stop at its "not int32" check and fall back, over and over — the function
+        //  never left its first optimising tier and boxed every number, ~480 KB of garbage a frame on the street. The
+        //  same rows: -0 and +0 are one row, and the range test below still drops the point)
+        const yb = Math.floor((y - y0) / AC_DY + 0.5);
         if (yb < 0 || yb >= ny) continue;
         // (ARM-COST: a point that could not be deeper than the deepest so far even at the height's greatest radius is
         //  passed without its bearing — the same answer: the bearing's radius is never more than that, and the deepest is

@@ -250,7 +250,9 @@ export function buildTraluCaveRoom(scene, physics) {
 
   // --- the lower cave: the railed pool at the front right, globe posts at its corners, spike clusters, boulders
   const PX0 = 3.0 * F, PX1 = 7.4 * F, PZ0 = 2.0 * F, PZ1 = 5.4 * F, kerb = 0.3;
-  for (const [x0, z0, x1, z1] of [[PX0, PZ0, PX1, PZ0 + 0.3], [PX0, PZ1 - 0.3, PX1, PZ1], [PX0, PZ0, PX0 + 0.3, PZ1], [PX1 - 0.3, PZ0, PX1, PZ1]]) k.add(rbox(x1 - x0, kerb, z1 - z0, 0.03), block, (x0 + x1) / 2, kerb / 2, (z0 + z1) / 2);
+  // (FLICKER-142: the side kerbs 6 mm higher: at the corners the four kerbs' tops lay in one plane)
+  // (and each 1 cm short at its ends, inside the crossing kerb: their end faces lay in the other's outer face)
+  for (const [x0, z0, x1, z1, up] of [[PX0 + 0.01, PZ0, PX1 - 0.01, PZ0 + 0.3, 0], [PX0 + 0.01, PZ1 - 0.3, PX1 - 0.01, PZ1, 0], [PX0, PZ0 + 0.01, PX0 + 0.3, PZ1 - 0.01, 0.006], [PX1 - 0.3, PZ0 + 0.01, PX1, PZ1 - 0.01, 0.006]]) k.add(rbox(x1 - x0, kerb + up, z1 - z0, 0.03), block, (x0 + x1) / 2, (kerb + up) / 2, (z0 + z1) / 2);
   k.add(plane(PX1 - PX0 - 0.6, PZ1 - PZ0 - 0.6), waterM(), (PX0 + PX1) / 2, kerb - 0.08, (PZ0 + PZ1) / 2, 0, { rx: -Math.PI / 2 });
   k.at(0, kerb, 0, 0, () => railing(k, [[PX0 + 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ0 + 0.15]], { h: 0.9, mat: rail, step: 0.45 }));
   B.col((PX0 + PX1) / 2, (PZ0 + PZ1) / 2, (PX1 - PX0) / 2, (PZ1 - PZ0) / 2, kerb + 1.0, { seeThrough: true, noStand: true });
@@ -281,8 +283,9 @@ export function buildTraluCaveRoom(scene, physics) {
     const face = (o) => { const [f, l] = rockFace({ ds: 0.6, dy: 0.55, lip: 0.55, ...o }); k.add(f, crock); if (l) k.add(l, cfloor); };
     const box = (x0, y0, z0, x1, y1, z1, m = crock) => k.add(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), m, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
     const DZ0 = DOORZ - 0.8, DZ1 = DOORZ + 0.8, DH = 2.6;
-    box(-RX - T, 0, -RZ - T, RX + T, H - 0.25, -RZ);
-    box(-RX - T, 0, -RZ, -RX, H - 0.25, DZ0); box(-RX - T, 0, DZ1, -RX, H - 0.25, RZ + T); box(-RX - T, DH, DZ0, -RX, H - 0.25, DZ1);
+    // (FLICKER-142: the far walls' near ends 1 cm short of the rims' outer faces, which they lay in)
+    box(-RX - T, 0, -RZ - T, RX + T - 0.01, H - 0.25, -RZ);
+    box(-RX - T, 0, -RZ, -RX, H - 0.25, DZ0); box(-RX - T, 0, DZ1, -RX, H - 0.25, RZ + T - 0.01); box(-RX - T, DH, DZ0, -RX, H - 0.25, DZ1);
     // back wall: over the terrace (flat behind the gate's arch), the alcove behind the stair, over the guard house
     const gate = (s, y) => smoothstep(0, 0.8, Math.max(Math.abs(s - GX) - (gw + 0.9) / 2, y - (TY + gh + 0.55)));
     face({ s0: -RX - T, s1: TX1 + 0.3, y0: TY - 0.05, y1: H, out: wallOut(11, TY, gate), top: crest(1), to: back, facing: [0, 1], seed: 11 });

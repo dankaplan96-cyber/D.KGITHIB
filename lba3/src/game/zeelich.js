@@ -695,7 +695,10 @@ export function* buildZeelichSteps(scene, physics) {
       const [px, pz] = pad, gy = physics.groundAt(px + ox, pz + oz);
       const deckM = MAT_PAD();
       const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.8, 0.25, 24), deckM); disc.position.set(px, gy + 0.12, pz); disc.receiveShadow = true; group.add(disc);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(4.1, 0.08, 6, 32), new THREE.MeshStandardMaterial({ color: '#e8c040', roughness: 0.5 })); ring.rotation.x = Math.PI / 2; ring.position.set(px, gy + 0.26, pz); group.add(ring);
+      // (FEET-66: the pad is walked on: a floor at its top, gy + 0.245; he stood on the slab under it, 24.5 cm in it; its
+      //  yellow ring 1.5 cm over the pad, was 9.5)
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(4.1, 0.08, 6, 32), new THREE.MeshStandardMaterial({ color: '#e8c040', roughness: 0.5 })); ring.rotation.x = Math.PI / 2; ring.position.set(px, gy + 0.18, pz); group.add(ring);
+      col({ type: 'cyl', x: px, z: pz, r: 4.68, top: gy + 0.245, seeThrough: true });   // (to 4.63 under him: the cap's edge 4.6, its side 3.5 cm under there)
       const sh = esmerShuttle({ landed: true }); sh.position.set(px, gy + 0.25, pz); sh.rotation.y = 0.6; group.add(sh);
       col({ type: 'cyl', x: px, z: pz, r: 3.5, top: gy + 4.4, noStand: true });
       keepClear(px - 5, pz - 5, px + 5, pz + 5);
@@ -718,7 +721,8 @@ export function* buildZeelichSteps(scene, physics) {
       const [yx, yz] = yard, gy = physics.groundAt(yx + ox, yz + oz);
       const HW = 5.5, HD = 3.4;   // the palisade's half-size
       const flat = (w, d, hex, y, x = yx, z = yz, ry = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95 })); m.position.set(x, y, z); m.rotation.y = ry; m.receiveShadow = true; group.add(m); return m; };
-      flat(HW * 2, HD * 2, '#a8582a', gy + 0.02);
+      // (FEET-66: the leaf bed's top 0.8 cm over the ground he walks on, the track's 1.6; they were 5 and 8 cm: his feet in them)
+      flat(HW * 2, HD * 2, '#a8582a', gy - 0.022);
       // the track: a rounded loop of pale planks-and-sand, 1.1 m wide
       const path = [];
       const TW = HW - 1.6, TD = HD - 1.4;
@@ -729,7 +733,7 @@ export function* buildZeelichSteps(scene, physics) {
       }
       for (let i = 0; i < path.length; i++) {
         const [ax, az] = path[i], [bx, bz] = path[(i + 1) % path.length];
-        flat(1.15, Math.hypot(bx - ax, bz - az) + 0.25, '#d4cec6', gy + 0.05, (ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az));
+        flat(1.15, Math.hypot(bx - ax, bz - az) + 0.25, '#d4cec6', gy - 0.014, (ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az));
       }
       const wood = new THREE.MeshStandardMaterial({ color: '#7a5434', roughness: 0.9 }), woodD = new THREE.MeshStandardMaterial({ color: '#5a3c24', roughness: 0.9 });
       const box = (w, h, d, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; group.add(o); return o; };
@@ -934,6 +938,7 @@ export function* buildZeelichSteps(scene, physics) {
       if (px > 34 && Math.abs(pz) < 8) continue;
       const s = 0.8 + r() * 1.6;
       rimRocks.push({ x: px + nx * (0.2 + r() * 0.6), y: Y0 - 0.6 - r() * 1.2, z: pz + nz * (0.2 + r() * 0.6), ry: r() * 6, s, color: new THREE.Color('#eeece8').multiplyScalar(0.95 + r() * 0.15) });   // (ZSTYLE-1: grey, not lilac)
+      { const q = rimRocks[rimRocks.length - 1]; if (q.y + 0.9 * s > Y0 + 0.03) col({ type: 'cyl', x: q.x, z: q.z, r: s, top: q.y + 0.9 * s, seeThrough: true, block: true }); }   // (FEET-66B: where it stands over the walk, an obstacle, as the stones in the grass)
     }
   }
   function stripBricks(P, inset, top) {
@@ -954,37 +959,44 @@ export function* buildZeelichSteps(scene, physics) {
   }
 
   // ================================================================ paths: paved street + plaza, dirt tracks to the mills
+  // (FEET-66: the paving lies on the island's slab, which is his floor (Y0): each layer's top now 0.4-3.0 cm over it, in
+  //  the same order as before and 3.5 mm or more apart (worldfit judges 3 mm): gravel 0.4, street 1.4 (the gate's planks
+  //  at 1.0 run under its end), arcade 1.75, kerbs 2.1, plaza 2.45, star 2.8, the plaza's kerb ring 3.0; the slabs' bodies
+  //  sunk into the island. Before, the street's top stood 5 cm over his feet, the plaza's 6.5, the star's 7.5, the kerb
+  //  ring's 10: he walked in the paving, not on it)
+  function PV(thick, top) { return Y0 + top - thick; }
   function buildPaths() {
     const cobble = tm(paveTex(), { color: '#ffffff', rough: 0.85 });   // (ZEELICH-2: lavender grey, as LBA2's Zeelich paving; ZSTYLE-2: its pale flags)
     const street = [[-49.6, -3.4], [-34, -3.6], [-16, -3.4], [0, -3.6], [16, -3.3], [30, -3.5], [36.2, -2.9], [36.2, 2.9], [30, 3.5], [16, 3.3], [0, 3.6], [-16, 3.4], [-34, 3.6], [-49.6, 3.4]];
-    B.add(slabGeo(street, 0.05, TILE.cobble), cobble, 0, Y0, 0);
+    B.add(slabGeo(street, 0.05, TILE.cobble), cobble, 0, PV(0.05, 0.014), 0);
     const plaza = []; for (let i = 0; i < 40; i++) { const a = (i / 40) * Math.PI * 2; plaza.push([PLAZA.x + Math.sin(a) * PLAZA.r, PLAZA.z + Math.cos(a) * PLAZA.r]); }
-    B.add(slabGeo(plaza, 0.065, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, Y0, 0);
+    B.add(slabGeo(plaza, 0.065, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, PV(0.065, 0.0245), 0);
     // ZSTYLE-2: the street's lighter borders, a pale kerb stone along both edges (under the plaza's paving where it crosses)
     {
       const N = street.slice(0, 6), Sd = street.slice(8);   // (the north edge west → east, the south edge east → west; not the gate's end)
       // (AUDIT-FIX A-7: its outer edge 1 cm outside the street's: on the same line the two edges' faces flickered, worldfit)
-      for (const [edge, s] of [[N, 1], [Sd, -1]]) B.add(slabGeo(edge.map(([x, z]) => [x, z - s * 0.01]).concat(edge.map(([x, z]) => [x, z + s * 0.5]).reverse()), 0.06, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, Y0, 0);
+      for (const [edge, s] of [[N, 1], [Sd, -1]]) B.add(slabGeo(edge.map(([x, z]) => [x, z - s * 0.01]).concat(edge.map(([x, z]) => [x, z + s * 0.5]).reverse()), 0.06, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, PV(0.06, 0.021), 0);
     }
     // a mosaic star in the plaza
     const star = []; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? 3.2 : 5.6; star.push([PLAZA.x + Math.sin(a) * rr, PLAZA.z + Math.cos(a) * rr]); }
     // (ZSTYLE-1: in pale border stone, LBA2's lavender-grey paving with lighter borders; it was rose and blue star tiles)
-    B.add(slabGeo(star, 0.075, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, Y0, 0);
+    B.add(slabGeo(star, 0.075, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, PV(0.075, 0.028), 0);
     // kerb ring of the plaza
-    B.add(lathe([[PLAZA.r - 0.05, 0], [PLAZA.r + 0.18, 0], [PLAZA.r + 0.18, 0.1], [PLAZA.r - 0.05, 0.1]], 48, 1.2), tm('stone', { color: '#f2f0f2' }), PLAZA.x, Y0, PLAZA.z);
+    B.add(lathe([[PLAZA.r - 0.05, 0], [PLAZA.r + 0.18, 0], [PLAZA.r + 0.18, 0.1], [PLAZA.r - 0.05, 0.1]], 48, 1.2), tm('stone', { color: '#f2f0f2' }), PLAZA.x, PV(0.1, 0.03), PLAZA.z);
+    col({ type: 'cyl', x: PLAZA.x, z: PLAZA.z, r: PLAZA.r + 0.18, ri: PLAZA.r - 0.05, top: Y0 + 0.03, seeThrough: true, stair: true });   // (FEET-66B: the ring's top a floor, a ring collider (physics.js ri): 3 cm over the slab he stood on)
     // P136 (the user, 26.11: paving that stops short of other paving is a fault): the council house's arcade floor ended
     // 0.2–2.4 m short of the plaza's kerb ring, the island's bare granite in the two corners between. Its flags run on to
-    // the ring now (their edge under the ring's stone, 1 cm under the plaza's own paving), the arcade's width
+    // the ring now (their edge under the ring's stone, 7 mm under the plaza's own paving), the arcade's width
     for (const h of HOUSES) {
       if (!h.arcade || h.ry !== 0) continue;
       const R = PLAZA.r - 0.04, front = h.z + h.d / 2 + 2.1 - 0.1, hw = (h.w - 0.2) / 2, x0 = h.x - hw, x1 = h.x + hw;
       if (front > PLAZA.z || Math.abs(x0 - PLAZA.x) >= R || Math.abs(x1 - PLAZA.x) >= R || PLAZA.z - Math.sqrt(R * R - (h.x - PLAZA.x) ** 2) < front) continue;
       const P = [[x0, front], [x1, front]];
       for (let i = 0; i <= 12; i++) { const x = x1 + (x0 - x1) * (i / 12); P.push([x, PLAZA.z - Math.sqrt(R * R - (x - PLAZA.x) ** 2)]); }
-      B.add(slabGeo(P, 0.055, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, Y0, 0);
+      B.add(slabGeo(P, 0.055, TILE.cobble), tm(paveTex(), { color: '#f4f2f8', rough: 0.85 }), 0, PV(0.055, 0.0175), 0);
     }
     // depot spur and the drill-platform approach
-    B.add(slabGeo([[DEPOT.gate[0] - 0.4, 3], [DEPOT.gate[1] + 0.4, 3], [DEPOT.gate[1] + 0.2, DEPOT.z0 + 0.3], [DEPOT.gate[0] - 0.2, DEPOT.z0 + 0.3]], 0.05, TILE.cobble), cobble, 0, Y0, 0);
+    B.add(slabGeo([[DEPOT.gate[0] - 0.4, 3], [DEPOT.gate[1] + 0.4, 3], [DEPOT.gate[1] + 0.2, DEPOT.z0 + 0.3], [DEPOT.gate[0] - 0.2, DEPOT.z0 + 0.3]], 0.05, TILE.cobble), cobble, 0, PV(0.05, 0.014), 0);
     // dirt tracks to the mills
     const dirt = tm(gravelTex(), { color: '#ffffff', rough: 0.95 });   // (ZSTYLE-1/2: a grey-ochre gravel, not orange earth)
     const track = (pts, w) => {
@@ -994,7 +1006,7 @@ export function* buildZeelichSteps(scene, physics) {
         const ww = w * (0.9 + Math.sin(i * 2.1) * 0.12);
         L.push([pts[i][0] - (tz / l) * ww, pts[i][1] + (tx / l) * ww]); Rr.push([pts[i][0] + (tz / l) * ww, pts[i][1] - (tx / l) * ww]);
       }
-      B.add(slabGeo(L.concat(Rr.reverse()), 0.035, TILE.dirt), dirt, 0, Y0, 0);
+      B.add(slabGeo(L.concat(Rr.reverse()), 0.035, TILE.dirt), dirt, 0, PV(0.035, 0.004), 0);
     };
     track([[-4, -3], [-3.6, -8], [-2.8, -12.5], [-2.2, -15.6]], 1.25);
     track([[19, -3], [20.2, -8], [21.4, -12.5], [21.9, -14.2]], 1.2);
@@ -1298,6 +1310,9 @@ export function* buildZeelichSteps(scene, physics) {
             Object.assign(fe, { x0: op.x - aw / 2 - 0.1, x1: op.x + aw / 2 + 0.1, y1: ah + 0.07 });
           }
           HB.addM(boxUV(bbox(1.9, 0.14, 0.7, 0.03, 1), 1), stoneM, at(op.x, -base + 0.07, t + 0.35));
+          // (FEET-66B: the door's step a floor of its own: he walked 14 cm into it; placed as the house)
+          { const e = at(op.x, -base + 0.07, t + 0.35).elements, c = Math.cos(o.ry), sn = Math.sin(o.ry);
+            col({ type: 'box', x: o.x + e[12] * c + e[14] * sn, z: o.z - e[12] * sn + e[14] * c, hw: 0.95, hd: 0.35, rot: Math.atan2(-e[2], e[0]) + o.ry, top: Y0 + 0.14, seeThrough: true }); }
         } else {
           HB.addM(fillGeo(op, 0.05, 0, 0.5), lattice, at(0, 0, t * 0.45));
           HB.addM(bbox(op.w + 0.35, 0.09, 0.26, 0.02, 1), stoneM, at(op.x, op.y - 0.04, t + 0.06));
@@ -1912,7 +1927,7 @@ export function* buildZeelichSteps(scene, physics) {
     // (P93 DEPOT: the hazard beam over the gate had nothing behind it: a high lob went through it. Above anyone's head)
     col({ type: 'box', x: (D.gate[0] + D.gate[1]) / 2, z: D.z0, hw: (D.gate[1] - D.gate[0] + 0.5) / 2, hd: 0.15, rot: 0, bottom: Y0 + 3.05, top: Y0 + 3.35 });
     // concrete yard floor
-    B.add(slabGeo([[D.x0 + 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z1 - 0.15], [D.x0 + 0.15, D.z1 - 0.15]], 0.04, TILE.concrete), tm('concrete', { color: '#e8dcd8' }), 0, Y0, 0);
+    B.add(slabGeo([[D.x0 + 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z0 + 0.15], [D.x1 - 0.15, D.z1 - 0.15], [D.x0 + 0.15, D.z1 - 0.15]], 0.04, TILE.concrete), tm('concrete', { color: '#e8dcd8' }), 0, PV(0.04, 0.004), 0);   // (FEET-66: its top 0.4 cm over the slab, 1 cm under the spur's paving; was 4 cm)
     // containers
     // (P93 DEPOT: loose — the red container's west door leaf is unlatched and hangs on its hinge: built apart from the
     //  merged body so it can swing; see swingLeaf below)
@@ -2402,7 +2417,7 @@ export function* buildZeelichSteps(scene, physics) {
       const s = 0.25 + r() * 0.5, it = { x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#eeece8').multiplyScalar(0.95 + r() * 0.15) };
       if (zlClear(x, z, 1) || liftClear(x, z, 1)) continue;
       rocks[i % 3].push(it);
-      if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
+      col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true, block: true });   // (FEET-66B: every stone in the grass an obstacle (block): a boulder's flat top held him up to 0.5 m over its dome, and the small ones, with no collider, he walked through; as drawn, neither is stood on)
     }
     const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#2a2a2c', emissiveIntensity: 0.4 });
     rocks.forEach((list, v) => { if (list.length) cullInstances(group, rockGeometry(v + 1), rockMat, list).userData.gpuGroup = 'trees'; });

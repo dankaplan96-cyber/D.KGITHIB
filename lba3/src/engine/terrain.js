@@ -42,12 +42,13 @@ const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVary
 // (LAWN-EDGES-2, the user's pick 26.11: smooth grass/soil edges are the default; ?lawnedge=old brings back the stepped edge)
 export const LAWN_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('lawnedge') !== 'old'; } catch { return true; } })();
 const LAWN_WOB = 0.1;   // (m: the edge's wobble by the grass tile's brightness, so it reads painted, not ruled)
-// ROCK-EDGES (docs/lba-maturity/ROCK-EDGES.md; ?rockedge=new, off by default): LAWN-EDGES-2's traced edge for two more
+// ROCK-EDGES (docs/lba-maturity/ROCK-EDGES.md): LAWN-EDGES-2's traced edge for two more
 // channels, the rock's edge (the rock's share, re-split per pixel: rk) and the paving's (its share of the ground that is
 // not rock: pk) — the `rockedge` attribute, [rock distance, rock strength, paving distance, paving strength] per grid
 // point (Terrain._edgeChannels). Off: no attribute, no work, the shader's text as before. Where LAWN-EDGES' own paving
 // line runs (Citadel's streets, vEdge), its cut (EDGE_CUT) still decides, as before.
-export const ROCK_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('rockedge') === 'new'; } catch { return false; } })();
+// (ROCK-EDGES, the user's pick 26.11: smooth rock and paving edges are the default; ?rockedge=old brings back the old split)
+export const ROCK_EDGE = (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('rockedge') !== 'old'; } catch { return true; } })();
 const ROCK_WOB = 0.1, PAVE_WOB = 0.1;   // (m: the rock's edge wobbled by the rock tile's brightness about its mean (uRockMid), the paving's by the grass tile's; 0.25 drew the granite's dark specks as a dotted fringe outside the line)
 const RB = (0.25 + ROCK_WOB).toFixed(3), PB = (0.25 + PAVE_WOB).toFixed(3);   // (m: beyond these on the outer side the cut is 0 whatever the wobble)
 // the rock's share: the old split (the share plus the tile's wobble, on a short ramp: across a ~1 m triangle the grid's
@@ -90,7 +91,9 @@ const LAWN_SPLIT = LAWN_EDGE ? `          float gs = sp.x + sp.w;
 // not the grid's zig-zag: the paving's share is set by it per pixel (anti-aliased over about a pixel), and the band's
 // earth takes the grass's share up to its width. Only where the distance is under EDGE_RANGE − 0.05 (near an edge).
 export const EDGE_RANGE = 4, EDGE_OFF = EDGE_RANGE;
-const LE_SUB = 4, LE_R = 2.6;   // (LAWN-EDGES-2: fine samples a cell a side; the distance's reach, m)
+const LE_SUB = 4, LE_R = 2.6;
+const TINT_RAMP = +(globalThis.location ? new URLSearchParams(globalThis.location.search).get('tintramp') ?? 1 : 1);   // (P141: the vertex tint's ramp from the rock's line, in cells; 0: off)
+const smoothstep01 = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));   // (LAWN-EDGES-2: fine samples a cell a side; the distance's reach, m)
 // (LAWN-EDGES-2: beside the paving's line, a point painted paving lends its share to the grass or the earth by the
 //  lawn's cut, lk, instead of to the earth alone)
 const EDGE_CUT = `
@@ -230,8 +233,8 @@ ${LAWN_SPLIT}${EDGE_CUT}
 export class Terrain {
   // squares (HEADING-LOAD-2): > 0 draws the tiles' cells in squares of that many cells a side, all in one BatchedMesh
   // whose squares three culls one by one against the view (the caller passes it only with WEBGL_multi_draw)
-  constructor({ size, segs, heightFn, colorFn, splatFn, edgeFn = null, textures, cx = 0, cz = 0, tile = 70, squares = 0 }) {
-    this.tile = tile; this.squares = squares;
+  constructor({ size, segs, heightFn, colorFn, splatFn, edgeFn = null, tintKeep = null, textures, cx = 0, cz = 0, tile = 70, squares = 0 }) {
+    this.tile = tile; this.squares = squares; this.tintKeep = tintKeep;   // (P141: tintKeep(x, z, h, slope) true: that vertex's colour is left as it is (Knartas's approved earth patches))
     this.splatFn = splatFn; this.edgeFn = edgeFn;   // (LAWN-EDGES: edgeFn(x, z, h, e) sets e = [distance to the paving's edge, band width]; none: no edge)
     this.tex = textures;
     // ROCK-EDGES: the rock's traced line at the old split's midpoint on average: rk = 0.5 where the share plus the tile's
@@ -344,7 +347,7 @@ export class Terrain {
       if (slopes) {
         const E = this._edgeChannels(spl, spl2, slopes);
         if (E.lawn) geo.setAttribute('lawn', new THREE.BufferAttribute(E.lawn, 2, true));   // (LAWN-EDGES-2)
-        if (E.rock) geo.setAttribute('rockedge', new THREE.BufferAttribute(E.rock, 4, true));   // (ROCK-EDGES)
+        if (E.rock) { geo.setAttribute('rockedge', new THREE.BufferAttribute(E.rock, 4, true)); this._rockTint(col, spl, E.rock, slopes); this._restFloor(spl, spl2); }   // (ROCK-EDGES; P141; PATHS-140B)
       }
       this._splatMaterial(mat);
     }
@@ -383,7 +386,7 @@ export class Terrain {
   // A point with no grass or soil (paving, sand, snow, rock: under 1 % of the two) takes the side of the piece it is
   // nearest to, or with none near, its neighbours' side.
   // Nothing else changes: the splat, the heights and the scatter (which reads the splat functions, not this) as before.
-  // ROCK-EDGES (?rockedge=new): the same, in one pass sharing the fine samples, for the rock's share and the paving's
+  // ROCK-EDGES (default; ?rockedge=old: off): the same, in one pass sharing the fine samples, for the rock's share and the paving's
   // share of what is not rock (the `rockedge` attribute); the lawn's result is the same with it or without.
   _edgeChannels(spl, spl2, slopes) {
     const t0 = performance.now(), n = this.segs + 1, S = LE_SUB, NF = this.segs * S + 1, st = this.step, fs = st / S;
@@ -485,12 +488,16 @@ export class Terrain {
         if (r === r) cls = side(r) ? -1 : 1;
         else if (best[k] < Infinity) cls = sgn[k];
         else {
-          let a = 0;
+          let a = 0, an = 0, ap = 0;
           for (let b = -1; b <= 1; b++) for (let cc = -1; cc <= 1; cc++) {
             const ii = i + cc, jj = j + b; if (ii < 0 || jj < 0 || ii > this.segs || jj > this.segs) continue;
-            const kk = jj * n + ii, rr = ratio[kk]; if (rr === rr) a += (side(rr) ? -1 : 1) * wtOf(kk);
+            const kk = jj * n + ii, rr = ratio[kk]; if (rr === rr) { const w0 = wtOf(kk); a += (side(rr) ? -1 : 1) * w0; if (side(rr)) an += w0; else ap += w0; }
           }
           cls = a < 0 ? -1 : 1;
+          // (PATHS-140B: the paving's, under the rock between paving and open ground — a rock strip along a terrace's
+          //  face — on the line itself: it took the paving's side whole, and from it to the open ground beyond the rock
+          //  the paving's distance crossed 0 mid-cell, a sliver of paving drawn past the rock on the open side)
+          if (name === 'pave' && an > 0.05 && ap > 0.05) cls = 0;
         }
         D[k] = cls * Math.min(EDGE_RANGE, best[k]);
       }
@@ -532,6 +539,96 @@ export class Terrain {
     }
     this.lawnStats = { ms: +(performance.now() - t0).toFixed(1), step: +st.toFixed(3), verts: n * n, samples: fine.size, ...stats, bytes: (res.lawn?.byteLength || 0) + (res.rock?.byteLength || 0) };
     return res;
+  }
+
+  // PATHS-140B: the ground as the splat shader draws it at x, z (this terrain's own coordinates): [paving, earth, rock]
+  // shares after its splits (ROCK_SPLIT, PAVE_SPLIT, LAWN_SPLIT, EDGE_CUT), from the attributes, with no tile wobble and
+  // each cut on a ramp of ±0.25 m (so a line traced on it falls where the shader's does). For what is built on the
+  // drawn edge (the isles' kerbs) and the probes. With ROCK-EDGES off: null.
+  drawn(x, z) {
+    const geo = this.mesh?.userData?.full, A = geo?.attributes;
+    if (!A?.rockedge) return null;
+    const n = this.segs + 1, gx = (x - this.x0) / this.step, gz = (z - this.z0) / this.step;
+    const i = Math.max(0, Math.min(this.segs - 1, Math.floor(gx))), j = Math.max(0, Math.min(this.segs - 1, Math.floor(gz))), fx = Math.max(0, Math.min(1, gx - i)), fz = Math.max(0, Math.min(1, gz - j));
+    const a = j * n + i, b = a + 1, d = a + n, e = d + 1;
+    let V0, V1, V2, w0, w1, w2;
+    if (fx + fz < 1) { V0 = a; V1 = b; V2 = d; w0 = 1 - fx - fz; w1 = fx; w2 = fz; } else { V0 = e; V1 = d; V2 = b; w0 = fx + fz - 1; w1 = 1 - fx; w2 = 1 - fz; }
+    const I = (arr, st, o) => arr[V0 * st + o] * w0 + arr[V1 * st + o] * w1 + arr[V2 * st + o] * w2;
+    const sp = A.splat.array, s2 = A.splat2.array, re = A.rockedge.array, lw = A.lawn?.array, ed = A.edge?.array, Q = 32767;
+    let g = I(sp, 4, 0), sa = I(sp, 4, 1), rz = I(sp, 4, 2), so = I(sp, 4, 3), pv = I(s2, 1, 0);
+    const rD = (I(re, 4, 0) / Q) * EDGE_RANGE, rS = I(re, 4, 1) / Q, pD = (I(re, 4, 2) / Q) * EDGE_RANGE, pS = I(re, 4, 3) / Q;
+    const cut = (v) => Math.max(0, Math.min(1, 0.5 - v / 0.5)), ss = (lo, hi, v) => { const t = Math.max(0, Math.min(1, (v - lo) / (hi - lo))); return t * t * (3 - 2 * t); };
+    const rest = 1 - rz;
+    const rk = rD < 0.35 ? Math.max(cut(rD) * ss(0.38, 0.52, rS), 1 - rest * 50) : 0, kk = rest > 0.001 ? (1 - rk) / rest : 0;
+    g *= kk; sa *= kk; so *= kk; pv *= kk;
+    const ns = g + sa + so + pv;
+    if (ns - pv > 0.001 && (pv > 0.001 || pD < 0.35)) { const pk = cut(pD) * ss(0.4, 0.6, pS), ok = (ns * (1 - pk)) / (ns - pv); g *= ok; sa *= ok; so *= ok; pv = ns * pk; }
+    const gs = g + so;
+    if (lw) { const lk = cut((I(lw, 2, 0) / Q) * EDGE_RANGE) * ss(0.42, 0.58, I(lw, 2, 1) / Q); g = gs * (1 - lk); so = gs * lk; }
+    else if (gs > 0.001) { const dk = ss(0.42, 0.58, so / gs); g = gs * (1 - dk); so = gs * dk; }
+    if (ed) { const ev = (I(ed, 2, 0) / Q) * EDGE_RANGE; if (ev < EDGE_RANGE - 0.05) { const pe = cut(ev), tot = g + sa + rk + so + pv, oth = tot - pv, rem = tot * (1 - pe); if (oth > 0.002) { const m = rem / oth; g *= m; sa *= m; so *= m; } pv = tot * pe; } }
+    return [pv, so, rk];
+  }
+
+  // PATHS-140B: the rock's traced line decides in a triangle whose three points are all rock too. The shader keeps the
+  // rock whole where the rest's share is ~0 (ROCK_SPLIT's `1 − rest × 50`: the shares must never sum under 1), so where
+  // the traced line ran into a triangle of three all-rock points — a paving piece's tip or a narrow tongue on Otringal's
+  // granite turf, a thin strip of grass between two rock patches — that whole triangle stayed rock: the edge drew the
+  // grid's triangles (a notch, a speck cut off). An all-rock point next to ground that is not all rock takes a trace
+  // (3 %) of its neighbours' other ground (their mix, by share); the cut then follows the traced line there, and the rest
+  // is drawn as that ground. The rock's line, its strength and every share it was traced from are as before (this runs
+  // after the tracer); inside the rock (the cut 1) nothing shows.
+  _restFloor(spl, spl2) {
+    const n = this.segs + 1, rest = (k) => 1 - spl[k * 4 + 2], src = spl.slice(), src2 = spl2.slice(), E = 0.03;
+    let moved = 0;
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const k = j * n + i; if (1 - src[k * 4 + 2] >= 0.02) continue;
+      // (the ground other than paving where a neighbour has some: the paving is then cut on its own traced line, as
+      //  anywhere; a trace of paving alone would fill the strip between the rock's line and the paving's with paving)
+      const m = [0, 0, 0, 0]; let c = 0, ground = 0;
+      for (let v = -1; v <= 1; v++) for (let u = -1; u <= 1; u++) {
+        const a = i + u, b = j + v; if ((!u && !v) || a < 0 || b < 0 || a >= n || b >= n) continue;
+        const q = b * n + a, r = 1 - src[q * 4 + 2]; if (r < 0.02) continue;
+        m[0] += src[q * 4] / r; m[1] += src[q * 4 + 1] / r; m[2] += src[q * 4 + 3] / r; m[3] += src2[q] / r; c++;
+      }
+      if (!c) continue;
+      ground = m[0] + m[1] + m[2];
+      if (ground > 0.05 * c) m[3] = 0;
+      const own = rest(k), add = E - own, sum = m[0] + m[1] + m[2] + m[3] || 1;
+      spl[k * 4] += (add * m[0]) / sum; spl[k * 4 + 1] += (add * m[1]) / sum; spl[k * 4 + 3] += (add * m[2]) / sum; spl2[k] += (add * m[3]) / sum; spl[k * 4 + 2] = 1 - E;
+      moved++;
+    }
+    this.restStats = { moved };
+  }
+
+  // P141 (PATHS-140B): the vertex colour follows the traced rock edge. The shader cuts the rock per pixel on the traced
+  // line (ROCK-EDGES), but the vertex colour is still interpolated over each triangle: where the line crosses one, the
+  // rock beside the line took the colour of the vertex on the other side (the isles' sand-coloured shore tint and turf
+  // at their rims, the desert's sand, Citadel's grass), the grid's triangles showing as warm or green patches on the
+  // rock. As Knartas's earth patches do (ROCK-EDGES.md), the tint fades to 0 at the line: a vertex on the open side
+  // within TINT_RAMP of a strong rock line takes the colour of its rock neighbours there, its own colour whole at
+  // TINT_RAMP. So the rock reads in its own colour up to its edge; the open side's colour starts at the line, as on a
+  // single cell's ramp. Before the tiles and the batch take the colour. No shader change, no draw, no memory.
+  _rockTint(col, spl, R, slopes) {
+    const n = this.segs + 1, Q = 32767, st = this.step, RAMP = st * TINT_RAMP, c0 = col.slice();
+    const rockV = (k) => (R[k * 4] < 0 && R[k * 4 + 1] / Q > 0.45) || spl[k * 4 + 2] > 0.98;   // (the shader's rock: inside the line on its strength, or a point all rock)
+    let moved = 0;
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const k = j * n + i, d = (R[k * 4] / Q) * EDGE_RANGE;
+      if (rockV(k) || d < 0 || d >= RAMP) continue;
+      let r = 0, g = 0, b = 0, m = 0;
+      for (let v = -1; v <= 1; v++) for (let u = -1; u <= 1; u++) {
+        const a = i + u, c = j + v; if ((!u && !v) || a < 0 || c < 0 || a >= n || c >= n) continue;
+        const q = c * n + a; if (!rockV(q)) continue;
+        r += c0[q * 3]; g += c0[q * 3 + 1]; b += c0[q * 3 + 2]; m++;
+      }
+      if (!m) continue;
+      if (this.tintKeep && this.tintKeep(this.x0 + i * st, this.z0 + j * st, this.heights[k], slopes[k])) continue;
+      const t = smoothstep01(d / RAMP); r /= m; g /= m; b /= m;
+      col[k * 3] = r + (c0[k * 3] - r) * t; col[k * 3 + 1] = g + (c0[k * 3 + 1] - g) * t; col[k * 3 + 2] = b + (c0[k * 3 + 2] - b) * t;
+      moved++;
+    }
+    this.tintStats = { moved };
   }
 
   // one tile of the grid: its own index over the shared vertex data, its own bounds

@@ -17,7 +17,7 @@
 //   R.land(x, z) → is this ground (not sea); R.sample [{x,z}] points of the main walkable area
 import { placeTag } from '../engine/placetag.js';
 import * as THREE from 'three';
-import { Terrain } from '../engine/terrain.js';
+import { Terrain, ROCK_EDGE } from '../engine/terrain.js';
 import { graniteTex, quietRock } from './quietrock.js';
 import { textures, cloneTex } from '../engine/textures.js';
 import { rng, smoothstep, fbm } from '../engine/math.js';
@@ -1425,6 +1425,17 @@ const COL0 = { turf: C('#f4ecb8'), turf2: C('#e4e8a8'), rock: C('#d8b4c4'), rock
 // patches of bare rock and of paving across the flat land, in the island's own stone colour. rock / pave: the share of
 // the flat land; t: the noise level above which a patch lies, for that share (the patch noise is ~N(0, 0.3)).
 const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
+// (P140: ?isles140=old brings back WA-11's paving patches as they were: cut again by the slope, no kerbs. The new ones
+//  are built only with ROCK-EDGES' traced lines (?rockedge=new, the user's decided default, its flip queued): under the
+//  old per-vertex split the paving's edge follows the 1.7 m grid, and the kerbs, on the smooth line, stood off it)
+const PATCH_LEVEL = 0.35;   // (P140: a WA-11 paving patch lies where the ground's averaged slope is under this: the old fade's middle, smoothstep(0.45, 0.25))
+const PATCH_BLUR = 0.9;   // (PATHS-140B: the pieces' outline blurred over this, m (the Gaussian's sigma): nothing finer than the terrain's 1.7 m grid can be drawn)
+const SQUARE_LEVEL = 0.6;   // (PATHS-140B: a square's paving where its slope, the point's or averaged over 1.5 m, the lower, is under this)
+const PATCH_GROW = 0.1;   // (PATHS-140B: the patch noise's level lowered by this for the smoothed pieces: the smoothing takes their necks, tips and specks; this gives the pieces back most of their share (Otringal's paving as drawn 4134 m² before, 4115 after))
+const PAD_JOIN = 4.6;   // (P140: a kept paving piece reaches this near the pad's middle, under the edge of the pad's own paving (~4.85 m))
+const OLD_PATCHES = !ROCK_EDGE || (() => { try { return new URLSearchParams(globalThis.location?.search || '').get('isles140') === 'old'; } catch { return false; } })();
+// (PATHS-140B: the paving and the earth as a built terrain's shader draws them, Terrain.drawn: the kerbs' line)
+const drawnGround = (t) => ({ pave: (x, z) => t.drawn(x, z)?.[0] ?? 0, dirt: (x, z) => t.drawn(x, z)?.[1] ?? 0 });
 function erfinv(y) { const a = 0.147, l = Math.log(1 - y * y), b = 2 / (Math.PI * a) + l / 2; return Math.sign(y) * Math.sqrt(Math.sqrt(b * b - l / a) - b); }
 const BARE = {
   otringal: { rock: 0.15, pave: 0.5, stone: '#c4bccc' },     // pale lavender-grey paving and stone
@@ -1533,12 +1544,16 @@ function buildIsland0(scene, physics, name, L, at) {
     else if (slope > 0.7) c.lerp(COL.rock, smoothstep(0.7, 1.4, slope));
     if (h > 12) c.lerp(COL.rockHi, smoothstep(12, 26, h) * 0.5);
     if (h < 0.8) c.lerp(COL.dust, smoothstep(0.8, 0.1, h) * 0.6);
+    // (P141, PATHS-140B: a point the splat draws as rock (its slope's rock over a half: smoothstep(0.65, 1.2)) takes the
+    //  rock's colour, not the turf's or the shore's sand tint: the colour's own ramp (0.7–1.4) was far softer than the
+    //  rock's cut, so the rock at the rims and on the banks read warm or green. With the traced edge only)
+    if (ROCK_EDGE && !PAL && !S.turfRock && h >= -0.5) { const rkS = smoothstep(0.65, 1.2, slope); if (rkS > 0.4) c.lerp(COL.rock, smoothstep(0.4, 0.6, rkS)); }
     const k = atData(x, z);
     if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * (PAL ? PAL.pathMix * smoothstep(0.95, 0.75, slope) : 0.5));   // (#17b: no earth tint on the rock of a slope: it read pink)
     if (slope < 0.7 && paved(x, z)) c.copy(COL.pave).lerp(COL.turf, 0.15);
     if (PAL && h >= 0.8) {   // #17b: the bare patches pale rock (BG.col) and orange-brown earth (not tiles); the village square earth
-      const [r, p] = bare(x, z); if (r > 0) c.lerp(BG.col, r); if (p > 0) c.lerp(COL.earth, p * smoothstep(0.95, 0.75, slope));
-      const e = earthSq(x, z, slope); if (e > 0) c.lerp(COL.earth, e);
+      const [r, p] = bare(x, z); if (r > 0) c.lerp(BG.col, r); if (p > 0 && !PATCH) c.lerp(COL.earth, p * smoothstep(0.95, 0.75, slope));
+      const e = Math.max(earthSq(x, z, slope), earthPatch(x, z, h, slope, true)); if (e > 0) c.lerp(COL.earth, e);
     } else if (BG && h >= 0.8) { const [r, p] = bare(x, z); if (r + p > 0) c.lerp(BG.col, Math.min(1, r + p)); }   // WA-11 (proto)
   };
   // #17b: the village square's earth share at x, z (an organic edge: the ellipse wobbled by the patch noise; flat ground only)
@@ -1547,14 +1562,167 @@ function buildIsland0(scene, physics, name, L, at) {
     const q = PAL.earthAt(x, z) + fbm(x * 0.15 + 1.7, z * 0.15 - 4.2, 2) * 0.5;
     return smoothstep(1.0, 0.85, q) * smoothstep(0.75, 0.5, slope);
   };
+  // ROCK-EDGES (Knartas patches; ROCK-EDGES.md): the earth patches whole. In bare() the earth (p) lies only where the
+  // bare-rock patch leaves room (× (1 − r)): the slivers between rock patches, mostly a fraction of a cell wide, that the
+  // old rock split drew as the grid's diamonds (the approved #17b look). The traced rock edge drew the slivers as they
+  // are, so most patches went under the rock, and their vertex tint left an orange cast on it. Here (Knartas, with the
+  // traced edge only: ?rockedge=old keeps the approved ground as it was) the same noise field's patches are whole and lie
+  // over the bare rock, so they are blobs of a few metres with the smooth edge. Their tint is 0 at the patch's edge and
+  // whole half a cell inside (the vertex colour is interpolated over a cell: a tint whole up to the edge spread orange
+  // onto the rock beside it; a whole cell's ramp left the smaller patches a dull grey-brown). KP_T: the noise level for
+  // the share of the flat land in patches (KP_SHARE: 0.14, under the 0.18 of bare()'s field, as the blobs are whole).
+  const PATCH = !!(PAL && BARE[name] && ROCK_EDGE), KP_SHARE = 0.14, KP_T = BARE_T(KP_SHARE);
+  const kpn = (x, z) => fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3);   // (bare()'s earth field)
+  const earthPatch = (x, z, h, slope, tint) => {
+    if (!PATCH || h < 0.8 || Math.hypot(x - pad.x, z - pad.z) < 7 || paved(x, z)) return 0;
+    const n = kpn(x, z);
+    if (!tint) return smoothstep(KP_T - 0.03, KP_T + 0.03, n) * smoothstep(0.92, 0.8, slope);
+    if (n <= KP_T) return 0;
+    const d = 0.25, g = Math.hypot(kpn(x + d, z) - kpn(x - d, z), kpn(x, z + d) - kpn(x, z - d)) / (2 * d) || 1e-4;
+    return smoothstep(0, cell * 0.5, (n - KP_T) / g) * smoothstep(0.88, 0.78, slope);   // (the depth inside the patch, m: the noise over its gradient)
+  };
   // WA-11 (proto): [rock, pave] shares of the island's bare patches at x,z (none on the landing pad or the paved squares)
   const BG = BARE[name] && { ...BARE[name], col: PAL ? lin(PAL.stone) : C(BARE[name].stone), tr: BARE[name].rock ? BARE_T(BARE[name].rock) : 9, tp: BARE[name].pave ? BARE_T(BARE[name].pave / (1 - BARE[name].rock)) : 9 };
+  // (P140: the ground's slope averaged over 1.5 m round a point, on the data grid's heights read bilinear (heightFn reads
+  //  its nearest point), for the WA-11 paving patches: the old fade on the point's own slope drew their edge along every
+  //  bump, a ragged line; the averaged slope's line is smooth)
+  //  (only the land's heights: the drop to the sea at the island's brink is the brink's, a clean end of its own; NaN off land)
+  const hb = (px, pz) => { const fi = gx(px), fj = gz(pz), i = Math.floor(fi), j = Math.floor(fj), u = fi - i, v = fj - j, h = (q, w) => (raw(cx(q), cz(w)) == null ? NaN : heightFn(cx(q), cz(w))); return (h(i, j) * (1 - u) + h(i + 1, j) * u) * (1 - v) + (h(i, j + 1) * (1 - u) + h(i + 1, j + 1) * u) * v; };
+  const levelSlope = (x, z) => {
+    const sl = (px, pz) => { const e = 0.6; return Math.hypot(hb(px + e, pz) - hb(px - e, pz), hb(px, pz + e) - hb(px, pz - e)) / (2 * e); };
+    let a = 0, n = 0; const add = (v) => { if (v === v) { a += v; n++; } };
+    add(sl(x, z)); for (let q = 0; q < 6; q++) { const t = (q / 6) * Math.PI * 2; add(sl(x + Math.cos(t) * 1.5, z + Math.sin(t) * 1.5)); }
+    return n ? a / n : 0;
+  };
   const bare = (x, z) => {
-    if (Math.hypot(x - pad.x, z - pad.z) < 7 || paved(x, z)) return [0, 0];
-    const r = smoothstep(BG.tr - 0.03, BG.tr + 0.03, fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
+    const pd = Math.hypot(x - pad.x, z - pad.z);
+    if (pd < (PG ? PAD_JOIN : 7) || paved(x, z)) return [0, 0];   // (P140: a WA-11 paving piece runs on to the pad's paving: it joins it)
+    const r = pd < 7 ? 0 : smoothstep(BG.tr - 0.03, BG.tr + 0.03, fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
+    if (PG) { const a = PG.at(x, z); return [r * (1 - a) * (1 - PG.sqNear(x, z)), a]; }   // (PATHS-140B: inside a piece's smoothed outline it is paved: a speck of bare rock there was a hole)
     const p = smoothstep(BG.tp - 0.03, BG.tp + 0.03, fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3)) * (1 - r);
     return [r, p];
   };
+  // P140 (the user's answer to P136, 26.11: every WA-11 patch ends at a clean edge — a kerb, a wall, a cliff, a deck — or
+  // joins a path; no paving that just stops in the grass or the rock). The paving patches (Otringal, the Platform, the
+  // two Celebrations; Knartas's are earth, #17b, and stay; the Lift Dock's lie under its decks) were the patch noise
+  // faded again by the point's own slope, so their edge ran ragged along every bump. Now a patch is the patch noise's
+  // smooth line, the bare rock's, and the line where the averaged slope (levelSlope) passes PATCH_LEVEL: the paving as it
+  // showed (on the level ground), with a smooth outline; pieces under 6 m² go. Kerb stones follow that outline (below),
+  // except where a worn path, the square, the pad, a wall or a drop meets it. (?isles140=old: the patches as before)
+  const PG = BG && !PAL && BG.pave > 0 && !OLD_PATCHES ? patchGrid() : null;
+  // PATHS-140B: the pieces' outline smoothed at the source. The shader draws the paving's edge from a distance per
+  // terrain point (1.7 m apart, ROCK-EDGES), so a feature finer than a cell (a neck, a notch, a tip, a speck, a hole:
+  // where the patch noise's, the bare rock's and the level line's zero lines meet at a sharp angle) could not be drawn
+  // as it is: the paving showed a jagged line, specks and holes, and the kerbs, on the true line, stood off it. Now
+  // the inside (the three fields' smallest signed distance, on a 0.5 m lattice) is blurred (a Gaussian, PATCH_BLUR m)
+  // and cut at a half: corners round off, notches fill, necks, tips and specks narrower than about 2 m go. The pad and
+  // the squares count as inside for the blur (a piece runs on to their paving with no seam), the sea and the shore as
+  // outside. Pieces under 6 m² go.
+  function patchGrid() {
+    const st = 0.5, xa = cx(0) - 2, za = cz(0) - 2, nI = Math.ceil((cx(L.nx - 1) + 2 - xa) / st) + 1, nJ = Math.ceil((cz(L.nz - 1) + 2 - za) / st) + 1, N = nI * nJ;
+    const pv = (x, z) => fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3) - BG.tp + PATCH_GROW, rv = (x, z) => (Math.hypot(x - pad.x, z - pad.z) < 7 ? 1 : BG.tr - fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
+    const ex = new Uint8Array(N), P = new Float32Array(N), Rv = new Float32Array(N), Lv = new Float32Array(N);
+    const ptSlope = (x, z) => { const i = Math.round(gx(x)), j = Math.round(gz(z)), h = (q, w) => heightFn(cx(q), cz(w)); return Math.hypot(h(i + 1, j) - h(i - 1, j), h(i, j + 1) - h(i, j - 1)) / (2 * cell); };   // (the terrain's slope at its nearest point, as the splat reads it)
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) {
+      const x = xa + i * st, z = za + j * st, k = j * nI + i;
+      if (!land(x, z) || heightFn(x, z) < 0.8) ex[k] = 1;
+      else if (ptSlope(x, z) > 0.92) ex[k] = 3;   // (0.92: the splat's own rock, smoothstep(0.65, 1.2, slope), takes over: no paving drawn there)
+      else if (Math.hypot(x - pad.x, z - pad.z) < PAD_JOIN || paved(x, z)) ex[k] = 2;
+      P[k] = pv(x, z); Rv[k] = rv(x, z);
+    }
+    // (a piece keeps 1 m off such a steep crease: across it the splat's rock cut it in two, one side a speck)
+    for (let k = 0; k < N; k++) if (ex[k] === 3) { const i = k % nI, j = (k - i) / nI; for (let w = Math.max(0, j - 2); w <= Math.min(nJ - 1, j + 2); w++) for (let q = Math.max(0, i - 2); q <= Math.min(nI - 1, i + 2); q++) if (ex[w * nI + q] === 0) ex[w * nI + q] = 4; }
+    for (let k = 0; k < N; k++) if (ex[k] >= 3) ex[k] = 1;
+    // (each field's value over its gradient: the signed distance to its zero line, m; on the lattice's neighbours)
+    const dist = (F, k, i, j) => { const gx = (F[j * nI + Math.min(nI - 1, i + 1)] - F[j * nI + Math.max(0, i - 1)]) / (2 * st), gz = (F[Math.min(nJ - 1, j + 1) * nI + i] - F[Math.max(0, j - 1) * nI + i]) / (2 * st); return F[k] / Math.max(1e-4, Math.hypot(gx, gz)); };
+    const D = new Float32Array(N);
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) { const k = j * nI + i; D[k] = Math.min(dist(P, k, i, j), dist(Rv, k, i, j)); }
+    // the level line (levelSlope: ~110 height reads) only within 3 m of the other two's inside
+    const band = new Uint8Array(N);
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) { const k = j * nI + i; if (ex[k] === 0 && D[k] > -3) band[k] = 1; }
+    for (let k = 0; k < N; k++) Lv[k] = band[k] ? PATCH_LEVEL - levelSlope(xa + (k % nI) * st, za + Math.floor(k / nI) * st) : -1;
+    const I = new Float32Array(N);
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) {
+      const k = j * nI + i;
+      const f = ex[k] === 1 ? -1 : ex[k] === 2 ? 1 : Math.min(D[k], band[k] ? dist(Lv, k, i, j) : -1);
+      I[k] = Math.max(0, Math.min(1, 0.5 + f / 0.5));
+    }
+    // the blur (separable Gaussian)
+    const sg = PATCH_BLUR / st, rad = Math.ceil(sg * 2.5), W = []; let ws = 0;
+    for (let q = -rad; q <= rad; q++) { const w = Math.exp(-(q * q) / (2 * sg * sg)); W.push(w); ws += w; }
+    for (let q = 0; q < W.length; q++) W[q] /= ws;
+    const T = new Float32Array(N), B = new Float32Array(N);
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) { let a = 0; for (let q = -rad; q <= rad; q++) a += W[q + rad] * I[j * nI + Math.max(0, Math.min(nI - 1, i + q))]; T[j * nI + i] = a; }
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) { let a = 0; for (let q = -rad; q <= rad; q++) a += W[q + rad] * T[Math.max(0, Math.min(nJ - 1, j + q)) * nI + i]; B[j * nI + i] = ex[j * nI + i] === 1 ? Math.min(0.3, a) : a; }
+    // (an opening: what lies over ~0.5 m inside the outline — the core — spread out again by a second blur; a strip or a
+    //  neck narrower than about 1.5 m has no core, so it goes, with a rounded end where it left a piece. B as cut)
+    const E = new Float32Array(N); for (let k = 0; k < N; k++) E[k] = ex[k] === 0 || ex[k] === 2 ? smoothstep(0.68, 0.78, B[k]) : 0;
+    const sg2 = 0.7 / st, rad2 = Math.ceil(sg2 * 2.5), W2 = []; let ws2 = 0;
+    for (let q = -rad2; q <= rad2; q++) { const w = Math.exp(-(q * q) / (2 * sg2 * sg2)); W2.push(w); ws2 += w; }
+    for (let q = 0; q < W2.length; q++) W2[q] /= ws2;
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) { let a = 0; for (let q = -rad2; q <= rad2; q++) a += W2[q + rad2] * E[j * nI + Math.max(0, Math.min(nI - 1, i + q))]; T[j * nI + i] = a; }
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) { let a = 0; for (let q = -rad2; q <= rad2; q++) a += W2[q + rad2] * T[Math.max(0, Math.min(nJ - 1, j + q)) * nI + i]; const k = j * nI + i; if (ex[k] === 0) B[k] *= smoothstep(0.04, 0.2, a); }
+    // the pieces (B over a half, not the pad or a square), 4-connected; under 6 m² dropped
+    const comp = new Int32Array(N), keep = [0], stats = [];
+    for (let k0 = 0; k0 < N; k0++) {
+      if (!(B[k0] > 0.5 && ex[k0] === 0) || comp[k0]) continue;
+      const id = keep.length, stack = [k0]; comp[k0] = id; let n = 0;
+      while (stack.length) {
+        const k = stack.pop(), i = k % nI, j = (k - i) / nI; n++;
+        for (const [q, w] of [[i + 1, j], [i - 1, j], [i, j + 1], [i, j - 1]]) { if (q < 0 || w < 0 || q >= nI || w >= nJ) continue; const c = w * nI + q; if (B[c] > 0.5 && ex[c] === 0 && !comp[c]) { comp[c] = id; stack.push(c); } }
+      }
+      keep.push(n * st * st >= 6 ? 1 : 0); stats.push(n * st * st);
+    }
+    // (a small piece, under 25 m², within 2.5 m of another: the terrain's 1.7 m grid drew a thin link across the gap
+    //  between them; it goes — the bigger one stays)
+    for (let k = 0; k < N; k++) {
+      const c = comp[k]; if (!c || !keep[c] || stats[c - 1] >= 25) continue;
+      const i = k % nI, j = (k - i) / nI, R5 = 5;
+      for (let w = Math.max(0, j - R5); w <= Math.min(nJ - 1, j + R5) && keep[c]; w++) for (let q = Math.max(0, i - R5); q <= Math.min(nI - 1, i + R5); q++) {
+        const o = comp[w * nI + q]; if (o && o !== c && keep[o] && stats[o - 1] >= stats[c - 1] && (q - i) ** 2 + (w - j) ** 2 <= R5 * R5) { keep[c] = 0; break; }
+      }
+    }
+    const kept = keep.filter(Boolean).length, all = keep.length - 1;
+    // (a dropped piece's lattice points: B lowered under the cut there, so its outline goes with it)
+    for (let k = 0; k < N; k++) if (comp[k] && !keep[comp[k]]) B[k] = Math.min(B[k], 0.3);
+    for (let k = 0; k < N; k++) if (!comp[k] && B[k] > 0.5 && ex[k] === 0) B[k] = 0.3;   // (never: every such point is in a piece)
+    // (the piece's share at x, z: B bilinear, cut at a half on a short ramp)
+    const bAt = (x, z) => {
+      const gi = (x - xa) / st, gj = (z - za) / st, i = Math.floor(gi), j = Math.floor(gj);
+      if (i < 0 || j < 0 || i >= nI - 1 || j >= nJ - 1) return 0;
+      const u = gi - i, v = gj - j, k = j * nI + i;
+      return (B[k] * (1 - u) + B[k + 1] * u) * (1 - v) + (B[k + nI] * (1 - u) + B[k + nI + 1] * u) * v;
+    };
+    const at = (x, z) => smoothstep(0.47, 0.53, bAt(x, z));
+    // (the distance to a square's or the pad's paving, m, on the lattice: the bare rock keeps 1–2 m off it, so a square's
+    //  edge is its own designed line against the turf, not notched by a rock patch running into it)
+    const SQ = new Float32Array(N).fill(99);
+    for (let k = 0; k < N; k++) if (ex[k] === 2) SQ[k] = 0;
+    for (let pass = 0; pass < 2; pass++) for (let j0 = 0; j0 < nJ; j0++) for (let i0 = 0; i0 < nI; i0++) {
+      const j = pass ? nJ - 1 - j0 : j0, i = pass ? nI - 1 - i0 : i0, k = j * nI + i, s1 = pass ? 1 : -1;
+      let v = SQ[k];
+      if (i + s1 >= 0 && i + s1 < nI) v = Math.min(v, SQ[k + s1] + st);
+      if (j + s1 >= 0 && j + s1 < nJ) { v = Math.min(v, SQ[k + s1 * nI] + st); if (i + s1 >= 0 && i + s1 < nI) v = Math.min(v, SQ[k + s1 * nI + s1] + st * Math.SQRT2); if (i - s1 >= 0 && i - s1 < nI) v = Math.min(v, SQ[k + s1 * nI - s1] + st * Math.SQRT2); }
+      SQ[k] = v;
+    }
+    const sqNear = (x, z) => { const gi = (x - xa) / st, gj = (z - za) / st, i = Math.floor(gi), j = Math.floor(gj); if (i < 0 || j < 0 || i >= nI - 1 || j >= nJ - 1) return 0; const u = gi - i, v = gj - j, k = j * nI + i; return smoothstep(2.0, 1.0, (SQ[k] * (1 - u) + SQ[k + 1] * u) * (1 - v) + (SQ[k + nI] * (1 - u) + SQ[k + nI + 1] * u) * v); };
+    // (on or within 1.5 m of a kept piece: the probes' 'patch' kind)
+    const near = new Uint8Array(N), R3 = 3;
+    for (let k = 0; k < N; k++) if (comp[k] && keep[comp[k]]) { const i = k % nI, j = (k - i) / nI; for (let w = Math.max(0, j - R3); w <= Math.min(nJ - 1, j + R3); w++) for (let q = Math.max(0, i - R3); q <= Math.min(nI - 1, i + R3); q++) near[w * nI + q] = 1; }
+    const nearAt = (x, z) => { const i = Math.round((x - xa) / st), j = Math.round((z - za) / st); return i >= 0 && j >= 0 && i < nI && j < nJ && near[j * nI + i] === 1; };
+    // (a square's paving where it lies on the level (splatFn: SQUARE_LEVEL); a fragment of it cut off by a bank, under
+    //  30 m², goes: a few metres of paving alone in the turf. 8-connected, so a fragment is only what the rule leaves apart)
+    const sqOn = new Uint8Array(N), sqComp = new Int32Array(N), sqKeep = [0];
+    if (!S.paveFlat) for (let k = 0; k < N; k++) { if (ex[k] !== 2) continue; const x = xa + (k % nI) * st, z = za + Math.floor(k / nI) * st; if (paved(x, z) && Math.min(ptSlope(x, z), levelSlope(x, z)) < (S.paveSlope ?? SQUARE_LEVEL)) sqOn[k] = 1; }
+    for (let k0 = 0; k0 < N; k0++) {
+      if (!sqOn[k0] || sqComp[k0]) continue;
+      const id = sqKeep.length, stack = [k0]; sqComp[k0] = id; let n = 0;
+      while (stack.length) { const k = stack.pop(), i = k % nI, j = (k - i) / nI; n++; for (let w = Math.max(0, j - 1); w <= Math.min(nJ - 1, j + 1); w++) for (let q = Math.max(0, i - 1); q <= Math.min(nI - 1, i + 1); q++) { const c = w * nI + q; if (sqOn[c] && !sqComp[c]) { sqComp[c] = id; stack.push(c); } } }
+      sqKeep.push(n * st * st >= 30 ? 1 : 0);
+    }
+    const sqKeepAt = (x, z) => { const i = Math.round((x - xa) / st), j = Math.round((z - za) / st); let any = false; for (let w = j - 1; w <= j + 1; w++) for (let q = i - 1; q <= i + 1; q++) { if (q < 0 || w < 0 || q >= nI || w >= nJ) continue; const c = sqComp[w * nI + q]; if (c) { any = true; if (sqKeep[c]) return true; } } return !any; };
+    return { st, xa, za, nI, nJ, B, bAt, at, nearAt, sqNear, sqKeepAt, comp, keep, kept, all, stats };
+  }
   const splatFn = (x, z, h, slope, wt) => {
     wt[0] = 1; wt[1] = 0; wt[2] = 0; wt[3] = 0; wt[4] = 0;
     const rk = h < -0.5 ? 1 : smoothstep(0.65, 1.2, slope);
@@ -1562,26 +1730,27 @@ function buildIsland0(scene, physics, name, L, at) {
     if (h >= -0.5 && h < 0.8) { wt[1] = smoothstep(0.8, 0.2, h) * 0.8; }
     const pd = Math.hypot(x - pad.x, z - pad.z);
     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
-    if (rk < 0.5 && paved(x, z) && slope < (S.paveSlope ?? 9)) { wt[4] = 1.6; wt[0] *= 0.2; }   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
+    if (rk < 0.5 && paved(x, z) && (PG && !S.paveFlat ? Math.min(slope, levelSlope(x, z)) < (S.paveSlope ?? SQUARE_LEVEL) && PG.sqKeepAt(x, z) : slope < (S.paveSlope ?? 9))) { wt[4] = 1.6; wt[0] *= 0.2; }   // (PATHS-140B: with the smoothed pieces, a square's paving too lies on the level: the point's own slope or the slope averaged over 1.5 m (levelSlope), the lower, under SQUARE_LEVEL (Celebration's own paveSlope) — so a bump in the level is paved and the flat at a rock's foot too: a single bump cut a hole in Celebration's plaza, and Under Celebration's yard ran down its bank in a tongue; not on a square levelled in terraces, S.paveFlat: Otringal's)   // (ISLES-BAR, S.paveSlope: paving only where the ground is near level: on a slope it read as folds)
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
     if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
       const [r, p] = bare(x, z);
-      if (PAL) { wt[2] = Math.max(wt[2], r * 1.2); wt[3] = Math.max(wt[3] * (1 - r), p * 1.4); wt[0] *= 1 - Math.min(1, r + p); }   // #17b: the 'paved' patches earth (the dirt tile), not tiles
-      else { wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p); }
+      if (PAL) { wt[2] = Math.max(wt[2], r * 1.2); wt[3] = Math.max(wt[3] * (1 - r), PATCH ? 0 : p * 1.4); wt[0] *= 1 - Math.min(1, r + (PATCH ? 0 : p)); }   // #17b: the 'paved' patches earth (the dirt tile), not tiles
+      else { wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * (PG ? 1 : smoothstep(0.45, 0.25, slope))); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p); }   // (P140: a kept piece is paved whole: no fade on a bump)
     }
-    if (PAL && rk < 0.5) { const e = earthSq(x, z, slope); if (e > 0) { wt[3] = Math.max(wt[3], e * 1.4); wt[0] *= 1 - e; wt[2] = Math.max(rk, wt[2] * (1 - e)); } }   // #17b: the village square
+    if (PAL && rk < 0.5) { const e = Math.max(earthSq(x, z, slope), earthPatch(x, z, h, slope)); if (e > 0) { wt[3] = Math.max(wt[3], e * 1.4); wt[0] *= 1 - e; wt[2] = Math.max(rk, wt[2] * (1 - e)); } }   // #17b: the village square
     // #17b: the terrain shader moves the rock's edge by the tile's brightness (terrain.js: dot(rock, 1/3) - 0.5, times 0.3);
     // the granite is paler than the cliff tile (linear mean 0.466 against 0.294: +0.052), which ate ~9 % of the turf on
     // screen. The rock's share a little less, sized to cancel that (it recovers about a third of it on screen: KNARTAS-PALETTE.md)
     if (PAL?.granite) wt[2] *= 0.81;
     if (S.turfRock) { wt[2] += wt[0]; wt[0] = 0; }   // (ZEELICH-2: no grass: the turf is the island's granite)
   };
-  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, ...(S.turfRock || PAL?.granite ? { rock: graniteTex() } : { rock: TX.cliff, ...(name === 'knartas' ? {} : quietRock(TX.cliff, name)) }), cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite; #17b Knartas's rock too; QUIET-ROCK: on every other isle the granite on the flat, in the cliff tile's colour; ?knartaspal=old keeps Knartas's old ground whole)
+  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, tintKeep: PATCH ? (x, z, h, slope) => earthPatch(x, z, h, slope, true) > 0 || earthSq(x, z, slope) > 0 : null, textures: { ...TX, ...(S.turfRock || PAL?.granite ? { rock: graniteTex() } : { rock: TX.cliff, ...(name === 'knartas' ? {} : quietRock(TX.cliff, name)) }), cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });   // (ZEELICH-2: Otringal's pale granite; #17b Knartas's rock too; QUIET-ROCK: on every other isle the granite on the flat, in the cliff tile's colour; ?knartaspal=old keeps Knartas's old ground whole)
   group.add(terrain.mesh);
   // (P136, the path-ends scan, tests/lib/pathends.js: which paving a point of this ground is, island-local x, z — the
   //  island's designed square (paveAt), its landing pad, a WA-11 bare patch, or ground under a deck island's decks, far
   //  under the clouds and never seen. Read by the test only)
-  terrain.paveKind = (x, z) => (S.decks ? 'under' : paved(x, z) ? 'square' : Math.hypot(x - pad.x, z - pad.z) < 5.5 ? 'pad' : 'patch');
+  terrain.probe140 = (x, z) => ({ land: land(x, z), h: +heightFn(x, z).toFixed(2), paved: paved(x, z), pad: +Math.hypot(x - pad.x, z - pad.z).toFixed(1), route: route[atData(x, z)], bare: bare(x, z).map((v) => +v.toFixed(2)), B: PG ? +PG.bAt(x, z).toFixed(2) : null, piece: PG ? (() => { const i = Math.round((x - PG.xa) / PG.st), j = Math.round((z - PG.za) / PG.st), c = PG.comp[j * PG.nI + i]; return c ? [c, +PG.stats[c - 1].toFixed(1), PG.keep[c]] : null; })() : null, drawn: terrain.drawn(x, z)?.map((v) => +v.toFixed(2)) });   // (PATHS-140B: for the probes, island-local x, z)
+  terrain.paveKind = (x, z) => (S.decks ? 'under' : paved(x, z) ? 'square' : Math.hypot(x - pad.x, z - pad.z) < 5.5 ? 'pad' : !PG || PG.nearAt(x, z) ? 'patch' : 'ground');   // (PATHS-140B: with the smoothed pieces, 'patch' only on and near one: the edge of a square (Otringal's west side) is the square's, not a WA-11 patch's)
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);
   const gy = A.floorAt ? (x, z) => A.floorAt(x, z) ?? tgy(x, z) : tgy;
@@ -2313,6 +2482,50 @@ function buildIsland0(scene, physics, name, L, at) {
     }
     sp ||= { x: pad.x + Math.sin(pad.toward) * 4.8, z: pad.z + Math.cos(pad.toward) * 4.8, a: pad.toward };
     R.spawn = { x: ox + sp.x, z: oz + sp.z, a: sp.a };
+  }
+  // P140: the kerb stones along the kept WA-11 paving pieces (patchGrid): the patch noise's and the bare rock's smooth
+  // line, traced on a 0.5 m lattice, one stone per piece of it, set just outside the paving. None where a worn path
+  // joins the piece, where the square's or the pad's paving goes on beyond it, where anything stands on the line (a
+  // wall, a house, a prop) or the ground drops (a cliff, a bank) — the edge ends clean there already. No collider: a
+  // kerb 0.1 m high is stepped over, as Citadel's.
+  // (PATHS-140B: the line is the paving as the terrain's shader draws it — its splat and its traced rock and paving
+  //  lines (ROCK-EDGES), by the shader's formula, from the built terrain's attributes: drawnGround — so the kerb lies on
+  //  the drawn edge, never beside it. Each reason to leave a kerb out is read as tests/path-ends.mjs reads the edge: a
+  //  path's earth 0.5 m out, a face within 0.8 m, paving going on)
+  if (PG) {
+    const DG = drawnGround(terrain), f = 0.5, x0 = PG.xa, z0 = PG.za, nI = Math.ceil(((PG.nI - 1) * PG.st) / f) + 1, nJ = Math.ceil(((PG.nJ - 1) * PG.st) / f) + 1;
+    const sv = (x, z) => DG.pave(x, z) - 0.5, S = new Float32Array(nI * nJ).fill(-0.5);
+    for (let j = 0; j < nJ; j++) for (let i = 0; i < nI; i++) { const x = x0 + i * f, z = z0 + j * f; if (PG.bAt(x, z) > 0.15) S[j * nI + i] = sv(x, z); }   // (only near a piece)
+    const stones = [];
+    const onPiece = (x, z) => land(x, z) && DG.pave(x, z) > 0.5 && PG.bAt(x, z) > 0.15 && !paved(x, z) && Math.hypot(x - pad.x, z - pad.z) > 5.5;   // (drawn paving of a piece: not the square's or the pad's)
+    const face = (x, z, nx, nz) => { let prev = gy(x + nx * 0.2, z + nz * 0.2); for (let a = 0.1; a <= 0.81; a += 0.1) { const g = gy(x - nx * a, z - nz * a); if (Math.abs(g - prev) >= 0.3) return true; prev = g; } return false; };   // (a step: a wall's foot, a quay's face, a cliff; along a bank's top the kerb runs on)
+    const standing = (x, z, y) => { for (const c of physics.near(ox + x, oz + z)) if (c.enabled !== false && !c.block && c.top > y + 0.5 && (c.bottom ?? -1e9) < y + 1.2 && (c.type === 'box' ? 2 * Math.max(c.hw, c.hd) >= 1.5 : (c.r ?? 0) >= 1.2) && physics._inside(c, ox + x, oz + z, 0.12)) return true; return false; };   // (a wall, a house, the brink: the edge ends there; a lamp or a bush stands on the kerb's line, as in Citadel)
+    for (let j = 0; j < nJ - 1; j++) for (let i = 0; i < nI - 1; i++) {
+      const a = S[j * nI + i], b = S[j * nI + i + 1], c = S[(j + 1) * nI + i + 1], d = S[(j + 1) * nI + i];
+      if ((a > 0) === (b > 0) && (b > 0) === (c > 0) && (c > 0) === (d > 0)) continue;
+      const X = x0 + i * f, Z = z0 + j * f, P = [];
+      const cut = (va, vb, xa, za, xb, zb) => { if ((va > 0) !== (vb > 0)) { const t = va / (va - vb); P.push([xa + (xb - xa) * t, za + (zb - za) * t]); } };
+      cut(a, b, X, Z, X + f, Z); cut(b, c, X + f, Z, X + f, Z + f); cut(c, d, X + f, Z + f, X, Z + f); cut(d, a, X, Z + f, X, Z);
+      for (let q = 0; q + 1 < P.length; q += 2) {
+        const [ax, az] = P[q], [bx, bz] = P[q + 1], len = Math.hypot(bx - ax, bz - az); if (len < 0.05) continue;
+        const mx = (ax + bx) / 2, mz = (az + bz) / 2;
+        // the side the paving is on (the field's rise) and the stone's place, 0.1 m outside the line
+        const e = 0.05, gx = sv(mx + e, mz) - sv(mx - e, mz), gz = sv(mx, mz + e) - sv(mx, mz - e), gl = Math.hypot(gx, gz) || 1, nx = gx / gl, nz = gz / gl;
+        const dbg = globalThis.__kerb140 ? (why) => globalThis.__kerb140.push([+(mx + ox).toFixed(2), +(mz + oz).toFixed(2), why]) : null;
+        if (!onPiece(mx + nx * 0.3, mz + nz * 0.3)) { dbg?.('not a piece'); continue; }
+        const y = gy(mx, mz);
+        if (!land(mx - nx * 0.45, mz - nz * 0.45) || DG.pave(mx - nx * 0.3, mz - nz * 0.3) > 0.5 || DG.dirt(mx - nx * 0.5, mz - nz * 0.5) > 0.5) { dbg?.('goes on'); continue; }   // (the paving goes on, or a path joins it)
+        if (face(mx, mz, nx, nz) || standing(mx, mz, y)) { dbg?.(face(mx, mz, nx, nz) ? 'face' : 'standing'); continue; }   // (a drop, a bank: a clean end already; something stands there)
+        stones.push([mx - nx * 0.1, y, mz - nz * 0.1, Math.atan2(bx - ax, bz - az), len + 0.02]);
+      }
+    }
+    if (stones.length) {
+      const im = new THREE.InstancedMesh(cached('isle-kerb', () => new THREE.BoxGeometry(0.2, 0.16, 1)), pm(new THREE.Color(BARE[name].stone).lerp(new THREE.Color('#ffffff'), 0.18).getStyle(), 0.9), stones.length);
+      const o = new THREE.Object3D();
+      stones.forEach(([x, y, z, a, len], i) => { o.position.set(x, y + 0.02, z); o.rotation.set(0, a, 0); o.scale.set(1, 0.875, len); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+      im.receiveShadow = true; im.name = 'isle kerbs'; group.add(im);
+    }
+    R.patches140 = { pieces: PG.all, kept: PG.kept, kerbs: stones.length, m2: Math.round(PG.stats.reduce((a, n) => a + n, 0)), keptM2: Math.round(PG.stats.reduce((a, n, i) => a + (PG.keep[i + 1] ? n : 0), 0)) };   // (for the probes)
   }
   // the landmark (its approach, where the routes end) and the plan's tally; sample points clear of the new pieces
   const p0 = plan.pois[0]?.reach || plan.pois[0];

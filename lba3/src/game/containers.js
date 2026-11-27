@@ -359,8 +359,9 @@ function newPiece(physics, R, B, x, z, k, kitKind = null) {
       const ry = (px * 3.7 + pz) % 6.283;
       const got = DESERT_PIECE[kitKind](B, px - o.x, gh - 0.02, pz - o.z, ry);
       if (OPENABLE.has(kitKind)) openInto(B, kitKind, got, px - o.x, gh - 0.02, pz - o.z, ry);   // (QUEUE-9)
-      if (got.r != null) physics.add({ type: 'cyl', x: px, z: pz, r: got.r, top: gh + got.top, noStand: true, seeThrough: true });
-      else physics.add({ type: 'box', x: px, z: pz, hw: got.hw, hd: got.hd, rot: ry, top: gh + got.top, noStand: true, seeThrough: true });
+      // (FEET-66B: block, as SOLID-NPC's props: a low chest or jar, within a step, was walked through)
+      if (got.r != null) physics.add({ type: 'cyl', x: px, z: pz, r: got.r, top: gh + got.top, noStand: true, block: true, seeThrough: true });
+      else physics.add({ type: 'box', x: px, z: pz, hw: got.hw, hd: got.hd, rot: ry, top: gh + got.top, noStand: true, block: true, seeThrough: true });
       return { x: px, z: pz, y: gh, r: rad(got) + 1.05, top: got.top, kind: kitKind };
     }
     const Pl = new EP.Place(B, px - o.x, gh - 0.02, pz - o.z, (px * 3.7 + pz) % 6.283);

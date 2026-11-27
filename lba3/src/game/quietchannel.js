@@ -91,8 +91,8 @@ export function buildRiser(game, R) {
   k.add(cyl(0.03, 0.03, 0.12, 8), brass, RX, GAUGE.y - GAUGE.r - 0.04, RZ + 0.08);
   k.at(RX, GAUGE.y, RZ + 0.08, 0, () => {
     k.add(cyl(GAUGE.r * 1.12, GAUGE.r * 1.12, 0.06, 24), brass, 0, 0, 0.0, 0, { rx: Math.PI / 2 });
-    k.add(torus(GAUGE.r * 1.06, GAUGE.r * 0.08, 6, 24), brass, 0, 0, 0.035);
-    k.add(disc(GAUGE.r, 24), MAT.map(dialTex(), 0.5), 0, 0, 0.032);
+    k.add(torus(GAUGE.r * 1.06, GAUGE.r * 0.08, 6, 24), brass, 0, 0, 0.045);
+    k.add(disc(GAUGE.r, 24), MAT.map(dialTex(), 0.5), 0, 0, 0.04);   // (FLICKER-142: the dial 1 cm off its case, not 2 mm)
   });
   const needle = new THREE.Group(); needle.position.set(RX, GAUGE.y, RZ + 0.08 + 0.04); g.add(needle);
   { const nm = new THREE.Mesh(new THREE.BoxGeometry(GAUGE.r * 0.9, 0.014, 0.008).translate(GAUGE.r * 0.36, 0, 0), own({ color: '#a8201a', roughness: 0.4 })); nm.castShadow = false; needle.add(nm);
@@ -161,7 +161,7 @@ export function buildHorn(game, R) {
   k.add(torus(0.055, 0.015, 5, 12), brass, X - 0.06, 2.4, Z, 0, { rx: Math.PI / 2 });
   // (the bell: a lathe along +x, its mouth to the room)
   k.add(P.lathe([[0.045, 0], [0.05, 0.08], [0.07, 0.16], [0.12, 0.24], [0.15, 0.27], [0.14, 0.275], [0.11, 0.25], [0.001, 0.25]], 18), brass, X + 0.08, Y, Z, 0, { rz: -Math.PI / 2 });
-  k.add(disc(0.11, 18), MAT.flat('#1a1612', 0.9), X + 0.33, Y, Z, Math.PI / 2);
+  k.add(disc(0.11, 18), MAT.flat('#1a1612', 0.9), X + 0.34, Y, Z, Math.PI / 2);   // (FLICKER-142: inside the bell's mouth, not in its cap)
   k.add(plane(0.36, 0.14), sign(['RISER 2 · SHAFT'], 256, 96), X - 0.03, Y + 0.4, Z, Math.PI / 2);
   const lampM = own({ color: '#203a20', emissive: '#40e060', emissiveIntensity: 0 });
   const lamp = new THREE.Mesh(sphere(0.035, 10, 8), lampM); lamp.position.set(X + 0.02, Y + 0.24, Z + 0.22); lamp.castShadow = false; g.add(lamp);

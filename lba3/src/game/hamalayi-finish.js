@@ -51,7 +51,7 @@ export function gridCapture(heightFn, size, segs) {
     // (ROCK-EDGES: between the vertices the shares interpolated, not the nearest vertex's: the terrain's traced rock edge
     //  samples between them, and the nearest one drew the edge as the grid's squares. At a vertex, the vertex's own value)
     const gi = (x + half) / step, gj = (z + half) / step, i = Math.round(gi), j = Math.round(gj), R = (a, b) => G._rock[clamp(b, 0, n - 1) * n + clamp(a, 0, n - 1)];
-    if (!ROCK_EDGE || (Math.abs(gi - i) < 1e-6 && Math.abs(gj - j) < 1e-6)) return R(i, j);   // (switch off: the nearest vertex's, as before)
+    if (!ROCK_EDGE || (Math.abs(gi - i) < 1e-6 && Math.abs(gj - j) < 1e-6)) return R(i, j);   // (?rockedge=old: the nearest vertex's, as before)
     const i0 = Math.floor(gi), j0 = Math.floor(gj), fx = gi - i0, fz = gj - j0;
     return (R(i0, j0) * (1 - fx) + R(i0 + 1, j0) * fx) * (1 - fz) + (R(i0, j0 + 1) * (1 - fx) + R(i0 + 1, j0 + 1) * fx) * fz;
   };
@@ -105,7 +105,10 @@ const mergePlain = (geos) => {
 // as a chain of short segments; a station on every crossed lattice edge (shared, so the lip is watertight) carries a
 // rounded profile (back on the flat, a crest, an overhang, a curl under) whose thickness and overhang wander with a
 // smooth noise, thinning to almost nothing in places. Visual only: no collider, no shadow cast.
-export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) {
+// (FEET-66B, taper: where a designed walk meets the rim (the arch's steps), the lip is kept as it thins toward the walk —
+//  down to a fade of 0.04, no thickness floor, its overhang and back shrinking with it — so it ends in a taper to a
+//  sliver, not a cut)
+export function snowLips(T, parent, { levels, cell = 46, fade = () => 1, taper = null } = {}) {
   const n = T.segs + 1, h = T.heights, x0 = T.x0, z0 = T.z0, st = T.step;
   const H = (x, z) => T.heightAt(x, z);
   const smap = new Map();
@@ -142,9 +145,11 @@ export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) 
     if (s.v) return s.v;
     const cx = s.x - s.ox * 0.35, cz = s.z - s.oz * 0.35, Hc = H(cx, cz);
     s.fade = fade(cx, cz);
-    const thick = s.thick = s.fade * (0.42 + 0.5 * vnoise(cx * 0.33, cz * 0.33, 1)) * (0.2 + 0.8 * smoothstep(0.08, 0.36, vnoise(cx * 0.17, cz * 0.17, 3)));
-    const over = Math.sqrt(s.fade) * (0.5 + 0.6 * vnoise(cx * 0.21, cz * 0.21, 2) + 0.25 * Math.pow(Math.max(0, Math.sin(cx * 0.9 + cz * 0.7)), 2));
-    const back = Math.sqrt(s.fade) * (0.7 + 0.7 * vnoise(cx * 0.27 + 9, cz * 0.27, 5));
+    const ek = s.endK ?? 1;   // (FEET-66B: a run's end in a taper, below)
+    const thick = s.thick = ek * s.fade * (0.42 + 0.5 * vnoise(cx * 0.33, cz * 0.33, 1)) * (0.2 + 0.8 * smoothstep(0.08, 0.36, vnoise(cx * 0.17, cz * 0.17, 3)));
+    const tz = taper && taper(cx, cz), sf = ek * (tz ? s.fade : Math.sqrt(s.fade));   // (FEET-66B: in a taper its overhang and back shrink with the fade too)
+    const over = sf * (0.5 + 0.6 * vnoise(cx * 0.21, cz * 0.21, 2) + 0.25 * Math.pow(Math.max(0, Math.sin(cx * 0.9 + cz * 0.7)), 2));
+    const back = sf * (0.7 + 0.7 * vnoise(cx * 0.27 + 9, cz * 0.27, 5));
     s.v = PROF.map(([u, y], k) => {
       const su = u > 0 ? u * over : u * back, x = cx + s.ox * su, z = cz + s.oz * su;
       let yy = k === 0 ? H(x, z) + 0.03 : k === 1 ? H(x, z) + 0.04 + y * thick : Hc + y * thick;
@@ -155,7 +160,17 @@ export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) 
   };
   // keep the runs that matter: no segment where a trail or a walk crosses the rim or where the lip would be a film, and no
   // run shorter than 8 segments (a few metres of lip beside a trail's cut read as torn paper)
-  const keep = segs.filter(([a, b]) => { rim(a); rim(b); return !(a.fade < 0.8 || b.fade < 0.8 || a.thick < 0.17 || b.thick < 0.17); });
+  const keep = segs.filter(([a, b]) => { rim(a); rim(b); const lo = taper && (taper(a.x, a.z) || taper(b.x, b.z));
+    return lo ? !(a.fade < 0.04 || b.fade < 0.04) : !(a.fade < 0.8 || b.fade < 0.8 || a.thick < 0.17 || b.thick < 0.17); });
+  // (FEET-66B: where the rim itself ends in a taper zone — the bank cut for the arch's steps — a run's last station shrinks
+  //  to a sliver and the one before to under half: the lip thins out to its end instead of stopping in a cut face)
+  if (taper) {
+    const nb = new Map(), link = (p, q) => { if (!nb.has(p.id)) nb.set(p.id, []); nb.get(p.id).push(q); };
+    for (const [a, b] of keep) { link(a, b); link(b, a); }
+    for (const [a, b] of keep) for (const e of [a, b]) if (nb.get(e.id).length === 1 && e.endK == null && taper(e.x, e.z)) {
+      e.endK = 0.06; e.v = null; const n = nb.get(e.id)[0]; if (n.endK == null) { n.endK = 0.45; n.v = null; }
+    }
+  }
   const par = new Map(); const find = (i) => { while (par.get(i) !== i) { par.set(i, par.get(par.get(i))); i = par.get(i); } return i; };
   for (const [a, b] of keep) { if (!par.has(a.id)) par.set(a.id, a.id); if (!par.has(b.id)) par.set(b.id, b.id); par.set(find(a.id), find(b.id)); }
   const runLen = new Map(); for (const [a] of keep) { const r = find(a.id); runLen.set(r, (runLen.get(r) || 0) + 1); }
@@ -214,9 +229,11 @@ const crevasse = (list, a, b, w, ground, seed, bend = 0.5) => {
   const pts = []; let ca = ang;
   for (let i = 0; i <= n; i++) { const t = i / n; if (i) { ca += (r() - 0.5) * bend; } const p = i ? pts[i - 1] : a; pts.push(i ? [p[0] + Math.cos(ca) * L / n, p[1] + Math.sin(ca) * L / n] : [a[0], a[1]]); }
   const prof = (i, f) => w * f * Math.pow(Math.sin(Math.PI * (0.04 + 0.92 * i / n)), 0.7) * (0.75 + 0.25 * Math.sin(i * 1.9 + seed));
-  list.push(ribbonGeo(pts, (i) => prof(i, 0.5) + 0.34, ground, 0.03, '#e6f4fc'));
-  list.push(ribbonGeo(pts, (i) => prof(i, 0.5) + 0.1, ground, 0.06, '#4a86b8'));
-  list.push(ribbonGeo(pts, (i) => prof(i, 0.3), ground, 0.09, '#0a1830'));
+  // (FEET-66: the three layers 1.2, 1.8 and 2.4 cm over the ice, 6 mm apart; they were 3, 6 and 9 cm, and walking over a
+  //  hairline his feet went 6-9 cm into the dark throat. The wide ones keep their low collider)
+  list.push(ribbonGeo(pts, (i) => prof(i, 0.5) + 0.34, ground, 0.012, '#e6f4fc'));
+  list.push(ribbonGeo(pts, (i) => prof(i, 0.5) + 0.1, ground, 0.018, '#4a86b8'));
+  list.push(ribbonGeo(pts, (i) => prof(i, 0.3), ground, 0.024, '#0a1830'));
   return pts;
 };
 // seracs, crevasses and drifts on the glacier; returns the colliders it asks for
@@ -358,7 +375,7 @@ export function ventDress(env) {
   for (let i = 0; i < 7; i++) {
     const pts = [], steps = 11; let ca = rc() * 6.283;
     for (let k = 0; k <= steps; k++) { const rr = 3.3 + k * 0.55; ca += (rc() - 0.5) * 0.3; pts.push([VENT.x + Math.cos(ca) * rr, VENT.z + Math.sin(ca) * rr]); }
-    fr.push(ribbonGeo(pts, (k) => 0.06 + 0.05 * Math.sin(k * 0.9 + i) * (1 - k / steps), (x, z) => H(x, z), 0.05, '#3e72a0'));
+    fr.push(ribbonGeo(pts, (k) => 0.06 + 0.05 * Math.sin(k * 0.9 + i) * (1 - k / steps), (x, z) => H(x, z), 0.02, '#3e72a0'));   // (FEET-66: 2 cm over the ice, was 5)
   }
   const crackOut = new THREE.Mesh(mergePlain(fr), crackM); crackOut.name = 'hventfractures'; crackOut.castShadow = false; crackOut.receiveShadow = true; group.add(crackOut);
 
@@ -374,7 +391,7 @@ export function ventDress(env) {
     const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gg.setIndex(idx); gg.computeVertexNormals(); gg.computeBoundingSphere();
     const m = new THREE.Mesh(gg, mat); m.castShadow = false; m.receiveShadow = true; m.name = name; group.add(m); return m;
   };
-  ring(2.8, 6.4, 0.035, wetM, 3, 'hventwet');
+  ring(2.8, 6.4, 0.02, wetM, 3, 'hventwet');   // (FEET-66: the wet rim 2 cm over the ice, was 3.5; the pool over it is water)
   ring(2.8, 4.9, 0.07, poolM, 8, 'hventwater');
   return { cap, plates };
 }
@@ -417,11 +434,16 @@ export function gorgeRiver(env) {
   for (const s of [-1, 1]) for (let x = X0 + 2; x < X1 - 2; x += 1.2 + r() * 2.2) {
     const d = shore(x, s), c = zc(x); if (d > 5.2) continue;
     if (r() < 0.62) { const sz = 0.16 + r() * 0.36; B.add(stone, stoneM, x, 0.7 + sz * 0.12, c + s * (d - 0.15 - r() * 0.4), r(), r() * 6, r(), sz * (0.9 + r() * 0.5), sz, sz); }
-    if (r() < 0.45) { const len = 1.4 + r() * 2.6, wd = 0.5 + r() * 0.5; B.add(bbox(len, 0.12, wd, 0.05, 1), shelfM, x, 0.745, c + s * (d - wd * 0.35), 0, (r() - 0.5) * 0.5, 0); }
+    // (FEET-66: an ice shelf is walked on: a floor at its drawn top, 0.805; before, he stood on the bank or the river bed
+    //  under it, his feet 7-24 cm into the ice. The draws in the same order as before)
+    if (r() < 0.45) { const len = 1.4 + r() * 2.6, wd = 0.5 + r() * 0.5, sz = c + s * (d - wd * 0.35), ry = (r() - 0.5) * 0.5; B.add(bbox(len, 0.12, wd, 0.05, 1), shelfM, x, 0.745, sz, 0, ry, 0); col({ type: 'box', x, z: sz, hw: len / 2, hd: wd / 2, rot: ry, top: 0.805 }); }
     if (r() < 0.8) { const len = 0.8 + r() * 2.2; const pts = []; for (let i = 0; i <= 3; i++) { const xx = x + len * i / 3; pts.push([xx, zc(xx) + s * (shore(xx, s) - 0.12)]); } foam.push(ribbonGeo(pts, (i) => 0.1 + 0.07 * Math.sin(Math.PI * i / 3), () => 0, 0.74, '#ffffff')); }
   }
   // floes: pale slabs jammed against the stones and along the channel
-  for (let i = 0; i < 12; i++) { const x = -70 + r() * 140, o = (r() - 0.5) * 3.2; B.add(bbox(0.9 + r() * 1.2, 0.16, 0.7 + r() * 0.8, 0.06, 1), shelfM, x, 0.77, zc(x) + o, 0, r() * 3, (r() - 0.5) * 0.05); }
+  // (FEET-66: a floe floats: he wades round it, as round the boulders: a low block (never stood on) to its drawn edge; before,
+  //  he walked through it. Its top 1.3: a block within 12 cm of his feet is stepped over (physics BLOCK_LOW), and from a
+  //  shelf (0.805) the floe's own 0.85 would be; the ball passes over it. The draws in the same order as before)
+  for (let i = 0; i < 12; i++) { const x = -70 + r() * 140, o = (r() - 0.5) * 3.2, w = 0.9 + r() * 1.2, dd = 0.7 + r() * 0.8, ry = r() * 3, rz = (r() - 0.5) * 0.05; B.add(bbox(w, 0.16, dd, 0.06, 1), shelfM, x, 0.77, zc(x) + o, 0, ry, rz); col({ type: 'box', x, z: zc(x) + o, hw: w / 2, hd: dd / 2, rot: ry, top: 1.3, block: true, seeThrough: true, noBall: true }); }
   // three boulders mid-stream (a foam ring each) near the tree bridge's reach and west of it, off the channel's line
   for (const [x, o, rad] of [[-24, 1.7, 0.62], [14, -1.5, 0.55], [-48, -1.8, 0.5]]) {
     const z = zc(x) + o; B.add(stone, stoneM, x, 0.7 + rad * 0.3, z, 0.2, r() * 6, 0.1, rad * 1.1, rad * 1.15, rad);
