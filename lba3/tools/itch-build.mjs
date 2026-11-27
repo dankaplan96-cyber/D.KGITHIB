@@ -28,6 +28,8 @@ let html = readFileSync(join(ROOT, 'index.html'), 'utf-8');
 if (existsSync(join(ROOT, 'assets', 'fonts', 'rubik.css'))) {
   html = html.replace(/<link rel="preconnect"[^>]*>\s*/g, '').replace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="stylesheet" href="assets/fonts/rubik.css">');
 }
+// the pilot is English only (the user, 27.11): the language row hidden, the game held to English
+html = html.replace('<head>', '<head><script>window.LBA_EN_ONLY = true;</script><style>.set-row[data-hint=lang]{display:none !important}</style>');
 writeFileSync(join(OUT, 'index.html'), html); n++;
 put(join(ROOT, 'THIRD-PARTY-NOTICES.txt'), 'THIRD-PARTY-NOTICES.txt');
 rmSync(OUTZIP, { force: true });

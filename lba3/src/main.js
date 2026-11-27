@@ -332,6 +332,8 @@ class Game {
     // the choice came back (langV) was never chosen here (the game was English only, whatever was stored): English.
     if (this.settings.langV !== 1 || !['en', 'he'].includes(this.settings.lang)) this.settings.lang = 'en';
     this.settings.langV = 1;
+    // (PILOT, the user 27.11: the itch.io pilot build is English only; tools/itch-build.mjs sets window.LBA_EN_ONLY and hides the row)
+    if (typeof window !== 'undefined' && window.LBA_EN_ONLY) this.settings.lang = 'en';
     setLang(this.settings.lang);
 
     // BOOT-FAIL (P73): a renderer that cannot start (no WebGL context) is named as such on the failure screen
