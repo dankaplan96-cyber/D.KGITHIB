@@ -1,0 +1,11 @@
+{
+  "name": "HerzoSign – החתימה הדיגיטלית של הרצוג",
+  "short_name": "HerzoSign",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f8",
+  "theme_color": "#0d7377",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
