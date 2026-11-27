@@ -29,16 +29,20 @@ export const SPOTS = [
 // FEET-66B (the 122 handed on, class C, the lip): the square's ring steps first
 const SPOTS_66B = [
   { id: 'c2-plaza', area: 'citadel', x: -49.6, z: -9.4, a: -2.04, d: 2.5, what: 'Citadel square, the ring steps (FLAT-TOWN): walked up from the street' },
+  { id: 'c2b-plaza', area: 'citadel', x: -42, z: -13.1, a: 0, d: 2.5, what: 'Citadel square, the ring steps from the south: on the upper tread' },
+  { id: 'c2c-plaza', area: 'citadel', x: -32.95, z: -4, a: -Math.PI / 2, d: 2.5, what: 'Citadel square, the ring steps from the east: on the upper tread' },
   { id: 'c3-station', area: 'citadel', x: -24.3, z: -72.8, a: -2.01, d: 3, what: 'Citadel, the project station\'s yard: a plate on the platform' },
   { id: 'c8-doorstep', area: 'citadel', x: -56.84, z: -13.5, a: -2.06, d: 3, what: 'Citadel town, a house\'s door step' },
   { id: 'c6-hatch', area: 'citadel', x: -27.77, z: -62.19, a: -2.87, d: 3, what: 'Citadel, the old cellar hatch\'s boards' },
   { id: 'c4-stone', area: 'citadel', x: -37.57, z: 18.3, a: -2.81, d: 2.9, what: 'Citadel, a low stone by the street (no collider before)' },
   { id: 'c9-boulder', area: 'citadel', x: -33.18, z: 48.84, a: -Math.PI / 2, d: 2.6, what: 'Citadel, a boulder (class C: a flat standable top over its dome before)' },
   { id: 'c5-bedrim', area: 'citadel', x: -36.59, z: 69.86, a: -2.06, d: 1.5, what: 'Citadel, a tulip bed\'s rim (its collider over the drawn top before)' },
+  { id: 'd2-bridge', area: 'desert', x: 3336.55, z: -72.7, a: -Math.PI / 2, d: 3, what: 'Desert Island, the arched bridge over the channel by the old mask (its barrel stood 0.35 m out of the deck)' },
   { id: 'd1-slab', area: 'desert', x: 3358.95, z: -38.54, a: -2.12, d: 2, what: 'Desert Island, a low slab' },
   { id: 'z4-porch', area: 'zeelich', x: 2389.1, z: -10.5, a: -2.86, d: 2.5, what: 'Zeelich, a porch' },
   { id: 'h8-foldwall', area: 'hamalayi', x: 4275.97, z: 75.8, a: 2.56, d: 3.1, what: 'the Hamalayi landing, a dry-stone fold wall\'s top' },
   { id: 'h1-arch-top', area: 'hamalayi', x: 4270, z: 36.9, a: Math.PI, d: 2.0, what: 'Hamalayi, the arch steps\' top tread and the rim\'s snow lip beside it' },
+  { id: 'h9-lip', area: 'hamalayi', x: 4270, z: 39.4, a: Math.PI, d: 2.5, what: 'Hamalayi, the rim\'s snow lip either side of the arch\'s steps, from the river' },
 ];
 const LIST = SET === '66b' ? SPOTS_66B : SPOTS;
 const RUN = LIST.filter((s) => !ONLY || ONLY.split(',').some((o) => s.id.startsWith(o)));
