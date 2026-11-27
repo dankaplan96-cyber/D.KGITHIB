@@ -81,6 +81,7 @@ export const HE_I18N = {
 
   // LBA3: the title, and the prologue's lines kept in i18n.js
   logo_sub: 'ההתעוררות',
+  logo_top: 'ההתעוררות', logo_tag: 'מחווה של מעריצים ל־LBA',
   title_sub: 'המשך מעריצים לא רשמי ל־Little Big Adventure 2',
   to_title: 'לתפריט הראשי', quit_game: 'יציאה מהמשחק',
   disclaimer: 'פרויקט מעריצים לא מסחרי, לא קשור ל־Adeline Software או ל־[2.21]. הדמויות והעולם שייכים לבעליהם. הסיפור, המודלים, הצלילים והמוזיקה מקוריים; חלק מהמקומות בנויים לפי המפות של המשחקים המקוריים.',

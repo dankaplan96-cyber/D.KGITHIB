@@ -122,7 +122,7 @@ Object.assign(STR.en, {
   ep_zoe_2: "The tunnels are empty again, and the hill families brought their goats down from the lighthouse. Gilbert says the well water is finally cold. He wants his refund.",
   ep_zoe_3: 'Sit. Eat. Then tell us everything. Slowly.',
   ep_end_title: 'The End',
-  ep_end_text: 'The bore still turns under the island, now as a shield run by both worlds. The heat posts glow again at half heat, for every house, on the list or not. Kesh has its oasis and Lhar its village. {vesk} The well runs cool.<br><br>Thanks for playing LBA3: The Awakening.',
+  ep_end_text: 'The bore still turns under the island, now as a shield run by both worlds. The heat posts glow again at half heat, for every house, on the list or not. Kesh has its oasis and Lhar its village. {vesk} The well runs cool.<br><br>Thanks for playing The Awakening.',
   ep_obj_home: 'Go home. Dinner is waiting',
   ep_obj_free: 'See how everyone is doing',
   ep_gilbert: "My refund came. Two months' worth. I almost miss having something to complain about.",

@@ -222,6 +222,7 @@ spoken.miss = new Set();
 
 Object.assign(STR.en, {
   logo_sub: 'THE AWAKENING',
+  logo_top: 'THE AWAKENING', logo_tag: 'A FAN-MADE LBA TRIBUTE',   // (#21, the user 27.11: the title is the game's own name, not "LBA3")
   // BOOT-FAIL (P73): the start failed (main.js startupFailed)
   boot_fail_gfx: "The game couldn't start 3D graphics in this browser. Retry, or restart the browser.",
   boot_fail: "The game couldn't start. Retry, or reload the page.",
