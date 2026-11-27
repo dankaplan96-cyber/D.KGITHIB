@@ -67,23 +67,32 @@ await ev(() => { const G = game, R = G.rooms.well; G.flags.nodes = 3; if (R.barr
 const said = await ev(() => { for (let i = 0; i < 30 && !game.flags.prologueDone; i++) { T.talkAll(4); game.step(0.2); } return [game.flags.sendellHeard, game.flags.prologueDone]; });
 is("Sendell's scene played and chapter 1 ended", said, (v) => v[0] === true && v[1] === true);
 // the fade, chapter 2's card (held for its time), the morning's first line: stop at each line to look
-const morning = await ev(() => {
-  const G = game, seen = [];
+// (stops once on Gilbert's line, 1.5 s into it, for a picture: is he in the camera's view, facing Twinsen?)
+const run = (stopAtGilbert) => ev((stop) => {
+  const G = game, seen = (window.__seen ??= []);
   for (let i = 0; i < 400 && !(G.flags.c1_started); i++) {
     G.step(0.1);
     if (G.state === 'dialog') {
       window.__underCard ??= localStorage.getItem('lba3_save_v1');   // (the save chapter 2's card made, before its lines)
       const L = window.__lines[window.__lines.length - 1];
-      if (!seen.length || seen[seen.length - 1].text !== L.text) seen.push({ ...L, around: Object.keys(T.around()).sort().join(' ') });
+      if (!seen.length || seen[seen.length - 1].text !== L.text) {
+        if (stop && L.id === 'gilbert') { G.step(1.5); const n = T.npc('gilbert'), h = G.hero, a = Math.atan2(h.pos.x - n.pos.x, h.pos.z - n.pos.z), df = Math.abs(Math.atan2(Math.sin(a - n.angle), Math.cos(a - n.angle)));
+          seen.push({ ...L, inView: G.story.seen(n.pos), facing: +df.toFixed(2), around: Object.keys(T.around()).sort().join(' ') }); G.renderer.render(); return null; }
+        seen.push({ ...L, around: Object.keys(T.around()).sort().join(' ') });
+      }
       G.input.taps.add('KeyE'); G.step(0.05);
     }
   }
   return { key: G.flags.chapterKey, started: !!G.flags.c1_started, room: G.room?.id ?? 'outdoor', seen };
-});
+}, stopAtGilbert);
+await run(true);
+await page.screenshot({ path: 'captures/p152-morning-gilbert.png', timeout: 180000 });
+await ev(() => { game.input.taps.add('KeyE'); game.step(0.05); });
+const morning = await run(false);
 console.log('MORNING', JSON.stringify(morning));
 is('chapter 2 (project) started, outdoors by the well', morning, (v) => v.key === 'project' && v.started && v.room === 'outdoor');
 const gl = morning.seen.find((s) => s.id === 'gilbert');
-is("Gilbert's morning line: Gilbert there, shown, in Twinsen's scene, within talking distance", gl, (v) => v && v.present && v.shown && v.scene && v.d < 6);
+is("Gilbert's morning line: Gilbert there, shown, in Twinsen's scene, within talking distance, in the camera's view", gl, (v) => v && v.present && v.shown && v.scene && v.d < 6 && v.inView);
 is('every line with a person speaking: the speaker there and near (no talk with someone absent)', morning.seen.filter((s) => s.npc && !(s.present && s.shown && s.scene && s.d < 12)), (v) => v.length === 0);
 const after = await ev(() => T.around());
 // (the story's cast only: the residents' rounds — WORLD-LIFE's citizens — come and go about the square on their own)

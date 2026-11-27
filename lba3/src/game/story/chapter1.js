@@ -316,7 +316,7 @@ export class Chapter1 extends ChapterBase {
       case 'vesk':
         if (!f.c1_task) {
           return c([['vesk', 'c1_vesk_1'], ['hero', 'c1_tw_vesk1'], ['vesk', 'c1_vesk_2'], ['hero', 'c1_tw_vesk2'], ['vesk', 'c1_vesk_3'], ['vesk', 'c1_vesk_4']], () => {
-            f.c1_task = true; g.updateObjective(); g.save(false);   // (the new goal shows in the objective panel)
+            f.c1_task = true; this.story.refreshCast({ walk: true }); g.updateObjective(); g.save(false);   // (the new goal shows in the objective panel; P152: Gilbert walks back to the water office)
           });
         }
         if (!f.c1_water) return c([['vesk', 'c1_vesk_wait']]);
@@ -1001,7 +1001,8 @@ export class Chapter1 extends ChapterBase {
     this.line.applyFlags(current);
     // (P152: a save from under chapter 2's card, before its morning lines were over — nextChapter saves first — had no
     //  objective and nothing ran (update waits for c1_started): it goes on from the morning's end)
-    if (current && !f.c1_started) { f.c1_started = true; this.morning = false; }
+    this.morning = false;   // (a load never lands inside the morning's lines)
+    if (current && !f.c1_started) f.c1_started = true;
     for (const v of W.valves || []) if (f['c1_valve_' + v.id]) this.openValve(v, true);
     // a save from between the third valve and the water scene must not leave the chapter stuck
     if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) { f.c1_water = true; W.well?.setWater?.(true); }

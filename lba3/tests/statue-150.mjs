@@ -38,7 +38,7 @@ const close = async (name, side, d, up) => {
 await play('1-play-front', 0, 7);
 await play('2-play-side', Math.PI / 2, 7);
 await close('3-close-front', 0, 3.6, 0.3);
-await close('4-close-side', Math.PI / 2, 3.6, 0.3);
+await close('4-close-side', -Math.PI / 2, 3.6, 0.3);   // (his right side: the arm and the ball)
 await close('5-close-front-right', -0.6, 3.6, 0.2);
 const fails = done();
 await browser.close();

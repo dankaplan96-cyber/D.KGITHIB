@@ -169,7 +169,7 @@ export function buildStatue(scene, W, x, z, ry) {
   // (P150, the user 27.11: the ball raised over his head read badly from the square; his right arm now rests, the ball held
   //  low at his side. P152's look at it: bent forward, the hand brought the ball before his hip — from the side it stood
   //  out in front of him at the belt. Now the arm hangs nearly straight, a little out, the small ball beside his thigh)
-  pose(tw, { 'armR.sh.x': -0.06, 'armR.el.x': -0.18, 'armR.sh.z': -0.3,
+  pose(tw, { 'armR.sh.x': 0.08, 'armR.el.x': -0.1, 'armR.sh.z': -0.3,
     'armL.sh.z': 0.55, 'armL.sh.x': -0.25, 'armL.el.x': -0.35, 'head.y': 0.12, 'head.x': -0.08 });
   pose(zo, { 'armL.sh.z': -0.05, 'armL.sh.x': -0.45, 'armL.el.x': -1.9, 'armR.sh.z': -0.5, 'armR.sh.x': -0.2, 'armR.el.x': -0.3, 'head.y': -0.25, 'head.x': -0.05 });
   // the ball in his lowered hand
