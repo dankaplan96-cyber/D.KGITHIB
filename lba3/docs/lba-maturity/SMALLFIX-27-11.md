@@ -144,3 +144,5 @@ probes (colliders and their builders, the reach sets, the slides). The pictures 
   gate since `2183c93a`: the suite's check to update (or the landing), not this branch's.
 - `hamalayi-life`: Pim in Lhar in a chapter 7 save, and Retry still loading after 120 s: not this branch's; to rerun on
   the base when the machine is quiet.
+
+> 27.11 (coordinator): correction to commit message "inside-out PASS after merge": the post-merge run did not finish (the browser was closed under memory pressure, load 24, three other workers running); the worker's own PASS on its branch stands. Rerun after the merge when the machine is quiet.
