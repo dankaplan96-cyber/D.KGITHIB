@@ -70,8 +70,8 @@ Discovery after: **0 candidates on every isle**. `HANDED` holds the one true exc
 **Behaviour changes (for the user's pick)**: on the isles, planters, benches, crates, fences and other low props are
 obstacles (were walked through); rocks and fallen blocks are no longer stood on; rocks and blocks at a slope's edge
 are solid; Franco's heaps, mounds and seat are obstacles; the portal plinth is stepped onto. Nothing looks
-different. The temple's door was walked in and out by input over the new plinth (scratch boot: entered, back on the
-plaza on the plinth's floor).
+different. The temple's door was walked in and out by input over the new plinth (scratch boot: entered, and back out on
+the plaza).
 
 **Reach** (the suite's flood over a 0.5 m grid, on foot and generously by the hop-pack; floors reached, before →
 after; measured on `e293f25e`, before the narrowing, which only takes obstacles away): Otringal 43 140 → 42 121, Knartas' bounds 83 737 → 82 631, Mosquibee 17 838 → 17 567, Celebration 5 748 →
@@ -84,8 +84,8 @@ door by input, Knartas door to door by the planner) is the check of that.
 `e293f25e`, before the narrowing): 199 fine
 on both, 166 fail on both (slides off an isle's edge into the clouds: a respawn either way, not this change; the isles
 are not in `slidetraps`), 9 better, **4 worse** (Otringal (1881.7, 1876.2), Celebration (2905.5, 1820.1), the
-Platform (3856.9, 1756.0), Oldwatch (5208.5, 1774.8): a slide held by a new obstacle ends in the fall's respawn).
-Handed on below.
+Platform (3856.9, 1756.0), Oldwatch (5208.5, 1774.8): a slide held by a new obstacle ends in the fall's respawn; the
+same four replayed on `f1e0823f`: still a respawn, 2 of them with a life lost). Handed on below.
 
 ## 3. #67: five suites undercounted minor residents' lines
 
@@ -104,7 +104,9 @@ logs `HEARD` per speaker (box / overhead). Per suite:
   list: now each from its own speaker.
 - `interior-life`: hears remarks under the same name; the two filters (`'n_' + id` / `def.name`) take either.
 
-What each run heard: see the table below (HEARD lines).
+What each run heard: see the table below (HEARD lines). On the base, the lines that went over a head were not heard:
+`interior-life`'s, `zeelich-doors`' and `hamalayi-life`'s checks of them fell short (inferred from HEARD; the base
+not rerun).
 
 ## Tests (each once, `SERVE=1`; feet-on-surface and island-doors twice, after a fix; automated runtime only, SwiftShader)
 
@@ -114,12 +116,13 @@ What each run heard: see the table below (HEARD lines).
 | `feet-on-surface` (all areas) | `026b1113` | PASS, 2/2: class A walked 1 (the roof eave, handed on: the one true exception), FAIL 0, not reached 0; class B 1 (the monastery wall's pillar, listed); soft snow 86, water 4 listed |
 | `feet-on-surface` (all areas), again after the narrowing | `f1e0823f` | PASS, 2/2, the same counts (456 s) |
 | `desert-life` | `026b1113` | PASS, 30/0. HEARD: every line in the box (Kesh's people are chapter 4's cast, not minor) |
-| `interior-life` | `026b1113` | PASS, 144/0. HEARD: 36 of the rooms' and the ports' people spoke over their heads (Luc 3, Tavi 7, Ama 6 + 1 in the box, Lomba 5 …): those lines were not heard before |
+| `interior-life` | `026b1113` | PASS, 144/0. HEARD: 32 of the rooms' and the ports' people spoke over their heads (Luc 3, Tavi 7, Ama 6 + 1 in the box, Lomba 5 …): on the base their "a line of their own" checks fell short (inferred from HEARD; the base not rerun) |
 | `isles-bar` | `026b1113` | PASS, 13/0. HEARD: Ione 2, Zuzz 1, Ulla 1, all in the box; Zuzz's line is now required |
-| `hamalayi-life` | `026b1113` | FAIL, 16/2. The #67 checks PASS (HEARD: Sana, Lhamo and Dorje over their heads; Bero, Yorna, Sefa, Tenpa in the box). The two failures are not this branch's (it changes no Hamalayi, residents' or loading file): "a save with only chapter 7's key: Pim at the monastery" (Pim at x −11, in Lhar) and "Retry: back in play" (still `loading` after 120 s, with three browsers on the machine). Not rerun on the base |
-| `zeelich-doors` | `026b1113` | FAIL, 22/2. "Lissa and Wenna talk (their own lines)" PASS: **both spoke over their heads**, and the old `tl.length >= 2` had counted other lines. The two failures (chapters 3 and 5): out of Zeelich's terminal he lands 7.84 m from its street door (the suite wants under 2.8 m); the terminal leads out by its gate since P83 item 10 (`2183c93a`, 20.11; the suite's check is from 7.11). Not this branch's |
+| `hamalayi-life` | `026b1113` | FAIL, 16/2. The #67 checks PASS (HEARD: Sana, Lhamo and Dorje over their heads, so on the base those checks fell short (inferred); Bero, Yorna, Sefa, Tenpa in the box). The two failures are not this branch's (it changes no Hamalayi, residents' or loading file): "a save with only chapter 7's key: Pim at the monastery" (Pim at x −11, in Lhar) and "Retry: back in play" (still `loading` after 120 s, with three browsers on the machine). Not rerun on the base |
+| `zeelich-doors` | `026b1113` | FAIL, 22/2. "Lissa and Wenna talk (their own lines)" PASS: **both spoke over their heads** (HEARD: hero 1, Lissa +1 and Wenna +1 overhead), so on the base `tl.length >= 2` fell short (inferred; the base not rerun). The two failures (chapters 3 and 5): out of Zeelich's terminal he lands 7.84 m from its street door (the suite wants under 2.8 m); the terminal leads out by its gate since P83 item 10 (`2183c93a`, 20.11; the suite's check is from 7.11). Not this branch's |
 | `island-doors` | `026b1113` | FAIL, 87/2: the Platform house `ih_platform_27_m38` was not entered (a fence drawn across its door, given a collider by this branch): fixed in `f1e0823f` |
 | `island-doors`, again | `f1e0823f` | PASS, 89/0 (the Platform house entered; Knartas door to door by the planner). Two tries before it crashed the browser during boot or the first area (a renderer crash, `trap int3`, and a cgroup out-of-memory kill in `dmesg`, with two other agents' browsers running): no result, rerun once the machine had one other browser |
+| `francos` (the dig: Mott, the tips, the Founder's Seat, the Waker found by the pocket set and dug, by input) | `93f3df66` | PASS, 19/0 (it covers the new heap, mound and seat obstacles) |
 | `worldfit` | `026b1113` | PASS, 1/0, visual 8/0 |
 | `walkers` | `026b1113` | PASS, 37/0 |
 
@@ -130,7 +133,7 @@ probes (colliders and their builders, the reach sets, the slides). The pictures 
 
 ## Handed on / not covered
 
-- The 4 isle slides that now end in a respawn, and the isles' 166 slides off their edges that do on both builds (the
+- The 4 isle slides that now end in a respawn (2 with a life lost), and the isles' 166 slides off their edges that do on both builds (the
   isles are not in `slidetraps`).
 - `inside-out`: profiles built in code for things not in the scene at a new game (enemies, items, pickups); the open
   list is not judged; the 1.91 m rig part is unidentified.
