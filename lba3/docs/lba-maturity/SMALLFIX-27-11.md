@@ -119,7 +119,7 @@ What each run heard: see the table below (HEARD lines).
 | `hamalayi-life` | `026b1113` | FAIL, 16/2. The #67 checks PASS (HEARD: Sana, Lhamo and Dorje over their heads; Bero, Yorna, Sefa, Tenpa in the box). The two failures are not this branch's (it changes no Hamalayi, residents' or loading file): "a save with only chapter 7's key: Pim at the monastery" (Pim at x −11, in Lhar) and "Retry: back in play" (still `loading` after 120 s, with three browsers on the machine). Not rerun on the base |
 | `zeelich-doors` | `026b1113` | FAIL, 22/2. "Lissa and Wenna talk (their own lines)" PASS: **both spoke over their heads**, and the old `tl.length >= 2` had counted other lines. The two failures (chapters 3 and 5): out of Zeelich's terminal he lands 7.84 m from its street door (the suite wants under 2.8 m); the terminal leads out by its gate since P83 item 10 (`2183c93a`, 20.11; the suite's check is from 7.11). Not this branch's |
 | `island-doors` | `026b1113` | FAIL, 87/2: the Platform house `ih_platform_27_m38` was not entered (a fence drawn across its door, given a collider by this branch): fixed in `f1e0823f` |
-| `island-doors`, again | `f1e0823f` | ISLAND_DOORS_2 |
+| `island-doors`, again | `f1e0823f` | PASS, 89/0 (the Platform house entered; Knartas door to door by the planner). Two tries before it crashed the browser during boot or the first area (a renderer crash, `trap int3`, and a cgroup out-of-memory kill in `dmesg`, with two other agents' browsers running): no result, rerun once the machine had one other browser |
 | `worldfit` | `026b1113` | PASS, 1/0, visual 8/0 |
 | `walkers` | `026b1113` | PASS, 37/0 |
 
