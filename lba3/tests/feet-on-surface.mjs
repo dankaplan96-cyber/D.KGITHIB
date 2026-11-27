@@ -43,16 +43,11 @@ const SNOW = ['#f6f9ff', '#f4f6fa'];   // (FEET-66B: and the wave-5 tin stacks' 
 // measured by the discovery (m; negative: floating)], by the discovery's middle of the piece (0.5 m))
 const OWNERS = {
   x1: "a house's roof eave, 7 cm over the house's wall collider: reached only by the hop-pack from the promenade (2.24 m below); a pitched roof is not a floor (a true exception)",
-  o17: "the isles (zislands.js, francosworld.js: PATHS-140B's files until it lands; FEET-66B.md lists each)",
 };
+// (SMALLFIX-27-11: the isles' 13 fixed (SMALLFIX-27-11.md): their noStand colliders are obstacles, their rocks too, the
+//  things on a slope's edge have one, Celebration's portal plinth a floor, Franco's spoil heaps and seat obstacles)
 const HANDED = [
   ['citadel', -69.505, 12.495, 'x1', 0.072],
-  ['isle_otringal', 1946.233, 1860.236, 'o17', 0.48], ['isle_otringal', 1894.87, 1802.06, 'o17', -0.476], ['isle_otringal', 1891.165, 1765.627, 'o17', 0.391],
-  ['isle_otringal', 1908.825, 1837.161, 'o17', 0.08], ['isle_otringal', 1864.165, 1786.995, 'o17', 0.067],
-  ['isle_knartas', 2250.66, 1806.66, 'o17', 0.23], ['isle_knartas', 2198.961, 1764.429, 'o17', 0.055],
-  ['isle_celebration', 2893.638, 1790.685, 'o17', 0.487], ['isle_celebration', 2883.131, 1812.708, 'o17', 0.085], ['isle_celebration', 2886.199, 1810.384, 'o17', 0.087],
-  ['isle_celebration', 2880.495, 1809.495, 'o17', 0.086],
-  ['isle_oldwatch', 5196.235, 1807.291, 'o17', 0.472], ['isle_oldwatch', 5186.913, 1793.827, 'o17', 0.243],
 ];
 const handed = (c) => { const h = HANDED.find(([a, x, z]) => a === c.area && Math.hypot(c.x - x, c.z - z) < 0.5); return h && { why: OWNERS[h[3]] }; };
 
@@ -115,6 +110,9 @@ for (const area of areas) {
           const x = X0 + a * C, z = Z0 + b * C, g = PH.groundAt(x, z, y + 0.01);
           if (g > y + 0.05 && PH.steepAt(x, z, g)) {} else if (okAt(x, z, g)) add(a, b, g);
           const g2 = PH.groundAt(x, z, y + HOP - 0.55 + 0.01); if (g2 > g + 0.3 && okAt(x, z, g2)) add(a, b, g2); } }
+      // (SMALLFIX-27-11: how much he reaches, for the log: grid points and floors reached; a fix that adds obstacles must
+      //  not shrink it beyond their own footprint)
+      let reached = 0; for (let k = 0; k < lv.length; k++) if (lv[k] === lv[k]) reached++; G._reached = reached;
       // (a spot's floor f reached: from a floor reached at one of the four grid points round it, a step takes him onto f)
       return (x, z, f) => { const i0 = Math.floor((x - X0) / C), j0 = Math.floor((z - Z0) / C); for (let a = i0; a <= i0 + 1; a++) for (let b = j0; b <= j0 + 1; b++) { if (a < 0 || b < 0 || a >= NX || b >= NZ) continue; const k = (a * NZ + b) * 3; for (let n = 0; n < 3; n++) { const L = lv[k + n]; if (L === L && Math.abs(PH.groundAt(x, z, L + 0.05) - f) < 0.02) return true; } } return false; };
     })();
@@ -167,8 +165,14 @@ for (const area of areas) {
     }
     // (b) float spots: every standable collider top in the area, its footprint shrunk 0.15 m
     const near = (x, z) => x > A.x0 && x < A.x1 && z > A.z0 && z < A.z1;
+    // (SMALLFIX-27-11: the isles lie side by side, and an isle's bounds (its drawn things) took in a neighbour's ground:
+    //  Knartas's held Undergas's, the Platform's and the Lift Dock's colliders, the Platform's Oldwatch's; nothing of theirs
+    //  is drawn in this area's store, so each read as a floor over nothing. A collider is judged in the outdoor area whose
+    //  middle is nearest it)
+    const OUT = Object.keys(G.rooms).map((id) => [id, G.regions.centreOf(id)]).filter(([, c]) => c?.outdoor);
+    const mine = (c) => { if (!area.room) return true; const own = G.regions.centreOf(area.room); if (!own) return true; const d0 = Math.hypot(c.x - own.x, c.z - own.z); return !OUT.some(([id, q]) => id !== area.room && Math.hypot(c.x - q.x, c.z - q.z) < d0); };
     for (const c of PH.colliders) {
-      if (!c.enabled || c.noStand || c.top < -40 || !near(c.x, c.z)) continue;
+      if (!c.enabled || c.noStand || c.top < -40 || !near(c.x, c.z) || !mine(c)) continue;
       // (only a floor he can step onto from the ground beside it: a building's roof box is not walked on)
       { const R = (c.type === 'cyl' ? c.r : Math.max(c.hw, c.hd)) + 0.5; let ok = false;
         for (let k = 0; k < 8 && !ok; k++) { const x = c.x + Math.sin(k * 0.785) * R, z = c.z + Math.cos(k * 0.785) * R, g = PH.groundAt(x, z, c.top + 0.3); if (g >= c.top - 0.55 && g < c.top - 0.02 && !PH.steepAt(x, z, g)) ok = true; }
@@ -203,9 +207,10 @@ for (const area of areas) {
       cand.push({ kind: 'sink', cls: c.dSum / c.n <= 0.3 ? 'A' : 'B', th: r3(th), area: area.id, si: c.si, name: nm + (c.built ? ' over a built walk' : ''), path, look: lk.hex + (lk.tex ? '/' + lk.tex : '') + (lk.transparent ? ' (see-through)' : ''), water: WATER.test(nm) || S[c.si].box[3] - S[c.si].box[0] > 300, soft: (SOFT.test(nm) || SNOW.includes(lk.hex)) && !c.built, m2: r3(c.n * C * C), dMax: r3(c.dMax), dMean: r3(c.dSum / c.n), x: r3(c.x / c.n), z: r3(c.z / c.n), box: S[c.si].box.map(r3), pts: c.pts }); }
     for (const [ci, f] of floats) cand.push({ kind: 'float', cls: f.rock > f.n / 2 ? 'C' : 'A', area: area.id, ci, name: 'collider ' + ci + (f.c.stair ? ' (stair)' : '') + (f.c.type === 'cyl' ? ' cyl r ' + f.c.r : ` box ${r3(f.c.hw * 2)}x${r3(f.c.hd * 2)}`), top: r3(f.c.top), m2: r3(f.n * C * C), dMax: r3(f.gMax), x: r3(f.x / f.n), z: r3(f.z / f.n), pts: f.pts });
     cand.sort((a, b) => b.m2 * b.dMax - a.m2 * a.dMax);
-    return { census: res.census, decals: res.decals.length, cols, cand, byRadius, narrow, unreach: [...unreach].map(([k, v]) => `${k} (${v.n} spots, one at ${v.at})`) };
+    return { census: res.census, decals: res.decals.length, cols, cand, byRadius, narrow, reached: G._reached, unreach: [...unreach].map(([k, v]) => `${k} (${v.n} spots, one at ${v.at})`) };
   }, { area, WATERs: WATER.source, SOFTs: SOFT.source, SNOW });
   console.log(`\n== ${area.id}: ${disc.cand.length} candidates (${disc.cand.filter((c) => c.kind === 'sink').length} sink, ${disc.cand.filter((c) => c.kind === 'float').length} float); ${disc.cols} columns; store ${JSON.stringify(disc.census)}`);
+  console.log(`  reach: ${disc.reached} floors at the 0.5 m grid's points reached on foot or by the hop-pack`);
   console.log(`  left out: ${disc.byRadius} spot(s) within his radius of something that stops him; ${disc.narrow} on a top narrower than a foot (a rail, a bar); UNREACHABLE (no way there on foot or by the hop-pack): ${disc.unreach.length ? disc.unreach.join('; ') : 'none'}`);
   for (const c of disc.cand.slice(0, 60)) console.log(`  ${c.cls} ${c.kind} ${c.water ? '[water] ' : ''}${c.soft ? '[soft] ' : ''}${c.m2} m2 max ${c.dMax} at (${c.x}, ${c.z}) ${c.name} | ${c.path || ''} ${c.look || ''} ${c.top != null ? 'top ' + c.top : ''}`);
   all.areas[area.id] = { census: disc.census, decals: disc.decals, cand: disc.cand, walks: [] };

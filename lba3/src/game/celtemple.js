@@ -178,6 +178,7 @@ export function buildCelPortal(group, physics) {
   const y = H(PORTAL.x, PORTAL.z + 0.6), x = PORTAL.x, z = PORTAL.z;
   const box = (w, h, d, m, px, py, pz) => { const mm = new THREE.Mesh(rbox(w, h, d, 0.05), m); mm.position.set(px, py, pz); mm.castShadow = mm.receiveShadow = true; k.add(mm); return mm; };
   box(4.0, 0.6, 2.6, g, x, y - 0.25, z);                                   // the plinth
+  physics.add({ type: 'box', x: o.x + x, z: o.z + z, hw: 2.0, hd: 1.3, top: y + 0.05 });   // (SMALLFIX-27-11: its floor: he walked in it, 49 cm under its top where the plaza falls away)
   box(2.4, 0.05, 1.8, MAT.flat('#0a0b0e', 0.95), x, y + 0.06, z - 0.2);     // the dark stairwell's mouth
   for (const s of [-1, 1]) { box(0.6, 3.4, 0.6, g, x + s * 1.5, y + 1.7, z + 0.6); physics.add({ type: 'box', x: o.x + x + s * 1.5, z: o.z + z + 0.6, hw: 0.32, hd: 0.32, top: y + 3.4, noStand: true }); }
   box(3.8, 0.6, 0.8, g, x, y + 3.7, z + 0.6);

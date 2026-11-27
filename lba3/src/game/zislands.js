@@ -1510,7 +1510,10 @@ function buildIsland0(scene, physics, name, L, at) {
   const atData = (x, z) => { const i = Math.round(gx(x)), j = Math.round(gz(z)); return i < 0 || j < 0 || i >= L.nx || j >= L.nz ? -1 : j * L.nx + i; };
   const paved = (x, z) => { const k = atData(x, z); return k >= 0 && A.comp[k] === A.main && !!S.paveAt?.(x, z); };
   const group = new THREE.Group(); group.name = 'isle_' + name; group.visible = false; group.position.set(ox, 0, oz); scene.add(group);
-  const col = (c) => physics.add({ ...c, x: c.x + ox, z: c.z + oz });
+  // (SMALLFIX-27-11, FEET-66B's rule on the isles: a collider that is not stood on (noStand) is an obstacle (block): a low
+  //  one — a planter, a wall's low end on a slope, a bench, a crate — was walked through under a step's height (physics
+  //  steps over a noStand brick up to STEP_UP); a tall one blocks as before. A stair, or one set block: false, keeps its way)
+  const col = (c) => physics.add({ ...c, x: c.x + ox, z: c.z + oz, ...(c.noStand && !c.stair && c.block == null ? { block: true } : {}) });
   const updaters = [];
   const r = rng(name.length * 131 + L.nx);
   const TX = textures();
@@ -1923,13 +1926,16 @@ function buildIsland0(scene, physics, name, L, at) {
     const top = y0 + o.sy;
     if (o.shape === 'skip' || S.open?.(o)) continue;   // (drawn by the style's own piece, or left out: a rail, a beam; S.open: a way through, ISLES-BAR)
     if (!o.solid && o.shape !== 'deck' && Math.hypot(o.x - pad.x, o.z - pad.z) < 4.2 + Math.max(o.sx, o.sz) / 2) continue;   // (under the shuttle's pad)
-    // (a small thing standing on a steep slope gets no block: he would slide into it and be held there)
+    // (a small thing standing on a steep slope: it had no collider (a slide held against it); now a block, below)
     const gi = Math.round(gx(o.x)), gj = Math.round(gz(o.z));
     let onSteep = false; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const ii = gi + a, jj = gj + b; if (ii >= 0 && jj >= 0 && ii < L.nx && jj < L.nz && A.steep[jj * L.nx + ii]) onSteep = true; }
     // (KNARTAS-GATE: a small thing resting on a roof, well over the ground, blocks only from its own foot up. Its block
     // reached down to the ground: the slab on Knartas's gatehouse roof filled the arch under it, and the harbour with
     // its shuttle pad was cut off from the diggers' village)
-    const small = (c) => { if (!onSteep) col(c.bottom == null && y0 - gy(o.x, o.z) > 1.2 ? { ...c, bottom: y0 - 0.05 } : c); };
+    // (SMALLFIX-27-11: on a steep slope it is an obstacle too (block, never stood on): with none he walked through the
+    //  fallen blocks and rocks lying at a slope's edge (Oldwatch, Celebration, the Platform); a slide held against one is
+    //  SLIDE-RESCUE's (actors.js), as against any rock)
+    const small = (c) => { const c1 = c.bottom == null && y0 - gy(o.x, o.z) > 1.2 ? { ...c, bottom: y0 - 0.05 } : c; col(onSteep ? { ...c1, block: true } : c1); };
     const shape = o.shape === 'house' && o.sy > 3 && landFrac(o) < 0.35 ? 'hulk'
       : o.shape === 'house' && G && o.x - ex / 2 < G.x1 && o.x + ex / 2 > G.x0 && o.z - ez / 2 < G.z0 && o.z + ez / 2 > G.z1 ? 'gate' : o.shape;
     placeTag(shape);   // (PLACE-2: each object a piece of its shape, for tests/place-scan.mjs; nothing in play)
@@ -1968,7 +1974,10 @@ function buildIsland0(scene, physics, name, L, at) {
       case 'block': {   // a fallen block of the old wall
         const a = (o.beta / 4096) * Math.PI * 2;
         B.add(bbox(ex, o.sy, ez, 0.08, 1.8), stoneM, o.x, y0 + o.sy / 2 - 0.08 + jy(o), o.z, 0.06, a, 0.04);
-        small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.45, hd: ez * 0.45, rot: a, top: y0 + o.sy - 0.1, noStand: o.sy > 0.5 });
+        // (SMALLFIX-27-11: an obstacle, as a rock is, at its drawn size: tilted, a low one's top stood up to 15 cm over its flat
+        //  collider and its block 6 cm over the ground at a raised corner (under BLOCK_LOW: walked into); a tall one's edge
+        //  47 cm over the ground outside its 0.9 box)
+        small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.5, hd: ez * 0.5, rot: a, top: y0 + o.sy + 0.15, block: true });   // (its top over the tilted corner's: a block is never stood on)
         break;
       }
       case 'gate': {   // a gatehouse: its two halves either side of the causeway, a lintel and a roof over the passage
@@ -2146,7 +2155,9 @@ function buildIsland0(scene, physics, name, L, at) {
         break;
       }
       case 'tree': trees[o.body % 2].push(o); if (!o.cut) col({ type: 'cyl', x: o.x, z: o.z, r: 0.3, top, noStand: true }); break;   // (o.cut: TREES-1, cutPlants)
-      case 'rock': rocks[o.body % 3].push(o); small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.4, hd: ez * 0.4, top: y0 + o.sy * 0.85, noStand: o.sy > 1.2 }); break;
+      // (SMALLFIX-27-11: a rock is an obstacle, as every scattered rock is since FEET-66B: its flat collider stood 5–48 cm
+      //  off its drawn dome, over it or in it)
+      case 'rock': rocks[o.body % 3].push(o); small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.4, hd: ez * 0.4, top: y0 + o.sy * 0.85, block: true }); break;
       case 'crate': {
         B.add(bbox(ex * 0.9 - jy(o), o.sy, ez * 0.9 - jy(o), 0.04, 1), plankM, o.x, y0 + o.sy / 2 + jy(o), o.z);
         R.smallThings.push({ x: ox + o.x, z: oz + o.z, r: Math.hypot(ex, ez) * 0.45, top });
