@@ -19,7 +19,8 @@ pointing well in (dir < −0.5, under 10 m). 10 684 one-sided meshes, 86 737 par
 **Positive control** on the base: it found FEET-66B's islet and bell and every small one in its list, and not the
 dais FEET-66B had fixed. 79 closed parts inside out (1 known); after the fixes **0**.
 
-**Fixed (profile reversed, shape and UVs unchanged: kit.js's v is the height, not the profile's order)**, each
+**Fixed (profile reversed, shape unchanged; with kit.js's lathe v is the height, so its UVs are unchanged; the
+others' v runs along the profile and is flipped, on untextured or vertex-coloured pieces)**, each
 confirmed by a picture first:
 
 | Piece | File | Copies | Sheet row |
@@ -59,7 +60,7 @@ Rediscovered first (`DISCOVER=1 ONLY=isle`): the line numbers and causes below a
 | Low noStand colliders walked through (physics steps over a noStand brick up to STEP_UP): Otringal's 19 frond-tree planters (49 cm), a wall's low end on a slope (48 cm), benches, crates, planks, fences | `zislands.js` | every noStand isle collider (not a stair, not `block: false`) is a `block`, as FEET-66B did elsewhere |
 | Rocks: flat colliders 5–48 cm off their drawn domes (Otringal 4, Knartas 2, Celebration 3) | `zislands.js` rock | `block` (obstacles, as every scattered rock since FEET-66B) |
 | Fallen blocks of the old wall, tilted: a low one's top 15 cm over its flat collider, a tall one's edge 47 cm out (Oldwatch) | `zislands.js` block | `block` at the drawn size, its top 15 cm over the drawn top |
-| Things on a slope's edge had no collider at all ("he would slide into it"): Oldwatch's blocks, Celebration's and the Platform's rocks (50–60 cm, walked through), railings | `zislands.js` `small` | a `block` there too |
+| Rocks and fallen blocks on a slope's edge had no collider at all ("he would slide into it"): Oldwatch's blocks, Celebration's and the Platform's rocks (50–60 cm, walked through) | `zislands.js` `small` | a `block` there too (rocks and blocks only: given to every small thing there, a fence drawn across the Platform house's door shut it, `island-doors` failed; narrowed, `f1e0823f`) |
 | Celebration's portal plinth: no floor, he walked 49 cm inside it where the plaza falls away | `celtemple.js` | a floor at the plinth's top |
 | Franco's dig: the spoil heaps (22 cm), the filled holes' mounds (to 23 cm on the slope), the seat (0.5 m) walked into | `francosworld.js` | `block` colliders |
 | Knartas's 14 and the Platform's floats "over nothing": other isles' colliders inside the bounds | `tests/feet-on-surface.mjs` | an isle's collider is judged in the isle whose middle is nearest it (isles only) |
@@ -67,19 +68,20 @@ Rediscovered first (`DISCOVER=1 ONLY=isle`): the line numbers and causes below a
 Discovery after: **0 candidates on every isle**. `HANDED` holds the one true exception (Citadel's roof eave).
 
 **Behaviour changes (for the user's pick)**: on the isles, planters, benches, crates, fences and other low props are
-obstacles (were walked through); rocks and fallen blocks are no longer stood on; railings, rocks and blocks at a slope's
-edge are solid; Franco's heaps, mounds and seat are obstacles; the portal plinth is stepped onto. Nothing looks
+obstacles (were walked through); rocks and fallen blocks are no longer stood on; rocks and blocks at a slope's edge
+are solid; Franco's heaps, mounds and seat are obstacles; the portal plinth is stepped onto. Nothing looks
 different. The temple's door was walked in and out by input over the new plinth (scratch boot: entered, back on the
 plaza on the plinth's floor).
 
 **Reach** (the suite's flood over a 0.5 m grid, on foot and generously by the hop-pack; floors reached, before →
-after): Otringal 43 140 → 42 121, Knartas' bounds 83 737 → 82 631, Mosquibee 17 838 → 17 567, Celebration 5 748 →
+after; measured on `e293f25e`, before the narrowing, which only takes obstacles away): Otringal 43 140 → 42 121, Knartas' bounds 83 737 → 82 631, Mosquibee 17 838 → 17 567, Celebration 5 748 →
 5 637, Undergas 26 397 → 26 218, the Platform 37 592 → 37 126, the Lift Dock 1 171 → 1 169, the Orchard 18 424 →
 18 276, Oldwatch 5 092 → 5 015. Every lost cluster is a new obstacle's footprint (at most 64 points, 16 m²) or a
-railing's line; no region was cut off. The hop-pack in the flood can hide a walk cut off: `island-doors` (every isle
+railing's line (railings on slopes: back to none after the narrowing); no region was cut off. The hop-pack in the flood can hide a walk cut off: `island-doors` (every isle
 door by input, Knartas door to door by the planner) is the check of that.
 
-**Slides** (scratch, `slidetraps`' method on the isles, 378 spots against the new obstacles, both builds): 199 fine
+**Slides** (scratch, `slidetraps`' method on the isles, 378 spots against the new obstacles, both builds; on
+`e293f25e`, before the narrowing): 199 fine
 on both, 166 fail on both (slides off an isle's edge into the clouds: a respawn either way, not this change; the isles
 are not in `slidetraps`), 9 better, **4 worse** (Otringal (1881.7, 1876.2), Celebration (2905.5, 1820.1), the
 Platform (3856.9, 1756.0), Oldwatch (5208.5, 1774.8): a slide held by a new obstacle ends in the fall's respawn).
@@ -104,9 +106,22 @@ logs `HEARD` per speaker (box / overhead). Per suite:
 
 What each run heard: see the table below (HEARD lines).
 
-## Tests (each once, `SERVE=1`, on `026b1113`; automated runtime only, SwiftShader)
+## Tests (each once, `SERVE=1`; feet-on-surface and island-doors twice, after a fix; automated runtime only, SwiftShader)
 
-RESULTS_TABLE
+| Suite | Commit | Result |
+|---|---|---|
+| `inside-out` (new) | `026b1113` | PASS, 1/1: 0 closed parts inside out (1 known, the sky); 6 small open parts listed (232 s) |
+| `feet-on-surface` (all areas) | `026b1113` | PASS, 2/2: class A walked 1 (the roof eave, handed on: the one true exception), FAIL 0, not reached 0; class B 1 (the monastery wall's pillar, listed); soft snow 86, water 4 listed |
+| `feet-on-surface` (all areas), again after the narrowing | `f1e0823f` | PASS, 2/2, the same counts (456 s) |
+| `desert-life` | `026b1113` | PASS, 30/0. HEARD: every line in the box (Kesh's people are chapter 4's cast, not minor) |
+| `interior-life` | `026b1113` | PASS, 144/0. HEARD: 36 of the rooms' and the ports' people spoke over their heads (Luc 3, Tavi 7, Ama 6 + 1 in the box, Lomba 5 …): those lines were not heard before |
+| `isles-bar` | `026b1113` | PASS, 13/0. HEARD: Ione 2, Zuzz 1, Ulla 1, all in the box; Zuzz's line is now required |
+| `hamalayi-life` | `026b1113` | FAIL, 16/2. The #67 checks PASS (HEARD: Sana, Lhamo and Dorje over their heads; Bero, Yorna, Sefa, Tenpa in the box). The two failures are not this branch's (it changes no Hamalayi, residents' or loading file): "a save with only chapter 7's key: Pim at the monastery" (Pim at x −11, in Lhar) and "Retry: back in play" (still `loading` after 120 s, with three browsers on the machine). Not rerun on the base |
+| `zeelich-doors` | `026b1113` | FAIL, 22/2. "Lissa and Wenna talk (their own lines)" PASS: **both spoke over their heads**, and the old `tl.length >= 2` had counted other lines. The two failures (chapters 3 and 5): out of Zeelich's terminal he lands 7.84 m from its street door (the suite wants under 2.8 m); the terminal leads out by its gate since P83 item 10 (`2183c93a`, 20.11; the suite's check is from 7.11). Not this branch's |
+| `island-doors` | `026b1113` | FAIL, 87/2: the Platform house `ih_platform_27_m38` was not entered (a fence drawn across its door, given a collider by this branch): fixed in `f1e0823f` |
+| `island-doors`, again | `f1e0823f` | ISLAND_DOORS_2 |
+| `worldfit` | `026b1113` | PASS, 1/0, visual 8/0 |
+| `walkers` | `026b1113` | PASS, 37/0 |
 
 Diagnostic runs during the work (not the covering runs): `inside-out` 3 full (before, before with pictures, after
 with pictures) and 2 for the two extra pictures; `feet-on-surface` 6 discoveries (`DISCOVER=1`, isles only); scratch
