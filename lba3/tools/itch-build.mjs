@@ -22,10 +22,17 @@ for (const [, src] of Object.entries(gameFiles())) {
 }
 // the code: one module at src/main.js (three.js stays in vendor/, through the page's import map)
 mkdirSync(join(OUT, 'src'), { recursive: true });
-execFileSync('node', [join(ROOT, 'tools/bundle-artifact.mjs'), join(OUT, 'src/main.js')], { cwd: ROOT, stdio: ['ignore', 'ignore', 'inherit'] });
+// the build's own time (title screen, pause menu, the newer-version check): stamped into src/build-stamp.js BEFORE
+// bundling (the bundle inlines it; a stamp written only next to the bundle made the game call itself out of date),
+// then the file put back as it was
+const STAMP = join(ROOT, 'src/build-stamp.js'), stampWas = readFileSync(STAMP, 'utf-8');
+writeFileSync(STAMP, stampWas.replace(/BUILT = '[^']*'/, `BUILT = '${new Date().toISOString().slice(0, 19)}Z'`));
+try {
+  execFileSync('node', [join(ROOT, 'tools/bundle-artifact.mjs'), join(OUT, 'src/main.js')], { cwd: ROOT, stdio: ['ignore', 'ignore', 'inherit'] });
+  cpSync(STAMP, join(OUT, 'src/build-stamp.js'));
+} finally { writeFileSync(STAMP, stampWas); }
 n++; bytes += statSync(join(OUT, 'src/main.js')).size;
-// the build's own time on the title screen and in the pause menu (the repo's build-stamp.js is only stamped on publish)
-writeFileSync(join(OUT, 'src/build-stamp.js'), readFileSync(join(ROOT, 'src/build-stamp.js'), 'utf-8').replace(/BUILT = '[^']*'/, `BUILT = '${new Date().toISOString().slice(0, 19)}Z'`));
+
 let html = readFileSync(join(ROOT, 'index.html'), 'utf-8');
 if (existsSync(join(ROOT, 'assets', 'fonts', 'rubik.css'))) {
   html = html.replace(/<link rel="preconnect"[^>]*>\s*/g, '').replace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="stylesheet" href="assets/fonts/rubik.css">');
