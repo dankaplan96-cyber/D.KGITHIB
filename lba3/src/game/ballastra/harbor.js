@@ -566,9 +566,14 @@ export function* buildBallastraSteps(scene, physics) {
   const BR_OPEN = 0, BR_SHUT = -Math.PI / 2;
   const bridgeCol = physics.add({ type: 'box', x: 0, z: 0, hw: 1.2, hd: SC.len / 2, rot: 0, top: FL, seeThrough: true });
   const bridgeRails = [-1, 1].map(() => physics.add({ type: 'box', x: 0, z: 0, hw: 0.09, hd: SC.len / 2 - 0.3, rot: 0, top: FL + 1.3, seeThrough: true, noStand: true }));
+  // (FEET-66B: the bronze turntable, 8 cm over the pier, and the counterweight behind the pivot, 10 cm, their tops floors:
+  //  he walked into them; the counterweight's turns with the bridge)
+  physics.add({ type: 'cyl', x: ox + SC.piv.x, z: oz + SC.piv.z, r: 1.0, top: FL + 0.08, seeThrough: true });
+  const cwCol = physics.add({ type: 'box', x: 0, z: 0, hw: 0.9, hd: 0.6, rot: 0, top: FL + 0.1, seeThrough: true });
   const placeBridgeCols = (a) => {
     const dx = -Math.sin(a), dz = -Math.cos(a), cx = ox + SC.piv.x + dx * SC.len / 2, cz = oz + SC.piv.z + dz * SC.len / 2;
     Object.assign(bridgeCol, { x: cx, z: cz, rot: a }); physics.update(bridgeCol);
+    Object.assign(cwCol, { x: ox + SC.piv.x + Math.sin(a) * 1.0, z: oz + SC.piv.z + Math.cos(a) * 1.0, rot: a }); physics.update(cwCol);
     [-1, 1].forEach((s, i) => { const R = bridgeRails[i]; Object.assign(R, { x: cx + Math.cos(a) * s * 1.15, z: cz - Math.sin(a) * s * 1.15, rot: a }); physics.update(R); });
   };
 

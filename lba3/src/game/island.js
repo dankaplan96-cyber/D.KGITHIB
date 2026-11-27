@@ -471,7 +471,7 @@ function crateStack(W, parent, list, r) {
   for (const [x, z, n = 1, s = 1] of list) {
     const y = W.H(x, z), ry = r() * 0.6;
     for (let k = 0; k < n; k++) items.push({ x: x + (r() - 0.5) * 0.06, y: y + k * s, z: z + (r() - 0.5) * 0.06, ry: ry + (r() - 0.5) * 0.25, s });
-    W.physics.add({ type: 'box', x, z, hw: s / 2, hd: s / 2, rot: ry, top: y + n * s, seeThrough: n * s < 1.6 });
+    W.physics.add({ type: 'box', x, z, hw: s / 2, hd: s / 2, rot: ry, top: y + (n - 0.05) * s, seeThrough: n * s < 1.6 });   // (FEET-66B: the top crate's lid, 0.95 of it: 5 cm under the stack's full height, where he stood)
   }
   instances(parent, C.planks, a, items);
   instances(parent, C.frame, b, items);
@@ -681,6 +681,9 @@ function buildHarbour(W0, root, r) {
       sh.moveTo(-0.2, -3.6); sh.lineTo(1.0, -3.6); sh.lineTo(1.0, wt); sh.lineTo(0.18, wt); sh.lineTo(-0.2, -3.6);
       B2.add(WALL_LOOK ? boxUV(extrude(sh, len, 1), WALL_TILE) : extrude(sh, len, TILE.rubble), rub, ax, 0, az, 0, ry, 0);
       B2.add(bbox(0.62, 0.22, len - c0, 0.03, TILE.stone), cope, (ax + bx) / 2 + Math.cos(ry) * 0.3 + Math.sin(ry) * c0 / 2, top - 0.09, (az + bz) / 2 - Math.sin(ry) * 0.3 + Math.cos(ry) * c0 / 2, 0, ry, 0);   // (bbox is cached: placed by its middle, never translated)
+      // (FEET-66B: the coping's top a floor, 0.1 m out past the face as HARBOUR-BRINK's lip: on the pier the deck's floor
+      //  held him 7 cm under it)
+      (B2 === BL ? Wl.physics : physics).add({ type: 'box', x: (ax + bx) / 2 + Math.cos(ry) * 0.26, z: (az + bz) / 2 - Math.sin(ry) * 0.26, hw: 0.36, hd: len / 2 + 0.1, rot: ry, top: top + 0.02, seeThrough: true });
       const ix = Math.cos(ry) * 0.45, iz = -Math.sin(ry) * 0.45, uA = j & 1 ? 0.45 : 0, uB = j & 2 ? len - 0.45 : len, n = Math.max(1, Math.round((uB - uA) / 3));
       const us = []; for (let i = 0; i <= n; i++) us.push(uA + ((uB - uA) * i) / n);
       for (const [u0, u1] of gaps) for (const u of [u0, u1]) if (u > uA && u < uB) us.push(u);
@@ -736,9 +739,14 @@ function buildHarbour(W0, root, r) {
       // the paving), 0.1 m out past the face and its ends, as the quay's west face has: the terrain grid can't step at
       // the face (world.js keeps the last grid row inside level and sinks the first one out, so the bank between them
       // meets the sea 0.1 m past the face), so this holds the paving's level out to the face
+      // (FEET-66B: the coping's top, 0.62 m, then the wall's own top behind it, 0.18 m lower, to 1 m in: one box at the
+      //  coping's height held him 20 cm over the wall top where the land behind lies lower than the coping (the quay's
+      //  south face); where the paving is at the coping's level the ground there is higher than the wall top and wins. The
+      //  two overlap 0.1 m: physics reads a box 5 cm in from its edges, and a seam would read the land under them)
       const lip = (ax, az, bx, bz, top) => {
-        const len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az), o = 0.45;
-        physics.add({ type: 'box', x: (ax + bx) / 2 + Math.cos(ry) * o, z: (az + bz) / 2 - Math.sin(ry) * o, hw: 0.55, hd: len / 2 + 0.1, rot: ry, top: top + 0.02, seeThrough: true });
+        const len = Math.hypot(bx - ax, bz - az), ry = Math.atan2(bx - ax, bz - az);
+        for (const [u0, u1, y] of [[0.52, 1.0, top - 0.18]]) { const o = (u0 + u1) / 2;   // (the coping's: wallRun)
+          physics.add({ type: 'box', x: (ax + bx) / 2 + Math.cos(ry) * o, z: (az + bz) / 2 - Math.sin(ry) * o, hw: (u1 - u0) / 2, hd: len / 2 + 0.1, rot: ry, top: y, seeThrough: true }); }
       };
       for (const [ax, az, bx, bz, top, gaps, j] of [
         [QX + QUAY_R, z1, qx1, z1, QH, [[-1, 99]], 0],
@@ -769,6 +777,7 @@ function buildHarbour(W0, root, r) {
     g.add(shed.group);
     fitAdd({ region: 'citadel', name: "Doran's harbour shed", x: sx + d.x, z: sz + d.z, ry, oy: y - 0.05, ...shed.fit });
     for (const c of shed.colliders) physics.add({ type: 'box', x: sx, z: sz, hw: c.hw, hd: c.hd, rot: ry, top: y + 4 });
+    for (const c of shed.steps) physics.add({ type: 'box', x: sx + Math.cos(ry) * c.x + Math.sin(ry) * c.z, z: sz - Math.sin(ry) * c.x + Math.cos(ry) * c.z, hw: c.hw, hd: c.hd, rot: ry, top: y - 0.05 + c.top, seeThrough: true });   // (FEET-66B: its door step)
     W.harbourShed = { x: sx, z: sz, door: { x: sx - 1.1, z: sz - 3.6 / 2 - 0.75 } };
     // fishing tools against the wall: oars, a net on a rack, lobster pots
     const at = frame(sx, sz, ry);
@@ -1334,7 +1343,13 @@ function tulipBed(W, parent, x, z, w, d, ry, r, acc = null) {
     instances(g, T.green, pm('#4f8f3a', 0.8), list, { cast: false });
     instances(g, T.cup, pm('#ffffff', 0.6), cups, { cast: false });
   }
-  W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.15, hd: d / 2 + 0.15, rot: ry, top: y + 0.24, seeThrough: true });
+  // (FEET-66B: the curb's top and the soil's, each its own floor: one box at the curb's level held him 9 cm over the soil)
+  const P = W.physics, c = Math.cos(ry), sn = Math.sin(ry), at = (lx, lz) => [x + c * lx + sn * lz, z - sn * lx + c * lz];
+  P.add({ type: 'box', x, z, hw: w / 2 + 0.1, hd: d / 2 + 0.1, rot: ry, top: y + 0.15, seeThrough: true });   // (under the curb's inner half: no seam)
+  for (const s of [-1, 1]) {
+    { const [cx, cz] = at(0, s * (d / 2 + 0.07)); P.add({ type: 'box', x: cx, z: cz, hw: w / 2 + 0.15, hd: 0.08, rot: ry, top: y + 0.23, seeThrough: true }); }
+    { const [cx, cz] = at(s * (w / 2 + 0.07), 0); P.add({ type: 'box', x: cx, z: cz, hw: 0.08, hd: d / 2, rot: ry, top: y + 0.23, seeThrough: true }); }
+  }
 }
 // (HEADING-LOAD: the rows of a whole quarter in two instanced meshes, drawn in full wherever the camera looked — the
 //  original props' rows 56k triangles on the street, none of them in view facing east: drawn only where the view can
@@ -1998,6 +2013,8 @@ function buildStation(W0, root, r) {
       for (let k = 0; k < 4; k++) {
         const [ax, az] = corners[k], [bx, bz] = corners[(k + 1) % 4];
         member(B, [BX + ax * hw, y0 + y, BZ + az * hw], [BX + bx * hw, y0 + y, BZ + bz * hw], i === 0 ? 0.2 : 0.14, tealM(), 1.2);
+        // (FEET-66B: the bottom girt lies 15 cm over the deck: its top a floor, stepped over, his feet were through it)
+        if (i === 0) P.add({ type: 'box', x: BX + (ax + bx) / 2 * hw, z: BZ + (az + bz) / 2 * hw, hw: az === bz ? hw + 0.1 : 0.1, hd: az === bz ? 0.1 : hw + 0.1, rot: 0, top: y0 + y + 0.1, seeThrough: true });
         if (i < lv.length - 1) {
           const y2 = lv[i + 1], hw2 = hwAt(y2);
           member(B, [BX + ax * hw, y0 + y, BZ + az * hw], [BX + bx * hw2, y0 + y2, BZ + bz * hw2], 0.09, tealM(), 1.2);
@@ -2142,6 +2159,10 @@ function buildStation(W0, root, r) {
     mesh(grp, new THREE.CircleGeometry(0.98, 32).rotateX(-Math.PI / 2), emit, BP.x, padTop + 0.012, BP.z, 0, { cast: false });
     P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 2.5, top: padTop, seeThrough: true });
     P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 3.1, top: g + 0.26, seeThrough: true });
+    // (FEET-66B: the emitter's brass ring lies 11 cm over the pad and the edge's torus 4 cm: rings he steps over, each a
+    //  ring collider at its top (physics.js ri))
+    P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 1.09, ri: 0.91, top: padTop + 0.11, seeThrough: true, stair: true });
+    P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 2.49, ri: 2.35, top: padTop + 0.04, seeThrough: true, stair: true });
     // the arch stands across the pad: its ring faces west, toward the gate
     const arch = mesh(grp, archGeo(), VC(), BP.x, padTop - 0.12, BP.z, 0);
     void arch;
@@ -2199,7 +2220,12 @@ function buildStation(W0, root, r) {
   { let k = 0; const r4 = () => (k++ < 6 ? r() : 0.31); barrels(W, grp, [[37.5, 41.6], [38.45, 42.0], [37.76, 40.25, false], [38.75, 40.8]], r4); }
   // walkway plates from the gate passage to the pad
   // (WORLD-FIX: every other plate 5 mm higher: where the walk turns, two plates overlap and their tops z-fought)
-  for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025 + (i % 2) * 0.005, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
+  // (FEET-66B: each plate its top a floor, 5 cm along past its ends so the next one's meets it: he walked 5 cm under them)
+  for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) {
+    const px = x + 0.8, py = g + 0.025 + (i % 2) * 0.005, pz = 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), pr = x > 47 ? -0.55 : 0;
+    B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, px, py, pz, 0, pr, 0);
+    P.add({ type: 'box', x: px, z: pz, hw: 0.825, hd: 1.1, rot: pr, top: py + 0.025, seeThrough: true });
+  }
   B.build();
 
   // --- machinery animation and steam (setActive), the beam (setBeam)
@@ -2619,6 +2645,7 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
       const x = xs[i], z = zs[i], g = W.H(x, z);
       B.add(cached('pcover', () => cyl(0.46, 0.5, 0.1, 14)), darkSteel(), x, g + 0.03, z);
       B.add(cached('pcoverr', () => new THREE.TorusGeometry(0.34, 0.025, 5, 14).rotateX(Math.PI / 2)), darkSteel(), x, g + 0.1, z);
+      W.physics.add({ type: 'cyl', x, z, r: 0.5, top: g + 0.08, seeThrough: true });   // (FEET-66B: the cover's top a floor: he walked 8 cm into it)
       if (vents && k % 2 === 0) {   // (a vent standpipe beside it)
         const vx = x + 0.9, vz = z + 0.2, vg = W.H(vx, vz);
         B.add(cyl(0.12, 0.12, 1.0, 10), tealM(), vx, vg + 0.5, vz);
@@ -2816,6 +2843,7 @@ function buildPipeline(W, root, r) {
     for (const s of [-1, 1]) W.physics.add({ type: 'cyl', x: V.x + s * 1.6, z: zl, r: 0.2, top: ym + 0.36, noStand: true, seeThrough: true });
     // a hazard-striped kerb plate under it and a warning plate
     B.add(boxUV(bbox(3.9, 0.06, 1.2, 0.02, 1), TILE.hazard), tm('hazard', { rough: 0.6 }), V.x, g + 0.03, zl);
+    W.physics.add({ type: 'box', x: V.x, z: zl, hw: 1.95, hd: 0.6, rot: 0, top: g + 0.06, seeThrough: true });   // (FEET-66B: the plate's top a floor: he walked 6 cm into it)
     // P17 (the user, 12.11.2026: "you can turn the pipe without crossing the line that makes them attack"): the valve stood
     // 1.3 m past the yard's painted line and its wheel answered the key from the public path, 0.3 m short of the line. A
     // waist-high hazard rail on the line in front of it: the wheel is reached only from inside the yard (story/depotwatch.js);
@@ -2931,7 +2959,7 @@ function buildDressing(W, root, r) {
   for (const [x, z] of CRATES) {
     const g = W.H(x, z), ry = x * 0.3;
     const m = crateMesh(1); m.position.set(x, g - 0.02, z); m.rotation.y = ry; grp.add(m);
-    const c = W.physics.add({ type: 'box', x, z, hw: 0.5, hd: 0.5, rot: ry, top: g + 1, seeThrough: true });
+    const c = W.physics.add({ type: 'box', x, z, hw: 0.5, hd: 0.5, rot: ry, top: g - 0.02 + 0.95, seeThrough: true });   // (FEET-66B: at its lid, the crate set 2 cm into the ground: he stood 7 cm over it)
     W.crates.push({ mesh: m, c, x, z, y: g + 0.5, alive: true });
   }
   // signposts (language-free pictograms; the text shows when read)
@@ -3067,8 +3095,13 @@ function tunnelMouth(W, root, id, o) {
   // colliders: the vault (as far as it stands out of the slope), the landing to stand on
   const [cx, cz] = f(0, -o.back / 2);
   P.add({ type: 'box', x: cx, z: cz, hw: W2, hd: o.back / 2, rot: o.ry, top: y + wall + W2, camSkip: true });
-  const [lx, lz] = f(0, 0.95);
-  P.add({ type: 'box', x: lx, z: lz, hw: 1.3, hd: 0.95, rot: o.ry, top: y - 0.02 });
+  // (FEET-66B: without a balcony, the landing to its drawn front, 1.45 m, and its step a floor of its own 0.23 m lower:
+  //  the one box at the landing's level held him 23 cm over the step)
+  if (o.balcony) { const [lx, lz] = f(0, 0.95); P.add({ type: 'box', x: lx, z: lz, hw: 1.3, hd: 0.95, rot: o.ry, top: y - 0.02 }); }
+  else {
+    { const [lx, lz] = f(0, 0.725); P.add({ type: 'box', x: lx, z: lz, hw: 1.3, hd: 0.725, rot: o.ry, top: y - 0.02 }); }
+    { const [lx, lz] = f(0, 1.625); P.add({ type: 'box', x: lx, z: lz, hw: 1.1, hd: 0.275, rot: o.ry, top: y - 0.25 }); }
+  }
   addOccluder(W, { kind: 'box', x: cx, z: cz, rot: o.ry, hw: W2, hd: o.back / 2, y0: y - 2, y1: y + wall + W2, name: 'old door ' + id });
   shutDoor(W, id, o.x, y, o.z, o.ry, 1.0);
 }
@@ -3088,6 +3121,8 @@ function cellarHatch(W, root, id, o) {
     for (const bz of [-0.75, 0.75]) { const [qx, qz] = frame(o.x, o.z, o.ry)(s * 0.465, bz); B.add(bbox(0.86, 0.03, 0.09, 0.01, 1), ironM, qx, g + 0.1, qz, 0, o.ry, 0); }
   }
   { const [px, pz] = frame(o.x, o.z, o.ry)(0, 0.95); B.add(bbox(0.16, 0.12, 0.08, 0.01, 1), ironM, px, g + 0.14, pz, 0, o.ry, 0); }
+  // (FEET-66B: the leaves' top a floor, the trim's 1 cm lower within it: he walked 9 cm into the boards)
+  W.physics.add({ type: 'box', x: o.x, z: o.z, hw: 1.15, hd: 1.4, rot: o.ry, top: g + 0.09, seeThrough: true });
   B.build();
   shutDoor(W, id, o.x, g, o.z, o.ry, 1.0);
 }
@@ -3177,7 +3212,7 @@ function plateauStair(W, root, o) {
     const ym = line(lm) + up, [px, pz] = f(lm, lz), sh = (g) => g.clone().applyMatrix4(new THREE.Matrix4().makeShear(k, 0, 0, 0, 0, 0));
     B.add(sh(bbox(L + 0.02, D + 0.3, 0.3, 0.03, 1)), stoneM, px, ym - (D + 0.3) / 2, pz, 0, o.ry, 0);
     B.add(sh(bbox(L + 0.06, 0.08, 0.38, 0.02, 1)), trimM, px, ym + 0.04, pz, 0, o.ry, 0);
-    for (const st of steps) { const [cx, cz] = f(st.m, lz); P.add({ type: 'box', x: cx, z: cz, hw: run / 2 + 0.02, hd: 0.15, rot: o.ry, top: line(st.m) + up + 0.15, noStand: true, seeThrough: true }); }
+    for (const st of steps) { const [cx, cz] = f(st.m, lz); P.add({ type: 'box', x: cx, z: cz, hw: run / 2 + 0.02, hd: 0.15, rot: o.ry, top: line(st.m) + up + 0.15, noStand: true, block: true, seeThrough: true }); }   // (FEET-66B: block: a cheek 0.35-0.48 m over the treads was walked through)
     return up;
   };
   const upN = cheek(oN, (st) => st.top + 0.45);
@@ -3249,7 +3284,10 @@ function buildFlatTown(W, root) {
     for (let i = 0; i < S.n; i++) physics.add({ type: 'box', x: S.xa - (i + 0.5) * tr, z: (S.zN + S.zS) / 2, hw: tr / 2, hd: depth / 2, rot: 0, top: TOWN_FLAT + (i + 1) * rise, seeThrough: true });
   }
   // the square's plaza: its steps, stone rings round it, each from under the street to its tread (world.js plaza walks
-  // the incline under them: no colliders, a step of 0.21 m is no wall)
+  // the incline under them, a step of 0.21 m is no wall)
+  // (FEET-66B: the incline runs through the treads' outer edges, so on a tread his feet were up to 28 cm under it: each
+  //  ring a stair collider at its drawn tread (a ring collider, physics.js ri); the look unchanged. 48-sided rings: the
+  //  collider's outer edge 2 cm past the polygon's chords, inside them once physics reads it 5 cm in)
   {
     const P = PLAZA;
     for (let k = 0; k < P.n; k++) {
@@ -3258,6 +3296,7 @@ function buildFlatTown(W, root) {
       const hole = new THREE.Path(); hole.absarc(0, 0, ri, 0, Math.PI * 2, true); sh.holes.push(hole);
       const g = new THREE.ExtrudeGeometry(sh, { depth: top - foot, bevelEnabled: false, curveSegments: 48 });
       B.add(scaleUV(g, TILE.stone), step, P.x, foot, P.z, -Math.PI / 2, 0, 0);
+      physics.add({ type: 'cyl', x: P.x, z: P.z, r: ro, ri: k === P.n - 1 ? ri : ri - 0.1, top, seeThrough: true, stair: true });   // (a ring, over the next one's outer 0.1 m: no seam; the plaza inside is the ground's. A stair: the residents' planner walks up it, walknav.js lowBrick)
     }
   }
   B.build();

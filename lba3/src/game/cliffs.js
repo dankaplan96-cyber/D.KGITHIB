@@ -506,6 +506,51 @@ export function stoneColumnGeometry(seed, depth, groundY = () => -1e9) {
 //     corners a little off true, paler than the stones (dressed stone), moss in the angle of the foot.
 // spec: { stones: [{ x, z, ry, h, seed }], pedestal: { x, z, y, h }, ground(x, z) } in world coordinates; every
 // stone's foot reaches 0.4 m under the lowest ground round it.
+// FEET-66B: the cliff rocks stand out onto walkable ground at a cliff's foot and its rim (a toe, a crag proud of the
+// rim); with no collider he walked into them, up to 0.6 m of rock over his feet. Every 0.33 m cell of walkable ground
+// (terrain not steeper than the walk allows, physics.js steepAt's limit; no floor of a brick over the rock there) with
+// the rock drawn more than 3 cm over the floor under it becomes an obstacle, block as the scattered stones (at least
+// 13 cm over that floor, so a toe of 3-12 cm stops him too); the cells of a row merged into one box. Read from the drawn
+// mesh, once, after the masonry's rocks have gone (world.js rocksOutOfMasonry). Returns the boxes added.
+export function rockFootColliders(mesh, terrain, physics, { cell = 0.33, slope = 1.1 * 1.35 } = {}) {
+  const pos = mesh.geometry.attributes.position.array, top = new Map(), K = 100003;
+  for (let t = 0; t + 8 < pos.length; t += 9) {
+    const ax = pos[t], ay = pos[t + 1], az = pos[t + 2], bx = pos[t + 3], by = pos[t + 4], bz = pos[t + 5], cx = pos[t + 6], cy = pos[t + 7], cz = pos[t + 8];
+    const d = (bx - ax) * (cz - az) - (cx - ax) * (bz - az);
+    if (Math.abs(d) < 1e-6) continue;   // (upright: no area seen from above)
+    const i0 = Math.floor(Math.min(ax, bx, cx) / cell), i1 = Math.floor(Math.max(ax, bx, cx) / cell), j0 = Math.floor(Math.min(az, bz, cz) / cell), j1 = Math.floor(Math.max(az, bz, cz) / cell);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      const px = (i + 0.5) * cell, pz = (j + 0.5) * cell;
+      const u = ((px - ax) * (cz - az) - (cx - ax) * (pz - az)) / d, v = ((bx - ax) * (pz - az) - (px - ax) * (bz - az)) / d;
+      if (u < 0 || v < 0 || u + v > 1) continue;
+      const y = ay + (by - ay) * u + (cy - ay) * v, k = i * K + j, o = top.get(k);
+      if (o === undefined || y > o) top.set(k, y);
+    }
+  }
+  const H = (x, z) => terrain.heightAt(x, z), e = 0.25, rows = new Map();
+  for (const [k, y] of top) {
+    const i = Math.round(k / K), j = k - i * K, px = (i + 0.5) * cell, pz = (j + 0.5) * cell;
+    if (physics.groundAt(px, pz, y + 0.3) >= y - 0.03) continue;   // (under a floor, or flush with the ground)
+    const fl = physics.groundAt(px, pz, H(px, pz) + 0.05), brick = physics._brick;
+    if (y - fl <= 0.03) continue;
+    if (!brick && Math.hypot(H(px + e, pz) - H(px - e, pz), H(px, pz + e) - H(px, pz - e)) / (2 * e) > slope) continue;   // (steep: not walked)
+    if (!rows.has(j)) rows.set(j, []);
+    rows.get(j).push([i, Math.max(y, fl + 0.13)]);
+  }
+  let n = 0;
+  for (const [j, list] of rows) {
+    list.sort((a, b) => a[0] - b[0]);
+    for (let s = 0; s < list.length;) {
+      let e2 = s, hi = list[s][1];
+      while (e2 + 1 < list.length && list[e2 + 1][0] === list[e2][0] + 1) { e2++; hi = Math.max(hi, list[e2][1]); }
+      const i0 = list[s][0], i1 = list[e2][0];
+      physics.add({ type: 'box', x: (i0 + i1 + 1) / 2 * cell, z: (j + 0.5) * cell, hw: (i1 - i0 + 1) * cell / 2, hd: cell / 2, rot: 0, top: hi, seeThrough: true, block: true });
+      n++; s = e2 + 1;
+    }
+  }
+  return n;
+}
+
 export function plateauStonesGeometry({ stones, pedestal, ground }) {
   const pos = [], uv = [], col = [];
   const LICHEN = [[0.62, 0.74, 0.42], [0.72, 0.78, 0.5], [0.5, 0.66, 0.3]];

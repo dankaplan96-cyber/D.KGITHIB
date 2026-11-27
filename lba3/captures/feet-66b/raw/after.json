@@ -1,0 +1,140 @@
+[
+ {
+  "id": "c2c-plaza",
+  "at": [
+   -32.805,
+   2.735,
+   -4
+  ],
+  "feetPx": [
+   480,
+   324
+  ],
+  "over": [],
+  "top": null,
+  "what": "Citadel square, the ring steps from the east: on the upper tread"
+ },
+ {
+  "id": "c6-hatch",
+  "at": [
+   -27.722,
+   15.97,
+   -62.018
+  ],
+  "feetPx": [
+   480,
+   356
+  ],
+  "over": [
+   {
+    "y": 15.97,
+    "what": "Buffer<old-door-passageS<Group"
+   }
+  ],
+  "top": 0,
+  "what": "Citadel, the old cellar hatch's boards"
+ },
+ {
+  "id": "c4-stone",
+  "at": [
+   -37.089,
+   2.3,
+   16.886
+  ],
+  "feetPx": [
+   480,
+   335
+  ],
+  "over": [],
+  "top": null,
+  "what": "Citadel, a low stone by the street (no collider before)"
+ },
+ {
+  "id": "c5-bedrim",
+  "at": [
+   -36.462,
+   2.441,
+   69.928
+  ],
+  "feetPx": [
+   480,
+   331
+  ],
+  "over": [
+   {
+    "y": 2.441,
+    "what": "Extrude<Group<original-props<Group"
+   }
+  ],
+  "top": 0,
+  "what": "Citadel, a tulip bed's rim (its collider over the drawn top before)"
+ },
+ {
+  "id": "d2-bridge",
+  "at": [
+   3336.728,
+   1.32,
+   -72.7
+  ],
+  "feetPx": [
+   480,
+   324
+  ],
+  "over": [
+   {
+    "y": 1.32,
+    "what": "Buffer<desert"
+   },
+   {
+    "y": 1.279,
+    "what": "Buffer<desert"
+   }
+  ],
+  "top": 0,
+  "what": "Desert Island, the arched bridge over the channel by the old mask (its barrel stood 0.35 m out of the deck)"
+ },
+ {
+  "id": "d1-slab",
+  "at": [
+   3358.917,
+   2.03,
+   -38.343
+  ],
+  "feetPx": [
+   480,
+   452
+  ],
+  "over": [
+   {
+    "y": 2.03,
+    "what": "Buffer<desert"
+   }
+  ],
+  "top": 0,
+  "what": "Desert Island, a low slab"
+ },
+ {
+  "id": "h9-lip",
+  "at": [
+   4270.111,
+   0.288,
+   39.52
+  ],
+  "feetPx": [
+   480,
+   337
+  ],
+  "over": [
+   {
+    "y": 0.715,
+    "what": "hchannel<hamalayi"
+   },
+   {
+    "y": 0.7,
+    "what": "hriver<hamalayi"
+   }
+  ],
+  "top": 0.427,
+  "what": "Hamalayi, the rim's snow lip either side of the arch's steps, from the river"
+ }
+]

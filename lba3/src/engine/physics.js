@@ -25,7 +25,8 @@ export class Physics {
   _key(ix, iz) { return ix * 73856093 ^ iz * 19349663; }
 
   add(c) {
-    // c: {type:'cyl', x,z,r, top, bottom?} | {type:'box', x,z,hw,hd,rot, top, bottom?}
+    // c: {type:'cyl', x,z,r, ri?, top, bottom?} | {type:'box', x,z,hw,hd,rot, top, bottom?}   (ri: a ring, its hole's radius;
+    // for a stair only: _push, which a stair never uses, reads the whole disc)
     // block: a low solid that is not a step (a bench, a planter box, a flower tub, a pot: SOLID-NPC props): never stepped
     // onto, it stops an actor like a wall once it stands above the ankle (BLOCK_LOW); never stood on either (noStand)
     c.bottom ??= -50;
@@ -107,7 +108,7 @@ export class Physics {
   }
 
   _inside(c, x, z, r = 0) {
-    if (c.type === 'cyl') return Math.hypot(x - c.x, z - c.z) < c.r + r;
+    if (c.type === 'cyl') { const d = Math.hypot(x - c.x, z - c.z); return d < c.r + r && !(c.ri > 0 && d <= c.ri - r); }   // (ri: a ring's hole, FEET-66B: the square's ring steps)
     const dx = x - c.x, dz = z - c.z;
     const lx = dx * c.cos - dz * c.sin;
     const lz = dx * c.sin + dz * c.cos;

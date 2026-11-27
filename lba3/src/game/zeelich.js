@@ -938,6 +938,7 @@ export function* buildZeelichSteps(scene, physics) {
       if (px > 34 && Math.abs(pz) < 8) continue;
       const s = 0.8 + r() * 1.6;
       rimRocks.push({ x: px + nx * (0.2 + r() * 0.6), y: Y0 - 0.6 - r() * 1.2, z: pz + nz * (0.2 + r() * 0.6), ry: r() * 6, s, color: new THREE.Color('#eeece8').multiplyScalar(0.95 + r() * 0.15) });   // (ZSTYLE-1: grey, not lilac)
+      { const q = rimRocks[rimRocks.length - 1]; if (q.y + 0.9 * s > Y0 + 0.03) col({ type: 'cyl', x: q.x, z: q.z, r: s, top: q.y + 0.9 * s, seeThrough: true, block: true }); }   // (FEET-66B: where it stands over the walk, an obstacle, as the stones in the grass)
     }
   }
   function stripBricks(P, inset, top) {
@@ -982,6 +983,7 @@ export function* buildZeelichSteps(scene, physics) {
     B.add(slabGeo(star, 0.075, 1.0), tm(kerbTex(), { rough: 0.8 }), 0, PV(0.075, 0.028), 0);
     // kerb ring of the plaza
     B.add(lathe([[PLAZA.r - 0.05, 0], [PLAZA.r + 0.18, 0], [PLAZA.r + 0.18, 0.1], [PLAZA.r - 0.05, 0.1]], 48, 1.2), tm('stone', { color: '#f2f0f2' }), PLAZA.x, PV(0.1, 0.03), PLAZA.z);
+    col({ type: 'cyl', x: PLAZA.x, z: PLAZA.z, r: PLAZA.r + 0.18, ri: PLAZA.r - 0.05, top: Y0 + 0.03, seeThrough: true, stair: true });   // (FEET-66B: the ring's top a floor, a ring collider (physics.js ri): 3 cm over the slab he stood on)
     // P136 (the user, 26.11: paving that stops short of other paving is a fault): the council house's arcade floor ended
     // 0.2–2.4 m short of the plaza's kerb ring, the island's bare granite in the two corners between. Its flags run on to
     // the ring now (their edge under the ring's stone, 7 mm under the plaza's own paving), the arcade's width
@@ -1308,6 +1310,9 @@ export function* buildZeelichSteps(scene, physics) {
             Object.assign(fe, { x0: op.x - aw / 2 - 0.1, x1: op.x + aw / 2 + 0.1, y1: ah + 0.07 });
           }
           HB.addM(boxUV(bbox(1.9, 0.14, 0.7, 0.03, 1), 1), stoneM, at(op.x, -base + 0.07, t + 0.35));
+          // (FEET-66B: the door's step a floor of its own: he walked 14 cm into it; placed as the house)
+          { const e = at(op.x, -base + 0.07, t + 0.35).elements, c = Math.cos(o.ry), sn = Math.sin(o.ry);
+            col({ type: 'box', x: o.x + e[12] * c + e[14] * sn, z: o.z - e[12] * sn + e[14] * c, hw: 0.95, hd: 0.35, rot: Math.atan2(-e[2], e[0]) + o.ry, top: Y0 + 0.14, seeThrough: true }); }
         } else {
           HB.addM(fillGeo(op, 0.05, 0, 0.5), lattice, at(0, 0, t * 0.45));
           HB.addM(bbox(op.w + 0.35, 0.09, 0.26, 0.02, 1), stoneM, at(op.x, op.y - 0.04, t + 0.06));
@@ -2412,7 +2417,7 @@ export function* buildZeelichSteps(scene, physics) {
       const s = 0.25 + r() * 0.5, it = { x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#eeece8').multiplyScalar(0.95 + r() * 0.15) };
       if (zlClear(x, z, 1) || liftClear(x, z, 1)) continue;
       rocks[i % 3].push(it);
-      if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
+      col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true, block: true });   // (FEET-66B: every stone in the grass an obstacle (block): a boulder's flat top held him up to 0.5 m over its dome, and the small ones, with no collider, he walked through; as drawn, neither is stood on)
     }
     const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#2a2a2c', emissiveIntensity: 0.4 });
     rocks.forEach((list, v) => { if (list.length) cullInstances(group, rockGeometry(v + 1), rockMat, list).userData.gpuGroup = 'trees'; });

@@ -105,7 +105,10 @@ const mergePlain = (geos) => {
 // as a chain of short segments; a station on every crossed lattice edge (shared, so the lip is watertight) carries a
 // rounded profile (back on the flat, a crest, an overhang, a curl under) whose thickness and overhang wander with a
 // smooth noise, thinning to almost nothing in places. Visual only: no collider, no shadow cast.
-export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) {
+// (FEET-66B, taper: where a designed walk meets the rim (the arch's steps), the lip is kept as it thins toward the walk —
+//  down to a fade of 0.04, no thickness floor, its overhang and back shrinking with it — so it ends in a taper to a
+//  sliver, not a cut)
+export function snowLips(T, parent, { levels, cell = 46, fade = () => 1, taper = null } = {}) {
   const n = T.segs + 1, h = T.heights, x0 = T.x0, z0 = T.z0, st = T.step;
   const H = (x, z) => T.heightAt(x, z);
   const smap = new Map();
@@ -142,9 +145,11 @@ export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) 
     if (s.v) return s.v;
     const cx = s.x - s.ox * 0.35, cz = s.z - s.oz * 0.35, Hc = H(cx, cz);
     s.fade = fade(cx, cz);
-    const thick = s.thick = s.fade * (0.42 + 0.5 * vnoise(cx * 0.33, cz * 0.33, 1)) * (0.2 + 0.8 * smoothstep(0.08, 0.36, vnoise(cx * 0.17, cz * 0.17, 3)));
-    const over = Math.sqrt(s.fade) * (0.5 + 0.6 * vnoise(cx * 0.21, cz * 0.21, 2) + 0.25 * Math.pow(Math.max(0, Math.sin(cx * 0.9 + cz * 0.7)), 2));
-    const back = Math.sqrt(s.fade) * (0.7 + 0.7 * vnoise(cx * 0.27 + 9, cz * 0.27, 5));
+    const ek = s.endK ?? 1;   // (FEET-66B: a run's end in a taper, below)
+    const thick = s.thick = ek * s.fade * (0.42 + 0.5 * vnoise(cx * 0.33, cz * 0.33, 1)) * (0.2 + 0.8 * smoothstep(0.08, 0.36, vnoise(cx * 0.17, cz * 0.17, 3)));
+    const tz = taper && taper(cx, cz), sf = ek * (tz ? s.fade : Math.sqrt(s.fade));   // (FEET-66B: in a taper its overhang and back shrink with the fade too)
+    const over = sf * (0.5 + 0.6 * vnoise(cx * 0.21, cz * 0.21, 2) + 0.25 * Math.pow(Math.max(0, Math.sin(cx * 0.9 + cz * 0.7)), 2));
+    const back = sf * (0.7 + 0.7 * vnoise(cx * 0.27 + 9, cz * 0.27, 5));
     s.v = PROF.map(([u, y], k) => {
       const su = u > 0 ? u * over : u * back, x = cx + s.ox * su, z = cz + s.oz * su;
       let yy = k === 0 ? H(x, z) + 0.03 : k === 1 ? H(x, z) + 0.04 + y * thick : Hc + y * thick;
@@ -155,7 +160,17 @@ export function snowLips(T, parent, { levels, cell = 46, fade = () => 1 } = {}) 
   };
   // keep the runs that matter: no segment where a trail or a walk crosses the rim or where the lip would be a film, and no
   // run shorter than 8 segments (a few metres of lip beside a trail's cut read as torn paper)
-  const keep = segs.filter(([a, b]) => { rim(a); rim(b); return !(a.fade < 0.8 || b.fade < 0.8 || a.thick < 0.17 || b.thick < 0.17); });
+  const keep = segs.filter(([a, b]) => { rim(a); rim(b); const lo = taper && (taper(a.x, a.z) || taper(b.x, b.z));
+    return lo ? !(a.fade < 0.04 || b.fade < 0.04) : !(a.fade < 0.8 || b.fade < 0.8 || a.thick < 0.17 || b.thick < 0.17); });
+  // (FEET-66B: where the rim itself ends in a taper zone — the bank cut for the arch's steps — a run's last station shrinks
+  //  to a sliver and the one before to under half: the lip thins out to its end instead of stopping in a cut face)
+  if (taper) {
+    const nb = new Map(), link = (p, q) => { if (!nb.has(p.id)) nb.set(p.id, []); nb.get(p.id).push(q); };
+    for (const [a, b] of keep) { link(a, b); link(b, a); }
+    for (const [a, b] of keep) for (const e of [a, b]) if (nb.get(e.id).length === 1 && e.endK == null && taper(e.x, e.z)) {
+      e.endK = 0.06; e.v = null; const n = nb.get(e.id)[0]; if (n.endK == null) { n.endK = 0.45; n.v = null; }
+    }
+  }
   const par = new Map(); const find = (i) => { while (par.get(i) !== i) { par.set(i, par.get(par.get(i))); i = par.get(i); } return i; };
   for (const [a, b] of keep) { if (!par.has(a.id)) par.set(a.id, a.id); if (!par.has(b.id)) par.set(b.id, b.id); par.set(find(a.id), find(b.id)); }
   const runLen = new Map(); for (const [a] of keep) { const r = find(a.id); runLen.set(r, (runLen.get(r) || 0) + 1); }

@@ -103,9 +103,15 @@ export function waystone(k) {
   k.add(rb(0.4, 0.5, 0.06, 0.02), MM.glow(), 0, H1 + H2 + SH * 0.62, C / 2 + 0.01);
   k.add(rb(0.52, 0.08, 0.14, 0.02), stone, 0, H1 + H2 + SH * 0.62 - 0.3, C / 2 + 0.05);
   [[-PW / 2 - 0.5, 0.2, 2.2, 0.45, 1.2, 0.3, 1], [PW / 2 + 0.6, -0.5, 2.0, 0.4, 1.1, -0.2, 2]].forEach(([x, z, l, h, d, ry, sd]) => drift(k, x, -0.08, z, l, h, d, ry, sd));
-  cols.push({ x: 0, z: 0, hw: PW / 2 + 0.45, hd: PD / 2 + 0.45, top: Ly });               // (two low stages, each within a step)
-  cols.push({ x: 0, z: 0, hw: PW / 2 - 0.1, hd: PD / 2 - 0.1, top: H1 });
-  cols.push({ x: 0, z: 0, hw: C / 2 + 0.55, hd: C / 2 + 0.55, top: H1 + H2 });
+  // (FEET-66B: the plinth's two sloped stages walked as drawn: each frustum a stack of nested boxes 5 cm apart in height,
+  //  each box's edge where the slope stands half a step under its top (so his feet are within 2.5 cm of the drawn face
+  //  all the way up), 5 cm wider for physics reading a box 5 cm in from its edge. The two stages were one box each, at
+  //  half and full height: he stood up to 43 cm over the slope and walked 43 cm into it. Its top step is the turning
+  //  puzzle's, story/depth.js buildWay)
+  const slope = (w0, d0, w1, d1, ya, yb) => { const n = Math.ceil((yb - ya) / 0.05 - 1e-6);
+    for (let k = 1; k <= n; k++) { const t = (k - 0.5) / n; cols.push({ x: 0, z: 0, hw: (w0 + (w1 - w0) * t) / 2 + 0.05, hd: (d0 + (d1 - d0) * t) / 2 + 0.05, top: ya + (yb - ya) * k / n }); } };
+  slope(PW + 0.9, PD + 0.9, PW, PD, 0, H1);
+  slope(2.6, 2.6, 1.9, 1.9, H1, H1 + H2);
   cols.push({ x: 0, z: 0, hw: C / 2, hd: C / 2, top: H1 + H2 + SH, noStand: true, see: true });
   return { colliders: cols, zones: [{ x: 0, z: 0, hw: PW / 2 + 1.5, hd: PD / 2 + 1.5 }], top: H1 + H2 + SH };
 }

@@ -167,6 +167,7 @@ export function buildLaneGate(game) {
   }
   for (let i = 0; i <= 18; i++) k.add(new THREE.BoxGeometry(0.03, 0.03, GRATE.hd * 2), iron, GRATE.x - GRATE.hw + (i * GRATE.hw * 2) / 18, gyG + 0.04, GRATE.z);
   k.add(new THREE.PlaneGeometry(GRATE.hw * 2, GRATE.hd * 2).rotateX(-Math.PI / 2), iron, GRATE.x, gyG + 0.022, GRATE.z);   // (the pit's dark iron floor: static)
+  PH.add({ type: 'box', x: GRATE.x, z: GRATE.z, hw: GRATE.hw + 0.1, hd: GRATE.hd + 0.1, top: gyG + 0.05, seeThrough: true });   // (FEET-66B: the frame's and the bars' top a floor: he walked 5 cm into them)
   const waterM = new THREE.MeshStandardMaterial({ color: '#4a7f9c', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.72, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
   const sheet = new THREE.Mesh(new THREE.CircleGeometry(1, 24).rotateX(-Math.PI / 2), waterM);
   sheet.scale.set(GRATE.hw + 0.3, 1, GRATE.hd + 0.42); sheet.position.set(GRATE.x, gyG + 0.05, GRATE.z + 0.1); root.add(sheet);
@@ -178,7 +179,7 @@ export function buildLaneGate(game) {
   const bx = LANDING.x - LANDING.hw + 0.28, ytop = yl + LANDING.h;
   k.add(rbox(0.38, 0.06, 1.9, 0.02), stone, bx, ytop + 0.45, LANDING.z);   // (a stone bench)
   for (const dz of [-0.75, 0.75]) k.add(new THREE.BoxGeometry(0.3, 0.42, 0.06), iron, bx, ytop + 0.21, LANDING.z + dz);
-  PH.add({ type: 'box', x: bx, z: LANDING.z, hw: 0.2, hd: 0.95, top: ytop + 0.5, noStand: true });
+  PH.add({ type: 'box', x: bx, z: LANDING.z, hw: 0.2, hd: 0.95, top: ytop + 0.5, noStand: true, block: true });   // (FEET-66B: block, as the town's benches: 0.5 m is within a step, and noStand alone let him walk through the seat)
   const sp = { x: LANDING.x + LANDING.hw - 0.12, z: LANDING.z - LANDING.hd + 0.14 };
   k.add(new THREE.CylinderGeometry(0.04, 0.04, 1.9, 6), iron, sp.x, ytop + 0.95, sp.z);
   k.add(atlasPlane(0.62, 0.155, 512, 0, 1024, 128), atlas, sp.x + 0.045, ytop + 1.72, sp.z, Math.PI / 2);

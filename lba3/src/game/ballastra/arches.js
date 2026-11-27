@@ -233,7 +233,9 @@ export function* buildArchesSteps(scene, physics) {
       B.add(cached('blw2seat', () => compose([[bbox(1.3, 0.12, 0.5, 0.03), 0, 0.42, 0], [bbox(0.24, 0.4, 0.4, 0.03), -0.45, 0.2, 0], [bbox(0.24, 0.4, 0.4, 0.03), 0.45, 0.2, 0]])), BM.cap(), sx, QY, sz, 0, a);
       col({ type: 'box', x: sx, z: sz, hw: 0.65, hd: 0.25, rot: a, top: QY + 0.48, block: true });
     }
-    B.add(cached('blw2dais', () => lathe([[0.001, 0.32], [1.1, 0.32], [1.2, 0.26], [1.25, 0], [0.001, 0]], 24, 1)), BM.cap(), x, QY, z);
+    // (FEET-66B: the profile runs up from the axis at the bottom, as a lathe's outward faces need; it ran down from the
+    //  top, so the dais was inside out: its top culled from above, his feet 29 cm over the paving seen through it)
+    B.add(cached('blw2dais', () => lathe([[0.001, 0], [1.25, 0], [1.2, 0.26], [1.1, 0.32], [0.001, 0.32]], 24, 1)), BM.cap(), x, QY, z);
     B.add(cached('blw2daisring', () => new THREE.TorusGeometry(1.15, 0.05, 5, 32).rotateX(Math.PI / 2)), BM.bronze(), x, QY + 0.3, z);
     col({ type: 'cyl', x, z, r: 1.25, top: QY + 0.32, stair: true });
     col({ type: 'cyl', x, z, r, top: QY });
@@ -554,7 +556,7 @@ export function* buildArchesSteps(scene, physics) {
     for (let i = 1; i < 6; i++) gB.add(cached('blw2cleat' + w, () => bbox(w - 0.3, 0.04, 0.06, 0.01)), BM.post(), 0, 0.02, dir * i * L / 6);
     gB.add(cached('blw2roller', () => cyl(0.1, 0.1, 1.9, 10).rotateZ(Math.PI / 2)), BM.bronze(), 0, -0.12, dir * (L - 0.1));
     gB.build();
-    const N = 9, segs = [];
+    const N = 24, segs = [];   // (FEET-66B: 24 steps under the tilted deck: 9 left him up to 4 cm off it)
     for (let i = 0; i < N; i++) segs.push(physics.add({ type: 'box', x: (G.x0 + G.x1) / 2 + ox, z: G.zA + dir * (L * (i + 0.5) / N) + oz, hw: w / 2, hd: L / N / 2 + 0.07, top: 0, seeThrough: true, stair: true }));
     // the side rails (fixed: the gangway turns about its hinge only)
     for (const s of [-1, 1]) col({ type: 'box', x: (G.x0 + G.x1) / 2 + s * (w / 2 + 0.02), z: (G.zA + G.zB) / 2, hw: 0.08, hd: L / 2, top: 4.2, seeThrough: true, noStand: true });

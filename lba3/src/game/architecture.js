@@ -344,7 +344,10 @@ export function buildHouse(opts) {
     top: { front: o.h - 0.14, back: o.h - 0.14, left: o.h, right: o.h },
     openings: fitOps,
   };
-  return { group: g, colliders, door: { x: door.x, z: o.d / 2 + 0.75 }, gableH, fit, roofOcc };
+  // (FEET-66B: the door's stone step, 0.55 m out of the front and 0.18 m tall over the group's base: a floor of its own,
+  //  for the builder to place as the house; he walked 13 cm into it)
+  const steps = [{ x: door.x, z: o.d / 2 + 0.26, hw: (door.w + 0.6) / 2, hd: 0.275, top: 0.18 }];
+  return { group: g, colliders, steps, door: { x: door.x, z: o.d / 2 + 0.75 }, gableH, fit, roofOcc };
 }
 
 // CITADEL-85: the hip roof. Four planes over the eaves' rectangle (half sizes A along x, Bd along z), one pitch, so the

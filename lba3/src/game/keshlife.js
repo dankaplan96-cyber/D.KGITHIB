@@ -236,7 +236,7 @@ export function buildKesh({ group, col, H, W, updaters, ox, oz }) {
       col({ type: 'box', x: px, z: pz, hw: pw / 2, hd: pd / 2, top: roofY + 0.9, noStand: true });
     }
     B.add(bbox(COOL.w - 0.5, 0.04, COOL.d - 0.5, 0.01, 2), plaster, COOL.x, roofY + 0.01, COOL.z);
-    col({ type: 'box', x: COOL.x, z: COOL.z, hw: COOL.w / 2, hd: COOL.d / 2, top: roofY });
+    col({ type: 'box', x: COOL.x, z: COOL.z, hw: COOL.w / 2, hd: COOL.d / 2, top: roofY + 0.03 });   // (FEET-66B: at the plaster's top, 3 cm over the concrete: its 0.25 m border 3 cm under him)
     // the door: dark, framed in Kesh blue, a hand-painted board over it
     B.add(bbox(DOOR.w, 2.1, 0.14, 0.01, 1), pm('#140f0c', 1), DOOR.x, gy + 1.05, Z1 + 0.0);
     for (const s of [-1, 1]) B.add(bbox(0.14, 2.25, 0.2, 0.02, 1), blue, DOOR.x + s * (DOOR.w / 2 + 0.07), gy + 1.12, Z1 + 0.06);

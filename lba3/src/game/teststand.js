@@ -66,6 +66,7 @@ export function buildTestStand({ group, col, W, H, updaters, postY, bore }) {
 
   // ---- the plinth, the cabinet, the desk
   add(box(1.5, 0.1, 3.3), concrete, SX - 0.4, Y - 0.03, SZ + 0.55);   // (a pad flush with the sand: he stands on the ground)
+  col({ type: 'box', x: SX - 0.4, z: SZ + 0.55, hw: 0.75, hd: 1.65, top: Y + 0.02, seeThrough: true });   // (FEET-66B: ... and on the pad, where the sand falls away under it: up to 17 cm into it)
   add(box(0.36, 1.85, 1.3), teal, SX, Y + 0.97, SZ);
   add(box(0.4, 0.06, 1.36), steel, SX, Y + 1.92, SZ);
   add(box(0.44, 0.06, 1.3), steel, SX - 0.4, Y + 0.97, SZ, 0, 0, 0.08);                 // the desk (a little sloped toward him)
