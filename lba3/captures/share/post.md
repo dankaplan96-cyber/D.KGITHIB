@@ -64,3 +64,21 @@ EDIT: Thank you all for the comments, including the critical ones, I read every 
 
 ## עריכה לפוסט המקורי — עברית
 עריכה: תודה לכולם על התגובות, גם הביקורתיות, אני קורא כל אחת. אני מבין ש־LBA חשוב להרבה מאיתנו ושפרויקט של מעריץ יכול להרגיש מוזר. אני לא מנסה להחליף את המקוריים; שום דבר לא יכול. אני מעריץ שגדל על המשחקים האלה ובונה את זה מתשוקה, בחינם. אם משהו מרגיש לכם לא נכון או "לא LBA", תגידו לי מה. זה בדיוק הפידבק שעוזר.
+
+## Pilot announcement post (27.11) — English, with itch-cover-1260x1000.png
+🎮 The Awakening: closed pilot now open!
+
+A few weeks ago I shared my fan-made Little Big Adventure tribute here, and the response blew me away. Thank you all! 💙
+
+So I'm opening a small closed pilot for 20–30 players:
+• The whole adventure as it is today, 16 chapters from start to finish
+• Plays in your browser on a PC, nothing to download or install
+• Weekly updates with fixes and new things
+
+I'm looking for players who'll tell me honestly what works, what breaks, and what feels like LBA (and what doesn't).
+
+Want in? Send me a private message saying "I'd like to test" and I'll send you the link and password. Places are limited, first come first served.
+
+It's free, unofficial, and made purely out of love for Twinsen's world.
+
+Long live Twinsen! 🌍
