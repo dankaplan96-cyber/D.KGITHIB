@@ -167,10 +167,10 @@ for (const area of areas) {
     const near = (x, z) => x > A.x0 && x < A.x1 && z > A.z0 && z < A.z1;
     // (SMALLFIX-27-11: the isles lie side by side, and an isle's bounds (its drawn things) took in a neighbour's ground:
     //  Knartas's held Undergas's, the Platform's and the Lift Dock's colliders, the Platform's Oldwatch's; nothing of theirs
-    //  is drawn in this area's store, so each read as a floor over nothing. A collider is judged in the outdoor area whose
-    //  middle is nearest it)
-    const OUT = Object.keys(G.rooms).map((id) => [id, G.regions.centreOf(id)]).filter(([, c]) => c?.outdoor);
-    const mine = (c) => { if (!area.room) return true; const own = G.regions.centreOf(area.room); if (!own) return true; const d0 = Math.hypot(c.x - own.x, c.z - own.z); return !OUT.some(([id, q]) => id !== area.room && Math.hypot(c.x - q.x, c.z - q.z) < d0); };
+    //  is drawn in this area's store, so each read as a floor over nothing. An isle's collider is judged in the isle whose
+    //  middle is nearest it; other areas as before)
+    const OUT = Object.keys(G.rooms).filter((id) => /^isle_/.test(id)).map((id) => [id, G.regions.centreOf(id)]).filter(([, c]) => c?.outdoor);
+    const mine = (c) => { if (!/^isle_/.test(area.room || '')) return true; const own = G.regions.centreOf(area.room); if (!own) return true; const d0 = Math.hypot(c.x - own.x, c.z - own.z); return !OUT.some(([id, q]) => id !== area.room && Math.hypot(c.x - q.x, c.z - q.z) < d0); };
     for (const c of PH.colliders) {
       if (!c.enabled || c.noStand || c.top < -40 || !near(c.x, c.z) || !mine(c)) continue;
       // (only a floor he can step onto from the ground beside it: a building's roof box is not walked on)

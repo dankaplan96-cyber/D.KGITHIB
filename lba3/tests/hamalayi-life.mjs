@@ -134,7 +134,7 @@ const l4 = await said();
 for (const id of ['hl_bero', 'hl_sana', 'hl_lhamo']) check(`chapter 8: ${id.slice(3)} is at home (in the room among the mending's things, at work on a round, talks); the outdoor self is away; one dress indoors and out`, c8[id].set === 'mend' && c8[id].room && c8[id].here && c8[id].moved > 0.5 && c8[id].talk === 'talked' && c8[id].outAway && c8[id].dress, c8[id]);
 check('chapter 8: Yorna sits in her own house, Sefa in his (both talk)', c8.yorna.here && c8.yorna.talk === 'talked' && c8.keeper.here && c8.keeper.talk === 'talked', { yorna: c8.yorna, keeper: c8.keeper });
 check('chapter 8: the observatory\'s door is shut with its own line and a slate on it (no story door to it)', c8.obs.kind === 'hl_obs' && c8.obs.sign && !c8.obs.door && l4.some((l) => /SEFA, NEXT DOOR/.test(l)) && !l4.some((l) => /^Locked\.?$/.test(l)), { obs: c8.obs, l4: l4.slice(-3) });
-check('chapter 8: the lines are their own (Bero\'s mending, Sana\'s flags, Lhamo\'s menders, Yorna\'s ledger, Sefa\'s crystal)', [['hl_bero', /Grandfather built well|home a bit/], ['hl_sana', /New flags|knots/], ['hl_lhamo', /Menders|own stove/], ['yorna', /packing up|ledger/], ['keeper', /crystal|snow stays/]].every(([id, re]) => linesOf(l4, id).some((l) => re.test(l))), { l4, by: l4.by.map((e) => `${e.id} (${e.via}): ${e.lines.join(' ').slice(0, 60)}`) });   // (#67: each line from its own speaker, box or overhead)
+check('chapter 8: the lines are their own (Bero\'s mending, Sana\'s flags, Lhamo\'s menders, Yorna\'s ledger, Sefa\'s crystal)', [[['hl_bero', 'lh_bero'], /Grandfather built well|home a bit/], [['hl_sana', 'lh_sana'], /New flags|knots/], [['hl_lhamo', 'lh_mira'], /Menders|own stove/], [['yorna'], /packing up|ledger/], [['keeper'], /crystal|snow stays/]].every(([ids, re]) => linesOf(l4, ...ids).some((l) => re.test(l))), { l4, by: l4.by.map((e) => `${e.id} (${e.via}): ${e.lines.join(' ').slice(0, 60)}`) });   // (#67: each line from its own speaker, box or overhead)
 
 // a save inside Bero's house comes back there, Bero in it, and the door leads out
 await ev(() => { inBy('ih_ham_lhar3'); P.settle(); game.save(false); });
@@ -192,7 +192,7 @@ const ep = await ev(() => {
   return { smoke, room: i.room, dorje: here('hl_dorje'), talk: t, outAway: old?.away === 'story' || !old?.present };
 });
 const l5 = await said();
-check('the epilogue: Lhar lived in again (every chimney); Old Dorje in his own corner (not outdoors as well), talking', ep.smoke.every(Boolean) && ep.room === 'ih_ham_lhar2' && ep.dorje && ep.talk === 'talked' && ep.outAway && linesOf(l5, 'hl_dorje').some((l) => /My own fire/.test(l)), { ep, l5 });
+check('the epilogue: Lhar lived in again (every chimney); Old Dorje in his own corner (not outdoors as well), talking', ep.smoke.every(Boolean) && ep.room === 'ih_ham_lhar2' && ep.dorje && ep.talk === 'talked' && ep.outAway && linesOf(l5, 'hl_dorje', 'lh_old').some((l) => /My own fire/.test(l)), { ep, l5 });
 
 // ---------------------------------------------------------------- a death in the Hamalayi, Retry
 iso('chapter 7 by its flags; saved at the monastery yard; then 99 damage');

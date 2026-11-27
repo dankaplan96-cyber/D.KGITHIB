@@ -94,12 +94,18 @@ if (SHOTS || VIEWS) {
       cam.near = Math.min(near, dist / 50); cam.updateProjectionMatrix(); cam.updateMatrixWorld();
       const hv = G.hero.rig?.root?.visible; if (G.hero.rig?.root) G.hero.rig.root.visible = false;
       const shoot = () => { G.renderer.render(); return G.renderer.renderer.domElement.toDataURL('image/jpeg', 0.85); };
+      // the part's meshes (by its path, over its box); a part hidden in this state (a bell put up later) shown for the shot
+      const pathOf = (o) => { const p = []; for (let q = o, k = 0; q && q !== G.scene && k < 7; q = q.parent, k++) p.push(q.name || (q.isMesh ? (q.geometry?.type || 'Mesh').replace('Geometry', '') : q.type)); return p.join('<'); };
+      const targets = new Set(), shown = [];
+      G.scene.traverse((o) => { if (!o.isMesh) return; const box = new THREE.Box3().setFromObject(o); if (pathOf(o) === v.path && box.max.x >= v.box[0] - 0.05 && box.min.x <= v.box[3] + 0.05 && box.max.z >= v.box[2] - 0.05 && box.min.z <= v.box[5] + 0.05) targets.add(o); });
+      for (const o of targets) for (let q = o; q && q !== G.scene; q = q.parent) if (!q.visible) { q.visible = true; shown.push(q); }
       const scene = shoot();
-      // the part alone: every mesh but the one its path names (and the ones sharing its geometry) hidden
+      // the part alone: every mesh but the part's hidden
       const was = [];
-      G.scene.traverse((o) => { if (!o.isMesh) return; const p = []; for (let q = o, k = 0; q && q !== G.scene && k < 7; q = q.parent, k++) p.push(q.name || (q.isMesh ? (q.geometry?.type || 'Mesh').replace('Geometry', '') : q.type)); const box = new THREE.Box3().setFromObject(o); const hit = p.join('<') === v.path && box.max.x >= v.box[0] - 0.05 && box.min.x <= v.box[3] + 0.05 && box.max.z >= v.box[2] - 0.05 && box.min.z <= v.box[5] + 0.05; if (!hit && o.visible) { was.push(o); o.visible = false; } });
+      G.scene.traverse((o) => { if (o.isMesh && !targets.has(o) && o.visible) { was.push(o); o.visible = false; } });
       const alone = shoot();
       for (const o of was) o.visible = true;
+      for (const q of shown) q.visible = false;
       if (G.hero.rig?.root) G.hero.rig.root.visible = hv;
       cam.position.copy(gp); cam.quaternion.copy(gq); cam.near = near; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
       return [scene, alone];

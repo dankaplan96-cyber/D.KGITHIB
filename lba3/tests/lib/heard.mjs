@@ -33,5 +33,6 @@ export function hearer(getPage) {
   const report = () => console.log('HEARD ' + (Object.entries(tally).map(([k, t]) => `${k} ${t.box}${t.remark ? ' +' + t.remark + ' overhead' : ''}`).join(', ') || 'nothing'));
   return { install, said, report };
 }
-// the lines a person said in a said() result (box or remark)
-export const linesOf = (heard, id) => (heard.by || []).filter((e) => e.id === id).flatMap((e) => e.lines);
+// the lines a person said in a said() result (box or remark): by the speaker's id or its say key (n_<id>); a person with
+// an outdoor twin (one dress indoors and out: the Hamalayi's) may be named by either id
+export const linesOf = (heard, ...ids) => (heard.by || []).filter((e) => ids.includes(e.id) || ids.some((id) => e.name === 'n_' + id)).flatMap((e) => e.lines);
