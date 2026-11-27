@@ -1,0 +1,26 @@
+GPU ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11) view [1366,768,1.0000000149011612] fps setting auto
+high   fortwall {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+high   square   {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+high   harbour  {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+high   house    {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+high   zeelich  {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+high   desert   {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+high   lhar     {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+high   island   {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+medium fortwall {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+medium square   {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+medium harbour  {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+medium house    {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+medium zeelich  {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+medium desert   {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+medium lhar     {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+medium island   {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+auto   fortwall {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+auto   square   {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+auto   harbour  {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+auto   house    {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+auto   zeelich  {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+auto   desert   {"fps":60,"p50":16.7,"p95":16.9,"over20":0,"step":"High"}
+auto   lhar     {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+auto   island   {"fps":60,"p50":16.7,"p95":16.8,"over20":0,"step":"High"}
+autoQ.report() ["quality: medium (chosen by hand?) · governor on · GPU timer in play: yes","  runs: High: resolution 100 %, MSAA 4×, bloom, soft shadows, shadow map 4096, High's small shadows, 8 lamps, High's grass distance, full-rate animation, full far detail","  start: guess · nothing cached for this machine · key NVIDIA, NVIDIA GeForce GTX 1050 (0x00001C8D) Direct3D11 vs_5_0 ps_5_0, D3D11|mains|1366x768@1.0000000149011612"]
