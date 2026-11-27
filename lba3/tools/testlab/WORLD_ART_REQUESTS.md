@@ -6123,3 +6123,22 @@ Script `captures/hw-80/square80.mjs`, log `runs.log`.
 - **How it looks at Medium-lean** (the lowest step used): the square, the harbour, the spaceport hall (1–3): full resolution, plain shadow edges, no bloom; reads close to Medium.
 - Not done: battery; the laptop's UHD 620 itself (this is the UHD 630 by the user's standing choice); after CPU-RELIEF (say if you want a second run then).
 Pictures `captures/hw-76/` (1–3), the log `fps76.log`, the script `fps76.mjs`.
+
+## ORDER-77 again, on v174 (the desktop, 27.11; d441a27e = the cloud's ffe34e88)
+- **Citadel's square:** the paving stub by the signpost (−44.6, 6.6) is **fixed**: it now runs on into a paved area that joins the south street, no end in the dirt; the lawns round it are green (P140) (7: v173 left, v174 right, from above). No other end seen round the square.
+- **P138, the Hebrew speaker's name:** **fixed** in both places. The opening's subtitles put **ארתור** on the right, first, also in the two-line one (8); the talk box's name tag sits at the top **right** (Tim, 1092–1141 px in a 205–1161 box) (9).
+
+## ORDER-76, after CPU-RELIEF (the desktop, 27.11; v174 + CPU-eco; the same run on the Intel UHD 630, mains, a fresh profile)
+**Better: the streets went from ~56–57 to a clean 60 at the same step.** Auto again: Medium → **Medium-lean** on the square after ~2.5 min, then held; never lower; cached and started there after the reload into Zeelich.
+| place | before (26.11) | after (27.11) |
+|---|---|---|
+| square, Medium-lean | 53.3–56.9 fps, slow ≤ 1.1 % | **57.6–60.0**, slow ≤ 1.2 % (60.0 in the last three windows) |
+| harbour | 56.1–56.9, slow ≤ 0.7 % | **59.5–60.0**, slow ≤ 0.5 % |
+| depot fight | 55.5–56.5, slow 0.7–2.3 % | 55.6–60.0, slow 0–**7.9 %** (four windows over the 6 % bar) |
+| Zeelich | 56.6–60.0, slow ≤ 0.3 % | 58.5–60.5, slow ≤ 0.5 % (60 nearly throughout) |
+`autoQ.report()` last window: `ok · 60 fps · frame p90 16.7 ms · CPU p90 6.2 ms · GPU p90 12.3 ms · missed 0 %` (Zeelich). The depot fight is the one place still short: Auto stayed held at Medium-lean through windows of 7–8 % slow frames without stepping down. Log `captures/hw-76/fps76-after-cpu-relief.log`.
+
+## ORDER-79 (#25, the GTX 1050 once and lightly; 27.11, v174 + CPU-eco; headed Chrome, the GTX by its preference, 1366×768 at 1.0, the play camera Follow/Far, a new game at noon, Frame Rate auto)
+**60 everywhere at every preset: High, Medium and Auto; the panel's 60 Hz is the limit.** DEPTH-LOOK's eight places (fort wall, square, harbour, the house, Zeelich, Desert Island, Lhar, the Celebration isle), each 3 s to settle (8 s under Auto) then 6 s of frames: **every one 60.0 fps, frame p50 16.7 ms, p95 16.8–16.9 ms, 0 % over 20 ms**, at High, at Medium and at Auto. Auto on this card stays on **High** (its tier; nothing cached before). Not measured: 1920×1080, the installed app (it is still build 725), battery.
+- Checked on the side (`qprobe.mjs`): picking Medium in Settings does take effect (the sun's shadow map 4096 → 1024), but **`autoQ.report()`'s "runs:" line keeps saying "High: … MSAA 4×, shadow map 4096 …" when a quality is chosen by hand** — it shows the governor's last profile, not what runs. Small, but misleading in a report.
+Log `captures/hw-79/perf79.log`, scripts `perf79.mjs`, `qprobe.mjs`.
