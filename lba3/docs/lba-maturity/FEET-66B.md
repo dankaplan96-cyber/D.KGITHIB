@@ -10,8 +10,11 @@ headless Chromium)**: nobody played it, no real GPU, no frame times measured. Su
 Discovery on the base (`c3357e49`, all areas): 109 Citadel candidates, 21 Zeelich, 78 Desert, 148 Hamalayi (mostly the
 listed snow and water), 13 Ballastra, plus the isles. After (the last discovery, before the full run): **outside the
 isles, one class-A candidate left (a roof eave, a true exception, below)**, one class B (the monastery wall's pillar,
-listed), the Arch District's stage float (its meshes are moving, not in the store: nothing to measure). Class C (76 rock
-colliders over domes): **0**. The full run and the other suites: the table at the end.
+listed). The Arch District's dais float (29 cm, first walked once the reach flood was seeded from every door and prop)
+was the dais drawn inside out: fixed (below). Class C (76 rock colliders over domes): **0**. The final full run (on
+`3ddb23df`): class A walked 39: FAIL 0, handed on 9 (the isles' and the roof eave), not reached 30 (all in the isles'
+bounds: Knartas 25, Celebration 3, Otringal 1, Platform 1; 5 of them are `HANDED` entries, so `HANDED` 14 = 9 + 5);
+water walked 4 (listed); soft snow 86 (listed). The other suites: the table at the end.
 
 ## The square's ring steps (FLAT-TOWN, protected): fixed, no look change
 
@@ -31,6 +34,7 @@ The terrain, the meshes and the walkers' planner (stairs are walked up) are unch
 | A sloped or tilted top under one flat box | the Hamalayi waystone's two sloped stages (`props-lba1hamalayi.js`: nested boxes 5 cm apart, his feet within 2.5 cm of the slope; the turning puzzle's top step unchanged); the Desert's three fallen cubes (four strips across their tilt); Ballastra's tilting gangways (24 steps, not 9; `gardens.js`, `arches.js`) | 4–43 cm → ≤ 2.5 cm |
 | Rocks (class C and the collider-less stones) | **obstacles** (`block`): every scattered stone and boulder (`world.js`, `desert.js` rocks, scree and yard stones, `hamalayi.js`, `zeelich.js` grass stones and the rim boulders over the walk); the cliff rocks' toes on walkable ground (`cliffs.js rockFootColliders`, read from the drawn mesh after the masonry's rocks go: cells of 0.33 m merged per row) | up to 0.57 m into rock / 0.56 m over a dome → stopped at the rock |
 | Low solids walked through (`noStand` alone under a step's height) | made `block`: the Hamalayi's `put` props, Citadel's bushes, the Desert's shrubs, the plateau stair's cheeks, the asylum's pots, containers (chests, jars), Raph's seat, the lane gate's bench, the Desert's fire pits, the steam crack's slab, the drift and the hatch of the Gaze (`story/depth.js`) | walked through → stopped |
+| A drawn top seen from below only (an inside-out lathe) | the Speaking Steps' dais (`ballastra/arches.js`: its profile ran down from the top, so its faces pointed in: the top was not drawn from above and his feet stood over the paving seen through it; the profile now runs up from the axis, the shape unchanged). Sweep: the suite over all 16 areas finds no other walked top like it; the literal lathe profiles that run the wrong way elsewhere are props nobody stands on, handed on below | 29 cm → 0 |
 | Visible fixes (look) | the Desert bridge's barrel under its deck (it stood 0.35 m out of the deck as a hump); the Hamalayi arch's snow lip tapers to a sliver on both sides of the steps (where the rim ends, `hamalayi-finish.js snowLips` taper) | listed below |
 
 The census that found the walked-through solids: every enabled `noStand` collider, not `block`, not a stair, whose top
@@ -48,7 +52,9 @@ top, 5.9 m up: unreachable (below), no change. The two rocks the game does use a
 
 ## The suite (`tests/feet-on-surface.mjs`), what changed and why
 
-- **Reach**: a flood over a 0.5 m grid from the walkable terrain and each area's arrival spots, step by step as physics
+- **Reach**: a flood over a 0.5 m grid from the walkable terrain, each area's arrival and safe spots, and every spot a
+  door, an exit, a search, a giver, an interactable, a seat or a house's door puts him or asks him to stand that lies in
+  the area (a deck reached only through a building's door), step by step as physics
   moves him (a step up to STEP_UP, any drop) and, generously, a hop-pack hop (2.4 m + 0.25). A drawn top over a floor no
   flood reaches is printed as UNREACHABLE per piece, never judged: house roofs over their walls' colliders, the tank's
   and the tech buildings' lids, the fortress wall's top, the Desert hall's merlons, Zeelich's roofs and gateway (FEET-66's
@@ -73,7 +79,18 @@ and Franco's field (2258.9, 1805.0, `francosworld.js:144`), Celebration (2889.0,
 (3846.1, 1777.0), Orchard (4869.7, 1815.3), Oldwatch 4 (5187–5201, 1782–1815). Knartas' 14 floats at x 3238–3840 and
 the Platform's (5209.4, 1815.8) are other isles' colliders inside Knartas' bounds with nothing drawn (the isles are laid
 side by side): a discovery bounds question, not a fault. The not-reached isle candidates of FEET-66 (54) mostly went:
-the reach flood leaves out the unreachable ones; what the full run still reports NOT REACHED is in its log.
+the reach flood leaves out the unreachable ones; the final full run still reports 30 NOT REACHED, all within the isles'
+bounds (Knartas 25, of which 24 are those other isles' floats; Celebration 3, Otringal 1, Platform 1).
+
+Inside-out lathes elsewhere (**source only**: a static check of the literal profiles passed to `lathe(...)`, closed
+through the axis; profiles built in code not checked; not viewed). None is walked on (the suite above covers that); each
+may draw its outside culled. Largest first: Ballastra's islet north of the aqueduct (`ballastra/gardens.js:325`, 17 m
+across), the Arch District's bell (`ballastra/arches.js:654`), a Zeelich drill bit (`zeelich.js:2142`); small shades
+and caps (`ballastra/harbor.js:450, :467`,
+`ballastra/look.js:242`, `ballastra/archrooms.js:112`, `ballastra/shed.js:70`, `franco.js:128`, `pharmacy.js:96`,
+`offwall.js:144`). The thin two-walled shells (`props.js:833`, `pumproom.js:123`, `underground.js:158`) look the same
+either way; the falling-water bells (`props-esmer.js:700-701`, `zeelich.js:1614`) are two-sided. To confirm each with a
+picture before reversing it.
 
 ## True exceptions (in `HANDED`, printed, not failing)
 
@@ -82,6 +99,8 @@ the reach flood leaves out the unreachable ones; what the full run still reports
 
 ## Visible and behaviour changes (for the user's pick)
 
+0. Arch District: the Speaking Steps' dais draws as a solid dais from above (it was inside out; automated measurement,
+   not viewed).
 1. Desert: the bridge by the old mask has no hump along its deck (the arch's barrel sits under the deck).
 2. Hamalayi: the rim's snow lip either side of the arch steps tapers to a sliver (it ended in a cut face; sheet row 6).
 3. Behaviour: rocks, stones, small bushes, shrubs, low props, pots, chests, fire pits are obstacles (were walked through
@@ -91,10 +110,19 @@ the reach flood leaves out the unreachable ones; what the full run still reports
 
 ## Not covered
 
-- Interiors (FLICKER-142's files): not touched. NPCs' feet: not measured. The Arch District's stage (its meshes move:
-  not in the store). Moving pieces in general (the sewer lids' open state, the swing bridge mid-swing).
+- Interiors (FLICKER-142's files): not touched. NPCs' feet: not measured. Moving pieces in general (the sewer lids' open state, the swing bridge mid-swing).
 - The reach flood is generous (the hop-pack everywhere); it can only leave out what nothing reaches.
 
-## Tests (each once, `SERVE=1`, on the commit named in the report)
+## Tests (each once, `SERVE=1`, on the commit named; automated runtime only, SwiftShader)
 
-(filled in below)
+| Suite | Commit | Result |
+|---|---|---|
+| `walkers` | `c864fc13` | PASS, functional 37 passed, 0 failed (102 s). The run before `e3ee25cd` failed on "Kesh: bas_home not walkable"; Kesh's three residents now walk their rounds (Bashir 148 m, 4 stops) |
+| `opening-tutorial` | `c864fc13` | PASS, functional 48 passed, 0 failed (1148 s) |
+| `feet-on-surface` (all 16 areas) | `c864fc13` | FAIL, 1 passed, 1 failed: the Arch District's dais (collider 6736, (3008, -3800)), 29 cm over the drawn surface, 2/2 walks. A second full run after a first try (a flatter rim: no change, reverted) failed the same; the cause was the inside-out lathe |
+| `feet-on-surface` (all 16 areas) | `3ddb23df` | PASS, functional 2 passed, 0 failed (186 s): class A walked 39, FAIL 0 (counts in Result) |
+| `worldfit` | `3ddb23df` | PASS, functional 1 passed, 0 failed; visual 8 passed (164 s). It also passed on `0a05a7d0`+ |
+
+`feet-on-surface` ran three times in all (not once) because the first full run failed. `walkers` and
+`opening-tutorial` were not rerun after `3ddb23df` (the dais touches neither). The pictures the tests overwrite were
+restored (`git checkout -- lba3/captures/`).
