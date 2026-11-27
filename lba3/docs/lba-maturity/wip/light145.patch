@@ -1,0 +1,895 @@
+diff --git a/lba3/src/engine/environment.js b/lba3/src/engine/environment.js
+index 31f69999..f1a9cd9b 100644
+--- a/lba3/src/engine/environment.js
++++ b/lba3/src/engine/environment.js
+@@ -7,6 +7,7 @@ import * as THREE from 'three';
+ import { lerp } from './math.js';
+ import { textures } from './textures.js';
+ import { DL } from './depthlook.js';
++import { LD, SKY_FS_DYN, skyUniformsDyn } from './lightdyn.js';   // (LIGHTING-145 ?light=dyn; off: nothing)
+ 
+ const WATER_VS = `
+ uniform float uTime, uStorm, uWaveAmp;
+@@ -210,9 +211,10 @@ export class Environment {
+     const ct = TX.clouds.clone(); ct.needsUpdate = true; ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
+     this.cloudTex = ct;
+     this.skyU = { uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() }, uCloud: { value: new THREE.Color() }, uTex: { value: ct }, uOff: { value: new THREE.Vector2() }, uCover: { value: 0 } };
++    if (LD.on) skyUniformsDyn(this.skyU);   // (LIGHTING-145: the time of day's sky — sun, moon, stars, lit clouds)
+     this.clouds = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 12), new THREE.ShaderMaterial({
+       uniforms: this.skyU, side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
+-      vertexShader: SKY_VS, fragmentShader: SKY_FS,
++      vertexShader: SKY_VS, fragmentShader: LD.on ? SKY_FS_DYN : SKY_FS,
+     }));
+     this.clouds.renderOrder = 1e6;      // (after every opaque: the world's depth leaves only the sky's pixels)
+     this.clouds.frustumCulled = false;
+@@ -344,6 +346,7 @@ export class Environment {
+     this.interior = on;
+     this.indoor = on ? light : null;
+     this.water.visible = this.clouds.visible = !on && !this.region;
++    if (LD.on) this.clouds.visible = !on;   // (LIGHTING-145: the time of day's sky over the regions too)
+     this.scene.background = on ? (this._black ??= new THREE.Color('#000000')) : this.fog.color;
+   }
+   // outdoor region with its own sky (Zeelich: a pink-violet sky above a sea of clouds). The Citadel sea,
+@@ -351,6 +354,7 @@ export class Environment {
+   setRegion(r) {
+     this.region = r || null;
+     this.water.visible = this.clouds.visible = !r && !this.interior;
++    if (LD.on) this.clouds.visible = !this.interior;   // (LIGHTING-145: the time of day's sky over the regions too)
+     if (r) { this._rp = Object.fromEntries(Object.entries(r).filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, C(v)])); }
+   }
+   // [near, far] fog distances; the classic look uses the original's short range
+@@ -418,7 +422,8 @@ export class Environment {
+     // keys its cached static casters on this direction, so a moving sun would redraw all of them every frame
+     // (ASYLUM-4: a room may give its own as well, R.indoor.sunDir: LBA1's rooms are drawn lit from the camera's side)
+     const own = this.region?.sunDir || (this.interior && this.indoor?.sunDir);
+-    const sd = this.region || this.interior ? (own ? (this._rsd ??= new THREE.Vector3()).fromArray(own).normalize() : SUN_BASE) : SUN_CITADEL;
++    let sd = this.region || this.interior ? (own ? (this._rsd ??= new THREE.Vector3()).fromArray(own).normalize() : SUN_BASE) : SUN_CITADEL;
++    if (LD.on && !this.interior) sd = LD.lightDir;   // (LIGHTING-145: the hour's sun or moon, in steps: lightdyn.js STEP)
+     if (!this.sunDir.equals(sd)) this.sunDir.copy(sd);
+     const sf = this.snapShadow(focus);
+     this.sun.position.copy(sf).addScaledVector(this.sunDir, 80);
+@@ -441,6 +446,7 @@ export class Environment {
+       }
+       this.scene.background = this.fog.color;
+       this.rain.visible = false;
++      LD.apply(this);   // (LIGHTING-145 ?light=dyn; off: nothing)
+       DL.applyLight(this);   // (DEPTH-LOOK ?depth=light; off: nothing)
+       return;
+     }
+@@ -464,6 +470,7 @@ export class Environment {
+       }
+       this.rain.geometry.attributes.position.needsUpdate = true;
+     }
++    LD.apply(this);   // (LIGHTING-145 ?light=dyn; off: nothing)
+     DL.applyLight(this);   // (DEPTH-LOOK ?depth=light; off: nothing)
+   }
+ }
+diff --git a/lba3/src/engine/lightdyn.js b/lba3/src/engine/lightdyn.js
+new file mode 100644
+index 00000000..165f253d
+--- /dev/null
++++ b/lba3/src/engine/lightdyn.js
+@@ -0,0 +1,555 @@
++// LIGHTING-145 (P145, the user 27.11: lighting like a fan's LBA2 editor shots, "really impressive, truly dynamic
++// lighting"). A candidate behind a URL switch, OFF by default: without `?light=dyn` this module changes nothing — no
++// shader text, no uniform, no light, no object — and the picture is exactly as before.
++//
++//   ?light=dyn                 the dynamic lighting: a time of day (sun and moon that move, the sky's gradient, the sun's
++//                              disc and glow, stars and Twinsun's Emerald Moon at night, clouds lit by the sun, fog colour,
++//                              height mist and sun scattering by the hour), lamps / lanterns / fires / crystals / glowing
++//                              signs that light up at dusk (glow + a real pool of light on the ground, the walls and the
++//                              people: the light pool's nearest-N with fades), windows glowing at night, a little flicker
++//                              on flames, the rooms' own lamps taking over from the daylight at night, wet ground in rain
++//                              (darker, glossy, puddles in a noise of low spots, ripples on High, the sky and the lamps
++//                              reflected), and a slow drying after.
++//   ?tod=noon|sunset|dusk|night|dawn|golden    pins the time (the sheets; story moments use LD.pin)
++//   ?todcycle=dusk             the cycle never goes past deep dusk (weather.js's standing rule "no night on Twinsun", the
++//                              user's of 2.11: the lamps still come on in the blue hour)
++//   ?todmin=<minutes>          the length of a day (default 24)
++//
++// Twinsun's night is not an Earth night: the sky stays a deep blue with the other sun's violet afterglow low on the
++// opposite horizon, the Emerald Moon (LBA2's green moon) gives a cool green-white light, and the ground stays readable.
++// Zeelich keeps its pale grey-lavender by day and goes rose-violet at sunset and indigo-violet at night.
++//
++// Quality (the 60 fps rule, P137): the tier follows the light pool's size, so it moves with Auto's profiles and the
++// presets in both directions (High 8 lamps · Medium 4 · Medium-lean / CPU-eco / Low 2). Every tier keeps the time of day,
++// the sky, the mist and the glow (halos drawn as one batch of sprites; High adds the bloom it already has). High: wet
++// reflections with puddles and ripples, 8 lamp pools; Medium: wet gloss and the sky's reflection, no puddles, 4 pools;
++// Low / CPU-eco: no reflections (the ground only darkens), 2 pools. Tiers are uniforms: no program is made by a switch.
++// No light is added (the one directional light is the sun by day and the moon by night; the pool keeps its size), so
++// the programs are the ones the game already makes, with the patched chunks.
++import * as THREE from 'three';
++
++const Q = typeof location !== 'undefined' ? location.search : '';
++const arg = (k) => (new RegExp(`[?&]${k}=([\\w.-]+)`).exec(Q) || [])[1];
++const TOD_PIN = arg('tod');
++export const LD = {
++  on: /[?&]light=dyn\b/.test(Q),
++  duskOnly: arg('todcycle') === 'dusk',
++  dayMin: +(arg('todmin') || 24),
++  theta: 0,              // the sun's angle on its circle: 0 noon, ±THSET at the horizon, π midnight
++  pinned: null,          // a pinned time's name (?tod=, LD.pin)
++  holds: new Map(),
++  night: 0, dusk: 0, sunElev: 52, tier: 'high', wet: 0,
++  stats: { frameMs: 0, sites: 0, halos: 0, sunSteps: 0, n: 0, sum: 0 },
++};
++if (typeof window !== 'undefined') window.__ld = LD;
++
++// ------------------------------------------------------------------------------------------------ the sun's circle
++// Noon is today's sun exactly (environment.js SUN_CITADEL: from the south-west, high); it sets low towards +z, over the
++// sea behind the lighthouse seen from the harbour, and rises on the other side. The light's direction never goes under
++// LIGHT_MIN° (long low shadows over the whole box and acne at grazing angles otherwise): the disc drawn in the sky does.
++const NOON = new THREE.Vector3(-0.5, 0.8, 0.35).normalize();
++const SET = new THREE.Vector3(-0.25, 0, 1).normalize();
++const V = SET.clone().addScaledVector(NOON, -SET.dot(NOON)).normalize();
++const THSET = Math.atan2(NOON.y, -V.y);   // (cos θ · NOON.y + sin θ · V.y = 0)
++const D2R = Math.PI / 180, LIGHT_MIN = 11 * D2R;
++export const sunAt = (th, out = new THREE.Vector3()) => out.copy(NOON).multiplyScalar(Math.cos(th)).addScaledVector(V, Math.sin(th));
++// named times: the sun's elevation they stand for (deg; negative: under the horizon), on the setting side unless dawn
++const NAMED = { noon: 0, golden: THSET - 9 * D2R, sunset: THSET - 2.6 * D2R, dusk: THSET + 6 * D2R, night: Math.PI, dawn: -(THSET - 3 * D2R) };
++const wrap = (a) => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
++LD.thetaOf = (name) => NAMED[name];
++LD.setTime = (name) => { if (NAMED[name] != null) LD.theta = wrap(NAMED[name]); };
++LD.pin = (name, why = 'story') => { if (NAMED[name] == null) return; LD.holds.set(why, name); };
++LD.release = (why = 'story') => { LD.holds.delete(why); };
++if (TOD_PIN && NAMED[TOD_PIN] != null) { LD.pinned = TOD_PIN; LD.theta = wrap(NAMED[TOD_PIN]); }
++
++// ------------------------------------------------------------------------------------------------ the palettes
++// keys by the sun's elevation (deg), one table for the evening (and night), one for the morning. m: how far the frame
++// is taken from today's palette (0: today's colours exactly); the rest absolute (colours) or multipliers (K).
++const C = (h) => new THREE.Color(h);
++const key = (e, o) => ({ e, m: 1, sunK: 1, hemiK: 1, fogK: 1, scat: 0, hfog: 0, stars: 0, lamps: 0, moonK: 0, glow2: 0, ...o,
++  sun: C(o.sun || '#fff0d2'), hemiSky: C(o.hemiSky || '#c8dcff'), hemiGround: C(o.hemiGround || '#77745a'), fog: C(o.fog || '#a8d2f2'),
++  scatCol: C(o.scatCol || '#ffe0b0'), zenith: C(o.zenith || '#4f8fd6'), cloud: C(o.cloud || '#ffffff'), tint: new THREE.Vector3(...(o.tint || [1, 1, 1])), sea: new THREE.Vector3(...(o.sea || [1, 1, 1])) });
++const TW_EVE = [
++  key(-90, { m: 1, sunK: 0, moonK: 1, hemiSky: '#4a62a8', hemiGround: '#1c2234', hemiK: 0.62, fog: '#1d2a4e', fogK: 0.9, scat: 0.25, scatCol: '#5e8c88', hfog: 0.005, zenith: '#081030', cloud: '#26304c', stars: 1, lamps: 1, glow2: 1, tint: [0.93, 0.98, 1.1], sea: [0.2, 0.24, 0.32] }),
++  key(-14, { m: 1, sunK: 0, moonK: 1, hemiSky: '#4a62a8', hemiGround: '#1c2234', hemiK: 0.62, fog: '#1d2a4e', fogK: 0.9, scat: 0.25, scatCol: '#5e8c88', hfog: 0.005, zenith: '#081030', cloud: '#26304c', stars: 1, lamps: 1, glow2: 1, tint: [0.93, 0.98, 1.1], sea: [0.2, 0.24, 0.32] }),
++  key(-5, { m: 1, sunK: 0, moonK: 0.25, hemiSky: '#6c6cb0', hemiGround: '#2c2838', hemiK: 0.86, fog: '#4c4a7c', fogK: 0.85, scat: 0.45, scatCol: '#e4705a', hfog: 0.006, zenith: '#1c2658', cloud: '#5c4c70', stars: 0.35, lamps: 1, glow2: 0.6, tint: [0.98, 0.96, 1.05], sea: [0.36, 0.34, 0.46] }),
++  key(1.5, { m: 1, sunK: 0.75, sun: '#ff6a32', hemiSky: '#b08eac', hemiGround: '#4a3a40', hemiK: 0.88, fog: '#d98c68', fogK: 0.86, scat: 0.65, scatCol: '#ff9a50', hfog: 0.007, zenith: '#384a8c', cloud: '#ff9a72', lamps: 0.75, tint: [1.08, 0.95, 0.86], sea: [0.86, 0.5, 0.42] }),
++  key(8, { m: 0.75, sunK: 0.9, sun: '#ffb466', hemiSky: '#e4c6c2', hemiGround: '#6a5048', hemiK: 0.86, fog: '#ecbc94', fogK: 0.92, scat: 0.45, scatCol: '#ffb064', hfog: 0.004, zenith: '#5878b8', cloud: '#ffd0a2', lamps: 0.15, tint: [1.06, 0.99, 0.9], sea: [1.0, 0.8, 0.68] }),
++  key(22, { m: 0.25, sunK: 1, sun: '#ffe2bc', hemiSky: '#d6dcf0', hemiGround: '#77745a', fog: '#c4d6ec', scat: 0.15, scatCol: '#ffe0b0', hfog: 0.003, zenith: '#4a86d0', cloud: '#fff2e2', tint: [1.02, 1, 0.97] }),
++  key(40, { m: 0 }),
++  key(90, { m: 0 }),
++];
++const TW_MORN = [
++  TW_EVE[0], TW_EVE[1],
++  key(-5, { m: 1, sunK: 0, moonK: 0.25, hemiSky: '#7a7cb8', hemiGround: '#2e3040', hemiK: 0.86, fog: '#6a6c96', fogK: 0.75, scat: 0.4, scatCol: '#e8a0a0', hfog: 0.012, zenith: '#22306a', cloud: '#6a6280', stars: 0.3, lamps: 1, glow2: 0.5, tint: [0.98, 0.97, 1.05], sea: [0.4, 0.4, 0.52] }),
++  key(1.5, { m: 1, sunK: 0.6, sun: '#ffa078', hemiSky: '#b0aad4', hemiGround: '#4c4858', hemiK: 0.86, fog: '#e6b4b4', fogK: 0.7, scat: 0.55, scatCol: '#ffc4a4', hfog: 0.014, zenith: '#5068a8', cloud: '#ffc0b0', lamps: 0.6, tint: [1.04, 0.98, 0.98], sea: [0.95, 0.85, 0.86] }),
++  key(8, { m: 0.7, sunK: 0.88, sun: '#ffd2a8', hemiSky: '#d0d4ee', hemiGround: '#686452', fog: '#e4d4d8', fogK: 0.8, scat: 0.3, scatCol: '#ffe0c8', hfog: 0.009, zenith: '#5a84c8', cloud: '#fff0ea', lamps: 0.1, tint: [1.02, 1, 1] }),
++  key(22, { m: 0.25, sun: '#fff0dc', fog: '#c8dcf0', fogK: 0.92, scat: 0.12, hfog: 0.003, zenith: '#4c8ad2' }),
++  key(40, { m: 0 }), key(90, { m: 0 }),
++];
++// Zeelich: its pale grey-lavender day kept; a rose-violet sunset, an indigo-violet night (its pink-violet identity)
++const ZE_EVE = [
++  key(-90, { m: 1, sunK: 0, moonK: 1, hemiSky: '#6a5aa8', hemiGround: '#241c34', hemiK: 0.64, fog: '#2c2250', fogK: 0.9, scat: 0.3, scatCol: '#9a7ab8', hfog: 0.005, zenith: '#120a30', cloud: '#3a2c52', stars: 1, lamps: 1, tint: [1.0, 0.95, 1.1], sea: [0.4, 0.34, 0.6] }),
++  key(-14, { m: 1, sunK: 0, moonK: 1, hemiSky: '#6a5aa8', hemiGround: '#241c34', hemiK: 0.64, fog: '#2c2250', fogK: 0.9, scat: 0.3, scatCol: '#9a7ab8', hfog: 0.005, zenith: '#120a30', cloud: '#3a2c52', stars: 1, lamps: 1, tint: [1.0, 0.95, 1.1], sea: [0.4, 0.34, 0.6] }),
++  key(-5, { m: 1, sunK: 0, moonK: 0.25, hemiSky: '#8a6ab0', hemiGround: '#30243a', hemiK: 0.86, fog: '#5a4278', fogK: 0.85, scat: 0.45, scatCol: '#e47aa0', hfog: 0.006, zenith: '#2a1c58', cloud: '#6a4c78', stars: 0.35, lamps: 1, tint: [1.02, 0.95, 1.06], sea: [0.6, 0.5, 0.72] }),
++  key(1.5, { m: 1, sunK: 0.62, sun: '#ff7a6a', hemiSky: '#c88ab0', hemiGround: '#4c3046', hemiK: 0.82, fog: '#d48cac', fogK: 0.86, scat: 0.6, scatCol: '#ff9aa0', hfog: 0.007, zenith: '#4c3c8a', cloud: '#f8a0b4', lamps: 0.75, tint: [1.07, 0.95, 0.98], sea: [1.0, 0.75, 0.85] }),
++  key(8, { m: 0.7, sunK: 0.9, sun: '#ffc0a0', hemiSky: '#e8cade', hemiGround: '#6a5060', fog: '#ecc4d4', fogK: 0.92, scat: 0.4, scatCol: '#ffc0c0', hfog: 0.004, zenith: '#7a74b8', cloud: '#ffd4dc', lamps: 0.15, tint: [1.04, 0.98, 0.98] }),
++  key(22, { m: 0.2, sun: '#fff0e4', fog: '#e0d6e6', scat: 0.12, scatCol: '#ffe4ec', zenith: '#8a8ac8' }),
++  key(40, { m: 0 }), key(90, { m: 0 }),
++];
++const ZE_MORN = [ZE_EVE[0], ZE_EVE[1], ZE_EVE[2], key(1.5, { m: 1, sunK: 0.6, sun: '#ffb0a0', hemiSky: '#c0a8d4', hemiGround: '#4c4058', fog: '#e4c0d4', fogK: 0.72, scat: 0.5, scatCol: '#ffd0d8', hfog: 0.012, zenith: '#6060a8', cloud: '#ffd0dc', lamps: 0.6, tint: [1.03, 0.98, 1.0] }), ZE_EVE[4], ZE_EVE[5], ZE_EVE[6], ZE_EVE[7]];
++
++// the frame's look (no allocation a frame)
++const LOOK = key(90, { m: 0 });
++const lerpKey = (A, B, k, out) => {
++  for (const f of ['m', 'sunK', 'hemiK', 'fogK', 'scat', 'hfog', 'stars', 'lamps', 'moonK', 'glow2']) out[f] = A[f] + (B[f] - A[f]) * k;
++  for (const f of ['sun', 'hemiSky', 'hemiGround', 'fog', 'scatCol', 'zenith', 'cloud']) out[f].copy(A[f]).lerp(B[f], k);
++  out.tint.copy(A.tint).lerp(B.tint, k); out.sea.copy(A.sea).lerp(B.sea, k);
++  return out;
++};
++const sm = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
++function lookAt(elev, rising, planet) {
++  const T = planet === 'zeelich' ? (rising ? ZE_MORN : ZE_EVE) : (rising ? TW_MORN : TW_EVE);
++  let i = 0; while (i < T.length - 2 && elev >= T[i + 1].e) i++;
++  const A = T[i], B = T[i + 1];
++  return lerpKey(A, B, sm((elev - A.e) / Math.max(1e-6, B.e - A.e)), LOOK);
++}
++
++// ------------------------------------------------------------------------------------------------ shared uniforms
++// Float32Array values: three's uniform cloning passes them by reference, so one array feeds every program (built-in
++// materials take them from ShaderLib, the shader materials that merge UniformsLib.fog from there)
++const U = {
++  ldFog: { value: new Float32Array(12) },     // [sunDir.xyz, scatter] [scatCol.rgb, height-fog density] [base y, falloff, max, -]
++  ldWet: { value: new Float32Array(12) },     // [wet, puddles, ripples, time] [sky horizon.rgb, reflect] [zenith.rgb, -]
++  ldGlow: { value: new Float32Array([1, 0, 0, 0]) },   // [emissive gain, -, -, -]
++  ldChar: { value: new Float32Array([1, 1, 1, 0, 1, 1, 1, 0]) },   // [ramp tint.rgb, lamp gain] [-]
++};
++LD.U = U;
++
++// ------------------------------------------------------------------------------------------------ shader text
++const FOG_PARS_V = '\n#ifdef USE_FOG\n\tvarying vec3 vLdRel;\n#endif\n';
++const FOG_V = '\n#ifdef USE_FOG\n\tvLdRel = ( vec4( mvPosition.xyz, 0.0 ) * viewMatrix ).xyz;\n#endif\n';
++const FOG_PARS_F = '\n#ifdef USE_FOG\n\tvarying vec3 vLdRel;\n\tuniform vec4 ldFog[ 3 ];\n#endif\n';
++// (height mist: a density falling off exponentially with height above ldFog[2].x, integrated along the view ray; sun
++//  scattering: the fog's colour drawn towards the sun's tint by how much the ray looks into the sun. The sky dome uses
++//  the same scatter so the horizon meets it exactly)
++const FOG_MIX = `
++	vec3 ldFc = fogColor;
++	{
++		float ldL = length( vLdRel );
++		vec3 ldRd = vLdRel / max( ldL, 1e-4 );
++		if ( ldFog[ 1 ].w > 0.0 ) {
++			float k = ldFog[ 2 ].y, y0 = max( cameraPosition.y - ldFog[ 2 ].x, -20.0 ), dy = ldRd.y * ldL;
++			float od = ldFog[ 1 ].w * exp( - k * y0 ) * ( abs( k * dy ) > 1e-3 ? ( 1.0 - exp( - k * dy ) ) / ( k * ldRd.y ) : ldL );
++			float hf = min( 1.0 - exp( - max( od, 0.0 ) ), ldFog[ 2 ].z );
++			fogFactor = 1.0 - ( 1.0 - fogFactor ) * ( 1.0 - hf );
++		}
++		if ( ldFog[ 0 ].w > 0.0 ) ldFc = mix( ldFc, ldFog[ 1 ].rgb, ldFog[ 0 ].w * pow( max( dot( ldRd, ldFog[ 0 ].xyz ), 0.0 ), 6.0 ) );
++	}
++	gl_FragColor.rgb = mix( gl_FragColor.rgb, ldFc, fogFactor );`;
++// wet ground: after the normal is final, before the lights read the material (standard / physical materials only)
++const WET_PARS = `
++uniform vec4 ldWet[ 3 ];
++uniform vec4 ldGlow;
++float ldHash( vec2 p ) { return fract( sin( dot( p, vec2( 127.1, 311.7 ) ) ) * 43758.5453 ); }
++float ldNoise( vec2 p ) { vec2 i = floor( p ), f = fract( p ); f = f * f * ( 3.0 - 2.0 * f );
++	return mix( mix( ldHash( i ), ldHash( i + vec2( 1, 0 ) ), f.x ), mix( ldHash( i + vec2( 0, 1 ) ), ldHash( i + vec2( 1, 1 ) ), f.x ), f.y ); }
++vec3 ldReflK = vec3( 0.0 );
++`;
++const WET = `
++#if ( defined( STANDARD ) || defined( PHYSICAL ) ) && !defined( LD_NOWET )
++	if ( ldWet[ 0 ].x > 0.001 ) {
++		vec3 ldN = normalize( ( vec4( normal, 0.0 ) * viewMatrix ).xyz );
++		vec3 ldP = cameraPosition + ( vec4( - vViewPosition, 0.0 ) * viewMatrix ).xyz;
++		float ldUp = smoothstep( 0.5, 0.92, ldN.y );
++		float ldW = ldWet[ 0 ].x * ldUp, ldPud = 0.0;
++		if ( ldWet[ 0 ].y > 0.0 && ldUp > 0.0 ) {
++			float n = ldNoise( ldP.xz * 0.23 ) * 0.62 + ldNoise( ldP.xz * 0.9 + 7.3 ) * 0.38;
++			ldPud = smoothstep( 0.6, 0.66, n + 0.12 * ldWet[ 0 ].y * ldWet[ 0 ].x ) * ldUp * ldWet[ 0 ].y * ldWet[ 0 ].x;
++			if ( ldWet[ 0 ].z > 0.0 && ldPud > 0.05 ) {
++				vec2 c = floor( ldP.xz * 1.4 ), f = fract( ldP.xz * 1.4 ) - 0.5;
++				float ph = fract( ldWet[ 0 ].w * 0.7 + ldHash( c ) ), r = length( f - ( vec2( ldHash( c + 3.1 ), ldHash( c + 5.7 ) ) - 0.5 ) * 0.5 );
++				float ring = sin( ( r - ph * 0.45 ) * 60.0 ) * ( 1.0 - ph ) * smoothstep( 0.08, 0.0, abs( r - ph * 0.45 ) );
++				vec2 g = normalize( f + 1e-4 ) * ring * 0.18 * ldWet[ 0 ].z;
++				normal = normalize( normal + ( viewMatrix * vec4( g.x, 0.0, g.y, 0.0 ) ).xyz );
++			}
++		}
++		diffuseColor.rgb *= 1.0 - 0.36 * ldW - 0.22 * ldPud;
++		roughnessFactor = mix( roughnessFactor, 0.2, 0.85 * ldW );
++		roughnessFactor = mix( roughnessFactor, 0.05, ldPud );
++		if ( ldWet[ 1 ].w > 0.0 ) {
++			vec3 ldV = normalize( ldP - cameraPosition ), ldR = reflect( ldV, normalize( ( vec4( normal, 0.0 ) * viewMatrix ).xyz ) );
++			float fres = 0.04 + 0.96 * pow( 1.0 - max( dot( - ldV, ldN ), 0.0 ), 5.0 );
++			vec3 sky = mix( ldWet[ 1 ].rgb, ldWet[ 2 ].rgb, smoothstep( 0.03, 0.55, max( ldR.y, 0.0 ) ) );
++			ldReflK = sky * fres * ( 0.45 * ldW + 0.9 * ldPud ) * ldWet[ 1 ].w;
++		}
++	}
++#endif
++`;
++
++// install the patches (once, at import, before anything compiles)
++function install() {
++  const SC = THREE.ShaderChunk;
++  const fogEnd = 'gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );';
++  if (!SC.fog_fragment.includes(fogEnd) || !SC.fog_vertex.includes('mvPosition')) { console.warn('light=dyn: three.js fog chunks not as expected; fog left as it is'); }
++  else {
++    SC.fog_pars_vertex += FOG_PARS_V; SC.fog_vertex += FOG_V; SC.fog_pars_fragment += FOG_PARS_F;
++    SC.fog_fragment = SC.fog_fragment.replace(fogEnd, FOG_MIX);
++  }
++  // the emissive gain (glow at night), and the wet ground after the normal and before the lights
++  if (SC.emissivemap_fragment && SC.normal_fragment_maps && SC.lights_fragment_end) {
++    SC.emissivemap_fragment += '\n#ifndef LD_NOGLOW\n\ttotalEmissiveRadiance *= ldGlow.x;\n#endif\n';
++    SC.normal_fragment_maps += WET;
++    SC.lights_fragment_end += '\n#if ( defined( STANDARD ) || defined( PHYSICAL ) ) && !defined( LD_NOWET )\n\treflectedLight.indirectSpecular += ldReflK;\n#endif\n';
++    // (the declarations: every material that has the emissive chunk has <common> and <lights_pars_begin> or not;
++    //  put them in emissivemap_pars_fragment, which every lit and basic program includes before main)
++    SC.emissivemap_pars_fragment = WET_PARS + SC.emissivemap_pars_fragment;
++  } else console.warn('light=dyn: three.js chunks not as expected; glow and wet ground left out');
++  // the uniforms on every built-in shader and on UniformsLib.fog (merged by the game's own fogged shader materials)
++  for (const S of Object.values(THREE.ShaderLib)) if (S?.uniforms) Object.assign(S.uniforms, U);
++  Object.assign(THREE.UniformsLib.fog, { ldFog: U.ldFog });
++}
++if (LD.on) install();
++
++// ------------------------------------------------------------------------------------------------ the sky (dome)
++// environment.js uses this fragment for its sky dome under ?light=dyn (its own uniforms plus these)
++export const SKY_FS_DYN = /* glsl */`
++uniform vec3 uHorizon, uZenith, uCloud; uniform sampler2D uTex; uniform vec2 uOff; uniform float uCover;
++uniform vec3 uSun, uSunCol, uMoon, uMoonCol, uGlow2Dir; uniform vec4 uScat, uSky; uniform float uTime;
++varying vec3 vDir;
++float h3( vec3 p ) { return fract( sin( dot( p, vec3( 127.1, 311.7, 74.7 ) ) ) * 43758.5453 ); }
++void main() {
++  vec3 d = normalize( vDir );
++  float h = max( d.y, 0.0 );
++  vec3 col = mix( uHorizon, uZenith, smoothstep( 0.03, 0.55, h ) );
++  // the sun's side of the sky glows through the mist (the fog's own scatter, so the horizon meets the fogged world)
++  float sd = dot( d, uSun );
++  col = mix( col, uScat.rgb, uScat.w * pow( max( sd, 0.0 ), 6.0 ) );
++  // the other sun's violet afterglow, low on the opposite horizon (Twinsun's night is never an Earth night)
++  col += vec3( 0.32, 0.16, 0.3 ) * uSky.z * pow( max( dot( d, uGlow2Dir ), 0.0 ), 3.0 ) * ( 1.0 - smoothstep( 0.0, 0.35, h ) );
++  // stars (cells on the view direction, twinkling a little), fading into the horizon's haze
++  float st = 0.0;
++  if ( uSky.x > 0.01 ) {
++    vec3 p = d * 260.0, c = floor( p ), f = fract( p ) - 0.5;
++    float r = h3( c );
++    if ( r > 0.992 ) st = smoothstep( 0.22, 0.0, length( f ) ) * ( 0.5 + 0.5 * sin( uTime * ( 1.0 + 3.0 * r ) + r * 40.0 ) * 0.5 + 0.25 ) * ( 0.4 + 0.6 * fract( r * 97.0 ) );
++    st *= uSky.x * smoothstep( 0.02, 0.25, h );
++  }
++  // the cloud ceiling, lit by the sun from its side (warm at sunset), dark at night
++  vec2 uv = d.xz / ( h + 0.12 ) * 0.32 + uOff;
++  float c = smoothstep( 0.58 - uCover * 0.42, 0.95 - uCover * 0.3, texture2D( uTex, uv ).r ) * smoothstep( 0.04, 0.3, h );
++  vec3 cl = mix( uCloud, uScat.rgb * 1.05, clamp( uScat.w * pow( max( sd, 0.0 ), 3.0 ) * 0.9, 0.0, 1.0 ) );
++  col = mix( col, cl, c * 0.85 );
++  col += vec3( 0.9, 0.95, 1.0 ) * st * ( 1.0 - c );
++  // the sun's disc and its glow (under the clouds' cover a little)
++  col += uSunCol * ( smoothstep( 0.99955, 0.99975, sd ) * 3.0 + pow( max( sd, 0.0 ), 220.0 ) * 0.5 ) * uSky.y * ( 1.0 - 0.6 * c );
++  // the Emerald Moon: a green disc with darker seas, a soft halo
++  float md = dot( d, uMoon );
++  if ( uSky.w > 0.01 ) {
++    float disc = smoothstep( 0.99935, 0.9995, md );
++    vec3 q = d - uMoon * md;
++    float mare = 0.82 + 0.18 * h3( floor( q * 900.0 ) ) ;
++    col = mix( col, uMoonCol * mare * 1.25, disc * uSky.w * ( 1.0 - 0.7 * c ) );
++    col += uMoonCol * pow( max( md, 0.0 ), 600.0 ) * 0.35 * uSky.w;
++  }
++  gl_FragColor = vec4( col, 1.0 );
++  #include <colorspace_fragment>
++}`;
++export function skyUniformsDyn(skyU) {
++  Object.assign(skyU, {
++    uSun: { value: new THREE.Vector3(0, 1, 0) }, uSunCol: { value: new THREE.Color() }, uMoon: { value: new THREE.Vector3(0, 1, 0) }, uMoonCol: { value: C('#bfe8d2') },
++    uGlow2Dir: { value: SET.clone().negate().setY(0.02).normalize() }, uScat: { value: new THREE.Vector4() }, uSky: { value: new THREE.Vector4() }, uTime: { value: 0 },
++  });
++  return skyU;
++}
++
++// ------------------------------------------------------------------------------------------------ the frame's light
++const _sun = new THREE.Vector3(), _moon = new THREE.Vector3(), _ld = new THREE.Vector3(), _c = new THREE.Color(), _c2 = new THREE.Color();
++const LUM = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
++const STEP = { high: 0.6 * D2R, medium: 2.5 * D2R, low: 3.5 * D2R };   // (the light's direction moves in steps: each one redraws the cached shadow casters on Medium/Low)
++LD.lightDir = new THREE.Vector3().copy(NOON);
++LD.planet = 'twinsun';
++
++// the clock: called once a frame (Game.advance) with the play's time step (0 when frozen: menus, cinematics hold it)
++LD.tick = (dt, game = null) => {
++  if (!LD.on) return;
++  if (game) {
++    const room = game.room;
++    LD.regionPlanet = room && (room.id === 'zeelich' || room.isle || /^z|zeel/i.test(room.planet || '')) ? 'zeelich' : 'twinsun';
++    LD.base = room ? (game.hero?.pos?.y ?? 0) - 2 : 0;   // (the mist lies on the region's ground round him; on Citadel, the sea)
++  }
++  const held = LD.pinned || (LD.holds.size ? [...LD.holds.values()][0] : null);
++  if (held) { LD.theta = wrap(NAMED[held]); return; }
++  if (!(dt > 0)) return;
++  const e = Math.asin(sunAt(LD.theta, _sun).y) / D2R;
++  const speed = (2 * Math.PI) / (LD.dayMin * 60) * (e < -8 ? 2.6 : e < 12 ? 0.8 : 1.15);   // (the night and the long middle of the day pass faster; the golden hour and dusk slower)
++  // (?todcycle=dusk: the evening turns back at deep dusk and the light climbs back to noon the way it came, so the cycle
++  //  never reaches the night and nothing jumps; then on again: noon → golden hour → sunset → dusk → … → noon)
++  if (LD.duskOnly) {
++    LD._back ??= false;
++    let th = LD.theta + dt * speed * (LD._back ? -1 : 1);
++    if (th > NAMED.dusk) { th = NAMED.dusk; LD._back = true; } else if (th < 0) { th = 0; LD._back = false; }
++    LD.theta = th; return;
++  }
++  LD.theta = wrap(LD.theta + dt * speed);
++};
++
++// the environment's values for this frame, laid over what environment.js computed (Citadel's palette, the weather,
++// a region's own env). Called at the end of Environment.update, before DEPTH-LOOK's light.
++LD.apply = (env) => {
++  if (!LD.on) return;
++  const t0 = performance.now();
++  const R = env.region, inside = !!env.interior;
++  const planet = R ? LD.regionPlanet : 'twinsun';
++  LD.planet = planet;
++  sunAt(LD.theta, _sun);
++  const elev = Math.asin(_sun.y) / D2R, rising = Math.sin(LD.theta) < 0;
++  LD.sunElev = elev;
++  const L = lookAt(elev, rising, planet);
++  LD.night = sm((-elev - 2) / 10); LD.dusk = L.lamps; LD.look = L;
++  _moon.copy(_sun).negate();
++  // the light: the sun above -3°, the moon below (both near zero at the swap); never under LIGHT_MIN
++  const useMoon = elev < -3;
++  _ld.copy(useMoon ? _moon : _sun);
++  { const h = Math.hypot(_ld.x, _ld.z) || 1, el = Math.max(Math.asin(Math.max(-1, Math.min(1, _ld.y))), LIGHT_MIN); _ld.set(_ld.x / h * Math.cos(el), Math.sin(el), _ld.z / h * Math.cos(el)); }
++  const step = STEP[LD.tier] ?? STEP.medium;
++  if (LD.lightDir.angleTo(_ld) > step || useMoon !== LD._moonLit) { LD.lightDir.copy(_ld); LD._moonLit = useMoon; LD.stats.sunSteps++; }
++  const m = L.m, sun = env.sun, hemi = env.hemi, fog = env.fog;
++  if (!inside) {
++    // colours: today's (environment.js) taken towards the hour's by m; intensities by the hour's K
++    sun.color.lerp(useMoon ? _c.set('#b8e4d0') : L.sun, useMoon ? 1 : m);
++    sun.intensity = useMoon ? 0.36 * L.moonK : sun.intensity * L.sunK;
++    hemi.color.lerp(L.hemiSky, m); hemi.groundColor.lerp(L.hemiGround, m); hemi.intensity *= L.hemiK;
++    if (!R?.fogColor) fog.color.lerp(L.fog, m);   // (a region's live fog — Desert's sandstorm — keeps its colour)
++    else fog.color.lerp(L.fog, m * 0.5);
++    fog.near *= L.fogK; fog.far *= L.fogK;
++    if (sun.shadow) sun.shadow.intensity = useMoon ? 0.55 : 1;
++    // the sky
++    const S = env.skyU;
++    if (S?.uSun) {
++      S.uHorizon.value.copy(fog.color);
++      S.uZenith.value.lerp(L.zenith, m);
++      S.uCloud.value.lerp(L.cloud, m);
++      S.uSun.value.copy(_sun); S.uMoon.value.copy(_moon);
++      S.uSunCol.value.copy(L.sun).multiplyScalar(elev > -2 ? 1 : 0);
++      S.uScat.value.set(L.scatCol.r, L.scatCol.g, L.scatCol.b, L.scat);
++      S.uSky.value.set(L.stars, sm((elev + 2) / 3), L.glow2 * (planet === 'zeelich' ? 0 : 1), sm((_moon.y - 0.02) / 0.06) * (planet === 'zeelich' ? 0.6 : 1));
++      S.uTime.value = env.time;
++      if (planet === 'zeelich') S.uMoonCol.value.set('#e8d6f4'); else S.uMoonCol.value.set('#bfe8d2');
++    }
++    // the sea (Citadel): its colours under the hour's light, the sky's reflection the horizon's
++    const W = env.waterU;
++    if (W && env.water.visible) {
++      W.uDeep.value.multiply(_c.setRGB(1 + (L.sea.x - 1) * m, 1 + (L.sea.y - 1) * m, 1 + (L.sea.z - 1) * m));
++      W.uShallow.value.multiply(_c);
++      W.uSky.value.lerp(_c2.copy(fog.color).lerp(L.scatCol, 0.5 * L.scat), m);
++      W.uRefl.value = Math.max(W.uRefl.value, 0.3 + 0.4 * m);   // (low light: the sea mirrors more of the sky)
++    }
++    // the fog's height mist and scatter (the ground's base the sea, or the region's own ground)
++    const F = U.ldFog.value, sd = useMoon ? _moon : _sun;
++    F[0] = sd.x; F[1] = sd.y; F[2] = sd.z; F[3] = L.scat * (useMoon ? 0.5 : 1);
++    F[4] = L.scatCol.r; F[5] = L.scatCol.g; F[6] = L.scatCol.b; F[7] = L.hfog * (LD.tier === 'low' ? 0.8 : 1);
++    F[8] = R ? LD.base : 0; F[9] = 0.22; F[10] = 0.6;
++  } else {
++    // a room: the daylight through its windows follows the hour; its own lamps take over at night
++    const k = 1 - 0.72 * LD.night - 0.2 * (L.lamps - LD.night);
++    sun.intensity *= Math.max(0.2, k); hemi.intensity *= Math.max(0.34, k);
++    hemi.color.lerp(_c.set('#8090c8'), 0.45 * LD.night);
++    U.ldFog.value.fill(0);
++  }
++  if (!sun.position.equals(_ld)) { /* (environment.js positions the sun from env.sunDir, set by LD.lightDir below) */ }
++  // the people's ramp (characters.js LbaMaterial): tinted and dimmed with the world, lit by the lamps
++  const CH = U.ldChar.value, lv = LUM(hemi.color) * hemi.intensity / 1.22 * 0.55 + LUM(sun.color) * sun.intensity / 2.47 * 0.45;
++  const lvk = Math.min(1, Math.max(inside ? 0.45 : 0.3, lv));
++  CH[0] = lvk * (1 + (L.tint.x - 1) * 2 * m); CH[1] = lvk * (1 + (L.tint.y - 1) * 2 * m); CH[2] = lvk * (1 + (L.tint.z - 1) * 2 * m); CH[3] = 1;
++  if (inside) { CH[0] = CH[1] = CH[2] = Math.max(0.55, 1 - 0.4 * LD.night); }
++  // the glow of emissive things: up at dusk and night (bloom on High picks it up; the halos on every tier)
++  U.ldGlow.value[0] = 1 + 1.6 * L.lamps;
++  LD.stats.applyMs = performance.now() - t0;
++};
++
++// the light pool's gain for a source (lightpool.js): lamps that light up at dusk (sites found here, and the builders'
++// street lamps), the others (crystals, story lights, the lantern he carries, the rooms' lamps) as they are, a little
++// stronger at night; flames flicker
++LD.gain = (s, time) => {
++  const u = s.userData;
++  let g = u.ldNight ? LD.dusk : 1 + 0.6 * LD.dusk;
++  if (u.ldFlame) g *= 0.9 + 0.1 * Math.sin(time * 13.1 + u.ldPh) * Math.sin(time * 7.7 + u.ldPh * 1.7) + 0.06 * Math.sin(time * 23 + u.ldPh);
++  return g;
++};
++
++// ------------------------------------------------------------------------------------------------ lamp sites
++// Every lamp, lantern, fire, crystal and glowing sign in the world: found from the drawn world itself (game-wide, no
++// builder lists them): the meshes whose material glows (an emissive colour with some intensity), not people, not
++// windows (flat panes: they only glow), not things that move. A merged mesh holds many: its glowing triangles are
++// clustered on a 1.2 m lattice. Each site is a marker PointLight (a source of the light pool, so the nearest are lit
++// with fades) that turns on at dusk, and a halo.
++const SITE_MAX = 240;   // (all areas together: the pool tests each one a frame, at dusk and night only)
++const isFlame = (c) => c.r > 0.6 && c.g < c.r * 0.75 && c.b < c.r * 0.45;
++const winMat = (m) => { const e = m.emissive; return e.r > 0.5 && e.g > 0.35 && e.b < e.r && (m.roughness ?? 1) <= 0.3 && (m.emissiveIntensity ?? 1) <= 0.4; };
++function glowMat(m) {
++  if (!m || !m.emissive || m.userData?.ldSkip || winMat(m)) return false;
++  const e = m.emissive, k = m.emissiveIntensity ?? 1;
++  return (e.r + e.g + e.b) * k > 0.15 && !(m.transparent && m.opacity < 0.2);
++}
++function windowLike(geo) {
++  const bb = geo.boundingBox || (geo.computeBoundingBox(), geo.boundingBox), s = bb.getSize(_v3);
++  const dims = [s.x, s.y, s.z].sort((a, b) => a - b);
++  return dims[0] < 0.06 && dims[1] > 0.35;   // (a pane: flat and wide)
++}
++const _v3 = new THREE.Vector3(), _m4 = new THREE.Matrix4(), _p = new THREE.Vector3();
++LD.collect = (scene, sources) => {
++  if (!LD.on) return 0;
++  const t0 = performance.now();
++  let added = 0;
++  const near = (x, y, z, r) => { for (const s of sources) { if (s.userData.ldWP) _p.copy(s.userData.ldWP); else s.getWorldPosition(_p); if (_p.distanceToSquared(_v3.set(x, y, z)) < r * r) return s; } return null; };
++  const addSite = (parent, wx, wy, wz, col, flame, size) => {
++    if (LD.stats.sites >= SITE_MAX || !Number.isFinite(wx + wy + wz)) return;
++    const ex = near(wx, wy, wz, 1.6);
++    if (ex) { ex.userData.ldHalo ??= size; if (flame) { ex.userData.ldFlame = true; ex.userData.ldPh = Math.random() * 6.28; } return; }
++    const c = _c.copy(col).lerp(_c2.set(flame ? '#ffb060' : '#ffd8a4'), flame ? 0.3 : 0.82);
++    const l = new THREE.PointLight(c, flame ? 7 : 14, flame ? 8 : 13, 2);
++    parent.updateMatrixWorld(true);
++    l.position.copy(parent.worldToLocal(_p.set(wx, wy, wz)));
++    l.userData.ldNight = true; l.userData.ldHalo = size; l.userData.ldSite = true; l.userData.ldWP = new THREE.Vector3(wx, wy, wz);   // (static: the pool and the halos read it)
++    if (flame) { l.userData.ldFlame = true; l.userData.ldPh = Math.random() * 6.28; }
++    l.visible = false; l.userData.poolSource = true;
++    parent.add(l); sources.push(l); added++; LD.stats.sites++;
++  };
++  scene.traverse((o) => {
++    if (!o.isMesh || o.userData?.ldScanned || o.isSkinnedMesh || o.userData?.rig) return;
++    for (let p = o; p; p = p.parent) if (p.userData?.rig || p.userData?.npc || p.isBone) return;
++    o.userData.ldScanned = true;
++    const mats = Array.isArray(o.material) ? o.material : [o.material];
++    const G = o.geometry; if (!G?.attributes?.position) return;
++    const groups = Array.isArray(o.material) && G.groups.length ? G.groups : [{ start: 0, count: G.index ? G.index.count : G.attributes.position.count, materialIndex: 0 }];
++    o.updateMatrixWorld(true);
++    for (const gr of groups) {
++      const m = mats[gr.materialIndex ?? 0];
++      if (!glowMat(m)) continue;
++      if (!G.boundingBox) G.computeBoundingBox();
++      const col = m.emissive, flame = isFlame(col), size = 0.9;
++      if (o.isInstancedMesh) {
++        if (windowLike(G)) continue;
++        const bb = G.boundingBox, cy = (bb.min.y + bb.max.y) / 2, cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
++        for (let i = 0; i < Math.min(o.count, 64); i++) { o.getMatrixAt(i, _m4); _p.set(cx, cy, cz).applyMatrix4(_m4).applyMatrix4(o.matrixWorld); addSite(o, _p.x, _p.y, _p.z, col, flame, size); }
++        continue;
++      }
++      // clustered glowing vertices (a single piece is one cluster; a merged mesh many), a pane skipped by its extent
++      const pos = G.attributes.position, idx = G.index, cells = new Map();
++      const n = gr.count, s0 = gr.start;
++      for (let j = 0; j < n; j++) {
++        const vi = idx ? idx.getX(s0 + j) : s0 + j;
++        _p.fromBufferAttribute(pos, vi).applyMatrix4(o.matrixWorld);
++        const k = `${Math.round(_p.x / 1.2)},${Math.round(_p.y / 1.2)},${Math.round(_p.z / 1.2)}`;
++        let c = cells.get(k); if (!c) cells.set(k, (c = { x: 0, y: 0, z: 0, n: 0, x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9, z0: 1e9, z1: -1e9 }));
++        c.x += _p.x; c.y += _p.y; c.z += _p.z; c.n++;
++        c.x0 = Math.min(c.x0, _p.x); c.x1 = Math.max(c.x1, _p.x); c.y0 = Math.min(c.y0, _p.y); c.y1 = Math.max(c.y1, _p.y); c.z0 = Math.min(c.z0, _p.z); c.z1 = Math.max(c.z1, _p.z);
++        if (cells.size > 200) break;
++      }
++      for (const c of cells.values()) {
++        const d = [c.x1 - c.x0, c.y1 - c.y0, c.z1 - c.z0].sort((a, b) => a - b);
++        if (d[0] < 0.05 && d[1] > 0.3) continue;   // (a pane)
++        addSite(o, c.x / c.n, c.y / c.n, c.z / c.n, col, flame, size);
++      }
++    }
++  });
++  // windows: their panes glow at night (shared materials: one change each, fixed at build time — architecture.js PERF-2)
++  scene.traverse((o) => {
++    if (!o.isMesh) return;
++    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
++      if (!m?.emissive || m.userData.ldWin !== undefined) continue;
++      const e = m.emissive, warm = e.r > 0.5 && e.g > 0.35 && e.b < e.r;
++      m.userData.ldWin = warm && winMat(m) ? m.emissiveIntensity : null;
++      if (m.userData.ldWin != null) (LD.windows ??= new Set()).add(m);
++    }
++  });
++  LD.stats.collectMs = (LD.stats.collectMs || 0) + performance.now() - t0;
++  return added;
++};
++
++// ------------------------------------------------------------------------------------------------ halos
++// one batch of soft sprites at the lit sites near the camera (every tier: the glow without bloom), additive, fading in
++// at dusk, hidden by the world in front (depth test), out with the fog
++const HALO_N = 96;
++const HALO_VS = /* glsl */`
++attribute vec4 aCol; varying vec4 vCol; uniform float uScale, uFar;
++void main() {
++  vec4 mv = modelViewMatrix * vec4( position, 1.0 );
++  mv.xyz += normalize( - mv.xyz ) * 0.7;   // (in front of the lamp's own globe, which would hide the whole sprite's one depth)
++  gl_Position = projectionMatrix * mv;
++  gl_PointSize = aCol.w * uScale / max( - mv.z, 0.5 );
++  vCol = vec4( aCol.rgb, 1.0 - smoothstep( uFar * 0.6, uFar, - mv.z ) );
++}`;
++const HALO_FS = /* glsl */`
++varying vec4 vCol; uniform float uK;
++void main() {
++  vec2 q = gl_PointCoord * 2.0 - 1.0; float r = dot( q, q );
++  float a = exp( - r * 4.5 ) * 0.9 + exp( - r * 28.0 ) * 0.6;
++  gl_FragColor = vec4( vCol.rgb * a * uK * vCol.a, 1.0 );
++}`;
++LD.makeHalos = (scene) => {
++  if (!LD.on || LD.halos) return;
++  const g = new THREE.BufferGeometry();
++  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(HALO_N * 3), 3));
++  g.setAttribute('aCol', new THREE.BufferAttribute(new Float32Array(HALO_N * 4), 4));
++  g.setDrawRange(0, 0);
++  const M = new THREE.ShaderMaterial({ uniforms: { uScale: { value: 400 }, uFar: { value: 120 }, uK: { value: 0 } }, vertexShader: HALO_VS, fragmentShader: HALO_FS,
++    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
++  const P = new THREE.Points(g, M); P.frustumCulled = false; P.renderOrder = 3; P.name = 'ld-halos';
++  scene.add(P); LD.halos = P; LD._haloT = -1;
++};
++const shownSrc = (s) => { for (let p = s.parent; p; p = p.parent) if (!p.visible) return false; return true; };
++function updateHalos(game, time) {
++  const P = LD.halos; if (!P) return;
++  const k = LD.dusk;
++  P.visible = k > 0.02;
++  P.material.uniforms.uK.value = k * (LD.tier === 'high' ? 0.7 : 1);
++  P.material.uniforms.uScale.value = game.renderer.renderer.domElement.height * 0.5;
++  P.material.uniforms.uFar.value = game.scene.fog?.far ?? 120;
++  if (!P.visible || time - LD._haloT < 0.5) return;   // (the list refreshed twice a second: the sites don't move)
++  LD._haloT = time;
++  const src = game.lightPool?.sources || [], cam = game.camera.position, pos = P.geometry.attributes.position.array, col = P.geometry.attributes.aCol.array;
++  let n = 0;
++  for (const s of src) {
++    if (n >= HALO_N) break;
++    if (!s.userData.ldHalo || !(s.intensity > 0) || !shownSrc(s)) continue;
++    if (s.userData.ldWP) _p.copy(s.userData.ldWP); else s.getWorldPosition(_p);
++    if (_p.distanceToSquared(cam) > 140 * 140) continue;
++    pos[n * 3] = _p.x; pos[n * 3 + 1] = _p.y; pos[n * 3 + 2] = _p.z;
++    col[n * 4] = s.color.r; col[n * 4 + 1] = s.color.g; col[n * 4 + 2] = s.color.b; col[n * 4 + 3] = s.userData.ldHalo * 2.2;
++    n++;
++  }
++  P.geometry.setDrawRange(0, n);
++  P.geometry.attributes.position.needsUpdate = true; P.geometry.attributes.aCol.needsUpdate = true;
++  LD.stats.halos = n;
++}
++
++// ------------------------------------------------------------------------------------------------ the frame (Game)
++// after Environment.update: the tier, the wet ground, the windows, the halos, the frame's tint
++LD.frame = (game, dt) => {
++  if (!LD.on) return;
++  const t0 = performance.now();
++  const n = game.lightPool?.lights.length ?? 8;
++  LD.tier = n >= 8 ? 'high' : n >= 4 ? 'medium' : 'low';
++  const env = game.env, inside = !!env.interior, W = env.wx, L = LD.look;
++  // wet: up with the rain over ~25 s, dry over ~3 min (Citadel's rain and storm; never indoors)
++  const rain = inside || env.region ? 0 : Math.max(env.storm || 0, W?.on ? W.rain : 0);
++  const tgt = Math.min(1, rain * 1.15);
++  LD.wet += (tgt - LD.wet) * Math.min(1, (dt || 0) / (tgt > LD.wet ? 25 : 180));
++  const w = U.ldWet.value, wet = inside ? 0 : LD.wet;
++  w[0] = wet; w[1] = LD.tier === 'low' ? 0 : LD.tier === 'medium' ? 0.55 : 1; w[2] = LD.tier === 'high' ? 1 : 0; w[3] = game.time || 0;
++  const fc = env.fog.color, z = env.skyU?.uZenith?.value || fc;
++  w[4] = fc.r; w[5] = fc.g; w[6] = fc.b; w[7] = LD.tier === 'low' ? 0 : 1;
++  w[8] = z.r; w[9] = z.g; w[10] = z.b;
++  // windows glow at night
++  if (LD.windows) for (const m of LD.windows) m.emissiveIntensity = (m.userData.ldWin || 0) + 0.75 * (L?.lamps ?? 0);
++  updateHalos(game, game.time || 0);
++  // the frame's colour (the mood): over the area's own grade
++  if (L && !inside) { const m = L.m; game.renderer?.setLightTint?.(1 + (L.tint.x - 1) * m, 1 + (L.tint.y - 1) * m, 1 + (L.tint.z - 1) * m); }
++  else if (inside) game.renderer?.setLightTint?.(1 + 0.03 * LD.night, 1, 1 - 0.04 * LD.night);
++  const ms = performance.now() - t0 + (LD.stats.applyMs || 0);
++  const S = LD.stats; S.frameMs = ms; S.n++; S.sum += ms;
++};
++LD.info = () => ({ on: LD.on, theta: +LD.theta.toFixed(4), sunElev: +LD.sunElev.toFixed(2), night: +LD.night.toFixed(3), dusk: +LD.dusk.toFixed(3), tier: LD.tier, wet: +LD.wet.toFixed(3), planet: LD.planet,
++  pinned: LD.pinned, holds: [...LD.holds.keys()], sites: LD.stats.sites, halos: LD.stats.halos, sunSteps: LD.stats.sunSteps, msAvg: LD.stats.n ? +(LD.stats.sum / LD.stats.n).toFixed(4) : 0, collectMs: +(LD.stats.collectMs || 0).toFixed(1) });
+diff --git a/lba3/src/engine/lightpool.js b/lba3/src/engine/lightpool.js
+index 727e9641..8899c4f3 100644
+--- a/lba3/src/engine/lightpool.js
++++ b/lba3/src/engine/lightpool.js
+@@ -15,6 +15,7 @@
+ // is part of every lit shader's program: the battery profile's programs (made anyway on a switch, for its shadow filter)
+ // are made with 2 lights instead of 4/8, so no program is added.
+ import * as THREE from 'three';
++import { LD } from './lightdyn.js';   // (LIGHTING-145 ?light=dyn: lamps that light up at dusk, flames that flicker; off: nothing)
+ 
+ // lights in the pool by graphics quality: every lit pixel pays for each one, so integrated GPUs get fewer
+ export const POOL_SIZE = { high: 8, medium: 4, low: 2 };
+@@ -53,6 +54,7 @@ export class LightPool {
+   setFade(on) { on = !!on; if (on !== this.fade) { this.fade = on; for (const S of this.slots) { S.s = null; S.w = 0; } this._t = null; } }
+   // take in every point light the builders placed (call again if lamps are added later)
+   collect() {
++    if (LD.on) { LD.collect(this.scene, this.sources); LD.makeHalos(this.scene); }   // (LIGHTING-145: the world's glowing things as dusk lamps)
+     this.scene.traverse((o) => {
+       if (!o.isPointLight || o.userData.pool || o.userData.poolSource) return;
+       o.userData.poolSource = true;
+@@ -66,10 +68,11 @@ export class LightPool {
+     const cand = [];
+     for (const s of this.sources) {
+       if (!(s.intensity > 0)) continue;
++      if (LD.on && s.userData.ldNight && !(LD.dusk > 0.005)) continue;   // (LIGHTING-145: a dusk lamp by day)
+       let shown = true;
+       for (let p = s.parent; p; p = p.parent) if (!p.visible) { shown = false; break; }
+       if (!shown) continue;
+-      s.getWorldPosition(_p);
++      if (s.userData.ldWP) _p.copy(s.userData.ldWP); else s.getWorldPosition(_p);   // (LIGHTING-145: a dusk lamp's place is fixed)
+       const d = _p.distanceTo(focus), reach = s.distance > 0 ? s.distance : 40;
+       const edge = d - reach; // how far the edge of its light is from the focus
+       if (edge > 25) continue;
+@@ -112,7 +115,7 @@ export class LightPool {
+       const L = this.lights[i], x = S[i], c = x.s && by.get(x.s);
+       if (!c || !(x.w > 0)) { L.intensity = 0; continue; }
+       L.position.set(c.x, c.y, c.z);
+-      L.color.copy(c.s.color); L.intensity = c.s.intensity * smooth(x.w); L.distance = c.s.distance; L.decay = c.s.decay;
++      L.color.copy(c.s.color); L.intensity = c.s.intensity * smooth(x.w) * (LD.on ? LD.gain(c.s, this._t ?? 0) : 1); L.distance = c.s.distance; L.decay = c.s.decay;
+     }
+   }
+ }
+diff --git a/lba3/src/game/characters.js b/lba3/src/game/characters.js
+index 920267ad..603a1bd7 100644
+--- a/lba3/src/game/characters.js
++++ b/lba3/src/game/characters.js
+@@ -8,6 +8,7 @@
+ // silhouettes between races. Bodies are one skinned surface; hands with
+ // separate fingers and shoes are finer rigid sculpts attached to bones.
+ import * as THREE from 'three';
++import { LD } from '../engine/lightdyn.js';   // (LIGHTING-145 ?light=dyn: the people lit with the hour and by the lamps; off: nothing)
+ import { buildSculpted, sculptRigid, makeSDF, assemble } from '../engine/sculpt.js';
+ import { Rig } from '../engine/rig.js';
+ 
+@@ -1416,7 +1417,36 @@ lbaSun = getShadowHW( directionalShadowMap[ 0 ], directionalLightShadows[ 0 ].sh
+ #endif
+ vec3 outgoingLight = mix( 0.62, 1.0, lbaSun ) * lbaRamp(diffuseColor.rgb, inverseTransformDirection(normal, viewMatrix)) + totalEmissiveRadiance;` : 'vec3 outgoingLight = lbaRamp(diffuseColor.rgb, inverseTransformDirection(normal, viewMatrix)) + totalEmissiveRadiance;'));
+     };
+-    this.customProgramCacheKey = () => (LBA_SUN_SHADOW ? 'lba-ramp-sun' : 'lba-ramp');
++    this.customProgramCacheKey = () => (LBA_SUN_SHADOW ? 'lba-ramp-sun' : 'lba-ramp') + (LD.on ? '|ld' : '');
++    // LIGHTING-145 (?light=dyn only): the ramp, which ignores the scene's lights, is tinted and dimmed with the hour
++    // (lightdyn.js ldChar: the world's own light level, so a person at night is not lit as at noon) and the light pool's
++    // lamps light the person (a wrapped diffuse: the side towards the lamp, the rest a little). No new light, no
++    // wet ground, no night glow on the hit flash. Off: the shader as before.
++    if (LD.on) {
++      this.defines = { ...(this.defines || {}), LD_NOWET: '', LD_NOGLOW: '' };
++      const base = this.onBeforeCompile;
++      this.onBeforeCompile = (sh, r) => {
++        base(sh, r);
++        sh.fragmentShader = sh.fragmentShader
++          .replace('void main() {', `uniform vec4 ldChar[ 2 ];
++vec3 ldLamps( vec3 p, vec3 n ) {
++  vec3 s = vec3( 0.0 );
++#if NUM_POINT_LIGHTS > 0
++  IncidentLight il;
++  for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {
++    PointLight pl = pointLights[ i ];
++    vec3 v = pl.position - p;
++    if ( pl.color == vec3( 0.0 ) || ( pl.distance > 0.0 && dot( v, v ) >= pl.distance * pl.distance ) ) continue;
++    getPointLightInfo( pl, p, il );
++    s += il.color * ( 0.3 + 0.7 * saturate( dot( n, il.direction ) ) );
++  }
++#endif
++  return s;
++}
++void main() {`)
++          .replace(/lbaRamp\(diffuseColor\.rgb, inverseTransformDirection\(normal, viewMatrix\)\)/g, '( lbaRamp(diffuseColor.rgb, inverseTransformDirection(normal, viewMatrix)) * ldChar[ 0 ].rgb + diffuseColor.rgb * ldLamps( - vViewPosition, normal ) * 0.8 * ldChar[ 0 ].w )');
++      };
++    }
+   }
+ }
+ const polyEyeMat = new LbaMaterial();
+diff --git a/lba3/src/game/weather.js b/lba3/src/game/weather.js
+index 441eaef0..271f4c54 100644
+--- a/lba3/src/game/weather.js
++++ b/lba3/src/game/weather.js
+@@ -31,6 +31,7 @@
+ // before (a light rain draws 40 % of them; Low 60 % at most); the motes one draw of ≤ 320 points (Medium 160, Low none).
+ import * as THREE from 'three';
+ import { rng } from '../engine/math.js';
++import { LD } from '../engine/lightdyn.js';   // (LIGHTING-145 ?light=dyn: the time of day is its own; this cycle stays at noon)
+ 
+ const Q = typeof location !== 'undefined' ? location.search : '';
+ const NOWEATHER = /[?&]noweather\b/.test(Q);
+@@ -265,6 +266,7 @@ export class Weather {
+   }
+   // the light at a phase of the day, into `out`
+   light(planet, phase, out) {
++    if (LD.on) { out.set(NOON); return out; }
+     const T = PLANETS[planet].light;
+     let i = 0;
+     while (i < DAY.length - 2 && phase >= DAY[i + 1][0]) i++;
+diff --git a/lba3/src/main.js b/lba3/src/main.js
+index 6a6bb172..9cf9a06b 100644
+--- a/lba3/src/main.js
++++ b/lba3/src/main.js
+@@ -6,6 +6,7 @@ import './engine/fastmath.js';   // (CPU-RELIEF: Math.hypot the optimiser can in
+ import * as THREE from 'three';
+ import { Renderer } from './engine/renderer.js';
+ import { DL } from './engine/depthlook.js';
++import { LD } from './engine/lightdyn.js';   // (LIGHTING-145 ?light=dyn: the time of day; off: nothing)
+ import { fitRoomDepth, restoreRoomDepth } from './engine/roomdepth.js';   // (FLICKER-142)   // (DEPTH-LOOK: ?depth= candidates, off by default)
+ import { loadBake } from './engine/sculpt.js';
+ import { preloadCharacters } from './game/characters.js';
+@@ -3457,7 +3458,9 @@ class Game {
+     this.env.setStorm(this.storm);
+     this.audio.setStorm(this.storm, Math.max(this.storm, W?.rainSnd ?? 0), Math.max(this.storm, W?.windSnd ?? 0));
+     const focus = this.cine?.focus || this.hero.pos;
++    if (LD.on) LD.tick(this.state === 'play' || this.state === 'dialog' ? dt : 0, this);   // (LIGHTING-145: the hour runs in play and talk; menus, films and cutscenes hold it)
+     this.env.update(dt, this.camera, this.state === 'title' ? (this._origin ??= new THREE.Vector3()) : focus);
++    if (LD.on) LD.frame(this, dt);
+     if (DL.contact) { DL.focus.copy(this.state === 'title' ? (this._origin ??= new THREE.Vector3()) : focus); DL.area = this.room?.id || 'citadel'; }   // (DEPTH-LOOK)
+     // (TITLE-LOAD: the title's own fog end, a visible option: off unless TITLE_VIEW.far is set)
+     if (TITLE_VIEW.far > 0 && (this.state === 'title' || this.state === 'loading') && !this.room) this.scene.fog.far = Math.min(this.scene.fog.far, TITLE_VIEW.far);
+diff --git a/lba3/tools/lighting145-sheet.py b/lba3/tools/lighting145-sheet.py
+new file mode 100644
+index 00000000..3951f790
+--- /dev/null
++++ b/lba3/tools/lighting145-sheet.py
+@@ -0,0 +1,61 @@
++#!/usr/bin/env python3
++# LIGHTING-145: the user's sheets from tools/lighting145-shots.mjs's pictures.
++#   python3 tools/lighting145-sheet.py <shots dir> <out dir>
++# sheet-1 Citadel's square and the harbour lighthouse (today / noon / sunset / night / rain at night), sheet-2 Zeelich and
++# Desert Island (today / sunset / night / dawn or dusk), sheet-3 Twinsen's house and the tavern (today / night).
++# Each sheet at most 1300 px wide and 3500 px tall; tiles 640 x 360 in two columns with a caption over each.
++import sys, os
++from PIL import Image, ImageDraw, ImageFont
++
++SRC, OUT = sys.argv[1], sys.argv[2]
++os.makedirs(OUT, exist_ok=True)
++TW, TH, CAP, PAD = 640, 360, 26, 6
++W = 2 * TW + 3 * PAD
++try:
++    FONT = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 17)
++    TFONT = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 20)
++except OSError:
++    FONT = TFONT = ImageFont.load_default()
++
++def tile(name):
++    for ext in ('.jpg', '.png'):
++        p = os.path.join(SRC, name + ext)
++        if os.path.exists(p):
++            return Image.open(p).convert('RGB').resize((TW, TH), Image.LANCZOS)
++    im = Image.new('RGB', (TW, TH), (40, 40, 40)); ImageDraw.Draw(im).text((20, 20), 'missing: ' + name, fill=(220, 80, 80), font=FONT); return im
++
++def sheet(fname, title, rows):
++    H = 40 + sum(TH + CAP + PAD for _ in rows) + PAD
++    assert W <= 1300 and H <= 3500, (W, H)
++    S = Image.new('RGB', (W, H), (24, 24, 28)); d = ImageDraw.Draw(S)
++    d.text((PAD + 4, 10), title, fill=(240, 240, 240), font=TFONT)
++    y = 40
++    for row in rows:
++        for i, cell in enumerate(row):
++            if not cell: continue
++            name, cap = cell
++            x = PAD + i * (TW + PAD)
++            d.text((x + 4, y + 4), cap, fill=(230, 230, 230), font=FONT)
++            S.paste(tile(name), (x, y + CAP))
++        y += TH + CAP + PAD
++    S.save(os.path.join(OUT, fname), optimize=True)
++    print(fname, S.size)
++
++sheet('sheet-1.png', 'Citadel at noon, sunset, night and rain at night (?light=dyn) - top left is the game today', [
++    [('square-today', 'Square - today (no switch)'), ('square-noon', 'Square - noon (?light=dyn)')],
++    [('square-sunset', 'Square - sunset'), ('square-night', 'Square - night')],
++    [('square-rainnight', 'Square - rain at night (wet ground)'), ('square-night-low', 'Square - night, Low quality')],
++    [('harbour-today', 'Harbour and lighthouse - today'), ('harbour-noon', 'Harbour and lighthouse - noon')],
++    [('harbour-sunset', 'Harbour - sunset over the sea'), ('harbour-night', 'Harbour - night')],
++    [('harbour-rainnight', 'Harbour - rain at night'), ('square-dawn', 'Square - dawn haze')],
++])
++sheet('sheet-2.png', 'Zeelich and Desert Island at sunset and night (?light=dyn)', [
++    [('zeelich-today', 'Zeelich - today'), ('zeelich-sunset', 'Zeelich - sunset')],
++    [('zeelich-night', 'Zeelich - night'), ('zeelich-dusk', 'Zeelich - dusk')],
++    [('desert-today', 'Desert Island - today'), ('desert-sunset', 'Desert Island - sunset')],
++    [('desert-night', 'Desert Island - night'), ('desert-dawn', 'Desert Island - dawn')],
++])
++sheet('sheet-3.png', "Two rooms at night (?light=dyn): Twinsen's house and the tavern", [
++    [('house-today', "Twinsen's house - today"), ('house-night', "Twinsen's house - night")],
++    [('tavern-today', 'The tavern - today'), ('tavern-night', 'The tavern - night')],
++])
+diff --git a/lba3/tools/lighting145-shots.mjs b/lba3/tools/lighting145-shots.mjs
+new file mode 100644
+index 00000000..d22dede6
+--- /dev/null
++++ b/lba3/tools/lighting145-shots.mjs
+@@ -0,0 +1,61 @@
++// LIGHTING-145: the pictures and renderer.info for the user's sheets (tools/lighting145-sheet.py) and the cost table.
++//   SERVE=1 MODE=today node tools/lighting145-shots.mjs <out dir>     the game as it is (no switch): <place>-today
++//   SERVE=1 MODE=dyn   node tools/lighting145-shots.mjs <out dir>     ?light=dyn&weather=1 at each place's hours
++//   ONLY=square,harbour  some places; INFO=1 also the 10-frame CPU time of the step + render (relative, this machine)
++// One browser, 1280 x 720, a new game, each place from the play camera (rooms and regions entered directly, no story).
++// Automated runtime only (SwiftShader): the pictures show the look; no number here is a GPU's.
++import { launch, open, menu } from '../tests/lib/boot.mjs';
++import fs from 'node:fs'; import path from 'node:path';
++const OUT = process.argv[2]; fs.mkdirSync(OUT, { recursive: true });
++const MODE = process.env.MODE || 'dyn', ONLY = process.env.ONLY?.split(',');
++// [name, placement, hours under ?light=dyn] — the hours: noon · sunset · dusk · night · dawn · rainnight (Citadel's
++// rain forced, the ground wet) · night-low (night at the Low preset: the tier with 2 lamps and no reflections)
++const PLACES = [
++  ['square', { x: -42, z: -2, a: 0.6 }, ['noon', 'sunset', 'night', 'rainnight', 'dawn', 'night-low']],
++  ['harbour', { x: -116, z: 46, a: 0.25 }, ['noon', 'sunset', 'night', 'rainnight']],
++  ['zeelich', { room: 'zeelich', t: 2 }, ['sunset', 'dusk', 'night']],
++  ['desert', { room: 'desert', t: 2 }, ['sunset', 'night', 'dawn']],
++  ['house', { room: 'house', t: 2.5 }, ['night']],
++  ['tavern', { room: 'tavern', t: 2.5 }, ['night']],
++];
++const { browser, page, errs } = await launch({ width: 1280, height: 720 });
++const ev = (f, a) => page.evaluate(f, a);
++await open(page, MODE === 'today' ? '?nocine' : '?nocine&light=dyn&weather=1');
++await menu(page, 'new');
++const res = {};
++const quality = (q) => ev((q) => { const G = game; if (G.settings.quality === q && !G.settings.qualityAuto) return; G.settings.qualityAuto = false; G.settings.quality = q; G.applySettings(); G.step(0.5); }, q);
++for (const [name, s, hours] of PLACES) {
++  if (ONLY && !ONLY.includes(name)) continue;
++  await ev((s) => { const G = game, h = G.hero;
++    if (s.room) G.enterRoom(s.room, s.x != null ? { x: s.x, z: s.z, a: s.a } : null, true, true);
++    else G.exitRoom({ x: s.x, z: s.z, a: s.a ?? 0 }, true, true);
++    if (s.a != null) h.angle = s.a;
++    G.camRig.lba && (G.camRig.lba.init = false); G.step(s.t ?? 1.5);
++  }, s);
++  for (const hour of MODE === 'today' ? ['today'] : hours) {
++    const low = hour.endsWith('-low');
++    await quality(low ? 'low' : 'high');
++    const r = await ev(async ({ hour, info }) => { const G = game, LD = window.__ld;
++      if (LD?.on) {
++        const rain = hour.startsWith('rain'), t = (rain ? hour.slice(4) : hour).replace(/-low$/, '') || 'night';
++        if (G.weather?.enabled()) { try { G.weather.force(rain ? 'rain' : 'clear', 0); } catch { /* (a region without that state) */ } }
++        LD.pinned = t; LD.setTime(t); LD.wet = rain ? 1 : 0; LD._haloT = -1;
++      }
++      G.step(0.25);
++      const R = G.renderer.renderer;
++      G.renderer.render(); R.info.autoReset = false; R.info.reset(); G.renderer.render(); R.info.autoReset = true;
++      const i = R.info, out = { room: G.room?.id || 'citadel', calls: i.render.calls, tris: i.render.triangles, programs: i.programs?.length, textures: i.memory.textures, geometries: i.memory.geometries };
++      if (info) { const t0 = performance.now(); for (let k = 0; k < 10; k++) { G.step(1 / 60); G.renderer.render(); } out.frameMs = +((performance.now() - t0) / 10).toFixed(1); }
++      if (LD?.on) out.ld = LD.info();
++      G.renderer.render();
++      return out;
++    }, { hour, info: !!process.env.INFO });
++    const nm = `${name}-${hour}`;
++    res[nm] = r; console.log(nm, JSON.stringify(r));
++    await page.screenshot({ path: path.join(OUT, nm + '.jpg'), type: 'jpeg', quality: 92, timeout: 600000 });
++  }
++  await quality('high');
++}
++fs.writeFileSync(path.join(OUT, `info-${MODE}.json`), JSON.stringify({ mode: MODE, res, errs: errs.slice(0, 20) }, null, 1));
++console.log('errors', errs.length, JSON.stringify(errs.slice(0, 5)).slice(0, 2000));
++await browser.close();
