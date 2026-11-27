@@ -227,6 +227,9 @@ v68 published 9.11 (1794197460-ceb9): Desert Island and the Hamalayi passes, DOO
 | P146 | 27.11 | ORDER-76 after CPU-RELIEF (Intel UHD 630): the depot fight has windows of 7–8 % slow frames and Auto stays held at Medium-lean without stepping down (the streets are now a clean 60) | the local agent, ORDER-76 | open: Auto's governor must step down on a fight's slow windows; or cut the fight's cost |
 | P147 | 27.11 | ORDER-77 (GTX 1050): the ending film has a visible hitch at two cuts (home → square, square → harbour) and the square shot stutters throughout | the local agent, ORDER-77 (no pictures: spoiler) | open: warm the next shot before each cut; profile the square shot |
 | P148 | 27.11 | `game.autoQ.report()`'s runs line shows the governor's last profile, not what runs, when a quality is picked by hand | the local agent, ORDER-79 | open, small |
+| P149 | 27.11 | Citadel: at a paving corner by a blue lamp post the kerb stops short and the paving ends square in the dirt (the corner not closed; the lamp's base sits on the kerb's end) | the user's photo | open: next session; path-ends' EDGE/END rules missed a corner with a lamp; fix game-wide |
+| P150 | 27.11 | The square's statue of Twinsen and Zoé: his raised arm with the ball over his head reads as an obscene shape from the square (the pilot is live) | the user's photo | IN BRANCH, NOT VERIFIED, NOT PUBLISHED: statue.js pose lowered (the arm at his side, the ball smaller and low); the render probe came out black (the probe, not the game) — verify with a picture, then publish and rebuild the itch zip |
+| P151 | 27.11 | A character's face sank into his head for a moment (the user could not photograph it; the photo shows a resident on the pier in a talk, Hebrew subtitle) | the user | open: find which face rig/morph can move inside the head (a talk expression?), game-wide |
 
 ## Waves (cloud)
 
