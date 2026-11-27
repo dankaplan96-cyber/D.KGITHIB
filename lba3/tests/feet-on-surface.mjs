@@ -101,7 +101,14 @@ for (const area of areas) {
       const add = (i, j, y) => { const k = (i * NZ + j) * 3; for (let n = 0; n < 3; n++) { const v = lv[k + n]; if (v === v) { if (Math.abs(v - y) < 0.05) return; continue; } lv[k + n] = y; q.push(i, j, y); return; } };
       const okAt = (x, z, g) => { const gi = PH.groundInfo(x, z, g + 0.01); return !(g < -0.35 && !gi.brick) && !PH.blockedAt(x, z, g, R); };
       for (let i = 0; i < NX; i++) for (let j = 0; j < NZ; j++) { const x = X0 + i * C, z = Z0 + j * C; const gi = PH.groundInfo(x, z, 1e4); if (gi.brick) continue; const g = gi.h; if (g < -0.35 || PH.steepAt(x, z, g) || PH.blockedAt(x, z, g, R)) continue; add(i, j, g); }
-      for (const h of [area.room ? G.rooms[area.room].spawn : null, ...(area.room ? G.rooms[area.room].safe || [] : [])]) { if (!h || !Number.isFinite(h.x)) continue;   // (the area's arrival spot, its safe spots)
+      // (seeds: the area's arrival and safe spots, and every place a door, an exit, a search, a giver or an interactable of
+      //  any room puts him or asks him to stand that lies in the area — a deck reached only through a building's door,
+      //  the spaceport's through its terminal)
+      const SEEDS = [], pick = (o, d = 0) => { if (!o || typeof o !== 'object' || d > 2) return; if (Number.isFinite(o.x) && Number.isFinite(o.z)) SEEDS.push(o); for (const k of ['to', 'out', 'spawn', 'at', 'pos', 'door', 'sill']) pick(o[k], d + 1); };
+      for (const rm of Object.values(G.rooms)) { pick(rm.spawn); for (const k of ['safe', 'exits', 'searches', 'givers', 'reads']) for (const o of rm[k] || []) pick(o); }
+      for (const k of ['interactables', 'givers', 'seats']) for (const o of G.world[k] || []) pick(o);
+      for (const o of G.world.houses || []) pick(o.door);   // (a house's door, not its middle: that is its roof)
+      for (const h of SEEDS) { if (!h || !Number.isFinite(h.x) || h.x < X0 || h.z < Z0 || h.x > A.x1 || h.z > A.z1) continue;
         const i = Math.round((h.x - X0) / C), j = Math.round((h.z - Z0) / C); if (i >= 0 && j >= 0 && i < NX && j < NZ) add(i, j, PH.groundAt(X0 + i * C, Z0 + j * C, PH.groundAt(h.x, h.z) + 0.1)); }
       while (q.length) { const y = q.pop(), j = q.pop(), i = q.pop();
         for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { if (!di && !dj) continue; const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= NX || b >= NZ) continue;
