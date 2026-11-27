@@ -31,6 +31,8 @@ if (existsSync(join(ROOT, 'assets', 'fonts', 'rubik.css'))) {
 writeFileSync(join(OUT, 'index.html'), html); n++;
 put(join(ROOT, 'THIRD-PARTY-NOTICES.txt'), 'THIRD-PARTY-NOTICES.txt');
 rmSync(OUTZIP, { force: true });
-execFileSync('zip', ['-q', '-r', '-X', OUTZIP, '.'], { cwd: OUT });
+// (index.html first and no directory entries: itch.io's upload check looks for index.html at the zip's top)
+execFileSync('zip', ['-q', '-X', '-D', OUTZIP, 'index.html'], { cwd: OUT });
+execFileSync('zip', ['-q', '-X', '-D', '-r', OUTZIP, '.', '-x', 'index.html'], { cwd: OUT });
 rmSync(OUT, { recursive: true, force: true });
 console.log(`${OUTZIP}: ${n} files, ${(bytes / 1048576).toFixed(1)} MB before zip, ${(statSync(OUTZIP).size / 1048576).toFixed(1)} MB zipped`);
