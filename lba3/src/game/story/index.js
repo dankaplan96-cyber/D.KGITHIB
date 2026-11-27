@@ -343,7 +343,13 @@ export class Story {
       if (p === undefined) p = this.citizens.place(n.def.id);   // (WORLD-LIFE: a resident the story takes off the streets, or gives them back)
       if (p === undefined) continue;
       // (a walk to an earlier place, below, is over: this placement decides)
-      const mv = this.moving?.get(n); if (mv) { this.moving.delete(n); if (n.track === mv.track) n.track = null; }
+      const mv = this.moving?.get(n);
+      // (P152: a recast that gives him the very place he is walking to — OnePlace's on a scene change, any refreshCast()
+      //  from a side story — lets the walk go on; it put him straight on it, so Gilbert and Mira, set off from the well
+      //  to the water office in sight, were cut there on the first frame of play. A load or a chapter's card still puts
+      //  everyone on their places: noWalk)
+      if (mv && p && !this.noWalk && n.present && Math.hypot(p.x - mv.p.x, p.z - mv.p.z) < 0.05 && (p.y ?? null) === (mv.p.y ?? null)) { mv.p = p; n.placed = p; continue; }
+      if (mv) { this.moving.delete(n); if (n.track === mv.track) n.track = null; }
       const was = n.present;
       n.setPresent(!!p);
       // (INTERIOR-LIFE: the place the story gave is remembered; a household round's person whose place is still their

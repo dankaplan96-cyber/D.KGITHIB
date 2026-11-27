@@ -129,9 +129,20 @@ export class Chapter1 extends ChapterBase {
         return this.isCur() ? { x: ps.x, z: ps.z + 2.2, a: Math.PI } : undefined;   // (at his harbour, as the prologue left him)
       }
       case 'gilbert':
-        return f.c1_water ? { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'wipe' } : R.office?.npcSpots?.gilbert ?? undefined;
-      case 'mira':
-        return R.office?.npcSpots?.mira ?? undefined;
+        if (f.c1_water) return { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'wipe' };
+      // falls through: (P152) the morning's talk at the well, then the water office
+      case 'mira': {
+        // P152 (the user, pilot, 27.11: "characters vanish, and he talks with Gilbert, but Gilbert is not there"): the two
+        // stood at the well all through chapter 1; under chapter 2's card they were put in the water office, and Gilbert's
+        // morning line by the well was said from there. Through the morning's lines they stay at the well (chapter 1's
+        // marks, npcDefs in prologue.js); once it is over they walk to the office's door and go in (walkOn's `via`).
+        // (`morning` is not saved: a load in that window plays on from the office, applyFlags)
+        if (this.morning) { const w = W.well; return id === 'gilbert' ? { x: w.x + 2.4, z: w.z + 1.6, a: Math.atan2(-1.2, 1.3), anim: 'talk' } : { x: w.x + 1.2, z: w.z + 2.9, a: Math.atan2(1.2, -1.3), anim: 'talk' }; }
+        const o = R.office?.npcSpots?.[id];
+        if (!o) return undefined;
+        const h = W.houses.find((q) => q.id === 'water'), d = h?.door;
+        return d ? { ...o, via: { x: d.x + Math.sin(h.ry ?? 0) * 0.9, z: d.z + Math.cos(h.ry ?? 0) * 0.9 } } : o;
+      }
     }
     return undefined;
   }
@@ -146,7 +157,12 @@ export class Chapter1 extends ChapterBase {
     g.audio.endCue();
     g.audio.setMood('calm');
     this.line.begin();
-    this.chain([['hero', this.f.pr_v2 ? 'c1_tw_morning_pump' : 'c1_tw_morning'], ['gilbert', 'c1_gil_morning'], ['hero', 'c1_tw_morning2']], () => { this.f.c1_started = true; g.updateObjective(); g.save(false); });
+    this.morning = true;   // (P152: Gilbert and Mira at the well for these lines: place)
+    this.chain([['hero', this.f.pr_v2 ? 'c1_tw_morning_pump' : 'c1_tw_morning'], ['gilbert', 'c1_gil_morning'], ['hero', 'c1_tw_morning2']], () => {
+      this.morning = false; this.f.c1_started = true;
+      this.story.refreshCast({ walk: true });   // (they go about their day: to the water office, in sight)
+      g.updateObjective(); g.save(false);
+    });
   }
 
   doors() {
@@ -979,6 +995,9 @@ export class Chapter1 extends ChapterBase {
   applyFlags(past, current) {
     const g = this.game, f = this.f, W = g.world;
     this.line.applyFlags(current);
+    // (P152: a save from under chapter 2's card, before its morning lines were over — nextChapter saves first — had no
+    //  objective and nothing ran (update waits for c1_started): it goes on from the morning's end)
+    if (current && !f.c1_started) { f.c1_started = true; this.morning = false; }
     for (const v of W.valves || []) if (f['c1_valve_' + v.id]) this.openValve(v, true);
     // a save from between the third valve and the water scene must not leave the chapter stuck
     if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) { f.c1_water = true; W.well?.setWater?.(true); }

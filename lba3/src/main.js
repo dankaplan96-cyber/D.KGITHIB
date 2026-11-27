@@ -2768,6 +2768,18 @@ class Game {
 
   say(name, lines, done, speaker = null, color = null) {
     if (!Array.isArray(lines)) lines = [lines];
+    // P152 (game-wide): a line is never said by a body that isn't there — hidden, or in another scene (a room, another
+    // region) and out of the camera's view. Such a line is heard as a voice off (no bubble, mouth, face or two-shot on a
+    // body elsewhere), and it is noted (absentTalks, a '[talk]' log line every suite prints) so the story that placed
+    // him wrongly is fixed at its cause. The speaker is never pulled to Twinsen: a line on the radio has a real person
+    // far away. (A cut-away that shows the speaker — the camera on him — counts as there.)
+    if (speaker && speaker !== this.hero && speaker.def && !this.speakerHere(speaker)) {
+      const why = !speaker.present ? 'hidden' : !speaker.rig?.root?.visible ? 'not shown' : 'elsewhere';
+      (this.absentTalks ??= []).push({ name, id: speaker.def.id, why, line: String(lines[0] ?? '').slice(0, 60) });
+      console.log(`[talk] absent speaker ${speaker.def.id} (${why}): ${String(lines[0] ?? '').slice(0, 60)}`);
+      color ??= speaker.def.color;
+      speaker = null;
+    }
     this.remarks?.close('state');   // (P116: a box opening takes the place of a remark over a head)
     this.setState('dialog');
     this.hud.prompt(null);
@@ -2778,6 +2790,14 @@ class Game {
     this.speakerColor = color;
     this.audio.duck(true);
     this.hud.say(name, lines, () => { this.speaker = null; this.audio.duck(false); this.setState('play'); done?.(); }, color);
+  }
+
+  // P152: the speaker is where Twinsen (or the camera) is: present, shown, and in his scene or in view
+  speakerHere(n) {
+    if (!n.present || !n.rig?.root?.visible || !n.pos) return false;
+    const R = this.regions, h = this.hero;
+    if (!R || R.sceneOf(n.pos.x, n.pos.z) === R.sceneOf(h.pos.x, h.pos.z)) return true;
+    return !!this.story?.seen?.(n.pos);
   }
 
   // FACE-1 (P67 phase 4, the user 18.11: "the characters lack even basic facial expressions"): each dialogue line sets
