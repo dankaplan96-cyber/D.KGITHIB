@@ -166,11 +166,14 @@ export function buildStatue(scene, W, x, z, ry) {
   fig.add(tw.root, zo.root);
   tw.root.position.set(-0.36, 0, 0.02); tw.root.rotation.y = 0.18; zo.root.position.set(0.36, 0, -0.02); zo.root.rotation.y = -0.22;
   for (const r of [tw, zo]) r.root.scale.multiplyScalar(SCALE);
-  pose(tw, { 'armR.sh.x': -0.35, 'armR.el.x': -0.5, 'armR.sh.z': -0.12,   // (P150, the user 27.11: the ball raised over his head read badly from the square; his right arm now rests, the ball held low at his side)
+  // (P150, the user 27.11: the ball raised over his head read badly from the square; his right arm now rests, the ball held
+  //  low at his side. P152's look at it: bent forward, the hand brought the ball before his hip — from the side it stood
+  //  out in front of him at the belt. Now the arm hangs nearly straight, a little out, the small ball beside his thigh)
+  pose(tw, { 'armR.sh.x': -0.06, 'armR.el.x': -0.18, 'armR.sh.z': -0.3,
     'armL.sh.z': 0.55, 'armL.sh.x': -0.25, 'armL.el.x': -0.35, 'head.y': 0.12, 'head.x': -0.08 });
   pose(zo, { 'armL.sh.z': -0.05, 'armL.sh.x': -0.45, 'armL.el.x': -1.9, 'armR.sh.z': -0.5, 'armR.sh.x': -0.2, 'armR.el.x': -0.3, 'head.y': -0.25, 'head.x': -0.05 });
-  // the ball in his raised hand
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 10)); tw.j.armR.hand.add(ball); ball.position.set(0, -0.14, 0.06); ball.scale.setScalar(0.8); ball.userData.statueKeep = true;
+  // the ball in his lowered hand
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 10)); tw.j.armR.hand.add(ball); ball.position.set(0, -0.13, 0.04); ball.scale.setScalar(0.62); ball.userData.statueKeep = true;
   const parts = [bake(tw, fig), bake(zo, fig)];
   fig.remove(tw.root, zo.root);
   const bronzeM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.2 });

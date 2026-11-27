@@ -7,7 +7,7 @@
 //    none of them is hidden or moved away under the card);
 //  - every present resident around the well is shown and stands on the ground (not at the origin, not under it);
 //  - the game-wide guard (Game.say): no line was said with an absent speaker (game.absentTalks).
-// Then the morning's chain ends and Gilbert goes about his day (he walks to the water office).
+// Then the morning's chain ends and they go about their day: Gilbert to the quay (Vesk's ferry), Mira to the office.
 // SERVE=1 node tests/p152-well-morning.mjs
 import { launch, checker } from './lib/boot.mjs';
 const { browser, page } = await launch({ width: 960, height: 540, locale: process.argv[2] || 'en-US' });
@@ -91,19 +91,21 @@ const cast = await ev(() => game.story.chapters.slice(0, 2).flatMap((c) => c.npc
 const gone = Object.keys(before.around).filter((id) => cast.includes(id) && !morning.seen[0]?.around.split(' ').includes(id));
 is('the story\'s people about the well when he went down are about it at the morning\'s first line (none hidden or moved away under the card)', { before: Object.keys(before.around).filter((id) => cast.includes(id)), firstLine: morning.seen[0]?.around, gone }, (v) => v.before.includes('gilbert') && v.before.includes('mira') && v.gone.length === 0);
 is('every resident about the well in the morning is shown and on the ground', after, (v) => Object.values(v).every((r) => r.shown && r.ground));
-// Gilbert goes about his day once the talk is done: he walks off toward the water office (in sight, not snapped away)
+// they go about their day once the talk is done, in sight (walks, not cuts): Gilbert down to the quay to meet the
+// project's ferry (his own line: "the chief engineer lands today"), Mira to the water office
 const walk = await ev(() => { const G = game, ns = ['gilbert', 'mira'].map(T.npc), p0 = ns.map((n) => n.pos.clone()), mv = ns.map((n) => !!G.story.moving?.get(n)); G.step(3); const r = ns.map((n, i) => ({ moving: mv[i], walked: +n.pos.distanceTo(p0[i]).toFixed(1) }));
-  for (let i = 0; i < 400 && G.story.moving?.size; i++) G.step(0.1); return [...r, ns.map((n) => G.regions.sceneOf(n.pos.x, n.pos.z))]; });
-is('after the talk Gilbert and Mira walk off to the water office in sight (a walk, not a cut), then are in it', walk, (v) => v[0].moving && v[0].walked > 0.5 && v[1].moving && v[1].walked > 0.5 && v[2].every((s) => s === 'office'));
+  for (let i = 0; i < 600 && G.story.moving?.size; i++) G.step(0.1); const ps = G.world.pierStart, gl = ns[0];
+  return [...r, ns.map((n) => G.regions.sceneOf(n.pos.x, n.pos.z)), +Math.hypot(gl.pos.x - ps.x, gl.pos.z - ps.z).toFixed(1), G.physics.blockedAt(gl.pos.x, gl.pos.z, 0, 0.3)]; });
+is('after the talk Gilbert walks to the quay and Mira to the water office, both in sight (walks, not cuts)', walk, (v) => v[0].moving && v[0].walked > 0.5 && v[1].moving && v[1].walked > 0.5 && v[2][0] === 'citadel' && v[2][1] === 'office' && v[3] < 6 && !v[4]);
 is('the game-wide guard: no line said with an absent speaker in all this', await ev(() => game.absentTalks || []), (v) => v.length === 0);
 // the guard itself: a line said by someone hidden is heard as a voice off (no body named as the speaker) and noted
 const guard = await ev(() => { const G = game, n = T.npc('pippa'); n.setPresent(false); G.say('n_pippa', ['(test)'], null, n); const r = [G.speaker, (G.absentTalks || []).map((a) => a.id + ':' + a.why)]; T.talkAll(4); n.setPresent(true); G.absentTalks.length = 0; return [r[0] === null, r[1]]; });
 is('the guard: a hidden speaker\'s line is said with no body and noted', guard, (v) => v[0] === true && v[1].includes('pippa:hidden'));
 // a save from under the card (nextChapter saves before the morning's lines): it goes on from the morning's end — an
-// objective, the chapter running, Gilbert in the water office — instead of a chapter that never started
+// objective, the chapter running, Gilbert on the quay — instead of a chapter that never started
 const load = await ev(() => { const G = game, raw = window.__underCard, s0 = JSON.parse(raw); localStorage.setItem('lba3_save_v1', raw); G.startContinue('lba3_save_v1'); G.step(1); const n = T.npc('gilbert');
   return { savedStarted: !!s0.flags.c1_started, key: G.flags.chapterKey, started: !!G.flags.c1_started, obj: G.story.objective().replace(/<[^>]+>/g, '').slice(0, 60), gilbert: G.regions.sceneOf(n.pos.x, n.pos.z), state: G.state }; });
-is('a save from under the card loads on from the morning: an objective, Gilbert in the office', load, (v) => v.savedStarted === false && v.key === 'project' && v.started && v.obj.length > 0 && v.gilbert === 'office');
+is('a save from under the card loads on from the morning: an objective, Gilbert on the quay', load, (v) => v.savedStarted === false && v.key === 'project' && v.started && v.obj.length > 0 && v.gilbert === 'citadel');
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);
