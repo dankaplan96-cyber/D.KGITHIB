@@ -163,7 +163,7 @@ export function buildOldPlaces(C) {
     if (o.shut && !o.lived) piece(D.side, D.u, 0.04, bbox(1.2, 2.1, 0.08, 0, 0.6), M.plank, gy + 1.05);   // (DESERT-BAR: `lived`, a door that leads in: ajar)
     else { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u - 0.15, 0.28); add(bbox(0.95, 1.95, 0.08, 0, 0.6), M.plank, lx, gy + 1.0, lz, S.yaw - 0.55); }
     piece(D.side, D.u, 0.32, bbox(1.7, 0.16, 0.6, 0, 1), M.stone, gy + 0.02);   // the sill's step
-    { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u, 0.32), [sx, sz] = at(lx, lz); col({ type: 'box', x: sx, z: sz, hw: 0.85, hd: 0.3, rot: o.ry + S.yaw, top: gy + 0.1, seeThrough: true }); }   // (FEET-66B: its top a floor: 5-10 cm into it)
+    { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u, 0.32), [sx, sz] = at(lx, lz); col({ type: 'box', x: sx, z: sz, hw: 0.85, hd: 0.3, rot: o.ry + S.yaw, top: gy + 0.1, seeThrough: true, deck: true }); }   // (FEET-66B: its top a floor: 5-10 cm into it; deck, as the stoop)
     // windows: small, deep, with a wooden sill and one open shutter; the upper storey's higher
     for (const w of o.windows || []) {
       const y = gy + (w.up ? o.h * 0.52 + 1.3 : 2.0);
@@ -174,7 +174,7 @@ export function buildOldPlaces(C) {
     for (let k = 0; k < 3; k++) add(lathe([[0.01, 0], [0.22, 0.04], [0.3, 0.3], [0.18, 0.55], [0.15, 0.62], [0.17, 0.66]], 12, 0), pm(['#c86a3a', '#d8a050', '#a85030'][k], 0.85), -o.w / 2 + 0.7 + k * 0.6, gy + o.h + 0.07, -o.d / 2 + 0.7);
     // a paved stoop before the door (S40's: body 28, a 3 m slab)
     if (o.stoop) { const S = SIDE[D.side], [lx, lz] = S.at(b, D.u, o.stoop / 2 + 0.1); add(bbox(o.stoop, 0.3, o.stoop, 0, 1.5), M.stone, lx, gy - 0.1, lz, S.yaw);
-      const [sx, sz] = at(lx, lz); col({ type: 'box', x: sx, z: sz, hw: o.stoop / 2, hd: o.stoop / 2, rot: o.ry + S.yaw, top: gy + 0.05, seeThrough: true }); }   // (FEET-66B: the stoop's top a floor: he walked up to 33 cm into it)
+      const [sx, sz] = at(lx, lz); col({ type: 'box', x: sx, z: sz, hw: o.stoop / 2, hd: o.stoop / 2, rot: o.ry + S.yaw, top: gy + 0.05, seeThrough: true, deck: true }); }   // (FEET-66B: the stoop's top a floor: he walked up to 33 cm into it; deck: the residents stand on it, walknav deckAt)
     const [cx, cz] = at(0, 0);
     col({ type: 'box', x: cx, z: cz, hw: o.w / 2, hd: o.d / 2, rot: o.ry, top: gy + o.h + 0.6 });
     fitAdd({ region: 'desert', name: o.name, x: W(cx, cz).x, z: W(cx, cz).z, ry: o.ry, oy: gy, w: o.w, d: o.d, base: low - gy, plinth: 0.1, floor: 0.02, steps: 0.6,
