@@ -239,7 +239,7 @@ export function lantern(P, { h = 2.7, arm = true } = {}) {
   P.add(cached('bllpost' + h, () => bbox(0.16, h, 0.16, 0.03, 1)), BM.post(), 0, 0.3 + h / 2, 0);
   const lx = arm ? 0.5 : 0, ly = arm ? h + 0.05 : h + 0.45;
   if (arm) P.add(cached('bllarm', () => compose([[bbox(0.62, 0.05, 0.05, 0.01), 0.27, 0, 0], [tube([[0, -0.35, 0], [0.18, -0.12, 0], [0.42, 0, 0]], 0.02, 4, 1)]])), BM.iron(), 0, h + 0.2, 0);
-  P.add(cached('bllcap', () => lathe([[0, 0.34], [0.2, 0.26], [0.17, 0.2], [0.001, 0.2]], 8)), BM.celadonDeep(), lx, ly - 0.32, 0);
+  P.add(cached('bllcap', () => lathe([[0.001, 0.2], [0.17, 0.2], [0.2, 0.26], [0, 0.34]], 8)), BM.celadonDeep(), lx, ly - 0.32, 0);
   P.add(cached('bllbody', () => lathe([[0.001, -0.12], [0.1, -0.12], [0.15, 0.0], [0.15, 0.16], [0.11, 0.2], [0.001, 0.2]], 8)), BM.glow(), lx, ly - 0.32, 0);
   P.add(cached('bllribs', () => compose([0, 1, 2, 3].map((k) => [bbox(0.03, 0.34, 0.03, 0.005), Math.sin(k * Math.PI / 2 + 0.78) * 0.155, 0.04, Math.cos(k * Math.PI / 2 + 0.78) * 0.155]))), BM.celadon(), lx, ly - 0.32, 0);
   P.add(cached('bllbase', () => lathe([[0.001, -0.2], [0.12, -0.16], [0.13, -0.12], [0.001, -0.12]], 8)), BM.celadonDeep(), lx, ly - 0.32, 0);

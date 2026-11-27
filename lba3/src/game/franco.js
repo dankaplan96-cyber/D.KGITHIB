@@ -125,7 +125,7 @@ export function francoHut(P, o) {
   // the chimney pot on the crown, with a brass cap
   if (!low) {
     add(cached('fhut-pot', () => tintGeo(lathe([[0.2, 0], [0.22, 0.32], [0.27, 0.4], [0.26, 0.46], [0.17, 0.48], [0.0001, 0.3]], 8), '#8a5a3c')), mats.vc, M(0, top - 0.08, 0));
-    add(cached('fhut-potcap', () => lathe([[0.0001, 0.18], [0.3, 0.06], [0.28, 0.03], [0.0001, 0.08]], 8)), mats.brass, M(0, top + 0.34, 0));
+    add(cached('fhut-potcap', () => lathe([[0.0001, 0.08], [0.28, 0.03], [0.3, 0.06], [0.0001, 0.18]], 8)), mats.brass, M(0, top + 0.34, 0));
   }
   // round porthole windows round the drum: a brass ring and dark glass (none on a side banked into the rise, none by
   // the door)

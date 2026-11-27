@@ -651,7 +651,7 @@ export function* buildArchesSteps(scene, physics) {
   const bellTop = TER + BELL.h + 2.7;
   const bellG = keep(new THREE.Group()); bellG.name = 'bl_bell'; bellG.position.set(BT.x, bellTop, BT.z); group.add(bellG);
   {
-    const b = new THREE.Mesh(cached('blw2bell', () => lathe([[0.001, -0.02], [0.12, 0], [0.2, -0.05], [0.4, -0.3], [0.55, -0.9], [0.72, -1.3], [0.78, -1.42], [0.7, -1.42], [0.6, -1.25], [0.001, -1.25]], 28)), BM.bronze());
+    const b = new THREE.Mesh(cached('blw2bell', () => lathe([[0.001, -1.25], [0.6, -1.25], [0.7, -1.42], [0.78, -1.42], [0.72, -1.3], [0.55, -0.9], [0.4, -0.3], [0.2, -0.05], [0.12, 0], [0.001, -0.02]], 28)), BM.bronze());
     b.castShadow = true; bellG.add(b);
     const yoke = new THREE.Mesh(cached('blw2yoke', () => compose([[bbox(1.4, 0.24, 0.3, 0.03), 0, 0.12, 0], [cyl(0.08, 0.08, 1.6, 8).rotateZ(Math.PI / 2), 0, 0.12, 0]])), BM.post()); bellG.add(yoke);
   }

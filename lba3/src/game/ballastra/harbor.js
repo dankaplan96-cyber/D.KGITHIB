@@ -447,7 +447,7 @@ export function* buildBallastraSteps(scene, physics) {
     cols(p.cols);
     // the stove's ceramic pipe through the roof, the hoist beam out of the east gable, the sign over the door
     p.add(cached('blshedpipe', () => cyl(0.14, 0.14, 1.8, 10)), BM.celadonDeep(), -1.8, 3.6, -1.2);
-    p.add(cached('blshedcowl', () => lathe([[0.001, 0.25], [0.3, 0.05], [0.26, 0], [0.001, 0.04]], 10)), BM.iron(), -1.8, 4.55, -1.2);
+    p.add(cached('blshedcowl', () => lathe([[0.001, 0.04], [0.26, 0], [0.3, 0.05], [0.001, 0.25]], 10)), BM.iron(), -1.8, 4.55, -1.2);
     p.add(cached('blhoist', () => bbox(1.6, 0.2, 0.2, 0.02, 1)), BM.post(), SHEDB.w / 2 + 0.5, 3.65, 0);
     p.add(cached('blhoistw', () => cyl(0.16, 0.16, 0.08, 10).rotateX(Math.PI / 2)), BM.bronze(), SHEDB.w / 2 + 1.15, 3.45, 0);
     p.add(tube([[SHEDB.w / 2 + 1.3, 3.45, 0], [SHEDB.w / 2 + 1.3, 1.6, 0]], 0.015, 3, 1), BM.rope());
@@ -464,7 +464,7 @@ export function* buildBallastraSteps(scene, physics) {
     p.add(cached('blhutcounter', () => bbox(1.7, 0.08, 0.5, 0.02, 1)), BM.timber(), -0.3, 0.95, HUT.s / 2 + 0.2);
     p.add(cached('blhutaw', () => { const g = new THREE.PlaneGeometry(2.0, 0.9, 6, 1); g.rotateX(-1.1); return g; }), pm('#ffffff', 0.9, { map: ctex('blawT', 64, 64, (x, W) => { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? '#f2ead6' : '#5f9a86'; x.fillRect((i * W) / 4, 0, W / 4, W); } }), side: THREE.DoubleSide }), -0.3, 2.05, HUT.s / 2 + 0.35);
     p.add(cached('blhutslate', () => bbox(0.7, 0.9, 0.04, 0.02, 1)), pm('#2e3436', 0.8), 1.05, 1.4, HUT.s / 2 + 0.04);
-    p.add(cached('blhutbell', () => lathe([[0.001, 0.2], [0.06, 0.18], [0.1, 0.05], [0.13, 0], [0.001, 0]], 10)), BM.bronze(), 0.55, 1.9, HUT.s / 2 + 0.3);
+    p.add(cached('blhutbell', () => lathe([[0.001, 0], [0.13, 0], [0.1, 0.05], [0.06, 0.18], [0.001, 0.2]], 10)), BM.bronze(), 0.55, 1.9, HUT.s / 2 + 0.3);
   }
   {
     // the cargo balance: a beam on a post, two pans, a weight on one
