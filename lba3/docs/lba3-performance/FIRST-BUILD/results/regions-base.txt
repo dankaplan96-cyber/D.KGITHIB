@@ -1,0 +1,193 @@
+PROBE title after 185.7 s
+region entry (stepped 60 Hz frames) · medium · battery true · shadows true · staged true
+zeelich (cold): black frames 32273 ms (worst 6508) + area build 2037 ms (zeelich 2037, 15 steps, longest 470) = 34310 ms of work behind black · wall to first frame in view 13377 ms · worst frame in view 42344 ms · shadow cache builds 1 (first) · +11 programs, 104 geometries, 49 textures
+  preparation steps (ms): shadow batches 1 · texture layers 6384 · texture layers 1395 · texture layers 861 · texture layers 777 · texture layers 660 · texture layers 220 · texture layers 381 · texture layers 410 · texture layers 734 · texture layers 456 · texture layers 958 · texture layers 483 · texture layers 376 · texture layers 667 · texture layers 995 · texture layers 375 · texture layers 714 · texture layers 0 · draw batches 1384 · geometry 0 · geometry 354 · geometry 6 · geometry 4 · geometry 2187 · geometry 5 · batch meshes 0 · textures 8 · shadow programs 5396 · shader warm-up 73
+   20      2 ms BLACK fade 0.33  op 1.00 
+   21    366 ms BLACK fade 0.35  op 1.00 shadow batches built 362 ms
+   22      4 ms BLACK prep 0     op 1.00 
+   23   6508 ms BLACK prep 1     op 1.00 84 left shadow batches
+   24   1398 ms BLACK prep 1     op 1.00 
+   25    863 ms BLACK prep 1     op 1.00 
+   26    792 ms BLACK prep 1     op 1.00 
+   27    662 ms BLACK prep 1     op 1.00 
+   28    221 ms BLACK prep 1     op 1.00 
+   29    385 ms BLACK prep 1     op 1.00 
+   30    416 ms BLACK prep 1     op 1.00 
+   31    738 ms BLACK prep 1     op 1.00 
+   32    458 ms BLACK prep 1     op 1.00 
+   33    963 ms BLACK prep 1     op 1.00 
+   34    487 ms BLACK prep 1     op 1.00 
+   35    381 ms BLACK prep 1     op 1.00 
+   36    687 ms BLACK prep 1     op 1.00 
+   37    997 ms BLACK prep 1     op 1.00 
+   38    378 ms BLACK prep 1     op 1.00 
+   39    716 ms BLACK prep 1     op 1.00 
+   40      2 ms BLACK prep 1     op 1.00 
+   41   1385 ms BLACK prep 2     op 1.00 draw batches built 1382 ms, +1 textures
+   42      1 ms BLACK prep 3     op 1.00 
+   43    356 ms BLACK prep 4     op 1.00 +20 geometries
+   44      7 ms BLACK prep 5     op 1.00 
+   45      6 ms BLACK prep 6     op 1.00 +15 geometries
+   46   2191 ms BLACK prep 7     op 1.00 +74 geometries
+   47      6 ms BLACK prep 8     op 1.00 
+   48      1 ms BLACK prep 9     op 1.00 
+   49     10 ms BLACK prep 10    op 1.00 +48 textures
+   50   5398 ms BLACK prep 11    op 1.00 +4 programs
+   51     78 ms BLACK prep 12    op 1.00 +7 programs
+   52      4 ms BLACK prep 13    op 1.00 
+   53   5408 ms BLACK held       op 1.00 shadow cache built (first), -5 geometries, 87 pieces left draw batches
+citadel (cold): black frames 3772 ms (worst 3169) + area build 0 ms = 3772 ms of work behind black · wall to first frame in view 691 ms · worst frame in view 37958 ms · shadow cache builds 1 (casters changed) · +0 programs, -13 geometries, 0 textures
+  preparation steps (ms): shadow batches 0 · draw batches back 24 · geometry 0 · geometry 9 · geometry 8 · geometry 3 · geometry 5 · geometry 7 · batch meshes 0 · textures 8 · shadow programs 0 · shader warm-up 45
+   20      3 ms BLACK fade 0.33  op 1.00 
+   21      1 ms BLACK prep 0     op 1.00 
+   22     25 ms BLACK prep 1     op 1.00 -1 geometries
+   23      4 ms BLACK prep 2     op 1.00 
+   24     11 ms BLACK prep 3     op 1.00 +1 geometries
+   25      9 ms BLACK prep 4     op 1.00 
+   26      4 ms BLACK prep 5     op 1.00 
+   27      8 ms BLACK prep 6     op 1.00 +3 geometries
+   28     10 ms BLACK prep 7     op 1.00 
+   29      1 ms BLACK prep 8     op 1.00 
+   30      9 ms BLACK prep 9     op 1.00 
+   31      1 ms BLACK prep 10    op 1.00 
+   32     46 ms BLACK prep 11    op 1.00 
+   33      1 ms BLACK prep 12    op 1.00 
+   34    472 ms BLACK held       op 1.00 shadow cache built (casters changed), -16 geometries, 12 pieces left draw batches
+   35   3169 ms BLACK held       op 1.00 
+desert (cold): black frames 26752 ms (worst 3455) + area build 2715 ms (desert 2715, 7 steps, longest 2001) = 29467 ms of work behind black · wall to first frame in view 2880 ms · worst frame in view 48778 ms · shadow cache builds 1 (first) · +6 programs, 113 geometries, 56 textures
+  preparation steps (ms): shadow batches 0 · texture layers 3141 · texture layers 730 · texture layers 909 · texture layers 628 · texture layers 601 · texture layers 229 · texture layers 698 · texture layers 932 · texture layers 425 · texture layers 750 · texture layers 1164 · texture layers 2556 · texture layers 723 · texture layers 830 · texture layers 584 · texture layers 779 · texture layers 1 · draw batches 1384 · geometry 0 · geometry 331 · geometry 7 · geometry 5 · geometry 2209 · geometry 7 · batch meshes 0 · textures 7 · shadow programs 3049 · shader warm-up 98
+   20      2 ms BLACK fade 0.33  op 1.00 
+   21    447 ms BLACK fade 0.35  op 1.00 shadow batches built 442 ms
+   22      1 ms BLACK prep 0     op 1.00 
+   23   3149 ms BLACK prep 1     op 1.00 40 left shadow batches
+   24    731 ms BLACK prep 1     op 1.00 
+   25    911 ms BLACK prep 1     op 1.00 
+   26    631 ms BLACK prep 1     op 1.00 
+   27    603 ms BLACK prep 1     op 1.00 
+   28    230 ms BLACK prep 1     op 1.00 
+   29    700 ms BLACK prep 1     op 1.00 
+   30    933 ms BLACK prep 1     op 1.00 
+   31    427 ms BLACK prep 1     op 1.00 
+   32    751 ms BLACK prep 1     op 1.00 
+   33   1165 ms BLACK prep 1     op 1.00 
+   34   2557 ms BLACK prep 1     op 1.00 
+   35    725 ms BLACK prep 1     op 1.00 
+   36    831 ms BLACK prep 1     op 1.00 
+   37    611 ms BLACK prep 1     op 1.00 
+   38    780 ms BLACK prep 1     op 1.00 
+   39      2 ms BLACK prep 1     op 1.00 
+   40   1385 ms BLACK prep 2     op 1.00 draw batches built 1383 ms, +1 textures
+   41      1 ms BLACK prep 3     op 1.00 
+   42    332 ms BLACK prep 4     op 1.00 +14 geometries
+   43      8 ms BLACK prep 5     op 1.00 +5 geometries
+   44      6 ms BLACK prep 6     op 1.00 +21 geometries
+   45   2210 ms BLACK prep 7     op 1.00 +77 geometries
+   46      8 ms BLACK prep 8     op 1.00 
+   47      1 ms BLACK prep 9     op 1.00 
+   48      8 ms BLACK prep 10    op 1.00 +55 textures
+   49   3051 ms BLACK prep 11    op 1.00 
+   50    101 ms BLACK prep 12    op 1.00 +6 programs
+   51      1 ms BLACK prep 13    op 1.00 
+   52   3455 ms BLACK held       op 1.00 shadow cache built (first), -4 geometries, 47 pieces left draw batches
+citadel (repeat): black frames 2248 ms (worst 1117) + area build 0 ms = 2248 ms of work behind black · wall to first frame in view 1102 ms · worst frame in view 29602 ms · shadow cache builds 1 (casters changed) · +0 programs, 16 geometries, 0 textures
+  preparation steps (ms): shadow batches 0 · draw batches back 266 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · batch meshes 14 · textures 5 · shadow programs 0 · shader warm-up 191
+   20      3 ms BLACK fade 0.33  op 1.00 
+   21      5 ms BLACK prep 0     op 1.00 
+   22    268 ms BLACK prep 1     op 1.00 -4 geometries
+   23      3 ms BLACK prep 2     op 1.00 
+   24      1 ms BLACK prep 3     op 1.00 
+   25      5 ms BLACK prep 4     op 1.00 
+   26      1 ms BLACK prep 5     op 1.00 
+   27      2 ms BLACK prep 6     op 1.00 
+   28      1 ms BLACK prep 7     op 1.00 
+   29     16 ms BLACK prep 8     op 1.00 +20 geometries
+   30      6 ms BLACK prep 9     op 1.00 
+   31      2 ms BLACK prep 10    op 1.00 
+   32    193 ms BLACK prep 11    op 1.00 
+   33      2 ms BLACK prep 12    op 1.00 
+   34   1117 ms BLACK held       op 1.00 shadow cache built (casters changed)
+   35    622 ms BLACK held       op 1.00 
+hamalayi (cold): black frames 10753 ms (worst 2613) + area build 1865 ms (hamalayi 1865, 7 steps, longest 701) = 12618 ms of work behind black · wall to first frame in view 17 ms · worst frame in view 24382 ms · shadow cache builds 1 (first) · +1 programs, 85 geometries, 30 textures
+  preparation steps (ms): shadow batches 0 · texture layers 2612 · texture layers 370 · texture layers 317 · texture layers 425 · texture layers 307 · texture layers 458 · texture layers 246 · texture layers 625 · texture layers 492 · texture layers 599 · texture layers 547 · texture layers 1 · draw batches 863 · geometry 0 · geometry 95 · geometry 5 · geometry 4 · geometry 1740 · geometry 8 · batch meshes 0 · textures 4 · shadow programs 753 · shader warm-up 55
+   20      3 ms BLACK fade 0.33  op 1.00 
+   21    108 ms BLACK fade 0.35  op 1.00 shadow batches built 107 ms
+   22      1 ms BLACK prep 0     op 1.00 
+   23   2613 ms BLACK prep 1     op 1.00 
+   24    373 ms BLACK prep 1     op 1.00 
+   25    317 ms BLACK prep 1     op 1.00 
+   26    426 ms BLACK prep 1     op 1.00 
+   27    308 ms BLACK prep 1     op 1.00 
+   28    459 ms BLACK prep 1     op 1.00 
+   29    247 ms BLACK prep 1     op 1.00 
+   30    629 ms BLACK prep 1     op 1.00 
+   31    492 ms BLACK prep 1     op 1.00 
+   32    601 ms BLACK prep 1     op 1.00 
+   33    586 ms BLACK prep 1     op 1.00 
+   34      2 ms BLACK prep 1     op 1.00 
+   35    864 ms BLACK prep 2     op 1.00 draw batches built 861 ms, +2 textures
+   36      1 ms BLACK prep 3     op 1.00 
+   37    100 ms BLACK prep 4     op 1.00 +10 geometries
+   38      6 ms BLACK prep 5     op 1.00 +5 geometries
+   39      4 ms BLACK prep 6     op 1.00 +1 geometries
+   40   1742 ms BLACK prep 7     op 1.00 +68 geometries
+   41      8 ms BLACK prep 8     op 1.00 +1 geometries
+   42      1 ms BLACK prep 9     op 1.00 
+   43      7 ms BLACK prep 10    op 1.00 +28 textures
+   44    754 ms BLACK prep 11    op 1.00 
+   45     56 ms BLACK prep 12    op 1.00 +1 programs
+   46      1 ms BLACK prep 13    op 1.00 
+   47      1 ms BLACK hold       op 1.00 
+   48     39 ms BLACK held       op 1.00 shadow cache built (first)
+   49      6 ms BLACK held       op 1.00 
+citadel (repeat): black frames 888 ms (worst 803) + area build 0 ms = 888 ms of work behind black · wall to first frame in view 791 ms · worst frame in view 25673 ms · shadow cache builds 1 (casters changed) · +0 programs, 0 geometries, 0 textures
+  preparation steps (ms): shadow batches 0 · draw batches back 1 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · batch meshes 0 · textures 5 · shadow programs 0 · shader warm-up 48
+   20      6 ms BLACK fade 0.33  op 1.00 
+   21      1 ms BLACK prep 0     op 1.00 
+   22      2 ms BLACK prep 1     op 1.00 
+   23      1 ms BLACK prep 2     op 1.00 
+   24      1 ms BLACK prep 3     op 1.00 
+   25      1 ms BLACK prep 4     op 1.00 
+   26      1 ms BLACK prep 5     op 1.00 
+   27      1 ms BLACK prep 6     op 1.00 
+   28      1 ms BLACK prep 7     op 1.00 
+   29      1 ms BLACK prep 8     op 1.00 
+   30      6 ms BLACK prep 9     op 1.00 
+   31      1 ms BLACK prep 10    op 1.00 
+   32     49 ms BLACK prep 11    op 1.00 
+   33      1 ms BLACK prep 12    op 1.00 
+   34     13 ms BLACK held       op 1.00 shadow cache built (casters changed)
+   35    803 ms BLACK held       op 1.00 
+zeelich (repeat): black frames 40322 ms (worst 27121) + area build 0 ms = 40322 ms of work behind black · wall to first frame in view 37 ms · worst frame in view 33525 ms · shadow cache builds 1 (casters changed) · +0 programs, 0 geometries, 0 textures
+  preparation steps (ms): shadow batches 0 · draw batches back 1 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · batch meshes 0 · textures 13004 · shadow programs 0 · shader warm-up 180
+   20      3 ms BLACK fade 0.33  op 1.00 
+   21      1 ms BLACK prep 0     op 1.00 
+   22      2 ms BLACK prep 1     op 1.00 
+   23      1 ms BLACK prep 2     op 1.00 
+   24      1 ms BLACK prep 3     op 1.00 
+   25      1 ms BLACK prep 4     op 1.00 
+   26      3 ms BLACK prep 5     op 1.00 
+   27      1 ms BLACK prep 6     op 1.00 
+   28      1 ms BLACK prep 7     op 1.00 
+   29      1 ms BLACK prep 8     op 1.00 
+   30  13006 ms BLACK prep 9     op 1.00 
+   31      1 ms BLACK prep 10    op 1.00 
+   32    182 ms BLACK prep 11    op 1.00 
+   33      1 ms BLACK prep 12    op 1.00 
+   34  27121 ms BLACK held       op 1.00 shadow cache built (casters changed)
+citadel (repeat): black frames 655 ms (worst 518) + area build 0 ms = 655 ms of work behind black · wall to first frame in view 2466 ms · worst frame in view 40725 ms · shadow cache builds 1 (casters changed) · +0 programs, 0 geometries, 0 textures
+  preparation steps (ms): shadow batches 0 · draw batches back 1 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · geometry 0 · batch meshes 0 · textures 5 · shadow programs 0 · shader warm-up 1
+   20     57 ms BLACK fade 0.33  op 1.00 
+   21      1 ms BLACK prep 0     op 1.00 
+   22      2 ms BLACK prep 1     op 1.00 
+   23      1 ms BLACK prep 2     op 1.00 
+   24      1 ms BLACK prep 3     op 1.00 
+   25      1 ms BLACK prep 4     op 1.00 
+   26      1 ms BLACK prep 5     op 1.00 
+   27      1 ms BLACK prep 6     op 1.00 
+   28      1 ms BLACK prep 7     op 1.00 
+   29      1 ms BLACK prep 8     op 1.00 
+   30      6 ms BLACK prep 9     op 1.00 
+   31      1 ms BLACK prep 10    op 1.00 
+   32      1 ms BLACK prep 11    op 1.00 
+   33    518 ms BLACK prep 12    op 1.00 shadow cache built (casters changed)
+   34     64 ms BLACK held       op 1.00 

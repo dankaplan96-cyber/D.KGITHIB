@@ -1,0 +1,1282 @@
+{
+ "fortwall-high-1366x768": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": -0.059,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 1003,
+  "normalMapped": 32,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -68.4,
+   2.3,
+   1.5
+  ]
+ },
+ "square-high-1366x768": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   0.497,
+   -0.476,
+   0.726
+  ],
+  "sunViewDot": 0.373,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 2588,
+  "normalMapped": 32,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -42,
+   2.72,
+   -2
+  ]
+ },
+ "harbour-high-1366x768": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.775,
+   -0.555,
+   0.301
+  ],
+  "sunViewDot": -0.049,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 8.05,
+  "camH": 5.45,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 4357,
+  "normalMapped": 32,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -107,
+   1.85,
+   37
+  ]
+ },
+ "house-high-1366x768": {
+  "room": "house",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.591,
+   -0.548,
+   -0.591
+  ],
+  "sunViewDot": -0.064,
+  "fog": [
+   400,
+   900
+  ],
+  "camDist": 89.15,
+  "camH": 50.12,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 5238,
+  "normalMapped": 32,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": true,
+  "indoor": null,
+  "hero": [
+   1001.2,
+   0,
+   9.9
+  ]
+ },
+ "zeelich-high-1366x768": {
+  "room": "zeelich",
+  "sunI": 2.15,
+  "sunLum": 0.874,
+  "hemiI": 1.35,
+  "skyLum": 0.753,
+  "groundLum": 0.2,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 7622,
+  "normalMapped": 32,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2344.5,
+   6,
+   0
+  ]
+ },
+ "desert-high-1366x768": {
+  "room": "desert",
+  "sunI": 2.9,
+  "sunLum": 0.931,
+  "hemiI": 1.25,
+  "skyLum": 0.844,
+  "groundLum": 0.275,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   280
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 13198,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   3292,
+   2,
+   4
+  ]
+ },
+ "lhar-high-1366x768": {
+  "room": "hamalayi",
+  "sunI": 2.6,
+  "sunLum": 0.932,
+  "hemiI": 1.6,
+  "skyLum": 0.906,
+  "groundLum": 0.536,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0,
+   -0.476,
+   -0.88
+  ],
+  "sunViewDot": 0.072,
+  "fog": [
+   70,
+   250
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 15038,
+  "normalMapped": 39,
+  "grade": 1,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   4292,
+   11.9,
+   18
+  ]
+ },
+ "island-high-1366x768": {
+  "room": "isle_celebration",
+  "sunI": 2.5,
+  "sunLum": 0.735,
+  "hemiI": 1.25,
+  "skyLum": 0.766,
+  "groundLum": 0.152,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.391,
+   -0.476,
+   -0.788
+  ],
+  "sunViewDot": -0.09,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 16622,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2895.79,
+   9.75,
+   1807.84
+  ]
+ },
+ "fortwall-medium-1366x768": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": -0.059,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 17830,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -68.4,
+   2.3,
+   1.5
+  ]
+ },
+ "square-medium-1366x768": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   0.497,
+   -0.476,
+   0.726
+  ],
+  "sunViewDot": 0.373,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 19263,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -42,
+   2.72,
+   -2
+  ]
+ },
+ "harbour-medium-1366x768": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.775,
+   -0.555,
+   0.301
+  ],
+  "sunViewDot": -0.049,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 8.05,
+  "camH": 5.45,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 20973,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -107,
+   1.85,
+   37
+  ]
+ },
+ "house-medium-1366x768": {
+  "room": "house",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.591,
+   -0.548,
+   -0.591
+  ],
+  "sunViewDot": -0.064,
+  "fog": [
+   400,
+   900
+  ],
+  "camDist": 89.15,
+  "camH": 50.12,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 21981,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": true,
+  "indoor": null,
+  "hero": [
+   1001.2,
+   0,
+   9.9
+  ]
+ },
+ "zeelich-medium-1366x768": {
+  "room": "zeelich",
+  "sunI": 2.15,
+  "sunLum": 0.874,
+  "hemiI": 1.35,
+  "skyLum": 0.753,
+  "groundLum": 0.2,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 24183,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2344.5,
+   6,
+   0
+  ]
+ },
+ "desert-medium-1366x768": {
+  "room": "desert",
+  "sunI": 2.9,
+  "sunLum": 0.931,
+  "hemiI": 1.25,
+  "skyLum": 0.844,
+  "groundLum": 0.275,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   280
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 29137,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   3292,
+   2,
+   4
+  ]
+ },
+ "lhar-medium-1366x768": {
+  "room": "hamalayi",
+  "sunI": 2.6,
+  "sunLum": 0.932,
+  "hemiI": 1.6,
+  "skyLum": 0.906,
+  "groundLum": 0.536,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0,
+   -0.476,
+   -0.88
+  ],
+  "sunViewDot": 0.072,
+  "fog": [
+   70,
+   250
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 30675,
+  "normalMapped": 39,
+  "grade": 1,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   4292,
+   11.9,
+   18
+  ]
+ },
+ "island-medium-1366x768": {
+  "room": "isle_celebration",
+  "sunI": 2.5,
+  "sunLum": 0.735,
+  "hemiI": 1.25,
+  "skyLum": 0.766,
+  "groundLum": 0.152,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.391,
+   -0.476,
+   -0.788
+  ],
+  "sunViewDot": -0.09,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 32035,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2895.79,
+   9.75,
+   1807.84
+  ]
+ },
+ "fortwall-high-1920x1080": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": -0.059,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 33191,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -68.4,
+   2.3,
+   1.5
+  ]
+ },
+ "square-high-1920x1080": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   0.497,
+   -0.476,
+   0.726
+  ],
+  "sunViewDot": 0.373,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 33979,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -42,
+   2.72,
+   -2
+  ]
+ },
+ "harbour-high-1920x1080": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.775,
+   -0.555,
+   0.301
+  ],
+  "sunViewDot": -0.049,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 8.05,
+  "camH": 5.45,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 34606,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -107,
+   1.85,
+   37
+  ]
+ },
+ "house-high-1920x1080": {
+  "room": "house",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.591,
+   -0.548,
+   -0.591
+  ],
+  "sunViewDot": -0.064,
+  "fog": [
+   400,
+   900
+  ],
+  "camDist": 89.15,
+  "camH": 50.12,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 34960,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": true,
+  "indoor": null,
+  "hero": [
+   1001.2,
+   0,
+   9.9
+  ]
+ },
+ "zeelich-high-1920x1080": {
+  "room": "zeelich",
+  "sunI": 2.15,
+  "sunLum": 0.874,
+  "hemiI": 1.35,
+  "skyLum": 0.753,
+  "groundLum": 0.2,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 37082,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2344.5,
+   6,
+   0
+  ]
+ },
+ "desert-high-1920x1080": {
+  "room": "desert",
+  "sunI": 2.9,
+  "sunLum": 0.931,
+  "hemiI": 1.25,
+  "skyLum": 0.844,
+  "groundLum": 0.275,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   280
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 38628,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   3292,
+   2,
+   4
+  ]
+ },
+ "lhar-high-1920x1080": {
+  "room": "hamalayi",
+  "sunI": 2.6,
+  "sunLum": 0.932,
+  "hemiI": 1.6,
+  "skyLum": 0.906,
+  "groundLum": 0.536,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0,
+   -0.476,
+   -0.88
+  ],
+  "sunViewDot": 0.072,
+  "fog": [
+   70,
+   250
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 39412,
+  "normalMapped": 39,
+  "grade": 1,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   4292,
+   11.9,
+   18
+  ]
+ },
+ "island-high-1920x1080": {
+  "room": "isle_celebration",
+  "sunI": 2.5,
+  "sunLum": 0.735,
+  "hemiI": 1.25,
+  "skyLum": 0.766,
+  "groundLum": 0.152,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.391,
+   -0.476,
+   -0.788
+  ],
+  "sunViewDot": -0.09,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 4096,
+  "quality": "high",
+  "pr": 1,
+  "calls": 39959,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2895.79,
+   9.75,
+   1807.84
+  ]
+ },
+ "fortwall-medium-1920x1080": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": -0.059,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 40569,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -68.4,
+   2.3,
+   1.5
+  ]
+ },
+ "square-medium-1920x1080": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   0.497,
+   -0.476,
+   0.726
+  ],
+  "sunViewDot": 0.373,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 41298,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -42,
+   2.72,
+   -2
+  ]
+ },
+ "harbour-medium-1920x1080": {
+  "room": "citadel",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   0.348
+  ],
+  "viewDir": [
+   -0.775,
+   -0.555,
+   0.301
+  ],
+  "sunViewDot": -0.049,
+  "fog": [
+   45,
+   190
+  ],
+  "camDist": 8.05,
+  "camH": 5.45,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 41877,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   -107,
+   1.85,
+   37
+  ]
+ },
+ "house-medium-1920x1080": {
+  "room": "house",
+  "sunI": 2.6,
+  "sunLum": 0.882,
+  "hemiI": 1.42,
+  "skyLum": 0.707,
+  "groundLum": 0.172,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.591,
+   -0.548,
+   -0.591
+  ],
+  "sunViewDot": -0.064,
+  "fog": [
+   400,
+   900
+  ],
+  "camDist": 89.15,
+  "camH": 50.12,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 42187,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": true,
+  "indoor": null,
+  "hero": [
+   1001.2,
+   0,
+   9.9
+  ]
+ },
+ "zeelich-medium-1920x1080": {
+  "room": "zeelich",
+  "sunI": 2.15,
+  "sunLum": 0.874,
+  "hemiI": 1.35,
+  "skyLum": 0.753,
+  "groundLum": 0.2,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 44080,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2344.5,
+   6,
+   0
+  ]
+ },
+ "desert-medium-1920x1080": {
+  "room": "desert",
+  "sunI": 2.9,
+  "sunLum": 0.931,
+  "hemiI": 1.25,
+  "skyLum": 0.844,
+  "groundLum": 0.275,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0.88,
+   -0.476,
+   0
+  ],
+  "sunViewDot": 0.815,
+  "fog": [
+   80,
+   280
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 45427,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   3292,
+   2,
+   4
+  ]
+ },
+ "lhar-medium-1920x1080": {
+  "room": "hamalayi",
+  "sunI": 2.6,
+  "sunLum": 0.932,
+  "hemiI": 1.6,
+  "skyLum": 0.906,
+  "groundLum": 0.536,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   0,
+   -0.476,
+   -0.88
+  ],
+  "sunViewDot": 0.072,
+  "fog": [
+   70,
+   250
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 46093,
+  "normalMapped": 39,
+  "grade": 1,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   4292,
+   11.9,
+   18
+  ]
+ },
+ "island-medium-1920x1080": {
+  "room": "isle_celebration",
+  "sunI": 2.5,
+  "sunLum": 0.735,
+  "hemiI": 1.25,
+  "skyLum": 0.766,
+  "groundLum": 0.152,
+  "sunDir": [
+   -0.497,
+   0.795,
+   -0.348
+  ],
+  "viewDir": [
+   -0.391,
+   -0.476,
+   -0.788
+  ],
+  "sunViewDot": -0.09,
+  "fog": [
+   80,
+   290
+  ],
+  "camDist": 11.49,
+  "camH": 6.55,
+  "shadows": true,
+  "shadowMap": 1024,
+  "quality": "medium",
+  "pr": 1,
+  "calls": 46604,
+  "normalMapped": 39,
+  "grade": 0.72,
+  "storm": 0,
+  "interior": false,
+  "indoor": null,
+  "hero": [
+   2895.79,
+   9.75,
+   1807.84
+  ]
+ }
+}

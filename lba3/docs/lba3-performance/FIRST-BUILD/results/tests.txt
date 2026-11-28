@@ -1,0 +1,25 @@
+FIRST-BUILD, the regression suites against a snapshot of the branch (its src identical to 18719e6), served on its own
+port, SwiftShader, two streams at a time on a shared machine (load average 19-31 on 4 cores the whole time).
+probes/runtests.mjs, BOOT_TIMEOUT / BOOT_MS 900-1200 s (the suites' own boot limits are 240-300 s; boots took 180-375 s
+on this machine today, the baseline's included).
+
+opening:     VERDICT: PASS (1692 s)
+chapter1:    VERDICT: PASS (445 s)    first try: no verdict — its second boot (Continue) over chapter1.mjs's fixed 240 s
+                                       wait for the loading screen (TimeoutError at boot; every check before it passed)
+house:       VERDICT: PASS (236 s)    (also PASS at 55e9684, 161 s)
+transitions: VERDICT: PASS (172 s)
+travel:      VERDICT: PASS (826 s)
+zislands:    VERDICT: PASS (840 s)
+drawcalls:   VERDICT: PASS (300 s)
+perfbudget:  VERDICT: PASS (1977 s)
+display:     VERDICT: PASS (529 s)
+menus:       VERDICT: PASS (440 s)    first try: no verdict — page.click on the pause menu's Settings timed out (30 s,
+                                       "waiting for element to be visible, enabled and stable") after 20 checks passed
+combat:      VERDICT: PASS (223 s)
+containers:  VERDICT: PASS (727 s)
+camfollow:   VERDICT: PASS (346 s)
+timing:      VERDICT: PASS (205 s)
+
+Earlier, not counted: opening at 55e9684 failed while drawbatch.js was being edited in the served worktree (a page
+loaded a half-edited file: "IA is not defined"); since then every suite ran against a snapshot. Two probe runs and one
+opening run timed out at boot (300 s / 240 s) under the load before the limits were raised.

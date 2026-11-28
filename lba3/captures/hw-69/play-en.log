@@ -1,0 +1,580 @@
+[20.3] new game, language en
+[20.3] OBJECTIVE "Check the well"
+[20.5] STATE cinematic room house chapter 0
+[108.9] HINT "Take your magic ball from the cupboard↑ Walk · ←→ Turn |  | "
+[108.9] TIP "Take your magic ball from the cupboard" keys "↑ Walk · ←→ Turn" step ball
+[109.0] STATE play room house chapter 0
+[109.3] ← turns the angle by sign 1
+[109.3] STAR 996.8,-1.6,search cupboard at 4.8 m
+[110.3] HINT "Take your magic ball from the cupboard |  | "
+[111.3] HINT "Take your magic ball from the cupboardW Search the cupboard |  | "
+[111.3] PROMPT "W Inspect"
+[112.1] SEARCHED search cupboard prompt "W Inspect"
+[112.1] STATE found room house chapter 0
+[112.6] STATE dialog room house chapter 0
+[113.9] SAY "Twinsen" "The magic ball, the holomap... and a lot of dust."
+[116.8] SAY "Twinsen" "Hello again, old friend."
+[118.2] HINT "Go out to the yard | Magic ball (Alt) · Holomap (H) | ➤Front door"
+[118.2] TIP "Go out to the yard" keys "" step out
+[118.4] STATE play room house chapter 0
+[118.4] STAR 1001.2,11.3,exit outdoor at 13.3 m
+[118.4] STUCK at 997.7 -1.6 toward 1001.2,11.3,exit outdoor 
+[120.8] HINT "Go out to the yard |  | ➤Front door"
+[132.9] STAR -42.6,73.7,Zoé at 3.7 m
+[134.8] STUCK at -43.8 77.2 toward -42.6,73.7,Zoé 
+[135.4] HINT "Talk to Zoé○○○○○ |  | ➤Front door"
+[135.4] TIP "Talk to Zoé○○○○○" keys "" step zoe
+[136.4] HINT "Talk to Zoé○○○○○ |  | ➤Front doorTwinsen! Over here."
+[140.1] STUCK at -43.3 77.0 toward -42.6,73.7,Zoé (2× here)
+[143.1] HINT "Talk to Zoé○○○○○ |  | ➤ZoéTwinsen! Over here."
+[144.4] STATE dialog room out chapter 0
+[145.6] SAY "Zoé" "Same next door. Their tap ran warm, knocked three times, and stopped."
+[149.7] SAY "Zoé" "And look at their kettle. Furred with these since breakfast."
+[152.7] SAY "Twinsen" "(Tiny crystals. Still warm.)"
+[157.2] SAY "Zoé" "Mira's got the well padlocked, and she's telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it."
+[160.4] STATE found room out chapter 0
+[161.4] HINT "✓ Talk to Zoé |  | ➤ZoéTwinsen! Over here."
+[161.4] TIP "✓ Talk to Zoé" keys "" step inv
+[161.6] STATE play room out chapter 0
+[161.6] STEP inv: opening the inventory (I)
+[163.4] state after I: inventory
+[167.7] HINT "Try the garden tap by the front door●●○○○W Try the tap |  | ➤ZoéTry the garden tap. If that's dry too, it isn't just our kitchen."
+[167.7] TIP "Try the garden tap by the front door●●○○○" keys "W Try the tap" step tap
+[167.8] PROMPT "W Try Tap"
+[168.0] STAR -43.9,74.7, at 1.3 m
+[181.2] HINT "Try the garden tap by the front door●●○○○A brass tap on a stone foot, a bucket under it, a few steps from the doorW Try the tap |  | ➤ZoéTry the garden tap. If that's dry too, it isn't just our kitchen."
+[188.5] NOTE at the star -43.9,74.7, and E does nothing for 20 s (objective "Check the well") 021-note.jpg
+[200.9] HINT "Try the garden tap by the front door●●○○○A brass tap on a stone foot, a bucket under it, a few steps from the doorW Try the tap |  | ➤ZoéThe brass tap, right here by me. The one with the bucket."
+[208.9] NOTE at the star -43.9,74.7, and E does nothing for 20 s (objective "Check the well") 023-note.jpg
+[209.6] STATE dialog room out chapter 0
+[210.3] SAY "Twinsen" "(Dry too. And something knocks back behind the barrels, where the pipe goes into the wall.)"
+[213.5] HINT "✓ Try the garden tap by the front door |  | ➤ZoéThe brass tap, right here by me. The one with the bucket."
+[213.5] TIP "✓ Try the garden tap by the front door" keys "" step barrels
+[213.6] STATE play room out chapter 0
+[213.6] STAR -48.2,74.5, at 3.7 m
+[213.6] STEP barrels: throwing the ball (F) at 3.7 m
+[215.6] HINT "✓ Knock the barrel by the house aside with the magic ball |  | ➤ZoéOver the project's pipe is quicker. You used to clear fences twice that high."
+[215.6] TIP "✓ Knock the barrel by the house aside with the magic ball" keys "" step pipe
+[215.7] STATE dialog room out chapter 0
+[216.0] SAY "Twinsen" "(Still got it.)"
+[219.5] SAY "Twinsen" "(My joint from yesterday. It held. But it's weeping warm water, and it's furred like their kettle.)"
+[224.4] SAY "Twinsen" "(Warm water, coming up the line from the square. Whatever this is starts at the well.)"
+[228.3] SAY "Zoé" "So your fix worked. It's the water, then."
+[230.4] HINT "Jump the copper pipe on your way out, or walk round it●●●●○F2 Switch to Athletic: run and jump |  | ➤ZoéOver the project's pipe is quicker. You used to clear fences twice that high."
+[230.4] TIP "Jump the copper pipe on your way out, or walk round it●●●●○" keys "F2 Switch to Athletic: run and jump" step pipe
+[230.6] STATE play room out chapter 0
+[230.8] STAR -43.5,69, at 5.8 m
+[230.8] STEP pipe: the panel says "F2 Switch to Athletic: run and jump" - F2 for Athletic
+[231.7] HINT "Jump the copper pipe on your way out, or walk round it●●●●○Space Jump · take a run at it |  | ➤ZoéOver the project's pipe is quicker. You used to clear fences twice that high."
+[233.4] STEP pipe: run and jump (Space)
+[234.6] STEP pipe: run and jump (Space)
+[235.9] PROMPT "W Talk"
+[236.7] PROMPT "W Inspect"
+[238.7] STEP pipe: run and jump (Space)
+[239.9] HINT "✓ Jump the copper pipe on your way out, or walk round it |  | ➤ZoéNot bad for an old hero. And be back for dinner."
+[239.9] TIP "✓ Jump the copper pipe on your way out, or walk round it" keys "" step 
+[240.1] STAR -42,-4,The well at 75.5 m
+[240.1] ROUTE to -42,-4,The well by the streets: -45,74 > -46,40 > -44,10 > -42,-4
+[241.3] HINT "Hold Alt to see where it lands |  | ➤ZoéNot bad for an old hero. And be back for dinner."
+[241.4] TIP "" keys "" step 
+[242.6] STATE dialog room out chapter 0
+[245.4] SAY "Twinsen" "(And here, where the project's pipe goes into the ground. Louder. Everything on this lane hangs off the square's well.)"
+[248.5] STATE play room out chapter 0
+[248.8] back to Normal (F1)
+[259.1] PROMPT "W Talk"
+[267.1] PROMPT "W Search"
+[283.8] PROMPT "W Talk"
+[285.6] NOTE at the star -42,-4,The well and E does nothing for 20 s (objective "Check the well") 035-note.jpg
+[285.6] STATE dialog room out chapter 0
+[286.2] SAY "Gilbert" "I paid my water bill! So where is my water?"
+[289.6] SAY "Mira" "Mr Gilbert, the bill covers the connection, not the water."
+[292.9] SAY "Gilbert" "So I'm paying for an empty pipe?"
+[296.3] SAY "Twinsen" "Next door's kettle furred up with these since breakfast. Pipes don't do that."
+[300.8] SAY "Mira" "Crystals? No, pipes don't grow those. That comes up from the spring."
+[305.7] SAY "Mira" "All right, it's the well. Here's the key to the lid. Find the fault and I'll waive his bill this month."
+[309.4] SAY "Gilbert" "And last month too."
+[310.9] OBJECTIVE "Climb down the well"
+[311.0] STATE found room out chapter 0
+[312.0] STATE play room out chapter 0
+[313.3] STATE dialog room out chapter 0
+[314.2] SAY "Twinsen" "The padlock's off. But the lid's rusted to the rim."
+[316.9] SAY "Twinsen" "It won't lift."
+[318.1] HINT "Hold Alt to see where it lands | Aggressive (F3), then W by the lid | ➤ZoéNot bad for an old hero. And be back for dinner."
+[319.4] SAY "Gilbert" "Stuck? Give it a good kick. That's how I fix everything."
+[322.4] SAY "Mira" "That explains his pipes."
+[324.0] HINT "Hold Alt to see where it lands |  | ➤ZoéNot bad for an old hero. And be back for dinner."
+[324.0] STATE play room out chapter 0
+[324.3] HINT "F3 Switch to Aggressive: kick and punch |  | ➤ZoéNot bad for an old hero. And be back for dinner."
+[324.3] HINT says F3 -> pressing it
+[326.3] PROMPT "W Inspect"
+[327.4] STATE dialog room out chapter 0
+[328.0] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[331.5] SAY "Twinsen" "There. Years of rust, one kick."
+[334.0] SAY "Gilbert" "Told you. Same kick I taught Arthur."
+[335.9] PROMPT "W Talk"
+[335.9] STATE play room out chapter 0
+[337.0] STATE dialog room out chapter 0
+[338.3] SAY "Mira" "If you need anything else from the water office, I'm here. Sadly."
+[340.9] STATE play room out chapter 0
+[342.4] STATE dialog room out chapter 0
+[343.4] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[345.9] PROMPT "W Inspect"
+[345.9] STATE play room out chapter 0
+[346.5] STATE dialog room out chapter 0
+[347.5] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[347.6] NOTE at the star -42,-4,The well E talks to Twinsen (the same line a third time: "Too deep to jump. I need a rope. The harbour might have one.") instead of the thing under the star; walking round it 053-note.jpg
+[350.0] STATE play room out chapter 0
+[350.0] ROUND THE STAR: the prompt now "W Inspect"
+[350.8] STATE dialog room out chapter 0
+[351.7] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[354.1] STATE play room out chapter 0
+[354.2] ROUND THE STAR: the prompt now "W Inspect"
+[355.0] STATE dialog room out chapter 0
+[355.9] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[358.3] STATE play room out chapter 0
+[358.3] ROUND THE STAR: the prompt now "W Inspect"
+[359.0] STATE dialog room out chapter 0
+[359.9] SAY "Twinsen" "Too deep to jump. I need a rope. The harbour might have one."
+[359.9] SPENT -42,-4,The well (the same line six times); the next star
+[362.3] STATE play room out chapter 0
+[362.3] STAR -126.2,49.1,Xil at 98.3 m
+[362.3] STUCK at -41.9 -1.4 toward -126.2,49.1,Xil 
+[362.3] ROUTE to -126.2,49.1,Xil by the streets: -42,-4 > -44,10 > -46,40 > -60,33 > -74,35.5 > -90,38 > -107.5,39
+[362.6] PROMPT "W Talk"
+[363.0] PROMPT "W Inspect"
+[363.9] PROMPT "W Shop"
+[381.9] STUCK at -45.7 19.8 toward -126.2,49.1,Xil 
+[381.9] ROUTE to -126.2,49.1,Xil by the streets: -44,10 > -46,40 > -60,33 > -74,35.5 > -90,38 > -107.5,39
+[385.5] STUCK at -45.7 19.8 toward -126.2,49.1,Xil (2× here)
+[385.5] ROUTE to -126.2,49.1,Xil by the streets: -44,10 > -46,40 > -60,33 > -74,35.5 > -90,38 > -107.5,39
+[391.8] PROMPT "W Search"
+[397.1] PROMPT "W Talk"
+[429.9] NOTE at the star -126.2,49.1,Xil and E does nothing for 20 s (objective "Climb down the well") 058-note.jpg
+[429.9] STATE dialog room out chapter 0
+[432.1] SAY "Xil" "Greetings, child of Twinsun. Xil, trader, of Zeelich. My cargo waits on that barge until the harbour master stamps my permit."
+[436.4] SAY "Xil" "I asked him three times. The third time, he snored."
+[440.1] SAY "Xil" "Only the bell on that post wakes him. I saw it when the barge came in."
+[444.0] SAY "Twinsen" "I need a rope for the town well. Is there any on that barge?"
+[448.1] SAY "Xil" "Rope ladders, a whole crate. Wake that man, bring me my stamp, and one is yours."
+[451.1] STATE play room out chapter 0
+[453.7] BELL: the ball (F) at the bell from 5.0 m, try 1
+[456.3] STATE dialog room out chapter 0
+[456.7] SAY "Doran" "Boat in! Ropes! Fenders! ...There is no boat."
+[460.5] SAY "Twinsen" "Sorry, Doran. The trader from Zeelich is still waiting for his stamp."
+[465.1] SAY "Doran" "The Zeelichian? He's only been waiting three days. Waiting is what harbours are for."
+[469.9] SAY "Doran" "Fine, fine. For you. There, stamped. Tell him there's no need to thank me. Again."
+[472.8] STATE found room out chapter 0
+[473.8] STATE play room out chapter 0
+[478.4] STUCK at -124.6 46.1 toward -126.2,49.1,Xil 
+[484.1] STUCK at -123.9 46.7 toward -126.2,49.1,Xil (2× here)
+[490.4] STUCK at -127.2 45.9 toward -126.2,49.1,Xil 
+[493.4] NOTE at the star -126.2,49.1,Xil and E does nothing for 20 s (objective "Climb down the well") 069-note.jpg
+[495.1] HINT "F3 Switch to Aggressive: kick and punch |  | ➤ZoéNot bad for an old hero. And be back for dinner.Next time, fish. Next time."
+[496.7] STATE dialog room out chapter 0
+[498.4] SAY "Xil" "The stamp! At last. Drills, pipes and sensors, for Twinsun and Zeelich's Joint Project."
+[503.4] SAY "Xil" "Please take this rope ladder, Twinsen. You look like someone who climbs down a lot of holes."
+[506.4] STATE found room out chapter 0
+[507.4] STATE play room out chapter 0
+[507.4] STAR -42,-4,The well at 98.9 m
+[507.4] ROUTE to -42,-4,The well by the streets: -107.5,39 > -90,38 > -74,35.5 > -60,33 > -46,40 > -44,10 > -42,-4
+[519.4] PROMPT "W Shop"
+[519.9] HINT "F3 Switch to Aggressive: kick and punch |  | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[538.3] PROMPT "W Inspect"
+[539.1] PROMPT "W Talk"
+[539.8] PROMPT "W Inspect"
+[544.8] PROMPT "W Search"
+[550.3] STUCK at -47.7 12.2 toward -42,-4,The well 
+[555.0] STUCK at -47.7 12.2 toward -42,-4,The well (2× here)
+[560.5] PROMPT "W Talk"
+[564.2] PROMPT "W Inspect"
+[564.2] ROUND THE STAR: the prompt now "W Inspect"
+[564.9] STATE dialog room out chapter 0
+[565.5] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[567.8] STATE play room out chapter 0
+[567.8] ROUND THE STAR: the prompt now "W Inspect"
+[568.5] OBJECTIVE "Find the source of the heat"
+[568.6] STATE dialog room well chapter 0
+[568.9] SAY "Twinsen" "Crystals? Down a town well?"
+[572.1] SAY "Twinsen" "The ball's trembling in my pocket. Maybe it can wake those three dark crystals."
+[574.9] STATE play room well chapter 0
+[574.9] CRYSTAL to wake at 1095,-4
+[575.2] HINT "X Dodge |  | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[576.2] CRYSTAL: the ball (F) from 4.6 m, try 1
+[578.6] HINT "X Dodge | Crystal awake (1/3) | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[578.8] CRYSTAL to wake at 1101,4.8
+[579.4] HINT "X Dodge |  | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[585.3] STATE dialog room well chapter 0
+[586.8] SAY "Twinsen" "(A pump, somewhere above. The whole wall hums with it.)"
+[590.7] SAY "Twinsen" "(The growth on the stones leaned toward it. Like a plant to a window.)"
+[593.3] STATE play room well chapter 0
+[700.4] CRYSTAL to wake at 1100.5,-5.2
+[700.8] CRYSTAL to wake at 1101,4.8
+[701.3] CRYSTAL to wake at 1100.5,-5.2
+[704.4] HINT "X Dodge | Crystal awake (2/3) | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[704.4] CRYSTAL to wake at 1101,4.8
+[705.4] HINT "X Dodge | Crystal awake (2/3)Crystal awake (3/3) | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[705.4] STAR 1092,4.5,exit outdoor-well at 7.6 m
+[705.4] back to Normal (F1)
+[707.2] HINT "X Dodge | Crystal awake (3/3) | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[708.1] HINT "X Dodge |  | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[711.6] STAR -42,-4,The well at 1.9 m
+[712.4] PROMPT "W Talk"
+[712.6] PROMPT "W Inspect"
+[712.8] HINT "Out of magic: the ball still flies, but no longer bounces. Flasks refill it. |  | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[713.7] STATE dialog room out chapter 0
+[714.6] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[716.7] STATE play room well chapter 0
+[716.7] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[718.6] STUCK at 1093.4 3.3 toward 1092,4.5,exit outdoor-well 
+[719.1] PROMPT "W Touch"
+[721.9] STAR -42,-4,The well at 1.9 m
+[722.7] PROMPT "W Talk"
+[722.9] PROMPT "W Inspect"
+[724.0] STATE dialog room out chapter 0
+[724.9] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[727.0] STATE play room out chapter 0
+[727.6] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[730.0] STAR -42,-4,The well at 1.9 m
+[730.9] PROMPT "W Talk"
+[732.4] STATE dialog room out chapter 0
+[733.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[735.7] STATE play room out chapter 0
+[737.1] STATE dialog room out chapter 0
+[738.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[740.2] STATE play room out chapter 0
+[741.8] STATE dialog room out chapter 0
+[742.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[742.9] NOTE at the star -42,-4,The well E talks to Gilbert (the same line a third time: "Still waiting for my water, Twinsen. And my refund.") instead of the thing under the star; walking round it 088-note.jpg
+[745.0] STATE play room out chapter 0
+[746.0] PROMPT "W Inspect"
+[746.0] ROUND THE STAR: the prompt now "W Inspect"
+[746.7] STATE dialog room out chapter 0
+[747.3] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[749.6] STATE play room well chapter 0
+[749.6] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[751.4] STUCK at 1093.4 3.3 toward 1092,4.5,exit outdoor-well (2× here)
+[752.0] PROMPT "W Touch"
+[756.1] STAR -42,-4,The well at 1.9 m
+[756.1] ROUND THE STAR: the prompt now "W Touch"
+[756.8] ROUND THE STAR: the prompt now "W Touch"
+[757.5] STATE dialog room out chapter 0
+[758.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[760.8] PROMPT "W Talk"
+[760.8] STATE play room out chapter 0
+[761.5] PROMPT "W Inspect"
+[761.5] ROUND THE STAR: the prompt now "W Inspect"
+[762.3] STATE dialog room out chapter 0
+[762.9] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[765.1] STATE play room well chapter 0
+[765.1] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[767.0] STUCK at 1093.4 3.1 toward 1092,4.5,exit outdoor-well (3× here)
+[771.6] STAR -42,-4,The well at 1.9 m
+[771.6] ROUND THE STAR: the prompt now "W Inspect"
+[772.4] ROUND THE STAR: the prompt now "W Inspect"
+[773.1] STATE dialog room out chapter 0
+[774.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[776.3] PROMPT "W Talk"
+[776.3] STATE play room out chapter 0
+[776.9] PROMPT "W Inspect"
+[776.9] ROUND THE STAR: the prompt now "W Inspect"
+[777.6] STATE dialog room out chapter 0
+[778.3] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[780.5] STATE play room out chapter 0
+[780.5] ROUND THE STAR: the prompt now "W Inspect"
+[781.3] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[783.7] STAR -42,-4,The well at 1.9 m
+[783.7] ROUND THE STAR: the prompt now "W Inspect"
+[784.4] ROUND THE STAR: the prompt now "W Inspect"
+[785.1] STATE dialog room out chapter 0
+[786.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[786.1] SPENT -42,-4,The well (the same line six times); the next star
+[788.4] PROMPT "W Talk"
+[788.4] STATE play room out chapter 0
+[789.0] PROMPT "W Inspect"
+[789.0] ROUND THE STAR: the prompt now "W Inspect"
+[789.7] STATE dialog room out chapter 0
+[790.3] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[792.6] STATE play room out chapter 0
+[792.6] ROUND THE STAR: the prompt now "W Inspect"
+[793.3] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[795.7] STAR -42,-4,The well at 1.9 m
+[795.7] ROUND THE STAR: the prompt now "W Inspect"
+[796.4] ROUND THE STAR: the prompt now "W Inspect"
+[797.1] STATE dialog room out chapter 0
+[798.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[798.0] SPENT -42,-4,The well (the same line six times); the next star
+[800.3] PROMPT "W Talk"
+[800.3] STATE play room out chapter 0
+[800.9] PROMPT "W Inspect"
+[800.9] ROUND THE STAR: the prompt now "W Inspect"
+[801.6] STATE dialog room out chapter 0
+[802.4] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[804.7] STATE play room out chapter 0
+[804.7] ROUND THE STAR: the prompt now "W Inspect"
+[805.4] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[807.7] STAR -42,-4,The well at 1.9 m
+[807.7] ROUND THE STAR: the prompt now "W Inspect"
+[808.5] ROUND THE STAR: the prompt now "W Inspect"
+[809.2] STATE dialog room out chapter 0
+[810.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[810.1] SPENT -42,-4,The well (the same line six times); the next star
+[812.4] PROMPT "W Talk"
+[812.4] STATE play room out chapter 0
+[813.7] PROMPT "W Inspect"
+[813.7] ROUND THE STAR: the prompt now "W Inspect"
+[814.4] STATE dialog room out chapter 0
+[815.0] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[817.2] STATE play room out chapter 0
+[817.2] ROUND THE STAR: the prompt now "W Inspect"
+[817.9] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[820.3] STAR -42,-4,The well at 1.9 m
+[820.3] ROUND THE STAR: the prompt now "W Inspect"
+[821.0] ROUND THE STAR: the prompt now "W Inspect"
+[821.7] STATE dialog room out chapter 0
+[822.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[822.5] SPENT -42,-4,The well (the same line six times); the next star
+[824.8] PROMPT "W Talk"
+[824.8] STATE play room out chapter 0
+[825.4] PROMPT "W Inspect"
+[825.4] ROUND THE STAR: the prompt now "W Inspect"
+[826.2] STATE dialog room out chapter 0
+[826.8] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[829.0] STATE play room out chapter 0
+[829.0] ROUND THE STAR: the prompt now "W Inspect"
+[829.8] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[832.1] STAR -42,-4,The well at 1.9 m
+[832.1] ROUND THE STAR: the prompt now "W Inspect"
+[832.8] ROUND THE STAR: the prompt now "W Inspect"
+[833.6] STATE dialog room out chapter 0
+[834.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[834.5] SPENT -42,-4,The well (the same line six times); the next star
+[836.8] PROMPT "W Talk"
+[836.8] STATE play room out chapter 0
+[837.4] PROMPT "W Inspect"
+[837.4] ROUND THE STAR: the prompt now "W Inspect"
+[838.1] STATE dialog room out chapter 0
+[838.8] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[841.0] STATE play room out chapter 0
+[841.0] ROUND THE STAR: the prompt now "W Inspect"
+[841.9] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[844.2] STAR -42,-4,The well at 1.9 m
+[844.2] ROUND THE STAR: the prompt now "W Inspect"
+[844.9] ROUND THE STAR: the prompt now "W Inspect"
+[845.7] STATE dialog room out chapter 0
+[846.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[846.6] SPENT -42,-4,The well (the same line six times); the next star
+[848.9] PROMPT "W Talk"
+[848.9] STATE play room out chapter 0
+[849.6] PROMPT "W Inspect"
+[849.6] ROUND THE STAR: the prompt now "W Inspect"
+[850.3] STATE dialog room out chapter 0
+[850.9] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[853.2] STATE play room well chapter 0
+[853.2] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[855.0] STUCK at 1093.4 3.4 toward 1092,4.5,exit outdoor-well (4× here)
+[858.9] HINT "Out of magic: the ball still flies, but no longer bounces. Flasks refill it. | A clover leaf saved you! | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[861.7] HINT "Out of magic: the ball still flies, but no longer bounces. Flasks refill it. |  | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[862.4] STAR -42,-4,The well at 1.9 m
+[862.4] ROUND THE STAR: the prompt now "W Inspect"
+[863.1] ROUND THE STAR: the prompt now "W Inspect"
+[863.8] STATE dialog room out chapter 0
+[864.7] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[864.7] SPENT -42,-4,The well (the same line six times); the next star
+[867.0] PROMPT "W Talk"
+[867.0] STATE play room out chapter 0
+[867.7] PROMPT "W Inspect"
+[867.7] ROUND THE STAR: the prompt now "W Inspect"
+[868.4] STATE dialog room out chapter 0
+[869.0] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[871.3] STATE play room well chapter 0
+[871.3] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[873.2] STUCK at 1093.3 3.3 toward 1092,4.5,exit outdoor-well (5× here)
+[878.3] PROMPT "W Touch"
+[883.1] STAR -42,-4,The well at 1.9 m
+[883.1] ROUND THE STAR: the prompt now "W Touch"
+[883.8] ROUND THE STAR: the prompt now "W Touch"
+[884.5] STATE dialog room out chapter 0
+[885.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[885.4] SPENT -42,-4,The well (the same line six times); the next star
+[887.7] PROMPT "W Talk"
+[887.7] STATE play room out chapter 0
+[888.3] PROMPT "W Inspect"
+[888.3] ROUND THE STAR: the prompt now "W Inspect"
+[889.0] STATE dialog room out chapter 0
+[889.6] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[891.9] STATE play room well chapter 0
+[891.9] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[893.8] STUCK at 1093.4 3.3 toward 1092,4.5,exit outdoor-well (6× here)
+[899.1] PROMPT "W Touch"
+[903.4] STUCK at 1091.0 1.9 toward 1092,4.5,exit outdoor-well 
+[910.1] STAR -42,-4,The well at 1.9 m
+[910.1] ROUND THE STAR: the prompt now "W Touch"
+[910.8] ROUND THE STAR: the prompt now "W Touch"
+[911.6] STATE dialog room out chapter 0
+[912.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[912.5] SPENT -42,-4,The well (the same line six times); the next star
+[914.8] PROMPT "W Talk"
+[914.8] STATE play room out chapter 0
+[915.7] PROMPT "W Inspect"
+[915.7] ROUND THE STAR: the prompt now "W Inspect"
+[916.4] STATE dialog room out chapter 0
+[917.1] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[919.3] STATE play room out chapter 0
+[919.3] ROUND THE STAR: the prompt now "W Inspect"
+[920.0] STAR 1092,4.5,exit outdoor-well at 2.0 m
+[923.3] HINT "Out of magic: the ball still flies, but no longer bounces. Flasks refill it. | A clover leaf saved you! | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[924.1] STUCK at 1092.4 3.2 toward 1092,4.5,exit outdoor-well (2× here)
+[926.2] HINT "Out of magic: the ball still flies, but no longer bounces. Flasks refill it. |  | ➤ZoéNot bad for an old hero. And be back for dinner.Oops! After you, Twinsen."
+[928.2] STAR -42,-4,The well at 1.9 m
+[928.2] ROUND THE STAR: the prompt now "W Inspect"
+[928.9] ROUND THE STAR: the prompt now "W Inspect"
+[929.6] STATE dialog room out chapter 0
+[930.6] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[930.6] SPENT -42,-4,The well (the same line six times); the next star
+[932.8] PROMPT "W Talk"
+[932.8] STATE play room out chapter 0
+[933.8] PROMPT "W Inspect"
+[933.8] ROUND THE STAR: the prompt now "W Inspect"
+[934.5] STATE dialog room out chapter 0
+[935.2] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[937.4] STATE play room out chapter 0
+[937.4] ROUND THE STAR: the prompt now "W Inspect"
+[938.1] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[940.5] STAR -42,-4,The well at 1.9 m
+[940.5] ROUND THE STAR: the prompt now "W Inspect"
+[941.2] ROUND THE STAR: the prompt now "W Inspect"
+[941.9] STATE dialog room out chapter 0
+[942.9] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[942.9] SPENT -42,-4,The well (the same line six times); the next star
+[945.2] PROMPT "W Talk"
+[945.2] STATE play room out chapter 0
+[945.9] PROMPT "W Inspect"
+[945.9] ROUND THE STAR: the prompt now "W Inspect"
+[946.7] STATE dialog room out chapter 0
+[947.3] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[949.5] STATE play room out chapter 0
+[949.5] ROUND THE STAR: the prompt now "W Inspect"
+[950.2] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[953.2] STAR -42,-4,The well at 1.9 m
+[953.2] ROUND THE STAR: the prompt now "W Inspect"
+[953.9] ROUND THE STAR: the prompt now "W Inspect"
+[954.6] STATE dialog room out chapter 0
+[955.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[955.5] SPENT -42,-4,The well (the same line six times); the next star
+[957.8] PROMPT "W Talk"
+[957.8] STATE play room out chapter 0
+[958.5] PROMPT "W Inspect"
+[958.5] ROUND THE STAR: the prompt now "W Inspect"
+[959.2] STATE dialog room out chapter 0
+[959.8] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[962.0] STATE play room out chapter 0
+[962.0] ROUND THE STAR: the prompt now "W Inspect"
+[962.7] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[965.6] STAR -42,-4,The well at 1.9 m
+[965.6] ROUND THE STAR: the prompt now "W Inspect"
+[966.3] ROUND THE STAR: the prompt now "W Inspect"
+[967.0] STATE dialog room out chapter 0
+[968.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[968.0] SPENT -42,-4,The well (the same line six times); the next star
+[970.3] PROMPT "W Talk"
+[970.3] STATE play room out chapter 0
+[970.9] PROMPT "W Inspect"
+[970.9] ROUND THE STAR: the prompt now "W Inspect"
+[971.6] STATE dialog room out chapter 0
+[972.3] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[974.5] STATE play room out chapter 0
+[974.5] ROUND THE STAR: the prompt now "W Inspect"
+[975.2] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[977.6] STAR -42,-4,The well at 1.9 m
+[977.6] ROUND THE STAR: the prompt now "W Inspect"
+[978.3] ROUND THE STAR: the prompt now "W Inspect"
+[979.0] STATE dialog room out chapter 0
+[980.0] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[980.0] SPENT -42,-4,The well (the same line six times); the next star
+[982.3] PROMPT "W Talk"
+[982.3] STATE play room out chapter 0
+[982.9] PROMPT "W Inspect"
+[982.9] ROUND THE STAR: the prompt now "W Inspect"
+[983.7] STATE dialog room out chapter 0
+[984.3] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[986.6] STATE play room well chapter 0
+[986.7] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[988.5] STUCK at 1093.2 3.4 toward 1092,4.5,exit outdoor-well (3× here)
+[990.3] PROMPT "W Touch"
+[993.0] STAR -42,-4,The well at 1.9 m
+[993.0] ROUND THE STAR: the prompt now "W Touch"
+[993.7] ROUND THE STAR: the prompt now "W Touch"
+[994.4] STATE dialog room out chapter 0
+[995.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[995.3] SPENT -42,-4,The well (the same line six times); the next star
+[997.6] PROMPT "W Talk"
+[997.6] STATE play room out chapter 0
+[998.5] PROMPT "W Inspect"
+[998.6] ROUND THE STAR: the prompt now "W Inspect"
+[999.3] STATE dialog room out chapter 0
+[999.9] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[1002.1] STATE play room out chapter 0
+[1002.1] ROUND THE STAR: the prompt now "W Inspect"
+[1002.8] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[1005.2] STAR -42,-4,The well at 1.9 m
+[1005.2] ROUND THE STAR: the prompt now "W Inspect"
+[1005.9] ROUND THE STAR: the prompt now "W Inspect"
+[1006.7] STATE dialog room out chapter 0
+[1007.4] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1007.4] SPENT -42,-4,The well (the same line six times); the next star
+[1009.7] PROMPT "W Talk"
+[1009.7] STATE play room out chapter 0
+[1010.7] PROMPT "W Inspect"
+[1010.7] ROUND THE STAR: the prompt now "W Inspect"
+[1011.4] STATE dialog room out chapter 0
+[1012.0] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[1014.3] STATE play room well chapter 0
+[1014.3] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[1016.1] STUCK at 1093.4 3.3 toward 1092,4.5,exit outdoor-well (4× here)
+[1017.6] PROMPT "W Touch"
+[1022.1] STAR -42,-4,The well at 1.9 m
+[1022.1] ROUND THE STAR: the prompt now "W Touch"
+[1022.8] ROUND THE STAR: the prompt now "W Touch"
+[1023.6] STATE dialog room out chapter 0
+[1024.5] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1024.5] SPENT -42,-4,The well (the same line six times); the next star
+[1026.8] PROMPT "W Talk"
+[1026.8] STATE play room out chapter 0
+[1027.6] PROMPT "W Inspect"
+[1027.6] ROUND THE STAR: the prompt now "W Inspect"
+[1028.3] STATE dialog room out chapter 0
+[1028.9] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[1031.2] STATE play room well chapter 0
+[1031.2] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[1033.0] STUCK at 1093.4 3.3 toward 1092,4.5,exit outdoor-well (5× here)
+[1038.8] STAR -42,-4,The well at 1.9 m
+[1038.8] ROUND THE STAR: the prompt now "W Inspect"
+[1039.5] ROUND THE STAR: the prompt now "W Inspect"
+[1040.2] STATE dialog room out chapter 0
+[1041.1] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1041.1] SPENT -42,-4,The well (the same line six times); the next star
+[1043.5] PROMPT "W Talk"
+[1043.5] STATE play room out chapter 0
+[1044.1] PROMPT "W Inspect"
+[1044.1] ROUND THE STAR: the prompt now "W Inspect"
+[1044.8] STATE dialog room out chapter 0
+[1045.4] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[1047.7] STATE play room out chapter 0
+[1047.8] ROUND THE STAR: the prompt now "W Inspect"
+[1048.5] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[1050.9] STAR -42,-4,The well at 1.9 m
+[1050.9] ROUND THE STAR: the prompt now "W Inspect"
+[1051.6] ROUND THE STAR: the prompt now "W Inspect"
+[1052.3] STATE dialog room out chapter 0
+[1053.3] SAY "Gilbert" "Still waiting for my water, Twinsen. And my refund."
+[1053.3] SPENT -42,-4,The well (the same line six times); the next star
+[1055.6] PROMPT "W Talk"
+[1055.6] STATE play room out chapter 0
+[1056.2] PROMPT "W Inspect"
+[1056.2] ROUND THE STAR: the prompt now "W Inspect"
+[1056.9] STATE dialog room out chapter 0
+[1057.5] SAY "Twinsen" "Lid open, rope tied. Let's see what's down there."
+[1059.8] STATE play room well chapter 0
+[1059.8] STAR 1092,4.5,exit outdoor-well at 1.8 m
+[1061.6] STUCK at 1093.4 3.3 toward 1092,4.5,exit outdoor-well (6× here)
+[1066.9] STATE gameover room well chapter 0

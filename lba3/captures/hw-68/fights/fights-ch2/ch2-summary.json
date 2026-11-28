@@ -1,0 +1,45 @@
+[
+ {
+  "try": 1,
+  "result": "valve shut",
+  "hpIn": 10,
+  "hpOut": 10,
+  "maxHp": 10,
+  "dead": false,
+  "secs": 143.9,
+  "hits": 0,
+  "byKind": {},
+  "enemiesSeen": 4,
+  "beaten": 3
+ },
+ {
+  "try": 2,
+  "result": "valve open",
+  "hpIn": 10,
+  "hpOut": 7,
+  "maxHp": 10,
+  "dead": false,
+  "secs": 225.8,
+  "hits": 3,
+  "byKind": {
+   "guard": 3
+  },
+  "enemiesSeen": 4,
+  "beaten": 3
+ },
+ {
+  "try": 3,
+  "result": "valve shut",
+  "hpIn": 10,
+  "hpOut": 7,
+  "maxHp": 10,
+  "dead": false,
+  "secs": 82.5,
+  "hits": 1,
+  "byKind": {
+   "guard": 1
+  },
+  "enemiesSeen": 4,
+  "beaten": 0
+ }
+]

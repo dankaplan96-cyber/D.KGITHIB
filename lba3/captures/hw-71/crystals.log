@@ -1,0 +1,6 @@
+room well
+nodes [[1095,1.55,-4,true],[1100.5,1.55,-5.2,true],[1101,1.55,4.8,true]]
+singing crystals [["crystal",-113,5.1,85],["crystal",-85,14.1,-49.5],["crystal",-126.1,2.4,52.2]]
+singing-0 ground/water {"ground":4.49,"water":null,"stand":[-108.8,89.2,21]}
+singing-1 ground/water {"ground":13.49,"water":null,"stand":[-82.2,-52.3,16.1]}
+errors-none

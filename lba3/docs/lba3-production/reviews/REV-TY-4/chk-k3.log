@@ -1,0 +1,4 @@
+continue toasts: []
+state: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":1,"k_turns":3,"k_sand":true,"k_screen":true},"cowl":1,"jars":5,"ferry":true,"items":["evacplan","kscreen"],"journal":[{"key":"k_j_cool","done":false},{"key":"k_j_screen","done":false}],"coins":7,"hp":"4/11","pos":[3342.63,5,-1.5],"lying":[],"state":"play"}
+lines on continue: []
+no errors

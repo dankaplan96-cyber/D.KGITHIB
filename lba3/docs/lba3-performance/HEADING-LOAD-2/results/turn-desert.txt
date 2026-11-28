@@ -1,0 +1,34 @@
+desert: variants GPU: region instances not culled per instance (as before) + GPU: instanced decoration not culled to the view (as before)
+frame 0 heading 11°: pixels differ 0 · main calls 58 vs 58 · triangles 317k vs 319k 
+frame 1 heading 23°: pixels differ 0 · main calls 58 vs 58 · triangles 310k vs 312k 
+frame 2 heading 34°: pixels differ 0 · main calls 57 vs 57 · triangles 342k vs 344k 
+frame 3 heading 46°: pixels differ 0 · main calls 61 vs 61 · triangles 339k vs 342k 
+frame 4 heading 57°: pixels differ 0 · main calls 60 vs 60 · triangles 343k vs 345k 
+frame 5 heading 69°: pixels differ 0 · main calls 60 vs 60 · triangles 327k vs 330k 
+frame 6 heading 80°: pixels differ 0 · main calls 61 vs 61 · triangles 283k vs 286k 
+frame 7 heading 92°: pixels differ 0 · main calls 41 vs 41 · triangles 251k vs 253k 
+frame 8 heading 103°: pixels differ 0 · main calls 34 vs 34 · triangles 234k vs 236k 
+frame 9 heading 115°: pixels differ 0 · main calls 33 vs 33 · triangles 230k vs 233k 
+frame 10 heading 126°: pixels differ 0 · main calls 27 vs 27 · triangles 183k vs 185k 
+frame 11 heading 138°: pixels differ 0 · main calls 25 vs 25 · triangles 176k vs 178k 
+frame 12 heading 149°: pixels differ 0 · main calls 22 vs 22 · triangles 151k vs 154k 
+frame 13 heading 160°: pixels differ 0 · main calls 21 vs 21 · triangles 131k vs 133k 
+frame 14 heading 172°: pixels differ 0 · main calls 21 vs 21 · triangles 147k vs 150k 
+frame 15 heading 183°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 16 heading 195°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 17 heading 206°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 18 heading 218°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 19 heading 229°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 20 heading 241°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 21 heading 252°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 22 heading 264°: pixels differ 0 · main calls 19 vs 19 · triangles 115k vs 118k 
+frame 23 heading 275°: pixels differ 0 · main calls 20 vs 20 · triangles 134k vs 137k 
+frame 24 heading 286°: pixels differ 0 · main calls 21 vs 21 · triangles 143k vs 146k 
+frame 25 heading 298°: pixels differ 0 · main calls 24 vs 24 · triangles 193k vs 195k 
+frame 26 heading 309°: pixels differ 0 · main calls 24 vs 24 · triangles 198k vs 201k 
+frame 27 heading 321°: pixels differ 0 · main calls 26 vs 26 · triangles 212k vs 215k 
+frame 28 heading 332°: pixels differ 0 · main calls 28 vs 28 · triangles 214k vs 217k 
+frame 29 heading 344°: pixels differ 0 · main calls 35 vs 35 · triangles 274k vs 276k 
+frame 30 heading 355°: pixels differ 0 · main calls 45 vs 45 · triangles 322k vs 325k 
+frame 31 heading 7°: pixels differ 0 · main calls 50 vs 50 · triangles 292k vs 295k 
+all 32 frames: worst 0 pixels differ · mean main calls 33.5 vs 33.5 · mean triangles 212.4k vs 215.1k

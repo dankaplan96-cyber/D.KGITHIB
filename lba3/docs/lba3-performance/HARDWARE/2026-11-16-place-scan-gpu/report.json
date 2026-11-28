@@ -1,0 +1,2928 @@
+[
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "workbench",
+  "frame": 50,
+  "at": [
+   -102.8,
+   33.17
+  ],
+  "world": [
+   -102.8,
+   33.17
+  ],
+  "what": "workbench goes into custom (#49 at -102.8, 33.84)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "maker": "Kit",
+  "depth": 0.06,
+  "other": 49,
+  "otherItem": "custom",
+  "left": "low (6 cm): Nell's tapered landing leg on the bench, its thick end touching the top"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildTownLife",
+  "frame": 101195,
+  "at": [
+   -102.8,
+   34.32
+  ],
+  "world": [
+   -102.8,
+   34.32
+  ],
+  "what": "buildTownLife goes into custom (#49 at -102.8, 33.84)",
+  "measure": "parts overlap 12 cm (footprint SAT and height)",
+  "maker": "buildTownLife@townlife.js:334 < ?@main.js:300",
+  "depth": 0.12,
+  "other": 49,
+  "otherItem": "custom",
+  "left": "by design: Nell's lean-to, the bench under its roof against its back wall (one structure, two builders)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "barrels",
+  "frame": 100797,
+  "at": [
+   -75.6,
+   -77.2
+  ],
+  "world": [
+   -75.6,
+   -77.2
+  ],
+  "what": "barrels goes into handcart (#100036 at -77.37, -76.29)",
+  "measure": "parts overlap 7 cm (footprint SAT and height)",
+  "maker": "barrels@island.js:372 < buildDepot@island.js:2218",
+  "depth": 0.07,
+  "other": 100036,
+  "otherItem": "handcart",
+  "left": "by design: the depot yard's barrels, a lying one against the standing ones and the hand cart (looked at)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "barrels",
+  "frame": 100799,
+  "at": [
+   -75.47,
+   -75.76
+  ],
+  "world": [
+   -75.47,
+   -75.76
+  ],
+  "what": "barrels goes into handcart (#100036 at -77.37, -76.29)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "barrels@island.js:372 < buildDepot@island.js:2218",
+  "depth": 0.04,
+  "other": 100036,
+  "otherItem": "handcart",
+  "left": "by design: the depot yard's barrels against the hand cart (4 cm)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100105,
+  "at": [
+   -81.38,
+   43.22
+  ],
+  "world": [
+   -81.38,
+   43.22
+  ],
+  "what": "crate goes into crate (#100103 at -80.76, 42.8)",
+  "measure": "parts overlap 9 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:224 < crateStack@props-esmer.js:248",
+  "depth": 0.09,
+  "other": 100103,
+  "otherItem": "crate",
+  "left": "low (9 cm): the harbour's Esmer crate stack, a wooden crate against a teal one"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildLid",
+  "frame": 100364,
+  "at": [
+   -42,
+   -4.32
+  ],
+  "world": [
+   -42,
+   -4.32
+  ],
+  "what": "buildLid goes into well (#100140 at -41.6, -4)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "maker": "Prologue.buildLid@prologue.js:116 < Prologue.decorate@prologue.js:104",
+  "depth": 0.06,
+  "other": 100140,
+  "otherItem": "well",
+  "left": "by design: the dry well's lid and the crates' lids resting on them (chapter 1 decoration)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "cargoLift",
+  "frame": 100274,
+  "at": [
+   -85.3,
+   -0.92
+  ],
+  "world": [
+   -85.3,
+   -0.92
+  ],
+  "what": "cargoLift goes into mkCrate (#100279 at -85.9, -0.5)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "cargoLift@island.js:784 < buildHarbour@island.js:707",
+  "depth": 0.04,
+  "other": 100279,
+  "otherItem": "mkCrate",
+  "left": "low (4 cm): the cargo lift's frame against its crate"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildLid",
+  "frame": 100360,
+  "at": [
+   -0.42,
+   -0.93
+  ],
+  "world": [
+   -0.42,
+   -0.93
+  ],
+  "what": "buildLid goes into mkCrate (#100280 at -0.39, -0.39)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "Prologue.buildLid@prologue.js:117 < Prologue.decorate@prologue.js:104",
+  "depth": 0.04,
+  "other": 100280,
+  "otherItem": "mkCrate",
+  "left": "by design: the dry well's lid and the crates' lids resting on them (chapter 1 decoration)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "buildLid",
+  "frame": 100361,
+  "at": [
+   0.42,
+   -0.93
+  ],
+  "world": [
+   0.42,
+   -0.93
+  ],
+  "what": "buildLid goes into mkCrate (#100282 at 0.39, -0.39)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "Prologue.buildLid@prologue.js:117 < Prologue.decorate@prologue.js:104",
+  "depth": 0.04,
+  "other": 100282,
+  "otherItem": "mkCrate",
+  "left": "by design: the dry well's lid and the crates' lids resting on them (chapter 1 decoration)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "barrels",
+  "frame": 100785,
+  "at": [
+   -38.35,
+   -60.4
+  ],
+  "world": [
+   -38.35,
+   -60.4
+  ],
+  "what": "barrels goes into barrels (#100783 at -38.63, -59.37)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "barrels@island.js:372 < buildStation@island.js:1990",
+  "depth": 0.04,
+  "other": 100783,
+  "otherItem": "barrels",
+  "left": "low (4 cm): the station's barrels, the lying one against a standing one"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "crateStack",
+  "frame": 100789,
+  "at": [
+   -66.09,
+   -69.4
+  ],
+  "world": [
+   -66.09,
+   -69.4
+  ],
+  "what": "crateStack goes into crateStack (#100786 at -66.4, -68.37)",
+  "measure": "parts overlap 17 cm (footprint SAT and height)",
+  "maker": "crateStack@island.js:417 < buildDepot@island.js:2216",
+  "depth": 0.17,
+  "other": 100786,
+  "otherItem": "crateStack",
+  "left": "low (7–17 cm): a stack's crates turned against each other in the depot yard"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "crateStack",
+  "frame": 100788,
+  "at": [
+   -66.5,
+   -67.2
+  ],
+  "world": [
+   -66.5,
+   -67.2
+  ],
+  "what": "crateStack goes into crateStack (#100786 at -66.4, -68.37)",
+  "measure": "parts overlap 7 cm (footprint SAT and height)",
+  "maker": "crateStack@island.js:417 < buildDepot@island.js:2216",
+  "depth": 0.07,
+  "other": 100786,
+  "otherItem": "crateStack",
+  "left": "low (7–17 cm): a stack's crates turned against each other in the depot yard"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "barrels",
+  "frame": 100797,
+  "at": [
+   -75.6,
+   -77.2
+  ],
+  "world": [
+   -75.6,
+   -77.2
+  ],
+  "what": "barrels goes into barrels (#100798 at -74.8, -77.3)",
+  "measure": "parts overlap 29 cm (footprint SAT and height)",
+  "maker": "barrels@island.js:372 < buildDepot@island.js:2218",
+  "depth": 0.29,
+  "other": 100798,
+  "otherItem": "barrels",
+  "left": "by design: the depot yard's barrels, a lying one against the standing ones and the hand cart (looked at)"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "handcart",
+  "frame": 100801,
+  "at": [
+   -77.03,
+   -76.26
+  ],
+  "world": [
+   -77.03,
+   -76.26
+  ],
+  "what": "handcart goes into handcart (#100800 at -77.7, -76.28)",
+  "measure": "parts overlap 7 cm (footprint SAT and height)",
+  "maker": "handcart@island.js:2159 < buildDepot@island.js:2219",
+  "depth": 0.07,
+  "other": 100800,
+  "otherItem": "handcart",
+  "left": "by design: one hand cart, its wheels and its body"
+ },
+ {
+  "room": "citadel",
+  "kind": "inside",
+  "item": "windsock",
+  "frame": 101202,
+  "at": [
+   -102.82,
+   -68
+  ],
+  "world": [
+   -102.82,
+   -68
+  ],
+  "what": "windsock goes into mk (#101201 at -103.5, -67.5)",
+  "measure": "parts overlap 15 cm (footprint SAT and height)",
+  "maker": "windsock@travel.js:84 < buildTravel@travel.js:112",
+  "depth": 0.15,
+  "other": 101201,
+  "otherItem": "mk",
+  "left": "by design: the glider field's sock on its mast"
+ },
+ {
+  "room": "citadel",
+  "kind": "wall",
+  "item": "meshFence",
+  "frame": 100031,
+  "at": [
+   -65,
+   -77.3
+  ],
+  "world": [
+   -65,
+   -77.3
+  ],
+  "what": "meshFence goes into a building's wall",
+  "measure": "drawn parts 40 cm into a wall part",
+  "maker": "meshFence@island.js:2077 < buildDepot@island.js:2207",
+  "depth": 0.4,
+  "left": "by design: the depot gate's hinge post beside the fence's end post"
+ },
+ {
+  "room": "citadel",
+  "kind": "wall",
+  "item": "barrels",
+  "frame": 100798,
+  "at": [
+   -74.8,
+   -77.3
+  ],
+  "world": [
+   -74.8,
+   -77.3
+  ],
+  "what": "barrels goes into a building's wall",
+  "measure": "drawn parts 12 cm into a wall part",
+  "maker": "barrels@island.js:372 < buildDepot@island.js:2218",
+  "depth": 0.12,
+  "left": "low (12 cm): a depot barrel against the yard's fence"
+ },
+ {
+  "room": "citadel",
+  "kind": "float",
+  "item": "custom",
+  "frame": 132,
+  "at": [
+   -27.99,
+   28.11
+  ],
+  "world": [
+   -27.99,
+   28.11
+  ],
+  "what": "custom floats over the ground",
+  "measure": "63 cm over the ground everywhere under it — lowest part y 3.02; the ground at its middle and corners 2.4 / 2.4 / 2.4 / 2.4 / 2.4 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.63,
+  "left": "not a standing piece: the sewer hatch lever's quadrant on its post (sewers.js; the post is drawn outside the piece)"
+ },
+ {
+  "room": "citadel",
+  "kind": "float",
+  "item": "custom",
+  "frame": 133,
+  "at": [
+   -24.59,
+   -30.99
+  ],
+  "world": [
+   -24.59,
+   -30.99
+  ],
+  "what": "custom floats over the ground",
+  "measure": "63 cm over the ground everywhere under it — lowest part y 10.34; the ground at its middle and corners 9.72 / 9.72 / 9.72 / 9.72 / 9.72 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.63,
+  "left": "not a standing piece: the sewer hatch lever's quadrant on its post (sewers.js; the post is drawn outside the piece)"
+ },
+ {
+  "room": "citadel",
+  "kind": "sunk",
+  "item": "meshFence",
+  "frame": 100031,
+  "at": [
+   -65,
+   -77.3
+  ],
+  "world": [
+   -65,
+   -77.3
+  ],
+  "what": "meshFence sinks into the ground",
+  "measure": "15 cm under the ground everywhere under it — lowest part y 15.82; the ground at its middle and corners 15.98 / 15.98 / 15.98 / 15.98 / 15.98 (terrain, bricks, slabs, pieces under it)",
+  "maker": "meshFence@island.js:2077 < buildDepot@island.js:2207",
+  "gap": -0.15,
+  "left": "by design: a fence post planted in the ground"
+ },
+ {
+  "room": "citadel",
+  "kind": "float",
+  "item": "flowerBox",
+  "frame": 100226,
+  "at": [
+   -46.7,
+   82.1
+  ],
+  "world": [
+   -46.7,
+   82.1
+  ],
+  "what": "flowerBox floats over the ground",
+  "measure": "6 cm over the ground everywhere under it — lowest part y 3.32; the ground at its middle and corners 2.34 / 2.34 / 3.26 / 3.26 / 2.34 (terrain, bricks, slabs, pieces under it)",
+  "maker": "flowerBox@architecture.js:98 < buildHouse@architecture.js:198",
+  "gap": 0.06,
+  "left": "low (6 cm): a window box under Twinsen's window"
+ },
+ {
+  "room": "citadel",
+  "kind": "walk",
+  "item": "mkCrate",
+  "frame": 100284,
+  "at": [
+   -128.69,
+   43.4
+  ],
+  "world": [
+   -128.69,
+   43.4
+  ],
+  "what": "mkCrate stands in the middle of a walkway or bridge",
+  "measure": "drawn parts 80 cm into the middle of the walkway's brick at -128.1, 43 (16.8 × 3.2 m, top 1.75)",
+  "maker": "mkCrate@island.js:791 < cargoLift@island.js:797",
+  "d": 0.8,
+  "left": "by design: cargo by the crane on the quay's deck (3.2 m wide)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "handcart",
+  "frame": 100036,
+  "at": [
+   -77.37,
+   -76.29
+  ],
+  "world": [
+   -77.37,
+   -76.29
+  ],
+  "what": "handcart stands on a path",
+  "measure": "its footprint 0.04 m from the path's centre line (world.js pathDist)",
+  "maker": "handcart@island.js:2147 < buildDepot@island.js:2219",
+  "d": 0.04,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "well",
+  "frame": 100140,
+  "at": [
+   -41.6,
+   -4
+  ],
+  "world": [
+   -41.6,
+   -4
+  ],
+  "what": "well stands on a path",
+  "measure": "its footprint 0.38 m from the path's centre line (world.js pathDist)",
+  "maker": "well@town.js:405 < buildTown@town.js:483",
+  "d": 0.38,
+  "left": "by design: the square's well, the paths meet round it"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "pot",
+  "frame": 100207,
+  "at": [
+   -45.59,
+   26.6
+  ],
+  "world": [
+   -45.59,
+   26.6
+  ],
+  "what": "pot stands on a path",
+  "measure": "its footprint 0.24 m from the path's centre line (world.js pathDist)",
+  "maker": "pot@town.js:363 < buildTown@town.js:585",
+  "d": 0.24,
+  "left": "by design: the pot beside the tavern's door, where its path ends"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "barrel",
+  "frame": 100209,
+  "at": [
+   -48.77,
+   74.46
+  ],
+  "world": [
+   -48.77,
+   74.46
+  ],
+  "what": "barrel stands on a path",
+  "measure": "its footprint 0.25 m from the path's centre line (world.js pathDist)",
+  "maker": "barrel@town.js:181 < buildTown@town.js:571",
+  "d": 0.25,
+  "left": "by design: Twinsen's barrels by his house (the home-barrels search spot)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "barrels",
+  "frame": 100799,
+  "at": [
+   -75.47,
+   -75.76
+  ],
+  "world": [
+   -75.47,
+   -75.76
+  ],
+  "what": "barrels stands on a path",
+  "measure": "its footprint 0 m from the path's centre line (world.js pathDist)",
+  "maker": "barrels@island.js:372 < buildDepot@island.js:2218",
+  "d": 0,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "handcart",
+  "frame": 100800,
+  "at": [
+   -77.7,
+   -76.28
+  ],
+  "world": [
+   -77.7,
+   -76.28
+  ],
+  "what": "handcart stands on a path",
+  "measure": "its footprint 0.2 m from the path's centre line (world.js pathDist)",
+  "maker": "handcart@island.js:2159 < buildDepot@island.js:2219",
+  "d": 0.2,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "handcart",
+  "frame": 100801,
+  "at": [
+   -77.03,
+   -76.26
+  ],
+  "world": [
+   -77.03,
+   -76.26
+  ],
+  "what": "handcart stands on a path",
+  "measure": "its footprint 0.37 m from the path's centre line (world.js pathDist)",
+  "maker": "handcart@island.js:2159 < buildDepot@island.js:2219",
+  "d": 0.37,
+  "left": "by design: the depot's staff yard behind the painted line; goods along its fence (world.js pathDist still runs through it)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "crateMesh",
+  "frame": 100914,
+  "at": [
+   -81,
+   -76
+  ],
+  "world": [
+   -81,
+   -76
+  ],
+  "what": "crateMesh stands on a path",
+  "measure": "its footprint 0.16 m from the path's centre line (world.js pathDist)",
+  "maker": "crateMesh@island.js:404 < buildDressing@island.js:2693",
+  "d": 0.16,
+  "left": "by design: the depot's breakable crates (W.crates: there to be broken)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "crateMesh",
+  "frame": 100915,
+  "at": [
+   -70,
+   -76
+  ],
+  "world": [
+   -70,
+   -76
+  ],
+  "what": "crateMesh stands on a path",
+  "measure": "its footprint 0.02 m from the path's centre line (world.js pathDist)",
+  "maker": "crateMesh@island.js:404 < buildDressing@island.js:2693",
+  "d": 0.02,
+  "left": "by design: the depot's breakable crates (W.crates: there to be broken)"
+ },
+ {
+  "room": "citadel",
+  "kind": "path",
+  "item": "crateMesh",
+  "frame": 100916,
+  "at": [
+   -68,
+   -75.6
+  ],
+  "world": [
+   -68,
+   -75.6
+  ],
+  "what": "crateMesh stands on a path",
+  "measure": "its footprint 0.06 m from the path's centre line (world.js pathDist)",
+  "maker": "crateMesh@island.js:404 < buildDressing@island.js:2693",
+  "d": 0.06,
+  "left": "by design: the depot's breakable crates (W.crates: there to be broken)"
+ },
+ {
+  "room": "house",
+  "kind": "float",
+  "item": "custom",
+  "frame": 197,
+  "at": [
+   -7.35,
+   8.79
+  ],
+  "world": [
+   992.65,
+   8.79
+  ],
+  "what": "custom floats over what is under it",
+  "measure": "lowest part 39 cm over the support at its middle (y 0.01)",
+  "gap": 0.39,
+  "left": "by design: the bathroom's towel rail on the wall (HOME-BATH, the desktop 14.11): towels hang"
+ },
+ {
+  "room": "office",
+  "kind": "inside",
+  "item": "pottedPlant",
+  "frame": 235,
+  "at": [
+   3.6,
+   -3.07
+  ],
+  "world": [
+   1203.6,
+   -3.07
+  ],
+  "what": "pottedPlant goes into custom (custom#231 at 3.43, -2.98)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "depth": 0.06,
+  "other": 231,
+  "otherItem": "custom",
+  "left": "low (6 cm): the plant behind the open door's leaf (a stealth room: left alone)"
+ },
+ {
+  "room": "control",
+  "kind": "inside",
+  "item": "console_",
+  "frame": 343,
+  "at": [
+   -3.15,
+   -2.42
+  ],
+  "world": [
+   1396.85,
+   -2.42
+  ],
+  "what": "console_ goes into console_ (console_#334 at -1.6, -2.67)",
+  "measure": "parts overlap 13 cm (footprint SAT and height)",
+  "depth": 0.13,
+  "other": 334,
+  "otherItem": "console_",
+  "left": "by design: three consoles joined into one curved bank (their side wings meet)"
+ },
+ {
+  "room": "control",
+  "kind": "inside",
+  "item": "console_",
+  "frame": 348,
+  "at": [
+   -0.05,
+   -2.42
+  ],
+  "world": [
+   1399.95,
+   -2.42
+  ],
+  "what": "console_ goes into console_ (console_#334 at -1.6, -2.67)",
+  "measure": "parts overlap 13 cm (footprint SAT and height)",
+  "depth": 0.13,
+  "other": 334,
+  "otherItem": "console_",
+  "left": "by design: three consoles joined into one curved bank (their side wings meet)"
+ },
+ {
+  "room": "workshop",
+  "kind": "inside",
+  "item": "draftingTable",
+  "frame": 427,
+  "at": [
+   -3.43,
+   2.45
+  ],
+  "world": [
+   1496.57,
+   2.45
+  ],
+  "what": "draftingTable goes into helixGeo (helixGeo#434 at -3.4, 3)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "depth": 0.06,
+  "other": 434,
+  "otherItem": "helixGeo",
+  "left": "low (6 cm): Baldino's helix model on the drafting table's edge"
+ },
+ {
+  "room": "lighttop",
+  "kind": "wall",
+  "item": "transmitterCabinet",
+  "frame": 455,
+  "at": [
+   -0.82,
+   -2.24
+  ],
+  "world": [
+   1599.19,
+   -2.24
+  ],
+  "what": "transmitterCabinet goes into the room's wall or partition",
+  "measure": "drawn parts 29 cm into a wall part",
+  "depth": 0.29,
+  "left": "not measurable: a round wall's parts are arcs whose boxes reach into the room; looked at, it stands before the glazing"
+ },
+ {
+  "room": "c3shaft",
+  "kind": "inside",
+  "item": "barrel",
+  "frame": 546,
+  "at": [
+   7.8,
+   -4.7
+  ],
+  "world": [
+   1807,
+   -5.7
+  ],
+  "what": "barrel goes into column (column#526 at 7.55, -5.15)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "depth": 0.06,
+  "other": 526,
+  "otherItem": "column",
+  "left": "low (6 cm, chapter 11): a barrel against the column at the tunnel"
+ },
+ {
+  "room": "c3shaft",
+  "kind": "float",
+  "item": "rockWallRun",
+  "frame": 498,
+  "at": [
+   9.05,
+   -5.36
+  ],
+  "world": [
+   1808.25,
+   -6.36
+  ],
+  "what": "rockWallRun floats over what is under it",
+  "measure": "lowest part 581 cm over the support at its middle (y -6)",
+  "gap": 5.81,
+  "left": "not a piece: the shaft's rock wall, rising from the shaft's floor 6 m down"
+ },
+ {
+  "room": "c3core",
+  "kind": "float",
+  "item": "custom",
+  "frame": 722,
+  "at": [
+   -8.73,
+   5.58
+  ],
+  "world": [
+   2190.27,
+   4.58
+  ],
+  "what": "custom floats over what is under it",
+  "measure": "lowest part 76 cm over the support at its middle (y 0.31)",
+  "gap": 0.76,
+  "left": "by design: the receivers' brass cages round the floating crystals, on their arms (underground.js)"
+ },
+ {
+  "room": "c3core",
+  "kind": "float",
+  "item": "custom",
+  "frame": 733,
+  "at": [
+   -9.41,
+   -1.67
+  ],
+  "world": [
+   2189.59,
+   -2.67
+  ],
+  "what": "custom floats over what is under it",
+  "measure": "lowest part 76 cm over the support at its middle (y 0.31)",
+  "gap": 0.76,
+  "left": "by design: the receivers' brass cages round the floating crystals, on their arms (underground.js)"
+ },
+ {
+  "room": "c3core",
+  "kind": "float",
+  "item": "custom",
+  "frame": 744,
+  "at": [
+   1.34,
+   -9.74
+  ],
+  "world": [
+   2200.34,
+   -10.74
+  ],
+  "what": "custom floats over what is under it",
+  "measure": "lowest part 76 cm over the support at its middle (y 0.31)",
+  "gap": 0.76,
+  "left": "by design: the receivers' brass cages round the floating crystals, on their arms (underground.js)"
+ },
+ {
+  "room": "c3core",
+  "kind": "sunk",
+  "item": "custom",
+  "frame": 758,
+  "at": [
+   8.07,
+   6.14
+  ],
+  "world": [
+   2207.07,
+   5.14
+  ],
+  "what": "custom sinks into the floor",
+  "measure": "lowest part 30 cm under the floor (y 0.3)",
+  "gap": -0.3,
+  "left": "by design: a pylon standing in the floor's ring channel (underground.js)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "wheel",
+  "frame": 100164,
+  "at": [
+   3375.13,
+   9.55
+  ],
+  "world": [
+   3375.13,
+   9.55
+  ],
+  "what": "wheel goes into buildDesertSteps (#100081 at 3375.56, 11.2)",
+  "measure": "parts overlap 15 cm (footprint SAT and height)",
+  "maker": "wheel@desert.js:1454 < buildDesertSteps@desert.js:1458",
+  "depth": 0.15,
+  "other": 100081,
+  "otherItem": "buildDesertSteps",
+  "left": "by design: the sand-yacht's wheels in their forks, under its axle and bowsprit (one vehicle, desert.js)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "wheel",
+  "frame": 100163,
+  "at": [
+   3375.13,
+   12.53
+  ],
+  "world": [
+   3375.13,
+   12.53
+  ],
+  "what": "wheel goes into buildDesertSteps (#100081 at 3375.56, 11.2)",
+  "measure": "parts overlap 15 cm (footprint SAT and height)",
+  "maker": "wheel@desert.js:1454 < buildDesertSteps@desert.js:1458",
+  "depth": 0.15,
+  "other": 100081,
+  "otherItem": "buildDesertSteps",
+  "left": "by design: the sand-yacht's wheels in their forks, under its axle and bowsprit (one vehicle, desert.js)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "wheel",
+  "frame": 100165,
+  "at": [
+   3377.64,
+   11.02
+  ],
+  "world": [
+   3377.64,
+   11.02
+  ],
+  "what": "wheel goes into buildDesertSteps (#100081 at 3375.56, 11.2)",
+  "measure": "parts overlap 17 cm (footprint SAT and height)",
+  "maker": "wheel@desert.js:1454 < buildDesertSteps@desert.js:1458",
+  "depth": 0.17,
+  "other": 100081,
+  "otherItem": "buildDesertSteps",
+  "left": "by design: the sand-yacht's wheels in their forks, under its axle and bowsprit (one vehicle, desert.js)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "lantern",
+  "frame": 100134,
+  "at": [
+   3439.42,
+   -28.3
+  ],
+  "world": [
+   3439.42,
+   -28.3
+  ],
+  "what": "lantern goes into pole (#100130 at 3439.2, -28.3)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "lantern@desertdress.js:218 < lanternPost@desertdress.js:215",
+  "depth": 0.05,
+  "other": 100130,
+  "otherItem": "pole",
+  "left": "by design (5 cm): a lantern hung from its post's arm (desertdress.js lanternPost)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "lantern",
+  "frame": 100135,
+  "at": [
+   3428.42,
+   -26
+  ],
+  "world": [
+   3428.42,
+   -26
+  ],
+  "what": "lantern goes into pole (#100131 at 3428.2, -26)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "lantern@desertdress.js:218 < lanternPost@desertdress.js:215",
+  "depth": 0.05,
+  "other": 100131,
+  "otherItem": "pole",
+  "left": "by design (5 cm): a lantern hung from its post's arm (desertdress.js lanternPost)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "lantern",
+  "frame": 100136,
+  "at": [
+   3428.42,
+   -15.6
+  ],
+  "world": [
+   3428.42,
+   -15.6
+  ],
+  "what": "lantern goes into pole (#100132 at 3428.2, -15.6)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "lantern@desertdress.js:218 < lanternPost@desertdress.js:215",
+  "depth": 0.05,
+  "other": 100132,
+  "otherItem": "pole",
+  "left": "by design (5 cm): a lantern hung from its post's arm (desertdress.js lanternPost)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "buildTestStand",
+  "frame": 100374,
+  "at": [
+   0,
+   0
+  ],
+  "world": [
+   0,
+   0
+  ],
+  "what": "buildTestStand goes into a2 (#100376 at 0, 0)",
+  "measure": "parts overlap 9 cm (footprint SAT and height)",
+  "maker": "buildTestStand@teststand.js:150 < buildDesertSteps@desert.js:1088",
+  "depth": 0.09,
+  "other": 100376,
+  "otherItem": "a2",
+  "left": "by design: the drill string's banded drive drum (DIGTEST-ART) on its kelly, its collar under it (teststand.js)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "a2",
+  "frame": 100380,
+  "at": [
+   0,
+   0
+  ],
+  "world": [
+   0,
+   0
+  ],
+  "what": "a2 goes into buildTestStand (#100374 at 0, 0)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "a2@teststand.js:139 < buildTestStand@teststand.js:152",
+  "depth": 0.04,
+  "other": 100374,
+  "otherItem": "buildTestStand",
+  "left": "by design: the drill string's kelly and collar through its drive drum (DIGTEST-ART, teststand.js)"
+ },
+ {
+  "room": "desert",
+  "kind": "inside",
+  "item": "windsock",
+  "frame": 100667,
+  "at": [
+   3347.35,
+   -31
+  ],
+  "world": [
+   3347.35,
+   -31
+  ],
+  "what": "windsock goes into mk (#100666 at 3346.5, -31)",
+  "measure": "parts overlap 8 cm (footprint SAT and height)",
+  "maker": "windsock@travel.js:84 < travelRegion@travel.js:167",
+  "depth": 0.08,
+  "other": 100666,
+  "otherItem": "mk",
+  "left": "by design: the glider field's sock on its mast"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100083,
+  "at": [
+   3387.54,
+   -49.9
+  ],
+  "world": [
+   3387.54,
+   -49.9
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 3.17; the ground at its middle and corners 3 / 3 / 3 / 3 / 3 / 3 / 3 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressCamp@desertdress.js:312",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100084,
+  "at": [
+   3391.86,
+   -49.9
+  ],
+  "world": [
+   3391.86,
+   -49.9
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 3.17; the ground at its middle and corners 3 / 3 / 3 / 3 / 3 / 3 / 3 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressCamp@desertdress.js:312",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100085,
+  "at": [
+   3387.54,
+   -45.3
+  ],
+  "world": [
+   3387.54,
+   -45.3
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 3.17; the ground at its middle and corners 3 / 3 / 3 / 3 / 3 / 3 / 3 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressCamp@desertdress.js:312",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100086,
+  "at": [
+   3391.86,
+   -45.3
+  ],
+  "world": [
+   3391.86,
+   -45.3
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 3.17; the ground at its middle and corners 3 / 3 / 3 / 3 / 3 / 3 / 3 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressCamp@desertdress.js:312",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100122,
+  "at": [
+   3439.54,
+   -33.4
+  ],
+  "world": [
+   3439.54,
+   -33.4
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 1.77; the ground at its middle and corners 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressPost@desertdress.js:379",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100123,
+  "at": [
+   3443.46,
+   -33.4
+  ],
+  "world": [
+   3443.46,
+   -33.4
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 1.77; the ground at its middle and corners 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressPost@desertdress.js:379",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100124,
+  "at": [
+   3439.54,
+   -29.2
+  ],
+  "world": [
+   3439.54,
+   -29.2
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 1.77; the ground at its middle and corners 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressPost@desertdress.js:379",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "desert",
+  "kind": "float",
+  "item": "tent",
+  "frame": 100125,
+  "at": [
+   3443.46,
+   -29.2
+  ],
+  "world": [
+   3443.46,
+   -29.2
+  ],
+  "what": "tent floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 1.77; the ground at its middle and corners 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 / 1.6 (terrain, bricks, slabs, pieces under it)",
+  "maker": "tent@desertdress.js:174 < dressPost@desertdress.js:379",
+  "gap": 0.17,
+  "left": "not a standing piece: a tent's guy lines, from its ridge and eaves to the tops of their pegs (17 cm up the peg)"
+ },
+ {
+  "room": "asylum",
+  "kind": "float",
+  "item": "custom",
+  "frame": 841,
+  "at": [
+   -18.64,
+   18.21
+  ],
+  "world": [
+   6981.36,
+   18.21
+  ],
+  "what": "custom floats over what is under it",
+  "measure": "lowest part 643 cm over the support at its middle (y -6)",
+  "gap": 6.43,
+  "left": "not measured: LBA1's floors are cells (lba1room.js), not recorded parts: the boiler and the stove grate stand on them"
+ },
+ {
+  "room": "asylum",
+  "kind": "float",
+  "item": "custom",
+  "frame": 1001,
+  "at": [
+   -16.39,
+   20.03
+  ],
+  "world": [
+   6983.61,
+   20.03
+  ],
+  "what": "custom floats over what is under it",
+  "measure": "lowest part 20 cm over the support at its middle (y 0.43)",
+  "gap": 0.2,
+  "left": "not measured: LBA1's floors are cells (lba1room.js), not recorded parts: the boiler and the stove grate stand on them"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "inside",
+  "item": "barrel",
+  "frame": 1095,
+  "at": [
+   4304.02,
+   0.22
+  ],
+  "world": [
+   4304.02,
+   0.22
+  ],
+  "what": "barrel goes into barrels (#1094 at 4303.43, 0.09)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "Kit",
+  "depth": 0.05,
+  "other": 1094,
+  "otherItem": "barrels",
+  "left": "low (5 cm, outdoors): a barrel against its stack"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "inside",
+  "item": "winch",
+  "frame": 1109,
+  "at": [
+   4326.3,
+   -21.06
+  ],
+  "world": [
+   4326.3,
+   -21.06
+  ],
+  "what": "winch goes into buildHamalayiSteps (#100016 at 4324.74, -20.99)",
+  "measure": "parts overlap 84 cm (footprint SAT and height)",
+  "maker": "Kit",
+  "depth": 0.84,
+  "other": 100016,
+  "otherItem": "buildHamalayiSteps",
+  "left": "by design (chapter 6): the frozen winch in its ice (pass.js thaws it)"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "inside",
+  "item": "decorate",
+  "frame": 100205,
+  "at": [
+   4327.32,
+   -20.57
+  ],
+  "world": [
+   4327.32,
+   -20.57
+  ],
+  "what": "decorate goes into winch (#1109 at 4326.3, -21.06)",
+  "measure": "parts overlap 10 cm (footprint SAT and height)",
+  "maker": "Pass.decorate@pass.js:34 < Story.decorate@index.js:144",
+  "depth": 0.1,
+  "other": 1109,
+  "otherItem": "winch",
+  "left": "by design: the frozen mooring rope's post by the winch, the rope tied to the winch (pass.js)"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "inside",
+  "item": "freight",
+  "frame": 1112,
+  "at": [
+   4330.58,
+   -22.52
+  ],
+  "world": [
+   4330.58,
+   -22.52
+  ],
+  "what": "freight goes into barrel (#1114 at 4331.52, -22.61)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "Kit",
+  "depth": 0.04,
+  "other": 1114,
+  "otherItem": "barrel",
+  "left": "low (4 cm): the freight's crate against its barrel"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "inside",
+  "item": "yardCrates",
+  "frame": 1161,
+  "at": [
+   4326.72,
+   -40.26
+  ],
+  "world": [
+   4326.72,
+   -40.26
+  ],
+  "what": "yardCrates goes into barrel (#1163 at 4326.51, -39.87)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "Kit",
+  "depth": 0.05,
+  "other": 1163,
+  "otherItem": "barrel",
+  "left": "low (5 cm): the yard's crate against its barrel"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "inside",
+  "item": "windsock",
+  "frame": 100204,
+  "at": [
+   4314.35,
+   88.5
+  ],
+  "world": [
+   4314.35,
+   88.5
+  ],
+  "what": "windsock goes into mk (#100203 at 4313.5, 88.5)",
+  "measure": "parts overlap 8 cm (footprint SAT and height)",
+  "maker": "windsock@travel.js:84 < travelRegion@travel.js:181",
+  "depth": 0.08,
+  "other": 100203,
+  "otherItem": "mk",
+  "left": "by design: the glider field's sock on its mast"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "wall",
+  "item": "wheels",
+  "frame": 1133,
+  "at": [
+   4328.95,
+   -44.92
+  ],
+  "world": [
+   4328.95,
+   -44.92
+  ],
+  "what": "wheels goes into a building's wall",
+  "measure": "drawn parts 27 cm into a wall part",
+  "maker": "Kit",
+  "depth": 0.27,
+  "left": "by design: the prayer wheels' roof against the monastery hall's front (a lean-to row)"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "wall",
+  "item": "wheels",
+  "frame": 1134,
+  "at": [
+   4339.05,
+   -44.92
+  ],
+  "world": [
+   4339.05,
+   -44.92
+  ],
+  "what": "wheels goes into a building's wall",
+  "measure": "drawn parts 27 cm into a wall part",
+  "maker": "Kit",
+  "depth": 0.27,
+  "left": "by design: the prayer wheels' roof against the monastery hall's front (a lean-to row)"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "wall",
+  "item": "barrel",
+  "frame": 1209,
+  "at": [
+   4280.59,
+   -68.4
+  ],
+  "world": [
+   4280.59,
+   -68.4
+  ],
+  "what": "barrel goes into a building's wall",
+  "measure": "drawn parts 17 cm into a wall part",
+  "maker": "Kit",
+  "depth": 0.17,
+  "left": "not measurable: the observatory's round wall, its parts arcs whose boxes reach out; the barrel stands 0.5 m off its plinth"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "sunk",
+  "item": "foldHay",
+  "frame": 1032,
+  "at": [
+   4277.03,
+   79.59
+  ],
+  "world": [
+   4277.03,
+   79.59
+  ],
+  "what": "foldHay sinks into the ground",
+  "measure": "9 cm under the ground everywhere under it — lowest part y 2.78; the ground at its middle and corners 2.87 / 2.87 / 2.87 / 2.87 / 2.87 / 2.87 / 2.87 / 2.87 / 2.87 / 2.87 / 2.87 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": -0.09,
+  "left": "low (9 cm): the fold's hay rack in the snow"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "float",
+  "item": "crate",
+  "frame": 1098,
+  "at": [
+   4273.76,
+   0.31
+  ],
+  "world": [
+   4273.76,
+   0.31
+  ],
+  "what": "crate stands with one side in the air (a slope)",
+  "measure": "one side 49 cm over the ground, another touching — lowest part y 12.84; the ground at its middle and corners 12.82 / 12.82 / 12.82 / 12.82 / 12.84 / 12.35 / 12.84 / 12.84 / 12.84 / 12.84 / 12.82 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.49,
+  "side": true,
+  "left": "low: a stack's top crate turned on the one under it, a corner over its edge (Lhar's west crates, the observatory's supplies)"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "float",
+  "item": "winch",
+  "frame": 1109,
+  "at": [
+   4326.3,
+   -21.06
+  ],
+  "world": [
+   4326.3,
+   -21.06
+  ],
+  "what": "winch floats over the ground",
+  "measure": "12 cm over the ground everywhere under it — lowest part y 12.21; the ground at its middle and corners 12.09 / 12.09 / 12.09 / 12.09 / 12.09 / 12.09 / 12.09 / 12.09 / 12.09 / 12.09 / 12.09 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.12,
+  "left": "not changed: the lift winch's sled 12 cm over the snow; wave 3's crank sits on its drum at this height (winchline.js): reported, not moved"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "float",
+  "item": "wheels",
+  "frame": 1133,
+  "at": [
+   4328.95,
+   -44.92
+  ],
+  "world": [
+   4328.95,
+   -44.92
+  ],
+  "what": "wheels floats over the ground",
+  "measure": "18 cm over the ground everywhere under it — lowest part y 22.2; the ground at its middle and corners 22.02 / 22.02 / 22.02 / 22.02 / 22.02 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.18,
+  "left": "not measurable: the prayer wheels stand on the yard's paving, which is not recorded as ground (looked at: on the paving)"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "float",
+  "item": "crate",
+  "frame": 1210,
+  "at": [
+   4280.36,
+   -68.96
+  ],
+  "world": [
+   4280.36,
+   -68.96
+  ],
+  "what": "crate stands with one side in the air (a slope)",
+  "measure": "one side 59 cm over the ground, another touching — lowest part y 30.46; the ground at its middle and corners 30.44 / 30.44 / 30.44 / 30.44 / 30.44 / 30.46 / 29.86 / 30.46 / 30.44 / 30.44 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": 0.59,
+  "side": true,
+  "left": "low: a stack's top crate turned on the one under it, a corner over its edge (Lhar's west crates, the observatory's supplies)"
+ },
+ {
+  "room": "hamalayi",
+  "kind": "sunk",
+  "item": "custom",
+  "frame": 1223,
+  "at": [
+   4294.5,
+   58
+  ],
+  "world": [
+   4294.5,
+   58
+  ],
+  "what": "custom sinks into the ground",
+  "measure": "60 cm under the ground everywhere under it — lowest part y 2.38; the ground at its middle and corners 2.98 / 2.98 / 2.98 / 2.98 / 2.98 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Kit",
+  "gap": -0.6,
+  "left": "by design: LBA1's old gate set on the lowest ground under its posts (hamalayi.js place), its foot in the snow"
+ },
+ {
+  "room": "tavern",
+  "kind": "inside",
+  "item": "counter",
+  "frame": 1332,
+  "at": [
+   -4,
+   0.68
+  ],
+  "world": [
+   6596,
+   0.68
+  ],
+  "what": "counter goes into counter (counter#1331 at -4.62, 3.25)",
+  "measure": "parts overlap 19 cm (footprint SAT and height)",
+  "depth": 0.19,
+  "other": 1331,
+  "otherItem": "counter",
+  "left": "by design: the L-shaped bar, two counters meeting at the corner"
+ },
+ {
+  "room": "tavern",
+  "kind": "back",
+  "item": "jukebox",
+  "frame": 1341,
+  "at": [
+   3.4,
+   -1.35
+  ],
+  "world": [
+   6603.4,
+   -1.35
+  ],
+  "what": "jukebox is turned: its right is to the wall, not its back",
+  "measure": "wall distances back 1.95, front 3, left 3, right 1.65 m (rays from each face to a wall part, a wall collider or the floor's edge)",
+  "side": {
+   "back": 1.950000000000001,
+   "front": 3,
+   "left": 3,
+   "right": 1.6500000000000008
+  },
+  "left": "by design: LBA2's Chez Luc has it at the stair's foot (tavern.js); Kip's stop is at its front"
+ },
+ {
+  "room": "pharmacy",
+  "kind": "inside",
+  "item": "basket",
+  "frame": 1475,
+  "at": [
+   1.64,
+   0.08
+  ],
+  "world": [
+   6901.64,
+   0.08
+  ],
+  "what": "basket goes into baubleTree (baubleTree#1466 at 1.79, 0.13)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "depth": 0.05,
+  "other": 1466,
+  "otherItem": "baubleTree",
+  "left": "low (5 cm): the basket under the bauble tree's branches"
+ },
+ {
+  "room": "otrbar",
+  "kind": "inside",
+  "item": "railing",
+  "frame": 2755,
+  "at": [
+   -3.05,
+   -4.82
+  ],
+  "world": [
+   8996.95,
+   -4.82
+  ],
+  "what": "railing goes into booth (booth#2750 at -5.4, -6.46)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "depth": 0.05,
+  "other": 2750,
+  "otherItem": "booth",
+  "left": "low (5 cm): the booths' rail meeting the booths' backs"
+ },
+ {
+  "room": "otrbar",
+  "kind": "inside",
+  "item": "railing",
+  "frame": 2755,
+  "at": [
+   -3.05,
+   -4.82
+  ],
+  "world": [
+   8996.95,
+   -4.82
+  ],
+  "what": "railing goes into booth (booth#2752 at -2.8, -6.46)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "depth": 0.05,
+  "other": 2752,
+  "otherItem": "booth",
+  "left": "low (5 cm): the booths' rail meeting the booths' backs"
+ },
+ {
+  "room": "otrbar",
+  "kind": "inside",
+  "item": "railing",
+  "frame": 2755,
+  "at": [
+   -3.05,
+   -4.82
+  ],
+  "world": [
+   8996.95,
+   -4.82
+  ],
+  "what": "railing goes into barTable (barTable#2753 at -2.8, -5.25)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "depth": 0.05,
+  "other": 2753,
+  "otherItem": "barTable",
+  "left": "low (5 cm): the booths' rail meeting the booths' backs"
+ },
+ {
+  "room": "otrbar",
+  "kind": "inside",
+  "item": "counter",
+  "frame": 2768,
+  "at": [
+   -3.12,
+   5.65
+  ],
+  "world": [
+   8996.88,
+   5.65
+  ],
+  "what": "counter goes into counter (counter#2767 at -5.1, 4.63)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "depth": 0.06,
+  "other": 2767,
+  "otherItem": "counter",
+  "left": "by design: the L-shaped bar, two counters meeting at the corner"
+ },
+ {
+  "room": "otrbar",
+  "kind": "inside",
+  "item": "custom",
+  "frame": 2773,
+  "at": [
+   -3.2,
+   5.4
+  ],
+  "world": [
+   8996.8,
+   5.4
+  ],
+  "what": "custom goes into counter (counter#2768 at -3.12, 5.65)",
+  "measure": "parts overlap 6 cm (footprint SAT and height)",
+  "depth": 0.06,
+  "other": 2768,
+  "otherItem": "counter",
+  "left": "low (6 cm): the till on the bar's corner"
+ },
+ {
+  "room": "otrbar",
+  "kind": "float",
+  "item": "railing",
+  "frame": 2754,
+  "at": [
+   -8.23,
+   -2.95
+  ],
+  "world": [
+   8991.78,
+   -2.95
+  ],
+  "what": "railing floats over what is under it",
+  "measure": "lowest part 60 cm over the support at its middle (y 0)",
+  "gap": 0.6,
+  "left": "not measured: the gallery's railing stands on the gallery's edge, its floor not under its middle"
+ },
+ {
+  "room": "otrbar",
+  "kind": "back",
+  "item": "aquarium",
+  "frame": 2762,
+  "at": [
+   4.6,
+   1.6
+  ],
+  "world": [
+   9004.6,
+   1.6
+  ],
+  "what": "aquarium stands away from every wall",
+  "measure": "wall distances back 2.45, front 3, left 3, right 3 m (rays from each face to a wall part, a wall collider or the floor's edge)",
+  "side": {
+   "back": 2.4499999999999993,
+   "front": 3,
+   "left": 3,
+   "right": 3
+  },
+  "left": "by design: LBA2's Otringal bar has it in the middle, by the booths (otrbar.js)"
+ },
+ {
+  "room": "otrhotel",
+  "kind": "inside",
+  "item": "coinMachine",
+  "frame": 2792,
+  "at": [
+   4.2,
+   -7.53
+  ],
+  "world": [
+   9404.2,
+   -7.53
+  ],
+  "what": "coinMachine goes into tierLamp (tierLamp#2790 at 3.6, -7)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "depth": 0.04,
+  "other": 2790,
+  "otherItem": "tierLamp",
+  "left": "low (4 cm): the two coin machines' tops under the tier lamp's shade"
+ },
+ {
+  "room": "otrhotel",
+  "kind": "inside",
+  "item": "coinMachine",
+  "frame": 2793,
+  "at": [
+   3.2,
+   -7.53
+  ],
+  "world": [
+   9403.2,
+   -7.53
+  ],
+  "what": "coinMachine goes into tierLamp (tierLamp#2790 at 3.6, -7)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "depth": 0.04,
+  "other": 2790,
+  "otherItem": "tierLamp",
+  "left": "low (4 cm): the two coin machines' tops under the tier lamp's shade"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100422,
+  "at": [
+   1962.76,
+   1837.67
+  ],
+  "world": [
+   1962.76,
+   1837.67
+  ],
+  "what": "crate goes into crate (#100414 at 1962.04, 1837.53)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "depth": 0.04,
+  "other": 100414,
+  "otherItem": "crate",
+  "left": "low (4–9 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100435,
+  "at": [
+   1962.48,
+   1838.3
+  ],
+  "world": [
+   1962.48,
+   1838.3
+  ],
+  "what": "crate goes into crate (#100422 at 1962.76, 1837.67)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "depth": 0.05,
+  "other": 100422,
+  "otherItem": "crate",
+  "left": "low (4–9 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100437,
+  "at": [
+   1916.65,
+   1843.52
+  ],
+  "world": [
+   1916.65,
+   1843.52
+  ],
+  "what": "crate goes into crate (#100428 at 1917.31, 1843.67)",
+  "measure": "parts overlap 9 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "depth": 0.09,
+  "other": 100428,
+  "otherItem": "crate",
+  "left": "low (4–9 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "float",
+  "item": "zplant",
+  "frame": 100391,
+  "at": [
+   1890.91,
+   1807
+  ],
+  "world": [
+   1890.91,
+   1807
+  ],
+  "what": "zplant floats over the ground",
+  "measure": "13 cm over the ground everywhere under it — lowest part y 13.25; the ground at its middle and corners 13.11 / 13.11 / 13.11 / 13.11 / 13.11 / 13.11 (terrain, bricks, slabs, pieces under it)",
+  "maker": "zplant@props-esmer.js:123 < planter@props-esmer.js:154",
+  "gap": 0.13,
+  "left": "not a standing piece: the plant in its planter"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100409,
+  "at": [
+   1877.53,
+   1801.7
+  ],
+  "world": [
+   1877.53,
+   1801.7
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "29 cm under the ground everywhere under it — lowest part y 12.7; the ground at its middle and corners 13.04 / 13.04 / 12.99 / 13.02 / 13.04 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < stall@props-esmer.js:304",
+  "gap": -0.29,
+  "left": "low (9–29 cm): seated on the lowest ground under it on a slope; the stall's crate under its counter"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "float",
+  "item": "jars",
+  "frame": 100413,
+  "at": [
+   1878.46,
+   1801.76
+  ],
+  "world": [
+   1878.46,
+   1801.76
+  ],
+  "what": "jars stands with one side in the air (a slope)",
+  "measure": "one side 67 cm over the ground, another touching — lowest part y 13.65; the ground at its middle and corners 13.65 / 12.98 / 13.65 / 13.65 / 13.65 / 13.65 / 13.65 / 13.65 (terrain, bricks, slabs, pieces under it)",
+  "maker": "jars@props-esmer.js:266 < stall@props-esmer.js:302",
+  "gap": 0.67,
+  "side": true,
+  "left": "by design: the stall's jars on its sloping shelf"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100435,
+  "at": [
+   1962.48,
+   1838.3
+  ],
+  "world": [
+   1962.48,
+   1838.3
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "9 cm under the ground everywhere under it — lowest part y 5.67; the ground at its middle and corners 5.81 / 5.76 / 5.76 / 5.76 / 5.86 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "gap": -0.09,
+  "left": "low (9–29 cm): seated on the lowest ground under it on a slope; the stall's crate under its counter"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100437,
+  "at": [
+   1916.65,
+   1843.52
+  ],
+  "world": [
+   1916.65,
+   1843.52
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "22 cm under the ground everywhere under it — lowest part y 5.21; the ground at its middle and corners 5.58 / 5.74 / 5.54 / 5.43 / 5.62 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "gap": -0.22,
+  "left": "low (9–29 cm): seated on the lowest ground under it on a slope; the stall's crate under its counter"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "float",
+  "item": "fit",
+  "frame": 100566,
+  "at": [
+   1969.48,
+   1833.25
+  ],
+  "world": [
+   1969.48,
+   1833.25
+  ],
+  "what": "fit floats over the ground",
+  "measure": "10 cm over the ground everywhere under it — lowest part y 4.68; the ground at its middle and corners 3.89 / 3.2 / 3.2 / 3.21 / 4.58 (terrain, bricks, slabs, pieces under it)",
+  "maker": "fit@zislands.js:2205 < buildIsland0@zislands.js:2210",
+  "gap": 0.1,
+  "left": "not measurable: the original's fitted pieces (a brass finial on a wall pier, looked at): the wall's top is not recorded as ground"
+ },
+ {
+  "room": "isle_otringal",
+  "kind": "door",
+  "item": "planter",
+  "frame": 100382,
+  "at": [
+   1886.17,
+   1793.58
+  ],
+  "world": [
+   1886.17,
+   1793.58
+  ],
+  "what": "planter stands in the way to the door otrhotel",
+  "measure": "drawn parts 16 cm into the door trigger's ring (0.9 m + 0.1 m)",
+  "maker": "planter@props-esmer.js:152 < buildIsland0@zislands.js:2076",
+  "d": 0.16,
+  "door": "otrhotel",
+  "left": "by design: beside the hotel's door, in the trigger's ring, the way in clear (island-doors)"
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100112,
+  "at": [
+   2251.83,
+   1793.15
+  ],
+  "world": [
+   2251.83,
+   1793.15
+  ],
+  "what": "buildIsland0 goes into pole (#100139 at 2252.22, 1791.87)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.04,
+  "other": 100139,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100113,
+  "at": [
+   2251.83,
+   1790.58
+  ],
+  "world": [
+   2251.83,
+   1790.58
+  ],
+  "what": "buildIsland0 goes into pole (#100140 at 2252.22, 1789.3)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100140,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100114,
+  "at": [
+   2251.83,
+   1788.01
+  ],
+  "world": [
+   2251.83,
+   1788.01
+  ],
+  "what": "buildIsland0 goes into pole (#100141 at 2252.22, 1786.73)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100141,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100115,
+  "at": [
+   2251.83,
+   1785.45
+  ],
+  "world": [
+   2251.83,
+   1785.45
+  ],
+  "what": "buildIsland0 goes into pole (#100141 at 2252.22, 1786.73)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100141,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100118,
+  "at": [
+   2272.38,
+   1793.15
+  ],
+  "world": [
+   2272.38,
+   1793.15
+  ],
+  "what": "buildIsland0 goes into pole (#100121 at 2272.77, 1791.87)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.04,
+  "other": 100121,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100119,
+  "at": [
+   2272.38,
+   1790.58
+  ],
+  "world": [
+   2272.38,
+   1790.58
+  ],
+  "what": "buildIsland0 goes into pole (#100122 at 2272.77, 1789.3)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100122,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100120,
+  "at": [
+   2272.38,
+   1788.01
+  ],
+  "world": [
+   2272.38,
+   1788.01
+  ],
+  "what": "buildIsland0 goes into pole (#100123 at 2272.77, 1786.73)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100123,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100171,
+  "at": [
+   2233.85,
+   1782.88
+  ],
+  "world": [
+   2233.85,
+   1782.88
+  ],
+  "what": "buildIsland0 goes into pole (#100185 at 2234.24, 1784.16)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100185,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100179,
+  "at": [
+   2233.85,
+   1772.61
+  ],
+  "world": [
+   2233.85,
+   1772.61
+  ],
+  "what": "buildIsland0 goes into pole (#100173 at 2234.24, 1773.89)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.04,
+  "other": 100173,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100180,
+  "at": [
+   2233.85,
+   1770.04
+  ],
+  "world": [
+   2233.85,
+   1770.04
+  ],
+  "what": "buildIsland0 goes into pole (#100174 at 2234.24, 1771.32)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100174,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100181,
+  "at": [
+   2233.85,
+   1767.47
+  ],
+  "world": [
+   2233.85,
+   1767.47
+  ],
+  "what": "buildIsland0 goes into pole (#100175 at 2234.24, 1768.75)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100175,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100182,
+  "at": [
+   2233.85,
+   1764.9
+  ],
+  "world": [
+   2233.85,
+   1764.9
+  ],
+  "what": "buildIsland0 goes into pole (#100176 at 2234.24, 1766.18)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100176,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100182,
+  "at": [
+   2233.85,
+   1764.9
+  ],
+  "world": [
+   2233.85,
+   1764.9
+  ],
+  "what": "buildIsland0 goes into pole (#100177 at 2234.24, 1763.62)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.04,
+  "other": 100177,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "buildIsland0",
+  "frame": 100183,
+  "at": [
+   2233.85,
+   1762.33
+  ],
+  "world": [
+   2233.85,
+   1762.33
+  ],
+  "what": "buildIsland0 goes into pole (#100178 at 2234.24, 1761.05)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "buildIsland0@zislands.js:1992 < buildIsland@zislands.js:1456",
+  "depth": 0.05,
+  "other": 100178,
+  "otherItem": "pole",
+  "left": null
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100642,
+  "at": [
+   2212.34,
+   1759.71
+  ],
+  "world": [
+   2212.34,
+   1759.71
+  ],
+  "what": "crate goes into crate (#100634 at 2213.08, 1759.71)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "depth": 0.04,
+  "other": 100634,
+  "otherItem": "crate",
+  "left": "low (4 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "float",
+  "item": "pole",
+  "frame": 100121,
+  "at": [
+   2272.77,
+   1791.87
+  ],
+  "world": [
+   2272.77,
+   1791.87
+  ],
+  "what": "pole stands with one side in the air (a slope)",
+  "measure": "one side 27 cm over the ground, another touching — lowest part y 2.59; the ground at its middle and corners 2.59 / 2.62 / 2.6 / 2.32 / 2.32 / 2.6 / 2.62 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Module.pole@props-esmer.js:348 < buildIsland0@zislands.js:1808",
+  "gap": 0.27,
+  "side": true,
+  "left": "low: a washing pole on the bank's edge"
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "float",
+  "item": "pole",
+  "frame": 100123,
+  "at": [
+   2272.77,
+   1786.73
+  ],
+  "world": [
+   2272.77,
+   1786.73
+  ],
+  "what": "pole stands with one side in the air (a slope)",
+  "measure": "one side 62 cm over the ground, another touching — lowest part y 2.59; the ground at its middle and corners 2.59 / 2.62 / 2.6 / 1.97 / 1.97 / 2.6 / 2.62 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Module.pole@props-esmer.js:348 < buildIsland0@zislands.js:1808",
+  "gap": 0.62,
+  "side": true,
+  "left": "low: a washing pole on the bank's edge"
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "float",
+  "item": "barrel",
+  "frame": 100705,
+  "at": [
+   2259.1,
+   1768.8
+  ],
+  "world": [
+   2259.1,
+   1768.8
+  ],
+  "what": "barrel stands with one side in the air (a slope)",
+  "measure": "one side 34 cm over the ground, another touching — lowest part y 3.57; the ground at its middle and corners 3.59 / 3.91 / 3.91 / 3.95 / 3.95 / 3.47 / 3.46 / 3.23 / 3.22 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Module.barrel@props-esmer.js:255 < newPiece@containers.js:364",
+  "gap": 0.34,
+  "side": true,
+  "left": "low: a container barrel on a slope (containers.js)"
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "float",
+  "item": "fit",
+  "frame": 100752,
+  "at": [
+   2197.45,
+   1764.48
+  ],
+  "world": [
+   2197.45,
+   1764.48
+  ],
+  "what": "fit floats over the ground",
+  "measure": "74 cm over the ground everywhere under it — lowest part y 3.33; the ground at its middle and corners 2.59 / 2.59 / 2.59 / 2.59 / 2.59 (terrain, bricks, slabs, pieces under it)",
+  "maker": "fit@zislands.js:2205 < buildIsland0@zislands.js:2210",
+  "gap": 0.74,
+  "left": "not measurable: a bush on the quay's paving, a slab with no brick under it (looked at: it stands on the paving)"
+ },
+ {
+  "room": "isle_knartas",
+  "kind": "float",
+  "item": "fit",
+  "frame": 100753,
+  "at": [
+   2264.23,
+   1797.66
+  ],
+  "world": [
+   2264.23,
+   1797.66
+  ],
+  "what": "fit floats over the ground",
+  "measure": "74 cm over the ground everywhere under it — lowest part y 3.33; the ground at its middle and corners 2.59 / 2.59 / 2.59 / 2.59 / 2.59 (terrain, bricks, slabs, pieces under it)",
+  "maker": "fit@zislands.js:2205 < buildIsland0@zislands.js:2210",
+  "gap": 0.74,
+  "left": "not measurable: a bush on the quay's paving, a slab with no brick under it (looked at: it stands on the paving)"
+ },
+ {
+  "room": "isle_mosquibee",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100240,
+  "at": [
+   2581.11,
+   1789.68
+  ],
+  "world": [
+   2581.11,
+   1789.68
+  ],
+  "what": "crate goes into crate (#100233 at 2580.41, 1789.97)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "depth": 0.05,
+  "other": 100233,
+  "otherItem": "crate",
+  "left": "low (5 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_mosquibee",
+  "kind": "float",
+  "item": "fit",
+  "frame": 100280,
+  "at": [
+   2526.86,
+   1825.28
+  ],
+  "world": [
+   2526.86,
+   1825.28
+  ],
+  "what": "fit floats over the ground",
+  "measure": "38 cm over the ground everywhere under it — lowest part y 18.64; the ground at its middle and corners 17.7 / 17.14 / 18.26 / 18.26 / 17.14 (terrain, bricks, slabs, pieces under it)",
+  "maker": "fit@zislands.js:2205 < ?@zislands.js:2212",
+  "gap": 0.38,
+  "left": "not measurable: the original's fitted pieces on the bank's lip"
+ },
+ {
+  "room": "isle_celebration",
+  "kind": "float",
+  "item": "pole",
+  "frame": 100045,
+  "at": [
+   2896.51,
+   1790.55
+  ],
+  "world": [
+   2896.51,
+   1790.55
+  ],
+  "what": "pole stands with one side in the air (a slope)",
+  "measure": "one side 19 cm over the ground, another touching — lowest part y 9.8; the ground at its middle and corners 9.81 / 9.84 / 9.84 / 9.61 / 9.61 / 9.79 / 9.81 (terrain, bricks, slabs, pieces under it)",
+  "maker": "pole@props-esmer.js:348 < buildIsland0@zislands.js:2076",
+  "gap": 0.19,
+  "side": true,
+  "left": "low (19–21 cm): a banner pole on the slope's edge"
+ },
+ {
+  "room": "isle_celebration",
+  "kind": "float",
+  "item": "pole",
+  "frame": 100047,
+  "at": [
+   2883.45,
+   1799.14
+  ],
+  "world": [
+   2883.45,
+   1799.14
+  ],
+  "what": "pole stands with one side in the air (a slope)",
+  "measure": "one side 21 cm over the ground, another touching — lowest part y 10.13; the ground at its middle and corners 10.08 / 10.15 / 10.11 / 9.93 / 9.93 / 10.11 / 10.15 (terrain, bricks, slabs, pieces under it)",
+  "maker": "pole@props-esmer.js:348 < buildIsland0@zislands.js:2076",
+  "gap": 0.21,
+  "side": true,
+  "left": "low (19–21 cm): a banner pole on the slope's edge"
+ },
+ {
+  "room": "isle_undergas",
+  "kind": "wall",
+  "item": "crate",
+  "frame": 2822,
+  "at": [
+   3183.54,
+   1780.4
+  ],
+  "world": [
+   3183.54,
+   1780.4
+  ],
+  "what": "crate goes into a building's wall",
+  "measure": "drawn parts 50 cm into a wall part",
+  "maker": "Kit",
+  "depth": 0.5,
+  "left": "low: a crate of the island home's planner against the wall's pilaster (ihomes.js)"
+ },
+ {
+  "room": "isle_undergas",
+  "kind": "float",
+  "item": "planter",
+  "frame": 100111,
+  "at": [
+   3237.21,
+   1820.71
+  ],
+  "world": [
+   3237.21,
+   1820.71
+  ],
+  "what": "planter stands with one side in the air (a slope)",
+  "measure": "one side 18 cm over the ground, another touching — lowest part y 7.53; the ground at its middle and corners 7.69 / 7.57 / 7.35 / 7.69 / 7.61 (terrain, bricks, slabs, pieces under it)",
+  "maker": "planter@props-esmer.js:152 < buildIsland0@zislands.js:2076",
+  "gap": 0.18,
+  "side": true,
+  "left": "low (18 cm): a planter on a slope"
+ },
+ {
+  "room": "isle_platform",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100458,
+  "at": [
+   3905.88,
+   1783.57
+  ],
+  "world": [
+   3905.88,
+   1783.57
+  ],
+  "what": "crate goes into crate (#100451 at 3906.54, 1783.85)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "depth": 0.04,
+  "other": 100451,
+  "otherItem": "crate",
+  "left": "low (4 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_platform",
+  "kind": "sunk",
+  "item": "bench",
+  "frame": 100479,
+  "at": [
+   3909.21,
+   1756.22
+  ],
+  "world": [
+   3909.21,
+   1756.22
+  ],
+  "what": "bench sinks into the ground",
+  "measure": "13 cm under the ground everywhere under it — lowest part y 4.4; the ground at its middle and corners 4.6 / 4.66 / 4.57 / 4.57 / 4.54 / 4.54 / 4.65 / 4.66 / 4.7 (terrain, bricks, slabs, pieces under it)",
+  "maker": "bench@props-esmer.js:173 < buildIsland0@zislands.js:2076",
+  "gap": -0.13,
+  "left": "low (13–18 cm): a bench set on the lowest ground under it on a slope (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_platform",
+  "kind": "sunk",
+  "item": "bench",
+  "frame": 100480,
+  "at": [
+   3909.21,
+   1804.22
+  ],
+  "world": [
+   3909.21,
+   1804.22
+  ],
+  "what": "bench sinks into the ground",
+  "measure": "18 cm under the ground everywhere under it — lowest part y 3.48; the ground at its middle and corners 3.79 / 3.85 / 3.66 / 3.65 / 3.85 / 3.86 / 4.05 / 4.1 / 3.91 (terrain, bricks, slabs, pieces under it)",
+  "maker": "bench@props-esmer.js:173 < buildIsland0@zislands.js:2076",
+  "gap": -0.18,
+  "left": "low (13–18 cm): a bench set on the lowest ground under it on a slope (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_platform",
+  "kind": "float",
+  "item": "fit",
+  "frame": 100505,
+  "at": [
+   3852.1,
+   1827.77
+  ],
+  "world": [
+   3852.1,
+   1827.77
+  ],
+  "what": "fit floats over the ground",
+  "measure": "17 cm over the ground everywhere under it — lowest part y 3.17; the ground at its middle and corners 2.1 / 1.15 / 3 / 1.73 / 1.15 (terrain, bricks, slabs, pieces under it)",
+  "maker": "fit@zislands.js:2205 < buildIsland0@zislands.js:2209",
+  "gap": 0.17,
+  "left": "not measurable: a cypress on the bank's edge, its crown over the drop (looked at: its trunk on the ground)"
+ },
+ {
+  "room": "isle_liftdock",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100029,
+  "at": [
+   4213.23,
+   1814.6
+  ],
+  "world": [
+   4213.23,
+   1814.6
+  ],
+  "what": "crate goes into crate (#100024 at 4213.97, 1814.6)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "depth": 0.04,
+  "other": 100024,
+  "otherItem": "crate",
+  "left": "low (4–5 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_liftdock",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100035,
+  "at": [
+   4213.39,
+   1813.93
+  ],
+  "world": [
+   4213.39,
+   1813.93
+  ],
+  "what": "crate goes into crate (#100029 at 4213.23, 1814.6)",
+  "measure": "parts overlap 5 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "depth": 0.05,
+  "other": 100029,
+  "otherItem": "crate",
+  "left": "low (4–5 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100086,
+  "at": [
+   4865.8,
+   1818.75
+  ],
+  "world": [
+   4865.8,
+   1818.75
+  ],
+  "what": "crate goes into crate (#100078 at 4865.9, 1818.17)",
+  "measure": "parts overlap 10 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "depth": 0.1,
+  "other": 100078,
+  "otherItem": "crate",
+  "left": "low (4–10 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100087,
+  "at": [
+   4876.71,
+   1782.91
+  ],
+  "world": [
+   4876.71,
+   1782.91
+  ],
+  "what": "crate goes into crate (#100080 at 4876.7, 1783.52)",
+  "measure": "parts overlap 4 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "depth": 0.04,
+  "other": 100080,
+  "otherItem": "crate",
+  "left": "low (4–10 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "inside",
+  "item": "crate",
+  "frame": 100088,
+  "at": [
+   4879.76,
+   1828.79
+  ],
+  "world": [
+   4879.76,
+   1828.79
+  ],
+  "what": "crate goes into crate (#100081 at 4879.18, 1828.72)",
+  "measure": "parts overlap 10 cm (footprint SAT and height)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "depth": 0.1,
+  "other": 100081,
+  "otherItem": "crate",
+  "left": "low (4–10 cm): a stack's crates touching"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100073,
+  "at": [
+   4863.19,
+   1793.44
+  ],
+  "world": [
+   4863.19,
+   1793.44
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "11 cm under the ground everywhere under it — lowest part y 9.11; the ground at its middle and corners 9.28 / 9.29 / 9.22 / 9.24 / 9.27 / 9.3 / 9.32 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:245",
+  "gap": -0.11,
+  "left": "low (10–20 cm): goods set on the lowest ground under them on the orchard's slopes (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100076,
+  "at": [
+   4869.68,
+   1815.2
+  ],
+  "world": [
+   4869.68,
+   1815.2
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "19 cm under the ground everywhere under it — lowest part y 7.84; the ground at its middle and corners 8.11 / 8.19 / 8.18 / 8.14 / 8.07 / 8.03 / 8.04 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "gap": -0.19,
+  "left": "low (10–20 cm): goods set on the lowest ground under them on the orchard's slopes (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100077,
+  "at": [
+   4866.67,
+   1828.73
+  ],
+  "world": [
+   4866.67,
+   1828.73
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "10 cm under the ground everywhere under it — lowest part y 2.14; the ground at its middle and corners 2.31 / 2.35 / 2.35 / 2.24 / 2.24 / 2.24 / 2.24 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "gap": -0.1,
+  "left": "low (10–20 cm): goods set on the lowest ground under them on the orchard's slopes (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100078,
+  "at": [
+   4865.9,
+   1818.17
+  ],
+  "world": [
+   4865.9,
+   1818.17
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "10 cm under the ground everywhere under it — lowest part y 7.06; the ground at its middle and corners 7.22 / 7.32 / 7.34 / 7.18 / 7.17 / 7.16 / 7.16 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "gap": -0.1,
+  "left": "low (10–20 cm): goods set on the lowest ground under them on the orchard's slopes (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100080,
+  "at": [
+   4876.7,
+   1783.52
+  ],
+  "world": [
+   4876.7,
+   1783.52
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "10 cm under the ground everywhere under it — lowest part y 7.21; the ground at its middle and corners 7.39 / 7.36 / 7.35 / 7.33 / 7.31 / 7.45 / 7.51 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "gap": -0.1,
+  "left": "low (10–20 cm): goods set on the lowest ground under them on the orchard's slopes (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100081,
+  "at": [
+   4879.18,
+   1828.72
+  ],
+  "world": [
+   4879.18,
+   1828.72
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "20 cm under the ground everywhere under it — lowest part y 1.49; the ground at its middle and corners 1.81 / 1.71 / 1.77 / 1.92 / 1.85 / 1.76 / 1.69 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:246",
+  "gap": -0.2,
+  "left": "low (10–20 cm): goods set on the lowest ground under them on the orchard's slopes (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "float",
+  "item": "crate",
+  "frame": 100084,
+  "at": [
+   4877.11,
+   1783.45
+  ],
+  "world": [
+   4877.11,
+   1783.45
+  ],
+  "what": "crate stands with one side in the air (a slope)",
+  "measure": "one side 55 cm over the ground, another touching — lowest part y 7.86; the ground at its middle and corners 7.88 / 7.88 / 7.88 / 7.31 / 7.88 / 7.88 / 7.88 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:247",
+  "gap": 0.55,
+  "side": true,
+  "left": "low: a stack's top crate over a slope's low side"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "crate",
+  "frame": 100088,
+  "at": [
+   4879.76,
+   1828.79
+  ],
+  "world": [
+   4879.76,
+   1828.79
+  ],
+  "what": "crate sinks into the ground",
+  "measure": "13 cm under the ground everywhere under it — lowest part y 1.49; the ground at its middle and corners 1.77 / 1.75 / 1.87 / 1.84 / 1.77 / 1.74 / 1.62 (terrain, bricks, slabs, pieces under it)",
+  "maker": "crate@props-esmer.js:225 < crateStack@props-esmer.js:248",
+  "gap": -0.13,
+  "left": "low (10–20 cm): goods set on the lowest ground under them on the orchard's slopes (zislands.js groundUnder: rather sunk than floating)"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "honeyJars",
+  "frame": 100100,
+  "at": [
+   4867.65,
+   1814.96
+  ],
+  "world": [
+   4867.65,
+   1814.96
+  ],
+  "what": "honeyJars sinks into the ground",
+  "measure": "20 cm under the ground everywhere under it — lowest part y 7.92; the ground at its middle and corners 8.18 / 8.16 / 8.23 / 8.24 / 8.23 / 8.22 / 8.15 / 8.13 / 8.12 / 8.13 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Module.honeyJars@props-esmer.js:279 < honey@zislands.js:2039",
+  "gap": -0.2,
+  "left": "low (9–20 cm): as the crates beside them"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "honeyJars",
+  "frame": 100102,
+  "at": [
+   4851.35,
+   1785.13
+  ],
+  "world": [
+   4851.35,
+   1785.13
+  ],
+  "what": "honeyJars sinks into the ground",
+  "measure": "20 cm under the ground everywhere under it — lowest part y 5.67; the ground at its middle and corners 5.94 / 5.95 / 5.88 / 5.87 / 5.88 / 5.92 / 5.96 / 6.01 / 6.01 / 5.97 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Module.honeyJars@props-esmer.js:279 < honey@zislands.js:2039",
+  "gap": -0.2,
+  "left": "low (9–20 cm): as the crates beside them"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "honeyJars",
+  "frame": 100104,
+  "at": [
+   4885.48,
+   1811.12
+  ],
+  "world": [
+   4885.48,
+   1811.12
+  ],
+  "what": "honeyJars sinks into the ground",
+  "measure": "9 cm under the ground everywhere under it — lowest part y 6.5; the ground at its middle and corners 6.65 / 6.67 / 6.69 / 6.69 / 6.68 / 6.64 / 6.63 / 6.59 / 6.6 / 6.64 (terrain, bricks, slabs, pieces under it)",
+  "maker": "Module.honeyJars@props-esmer.js:279 < honey@zislands.js:2039",
+  "gap": -0.09,
+  "left": "low (9–20 cm): as the crates beside them"
+ },
+ {
+  "room": "isle_orchard",
+  "kind": "sunk",
+  "item": "bench",
+  "frame": 100110,
+  "at": [
+   4835.56,
+   1787.99
+  ],
+  "world": [
+   4835.56,
+   1787.99
+  ],
+  "what": "bench sinks into the ground",
+  "measure": "10 cm under the ground everywhere under it — lowest part y 1.47; the ground at its middle and corners 1.72 / 1.57 / 1.64 / 1.67 / 1.69 / 1.83 / 1.83 / 1.83 / 1.77 / 1.77 / 1.62 / 1.6 (terrain, bricks, slabs, pieces under it)",
+  "maker": "bench@props-esmer.js:173 < buildIsland0@zislands.js:2076",
+  "gap": -0.1,
+  "left": "low (10 cm): a bench on a slope"
+ }
+]

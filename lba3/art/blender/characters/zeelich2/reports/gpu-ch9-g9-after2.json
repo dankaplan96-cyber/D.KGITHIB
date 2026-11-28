@@ -1,0 +1,68 @@
+{
+ "room": "zeelich",
+ "chapterKey": "council",
+ "hero": [
+  2396,
+  36.8
+ ],
+ "esmers": [
+  {
+   "id": "nara",
+   "char": "nara",
+   "x": 2365.5,
+   "z": -3.2
+  },
+  {
+   "id": "oku",
+   "char": "oku",
+   "x": 2376,
+   "z": 7
+  },
+  {
+   "id": "marl",
+   "char": "keeper",
+   "x": 2368.8,
+   "z": -16.2
+  },
+  {
+   "id": "zc_guard",
+   "char": "keeper_b",
+   "x": 2370.6,
+   "z": -6.6
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 2370.225,
+   "z": 2.25,
+   "a": 3.141592653589793
+  },
+  "centre": [
+   2370.225,
+   -4.75
+  ],
+  "n": 4,
+  "info": {
+   "calls": 643,
+   "triangles": 404329
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "medium"
+  }
+ },
+ "gpu": true,
+ "renderer": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+ "frames": {
+  "n": 1144,
+  "meanMs": 17.5,
+  "p50": 17.4,
+  "p95": 18.2,
+  "p99": 18.4,
+  "max": 20.5
+ },
+ "errors": [],
+ "at": "2026-11-08T05:39:11.526Z",
+ "candidates": {}
+}

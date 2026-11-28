@@ -1,0 +1,206 @@
+{
+ "chapter": "project",
+ "start": "citadel",
+ "scenes": [
+  {
+   "scene": "citadel@gilbert",
+   "people": [
+    [
+     "gilbert",
+     -39.8,
+     -2.6,
+     0.427
+    ],
+    [
+     "sphero2",
+     -34,
+     -7.5,
+     0.6
+    ]
+   ],
+   "things": 2,
+   "rows": [
+    {
+     "thing": "c1well:p_well",
+     "verdict": "NEAR",
+     "useCells": 571,
+     "reach0": 571,
+     "reach1": 522,
+     "minGapToPerson": -0.76
+    }
+   ]
+  },
+  {
+   "scene": "citadel@bram",
+   "people": [
+    [
+     "bram",
+     -42.3,
+     62.9,
+     0.608
+    ]
+   ],
+   "things": 2,
+   "rows": [
+    {
+     "thing": "lpump:p_look",
+     "verdict": "NEAR",
+     "useCells": 474,
+     "reach0": 474,
+     "reach1": 405,
+     "minGapToPerson": -0.94
+    }
+   ]
+  },
+  {
+   "scene": "house",
+   "people": [
+    [
+     "zoe",
+     997.68,
+     -2.62,
+     0.45
+    ],
+    [
+     "arthur",
+     1002.15,
+     2.15,
+     0.45
+    ]
+   ],
+   "things": 2,
+   "rows": [
+    {
+     "thing": "a_conch:p_take",
+     "verdict": "NEAR",
+     "useCells": 142,
+     "reach0": 142,
+     "reach1": 118,
+     "minGapToPerson": -0.51
+    }
+   ]
+  },
+  {
+   "scene": "office",
+   "people": [
+    [
+     "mira",
+     1198.8,
+     0.95,
+     0.368
+    ]
+   ],
+   "things": 2,
+   "rows": [
+    {
+     "thing": "pipemap:p_read",
+     "verdict": "NEAR",
+     "useCells": 192,
+     "reach0": 192,
+     "reach1": 192,
+     "minGapToPerson": 0.68
+    },
+    {
+     "thing": "roomsearch:pipemap",
+     "verdict": "NEAR",
+     "useCells": 192,
+     "reach0": 192,
+     "reach1": 192,
+     "minGapToPerson": 0.68
+    }
+   ]
+  },
+  {
+   "scene": "projoffice",
+   "error": "not entered: out"
+  },
+  {
+   "scene": "control",
+   "people": [
+    [
+     "vesk",
+     1398.4,
+     -1.8,
+     0.504
+    ],
+    [
+     "worker",
+     1395.35,
+     -0.4,
+     0.436
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "wtent",
+   "people": [
+    [
+     "bersimon",
+     5400.2,
+     -2.15,
+     0.496
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "school",
+   "people": [
+    [
+     "magus",
+     5605.2,
+     -4.1,
+     0.496
+    ],
+    [
+     "keraooc",
+     5593.1,
+     2.2,
+     0.495
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  }
+ ],
+ "rooms": [
+  "house",
+  "well",
+  "office",
+  "projoffice",
+  "control",
+  "workshop",
+  "lighttop",
+  "cellar",
+  "c3shaft",
+  "c3deep",
+  "c3gallery",
+  "c3sendell",
+  "c3core",
+  "condA",
+  "condB",
+  "butemple",
+  "wtent",
+  "school",
+  "asylum",
+  "bumaze",
+  "buhalls",
+  "obsv",
+  "upper",
+  "council",
+  "archive",
+  "valves",
+  "arena",
+  "sewer",
+  "sewervault",
+  "tavern",
+  "bazoo",
+  "ticket",
+  "pharmacy",
+  "nbrhouse",
+  "nellhouse"
+ ]
+}

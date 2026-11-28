@@ -1,0 +1,424 @@
+{
+  "file": "art/blender/characters/zoe38/work/zoe_poly.blend",
+  "blender": "5.2.3 LTS",
+  "checks": [
+    {
+      "check": "textures present",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "texture size <= 1024",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "plausible scale (metres)",
+      "status": "pass",
+      "detail": "size [0.5946, 2.0899, 0.5508], allowed largest side 0.02..30 m"
+    },
+    {
+      "check": "origin on the floor (min y = 0)",
+      "status": "pass",
+      "detail": "min y 0.0040"
+    },
+    {
+      "check": "no NaN/inf vertices",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no zero-area faces",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "no loose vertices",
+      "status": "warn",
+      "detail": "4"
+    },
+    {
+      "check": "transforms applied (export bakes them for props)",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "armatures unscaled",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "every mesh has a material",
+      "status": "pass",
+      "detail": ""
+    },
+    {
+      "check": "rig reference: zoe_armL -> zoeRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_armL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_armR -> zoeRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_armR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_armtrimL -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_armtrimL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_armtrimR -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_armtrimR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_bangleL -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_bangleL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_bangleR -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_bangleR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_belt -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_belt",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_brow -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_brow",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_brow.001 -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_brow.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_buckle -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_buckle",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_crease -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_crease",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_crease.001 -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_crease.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_dress -> zoeRig",
+      "status": "pass",
+      "detail": "5 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_dress",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_earring -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_earring",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_earring.001 -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_earring.001",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_fingersL -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_fingersL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_fingersR -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_fingersR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_hair -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_hair",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_hairband -> zoeRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_hairband",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_handL -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_handL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_handR -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_handR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_head -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_head",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_legL -> zoeRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_legL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_legR -> zoeRig",
+      "status": "pass",
+      "detail": "3 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_legR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_lips -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_lips",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_neck -> zoeRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_neck",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_necklace -> zoeRig",
+      "status": "pass",
+      "detail": "2 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_necklace",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_nose -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_nose",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_pendant -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_pendant",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_ponytail -> zoeRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_ponytail",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_shoeL -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_shoeL",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_shoeR -> zoeRig",
+      "status": "pass",
+      "detail": "1 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_shoeR",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_skin -> zoeRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_skin",
+      "status": "pass",
+      "detail": "0"
+    },
+    {
+      "check": "rig reference: zoe_trim -> zoeRig",
+      "status": "pass",
+      "detail": "4 groups"
+    },
+    {
+      "check": "<= 4 bone weights per vertex: zoe_trim",
+      "status": "pass",
+      "detail": "0"
+    }
+  ],
+  "totals": {
+    "objects": 55,
+    "meshes": 54,
+    "triangles": 7190,
+    "materials": 18,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 1,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.2973,
+        0.004,
+        -0.3422
+      ],
+      "max": [
+        0.2973,
+        2.0939,
+        0.2086
+      ],
+      "size": [
+        0.5946,
+        2.0899,
+        0.5508
+      ]
+    }
+  },
+  "passed": true
+}

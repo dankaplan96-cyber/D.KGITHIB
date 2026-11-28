@@ -1,0 +1,204 @@
+diff --git a/lba3/src/engine/environment.js b/lba3/src/engine/environment.js
+index d29883a8..73e07238 100644
+--- a/lba3/src/engine/environment.js
++++ b/lba3/src/engine/environment.js
+@@ -327,8 +327,12 @@ export class Environment {
+     return this._sf.copy(right).multiplyScalar(u).addScaledVector(up, v).addScaledVector(d, w);
+   }
+   // indoors: no sky, sea, rain or fog; black around the room like LBA2's interiors
+-  setInterior(on) {
++  // (ROOM-LIGHT, the user 5.11: "the room is too bright, it doesn't make sense with a lamp": every room was lit by the
++  //  island's full sun and sky fill, so its lamps added nothing you could see. light: the room's own { sun, hemi }
++  //  multipliers (interiors.js R.indoor), for a room whose lamps are meant to be its light; none: as before)
++  setInterior(on, light = null) {
+     this.interior = on;
++    this.indoor = on ? light : null;
+     this.water.visible = this.clouds.visible = !on && !this.region;
+     this.scene.background = on ? (this._black ??= new THREE.Color('#000000')) : this.fog.color;
+   }
+@@ -394,6 +398,7 @@ export class Environment {
+     this.hemi.color.copy(this._pal('hemiSky', s));
+     this.hemi.groundColor.copy(this._pal('hemiGround', s));
+     if (on) { this._wxLight(W); this._light(FLOOR_CITADEL); }
++    if (this.interior && this.indoor) { this.sun.intensity *= this.indoor.sun ?? 1; this.hemi.intensity *= this.indoor.hemi ?? 1; }   // (ROOM-LIGHT)
+ 
+     // PERF-BATTERY: the sea's grid follows the camera in whole grid steps (see seaGeometry)
+     this.water.position.set(Math.round(camera.position.x / SEA_STEP) * SEA_STEP, 0, Math.round(camera.position.z / SEA_STEP) * SEA_STEP);
+diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
+index 42f2571c..e3c18536 100644
+--- a/lba3/src/game/interiors.js
++++ b/lba3/src/game/interiors.js
+@@ -1263,7 +1263,7 @@ function buildProjOffice(scene, physics) {
+     floor: MAT.tiles('#b0684a', '#d8c09a', '#5a3a2a', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
+     body: MAT.stone('blue', 2), low: MAT.plates(teal, 1), dado: 1.15, rail: brass, cap: MAT.stone('slate', 1.4), beam: MAT.iron(),
+     posts: MAT.iron(), postsAt: (len) => (len === L ? [-4.75, -1.92, 0.58, 3.2, 6.42].map((x) => x + W / 2 + t) : [-4.92, -1.2, 0.55, 3.0].map((z) => D / 2 + t - z)),
+-    back: [{ kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, view: outsideView('fort'), sill: MAT.stone('slate', 1) }],
++    back: [{ kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, view: outsideView('station'), sill: MAT.stone('slate', 1) }],   // (DOOR-VIEW: the door out to the yard shows the yard, no longer a painted wall)
+   });
+   const BZ = -D / 2, LX = -W / 2;
+   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor-projoffice' });
+@@ -1383,14 +1383,20 @@ function buildProjOffice(scene, physics) {
+   B.put(-4.5, 4.5, Math.PI, P.bench, { w: 1.4, pal: 'grey', noCol: true });
+   B.col(-4.5, 4.5, 0.7, 0.2, 0.7, { noStand: true, seeThrough: true });
+   // --- hanging industrial lamps and light
+-  // (the user, 5.11: "Zoé's scene is too brightly lit": the office after hours, its lamps at about half; the hologram
+-  //  and the door's light keep it from going dark (R8))
+-  B.light('#e8f0ff', 2.2, 8, -3.6, 2.4, 3.0);
+-  for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#3f8a86' }));
+-  B.light('#e8f0ff', 3.6, 10, -3.2, 2.5, -1.8);
+-  B.light('#e8f0ff', 3.1, 10, 2.6, 2.5, 1.4);
++  // (ROOM-LIGHT, the user 5.11: "the room is too bright, it doesn't make sense with a lamp". No window: the island's
++  //  daylight fill is cut to about a third (R.indoor, environment.js setInterior), so the light is the room's own: a pool under
++  //  each hanging lamp, the hologram's cyan over the table, a small cyan wash round each of the four sconces, and the
++  //  daylight that comes in at the open door. Every lamp now hangs where a light is; the corner light with no lamp is gone.
++  //  It also answers the cloud's own note of 5.11, "Zoé's scene is too brightly lit": the office after hours.)
++  R.indoor = { sun: 0.22, hemi: 0.42 };
++  for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) {
++    k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#3f8a86' }));
++    B.light('#f4ecdc', 22, 6.5, x, 2.45, z);
++  }
+   const holoLight = B.light('#5ff4ff', 5, 6, tX, 1.9, tZ);
+-  B.light('#9ff4ff', 2, 5, doorX, 2.0, BZ + 0.8);
++  B.light('#fff2dc', 3.2, 4.5, doorX, 1.7, BZ + 0.7);   // (daylight in at the door)
++  for (const x of [-1.92, 3.2]) B.light('#bff6ff', 2.4, 3.4, x, 2.2, BZ + 0.35);
++  for (const z of [-1.2, 3.0]) B.light('#bff6ff', 2.4, 3.4, LX + 0.35, 2.2, z);
+   R.updaters.push((dt, tt) => {
+     fp.holo.rotation.y = tt * 0.4;
+     fp.shell.rotation.x = Math.sin(tt * 0.3) * 0.15;
+@@ -1420,7 +1426,7 @@ function buildControl(scene, physics) {
+     posts: MAT.iron(), postsAt: (len) => (len === W + 2 * t ? [-5.9, 1.15, 3.3, 5.92].map((x) => x + W / 2 + t) : [-4.42, -1.9, 1.2, 3.0].map((z) => D / 2 + t - z)),
+     back: [
+       { kind: 'hatch', at: winX, w: winW, h: winH, y0: winY },
+-      { kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, frame: MAT.iron(), view: outsideView('fort'), sill: MAT.stone('slate', 1) },
++      { kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, frame: MAT.iron(), view: outsideView('station'), sill: MAT.stone('slate', 1) },   // (DOOR-VIEW)
+     ],
+   });
+   const BZ = -D / 2, LX = -W / 2;
+@@ -1523,7 +1529,10 @@ function buildControl(scene, physics) {
+ 
+   B.light('#ffe8c8', 7, 10, 1.6, 2.6, 1.0);
+   B.light('#9ff4ff', 2.5, 4.5, LX + 1.2, 1.6, -0.4);
+-  B.light('#9ff4ff', 2, 5, doorX, 2.0, BZ + 0.8);
++  B.light('#fff2dc', 2.6, 4.5, doorX, 1.7, BZ + 0.7);   // (DOOR-VIEW: daylight in at the door, out to the yard)
++  // (ROOM-LIGHT: no window on daylight, the big hatch looks into the shaft: the island's sun and sky fill brought down so
++  //  the shaft's cyan and the hanging lamps light the room, as in the project office; a little more fill kept than there)
++  R.indoor = { sun: 0.4, hemi: 0.6 };
+   const screens = ['shaft', 'wave', 'bars', 'radar', 'text', 'map'].map((kd) => MAT.screen(P.CANV.screen(kd)));
+   R.updaters.push((dt, tt) => {
+     shaftTex.offset.y = (tt * 0.12) % 1;
+diff --git a/lba3/src/game/windowviews.js b/lba3/src/game/windowviews.js
+index 08a6c9df..aff92b96 100644
+--- a/lba3/src/game/windowviews.js
++++ b/lba3/src/game/windowviews.js
+@@ -11,7 +11,7 @@ import * as THREE from 'three';
+ import { M, canvasTex } from './props.js';
+ 
+ export const TILE = 256, GUTTER = 6;
+-export const TILES = { sea: 0, harbour: 1, village: 2, garden: 3, orchard: 4, street: 5, yard: 6 };
++export const TILES = { sea: 0, harbour: 1, village: 2, garden: 3, orchard: 4, street: 5, yard: 6, station: 7 };
+ const COLS = 4, ROWS = 2;
+ 
+ // ------------------------------------------------------------------ small painter kit
+@@ -269,6 +269,33 @@ const PAINT = {
+     for (let i = 0; i < 160; i++) { const xx = r() * TILE, yy = 172 + r() * 84, hh = 5 + (yy - 172) * 0.16; x.strokeStyle = mix('#3f8a3a', '#a8d860', r()); x.lineWidth = 1 + (yy - 172) * 0.01; x.beginPath(); x.moveTo(xx, yy); x.lineTo(xx + (r() - 0.5) * 6, yy - hh); x.stroke(); }
+     flowers(x, 190, 250, r, 22, ['#f2d24a', '#f4f0e8', '#e8643c']);
+   },
++  // (DOOR-VIEW, the user 5.11: "it looks like there's a wall there") the Joint Project's yard out of its offices' doors:
++  // the concrete yard in daylight, a lamp post, the hazard line by the pad, the other white-and-teal block across it
++  station(x, r) {
++    sky(x, '#4a9ee6', '#a8d8f4', 0, 100, '#f6efd6');
++    cloud(x, 64, 40, 42); cloud(x, 196, 60, 32, 0.8);
++    ridge(x, 118, 10, '#86b4a8', r, 140, 1.4);
++    haze(x, 90, 140, '#d8ecf8', 0.3);
++    // the block across the yard: white panels on teal, a round brass-rimmed window, a dish on its roof
++    const bx = 120, by = 150, bw = 112, bh = 46;
++    x.fillStyle = shade('#e8f4f2', 0.74); x.beginPath(); x.moveTo(bx + bw, by); x.lineTo(bx + bw + 22, by - 8); x.lineTo(bx + bw + 22, by - 8 - bh); x.lineTo(bx + bw, by - bh); x.closePath(); x.fill();
++    const wg = x.createLinearGradient(0, by - bh, 0, by); wg.addColorStop(0, '#eef8f6'); wg.addColorStop(1, '#cfe2de'); x.fillStyle = wg; x.fillRect(bx, by - bh, bw, bh);
++    x.fillStyle = '#3f8a86'; x.fillRect(bx, by - bh, bw, 5); x.fillRect(bx, by - 7, bw, 7);
++    x.strokeStyle = 'rgba(63,138,134,0.5)'; x.lineWidth = 1; for (let i = 1; i < 5; i++) { x.beginPath(); x.moveTo(bx + i * bw / 5, by - bh + 5); x.lineTo(bx + i * bw / 5, by - 7); x.stroke(); }
++    for (const cx of [bx + 22, bx + 90]) { x.fillStyle = '#c8a040'; x.beginPath(); x.arc(cx, by - 26, 8, 0, 7); x.fill(); x.fillStyle = '#7fd8e8'; x.beginPath(); x.arc(cx, by - 26, 5.5, 0, 7); x.fill(); }
++    x.fillStyle = '#3a4a52'; x.fillRect(bx + 48, by - 33, 17, 26); x.fillStyle = '#5ff4ff'; x.fillRect(bx + 50, by - 36, 13, 2);
++    x.fillStyle = '#9aa4a8'; x.fillRect(bx + 70, by - bh - 10, 3, 10); x.fillStyle = '#d8dcdc'; x.beginPath(); x.ellipse(bx + 71, by - bh - 14, 11, 6, -0.4, 0, 7); x.fill(); x.fillStyle = '#b8c0c4'; x.beginPath(); x.ellipse(bx + 72, by - bh - 13, 6, 3, -0.4, 0, 7); x.fill();
++    // the yard: concrete slabs to the door, a yellow-and-black line at the pad's edge
++    const yg = x.createLinearGradient(0, 148, 0, 256); yg.addColorStop(0, '#d8d4ca'); yg.addColorStop(1, '#aaa59a'); x.fillStyle = yg; x.fillRect(0, 148, TILE, 108);
++    x.strokeStyle = 'rgba(80,76,70,0.32)'; x.lineWidth = 1;
++    for (const y of [158, 172, 192, 220]) { x.beginPath(); x.moveTo(0, y); x.lineTo(TILE, y); x.stroke(); }
++    for (let i = -6; i <= 6; i++) { x.beginPath(); x.moveTo(128 + i * 30, 148); x.lineTo(128 + i * 62, 256); x.stroke(); }
++    for (let i = 0; i < 18; i++) { x.fillStyle = i % 2 ? '#2a2a2a' : '#f2c23a'; x.beginPath(); x.moveTo(i * 16 - 6, 182); x.lineTo(i * 16 + 10, 182); x.lineTo(i * 16 + 6, 188); x.lineTo(i * 16 - 10, 188); x.fill(); }
++    // a lamp post on the left, its cyan lamp
++    x.fillStyle = '#3f5a5a'; x.fillRect(44, 104, 4, 82); x.fillRect(38, 184, 16, 4); x.fillRect(44, 104, 18, 3);
++    x.fillStyle = '#5ff4ff'; x.beginPath(); x.arc(60, 110, 4, 0, 7); x.fill();
++    x.fillStyle = 'rgba(40,40,30,0.18)'; x.beginPath(); x.ellipse(52, 190, 22, 4, 0, 0, 7); x.fill();
++  },
+ };
+ 
+ // ------------------------------------------------------------------ the atlas
+diff --git a/lba3/src/game/world.js b/lba3/src/game/world.js
+index 9b890316..735f6707 100644
+--- a/lba3/src/game/world.js
++++ b/lba3/src/game/world.js
+@@ -18,6 +18,7 @@ import { buildStatue } from './statue.js';
+ import { buildCliffRocks } from './cliffs.js';
+ import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
+ import { culledToo } from '../engine/viewinst.js';
++import { mergeStatic } from '../engine/merge.js';
+ import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
+ import { lifeClear } from './townlife.js';
+ import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
+@@ -1264,15 +1265,38 @@ export function* buildWorldSteps(parentScene) {
+     });
+ 
+     // ball target
++    // (TARGET-1, the user 5.11: seen close it read as "a tree like a green ring on a stick", "it doesn't look good": a thick
++    //  glowing hoop round a blank pale disc on a bare brown pole, and once hit the hoop's green made it a crown. Now a target
++    //  as the villagers would make one: a straw butt with a painted face, red and cream rings round a gold middle, hung on a
++    //  pin at the top of a post braced by two stays. The thin hoop round its rim still glows, orange until it's hit, then
++    //  green; the board, not only the hoop, rocks on its pin until then. Its place, height and hit radius are unchanged.)
+     const T = POI.target, g = H(T.x, T.z);
+     const ty = g + 1.9;
+-    add(scene, new THREE.CylinderGeometry(0.15, 0.2, 1.9, 8), mat('#6b4a2e'), T.x, g + 0.95, T.z);
+-    const ringMat = new THREE.MeshStandardMaterial({ color: '#ff8a2a', emissive: '#ff6a00', emissiveIntensity: 2.2 });
+-    const disc = add(scene, new THREE.TorusGeometry(0.6, 0.14, 10, 24), ringMat, T.x, ty, T.z, { ry: Math.PI / 2 });
+-    add(scene, new THREE.CircleGeometry(0.5, 20), mat('#f4efe2', { side: THREE.DoubleSide }), T.x, ty, T.z, { ry: Math.PI / 2 });
++    const wood = mat('#6b4a2e');
++    const foot = ty - 0.6;   // (the post stops at the board's foot, where its pin is: it never shows through the face)
++    const stand = new THREE.Group(); scene.add(stand);   // (the post and its two stays: one draw, mergeStatic below)
++    add(stand, new THREE.CylinderGeometry(0.07, 0.12, foot - g, 8), wood, T.x, (g + foot) / 2, T.z);
++    for (const s of [-1, 1]) add(stand, new THREE.CylinderGeometry(0.045, 0.055, 1.18, 6), wood, T.x, g + 0.55, T.z + s * 0.27, { rx: -s * Math.atan2(0.42, 1.1) });
++    mergeStatic(stand);
++    const ringMat = new THREE.MeshStandardMaterial({ color: '#ff8a2a', emissive: '#ff6a00', emissiveIntensity: 1.6 });
++    const faceTex = (() => {
++      const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), S = 128;
++      ['#b8302a', '#f2ead6', '#b8302a', '#f2ead6', '#e0a83a'].forEach((col, i) => { x.fillStyle = col; x.beginPath(); x.arc(S / 2, S / 2, S / 2 - i * 12.5, 0, 7); x.fill(); });
++      x.strokeStyle = 'rgba(60,24,12,0.55)'; x.lineWidth = 1.5; for (let i = 0; i < 5; i++) { x.beginPath(); x.arc(S / 2, S / 2, S / 2 - i * 12.5 - 0.8, 0, 7); x.stroke(); }
++      x.strokeStyle = 'rgba(90,60,20,0.18)'; x.lineWidth = 1; for (let i = 0; i < 70; i++) { const a = i * 2.39996, r = 8 + (i * 37) % 54; x.beginPath(); x.moveTo(S / 2 + Math.cos(a) * r, S / 2 + Math.sin(a) * r); x.lineTo(S / 2 + Math.cos(a) * (r + 5), S / 2 + Math.sin(a + 0.3) * (r + 5)); x.stroke(); }
++      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
++    })();
++    const disc = new THREE.Group(); disc.position.set(T.x, foot, T.z); disc.rotation.order = 'ZYX'; disc.rotation.y = Math.PI / 2; scene.add(disc);   // (ZYX: rotation.z then swings it about the horizontal across its face)
++    const part = (geo, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y + 0.6, z); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; disc.add(o); return o; };
++    part(new THREE.CylinderGeometry(0.56, 0.56, 0.11, 28).rotateX(Math.PI / 2), mat('#c8a464'), 0, 0, 0);   // the straw butt
++    const face = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.9 });
++    part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, 0.057); part(new THREE.CircleGeometry(0.52, 32), face, 0, 0, -0.057, Math.PI);   // (painted both sides)
++    part(new THREE.TorusGeometry(0.575, 0.045, 8, 36), ringMat, 0, 0, 0);   // the hoop: its glow says hit or not
++    part(new THREE.BoxGeometry(0.1, 0.2, 0.18), wood, 0, -0.62, 0);   // the bracket over the post's pin
++    mergeStatic(disc, { recolor: true, retex: true });   // (the butt, the bracket and both faces: one draw; the hoop, whose glow changes, its own)
+     physics.add({ type: 'cyl', x: T.x, z: T.z, r: 0.25, top: g + 2.4, seeThrough: true });
+     W.target = { x: T.x, y: ty, z: T.z, ringMat, disc, hit: false };
+-    W.updaters.push((dt, t) => { if (!W.target.hit) disc.rotation.x = Math.sin(t * 2) * 0.2; });
++    W.updaters.push((dt, t) => { if (!W.target.hit) disc.rotation.z = Math.sin(t * 2) * 0.07; });
+ 
+     // shard pedestal on top of the plateau
+     const pg = H(P.x, P.z);
+diff --git a/lba3/src/main.js b/lba3/src/main.js
+index 76577ac4..dfcab6ff 100644
+--- a/lba3/src/main.js
++++ b/lba3/src/main.js
+@@ -1124,7 +1124,7 @@ class Game {
+       R.group.visible = true;
+       R.lights.forEach((l) => { l.intensity = l.userData.base; });
+       this.world.root.visible = false;
+-      if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true); }
++      if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true, R.indoor); }   // (ROOM-LIGHT: a room lit by its own lamps dims the daylight fill, R.indoor)
+       this.renderer.setGrade?.(R.grade, R.gradeTint);   // (WA-13 follow-up: an area's own palette)
+       // (a story exit may name only the room, { room }: then the room's own spawn — never a position without x/z)
+       const sp = spawn && Number.isFinite(spawn.x) && Number.isFinite(spawn.z) ? spawn : R.spawn;

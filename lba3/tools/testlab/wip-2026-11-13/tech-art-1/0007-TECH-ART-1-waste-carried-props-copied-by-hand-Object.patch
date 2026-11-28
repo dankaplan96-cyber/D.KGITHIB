@@ -1,0 +1,82 @@
+From 5b445bb8d17ef1d98b7843a94d6d0af18eb910bb Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Fri, 13 Nov 2026 13:54:49 +0000
+Subject: [PATCH 7/7] TECH-ART-1 waste: carried props copied by hand
+ (Object3D.clone made a throwaway default material per mesh); the harness
+ counts the materials too
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/src/game/walkers.js       | 16 ++++++++++++----
+ lba3/tests/techart-zeelich.mjs | 10 ++++++----
+ 2 files changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/lba3/src/game/walkers.js b/lba3/src/game/walkers.js
+index 74aa5d31..85b8068c 100644
+--- a/lba3/src/game/walkers.js
++++ b/lba3/src/game/walkers.js
+@@ -94,12 +94,20 @@ const CARRY = {
+   },
+ };
+ 
+-// TECH-ART-1: each kind is built once and a carrier holds a clone of it (Object3D.clone shares the geometry and the
+-// cached materials). Before, every pick-up built fresh geometries that nobody freed: 20 in 180 s of Zeelich's street
++// TECH-ART-1: each kind is built once and a carrier holds a copy of it that shares the template's geometry and its
++// (cached) materials. Before, every pick-up built fresh geometries that nobody freed: 20 in 180 s of Zeelich's street
+ // in chapter 3, each a new set of GPU buffers. The templates belong to this module and are never disposed or edited; a
+-// carrier only moves, hides or drops its own clone.
++// carrier only moves, hides or drops its own copy. (The copy is made by hand: Object3D.clone's `new Mesh()` makes a
++// default material and geometry for every mesh only to replace them.)
+ const CARRY_T = new Map();
+-const carryOf = (kind) => { if (!CARRY_T.has(kind)) CARRY_T.set(kind, CARRY[kind]()); return CARRY_T.get(kind).clone(); };
++const share = (o) => {
++  const c = o.isMesh ? new THREE.Mesh(o.geometry, o.material) : new THREE.Group();
++  c.position.copy(o.position); c.quaternion.copy(o.quaternion); c.scale.copy(o.scale);
++  c.castShadow = o.castShadow; c.receiveShadow = o.receiveShadow; c.visible = o.visible;
++  for (const ch of o.children) c.add(share(ch));
++  return c;
++};
++const carryOf = (kind) => { if (!CARRY_T.has(kind)) CARRY_T.set(kind, CARRY[kind]()); return share(CARRY_T.get(kind)); };
+ 
+ // ------------------------------------------------------------------ the manager (one per game)
+ export class Walkers {
+diff --git a/lba3/tests/techart-zeelich.mjs b/lba3/tests/techart-zeelich.mjs
+index 11a9fe8b..834fe236 100644
+--- a/lba3/tests/techart-zeelich.mjs
++++ b/lba3/tests/techart-zeelich.mjs
+@@ -25,12 +25,14 @@ await ev(async () => {
+   // the waste counter (TECH-ART-1): every BufferGeometry given its first position attribute, and how many of them came
+   // from the walkers' carried props (walkers.js)
+   const THREE = await import('three');
+-  const C = window.__taGeo = { all: 0, carry: 0 };
++  const C = window.__taGeo = { all: 0, carry: 0, carryMat: 0 };
+   const ps = THREE.BufferGeometry.prototype.setAttribute;
+   THREE.BufferGeometry.prototype.setAttribute = function (n, a) {
+     if (n === 'position' && !this.__ta) { this.__ta = 1; C.all++; if (/walkers\.js/.test(new Error().stack.split('\n').slice(2, 5).join(' '))) C.carry++; }
+     return ps.call(this, n, a);
+   };
++  const sv = THREE.Material.prototype.setValues;   // (and the materials made from the carried props' code: a throwaway default material counts too)
++  THREE.Material.prototype.setValues = function (v) { if (/walkers\.js/.test(new Error().stack.split('\n').slice(2, 9).join(' '))) C.carryMat++; return sv.call(this, v); };
+ });
+ await ev((Q) => {
+   const G = game;
+@@ -159,12 +161,12 @@ const SECS = +process.env.SECS || 120;
+ const life = await ev((SECS) => {
+   const G = game, R = G.renderer.renderer, C = window.__taGeo;
+   taAt(-24, 1.5, Math.PI / 2);
+-  const a = { all: C.all, carry: C.carry, live: R.info.memory.geometries };
++  const a = { all: C.all, carry: C.carry, carryMat: C.carryMat, live: R.info.memory.geometries };
+   for (let s = 0; s < SECS; s++) for (let i = 0; i < 30; i++) G.frame(1 / 30, i === 29);
+-  return { secs: SECS, made: C.all - a.all, carried: C.carry - a.carry, liveGrowth: R.info.memory.geometries - a.live };
++  return { secs: SECS, made: C.all - a.all, carried: C.carry - a.carry, walkersMaterials: C.carryMat - a.carryMat, liveGrowth: R.info.memory.geometries - a.live };
+ }, SECS);
+ const geoAll = await ev(() => window.__taGeo);
+-console.log('WASTE carried-prop geometries made over the whole run: ' + geoAll.carry + ' (of ' + geoAll.all + ' geometries made in all); street life ' + JSON.stringify(life));
++console.log('WASTE carried-prop geometries made over the whole run: ' + geoAll.carry + ' (of ' + geoAll.all + ' geometries made in all); materials made from walkers.js code: ' + geoAll.carryMat + '; street life ' + JSON.stringify(life));
+ console.log('COUNTS ' + JSON.stringify(counts));
+ done();
+ await browser.close();
+-- 
+2.43.0
+

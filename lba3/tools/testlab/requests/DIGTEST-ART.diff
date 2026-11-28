@@ -1,0 +1,60 @@
+diff --git a/lba3/src/game/teststand.js b/lba3/src/game/teststand.js
+index 36a33d41..df669722 100644
+--- a/lba3/src/game/teststand.js
++++ b/lba3/src/game/teststand.js
+@@ -39,9 +39,10 @@ const dialFace = (label) => canvasTex(128, 128, (x, w) => {
+   x.fillStyle = '#f2ecdc'; x.beginPath(); x.arc(64, 64, 62, 0, 7); x.fill();
+   x.strokeStyle = '#2a2a2a'; x.lineWidth = 3; x.beginPath(); x.arc(64, 64, 60, 0, 7); x.stroke();
+   // the scale: from lower left round the top to lower right
+-  for (let v = 0; v <= 10; v++) { const a = Math.PI * (0.75 + v * 0.15); x.lineWidth = v % 5 ? 2 : 4; x.beginPath(); x.moveTo(64 + Math.cos(a) * 44, 64 + Math.sin(a) * 44); x.lineTo(64 + Math.cos(a) * 56, 64 + Math.sin(a) * 56); x.stroke(); }
+-  if (label === 'DRILL') { x.strokeStyle = '#c8302a'; x.lineWidth = 9; x.beginPath(); x.arc(64, 64, 50, Math.PI * 2.04, Math.PI * 2.24); x.stroke(); }
+-  x.fillStyle = '#2a2a2a'; x.font = 'bold 19px sans-serif'; x.textAlign = 'center'; x.fillText(label, w / 2, 96);
++  // (DIGTEST-ART: the ticks and the CUT mark heavier, the label larger: read from the play camera at the lever)
++  for (let v = 0; v <= 10; v++) { const a = Math.PI * (0.75 + v * 0.15); x.lineWidth = v % 5 ? 3 : 6; x.beginPath(); x.moveTo(64 + Math.cos(a) * 42, 64 + Math.sin(a) * 42); x.lineTo(64 + Math.cos(a) * 57, 64 + Math.sin(a) * 57); x.stroke(); }
++  if (label === 'DRILL') { x.strokeStyle = '#c8302a'; x.lineWidth = 13; x.beginPath(); x.arc(64, 64, 49, Math.PI * 2.02, Math.PI * 2.25); x.stroke(); }
++  x.fillStyle = '#2a2a2a'; x.font = 'bold 21px sans-serif'; x.textAlign = 'center'; x.fillText(label, w / 2, 98);
+ });
+ const sign = (lines, bg, ink, w = 256, h = 64, size = 22) => canvasTex(w, h, (x) => {
+   x.fillStyle = bg; x.fillRect(0, 0, w, h); x.fillStyle = ink; x.font = `bold ${size}px sans-serif`; x.textAlign = 'center';
+@@ -71,10 +72,12 @@ export function buildTestStand({ group, col, W, H, updaters, postY, bore }) {
+   add(box(0.4, 0.9, 0.05), dark, SX - 0.38, Y + 0.5, SZ - 0.6); add(box(0.4, 0.9, 0.05), dark, SX - 0.38, Y + 0.5, SZ + 0.6);   // its two cheeks
+   add(box(0.04, 0.5, 1.2), teal, SX - 0.58, Y + 0.68, SZ);                                // its front panel, the levers' slots over it
+   // the dials' faces and bezels on the cabinet's face (DRILL on his left, GROUND on his right)
+-  const DIAL = { y: Y + 1.5, zd: SZ - 0.29, zg: SZ + 0.29, x: SX - 0.19 };
++  // (DIGTEST-ART, CLOUD_ORDERS 40.5: the faces 0.33 m across read at the stand but not from the play camera behind him, whose
++  //  body covers the cabinet's middle: now 0.46 m, set further apart, so each shows beside him; a little lower, under the plate)
++  const DIAL = { y: Y + 1.45, zd: SZ - 0.37, zg: SZ + 0.37, x: SX - 0.19, r: 0.23 };
+   for (const [z, label] of [[DIAL.zd, 'DRILL'], [DIAL.zg, 'GROUND']]) {
+-    add(new THREE.TorusGeometry(0.17, 0.02, 6, 20), steel, DIAL.x, DIAL.y, z, 0, Math.PI / 2, 0);
+-    const face = add(new THREE.CircleGeometry(0.165, 20), new THREE.MeshStandardMaterial({ map: dialFace(label), roughness: 0.6 }), DIAL.x - 0.005, DIAL.y, z, 0, -Math.PI / 2, 0);
++    add(new THREE.TorusGeometry(DIAL.r + 0.006, 0.025, 6, 24), steel, DIAL.x, DIAL.y, z, 0, Math.PI / 2, 0);
++    const face = add(new THREE.CircleGeometry(DIAL.r, 24), new THREE.MeshStandardMaterial({ map: dialFace(label), roughness: 0.6 }), DIAL.x - 0.005, DIAL.y, z, 0, -Math.PI / 2, 0);
+     face.castShadow = false;
+   }
+   // the name plate over the dials, the wire's horn and the SENT lamp on top
+@@ -99,7 +102,8 @@ export function buildTestStand({ group, col, W, H, updaters, postY, bore }) {
+   col({ type: 'box', x: WB.x + 0.05, z: WB.z, hw: 0.25, hd: 0.36, top: Y + 1.0, noStand: true });   // (the shelf, a little short of its front edge: Dallan stands close at it, his hands on its top)
+ 
+   // ---- what moves: the dials' needles, the levers, the paper, the tape, the lamp
+-  const needle = (z) => { const n = new THREE.Group(); n.position.set(DIAL.x - 0.014, DIAL.y, z); n.rotation.y = -Math.PI / 2; D.add(n); const m = dyn(new THREE.BoxGeometry(0.012, 0.14, 0.006), dark, 0, 0.06, 0, n); m.castShadow = false; dyn(new THREE.CylinderGeometry(0.018, 0.018, 0.012, 8), dark, 0, 0, 0, n).rotation.x = Math.PI / 2; return n; };
++  // (DIGTEST-ART: the needles as long as the bigger faces allow and twice as broad, a tapered tip)
++  const needle = (z) => { const n = new THREE.Group(); n.position.set(DIAL.x - 0.014, DIAL.y, z); n.rotation.y = -Math.PI / 2; D.add(n); const m = dyn(new THREE.BoxGeometry(0.026, 0.17, 0.008), dark, 0, 0.065, 0, n); m.castShadow = false; const t = dyn(new THREE.CylinderGeometry(0.0, 0.013, 0.04, 4), dark, 0, 0.17, 0, n); t.castShadow = false; dyn(new THREE.CylinderGeometry(0.03, 0.03, 0.014, 10), dark, 0, 0, 0, n).rotation.x = Math.PI / 2; mergeStatic(n, { recolor: true }); return n; };   // (one mesh each: was two)
+   const nd = needle(DIAL.zd), ng = needle(DIAL.zg);
+   const lever = (z, mat) => {
+     const p = new THREE.Group(); p.position.set(SX - 0.53, Y + 0.93, z); D.add(p);
+@@ -137,6 +141,15 @@ export function buildTestStand({ group, col, W, H, updaters, postY, bore }) {
+     a2(cyl(0.48, 0.48, 0.14, 14), iron, 1.78); a2(box(0.17, 5.2, 0.17), iron, 4.4); a2(box(0.42, 0.62, 0.42), paint('#d8a030', 0.5, { metalness: 0.4 }), 7.3);
+     for (const s of [-1, 1]) { const o = new THREE.Mesh(box(0.08, 0.1, 0.5), iron); o.position.set(s * 0.32, 1.88, 0); k.add(o); }
+     a2(cyl(0.02, 0.02, 3.4, 5), iron, 9.3);   // (the line up to the crown)
++    // (DIGTEST-ART, CLOUD_ORDERS 40.5: the turning parts stood at 1.8 m, behind the post's name board from the lever 21 m
++    //  away, and at 4-7 m, over the play camera's frame. A drive drum on the kelly at 3.6 m, in the band the camera sees over
++    //  the board and the pressure tank: 1.7 m across, its rim in eight hazard bands, yellow and black, that sweep round while the drill turns; a
++    //  collar under it. In the string's own mesh: no draw call added)
++    for (let i = 0; i < 8; i++) {
++      const o = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.34, 6, 1, false, (i * Math.PI) / 4, Math.PI / 4), paint(i % 2 ? '#1e2024' : '#e8b828', 0.5, { metalness: 0.2 }));
++      o.position.y = 3.6; o.castShadow = true; k.add(o);
++    }
++    a2(cyl(0.3, 0.3, 0.06, 12), iron, 3.8); a2(cyl(0.16, 0.22, 0.3, 10), iron, 3.32);
+     mergeStatic(k, { recolor: true }); spin.add(k); }
+ 
+   // ---- state

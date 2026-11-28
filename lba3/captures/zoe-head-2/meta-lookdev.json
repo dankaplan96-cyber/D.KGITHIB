@@ -1,0 +1,30 @@
+{
+ "a-twinsen": {
+  "tris": 10338,
+  "hairVerts": 4032,
+  "bodyVerts": 26022,
+  "leastToBody": 0.063,
+  "colours": 30456
+ },
+ "a-tall": {
+  "tris": 10338,
+  "hairVerts": 4032,
+  "bodyVerts": 24444,
+  "leastToBody": 0.107,
+  "colours": 30456
+ },
+ "a-tall-long": {
+  "tris": 10338,
+  "hairVerts": 4032,
+  "bodyVerts": 24444,
+  "leastToBody": 0.107,
+  "colours": 30456
+ },
+ "a-egg": {
+  "tris": 10338,
+  "hairVerts": 4032,
+  "bodyVerts": 24121,
+  "leastToBody": 0.127,
+  "colours": 30456
+ }
+}

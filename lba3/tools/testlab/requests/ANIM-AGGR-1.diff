@@ -1,0 +1,60 @@
+diff --git a/lba3/src/engine/rig.js b/lba3/src/engine/rig.js
+index 2d24284c..232b1aa5 100644
+--- a/lba3/src/engine/rig.js
++++ b/lba3/src/engine/rig.js
+@@ -363,6 +363,7 @@ export class Rig {
+     // rotations (X·Z·Y); no pose turned the shoulders about y before, so every existing pose is unchanged)
+     j.armL.sh.rotation.order = 'XZY'; j.armR.sh.rotation.order = 'XZY';
+     this.guard = false;       // the player is engaged: the idle becomes his combat stance (GUARD[guardKind])
++    this.aggro = false;       // the player in Aggressive: his walk is LBA2's strut, fists up (anim 83)
+     this.guardKind = 'ball';
+     this.combatLook = null;   // the player's locked target: the head and chest turn to it (when nothing else is looked at)
+     this.mouth = null;        // (FACES-HANDS) a poly model's talking mouth: a small mesh on the head (characters.js polyCharacter)
+@@ -961,6 +962,20 @@ export class Rig {
+         if (this.planting) hipsY += key(W.bobPlant, p * 2 % 1);
+         torsoY = key(W.twist, p); headY = -torsoY;
+         torsoX = 0.02 + key(W.lean, p * 2 % 1);
++        if (this.aggro) {
++          // ANIM-AGGR: LBA2's Aggressive walk (ANIM.HQR 83, measured: numbers only): a boxer's strut. The fists stay up
++          // before the chest (shoulders 13-75 deg forward, elbows bent 50-72 deg), pumping a little with the steps;
++          // the knees come up high (thigh to 90 deg, knee to 97 deg in the original; here a third more than the
++          // walk's), the chest leans in and twists with each step (up to 45 deg there; ours less), the pelvis bobs.
++          const G = GUARD.fists, sw = Math.sin(p * Math.PI * 2);
++          T.armL = G.armL + sw * 0.14; T.armR = G.armR - sw * 0.14; T.elL = G.elL - Math.max(0, -sw) * 0.18; T.elR = G.elR - Math.max(0, sw) * 0.18;
++          T.outL = G.outL; T.outR = G.outR; T.twL = G.twL; T.twR = G.twR;
++          T.kneeL *= 1.35; T.kneeR *= 1.35;
++          if (T.legL < 0) T.legL *= 1.3; if (T.legR < 0) T.legR *= 1.3;
++          T.footL = Math.min(T.footL, 0.25); T.footR = Math.min(T.footR, 0.25);
++          torsoY = torsoY * 2.2 + G.torsoY * 0.5; headY = -torsoY * 0.7;
++          torsoX += 0.1; hipsY -= 0.012 - Math.abs(Math.cos(p * Math.PI * 4)) * 0.012;
++        }
+       } else if (a === 'sneak') {
+         // (DISCREET-WALK) LBA2's discreet walk (SNEAK, Rig._sneak): one cycle per SNEAK.cyc body heights travelled, so the planted foot
+         // keeps its place on the ground at any speed (2.6 s at Discreet's 0.67 m/s)
+@@ -1060,6 +1075,8 @@ export class Rig {
+         const G = GUARD[this.guardKind] || GUARD.ball, w = this._guardW, mix = (v, g) => (v ?? 0) + (g - (v ?? 0)) * w;
+         for (const k of ['armR', 'elR', 'outR', 'twR', 'armL', 'elL', 'outL', 'twL', 'legL', 'kneeL', 'footL', 'legR', 'kneeR', 'footR']) T[k] = mix(T[k], G[k]);
+         torsoX = mix(torsoX, G.torsoX + b * 0.025); torsoY = mix(torsoY, G.torsoY); headX = mix(headX, G.headX); headY = mix(headY, G.headY);
++        // (ANIM-AGGR: in Aggressive with no fight on, he keeps looking round as LBA2's anim 82 does)
++        if (this.aggro && !this.combatLook) headY += w * (Math.sin(this.t * 0.9) * 0.45 + Math.sin(this.t * 2.3) * 0.08);
+         hipsY = mix(hipsY, G.hipsY + b * 0.006);
+       }
+     } else if (a === 'hide') {
+diff --git a/lba3/src/game/actors.js b/lba3/src/game/actors.js
+index ae3700b8..0a356883 100644
+--- a/lba3/src/game/actors.js
++++ b/lba3/src/game/actors.js
+@@ -445,8 +445,11 @@ export class Hero extends Actor {
+     // is his combat stance for the weapon in hand; with a lock his head and chest turn to the target
+     const C = this.combat, lock = g.targeting?.lock;
+     this.engagedT = lock || C.busy || C.holding || this.hurtT > 0 ? 2.5 : Math.max(0, (this.engagedT || 0) - dt);
+-    this.rig.guard = this.engagedT > 0 && this.body !== 'zoe' && this.body !== 'worker';
+-    this.rig.guardKind = C.weapon;
++    // (ANIM-AGGR: in Aggressive he stands in his boxer's guard and struts with his fists up, as LBA2's anims 82/83)
++    const aggro = beh === 'aggressive' && this.body !== 'zoe' && this.body !== 'worker';
++    this.rig.aggro = aggro;
++    this.rig.guard = (this.engagedT > 0 || aggro) && this.body !== 'zoe' && this.body !== 'worker';
++    this.rig.guardKind = aggro && this.engagedT <= 0 && C.weapon !== 'sword' ? 'fists' : C.weapon;
+     if (lock?.alive && lock.pos) (this._lookV ??= new THREE.Vector3()).set(lock.pos.x, lock.pos.y + (lock.aimY ?? 0.9), lock.pos.z);
+     this.rig.combatLook = lock?.alive && lock.pos ? this._lookV : null;
+     this.rig.update(dt, this.speed);

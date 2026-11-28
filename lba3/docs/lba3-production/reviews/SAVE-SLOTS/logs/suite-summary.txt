@@ -1,0 +1,31 @@
+saveslots exit=0 819s VERDICT: PASS
+save-migration exit=0 324s VERDICT: PASS
+resume exit=0 371s VERDICT: PASS
+zoe-resume exit=1 249s VERDICT: FAIL (1 functional)
+menus exit=0 279s VERDICT: PASS
+opening exit=1 960s VERDICT: FAIL (3 resource)
+prologue exit=1 0s VERDICT: FAIL (no verdict printed; 1 FAIL captured)
+chapter1 exit=1 1s VERDICT: FAIL (no verdict printed; 1 FAIL captured)
+deaths exit=1 1s VERDICT: FAIL (no verdict printed; 1 FAIL captured)
+longsession exit=1 1s VERDICT: FAIL (no verdict printed; 1 FAIL captured)
+stability exit=1 0s VERDICT: FAIL (no verdict printed; 1 FAIL captured)
+controls exit=1 1s VERDICT: FAIL (no verdict printed; 1 FAIL captured)
+SUITE_DONE
+opening exit=0 826s VERDICT: PASS
+prologue exit=1 164s VERDICT: FAIL (1 functional)
+chapter1 exit=0 157s VERDICT: PASS
+deaths exit=0 55s VERDICT: PASS
+SUITE_DONE
+longsession exit=0 122s VERDICT: PASS
+stability exit=0 88s VERDICT: PASS
+controls exit=0 254s VERDICT: PASS
+zoe-resume exit=0 220s VERDICT: PASS
+prologue exit=1 159s VERDICT: FAIL (1 functional)
+SUITE_DONE
+prologue exit=0 152s VERDICT: PASS
+prologue exit=0 180s VERDICT: PASS
+prologue exit=0 183s VERDICT: PASS
+SUITE_DONE
+BASE prologue exit=0 191s VERDICT: PASS 
+BASE prologue exit=1 138s VERDICT: FAIL (1 functional) FAIL the well's mites beaten with the ball [3,4,"well"];
+BASE_DONE

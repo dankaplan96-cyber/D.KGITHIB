@@ -1,0 +1,151 @@
+== try 1 zdepot (base-05): hp 11/11 mp 5
+[1.7] STAGED at the gate
+[1.8] fight: hp 11 mp 4; zguard1 patrol 9.7m, zdrone1 patrol 13.0m, zdrone2 patrol 16.2m, zgdog1 guard 18.3m; throws 0
+[1.8] fight → {"r":"clear","throws":0,"dodges":0}
+[1.8] at 2410.0,6.1 hp 11; near: zguard1 patrol 9.8, zdrone1 patrol 13.1, zdrone2 patrol 16.1, zgdog1 guard 18.3; prompt "E Talk"
+[1.9] plan 3 pts, wp 1 → 2414.4,22.1 keys KeyW cam 0.30,0.83
+[6.1] to the locker → threat
+[7.5] fight: hp 11 mp 3; zguard1 recover 5.7m, zdrone2 chase 5.8m, zdrone1 windup 6.9m, zgdog1 chase 7.7m; throws 1
+[8.0] HIT hp 11→10 nearest gdog:zgdog1 (chase, 5.8 m)
+[9.4] HIT hp 10→9 nearest gdog:zgdog1 (windup, 2.4 m)
+[10.7] HIT hp 9→8 nearest gdog:zgdog1 (recover, 2.1 m)
+[12.8] fight: hp 8 mp 0; zgdog1 hurt 3.0m, zdrone2 chase 6.0m, zguard1 recover 6.2m, zdrone1 windup 8.0m; throws 6
+[13.5] HIT hp 8→7 nearest gdog:zgdog1 (chase, 2.9 m)
+[14.6] HIT hp 7→6 nearest gdog:zgdog1 (chase, 2.5 m)
+[16.7] HIT hp 6→5 nearest guardG:zguard1 (chase, 4.9 m)
+[18.1] HIT hp 5→4 nearest guardG:zguard1 (recover, 4.7 m)
+[18.1] fight: hp 4 mp 0; zguard1 recover 4.7m, zdrone1 windup 6.0m, zdrone2 chase 6.0m, zgdog1 home 9.8m; throws 11
+[19.5] HIT hp 4→3 nearest guardG:zguard1 (chase, 4.1 m)
+[21.0] HIT hp 3→2 nearest guardG:zguard1 (recover, 4.0 m)
+[22.7] HIT hp 2→1 nearest guardG:zguard1 (aim, 3.4 m)
+[24.1] fight: hp 1 mp 0; zguard1 chase 3.4m, zdrone2 windup 6.0m, zdrone1 chase 6.0m, zgdog1 guard 18.9m; throws 15
+[24.4] HIT hp 1→0 nearest guardG:zguard1 (chase, 3.5 m)
+[28.6] HIT hp 11→10 nearest guardG:zguard1 (recover, 3.3 m)
+[30.0] HIT hp 10→9 nearest guardG:zguard1 (chase, 3.2 m)
+[30.0] fight: hp 9 mp 8; zguard1 chase 3.2m, zdrone2 chase 6.0m, zdrone1 chase 6.0m, zgdog1 guard 19.7m; throws 19
+[31.4] HIT hp 9→8 nearest guardG:zguard1 (hurt, 3.4 m)
+[34.8] HIT hp 8→7 nearest guardG:zguard1 (chase, 3.0 m)
+[36.1] fight: hp 7 mp 6; zguard1 aim 2.9m, zdrone1 chase 5.9m, zgdog1 guard 19.6m; throws 22
+[37.7] HIT hp 7→6 nearest guardG:zguard1 (chase, 3.0 m)
+[39.2] HIT hp 6→5 nearest guardG:zguard1 (recover, 2.9 m)
+[42.3] HIT hp 5→4 nearest guardG:zguard1 (recover, 3.0 m)
+[42.3] fight: hp 4 mp 4; zguard1 recover 3.0m, zdrone1 chase 6.0m, zgdog1 guard 19.7m; throws 26
+[45.2] HIT hp 4→3 nearest guardG:zguard1 (chase, 3.0 m)
+[48.2] HIT hp 3→2 nearest guardG:zguard1 (chase, 3.0 m)
+[48.2] fight: hp 2 mp 2; zguard1 chase 3.0m, zdrone1 chase 6.0m, zgdog1 guard 19.7m; throws 30
+[49.8] HIT hp 2→1 nearest guardG:zguard1 (hurt, 3.3 m)
+[53.3] fight: hp 1 mp 1; zguard1 chase 1.7m, zgdog1 guard 18.3m; throws 31
+[58.5] fight: hp 1 mp 1; zguard1 strike 3.0m, zgdog1 guard 19.7m; throws 31
+[63.7] fight: hp 1 mp 1; zguard1 recover 1.7m, zgdog1 guard 18.3m; throws 31
+[68.8] fight: hp 1 mp 0; zguard1 windup 1.7m, zgdog1 guard 18.3m; throws 32
+[74.3] fight: hp 1 mp 0; zguard1 recover 1.7m, zgdog1 guard 18.3m; throws 36
+[79.8] fight: hp 1 mp 0; zguard1 strike 1.6m, zgdog1 guard 18.3m; throws 40
+[85.4] HIT hp 11→10 nearest guardG:zguard1 (recover, 3.0 m)
+[85.4] fight: hp 10 mp 7; zguard1 recover 3.0m, zgdog1 guard 19.5m; throws 44
+[88.4] HIT hp 10→9 nearest guardG:zguard1 (chase, 3.0 m)
+[89.8] fight → {"r":"clear","throws":47,"dodges":6}
+[89.9] at 2404.6,9.8 hp 9; near: zgdog1 guard 19.5; prompt "E Talk"
+[89.9] plan 1 pts, wp 0 → 2415.2,23.8 keys KeyW+KeyD cam 0.88,-0.10
+[94.9] plan 1 pts, wp 0 → 2415.2,23.8 keys KeyW cam 0.69,0.54
+[100.0] at 2411.3,13.5 hp 9; near: zgdog1 guard 11.8; prompt "E Talk"
+[100.0] plan 5 pts, wp 3 → 2413.4,18.5 keys KeyW cam 0.59,0.65
+[105.0] plan 2 pts, wp 1 → 2414.7,22.9 keys KeyW+KeyA cam 0.39,0.79
+[105.1] to the locker → there
+SUMMARY {"try":1,"result":"no cylinder","hpIn":11,"hpOut":9,"maxHp":11,"dead":false,"secs":107.1,"hits":23,"byKind":{"gdog":5,"guardG":18},"enemiesSeen":4,"beaten":3}
+== try 2 zdepot (base-05): hp 11/11 mp 5
+[1.7] STAGED at the gate
+[1.8] fight: hp 11 mp 4; zguard1 chase 8.0m, zdrone1 patrol 14.2m, zdrone2 patrol 14.8m, zgdog1 guard 18.3m; throws 0
+[3.7] HIT hp 11→10 nearest guardG:zguard1 (chase, 7.7 m)
+[5.8] HIT hp 10→9 nearest guardG:zguard1 (recover, 5.5 m)
+[7.2] fight: hp 9 mp 3; zguard1 aim 4.4m, zdrone2 patrol 14.4m, zdrone1 patrol 15.6m, zgdog1 guard 18.9m; throws 3
+[8.6] HIT hp 9→8 nearest guardG:zguard1 (recover, 5.1 m)
+[11.7] HIT hp 8→7 nearest guardG:zguard1 (chase, 4.2 m)
+[13.1] fight: hp 7 mp 1; zguard1 aim 3.0m, zdrone1 patrol 16.3m, zdrone2 patrol 16.8m, zgdog1 guard 20.3m; throws 7
+[14.7] HIT hp 7→6 nearest guardG:zguard1 (chase, 3.0 m)
+[16.0] HIT hp 6→5 nearest guardG:zguard1 (hurt, 2.8 m)
+[19.1] HIT hp 5→4 nearest guardG:zguard1 (recover, 3.1 m)
+[19.1] fight: hp 4 mp 0; zguard1 recover 3.1m, zdrone1 patrol 18.6m, zdrone2 patrol 19.2m, zgdog1 guard 22.8m; throws 11
+[21.9] HIT hp 4→3 nearest guardG:zguard1 (recover, 3.1 m)
+[24.8] HIT hp 3→2 nearest guardG:zguard1 (chase, 2.9 m)
+[24.8] fight: hp 2 mp 0; zguard1 chase 2.9m, zdrone2 patrol 20.3m, zdrone1 patrol 21.1m, zgdog1 guard 24.4m; throws 15
+[27.6] HIT hp 2→1 nearest guardG:zguard1 (chase, 2.6 m)
+[30.4] fight: hp 11 mp 8; zguard1 chase 2.3m, zdrone1 patrol 21.7m, zdrone2 patrol 22.8m, zgdog1 guard 26.1m; throws 19
+[34.7] HIT hp 11→10 nearest guardG:zguard1 (recover, 2.3 m)
+[36.3] fight: hp 10 mp 5; zguard1 chase 2.2m, zdrone2 patrol 22.2m, zdrone1 patrol 24.1m, zgdog1 guard 26.9m; throws 23
+[37.8] HIT hp 10→9 nearest guardG:zguard1 (recover, 3.1 m)
+[40.6] HIT hp 9→8 nearest guardG:zguard1 (recover, 3.1 m)
+[42.0] fight: hp 8 mp 3; zdrone1 patrol 23.6m, zdrone2 patrol 25.7m, zgdog1 guard 28.5m; throws 27
+[42.0] fight → {"r":"clear","throws":27,"dodges":0}
+[42.2] at 2404.5,-2.7 hp 8; near: zdrone1 patrol 23.3, zdrone2 patrol 26.0, zgdog1 guard 28.5; prompt "E Talk"
+[42.3] plan 3 pts, wp 1 → 2410.9,8.9 keys KeyW cam 0.63,0.62
+[47.4] plan 3 pts, wp 1 → 2410.9,8.9 keys KeyW+KeyD cam 0.43,0.77
+[51.3] to the locker → threat
+[51.3] fight: hp 8 mp 6; zdrone2 patrol 7.1m, zdrone1 alerted 8.9m, zgdog1 guard 11.6m; throws 0
+[53.4] HIT hp 8→7 nearest gdog:zgdog1 (chase, 6.1 m)
+[54.7] HIT hp 7→6 nearest gdog:zgdog1 (hurt, 4.4 m)
+[56.4] fight: hp 6 mp 1; zdrone1 chase 5.9m, zdrone2 chase 5.9m; throws 5
+[56.9] HIT hp 6→5 nearest drone:zdrone1 (chase, 6.2 m)
+[59.1] fight → {"r":"clear","throws":7,"dodges":0}
+[59.2] HIT hp 5→4 nearest ?
+[59.2] at 2411.3,11.6 hp 4; near: ; prompt "E Talk"
+[59.2] plan 2 pts, wp 1 → 2414.9,22.8 keys KeyW+KeyD cam 0.66,0.58
+[64.3] plan 2 pts, wp 1 → 2414.9,22.8 keys KeyW cam 0.26,0.84
+[66.1] to the locker → there
+SUMMARY {"try":2,"result":"no cylinder","hpIn":11,"hpOut":4,"maxHp":11,"dead":false,"secs":68.1,"hits":17,"byKind":{"guardG":13,"gdog":2,"drone":1,"?":1},"enemiesSeen":4,"beaten":3}
+== try 3 zdepot (base-05): hp 11/11 mp 5
+[1.7] STAGED at the gate
+[1.7] fight: hp 11 mp 4; zguard1 patrol 10.9m, zdrone1 patrol 14.1m, zdrone2 patrol 14.9m, zgdog1 guard 18.3m; throws 0
+[1.7] fight → {"r":"clear","throws":0,"dodges":0}
+[1.8] at 2410.0,6.1 hp 11; near: zguard1 patrol 11.0, zdrone1 patrol 14.2, zdrone2 patrol 14.8, zgdog1 guard 18.3; prompt "E Talk"
+[1.9] plan 3 pts, wp 1 → 2414.4,22.1 keys KeyW cam 0.02,0.88
+[6.9] plan 3 pts, wp 1 → 2414.4,22.1 keys KeyW cam 0.02,0.88
+[10.0] to the locker → threat
+[10.0] fight: hp 11 mp 4; zdrone1 patrol 7.0m, zguard1 chase 8.7m, zdrone2 patrol 11.1m, zgdog1 guard 12.9m; throws 0
+[11.9] HIT hp 11→10 nearest guardG:zguard1 (recover, 7.3 m)
+[14.3] HIT hp 10→9 nearest guardG:zguard1 (recover, 6.5 m)
+[16.3] HIT hp 9→8 nearest gdog:zgdog1 (chase, 2.8 m)
+[16.3] fight: hp 8 mp 2; zgdog1 chase 2.8m, zguard1 aim 5.8m, zdrone2 chase 6.1m, zdrone1 windup 6.1m; throws 3
+[18.8] HIT hp 8→7 nearest gdog:zgdog1 (chase, 2.9 m)
+[20.2] HIT hp 7→6 nearest guardG:zguard1 (chase, 5.7 m)
+[21.7] fight: hp 6 mp 0; zguard1 recover 4.9m, zdrone1 windup 6.0m, zdrone2 chase 6.0m; throws 9
+[22.0] HIT hp 6→5 nearest guardG:zguard1 (recover, 4.9 m)
+[23.7] HIT hp 5→4 nearest guardG:zguard1 (aim, 4.7 m)
+[25.1] HIT hp 4→3 nearest guardG:zguard1 (recover, 5.6 m)
+[26.5] HIT hp 3→2 nearest guardG:zguard1 (aim, 4.7 m)
+[26.7] fight: hp 2 mp 0; zguard1 aim 5.0m, zdrone1 chase 6.0m, zdrone2 chase 6.1m; throws 12
+[28.3] HIT hp 2→1 nearest guardG:zguard1 (chase, 4.6 m)
+[30.0] HIT hp 1→0 nearest guardG:zguard1 (recover, 4.6 m)
+[33.0] fight: hp 11 mp 7; zguard1 recover 3.4m, zdrone1 windup 6.0m, zdrone2 chase 6.0m; throws 16
+[34.7] HIT hp 11→10 nearest guardG:zguard1 (aim, 3.1 m)
+[36.1] HIT hp 10→9 nearest guardG:zguard1 (chase, 3.3 m)
+[37.5] HIT hp 9→8 nearest guardG:zguard1 (recover, 3.4 m)
+[38.8] HIT hp 8→7 nearest guardG:zguard1 (chase, 3.3 m)
+[38.8] fight: hp 7 mp 7; zguard1 chase 3.3m, zdrone2 chase 6.2m, zdrone1 chase 6.6m; throws 20
+[40.2] HIT hp 7→6 nearest guardG:zguard1 (hurt, 2.9 m)
+[41.4] HIT hp 6→5 nearest guardG:zguard1 (chase, 3.0 m)
+[42.8] HIT hp 5→4 nearest guardG:zguard1 (recover, 1.8 m)
+[43.9] fight: hp 4 mp 6; zguard1 chase 1.3m, zdrone2 chase 3.5m; throws 21
+[46.3] HIT hp 4→3 nearest guardG:zguard1 (chase, 1.2 m)
+[49.4] HIT hp 6→5 nearest guardG:zguard1 (strike, 1.3 m)
+[49.4] fight: hp 5 mp 6; zguard1 strike 1.3m, zdrone2 chase 3.7m; throws 22
+[52.2] HIT hp 5→4 nearest guardG:zguard1 (recover, 1.0 m)
+[53.6] HIT hp 4→3 nearest guardG:zguard1 (windup, 1.2 m)
+[55.2] fight: hp 3 mp 3; zguard1 chase 1.1m, zdrone2 windup 5.2m; throws 26
+[56.5] HIT hp 3→2 nearest guardG:zguard1 (recover, 1.1 m)
+[59.3] HIT hp 2→1 nearest guardG:zguard1 (recover, 1.2 m)
+[60.7] fight: hp 1 mp 1; zguard1 hurt 1.4m, zdrone2 chase 5.9m; throws 30
+[60.8] HIT hp 1→0 nearest guardG:zguard1 (hurt, 1.4 m)
+[64.9] HIT hp 11→10 nearest guardG:zguard1 (recover, 3.0 m)
+[66.3] fight: hp 10 mp 7; zguard1 chase 2.2m; throws 33
+[67.8] HIT hp 10→9 nearest guardG:zguard1 (recover, 3.1 m)
+[70.7] HIT hp 9→8 nearest guardG:zguard1 (recover, 3.1 m)
+[72.1] fight: hp 8 mp 5; zguard1 aim 2.2m; throws 37
+[73.6] HIT hp 8→7 nearest guardG:zguard1 (chase, 2.8 m)
+[75.0] fight → {"r":"clear","throws":39,"dodges":3}
+[75.1] at 2410.5,-3.8 hp 7; near: ; prompt "E Talk"
+[75.2] plan 3 pts, wp 1 → 2410.9,12.2 keys KeyW cam -0.07,0.80
+[80.2] plan 3 pts, wp 1 → 2410.9,12.2 keys KeyW cam -0.08,0.88
+[85.1] at 2413.1,14.0 hp 7; near: ; prompt "E Talk"
+[85.3] plan 3 pts, wp 2 → 2414.9,22.8 keys KeyW+KeyD cam 0.54,0.66
+[89.9] to the locker → there
+SUMMARY {"try":3,"result":"no cylinder","hpIn":11,"hpOut":7,"maxHp":11,"dead":false,"secs":91.9,"hits":29,"byKind":{"guardG":27,"gdog":2},"enemiesSeen":4,"beaten":4}

@@ -1,0 +1,120 @@
+ROTATE-STALL arrival · medium · battery true · camera free · hamalayi → citadel × 2
+hamalayi (cold): 103 frames, 49587 ms in all, 48971 ms of it with the screen black
+    0     8 ms view  op 0.10 calls 160 uploads 18 (39 KB)
+    1     6 ms view  op 0.19 calls 160 uploads 18 (39 KB)
+    2     6 ms view  op 0.29 calls 160 uploads 18 (39 KB)
+    3     5 ms view  op 0.38 calls 160 uploads 18 (39 KB)
+    4     5 ms view  op 0.48 calls 160 uploads 18 (39 KB)
+    5     6 ms view  op 0.57 calls 160 uploads 18 (39 KB)
+    6    15 ms view  op 0.67 calls 160 uploads 18 (39 KB)
+    7     6 ms view  op 0.76 calls 160 uploads 18 (39 KB)
+    8     5 ms view  op 0.86 calls 160 uploads 18 (39 KB)
+    9     5 ms view  op 0.95 calls 160 uploads 18 (39 KB)
+   10 48917 ms BLACK op 1.00 calls 0 hold draw batches built 48656 ms, shadow batches built 152 ms, +108 geometries, +32 textures, uploads 490 (63558 KB), 35 first uploads by draws behind black: 2× tex 512x512 outside a draw · 5× tex 256x256 outside a draw · 4× tex 128x128 outside a draw · 2× tex 128x256 outside a draw · 2× tex 128x32 outside a draw · tex 64x64 outside a draw · tex 512x560 outside a draw · 2× tex 512x352 outside a draw · tex 20x20 outside a draw · 2× tex 9x9 outside a draw · 7× tex 12x12 outside a draw · 6× tex 6x6 outside a draw
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12     1 ms BLACK op 1.00 calls 0 hold 
+   13     1 ms BLACK op 1.00 calls 0 hold 
+   14     1 ms BLACK op 1.00 calls 0 hold 
+   15     0 ms BLACK op 1.00 calls 0 hold 
+   16     0 ms BLACK op 1.00 calls 0 hold 
+   17     1 ms BLACK op 1.00 calls 0 hold 
+   18     0 ms BLACK op 1.00 calls 0 hold 
+   19     0 ms BLACK op 1.00 calls 0 hold 
+   20     1 ms BLACK op 1.00 calls 0 hold 
+   21     1 ms BLACK op 1.00 calls 0 hold 
+   22     0 ms BLACK op 1.00 calls 0 hold 
+   23     1 ms BLACK op 1.00 calls 0 hold 
+   24     1 ms BLACK op 1.00 calls 0 hold 
+   25     1 ms BLACK op 1.00 calls 0 hold 
+   26     0 ms BLACK op 1.00 calls 0 hold 
+   27     1 ms BLACK op 1.00 calls 0 hold 
+   28     0 ms BLACK op 1.00 calls 0 hold 
+   29     1 ms BLACK op 1.00 calls 0 hold 
+   30    40 ms BLACK op 1.00 calls 86 cache full build, +11 geometries, +1 textures (1 render targets), uploads 117 (3536 KB), 1 first uploads by draws behind black: tex 256x256 drawing Mesh:terrain<terrain
+   31     4 ms BLACK op 1.00 calls 70 uploads 6 (7 KB)
+   32     4 ms view  op 0.90 calls 70 uploads 6 (7 KB)
+   33     3 ms view  op 0.81 calls 70 uploads 6 (7 KB)
+   34     3 ms view  op 0.71 calls 70 uploads 6 (7 KB)
+   35     6 ms view  op 0.62 calls 70 uploads 6 (7 KB)
+   36     2 ms view  op 0.52 calls 70 uploads 6 (7 KB)
+   37     2 ms view  op 0.43 calls 70 uploads 6 (7 KB)
+   38     3 ms view  op 0.33 calls 70 uploads 6 (7 KB)
+   39     2 ms view  op 0.24 calls 70 uploads 6 (7 KB)
+   40     2 ms view  op 0.14 calls 70 uploads 6 (7 KB)
+citadel (cold): 92 frames, 140874 ms in all, 86403 ms of it with the screen black
+    0     3 ms view  op 0.10 calls 72 uploads 6 (7 KB)
+    1     2 ms view  op 0.19 calls 72 uploads 6 (7 KB)
+    2     3 ms view  op 0.29 calls 72 uploads 6 (7 KB)
+    3     3 ms view  op 0.38 calls 72 uploads 6 (7 KB)
+    4     2 ms view  op 0.48 calls 72 uploads 6 (7 KB)
+    5     2 ms view  op 0.57 calls 72 uploads 6 (7 KB)
+    6     2 ms view  op 0.67 calls 72 uploads 6 (7 KB)
+    7     2 ms view  op 0.76 calls 72 uploads 6 (7 KB)
+    8     2 ms view  op 0.86 calls 72 uploads 6 (7 KB)
+    9     3 ms view  op 0.95 calls 72 uploads 6 (7 KB)
+   10    64 ms BLACK op 1.00 calls 0 hold -1 geometries
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12     1 ms BLACK op 1.00 calls 0 hold 
+   13     1 ms BLACK op 1.00 calls 0 hold 
+   14     1 ms BLACK op 1.00 calls 0 hold 
+   15     1 ms BLACK op 1.00 calls 0 hold 
+   16     1 ms BLACK op 1.00 calls 0 hold 
+   17     1 ms BLACK op 1.00 calls 0 hold 
+   18     1 ms BLACK op 1.00 calls 0 hold 
+   19     1 ms BLACK op 1.00 calls 0 hold 
+   20 86332 ms BLACK op 1.00 calls 209 cache full build, +2 geometries, uploads 63 (391 KB)
+   21     9 ms view  op 0.90 calls 175 uploads 20 (43 KB)
+   22     7 ms view  op 0.81 calls 175 uploads 20 (43 KB)
+   23     6 ms view  op 0.71 calls 175 uploads 20 (43 KB)
+   24     5 ms view  op 0.62 calls 175 uploads 20 (43 KB)
+   25     5 ms view  op 0.52 calls 175 uploads 20 (43 KB)
+   26     6 ms view  op 0.43 calls 175 uploads 20 (43 KB)
+   27     5 ms view  op 0.33 calls 175 uploads 20 (43 KB)
+   28     5 ms view  op 0.24 calls 175 uploads 20 (43 KB)
+   29     6 ms view  op 0.14 calls 175 uploads 20 (43 KB)
+   31    11 ms view  op 0.00 calls 178 -1 geometries, 2 pieces left draw batches, uploads 20 (43 KB)
+hamalayi (repeat): 83 frames, 44574 ms in all, 1129 ms of it with the screen black
+    0  1277 ms view  op 0.10 calls 176 uploads 20 (43 KB)
+    1  1357 ms view  op 0.19 calls 176 uploads 20 (43 KB)
+    2  1221 ms view  op 0.29 calls 176 uploads 20 (43 KB)
+    3  1240 ms view  op 0.38 calls 176 uploads 20 (43 KB)
+    4  1220 ms view  op 0.48 calls 176 uploads 20 (43 KB)
+    5  1207 ms view  op 0.57 calls 176 uploads 20 (43 KB)
+    6  1181 ms view  op 0.67 calls 176 uploads 20 (43 KB)
+    7  3786 ms view  op 0.76 calls 176 uploads 20 (43 KB)
+    8  2382 ms view  op 0.86 calls 176 uploads 20 (43 KB)
+    9  1171 ms view  op 0.95 calls 176 uploads 20 (43 KB)
+   10  1121 ms BLACK op 1.00 calls 86 cache full build, uploads 10 (8 KB)
+   11     8 ms BLACK op 1.00 calls 70 uploads 6 (7 KB)
+   12     3 ms view  op 0.90 calls 70 uploads 6 (7 KB)
+   13     2 ms view  op 0.81 calls 70 uploads 6 (7 KB)
+   14    62 ms view  op 0.71 calls 70 uploads 6 (7 KB)
+   15     3 ms view  op 0.62 calls 70 uploads 6 (7 KB)
+   16     3 ms view  op 0.52 calls 70 uploads 6 (7 KB)
+   17  1221 ms view  op 0.43 calls 70 uploads 6 (7 KB)
+   18     5 ms view  op 0.33 calls 70 uploads 6 (7 KB)
+   19     2 ms view  op 0.24 calls 70 uploads 6 (7 KB)
+   20  1281 ms view  op 0.14 calls 70 uploads 6 (7 KB)
+citadel (repeat): 83 frames, 165533 ms in all, 3615 ms of it with the screen black
+    0     2 ms view  op 0.10 calls 72 uploads 6 (7 KB)
+    1  1181 ms view  op 0.19 calls 72 uploads 6 (7 KB)
+    2     8 ms view  op 0.29 calls 72 uploads 6 (7 KB)
+    3     2 ms view  op 0.38 calls 72 uploads 6 (7 KB)
+    4  1252 ms view  op 0.48 calls 72 uploads 6 (7 KB)
+    5     8 ms view  op 0.57 calls 72 uploads 6 (7 KB)
+    6     3 ms view  op 0.67 calls 72 uploads 6 (7 KB)
+    7  1217 ms view  op 0.76 calls 72 uploads 6 (7 KB)
+    8     4 ms view  op 0.86 calls 72 uploads 6 (7 KB)
+    9     3 ms view  op 0.95 calls 72 uploads 6 (7 KB)
+   10  1211 ms BLACK op 1.00 calls 209 cache full build, +1 geometries, uploads 30 (49 KB)
+   11  2404 ms BLACK op 1.00 calls 175 uploads 20 (43 KB)
+   12    55 ms view  op 0.90 calls 175 uploads 20 (43 KB)
+   13  1274 ms view  op 0.81 calls 175 uploads 20 (43 KB)
+   14  1437 ms view  op 0.71 calls 175 uploads 20 (43 KB)
+   15  2535 ms view  op 0.62 calls 175 uploads 20 (43 KB)
+   16  6132 ms view  op 0.52 calls 175 uploads 20 (43 KB)
+   17  3763 ms view  op 0.43 calls 175 uploads 20 (43 KB)
+   18  1536 ms view  op 0.33 calls 175 uploads 20 (43 KB)
+   19  3833 ms view  op 0.24 calls 175 uploads 20 (43 KB)
+   20  3897 ms view  op 0.14 calls 175 uploads 20 (43 KB)
+   22  5060 ms view  op 0.00 calls 180 -1 geometries, 2 pieces left draw batches, uploads 22 (48 KB)

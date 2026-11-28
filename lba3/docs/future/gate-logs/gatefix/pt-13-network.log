@@ -1,0 +1,47 @@
+=== 13-network start 2026-11-01T23:01:34Z LOAD=/dev/shm/gatefix/saves/f/12.json ASSIST= SRC=/dev/shm/gatefix/c/lba3/tests/playthrough/13-network.mjs
+[0s +0s] continue: {"chapter":"network","room":"workshop"} | workshop [1502.75,0,-1.95] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[2s +2s] Oku: {"r":"talked","to":"oku","state":"play","lines":2,"ask":true} | zeelich [2377.21,6,6.91] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[5s +2s] brake the old mill (ball): {"braked":true,"fail":null} | zeelich [2397.51,6,-10.5] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[16s +11s] climb the old mill (jumps): {"heights":[7.09,8.19,9.28,10.38,11.47,12.56,13.66,14.75],"y":14.75,"top":true,"fail":null} | zeelich [2394.97,14.75,-21.3] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[16s +1s] the mill relay: {"r":"used","target":{"kind":"c10mill","id":"p_relay","label":"p_relay"},"state":"play","lines":4,"mill":true,"fail":null} | zeelich [2397.5,14.75,-16.75] hp 7 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[19s +2s] down from the mill: {"r":"arrived","t":5.366666666666657,"hops":[14.75,13.66,13.66,12.56,12.56,12.56,12.56],"y":6,"fail":null} | zeelich [2400.06,6,-14.48] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[172s +153s] the spaceship to Citadel: {"r":"picked","state":"play","room":"citadel","fail":null} | citadel [-1.7,2.35,39.5] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[176s +4s] Mira: the valve room: {"r":"talked","to":"mira","state":"play","lines":8,"room":"valves","ask":true} | valves [4995.8,0,2.5] hp 5 | Set Baldino's relays at the five stations (1/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[176s +0s] the three valves: {"valves":true,"levels":[2,2,2],"fail":null} | valves [5003.81,0,-3] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[178s +1s] out: {"room":"citadel"} | citadel [-63.58,2.35,11] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[182s +5s] the lighthouse: Zoé: {"r":"talked","to":"zoe","state":"play","lines":6,"ask":true,"room":"lighttop"} | lighttop [1601.55,0,0.24] hp 5 | Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[183s +1s] the dials: {"dials":[2,0,1],"light":true,"fail":null} | lighttop [1599.77,0,-1.43] hp 5 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[194s +10s] fly to Desert Island: {"r":"picked","state":"play","room":"desert","fail":null} | desert [3320,4.74,4] hp 5 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[206s +13s] Ilka: the bore relay: {"r":"used","target":{"kind":"c10bore","id":"p_relay","label":"p_relay"},"state":"play","lines":4,"relay":true} | desert [3441.82,1.6,-16.08] hp 5 | Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+  [502.5] ISO assist: 1 enemies beaten (ndrone1)
+  [548.8] ISO assist: 2 enemies beaten (nguard,nsentry)
+[212s +6s] the drones: {"left":2,"dead":false,"t":43.400000000000006,"assisted":3,"waves":[{"wave":1,"hp":2},{"wave":1,"hp":2}],"hp":11,"minHp":2,"breakHp":8,"w2":true,"bore":true,"fail":null} | desert [3439.24,1.6,-23.48] hp 11 | Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[216s +4s] fly to the Hamalayi: {"r":"picked","state":"play","room":"hamalayi","fail":null} | hamalayi [4336,21.92,-37] hp 11 | Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[216s +0s] Pim (Yorna): {"r":"talked","to":"yorna","state":"play","lines":6,"pim":true} | hamalayi [4335.94,21.92,-37.67] hp 11 | Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+[223s +8s] the dome: {"room":"obsv","pim":true,"keeper":true,"kt":"talked","relay":true,"r1":"used","r2":"used","dome":true,"fail":null} | obsv [4604.91,0,4.78] hp 9 | Go to the drill platform on Zeelich
+[231s +8s] fly to Citadel, the spaceship to Zeelich: {"glider":"citadel","r":"picked","state":"play","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 12 | Go to the drill platform on Zeelich
+[279s +48s] the platform console → chapter 11: {"r":"used","target":{"kind":"c10console","id":"p_station","label":"p_station"},"state":"play","lines":32,"chapter":"shell","room":"c3shaft","fail":null} | c3shaft [1797.9,0,-1.5] hp 12 | Find the bore's machinery
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 2 (this page; see the trace)
+[851.3] stuck at (4602.8, 4.2): replan
+[853.7] go → (4604.0, 4.0) plan ok=false pts=4 left=1.18
+[860.2] go → (4604.0, 4.0) plan ok=false pts=1 left=1.2
+[860.2] go → (4604.0, 4.0) plan ok=false pts=1 left=1.2
+[862.7] stuck at (4605.0, 3.3): replan
+[867.2] go → (4594.0, 4.5) plan ok=true pts=3 left=0.16
+[873.6] go: transition (obsv → obsv, trans true) at (4594.75, 4.63)
+[874.4] go → (4334.2, -37.0) plan ok=true pts=6 left=0.48
+[1028.0] go → (1.4, 40.3) plan ok=true pts=14 left=0.6
+[1043.2] stuck at (-33.4, -22.6): replan
+[1065.3] go → (2434.9, -4.3) plan ok=false pts=10 left=0.86
+[1080.1] go → (2434.9, -4.3) plan ok=false pts=3 left=0.91
+kept /dev/shm/gatefix/saves/f/13.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 13-network end rc=0 wall=566s 2026-11-01T23:11:00Z

@@ -1,0 +1,178 @@
+{
+ "gpu": true,
+ "before": true,
+ "at": "2026-11-09T20:34:44.213Z",
+ "renderer": {
+  "gpu": "ANGLE (AMD, AMD Radeon(TM) Vega 8 Graphics (0x000015D8) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "quality": "medium",
+  "bloom": false,
+  "msaa": null,
+  "controls": "classic",
+  "camDist": "medium",
+  "camera": "follow"
+ },
+ "spot": {
+  "x": -55.52,
+  "z": -5.62,
+  "a": 1.309
+ },
+ "ball": {
+  "L1": {
+   "state": "fly",
+   "life": 0.217,
+   "pos": [
+    -52.77,
+    3.82,
+    -4.69
+   ],
+   "emissive": 2.2,
+   "scale": 1,
+   "calls": 28,
+   "triangles": 416635,
+   "frameCalls": 159,
+   "frameTris": 859222,
+   "rect": {
+    "x": 387,
+    "y": 182,
+    "width": 647,
+    "height": 364
+   }
+  },
+  "L2": {
+   "state": "fly",
+   "life": 0.217,
+   "pos": [
+    -52.77,
+    3.82,
+    -4.69
+   ],
+   "emissive": 2.2,
+   "scale": 1,
+   "calls": 5,
+   "triangles": 478,
+   "frameCalls": 138,
+   "frameTris": 447853,
+   "rect": {
+    "x": 396,
+    "y": 190,
+    "width": 624,
+    "height": 351
+   }
+  },
+  "L3": {
+   "state": "fly",
+   "life": 0.217,
+   "pos": [
+    -52.76,
+    3.82,
+    -4.69
+   ],
+   "emissive": 2.2,
+   "scale": 1,
+   "calls": 5,
+   "triangles": 478,
+   "frameCalls": 138,
+   "frameTris": 448657,
+   "rect": {
+    "x": 396,
+    "y": 190,
+    "width": 624,
+    "height": 351
+   }
+  },
+  "L4": {
+   "state": "fly",
+   "life": 0.217,
+   "pos": [
+    -52.76,
+    3.82,
+    -4.69
+   ],
+   "emissive": 2.2,
+   "scale": 1,
+   "calls": 5,
+   "triangles": 478,
+   "frameCalls": 138,
+   "frameTris": 447529,
+   "rect": {
+    "x": 396,
+    "y": 190,
+    "width": 624,
+    "height": 351
+   }
+  }
+ },
+ "charge": {
+  "state": "inhand",
+  "charge": 1,
+  "emissive": 3.8000000000000003,
+  "calls": 2,
+  "triangles": 354,
+  "frameCalls": 164,
+  "frameTris": 496129,
+  "rect": {
+   "x": 391,
+   "y": 254,
+   "width": 476,
+   "height": 268
+  }
+ },
+ "sword": {
+  "meshes": 4,
+  "materials": 3,
+  "geometries": 4,
+  "triangles": 328,
+  "localMin": [
+   -0.1,
+   -0.826,
+   -0.032
+  ],
+  "localMax": [
+   0.1,
+   0.122,
+   0.032
+  ],
+  "held": {
+   "calls": 8,
+   "triangles": 656,
+   "frameCalls": 141,
+   "frameTris": 443807
+  },
+  "rect": {
+   "x": 374,
+   "y": 249,
+   "width": 531,
+   "height": 299
+  }
+ },
+ "swing": {
+  "move": null,
+  "t": 0.183,
+  "anim": "slash1",
+  "trail": true,
+  "tip": [
+   -54.65,
+   3.83,
+   -3.93
+  ],
+  "calls": 9,
+  "triangles": 678,
+  "frameCalls": 159,
+  "frameTris": 492681,
+  "rect": {
+   "x": 476,
+   "y": 254,
+   "width": 478,
+   "height": 269
+  }
+ },
+ "mem": {
+  "geometries": 1145,
+  "textures": 354,
+  "programs": 86
+ },
+ "errors": [
+  "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

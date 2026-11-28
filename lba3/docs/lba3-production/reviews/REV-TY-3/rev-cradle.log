@@ -1,0 +1,8 @@
+loaded: {"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":true,"pair":false,"paid":false,"owe":0,"trips":2,"room":"workshop","coins":7,"lying":0,"state":"play","chapter":"zeelich"}
+crank down: {"r":"used","tgt":"wcrank","label":"p_crank"}
+down: {"on":false,"heat":0,"sync":0,"lift":0,"up":false,"tap":true,"pair":false,"paid":false,"owe":0,"trips":2,"room":"workshop","coins":7,"lying":0,"state":"play","chapter":"zeelich"}
+into the lowered cradle (from W, N, S): {"W":{"d":0.68,"y":0},"N":{"d":0.68,"y":0},"S":{"d":0.68,"y":0}}
+crank up: {"r":"used","tgt":"wcrank","label":"p_crank"}
+under the raised cradle: {"r":"timeout","d":0.93,"lift":1}
+crank down then straight under: {"go":"timeout","trace":[[0,0.69,0],[0,0.69,0],[0,0.69,0],[0,0.69,0],[0,0.69,0],[0,0.69,0]],"escape":"arrived"}
+no errors

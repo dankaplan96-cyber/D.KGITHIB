@@ -1,0 +1,30 @@
+heading 3 (135°, camera yaw 7.07): main 103 calls 430k tris · shadow 7 calls 4k tris
+   scenery 48/231k · trees 2/59k · terrain 6/59k · characters 33/39k · water 1/22k · grass 9/21k · particles 2/1k · transparent 1/0k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 4/93/130/1/2 · trees 0/0/59/0/0 · terrain 0/10/10/20/20 · characters 31/6/0/1/0 · water 22/0/0/0/0 · grass 0/11/10/0/0 · particles 0/0/0/0/0 · transparent 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 1/2 · grass 15/21 · particles 0/1
+   [grass/flowers half beyond 28 m] main 102 calls 428k tris · shadow 7 calls 4k tris  (Δ main -1 calls -2.1k tris)
+      scenery 48/231k · trees 2/59k · terrain 6/59k · characters 33/39k · water 1/22k · grass 8/18k · particles 2/1k · transparent 1/0k · sky 1/0k
+   [grass/flowers to 30 m] main 102 calls 429k tris · shadow 7 calls 4k tris  (Δ main -1 calls -0.7k tris)
+      scenery 48/231k · trees 2/59k · terrain 6/59k · characters 33/39k · water 1/22k · grass 8/20k · particles 2/1k · transparent 1/0k · sky 1/0k
+   [trees detailed to 22 m] main 103 calls 422k tris · shadow 7 calls 4k tris  (Δ main 0 calls -8.0k tris)
+      scenery 48/231k · terrain 6/59k · trees 2/51k · characters 33/39k · water 1/22k · grass 9/21k · particles 2/1k · transparent 1/0k · sky 1/0k
+heading 4 (180°, camera yaw 7.85): main 165 calls 673k tris · shadow 7 calls 4k tris
+   scenery 88/390k · trees 2/99k · terrain 8/78k · characters 40/50k · grass 10/32k · water 1/22k · transparent 13/2k · particles 2/1k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 3/57/169/116/45 · trees 0/0/99/0/0 · terrain 0/10/10/20/39 · characters 31/0/3/13/2 · grass 0/14/18/0/0 · water 22/0/0/0/0 · transparent 0/0/0/2/0 · particles 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 39/40 · grass 19/32 · transparent 0/0 · particles 0/1
+   [grass/flowers half beyond 28 m] main 165 calls 668k tris · shadow 7 calls 4k tris  (Δ main 0 calls -5.1k tris)
+      scenery 88/390k · trees 2/99k · terrain 8/78k · characters 40/50k · grass 10/27k · water 1/22k · transparent 13/2k · particles 2/1k · sky 1/0k
+   [grass/flowers to 30 m] main 164 calls 667k tris · shadow 7 calls 4k tris  (Δ main -1 calls -5.6k tris)
+      scenery 88/390k · trees 2/99k · terrain 8/78k · characters 40/50k · grass 9/26k · water 1/22k · transparent 13/2k · particles 2/1k · sky 1/0k
+   [trees detailed to 22 m] main 165 calls 662k tris · shadow 7 calls 4k tris  (Δ main 0 calls -11.3k tris)
+      scenery 88/390k · trees 2/88k · terrain 8/78k · characters 40/50k · grass 10/32k · water 1/22k · transparent 13/2k · particles 2/1k · sky 1/0k
+heading 5 (225°, camera yaw 8.64): main 186 calls 850k tris · shadow 7 calls 4k tris
+   scenery 102/451k · trees 2/169k · terrain 8/78k · grass 13/71k · characters 46/57k · water 1/22k · transparent 11/2k · particles 2/1k · sky 1/0k
+   main tris by distance (0-15/15-30/30-60/60-100/100+ m, k): scenery 19/49/170/167/45 · trees 0/0/169/0/0 · terrain 10/0/10/20/39 · grass 0/20/51/0/0 · characters 31/3/8/12/3 · water 22/0/0/0/0 · transparent 0/0/0/2/0 · particles 0/0/0/0/0 · sky 0/0/0/0/0
+   instanced draws, tris in view / drawn (k): scenery 54/61 · grass 67/71 · transparent 0/0 · particles 0/1
+   [grass/flowers half beyond 28 m] main 186 calls 834k tris · shadow 7 calls 4k tris  (Δ main 0 calls -15.9k tris)
+      scenery 102/451k · trees 2/169k · terrain 8/78k · characters 46/57k · grass 13/55k · water 1/22k · transparent 11/2k · particles 2/1k · sky 1/0k
+   [grass/flowers to 30 m] main 184 calls 819k tris · shadow 7 calls 4k tris  (Δ main -2 calls -30.8k tris)
+      scenery 102/451k · trees 2/169k · terrain 8/78k · characters 46/57k · grass 11/40k · water 1/22k · transparent 11/2k · particles 2/1k · sky 1/0k
+   [trees detailed to 22 m] main 186 calls 839k tris · shadow 7 calls 4k tris  (Δ main 0 calls -11.2k tris)
+      scenery 102/451k · trees 2/158k · terrain 8/78k · grass 13/71k · characters 46/57k · water 1/22k · transparent 11/2k · particles 2/1k · sky 1/0k

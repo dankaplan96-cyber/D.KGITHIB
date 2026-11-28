@@ -1,0 +1,480 @@
+{
+ "prologue": {
+  "moments": [
+   {
+    "name": "01-handoff",
+    "n": 2,
+    "chars": 67,
+    "items": [
+     "toast: Check the well. Take the magic ball from the cupboard first.",
+     "weapon: ✊ Fists"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "02-cupboard",
+    "n": 2,
+    "chars": 55,
+    "items": [
+     "toast: Got the magic ball and the holomap",
+     "weapon: ✦ Magic Ball R: Fists"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "03-outside",
+    "n": 0,
+    "chars": 0,
+    "items": [],
+    "dialog": ""
+   },
+   {
+    "name": "04-at-well",
+    "n": 2,
+    "chars": 19,
+    "items": [
+     "prompt: W Inspect",
+     "toast: Game saved"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "05-key",
+    "n": 2,
+    "chars": 26,
+    "items": [
+     "prompt: W Talk",
+     "toast: Got the well lid key"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "06-rope",
+    "n": 2,
+    "chars": 23,
+    "items": [
+     "prompt: W Talk",
+     "toast: Got a rope ladder"
+    ],
+    "dialog": ""
+   }
+  ],
+  "handoff": {
+   "items": [
+    {
+     "kind": "toast",
+     "text": "Check the well. Take the magic ball from the cupboard first."
+    },
+    {
+     "kind": "weapon",
+     "text": "✊ Fists"
+    }
+   ],
+   "n": 2,
+   "chars": 67,
+   "counters": 0,
+   "dialog": ""
+  },
+  "cupboard": {
+   "items": [
+    {
+     "kind": "toast",
+     "text": "Got the magic ball and the holomap"
+    },
+    {
+     "kind": "weapon",
+     "text": "✦ Magic Ball R: Fists"
+    }
+   ],
+   "n": 2,
+   "chars": 55,
+   "counters": 0,
+   "dialog": ""
+  },
+  "outside": {
+   "items": [],
+   "n": 0,
+   "chars": 0,
+   "counters": 0,
+   "dialog": ""
+  },
+  "key": {
+   "items": [
+    {
+     "kind": "prompt",
+     "text": "W Talk"
+    },
+    {
+     "kind": "toast",
+     "text": "Got the well lid key"
+    },
+    {
+     "kind": "counter",
+     "text": "2"
+    },
+    {
+     "kind": "counter",
+     "text": "0"
+    }
+   ],
+   "n": 2,
+   "chars": 26,
+   "counters": 2,
+   "dialog": ""
+  },
+  "sum": {
+   "by": {
+    "prompt": {
+     "n": 26,
+     "chars": 131
+    },
+    "toast": {
+     "n": 6,
+     "chars": 134
+    },
+    "objective": {
+     "n": 2,
+     "chars": 118
+    }
+   },
+   "n": 34,
+   "chars": 383,
+   "lines": 19,
+   "lineChars": 1170
+  },
+  "log": [
+   "2.5 prompt: Inspect",
+   "3.5 toast: Got the magic ball and the holomap",
+   "3.5 objective: Check the well",
+   "7.3 prompt: Talk",
+   "16.2 prompt: Inspect",
+   "16.6 prompt: Talk",
+   "29.3 toast: Game saved",
+   "30.0 prompt: Shop",
+   "30.6 prompt: Inspect",
+   "42.9 prompt: Talk",
+   "44.8 prompt: Inspect",
+   "47.8 prompt: Talk",
+   "49.7 prompt: Inspect",
+   "62.7 toast: The ground is shaking...",
+   "86.0 prompt: Talk",
+   "87.7 prompt: Inspect",
+   "90.1 prompt: Talk",
+   "91.0 prompt: Inspect",
+   "100.1 prompt: Inspect",
+   "161.0 objective: Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?",
+   "161.6 prompt: Inspect",
+   "163.1 prompt: Talk",
+   "165.4 toast: Got the well lid key",
+   "165.4 prompt: Talk",
+   "167.9 prompt: Talk",
+   "182.9 prompt: Talk",
+   "188.9 prompt: Talk",
+   "190.2 prompt: Talk",
+   "193.6 prompt: Talk",
+   "195.1 toast: Got a signed unloading permit",
+   "195.2 prompt: Talk",
+   "198.5 prompt: Talk",
+   "199.3 toast: Got a rope ladder",
+   "199.3 prompt: Talk"
+  ]
+ },
+ "street": {
+  "moments": [
+   {
+    "name": "01-square",
+    "n": 0,
+    "chars": 0,
+    "items": [],
+    "dialog": ""
+   },
+   {
+    "name": "02-harbour",
+    "n": 1,
+    "chars": 6,
+    "items": [
+     "prompt: W Talk"
+    ],
+    "dialog": ""
+   }
+  ],
+  "sum": {
+   "by": {
+    "prompt": {
+     "n": 7,
+     "chars": 31
+    },
+    "toast": {
+     "n": 1,
+     "chars": 10
+    }
+   },
+   "n": 8,
+   "chars": 41,
+   "lines": 0,
+   "lineChars": 0
+  },
+  "log": [
+   "204.8 prompt: Talk",
+   "206.0 prompt: Talk",
+   "219.8 prompt: Talk",
+   "220.9 toast: Game saved",
+   "221.8 prompt: Talk",
+   "225.9 prompt: Inspect",
+   "226.9 prompt: Shop",
+   "243.1 prompt: Talk"
+  ]
+ },
+ "combat": {
+  "moments": [
+   {
+    "name": "01-cave",
+    "n": 1,
+    "chars": 21,
+    "items": [
+     "weapon: ✦ Magic Ball R: Fists"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "02-fight",
+    "n": 1,
+    "chars": 21,
+    "items": [
+     "weapon: ✦ Magic Ball R: Fists"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "03-after",
+    "n": 0,
+    "chars": 0,
+    "items": [],
+    "dialog": ""
+   }
+  ],
+  "sum": {
+   "by": {
+    "prompt": {
+     "n": 25,
+     "chars": 130
+    },
+    "toast": {
+     "n": 2,
+     "chars": 36
+    },
+    "objective": {
+     "n": 1,
+     "chars": 72
+    },
+    "float": {
+     "n": 3,
+     "chars": 6
+    }
+   },
+   "n": 28,
+   "chars": 238,
+   "lines": 14,
+   "lineChars": 813
+  },
+  "log": [
+   "247.6 prompt: Open",
+   "257.9 prompt: Talk",
+   "259.1 prompt: Talk",
+   "259.3 toast: You overhear whispering...",
+   "260.4 prompt: Talk",
+   "262.3 prompt: Talk",
+   "264.5 toast: Game saved",
+   "264.7 prompt: Shop",
+   "265.6 prompt: Inspect",
+   "266.4 prompt: Talk",
+   "267.1 prompt: Inspect",
+   "271.2 prompt: Talk",
+   "272.7 prompt: Inspect",
+   "276.6 prompt: Talk",
+   "278.0 prompt: Inspect",
+   "291.3 prompt: Talk",
+   "293.2 prompt: Inspect",
+   "297.8 prompt: Talk",
+   "298.6 prompt: Inspect",
+   "332.7 prompt: Talk",
+   "335.1 prompt: Inspect",
+   "336.6 prompt: Talk",
+   "336.9 prompt: Inspect",
+   "339.7 prompt: Talk",
+   "341.9 prompt: Inspect",
+   "348.5 prompt: Talk",
+   "349.4 prompt: Inspect",
+   "391.2 objective: Find the source of the heat◆ Wake the three crystals with the magic ball"
+  ]
+ },
+ "chapter4": {
+  "moments": [
+   {
+    "name": "01-arrive",
+    "n": 1,
+    "chars": 6,
+    "items": [
+     "prompt: W Talk"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "02-tarra",
+    "n": 1,
+    "chars": 6,
+    "items": [
+     "prompt: W Talk"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "03-gust",
+    "n": 0,
+    "chars": 0,
+    "items": [],
+    "dialog": ""
+   },
+   {
+    "name": "04-leak",
+    "n": 0,
+    "chars": 0,
+    "items": [],
+    "dialog": ""
+   }
+  ],
+  "sum": {
+   "by": {
+    "chapter": {
+     "n": 2,
+     "chars": 34
+    },
+    "toast": {
+     "n": 2,
+     "chars": 45
+    },
+    "objective": {
+     "n": 5,
+     "chars": 201
+    },
+    "prompt": {
+     "n": 9,
+     "chars": 41
+    }
+   },
+   "n": 18,
+   "chars": 321,
+   "lines": 30,
+   "lineChars": 2664
+  },
+  "log": [
+   "412.1 chapter: Chapter 3 Zeelich",
+   "417.9 toast: The evacuation plan was confiscated",
+   "418.2 objective: Find Baldino's workshop on the Esmer street",
+   "420.4 chapter: Chapter 4 The Dig",
+   "425.4 objective: Find the professor who found the crystals",
+   "425.4 prompt: Talk",
+   "433.1 prompt: Ferry",
+   "439.6 prompt: Talk",
+   "441.1 objective: Restart the wind-pump",
+   "441.1 prompt: Talk",
+   "444.7 prompt: Talk",
+   "446.7 prompt: Talk",
+   "448.2 objective: Restart the wind-pump◆ Find the gear that grinds",
+   "449.1 prompt: Talk",
+   "452.1 prompt: Listen",
+   "453.0 prompt: Listen",
+   "461.9 toast: Gear freed",
+   "463.6 objective: Restart the wind-pump◆ Stop the leak in the pipe"
+  ]
+ },
+ "core": {
+  "moments": [
+   {
+    "name": "01-fight",
+    "n": 2,
+    "chars": 113,
+    "items": [
+     "toast: Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels.",
+     "weapon: ✦ Magic Ball R: Fists"
+    ],
+    "dialog": ""
+   },
+   {
+    "name": "02-stuck",
+    "n": 2,
+    "chars": 113,
+    "items": [
+     "toast: Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels.",
+     "weapon: ✦ Magic Ball R: Fists"
+    ],
+    "dialog": ""
+   }
+  ],
+  "fight": {
+   "items": [
+    {
+     "kind": "toast",
+     "text": "Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels."
+    },
+    {
+     "kind": "weapon",
+     "text": "✦ Magic Ball R: Fists"
+    }
+   ],
+   "n": 2,
+   "chars": 113,
+   "counters": 0,
+   "dialog": ""
+  },
+  "nudge": {
+   "at": 468.1,
+   "pylons": 0
+  },
+  "stuck": {
+   "items": [
+    {
+     "kind": "toast",
+     "text": "Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels."
+    },
+    {
+     "kind": "weapon",
+     "text": "✦ Magic Ball R: Fists"
+    },
+    {
+     "kind": "counter",
+     "text": "2"
+    },
+    {
+     "kind": "counter",
+     "text": "3"
+    }
+   ],
+   "n": 2,
+   "chars": 113,
+   "counters": 2,
+   "dialog": ""
+  },
+  "sum": {
+   "by": {
+    "objective": {
+     "n": 2,
+     "chars": 44
+    },
+    "toast": {
+     "n": 1,
+     "chars": 92
+    }
+   },
+   "n": 3,
+   "chars": 136,
+   "lines": 4,
+   "lineChars": 464
+  },
+  "log": [
+   "466.3 objective: Reach the core",
+   "467.4 toast: Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels.",
+   "467.4 objective: Convert the three pylons (0/3)"
+  ]
+ }
+}

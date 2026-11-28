@@ -1,0 +1,13 @@
+import { launch, open } from '../../../../tests/lib/boot.mjs';
+import fs from 'node:fs';
+const { browser, page } = await launch({ width: +(process.env.VW || 1366), height: +(process.env.VH || 768) });
+await page.addInitScript((q) => { try { localStorage.setItem('sunshard_settings_v1', JSON.stringify({ quality: q, qPicked: true, qv: 1, v: 2 })); } catch {} }, process.env.Q || 'medium');
+page.on('console', (m) => { if (/^DBG/.test(m.text())) console.log(m.text()); });
+const ev = (f, a) => page.evaluate(f, a);
+await open(page, '?nocine');
+await ev(() => { document.querySelector('[data-act="new"]').click(); game.testFreeze = true; game.step(0.3); game.setState('play'); });
+const code = fs.readFileSync(process.argv[2], 'utf8');
+const r = await ev(code);
+console.log(typeof r === 'string' ? r : JSON.stringify(r, null, 1));
+if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });
+await browser.close();

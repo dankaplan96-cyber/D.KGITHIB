@@ -1,0 +1,60 @@
+{
+ "log": [
+  "Twinsen: "
+ ],
+ "miraAt": [
+  -40.8,
+  -1.1
+ ],
+ "before": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -29.64,
+   2.35,
+   74.25
+  ],
+  "hp": 10,
+  "chapter": "well",
+  "obj": "Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?"
+ },
+ "go": {
+  "r": "state:dialog",
+  "t": 7.999999999999981
+ },
+ "after": {
+  "state": "dialog",
+  "room": "citadel",
+  "pos": [
+   -29.34,
+   2.35,
+   40.37
+  ],
+  "hp": 11,
+  "chapter": "well",
+  "obj": "Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?"
+ },
+ "flags": {
+  "pr_row": true,
+  "pr_miraNo": true,
+  "pr_kettle": true
+ },
+ "near": []
+}
+[0.3] go → (996.8, -1.6) plan ok=true pts=2 left=0.38
+[2.1] go → (996.8, -1.6) plan ok=true pts=2 left=0.19
+[6.8] go → (1001.2, 11.3) plan ok=false pts=5 left=0.61
+[15.0] go: transition (house → house, trans true) at (1001.32, 10.61)
+[15.8] go → (-42.0, -4.0) plan ok=false pts=9 left=1.62
+[33.8] go → (-42.0, -4.0) plan ok=false pts=4 left=1.61
+[38.7] go → (-39.6, -2.4) plan ok=true pts=3 left=0.72
+[42.0] go → (-29.3, 75.3) plan ok=true pts=9 left=0.86
+[63.9] go → (-40.8, -1.1) plan ok=true pts=9 left=0.66
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+rc=0

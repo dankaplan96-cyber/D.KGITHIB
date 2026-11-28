@@ -1,0 +1,1120 @@
+From 939e864ad9e82d241aaa2374dc4e23e4ea1856d7 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 10 Nov 2026 14:33:13 +0000
+Subject: [PATCH] Depth first wave: twelve singing crystals, Old Jaspa's warm
+ gems, the pilgrims' waystone
+
+COL-1 (src/game/crystals.js): the collectible layer grows from 6 to 12 crystals, +1 max life each
+(10 to 22). The six in the world are unchanged; six more are given by puzzles as owed rewards
+(caught up after a load). crystalsAll keeps meaning the six in the world (Sendell's chapter-11
+line, old saves); all twelve is dx_crystals12: in the core fight Sendell catches Twinsen once
+when his life would reach zero (Hero.damage asks story.depth.catchFall), and an epilogue line.
+The slots of DES-1, DES-2, HAM-3 and UND-1 exist with their reward plumbing but are marked
+built: false: no quest gives them yet, so 8 of 12 can be had today.
+
+ISL-1 (story/depth.js): Knartas's gem-sorting room gets a low bench with a tray of six stones and
+two bins, PROJECT and KEEP. Jaspa's favour follows his own line. Twinsen takes each stone (his
+hand on it), says what he sees (two wear a pale crust with dust rising: the dig's rule), and sets
+it in a bin. A warm one in PROJECT flashes the bin's lamp and everything goes back on the tray;
+right, Jaspa gives a singing crystal. The singing fork makes the warm ones ring.
+
+HAM-1 (story/depth.js): the monastery terrace's waystone gets an upper stone that turns a quarter
+at a time, both his hands on its grips, carved dome, roof, ice, houses. Each wrong face says what
+it faces; the dome turned to the observatory sinks a slab in the pillar's foot: a crystal in the
+niche. Brother Tenpa's hook follows his own line.
+
+State is dx_ flags only, save format 5 unchanged; a save from the build before loads with 16 max
+life and 6 of 12. tests/depth-1.mjs plays both puzzles by input, with a wrong attempt and a
+Save & quit / Continue in the middle of each, and loads tests/fixtures/pre-col1-save.json (a save
+written by db3707df). DEPTH-PLAN.md: the three cards' Built rows.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/docs/lba-maturity/DEPTH-PLAN.md   |  14 +-
+ lba3/src/game/actors.js                |   2 +
+ lba3/src/game/crystals.js              |  31 ++
+ lba3/src/game/story/depth.js           | 493 +++++++++++++++++++++++++
+ lba3/src/game/story/index.js           |  21 +-
+ lba3/src/game/text/common.js           |   2 +-
+ lba3/src/game/text/depth.js            |  52 +++
+ lba3/src/main.js                       |  13 +-
+ lba3/tests/depth-1.mjs                 | 253 +++++++++++++
+ lba3/tests/fixtures/pre-col1-save.json |   1 +
+ 10 files changed, 868 insertions(+), 14 deletions(-)
+ create mode 100644 lba3/src/game/crystals.js
+ create mode 100644 lba3/src/game/story/depth.js
+ create mode 100644 lba3/src/game/text/depth.js
+ create mode 100644 lba3/tests/depth-1.mjs
+ create mode 100644 lba3/tests/fixtures/pre-col1-save.json
+
+diff --git a/lba3/docs/lba-maturity/DEPTH-PLAN.md b/lba3/docs/lba-maturity/DEPTH-PLAN.md
+index c4f519b6..339f851a 100644
+--- a/lba3/docs/lba-maturity/DEPTH-PLAN.md
++++ b/lba3/docs/lba-maturity/DEPTH-PLAN.md
+@@ -4,6 +4,11 @@ Written 10.11.2026 on `ccr-c1c2c4b9-dep6ed` at `2f1d3890` (artifact v76). **Desi
+ nothing was played, no browser was run for it.** It is the "written list per region for the user to approve"
+ (`WORKPLAN-2026-11-09.md`, wave E item 9). Every minute below is an **estimate**, not a measurement.
+ 
++**Build status (10.11.2026, first wave, part 1):** COL-1, HAM-1 and ISL-1 are **built** (`src/game/crystals.js`,
++`src/game/story/depth.js`, `src/game/text/depth.js`; test `tests/depth-1.mjs`; Automated runtime only, SwiftShader, no
++person has played them). The other 24 proposals are not built. Each built item's card below has a "Built" row saying
++where the build differs from the card.
++
+ The user's worry (10.11): the main path is estimated at 4–5 h for a first play (the bot plays it in about 1 h 15 min);
+ LBA1/LBA2 last several times longer for a newcomer, mostly through optional errands, reasons to go back, secrets and
+ puzzles that make the player stop and think. The user's rules for this plan: long chapters are **not** shortened
+@@ -188,6 +193,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
+ | Risks | none to the story. Flags `dx_jaspa_ask/sorted`; the crystal `sc-jaspa` (COL-1) |
+ | Test | a wrong sort (lamp, line, reset), the right sort by input, the crystal and +1 max life; the fork's ring as the alternate |
+ | Evidence → principle | sample 3 (a visible feature marks the answer), P1, P2 |
++| **Built** (10.11.2026) | `story/depth.js` (ISL-1), `tests/depth-1.mjs`. Jaspa is a man in the game (his voice and model since ISLES-BAR), so the lines are his. His favour comes after his own line the first time he is spoken to. The tray and the two bins stand on a low bench by the sorting room's back wall (the room's gem table keeps its look); six stones, two warm (a pale crust of small crystals, dust motes rising). Twinsen takes the next stone from the tray and says what he sees (the clue is in the world, not only the journal), then sets it in a bin; both reaches are his right hand on the stone and into the bin ('pickup'). Failure: a warm one in PROJECT flashes the lamp at once (Jaspa: "That one sweats!"); all six in with a cold one in KEEP is the other mistake (his second line); both put every stone back on the tray. A stone in his hand is not saved (back on the tray after a load or if he walks off); the bins are (`dx_jaspa_bins`). The fork: struck by the tray, the warm stones still on it ring. Flags `dx_jaspa_ask/bins/tries/sorted/thx`, owed crystal `dx_owe_sc_jaspa`. |
+ 
+ #### ISL-2 · Tellem's letters (a chain across both planets)
+ | | |
+@@ -282,6 +288,7 @@ on the player-input harness (`tests/lib/player.js`), with the shared checks in s
+ | Risks | the dome must be in view from the waystone (the art pass checks the shot; if not, the clue moves to Tenpa's lines). Flags `dx_way_ask/face/open` |
+ | Test | each wrong face's line, the right face by input, the crystal; Continue keeps the turned face |
+ | Evidence → principle | sample 4 (the clue points at a visible landmark), P1 |
++| **Built** (10.11.2026) | `story/depth.js` (HAM-1), `tests/depth-1.mjs`. Closest fit to the card where the geometry decided: the monastery's roof, the glacier and the observatory all lie west of the stone (within 30° of each other), so the four quarters cannot point at four landmarks. The turning stone is an upper block round the pillar, under its cap, set at 45° to the pillar: one of its faces then looks straight at the observatory (measured 0.2° off), and its faces look over the plinth's corners, the only places on the top step wide enough to stand with both hands on a face's grips ('pumpGrip' pose; the test measures the hands within 8 cm of the face). Carvings in turning order: dome, roof, ice, houses. As found the dome faces down the valley; each turn says what now faces the west: the ice faces the glacier, the roof faces the monastery's roof, then the dome faces the dome on the ridge. The niche is a slab at the pillar's foot that sinks into the step; inside, the crystal and the words FOR THE LAST PILGRIM (the card's "the pilgrims left one each" is Tenpa's line after). Tenpa: his own line first, then the pilgrims; after three turns without it, "Ask the altar" (the hall's altar already says the dome was Sendell's shrine). Flags `dx_way_seen/ask/face/turns/open/hint/thx/read`, owed crystal `dx_owe_sc_waystone`. Whether the dome is noticed from the terrace is a design judgment (section 8); the pictures of the stone are in the test's SHOTS. |
+ 
+ #### HAM-2 · Pim's kite and the goat path (a shortcut earned)
+ | | |
+@@ -496,6 +503,7 @@ and C12-3 too: chapter 12 about 18 min (0.9 T). All estimates by the balance for
+ | Risks | **balance**: max life 22 makes chapters 10–12 easier for a thorough player; animation-combat rechecks the ridge, the bore and the core with 16 and 22. **Saves**: `crystalsAll` keeps its meaning (the first six, Sendell's chapter-11 line); the new set is `dx_crystals12`; an old save with six keeps +6 and its line; the quest crystals are owed rewards (`ChapterBase.reward`) so a save before pick-up does not lose one. |
+ | Test | the count and max life after each; an old six-crystal save loads with 16 max life and `crystalsAll`; the twelfth triggers the line; chapter 12's catch happens once (death avoided once, then Retry rules as now) |
+ | Evidence → principle | recollection: LBA1/LBA2's clover boxes hidden off the paths that let him carry more; P7 |
++| **Built** (10.11.2026) | `src/game/crystals.js` (the registry), `main.js` (the count of unique `sc-` ids, the toast "n/12", `crystalsAll` = the six lying in the world, `dx_crystals12` = all twelve), `story/depth.js` (quest crystals as owed rewards, caught up after a load; Sendell's catch; the epilogue line), `actors.js` (one line: Hero.damage asks `depth.catchFall` before a clover or a death). **Obtainable today: 8 of 12** (the six in the world, ISL-1, HAM-1). The slots of DES-1 (`sc-figures`), DES-2 (`sc-trial`), HAM-3 (`sc-pack`) and UND-1 (`sc-source`) exist with their reward plumbing (`giveCrystal`) and are marked `built: false` in `crystals.js`: nothing in the game gives them until those quests are built, so the all-twelve payoff cannot happen in normal play yet (the test reaches it staged). Sendell's catch comes before a clover is used, once per game (`dx_c12_caught`; a Retry that reloads a save from before it can see it again in that attempt). Not built: the holomap helper (it belongs to DES-3, second wave). The "all six" line now reads without a number (the count is out of 12). For the combat owner to review: the catch in `Hero.damage` and the balance with 16 to 22 max life (the card's risk). |
+ 
+ Not proposed: raising the clover cap (9) or new clover boxes (the economy around 9 works, `chapter-balance.md` "Depot
+ economy"); a second currency (Zlitos) or a casino (`ZEELICH_GAP.md` items 7 and 9: a system decision, larger than
+@@ -585,5 +593,7 @@ Each `tests/depth-<id>.mjs` (player-input harness, one suite at a time, SwiftSha
+ 9. the chapter suites and the playthrough segment of that chapter still pass (for C11-1 and C12-1: updated);
+ 10. text: English only, and no night, evening or tonight in any new line (a grep over the new text keys).
+ 
+-Status of this document: **Not implemented** (design only). Next step: the user approves, cuts or reorders the list;
+-the coordinator gives the first wave to workers in pairs.
++Status of this document: the user approved the first wave (10.11.2026). **Built:** COL-1, HAM-1, ISL-1 (see their
++"Built" rows; Automated runtime only). **Not built:** the other nine of the first wave (UND-1, ISL-3, ZEE-1, DES-1,
++DES-2, HAM-2, HAM-3, C11-1, C12-1) and the whole second wave. When DES-1, DES-2, HAM-3 or UND-1 is built, it flips its
++entry in `src/game/crystals.js` to `built: true` and gives its crystal with `Depth.giveCrystal(id, x, y, z, area)`.
+diff --git a/lba3/src/game/actors.js b/lba3/src/game/actors.js
+index a6839bd9..a13ed7e9 100644
+--- a/lba3/src/game/actors.js
++++ b/lba3/src/game/actors.js
+@@ -832,6 +832,8 @@ export class Hero extends Actor {
+       this.rig.hitDir = angleDiff(this.angle, a + Math.PI); // 0 = hit from the front
+       if (heavy && this.hp > 0) { this.angle = a + Math.PI; this.act('knockdown', 0.5, null, 0, ['getup', 0.8]); }
+     }
++    // (COL-1: with all twelve singing crystals, Sendell catches him once in the core: story/depth.js catchFall)
++    if (this.hp <= 0 && g.story?.depth?.catchFall?.(this)) return;
+     if (this.hp <= 0) {
+       if (this.clovers > 0) {
+         // LBA2: a clover leaf revives you on the spot with full life
+diff --git a/lba3/src/game/crystals.js b/lba3/src/game/crystals.js
+new file mode 100644
+index 00000000..76fe5f6b
+--- /dev/null
++++ b/lba3/src/game/crystals.js
+@@ -0,0 +1,31 @@
++// COL-1 · Twelve singing crystals (docs/lba-maturity/DEPTH-PLAN.md, section 6). The collectible layer's registry: which
++// crystals exist, where each comes from, and which can be had today. Each one is +1 max life (10 → 22 with all twelve:
++// main.js applyCrystals counts the ids collected that start with 'sc-').
++//
++// The first six lie in the world (main.js crystalSpots spawns them): five on Citadel, one on the old mill's top on
++// Zeelich. `crystalsAll` keeps its old meaning: these six (Sendell's line in chapter 11, story/chapter3.js), so a save
++// from before the layer grew loads with the same flag and the same +6.
++// The other six are given by a puzzle each, never found lying on a path. A quest crystal is an owed reward until it is
++// in his hand (story/depth.js gives it and catches up an owed one after a load). Whether all twelve are in hand is
++// `dx_crystals12` (the twelfth's payoff: Sendell's catch in the core, chapter 12, and an epilogue line: story/depth.js).
++//
++// built: false = the slot and its reward plumbing exist, but the quest that gives it is a later wave of the plan and is
++// NOT built: nothing in the game can give that crystal yet, so today a player can reach at most 8 of 12 and the
++// all-twelve payoff cannot happen in normal play (only a staged test reaches it). Building the quest = flipping its
++// entry to true and calling Depth.giveCrystal(id, ...) from it.
++export const CRYSTAL_WORLD = ['sc-lighthouse', 'sc-orchard', 'sc-pier', 'sc-east', 'sc-north', 'sc-mill'];
++export const CRYSTAL_QUEST = {
++  'sc-jaspa': { quest: 'ISL-1', region: 'isles', built: true },        // Old Jaspa's warm gems, Knartas (chapter 4 on)
++  'sc-waystone': { quest: 'HAM-1', region: 'hamalayi', built: true },  // the pilgrims' waystone, the monastery terrace (chapter 6 on)
++  'sc-figures': { quest: 'DES-1', region: 'desert', built: false },    // where the figures look (a buried survey cache)
++  'sc-trial': { quest: 'DES-2', region: 'desert', built: false },      // Rector Hougo's third rebound trial
++  'sc-pack': { quest: 'HAM-3', region: 'hamalayi', built: false },     // Yorna's brother's pack in the glacier
++  'sc-source': { quest: 'UND-1', region: 'underground', built: false },  // the source, the crystal galleries
++};
++export const CRYSTAL_IDS = [...CRYSTAL_WORLD, ...Object.keys(CRYSTAL_QUEST)];
++export const CRYSTAL_TOTAL = CRYSTAL_IDS.length;   // 12
++export const isCrystal = (id) => typeof id === 'string' && id.startsWith('sc-');
++// the crystal ids in a collected list, each once
++export const crystalsIn = (collected) => new Set((collected || []).filter(isCrystal));
++// can this crystal be had in the game as built now?
++export const obtainable = (id) => CRYSTAL_WORLD.includes(id) || !!CRYSTAL_QUEST[id]?.built;
+diff --git a/lba3/src/game/story/depth.js b/lba3/src/game/story/depth.js
+new file mode 100644
+index 00000000..5bf7fb85
+--- /dev/null
++++ b/lba3/src/game/story/depth.js
+@@ -0,0 +1,493 @@
++// DEPTH, first wave (docs/lba-maturity/DEPTH-PLAN.md; the user approved it 10.11.2026). Not a chapter: the director
++// (index.js) asks it beside the chapter in progress, like the islands' and the Hamalayi's life. Its state is flags
++// prefixed dx_ (saved with the game; save format unchanged: an old save simply has none of them).
++//
++// COL-1 · Twelve singing crystals (src/game/crystals.js is the registry). Six lie in the world as before; six more are
++//   given by puzzles. Built now: ISL-1 (sc-jaspa) and HAM-1 (sc-waystone). DES-1, DES-2, HAM-3 and UND-1 have their slot
++//   (crystals.js, built: false) and giveCrystal() ready, but no quest gives them yet: they cannot be had.
++//   A quest crystal is an owed reward (dx_owe_<id>) from the moment it is given until it is in his hand: a save in
++//   between loads with it handed over (applyFlags). All twelve (dx_crystals12, main.js collect): in the core fight
++//   (chapter 12) Sendell catches him once when his life would reach zero (catchFall, called by actors.js Hero.damage:
++//   a full heal and her line; once per game, dx_c12_caught), and an epilogue line once dinner is over.
++//
++// ISL-1 · Old Jaspa's warm gems (Knartas's gem-sorting room, from chapter 4: the islands open). Jaspa's hook comes after
++//   his own line the first time he is spoken to. On a low bench by the back wall: a tray of six blue stones between two
++//   bins, PROJECT and KEEP. Two are warm: a pale crust and a thread of dust rising off them (the dig's rule, chapter 4,
++//   desert.js's warm discs; and Jaspa's "warm ones sweat" for a player who comes before the dig). Twinsen takes the next
++//   stone from the tray (his hand on it: 'pickup'), says what he sees, and sets it in a bin (his hand into the bin). A
++//   warm one in PROJECT: the bin's lamp flashes red, Jaspa's line, all six back on the tray. All six placed with a cold
++//   one in KEEP: Jaspa's other line, back on the tray. Right: Jaspa gives the crystal. The singing fork struck by the
++//   tray makes the warm ones still on it ring (an alternate way to tell). State: dx_jaspa_ask, dx_jaspa_bins ('.' on
++//   the tray, 'P' or 'K' per stone, in tray order), dx_jaspa_tries, dx_jaspa_sorted, dx_jaspa_thx. A stone in his hand
++//   is not saved: it is back on the tray after a load, and if he walks off with it.
++//
++// HAM-1 · The pilgrims' waystone (the monastery terrace, from chapter 6). Brother Tenpa's hook comes after his own line
++//   the first time. The waystone (LBA1's prop, props-lba1hamalayi.js) gets an upper stone that turns on its pillar, a
++//   quarter at a time (Twinsen's hands on its grips), carved on four sides: dome, roof, houses, ice. The dome's face
++//   toward the observatory (Sefa's dome, the old shrine: the hall's altar says so, hamlife.js hh_altar) opens a niche at
++//   the pillar's foot with the crystal. Each wrong turn says what the stone faces now. State: dx_way_seen, dx_way_ask,
++//   dx_way_face (0..3, the quarter turns made, mod 4), dx_way_turns, dx_way_open.
++import * as THREE from 'three';
++import { t } from '../i18n.js';
++import { ChapterBase } from './base.js';
++import { IH, roomOf } from '../ihomes.js';
++import { MAT, rbox, canvasTex, plane } from '../props.js';
++import { MM } from '../props-mountain.js';
++import { CRYSTAL_TOTAL, CRYSTAL_QUEST, crystalsIn } from '../crystals.js';
++import { islePhase } from '../islandlife.js';
++import '../text/depth.js';
++
++// ---------------------------------------------------------------- ISL-1's layout (the room's frame: ihomes.js IH.frame)
++const GEM_ROOM = roomOf('knartas-28-29');
++const GEMS = 6, WARM = [1, 4];                 // tray order, left to right as he faces the back wall
++const GEM_L = { bench: { x: 1.6, w: 1.0, d: 0.4, top: 0.46 }, P: { x: 0.5 }, K: { x: 2.75 }, binS: 0.5, binH: 0.44 };
++const PICK = { fw: 0.59, side: 0.44, at: 0.45, dur: 0.9 };   // the 'pickup' pose: his right hand 0.59 m ahead, 0.44 m right, lowest at 0.45 s left
++// ---------------------------------------------------------------- HAM-1's layout (the waystone's frame: origin on the ground)
++// The carvings in turning order; with the stone turned s quarters, carving c faces the bearing ry + 45° + (c + s) × 90°.
++// The observatory (Sefa's dome, the old shrine) lies at slot 2's bearing from the stone (measured: 4362, −50 → 4286,
++// −72 is −1.852 rad; slot 2 is 0.5 + π/4 + π = −1.856); the monastery's roof (−1.39) and the glacier (−1.53) lie near
++// it, Lhar down the valley on slot 3's side.
++const WAY_CARVE = ['dome', 'roof', 'ice', 'houses'];
++const WAY_SOLVED = 2;   // the dome (0) in slot 2
++const WAY_START = 3;    // as found: the dome faces down the valley (then the ice, the roof; the dome on the third turn)
++// the block's half-width (round the pillar's diagonal, 0.613), its band above the top step, the carvings' and the grips'
++// height (the 'pumpGrip' pose: hands 1.12 m up, 0.48 m ahead, ±0.19 m apart), where he stands (from the middle, along a
++// corner: 0.62 + 0.48, and a few cm for the pose's sway: measured in tests/depth-1.mjs), how long a quarter takes
++const WAY = { hw: 0.62, y0: 0.74, y1: 1.88, carveY: 1.5, gripY: 1.12, gripS: 0.19, stand: 1.13, dur: 1.3 };
++let CARVE_M = null;
++// a carving's face: grey stone, the motif cut in (a dark groove with a lit edge under it)
++function carveMat(kind) {
++  CARVE_M ||= {};
++  return (CARVE_M[kind] ||= MAT.map(canvasTex(160, 140, (x, w, h) => {
++    x.fillStyle = '#cfc6b8'; x.fillRect(0, 0, w, h);
++    x.strokeStyle = '#a89e90'; x.lineWidth = 4; x.strokeRect(6, 6, w - 12, h - 12);
++    const cut = (draw) => { for (const [dx, col, lw] of [[2, '#f2ece2', 7], [0, '#4e463e', 6]]) { x.save(); x.translate(dx, dx); x.strokeStyle = col; x.lineWidth = lw; x.lineJoin = 'round'; x.lineCap = 'round'; x.beginPath(); draw(); x.stroke(); x.restore(); } };
++    const g = h - 30;
++    if (kind === 'dome') cut(() => { x.moveTo(30, g); x.lineTo(130, g); x.moveTo(42, g); x.arc(80, g, 38, Math.PI, 0); x.moveTo(80, g - 38); x.lineTo(80, g - 54); });
++    else if (kind === 'roof') cut(() => { x.moveTo(25, g - 34); x.lineTo(80, g - 74); x.lineTo(135, g - 34); x.closePath(); x.moveTo(38, g - 34); x.lineTo(38, g); x.lineTo(122, g); x.lineTo(122, g - 34); x.moveTo(72, g); x.lineTo(72, g - 20); x.lineTo(88, g - 20); x.lineTo(88, g); });
++    else if (kind === 'houses') cut(() => { for (const [cx, s] of [[42, 1], [80, 1.25], [118, 0.9]]) { const hw = 15 * s, hh = 22 * s; x.moveTo(cx - hw, g); x.lineTo(cx - hw, g - hh); x.lineTo(cx, g - hh - 14 * s); x.lineTo(cx + hw, g - hh); x.lineTo(cx + hw, g); } x.moveTo(20, g); x.lineTo(140, g); });
++    else cut(() => { x.moveTo(20, g); x.lineTo(48, g - 60); x.lineTo(62, g - 34); x.lineTo(84, g - 80); x.lineTo(104, g - 40); x.lineTo(116, g - 56); x.lineTo(140, g); x.moveTo(84, g - 80); x.lineTo(80, g - 52); x.moveTo(48, g - 60); x.lineTo(52, g - 40); });
++  }), 0.9));
++}
++
++// the flag a quest crystal is owed under (sc-jaspa → dx_owe_sc_jaspa)
++const oweFlag = (id) => 'dx_owe_' + id.replace(/-/g, '_');
++
++export class Depth extends ChapterBase {
++  get RG() { return this.game.regions; }
++  able() { const b = this.game.hero.body; return b !== 'zoe' && b !== 'worker'; }
++  idx(key) { return this.story.chapters.findIndex((c) => c.key === key); }
++  at(key) { const i = this.idx(key); return i >= 0 && this.story.index >= i; }
++  here() { return this.game.room?.id ?? 'citadel'; }
++  holder(room, x, y, z, ry = 0) {
++    const grp = new THREE.Group(), gp = room.group.position;
++    grp.position.set(x - gp.x, y - gp.y, z - gp.z); grp.rotation.y = ry; room.group.add(grp); return grp;
++  }
++
++  // ================================================================ COL-1: the crystals
++  has(id) { return this.game.collected.includes(id); }
++  // a quest's crystal: tossed out at (x, y, z) in `where` (an area id), owed until it is in his hand
++  giveCrystal(id, x, y, z, where) {
++    if (!CRYSTAL_QUEST[id] || this.has(id) || this.game.pickups.list.some((p) => p.id === id)) return false;
++    this.reward(oweFlag(id), 'crystal', 1, x, y, z, { id, pop: true, where });
++    return true;
++  }
++  // after a load: an owed crystal not lying in the world any more is handed over at once (as settleOwed does for kashes)
++  settleCrystals() {
++    const g = this.game, f = this.f;
++    // (earned but neither given nor owed: a save in the moment between the puzzle's end and the crystal's toss)
++    const earned = { 'sc-jaspa': f.dx_jaspa_sorted, 'sc-waystone': f.dx_way_open };
++    for (const [id, e] of Object.entries(earned)) if (e && !this.has(id) && !f[oweFlag(id)] && !g.pickups.list.some((p) => p.id === id)) f[oweFlag(id)] = 1;
++    for (const id of Object.keys(CRYSTAL_QUEST)) {
++      const flag = oweFlag(id);
++      if (!this.f[flag]) continue;
++      if (this.has(id)) { delete this.f[flag]; continue; }
++      if (g.pickups.list.some((p) => p.owe === flag)) continue;
++      delete this.f[flag];
++      g.collected.push(id); g.applyCrystals();
++      g.hud.toast('toast_crystal', { n: g.crystalCount(), max: CRYSTAL_TOTAL });
++      if (g.crystalCount() >= CRYSTAL_TOTAL) this.f.dx_crystals12 = true;
++    }
++  }
++  // Hero.damage, his life at zero: with all twelve, in the core fight, Sendell catches him once
++  catchFall(h) {
++    const g = this.game, f = this.f;
++    if (!f.dx_crystals12 || f.dx_c12_caught || this.story.cur?.key !== 'core' || !f.c3_fight || f.c3_done || g.room?.id !== 'c3core') return false;
++    if (g.crystalCount() < CRYSTAL_TOTAL) return false;
++    f.dx_c12_caught = true;
++    h.hp = h.maxHp; h.invuln = 3; h.dead = false;
++    g.audio.play('revive');
++    g.particles.burst(h.pos.x, h.pos.y + 1, h.pos.z, '#bff4ff', 40, 4);
++    g.hud.stats?.(h);
++    this.chain([['sendell', 'dx_c12_catch']]);
++    return true;
++  }
++  journalTitle() { return t('dx_j_title', { n: this.game.crystalCount(), max: CRYSTAL_TOTAL }); }
++
++  // ================================================================ construction
++  decorate() {
++    const R = this.game.rooms;
++    if (R[GEM_ROOM] && IH[GEM_ROOM]?.frame && this.once('gems')) this.buildGems(R[GEM_ROOM]);
++    if (R.hamalayi?.lba1?.places?.['lba1-waystone'] && this.once('way')) this.buildWay(R.hamalayi);
++    this.applyFlags();
++  }
++  regionBuilt() { this.applyWorld(); }
++  applyFlags() {
++    this.settleCrystals();
++    this.applyWorld();
++  }
++  applyWorld() {
++    this.held = null;
++    this.layGems();
++    this.setWay();
++  }
++
++  // ---------------------------------------------------------------- ISL-1: the bench, the tray, the bins
++  buildGems(room) {
++    const F = IH[GEM_ROOM].frame, P = this.game.physics, L = GEM_L;
++    const X = (lx) => F.cx + lx, Z = (lz) => F.cz + lz;
++    const zB = F.BZ + 0.04 + L.bench.d / 2;   // the bench against the back wall, facing into the room (+z)
++    const grp = this.holder(room, X(0), 0, Z(0), 0);
++    const wood = MAT.wood('dark'), pale = MAT.wood('pale');
++    // the bench: a low plank on two trestles, and a shallow tray on it
++    const B = new THREE.Group(); B.position.set(L.bench.x, 0, zB); grp.add(B);
++    const top = new THREE.Mesh(rbox(L.bench.w, 0.05, L.bench.d, 0.01), wood); top.position.y = L.bench.top - 0.025; top.castShadow = true; B.add(top);
++    for (const s of [-1, 1]) { const leg = new THREE.Mesh(rbox(0.06, L.bench.top - 0.05, L.bench.d - 0.06, 0.01), wood); leg.position.set(s * (L.bench.w / 2 - 0.08), (L.bench.top - 0.05) / 2, 0); B.add(leg); }
++    const tray = new THREE.Mesh(rbox(0.82, 0.03, 0.22, 0.01), pale); tray.position.set(0, L.bench.top + 0.015, 0.04); B.add(tray);
++    P.add({ type: 'box', x: X(L.bench.x), z: Z(zB), hw: L.bench.w / 2, hd: L.bench.d / 2, rot: 0, top: L.bench.top, noStand: true });
++    // the bins: open wooden boxes with a painted board each; the project's has its lamp
++    const label = (word, bg) => MAT.map(canvasTex(192, 64, (x, w, h) => { x.fillStyle = bg; x.fillRect(0, 0, w, h); x.fillStyle = '#f2ead6'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(word, w / 2, h / 2 + 2); }), 0.8);
++    const bins = {};
++    for (const [k, word, bg] of [['P', 'PROJECT', '#2a4a6a'], ['K', 'KEEP', '#6a4a2a']]) {
++      const s = L.binS, hh = L.binH, b = new THREE.Group(); b.position.set(L[k].x, 0, F.BZ + 0.04 + s / 2 + 0.02); grp.add(b);
++      const floor = new THREE.Mesh(rbox(s, 0.04, s, 0.01), wood); floor.position.y = 0.02; b.add(floor);
++      for (const [sx, sz, w, d] of [[0, -1, s, 0.04], [0, 1, s, 0.04], [-1, 0, 0.04, s], [1, 0, 0.04, s]]) { const m = new THREE.Mesh(rbox(w, hh, d, 0.01), wood); m.position.set(sx * (s / 2 - 0.02), hh / 2, sz * (s / 2 - 0.02)); m.castShadow = true; b.add(m); }
++      const board = new THREE.Mesh(plane(0.42, 0.14), label(word, bg)); board.position.set(0, hh * 0.55, s / 2 + 0.005); b.add(board);
++      let lamp = null;
++      if (k === 'P') { lamp = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), new THREE.MeshStandardMaterial({ color: '#552222', emissive: '#ff2a1a', emissiveIntensity: 0, roughness: 0.4 })); lamp.position.set(s / 2 - 0.06, hh + 0.03, s / 2 - 0.02); b.add(lamp); }
++      P.add({ type: 'box', x: X(L[k].x), z: Z(b.position.z), hw: s / 2, hd: s / 2, rot: 0, top: hh, noStand: true });
++      bins[k] = { grp: b, lamp, x: X(L[k].x), z: Z(b.position.z), lx: L[k].x, lz: b.position.z };
++    }
++    // the stones: one blue crystal each, the warm ones crusted pale with dust motes rising off them
++    const blue = MAT.flat('#7ab8e8', 0.25, { metalness: 0.1, flatShading: true }), crustM = MAT.flat('#f6f8f2', 0.95, { flatShading: true });
++    const gg = new THREE.OctahedronGeometry(0.05, 0), cg = new THREE.OctahedronGeometry(0.022, 0), mg = new THREE.SphereGeometry(0.006, 4, 3), moteM = MAT.flat('#f4efe4', 1);
++    const gems = [];
++    for (let i = 0; i < GEMS; i++) {
++      const warm = WARM.includes(i), m = new THREE.Group(); grp.add(m);
++      const c = new THREE.Mesh(gg, blue); c.scale.set(1, 1.4, 1); c.position.y = 0.06; c.rotation.y = i * 0.7; m.add(c);
++      const motes = [];
++      if (warm) {
++        for (let j = 0; j < 7; j++) { const a = j * 0.9 + i, q = new THREE.Mesh(cg, crustM); q.position.set(Math.sin(a) * 0.034, 0.03 + (j % 3) * 0.022, Math.cos(a) * 0.034); q.rotation.set(a, a * 2, 0); m.add(q); }
++        for (let j = 0; j < 5; j++) { const q = new THREE.Mesh(mg, moteM); q.userData.ph = j / 5; m.add(q); motes.push(q); }
++      }
++      // (the tray's slot: local to the room's group; he faces the back wall, so left to right runs toward +x... seen
++      //  from the room it runs right to left; the order only matters to the saved string)
++      const slot = { x: L.bench.x - 0.3 + i * 0.12, y: L.bench.top + 0.03, z: zB + 0.04 };
++      gems.push({ i, warm, m, motes, slot });
++    }
++    this.G = { room, grp, bins, gems, F, zB, tray: { x: X(L.bench.x), z: Z(zB), lx: L.bench.x }, flashT: 0, okT: 0 };
++  }
++  get bins() { const s = this.f.dx_jaspa_bins; return typeof s === 'string' && s.length === GEMS ? s : '.'.repeat(GEMS); }
++  // every stone where the flags put it: on the tray, or in its bin (their own slots); the one in his hand stays there
++  layGems() {
++    const G = this.G; if (!G) return;
++    const b = this.bins, n = { P: 0, K: 0 };
++    for (const s of G.gems) {
++      if (this.held === s.i) continue;
++      if (s.m.parent !== G.grp) G.grp.add(s.m);
++      s.m.rotation.set(0, 0, 0); s.m.scale.setScalar(1);
++      const w = b[s.i];
++      if (w === 'P' || w === 'K') {
++        const k = n[w]++, B = G.bins[w];
++        s.m.position.set(B.lx - 0.12 + (k % 3) * 0.12, 0.05, B.lz - 0.08 + Math.floor(k / 3) * 0.14);
++      } else s.m.position.set(s.slot.x, s.slot.y, s.slot.z);
++    }
++  }
++  inGemRoom() { return this.here() === GEM_ROOM && !!this.G; }
++  gemsOpen() { return islePhase(this.story) != null && this.able(); }
++  nextOnTray() { const b = this.bins; return this.G?.gems.find((s) => b[s.i] === '.' && this.held !== s.i) || null; }
++  // world point of something in the room's group (its local x, y, z)
++  gw(lx, lz) { const F = this.G.F; return { x: F.cx + lx, z: F.cz + lz }; }
++  // walk him to where his right hand reaches (x, z) facing the back wall, then the 'pickup' reach; cb at the reach's low point
++  reachTo(x, z, cb) {
++    const h = this.game.hero, a = Math.PI;   // (facing the back wall: -z)
++    const fx = Math.sin(a), fz = Math.cos(a), sx = Math.cos(a), sz = -Math.sin(a);
++    const at = { x: x - fx * PICK.fw + sx * PICK.side, z: z - fz * PICK.fw + sz * PICK.side };
++    const go = () => h.act('pickup', PICK.dur, cb, PICK.at);
++    if (Math.hypot(h.pos.x - at.x, h.pos.z - at.z) < 0.05 && Math.abs(Math.atan2(Math.sin(h.angle - a), Math.cos(h.angle - a))) < 0.05) go();
++    else this.walk([at], a, go);
++  }
++  // Hero.walkTo, kept going in a room (life.js drops any walkTo once Twinsen is in a room or region, for its own
++  // bench and pump: the few steps asked for here are put back each frame until they end; his own stick, a hit or the
++  // weapon wheel still take over, as in Hero.update)
++  walk(pts, a, then) {
++    const h = this.game.hero, done = () => { this._steer = null; };
++    h.walkTo(pts, { a, speed: 1.3, then: () => { done(); then(); }, fail: () => { done(); h.angle = a; then(); } });
++    this._steer = h.steer;
++  }
++  keepSteer() {
++    const S = this._steer; if (!S) return;
++    const g = this.game, h = g.hero, mv = g.input?.move?.() || { x: 0, y: 0 };
++    if (h.steer === S) return;
++    if (h.steer || h.hurtT > 0.15 || Math.hypot(mv.x, mv.y) > 0.3 || g.input?.down?.('wheel') || g.state !== 'play') { this._steer = null; return; }
++    h.steer = S;
++  }
++  gemInteractables(consider, dist) {
++    if (!this.inGemRoom() || !this.gemsOpen()) return;
++    const G = this.G, f = this.f, h = this.game.hero;
++    if (h.steer || h.actT > 0 || this._steer) return;
++    const ready = !!f.dx_jaspa_ask && !f.dx_jaspa_sorted;
++    const next = this.nextOnTray();
++    consider(dist(G.tray.x, G.tray.z), 1.25, { kind: 'dx_tray', x: G.tray.x, z: G.tray.z, label: ready && next && this.held == null ? 'p_take' : 'p_look' });
++    for (const k of ['P', 'K']) { const B = G.bins[k]; consider(dist(B.x, B.z), 1.15, { kind: 'dx_bin' + k, bin: k, x: B.x, z: B.z, label: ready && this.held != null ? 'p_place' : 'p_look' }); }
++  }
++  gemInteract(it) {
++    const g = this.game, f = this.f, G = this.G;
++    const look = (key) => { g.say('n_hero', [t(key)], null, g.hero); return true; };
++    const ready = !!f.dx_jaspa_ask && !f.dx_jaspa_sorted;
++    if (it.kind === 'dx_tray') {
++      if (f.dx_jaspa_sorted) return look('dx_tray_done');
++      if (!ready) return look('dx_tray_look');
++      const s = this.nextOnTray();
++      if (this.held != null || !s) return look(this.held != null ? (G.gems[this.held].warm ? 'dx_gem_warm' : 'dx_gem_cold') : 'dx_tray_empty');
++      const F = G.F, wx = F.cx + s.slot.x, wz = F.cz + s.slot.z;
++      this.reachTo(wx, wz, () => {
++        this.held = s.i;
++        const hand = g.hero.rig?.j?.armR?.hand;
++        if (hand) { hand.add(s.m); s.m.position.set(0, -0.06, 0.02); s.m.rotation.set(0, 0, 0); }
++        g.audio.play('select');
++        const lines = [['hero', s.warm ? 'dx_gem_warm' : 'dx_gem_cold']];
++        if (s.warm && f.c4_bottom && !f.dx_jaspa_digSaid) { f.dx_jaspa_digSaid = true; lines.push(['hero', 'dx_gem_warm_dig']); }
++        this.chain(lines);
++      });
++      return true;
++    }
++    const k = it.bin, B = G.bins[k];
++    if (!ready || this.held == null) return look(k === 'P' ? 'dx_bin_project' : 'dx_bin_keep');
++    this.reachTo(B.x, B.z + GEM_L.binS / 2 - 0.1, () => this.place(k));   // (his hand in over the bin's near rim)
++    return true;
++  }
++  // the stone in his hand goes into a bin
++  place(k) {
++    const g = this.game, f = this.f, G = this.G, s = G.gems[this.held];
++    if (!s) return;
++    this.held = null;
++    const b = this.bins.split(''); b[s.i] = k; f.dx_jaspa_bins = b.join('');
++    this.layGems();
++    g.audio.play('chest');
++    if (k === 'P' && s.warm) {
++      G.flashT = 1.6; g.audio.play('deny');
++      return this.wrong('dx_jaspa_wrong_warm');
++    }
++    if (k === 'P') G.okT = 0.35;
++    if (b.includes('.')) { g.save(false); return; }
++    // all six in: a cold one kept is the other mistake
++    if (G.gems.some((q) => !q.warm && b[q.i] === 'K')) return this.wrong('dx_jaspa_wrong_cold');
++    f.dx_jaspa_sorted = true;
++    const n = this.npc('il_jaspa'), p = n?.present && this.here() === GEM_ROOM ? n.pos : { x: G.tray.x, y: 0, z: G.tray.z + 0.6 };
++    this.chain([['il_jaspa', 'dx_jaspa_done1'], ['il_jaspa', 'dx_jaspa_done2']], () => {
++      this.giveCrystal('sc-jaspa', p.x, (p.y || 0) + 1.2, p.z, GEM_ROOM);
++      g.save(false);
++    });
++  }
++  wrong(key) {
++    const g = this.game, f = this.f;
++    f.dx_jaspa_tries = (f.dx_jaspa_tries || 0) + 1;
++    this.chain([['il_jaspa', key]], () => { f.dx_jaspa_bins = '.'.repeat(GEMS); this.layGems(); g.audio.play('select'); g.save(false); });
++  }
++  gemUpdate(dt) {
++    const G = this.G; if (!G) return;
++    const g = this.game;
++    // a stone carried off (out of the room, away from the bench) goes back to the tray
++    if (this.held != null && (this.here() !== GEM_ROOM || Math.hypot(g.hero.pos.x - G.tray.x, g.hero.pos.z - G.tray.z) > 5)) { this.held = null; this.layGems(); }
++    if (this.here() !== GEM_ROOM) return;
++    const T = g.time;
++    for (const s of G.gems) for (const q of s.motes) { const ph = (T * 0.45 + q.userData.ph) % 1; q.position.set(Math.sin(ph * 9 + s.i) * 0.012, 0.09 + ph * 0.22, Math.cos(ph * 7 + s.i) * 0.012); q.visible = ph < 0.85; }
++    const L = G.bins.P.lamp;
++    if (G.flashT > 0) { G.flashT -= dt; L.material.color.set('#ff4a3a'); L.material.emissive.set('#ff2a1a'); L.material.emissiveIntensity = Math.sin(G.flashT * 18) > 0 ? 2.5 : 0.2; }
++    else if (G.okT > 0) { G.okT -= dt; L.material.color.set('#7aff8a'); L.material.emissive.set('#30e040'); L.material.emissiveIntensity = 1.6; }
++    else { L.material.color.set('#552222'); L.material.emissiveIntensity = 0; }
++    // the fork's ring dies away
++    for (const s of G.gems) if (s.ringT > 0 && (s.ringT -= dt) <= 0) s.m.children[0].material = s.base;
++  }
++  ringM() { return (this._ringM ||= MAT.glow('#d8f8ff', '#40d8ff', 2.2)); }
++  gemFork(o) {
++    if (!this.inGemRoom() || !this.gemsOpen()) return false;
++    const G = this.G;
++    if (Math.hypot(G.tray.x - o.x, G.tray.z - o.z) > o.reach + 0.9) return false;
++    const b = this.bins, ring = G.gems.filter((s) => s.warm && b[s.i] === '.' && this.held !== s.i);
++    const g = this.game;
++    for (const s of ring) { const c = s.m.children[0]; s.base ||= c.material; c.material = this.ringM(); s.ringT = 2.5; }
++    if (ring.length) g.audio.play('shard');
++    this.chain([['hero', ring.length >= 2 ? 'dx_gem_fork' : ring.length ? 'dx_gem_fork1' : 'dx_gem_fork0']]);
++    return true;
++  }
++  // Jaspa: his own line first, then the job (the first time); while it is open, every other talk reminds of the rule
++  jaspaTalk(npc) {
++    const f = this.f, g = this.game;
++    if (!this.gemsOpen() || this.here() !== GEM_ROOM) return false;
++    if (!f.dx_jaspa_ask) return this.after(npc, ['dx_jaspa_1', 'dx_jaspa_2', 'dx_jaspa_3'], () => { f.dx_jaspa_ask = true; g.save(false); });
++    if (f.dx_jaspa_sorted && !f.dx_jaspa_thx && !f.dx_owe_sc_jaspa) { f.dx_jaspa_thx = true; return this.say1(npc, 'dx_jaspa_after'); }
++    if (!f.dx_jaspa_sorted) { const n = (npc._dxN = (npc._dxN ?? -1) + 1); if (n % 2 === 0) return this.say1(npc, 'dx_jaspa_wait'); }
++    return false;
++  }
++  // (one line in the person's own name and voice)
++  say1(npc, key) { npc.talking = true; this.game.say(npc.def.name || 'n_' + npc.def.id, [t(key)], () => { npc.talking = false; }, npc); return true; }
++  // the person's own talk (the next handler of the chain says it), with lines added after it: the first talk keeps
++  // what the person always says and then brings up the favour
++  after(npc, keys, done) {
++    const g = this.game, say = g.say;
++    let used = false;
++    g.say = function (name, lines, cb, ...rest) {
++      g.say = say; used = true;
++      return say.call(g, name, [...[].concat(lines), ...keys.map((k) => t(k))], () => { done?.(); cb?.(); }, ...rest);
++    };
++    let r = false;
++    try { this._passing = true; r = this.story.talkRest(npc); } finally { this._passing = false; g.say = say; }
++    if (!used) { npc.talking = true; say.call(g, npc.def.name || 'n_' + npc.def.id, keys.map((k) => t(k)), () => { npc.talking = false; done?.(); }, npc); }
++    return true;
++  }
++
++  // ================================================================ HAM-1: the waystone
++  // The upper stone: a square block round the pillar's upper half, set at 45° to it (so its faces look out over the
++  // plinth's corners, where there is room to stand, and one of them looks straight at the observatory), under the
++  // pillar's cap. Its faces are carved (WAY_CARVE, in turning order); a turn moves each carving on a quarter. He stands
++  // on the plinth's top step at a corner, both hands on the face's grips ('pumpGrip'), and pushes it round. The niche:
++  // a slab in the pillar's foot that sinks into the step.
++  buildWay(M) {
++    const W = M.lba1.places['lba1-waystone'], P = this.game.physics;
++    const top = 1.302;                                      // the plinth's top step (props-lba1hamalayi.js H1 + H2)
++    const B = WAY.hw, y0 = top + WAY.y0, y1 = top + WAY.y1;
++    const grp = this.holder(M, W.x, W.gy, W.z, W.ry);
++    const turnBase = new THREE.Group(); turnBase.rotation.y = Math.PI / 4; grp.add(turnBase);
++    const turn = new THREE.Group(); turnBase.add(turn);
++    const stone = MM.stone('#d8d0c4'), dark = MM.stone('#5a524a');
++    const block = new THREE.Mesh(rbox(B * 2, y1 - y0, B * 2, 0.05), stone); block.position.y = (y0 + y1) / 2; block.castShadow = true; turn.add(block);
++    const band = new THREE.Mesh(rbox(B * 2 + 0.06, 0.08, B * 2 + 0.06, 0.02), stone); band.position.y = y1 - 0.04; turn.add(band);
++    const panels = [];
++    WAY_CARVE.forEach((c, k) => {
++      const face = new THREE.Group(); face.rotation.y = k * Math.PI / 2; turn.add(face);
++      const pl = new THREE.Mesh(plane(0.7, 0.62), carveMat(c)); pl.position.set(0, top + WAY.carveY, B + 0.004); face.add(pl);
++      for (const sx of [-WAY.gripS, WAY.gripS]) { const gq = new THREE.Mesh(rbox(0.07, 0.13, 0.03, 0.01), dark); gq.position.set(sx, top + WAY.gripY, B + 0.006); face.add(gq); }
++      panels.push(pl);
++    });
++    // the niche in the pillar's foot (its local -z face): a dark hollow behind a slab
++    const C = 0.867, nz = -(C / 2);
++    const hollow = new THREE.Mesh(rbox(0.3, 0.34, 0.02, 0.01), MAT.flat('#0a0806', 1)); hollow.position.set(0, top + 0.3, nz - 0.004); grp.add(hollow);
++    const slab = new THREE.Mesh(rbox(0.38, 0.44, 0.06, 0.02), stone); slab.position.set(0, top + 0.3, nz - 0.028); slab.castShadow = true; grp.add(slab);
++    const w = (lx, lz) => { const c = Math.cos(W.ry), sn = Math.sin(W.ry); return { x: W.x + c * lx + sn * lz, z: W.z - sn * lx + c * lz }; };
++    P.add({ type: 'box', x: W.x, z: W.z, hw: B, hd: B, rot: W.ry + Math.PI / 4, top: W.gy + y1, bottom: W.gy + y0, noStand: true });
++    this.way = { M, grp, turn, panels, slab, slabY: slab.position.y, top, ry: W.ry, cx: W.x, cz: W.z, gy: W.gy, niche: { ...w(0, nz - 0.25), y: W.gy + top + 0.3 }, turnT: 0, openT: 0 };
++  }
++  wayFace() { const v = this.f.dx_way_face; return Number.isInteger(v) ? ((v % 4) + 4) % 4 : WAY_START; }
++  // the world bearing (atan2 dx, dz) carving c faces with the stone turned s quarters
++  carveBearing(c, s = this.wayFace()) { return this.way.ry + Math.PI / 4 + (c + s) * Math.PI / 2; }
++  setWay() {
++    const Y = this.way; if (!Y || Y.turnT > 0) return;
++    Y.turn.rotation.y = this.wayFace() * Math.PI / 2;
++    if (!(Y.openT > 0)) Y.slab.position.y = this.f.dx_way_open ? Y.slabY - 0.5 : Y.slabY;
++  }
++  wayOpen() { return this.at('pass') && this.able() && this.here() === 'hamalayi' && !!this.way; }
++  wayInteractables(consider, dist) {
++    if (!this.wayOpen()) return;
++    const Y = this.way, h = this.game.hero, f = this.f;
++    if (h.steer || h.actT > 0 || Y.turnT > 0 || this._steer) return;
++    const d = Math.hypot(h.pos.x - Y.cx, h.pos.z - Y.cz), up = h.pos.y > Y.gy + Y.top - 0.25;
++    if (up && d < 1.5) consider(d, 1.6, { kind: 'dx_way', x: Y.cx, z: Y.cz, label: f.dx_way_seen && !f.dx_way_open ? 'p_turn' : 'p_look' });
++    else if (!up && d < 3.2) consider(d, 3.3, { kind: 'dx_way_look', x: Y.cx, z: Y.cz, label: 'p_look' });
++  }
++  wayInteract(it) {
++    const g = this.game, f = this.f, Y = this.way, h = g.hero;
++    const look = (key) => { this.chain([['hero', key]], () => g.save(false)); return true; };
++    if (f.dx_way_open) return look(this.has('sc-waystone') ? 'dx_way_done' : 'dx_way_words');
++    if (it.kind === 'dx_way_look' || !f.dx_way_seen) { f.dx_way_seen = true; return look('dx_way_look'); }
++    // to the corner nearest him, facing the stone's face there; both hands on its grips; he pushes it round a quarter
++    const al = Math.atan2(h.pos.x - Y.cx, h.pos.z - Y.cz), base = Y.ry + Math.PI / 4;
++    const k = Math.round((al - base) / (Math.PI / 2)), ak = base + k * Math.PI / 2;
++    const spot = { x: Y.cx + Math.sin(ak) * WAY.stand, z: Y.cz + Math.cos(ak) * WAY.stand }, a = ak + Math.PI;
++    const push = () => {
++      h.act('pumpGrip', WAY.dur, () => this.turned(), 0.05);
++      Y.turnT = WAY.dur - 0.15; Y.from = Y.turn.rotation.y; g.audio.play('grind');
++    };
++    if (Math.hypot(h.pos.x - spot.x, h.pos.z - spot.z) < 0.06) { h.angle = a; push(); }
++    else this.walk([spot], a, push);
++    return true;
++  }
++  turned() {
++    const g = this.game, f = this.f, Y = this.way;
++    const s = (this.wayFace() + 1) % 4;
++    f.dx_way_face = s; f.dx_way_turns = (f.dx_way_turns || 0) + 1;
++    Y.turnT = 0; Y.turn.rotation.y = s * Math.PI / 2;
++    if (s !== WAY_SOLVED) { this.chain([['hero', 'dx_way_s' + s]], () => g.save(false)); return; }
++    f.dx_way_open = true;
++    // the click; then the slab sinks (seen, not under a line); then the niche and its crystal
++    this.chain([['hero', 'dx_way_ok']], () => {
++      Y.openT = 1.2; g.audio.play('rumble');
++      Y.afterOpen = () => this.chain([['hero', 'dx_way_open']], () => {
++        const n = Y.niche;
++        this.giveCrystal('sc-waystone', n.x, n.y, n.z, 'hamalayi');
++        g.save(false);
++      });
++    });
++  }
++  wayUpdate(dt) {
++    const Y = this.way; if (!Y) return;
++    if (Y.turnT > 0) {
++      Y.turnT -= dt;
++      const k = 1 - Math.max(0, Y.turnT) / (WAY.dur - 0.15), e = k * k * (3 - 2 * k);
++      Y.turn.rotation.y = Y.from + e * Math.PI / 2;
++    }
++    if (Y.openT > 0) {
++      Y.openT -= dt;
++      const k = 1 - Math.max(0, Y.openT) / 1.2;
++      Y.slab.position.y = Y.slabY - 0.5 * k;
++      if (Y.openT <= 0 && Y.afterOpen) { const fn = Y.afterOpen; Y.afterOpen = null; fn(); }
++    }
++    // the words in the niche, once the crystal is in his hand
++    const f = this.f;
++    if (f.dx_way_open && !f.dx_way_read && this.has('sc-waystone') && this.game.state === 'play' && this.here() === 'hamalayi') { f.dx_way_read = true; this.chain([['hero', 'dx_way_words']]); }
++  }
++  // Brother Tenpa: his own line first; then the pilgrims (the first time), a hint after a few turns, thanks after
++  tenpaTalk(npc) {
++    const f = this.f;
++    if (!this.at('pass') || !this.able()) return false;
++    if (!f.dx_way_ask) return this.after(npc, ['dx_way_tenpa1', 'dx_way_tenpa2'], () => { f.dx_way_ask = true; this.game.save(false); });
++    if (!f.dx_way_open && (f.dx_way_turns || 0) >= 3 && !f.dx_way_hint) return this.after(npc, ['dx_way_tenpa_hint'], () => { f.dx_way_hint = true; });
++    if (f.dx_way_open && !f.dx_way_thx) return this.after(npc, ['dx_way_tenpa_done'], () => { f.dx_way_thx = true; });
++    return false;
++  }
++
++  // ================================================================ the director's hooks
++  interactables(consider, dist) { this.gemInteractables(consider, dist); this.wayInteractables(consider, dist); }
++  interact(it) {
++    if (typeof it?.kind !== 'string' || !it.kind.startsWith('dx_')) return false;
++    if (it.kind.startsWith('dx_way')) return this.wayInteract(it);
++    return this.gemInteract(it);
++  }
++  talkFirst(npc) {
++    if (this._passing) return false;
++    const id = npc?.def?.id;
++    if (id === 'il_jaspa') return this.jaspaTalk(npc);
++    if (id === 'hl_monk') return this.tenpaTalk(npc);
++    return false;
++  }
++  forkHit(o) { return this.gemFork(o); }
++  update(dt) {
++    this.keepSteer();
++    this.gemUpdate(dt); this.wayUpdate(dt);
++    const g = this.game, f = this.f;
++    // COL-1: the epilogue's line for all twelve, once dinner is over and he is free
++    if (f.dx_crystals12 && !f.dx_c12_home && this.story.cur?.key === 'home' && f.ep_free && g.state === 'play' && !g.trans && !g.cutscene) {
++      f.dx_c12_home = true; this.chain([['hero', 'dx_c12_home']]);
++    }
++  }
++  journal() {
++    const f = this.f, out = [];
++    if (this.game.crystalCount() > 0) out.push({ key: 'dx_j_crystals', done: false });
++    if (f.dx_jaspa_ask) { out.push({ key: 'dx_j_jaspa', done: !!f.dx_jaspa_sorted }); if (!f.dx_jaspa_sorted) out.push({ key: 'dx_j_jaspa_rule', done: false }); }
++    if (f.dx_way_ask) out.push({ key: 'dx_j_way', done: !!f.dx_way_open });
++    return out;
++  }
++}
++// (the crystals each in the game once: a helper for tests)
++export const crystalsHeld = (g) => [...crystalsIn(g.collected)];
+diff --git a/lba3/src/game/story/index.js b/lba3/src/game/story/index.js
+index b13430a9..4ce8d3ba 100644
+--- a/lba3/src/game/story/index.js
++++ b/lba3/src/game/story/index.js
+@@ -56,6 +56,7 @@ import { IsleHomes } from './ihomes.js';
+ import { HamalayiLife } from './hamlife.js';
+ import { UndergroundLife } from './deeplife.js';
+ import { IslesLife } from './isleslife.js';
++import { Depth } from './depth.js';
+ import '../text/common.js';
+ 
+ // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
+@@ -98,6 +99,7 @@ export class Story {
+     this.ulife = new UndergroundLife(this);   // UNDER-BAR: the underground's things answer by phase; the shield crew after the ending (deeplife.js)
+     this.hlife = new HamalayiLife(this);   // HAMALAYI-LIFE: the monastery's hall, Lhar's houses and their people by the story's phase (hamlife.js)
+     this.islife = new IslesLife(this);   // ISLES-BAR: Zeelich's islands' usable pieces and their people at home (isleslife.js)
++    this.depth = new Depth(this);   // DEPTH first wave: the twelve singing crystals, Old Jaspa's gems, the pilgrims' waystone (depth.js)
+   }
+   // position of the chapter in progress for a set of flags (by key when the save has one)
+   indexOf(f = this.f) {
+@@ -131,7 +133,7 @@ export class Story {
+     return list;
+   }
+   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
+-  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.kit2b.decorate(); this.citizens.decorate(); }
++  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.kit2.decorate(); this.kit2b.decorate(); this.citizens.decorate(); this.depth.decorate(); }
+ 
+   // ---- flow
+   start() {
+@@ -302,6 +304,8 @@ export class Story {
+     if (pp.length) out.push({ title: t('pp_title'), lines: pp });
+     const ip = this.ipeople.journal();
+     if (ip.length) out.push({ title: t('ip_title'), lines: ip });
++    const dx = this.depth.journal();
++    if (dx.length) out.push({ title: this.depth.journalTitle(), lines: dx });
+     return out;
+   }
+   items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items(), ...this.kesh.items(), ...this.arsenal.items(), ...this.sewers.items(), ...this.hostel.items(), ...this.shops.items(), ...this.purposes.items(), ...this.ipeople.items()]; }
+@@ -321,15 +325,17 @@ export class Story {
+     return out;
+   }
+   canExit(room, to) { return this.cur.canExit(room, to); }
+-  interactables(consider, dist) { this.cur.interactables(consider, dist); this.purposes.interactables(consider, dist); this.ipeople.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.kit2.interactables(consider, dist); this.kit2b.interactables(consider, dist); this.sewers.interactables(consider, dist); this.hostel.interactables(consider, dist); this.shops.interactables(consider, dist); this.stands.interactables(consider, dist); this.ihomes.interactables(consider, dist); this.hlife.interactables(consider, dist); this.dlife.interactables(consider, dist); this.ulife.interactables(consider, dist); this.islife.interactables(consider, dist); }
+-  interact(it) { return this.shops.interact(it) || this.cur.interact(it) || this.purposes.interact(it) || this.ipeople.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.kit2.interact(it) || this.kit2b.interact(it) || this.sewers.interact(it) || this.hostel.interact(it) || this.stands.interact(it) || this.hlife.interact(it) || this.dlife.interact(it) || this.ulife.interact(it) || this.islife.interact(it) || this.ihomes.interact(it) || this.chapters[0].baseInteract(it); }
+-  talk(npc) { if (this.shops.talkFirst(npc) || this.stands.talkFirst(npc) || this.ihomes.talkFirst(npc) || this.hlife.talkFirst(npc) || this.ulife.talkFirst(npc) || this.islife.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
++  interactables(consider, dist) { this.cur.interactables(consider, dist); this.purposes.interactables(consider, dist); this.ipeople.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); this.kit2.interactables(consider, dist); this.kit2b.interactables(consider, dist); this.sewers.interactables(consider, dist); this.hostel.interactables(consider, dist); this.shops.interactables(consider, dist); this.stands.interactables(consider, dist); this.ihomes.interactables(consider, dist); this.hlife.interactables(consider, dist); this.dlife.interactables(consider, dist); this.ulife.interactables(consider, dist); this.islife.interactables(consider, dist); this.depth.interactables(consider, dist); }
++  interact(it) { return this.depth.interact(it) || this.shops.interact(it) || this.cur.interact(it) || this.purposes.interact(it) || this.ipeople.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.kit2.interact(it) || this.kit2b.interact(it) || this.sewers.interact(it) || this.hostel.interact(it) || this.stands.interact(it) || this.hlife.interact(it) || this.dlife.interact(it) || this.ulife.interact(it) || this.islife.interact(it) || this.ihomes.interact(it) || this.chapters[0].baseInteract(it); }
++  talk(npc) { if (!this.depth.talkFirst(npc)) this.talkRest(npc); }
++  // (the talk chain without depth.js: depth.js's hooks add their lines after a person's own, Depth.after)
++  talkRest(npc) { if (this.shops.talkFirst(npc) || this.stands.talkFirst(npc) || this.ihomes.talkFirst(npc) || this.hlife.talkFirst(npc) || this.ulife.talkFirst(npc) || this.islife.talkFirst(npc) || this.purposes.talkFirst(npc) || this.ipeople.talkFirst(npc) || this.citizens.talkFirst(npc) || this.kit2b.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.kit2.talkFirst(npc) || this.sewers.talkFirst(npc) || this.hostel.talkFirst(npc) || this.magic.talkFirst(npc)) return true; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); return true; }
+   ballHit(p) { return this.cur.ballHit(p); }
+   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
+   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
+   jetHit(o) { return this.cur.jetHit?.(o) || this.kit2.jetHit(o); }   // (EQUIP-2a: the pump lance's jet, tools.js)
+   // EQUIP-2b (tools.js): the singing fork's note, the heat flask's blast, what the Esmer line can catch here
+-  forkHit(o) { return this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o); }
++  forkHit(o) { return this.cur.forkHit?.(o) || this.kit2b.forkHit(o) || this.purposes.forkHit(o) || this.depth.forkHit(o); }
+   heatHit(o) { return this.cur.heatHit?.(o) || this.kit2b.heatHit(o); }
+   lineTargets() { return this.kit2b.lineTargets(); }
+   ballTargets() { return this.cur.ballTargets(); }
+@@ -345,7 +351,7 @@ export class Story {
+     const c = this.game.physics.near(p.x, p.z).find((k) => k.type === 'box' && Math.abs(k.x - p.x) < 0.01 && Math.abs(k.z - p.z) < 0.01);
+     if (c) c.enabled = show;
+   }
+-  update(dt) { this.citadelGlider(); this.stepMoves(dt); this.cur.update(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); }
++  update(dt) { this.citadelGlider(); this.stepMoves(dt); this.cur.update(dt); this.depot?.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.kit2.update(dt); this.kit2b.update(dt); this.sewers.update(dt); this.shops.update(dt); this.ipeople.update(dt); this.citizens.update(dt); this.hlife.update(dt); this.ulife.update(dt); this.depth.update(dt); }
+   onEnterRoom(id) { this.cur.onEnterRoom(id); this.sewers.onEnterRoom(id); this.hostel.onEnterRoom(id); }   // (SEWERS-1: arrivals by the other ways)
+   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
+   applyFlags() {
+@@ -364,6 +370,7 @@ export class Story {
+     this.ihomes.applyFlags();
+     this.hlife.applyFlags();
+     this.ulife.applyFlags();
++    this.depth.applyFlags();
+     this.magic.catchUp();   // (MAGIC-LEVELS: a save from before: the levels its chapter has given; never lowered)
+     this.noWalk = true;   // (a load: everyone on their places)
+     try { this.refreshCast(); } finally { this.noWalk = false; }
+@@ -436,5 +443,5 @@ export class Story {
+   }
+   afterEnding() { this.cur.afterEnding?.(); }
+   // LAZY-REGIONS: after an area's build (src/main.js regionBuilt): what each part of the story keeps on it
+-  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.kit2, this.kit2b, this.sewers, this.hostel, this.purposes, this.ipeople, this.ihomes, this.hlife, this.ulife]) c.regionBuilt?.(ids); }
++  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal, this.kit2, this.kit2b, this.sewers, this.hostel, this.purposes, this.ipeople, this.ihomes, this.hlife, this.ulife, this.depth]) c.regionBuilt?.(ids); }
+ }
+diff --git a/lba3/src/game/text/common.js b/lba3/src/game/text/common.js
+index 6adcf11f..2e210158 100644
+--- a/lba3/src/game/text/common.js
++++ b/lba3/src/game/text/common.js
+@@ -113,7 +113,7 @@ Object.assign(STR.en, {
+   ct_pad: 'Gamepad', ct_pad_text: 'Left stick: move · right stick: camera · D-pad: the four behaviours (↑ Normal, → Athletic, ↓ Aggressive, ← Discreet) · A: action / talk · X: attack · Y: ball · B: dodge · View: inventory · LT: holomap · RT: weapon wheel · LB: swap · RB: focus · R3: next target · L3: camera distance · Menu: pause',
+   bench: 'Benchmark', bench_auto: 'Benchmark: Auto as played', bench_title: 'Benchmark results', bench_copy: 'Copy', bench_copied: 'Copied', bench_route: 'Benchmark {n}/{of}',
+   crystal_first: '(It hums, like the crystals in the well. A splinter of something much bigger.)',
+-  crystal_all: '(All six. Together they hum one note, the same one I heard when Sendell spoke.)',
++  crystal_all: '(Now they hum together, one note: the same one I heard when Sendell spoke.)',
+   it_crystals: 'Singing Crystals', itd_crystals: 'Splinters that hum like the crystals in the well. Each one makes me a little tougher.',
+   gen_search_nothing: 'Nothing here.',
+   inv_title: 'Inventory', journal_title: 'Journal', it_level: 'Level {n}',
+diff --git a/lba3/src/game/text/depth.js b/lba3/src/game/text/depth.js
+new file mode 100644
+index 00000000..666cc798
+--- /dev/null
++++ b/lba3/src/game/text/depth.js
+@@ -0,0 +1,52 @@
++// DEPTH first wave (docs/lba-maturity/DEPTH-PLAN.md): the singing crystals' layer (COL-1), Old Jaspa's warm gems on
++// Knartas (ISL-1), the pilgrims' waystone on the monastery terrace (HAM-1). src/game/story/depth.js. English only.
++import { STR } from '../i18n.js';
++
++Object.assign(STR.en, {
++  // ---- COL-1: the singing crystals (the count's toast is common.js toast_crystal)
++  crystal_twelve: "(Twelve. They don't hum any more, they sing. One note, all together.)",
++  dx_toast_owed: 'Singing crystal',
++  dx_c12_catch: 'Not yet, Twinsen. Twelve of my splinters hold you up. Once.',
++  dx_c12_home: "(The twelve crystals are still singing in my pocket. Sendell's note. I think she hums along.)",
++  dx_j_title: 'Singing crystals ({n} of {max})',
++  dx_j_crystals: 'Singing crystals: each one I find makes me a little tougher. Some lie hidden; some are given for a favour.',
++
++  // ---- ISL-1: Old Jaspa's warm gems (Knartas's gem-sorting room)
++  dx_jaspa_1: 'The project only takes cold stones. A warm one cracks in their machines, and they fine me for it.',
++  dx_jaspa_2: "My eyes can't tell them apart any more. That tray by the wall: cold ones in PROJECT, warm ones in KEEP.",
++  dx_jaspa_3: 'My mother used to say warm ones sweat. She never said what that looks like.',
++  dx_jaspa_wait: 'Cold in PROJECT, warm in KEEP. My mother said warm ones sweat.',
++  dx_jaspa_wrong_warm: "That one sweats! They'll fine me. Tip it all back on the tray. Again.",
++  dx_jaspa_wrong_cold: "That one's cold, and you kept it. The project pays for cold ones. Back on the tray. Again.",
++  dx_jaspa_done1: 'Two warm, four cold. All of it right.',
++  dx_jaspa_done2: "Here. This one hums louder than the rest. They never wanted it. I never knew why I kept it.",
++  dx_jaspa_after: "Since you sorted that tray I look for the sweat. I see it now. Mostly.",
++  dx_tray_look: 'A tray of blue stones between two bins, PROJECT and KEEP. Jaspa\'s work, not mine.',
++  dx_tray_empty: 'The tray is empty.',
++  dx_tray_done: 'Sorted. Two in KEEP, four in PROJECT.',
++  dx_gem_warm: 'This one wears a pale crust, and a thread of dust rises off it.',
++  dx_gem_warm_dig: '(Like the warm discs at the dig: crystal over them, dust rising.)',
++  dx_gem_cold: 'Clean and glassy. Cold in my hand.',
++  dx_bin_project: 'The PROJECT bin. A little lamp sits on its rim.',
++  dx_bin_keep: 'The KEEP bin. Jaspa\'s own.',
++  dx_gem_fork: 'Two stones on the tray ring back. The others stay quiet.',
++  dx_gem_fork1: 'One stone on the tray rings back. The others stay quiet.',
++  dx_gem_fork0: 'Nothing on the tray rings back.',
++  dx_j_jaspa: 'Old Jaspa on Knartas can no longer tell warm gems from cold. Cold ones go in the PROJECT bin, warm ones in KEEP; the project fines him for a warm one.',
++  dx_j_jaspa_rule: 'Jaspa: "My mother said warm ones sweat."',
++
++  // ---- HAM-1: the pilgrims' waystone (the monastery terrace)
++  dx_way_look: 'An old waystone. Its upper stone turns on the pillar, carved on four sides: a dome, a roof, houses, ice.',
++  dx_way_s0: "The ice faces the glacier. Cold, and nobody's shrine.",
++  dx_way_s1: "The roof faces the monastery's roof. That's the monks' hall, not a shrine.",
++  dx_way_s3: "The dome faces down the valley, at Lhar's roofs. Nobody climbed up here to look back down.",
++  dx_way_ok: 'The dome faces the dome on the ridge. Something clicks inside the stone.',
++  dx_way_open: 'A slab at its foot sinks into the step. There is a niche behind it.',
++  dx_way_words: 'Words cut inside the niche: FOR THE LAST PILGRIM.',
++  dx_way_done: 'Facing the dome. The pilgrims would leave it like that.',
++  dx_way_tenpa1: 'Before the last climb, pilgrims stopped at the waystone on the terrace and turned it to face the shrine.',
++  dx_way_tenpa2: 'Nobody climbs for that now. The stone still turns. Mind your fingers.',
++  dx_way_tenpa_hint: 'The shrine? Ask the altar here. It remembers more than I do.',
++  dx_way_tenpa_done: 'Each pilgrim left a crystal in that niche for the next. Yours waited a long time.',
++  dx_j_way: 'Brother Tenpa: before the last climb, pilgrims turned the waystone on the monastery terrace to face the shrine.',
++});
+diff --git a/lba3/src/main.js b/lba3/src/main.js
+index b83ca467..ab9befc7 100644
+--- a/lba3/src/main.js
++++ b/lba3/src/main.js
+@@ -56,6 +56,7 @@ import { Inventory } from './game/inventory.js';
+ import { FoundObject } from './game/found.js';
+ import { stage as itemStage } from './game/itemlook.js';
+ import { Story, ORDER, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
++import { CRYSTAL_WORLD, CRYSTAL_TOTAL, crystalsIn } from './game/crystals.js';
+ import { t, setLang, getLang } from './game/i18n.js';
+ import { roomName } from './game/mapdraw.js';
+ import { BUILT } from './build-stamp.js';
+@@ -630,7 +631,8 @@ class Game {
+     // reward on top of the Whispering Cliffs (optional ball + jumping puzzle); kashes come from the givers
+     const s = this.world.shard1Spot;
+     this.pickups.spawn('clover', s.x, s.y, s.z, { id: 'cliff-clover' });
+-    // six singing crystals, hidden off the paths (each one: +1 max health; all six: Sendell notices)
++    // six singing crystals, hidden off the paths (each one: +1 max health; all six: Sendell notices; COL-1: six more are
++    // given by puzzles, src/game/crystals.js and story/depth.js)
+     this.spawnCrystals();
+   }
+   // the crystals whose spots are built (the mill's is on Zeelich: it appears when Zeelich is built), each once
+@@ -743,7 +745,8 @@ class Game {
+     }
+     return out;
+   }
+-  crystalCount() { return this.collected.filter((id) => id.startsWith('sc-')).length; }
++  // (COL-1: twelve in all, src/game/crystals.js; each id once)
++  crystalCount() { return crystalsIn(this.collected).size; }
+   applyCrystals() { this.hero.maxHp = 10 + this.crystalCount(); this.hero.hp = Math.min(this.hero.hp, this.hero.maxHp); }
+ 
+   // ------------------------------------------------ rooms (interiors)
+@@ -2504,9 +2507,11 @@ class Game {
+         const n = this.crystalCount();
+         this.applyCrystals(); h.hp = h.maxHp;
+         this.audio.play('shard');
+-        this.hud.toast('toast_crystal', { n, max: this.crystalSpots().length });
++        this.hud.toast('toast_crystal', { n, max: CRYSTAL_TOTAL });
+         if (n === 1) this.story.cur.chain([['hero', 'crystal_first']]);
+-        if (n >= this.crystalSpots().length) { this.flags.crystalsAll = true; this.story.cur.chain([['hero', 'crystal_all']]); }
++        // (COL-1: crystalsAll keeps its meaning, the six lying in the world; all twelve is dx_crystals12)
++        if (!this.flags.crystalsAll && CRYSTAL_WORLD.every((id) => this.collected.includes(id))) { this.flags.crystalsAll = true; this.story.cur.chain([['hero', 'crystal_all']]); }
++        if (n >= CRYSTAL_TOTAL && !this.flags.dx_crystals12) { this.flags.dx_crystals12 = true; this.story.cur.chain([['hero', 'crystal_twelve']]); }
+         this.save(false);
+         break;
+       }
+diff --git a/lba3/tests/depth-1.mjs b/lba3/tests/depth-1.mjs
+new file mode 100644
+index 00000000..997e4f8f
+--- /dev/null
++++ b/lba3/tests/depth-1.mjs
+@@ -0,0 +1,253 @@
++// DEPTH first wave (docs/lba-maturity/DEPTH-PLAN.md): COL-1 (twelve singing crystals), ISL-1 (Old Jaspa's warm gems on
++// Knartas), HAM-1 (the pilgrims' waystone on the monastery terrace). src/game/story/depth.js, src/game/crystals.js.
++// Played by input where it says INPUT (the harness's arrow keys and E: tests/lib/player.js):
++//   - ISL-1: the tray only looked at before Jaspa asks; Jaspa's own line, then his favour; stones taken from the tray
++//     and set in the bins; a wrong attempt (a warm one in PROJECT: the lamp flashes, his line, all back on the tray);
++//     a save half way → Save & quit → Continue: the bins as they were; the rest sorted; the crystal, +1 max life, once;
++//     the fork's ring as the other way to tell (the fork given ISO);
++//   - HAM-1: Tenpa's own line, then the pilgrims; the stone looked at, then turned by its grips (his hands on the face);
++//     a wrong face says what it faces; Save & quit → Continue keeps the face; the dome turned to the observatory opens
++//     the niche: the crystal, +1 max life, once; the dome's carving really faces the observatory (its world normal);
++//   - COL-1: the count is out of 12; crystalsAll still means the six lying in the world; an owed crystal survives a save;
++//     all twelve (ISO: the four not built yet cannot be had) and Sendell's catch in the core, once;
++//   - old saves: a save written by the build before this change (tests/fixtures/pre-col1-save.json, chapter 7 on the Hamalayi with the
++//     six crystals) loads with 16 max life, crystalsAll and 6 of 12.
++// ISO (logged): chapters are set by their flags; he is put a few metres before a door or the stone and walks the rest.
++// SHOTS=dir writes pictures (deviceScaleFactor 1). SwiftShader: Automated runtime only.
++import { launch, open, menu, checker } from './lib/boot.mjs';
++import fs from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++const { check, done } = checker({ info: 'always' });
++const HARNESS = fileURLToPath(new URL('./lib/player.js', import.meta.url));
++const FIX = fileURLToPath(new URL('./fixtures/pre-col1-save.json', import.meta.url));
++let { browser, page } = await launch({ scale: 1 });
++const ev = (f, a) => page.evaluate(f, a);
++const iso = (s) => console.log('ISO  ' + s);
++const SHOTS = process.env.SHOTS || null;
++if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
++const shot = async (n) => { if (!SHOTS) return; await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, n + '.png'), timeout: 240000 }); };
++// a close look from a camera of our own (the game's camera put there for one frame; play goes on from its own after)
++const closeup = async (n, which) => { if (!SHOTS) return; await ev((w) => {
++  const c = game.renderer.camera, D = game.story.depth, set = (f, a) => { c.position.set(...f); c.lookAt(...a); c.updateMatrixWorld(); };
++  if (w === 'tray') { const T = D.G.tray; set([T.x - 0.5, 1.45, T.z + 1.6], [T.x, 0.45, T.z]); }
++  if (w === 'way') { const Y = D.way, a = Y.ry + Math.PI / 4 + Math.PI + 0.6; set([Y.cx + Math.sin(a) * 4.2, Y.gy + 3.4, Y.cz + Math.cos(a) * 4.2], [Y.cx, Y.gy + 2.3, Y.cz]); }
++  if (w === 'wayobs') { const Y = D.way, o = game.rooms.hamalayi.observatory, b = Math.atan2(o.x - Y.cx, o.z - Y.cz), oy = game.physics.groundAt(o.x, o.z, 200); set([Y.cx - Math.sin(b) * 3.5, Y.gy + 3.6, Y.cz - Math.cos(b) * 3.5], [o.x, oy + 4, o.z]); }
++  game.renderer.render(); }, which);
++  await page.screenshot({ path: path.join(SHOTS, n + '.png'), timeout: 240000 }); await ev(() => game.step(0.05)); };
++const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...[].concat(lines)); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
++const has = (lines, re) => lines.some((l) => re.test(l));
++const helpers = () => ev(async () => {
++  const ZI = await import('/src/game/zislands.js'); window.ZI = ZI;
++  window.BASE ??= JSON.parse(JSON.stringify(game.flags));
++  window.setChapter = (key, extra = {}) => {
++    const G = game, f = G.flags; P.settle();
++    const keep = Object.fromEntries(Object.entries(f).filter(([k]) => k.startsWith('dx_')));   // (this suite's own state carries over)
++    for (const k of Object.keys(f)) delete f[k];
++    Object.assign(f, JSON.parse(JSON.stringify(BASE)), { prologueDone: true, intro: true, chapterKey: key, c1_water: true, c1_done: true }, keep, extra);
++    f.chapter = G.story.chapters.findIndex((c) => c.key === key); G.hero.hasBall = true;
++    G.story.applyFlags(); G.story.refreshCast(); G.step(0.5); P.settle();
++  };
++  window.toIsle = (n) => { const G = game, reg = 'isle_' + n; G.regions.ensure(reg, 'test'); const R = G.rooms[reg]; G.enterRoom(reg, R.spawn, true); P.settle(); G.story.refreshCast(); G.step(0.3); return R; };
++  window.before = (x, z, fx, fz, d = 2.4) => { const G = game, h = G.hero, l = Math.hypot(fx, fz) || 1; const sx = x + fx / l * d, sz = z + fz / l * d; h.pos.set(sx, G.physics.groundAt(sx, sz, h.pos.y + 8), sz); h.angle = Math.atan2(x - sx, z - sz); h.onGround = true; h.vy = 0; G.camRig.snap(); G.step(0.3); P.settle(); };
++  window.walkIn = (rid) => { const G = game, d = G.story.doors().find((q) => q.room === rid); if (!d) return { r: 'no door' };
++    const sd = G.room?.shutDoors?.find((q) => q.id === d.house); if (sd) { const a = sd.ry ?? 0; before(d.x, d.z, Math.sin(a), Math.cos(a), 2.2); }
++    const t = P.through(d.x, d.z); P.settle(); G.step(0.5); return { r: t.r, room: G.room?.id }; };
++  window.D = () => game.story.depth;
++  window.crystals = () => { const G = game; return { n: G.crystalCount(), max: G.hero.maxHp, all: !!G.flags.crystalsAll, c12: !!G.flags.dx_crystals12, toast: document.querySelector('#toast')?.textContent || '' }; };
++  // ISL-1: E on the tray (take the next stone), then E on a bin
++  window.take = () => { const Gm = D().G; return P.use(Gm.tray.x, Gm.tray.z, { kind: 'dx_tray', near: 1.0 }).r; };
++  window.put = (k) => { const B = D().G.bins[k]; return P.use(B.x, B.z, { kind: 'dx_bin' + k, near: 1.0 }).r; };
++  window.held = () => D().held;
++  window.gemsIn = () => { const Gm = D().G, v = new (game.hero.pos.constructor)(); return Gm.gems.map((s) => { s.m.getWorldPosition(v); return [+v.x.toFixed(2), +v.y.toFixed(2), +v.z.toFixed(2)]; }); };
++});
++// Esc → pause menu → Save & Quit (it saves, then reloads the page): as boot.mjs quitAndKeep, without waiting on the click
++// for the reload's navigation (a loaded machine timed that out)
++const saveQuit = async () => {
++  await ev(() => { P.release(); P.settle(); P.tap('Escape', 0.1); });
++  const reloaded = page.waitForEvent('load', { timeout: 600000 });
++  await page.click('#pause [data-act="quit"]', { timeout: 60000, noWaitAfter: true });
++  await reloaded;
++};
++const reboot = async () => {   // after quitAndKeep: the harness again, then Continue as a player clicks it
++  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 900000 });
++  await ev(() => { game.testFreeze = true; });
++  await page.addScriptTag({ path: HARNESS });
++  await menu(page, 'continue');
++  await ev(() => { for (let i = 0; i < 40; i++) game.step(0.05); P.settle(); });
++  await helpers(); await said();   // (the new page's lines are listened to from here)
++};
++
++await open(page, '?nocine'); await menu(page, 'new');
++await helpers();
++const base = await ev(() => crystals());
++check('a new game: no crystals, 10 max life; the layer counts out of 12 (crystals.js: 6 in the world, 6 from puzzles, 4 of them not built yet)', base.n === 0 && base.max === 10, base);
++const reg = await ev(async () => { const C = await import('/src/game/crystals.js'); return { total: C.CRYSTAL_TOTAL, world: C.CRYSTAL_WORLD.length, built: Object.entries(C.CRYSTAL_QUEST).filter(([, q]) => q.built).map(([id]) => id), unbuilt: Object.entries(C.CRYSTAL_QUEST).filter(([, q]) => !q.built).map(([id, q]) => q.quest) }; });
++check('the registry: 12 crystals; 6 in the world; ISL-1 and HAM-1 built; DES-1, DES-2, HAM-3, UND-1 slots only (unobtainable)', reg.total === 12 && reg.world === 6 && reg.built.join() === 'sc-jaspa,sc-waystone' && reg.unbuilt.join() === 'DES-1,DES-2,HAM-3,UND-1', reg);
++
++// ================================================================ ISL-1 · Old Jaspa's warm gems (chapter 4)
++iso('chapter 4 by its flags; on Knartas a few metres before the gem-sorting room\'s door');
++await ev(() => setChapter('dig', { c4_started: true }));
++await said();
++const g0 = await ev(() => { toIsle('knartas'); const w = walkIn('ih_knartas_28_29'); P.settle(); const Gm = D().G; return { w, built: !!Gm, jaspa: !!P.npc('il_jaspa')?.present, bins: Object.keys(Gm?.bins || {}), gems: Gm?.gems.length, warm: Gm?.gems.filter((s) => s.warm).length }; });
++check('ISL-1: the gem-sorting room by its door (INPUT); Jaspa at home; the bench with six stones (two warm) and the two bins', g0.w.room === 'ih_knartas_28_29' && g0.jaspa && g0.built && g0.gems === 6 && g0.warm === 2 && g0.bins.join() === 'P,K', g0);
++await shot('depth-isl1-01-room');
++const g1 = await ev(() => { const r = take(); return { r, held: held(), bins: game.flags.dx_jaspa_bins ?? null }; });
++const g1l = await said();
++check('ISL-1: before Jaspa asks, the tray is only looked at (INPUT): its line, no stone taken', g1.r === 'used' && g1.held == null && has(g1l, /PROJECT and KEEP/), { g1, g1l });
++const g2 = await ev(() => ({ r: P.talk('il_jaspa').r, ask: !!game.flags.dx_jaspa_ask }));
++const g2l = await said();
++await closeup('depth-isl1-03-tray-close', 'tray');
++check('ISL-1: Jaspa (TALK): his own line first, then the favour: cold stones for the project, warm ones fined; "warm ones sweat"', g2.r === 'talked' && g2.ask && has(g2l, /Blue for the project/) && has(g2l, /only takes cold stones/) && has(g2l, /warm ones sweat/) && g2l.findIndex((l) => /Blue for/.test(l)) < g2l.findIndex((l) => /only takes cold/.test(l)), { g2, g2l });
++// a wrong attempt: the first (cold) to PROJECT, the second (warm) to PROJECT too
++const g3 = await ev(() => { const G = game, h = G.hero, out = {};
++  out.t0 = take(); out.h0 = held();
++  // (his hand on the stone as he takes it: the stone now rides in his right hand)
++  const v = new h.pos.constructor(); D().G.gems[0].m.getWorldPosition(v); const hv = new h.pos.constructor(); h.rig.j.armR.hand.getWorldPosition(hv); out.inHand = +v.distanceTo(hv).toFixed(2);
++  out.p0 = put('P'); out.b0 = G.flags.dx_jaspa_bins;
++  out.t1 = take(); out.h1 = held();
++  let flash = 0; const L = D().G.bins.P.lamp;
++  out.p1 = put('P');
++  out.b1 = G.flags.dx_jaspa_bins; out.tries = G.flags.dx_jaspa_tries; out.lampNow = +L.material.emissiveIntensity.toFixed(2);
++  out.onTray = D().G.gems.every((s) => s.m.parent === D().G.grp && Math.abs(s.m.position.y - s.slot.y) < 0.01);
++  return out; });
++const g3l = await said();
++check('ISL-1: take a stone (INPUT, E): in his hand, his line says it is cold; into PROJECT (E)', g3.t0 === 'used' && g3.h0 === 0 && g3.inHand < 0.15 && g3.p0 === 'used' && g3.b0 === 'P.....' && has(g3l, /Cold in my hand/), { g3, g3l });
++check('ISL-1: the wrong attempt (INPUT): a crusted, dusty stone into PROJECT: Jaspa\'s "That one sweats", every stone back on the tray, nothing lost', g3.h1 === 1 && g3.p1 === 'used' && g3.b1 === '......' && g3.tries === 1 && g3.onTray && has(g3l, /pale crust/) && has(g3l, /That one sweats/), { g3, g3l });
++// half way: two right, then Save & quit
++const g4 = await ev(() => { const out = {}; out.a = [take(), put('P'), take(), put('K')]; out.bins = game.flags.dx_jaspa_bins; out.where = gemsIn().slice(0, 2); out.room = game.room?.id; return out; });
++check('ISL-1: half way (INPUT): the cold one in PROJECT, the warm one in KEEP', g4.a.every((r) => r === 'used') && g4.bins === 'PK....', g4);
++iso('Save & quit through the pause menu, then Continue (as a player)');
++await saveQuit();
++await reboot();
++const g5 = await ev(() => ({ room: game.room?.id, bins: game.flags.dx_jaspa_bins, ask: !!game.flags.dx_jaspa_ask, held: held(), where: gemsIn().slice(0, 2), state: game.state }));
++check('ISL-1: after Continue: in the room, the bins as they were (the two stones in them), the favour still asked', g5.room === 'ih_knartas_28_29' && g5.bins === 'PK....' && g5.ask && g5.held == null && JSON.stringify(g5.where) === JSON.stringify(g4.where), { g4: g4.where, g5 });
++// the fork as the other way to tell (the fork given ISO): the warm stone still on the tray rings
++const g6 = await ev(() => { const G = game, h = G.hero; h.arms.fork = true; h.combat.equip('fork', true); G.gadgets.tools.forkCool = 0; const Gm = D().G;
++  P.go(Gm.tray.x, Gm.tray.z + 1.0, { tol: 0.3 }); P.face(Gm.tray.x, Gm.tray.z); P.tap('KeyK', 0.05); P.settle();
++  const ring = Gm.gems.filter((s) => s.ringT > 0).map((s) => s.i); h.combat.equip('ball', true); P.settle(); return { ring }; });
++const g6l = await said();
++check('ISL-1 (the other way): the singing fork struck by the tray (K): only the warm stone left on it rings', JSON.stringify(g6.ring) === '[4]' && has(g6l, /One stone on the tray rings/), { g6, g6l });
++const before1 = await ev(() => crystals());
++const g7 = await ev(() => { const out = {}; out.a = [take(), put('P'), take(), put('P'), take(), put('K'), take(), put('P')]; out.bins = game.flags.dx_jaspa_bins; out.sorted = !!game.flags.dx_jaspa_sorted;
++  for (let i = 0; i < 60 && !game.collected.includes('sc-jaspa'); i++) { game.step(0.1); const p = game.pickups.list.find((q) => q.id === 'sc-jaspa'); if (p && i > 15) P.go(p.pos.x, p.pos.z, { tol: 0.5, maxT: 8 }); }
++  P.settle(); out.got = game.collected.includes('sc-jaspa'); out.owe = game.flags.dx_owe_sc_jaspa ?? 0; return out; });
++const g7l = await said();
++const after1 = await ev(() => crystals());
++check('ISL-1: the rest sorted right (INPUT): Jaspa\'s thanks; the crystal ("hums louder"), picked up', g7.a.every((r) => r === 'used') && g7.bins === 'PKPPKP' && g7.sorted && g7.got && !g7.owe && has(g7l, /hums louder than the rest/), { g7, g7l });
++check('COL-1: the crystal: one more, +1 max life, the toast counts out of 12', after1.n === before1.n + 1 && after1.max === before1.max + 1 && /\/12\)/.test(after1.toast), { before1, after1 });
++const g8 = await ev(() => { const n0 = game.collected.filter((i) => i === 'sc-jaspa').length; const r1 = P.talk('il_jaspa').r; const r2 = P.talk('il_jaspa').r; const t = take(); game.step(2); return { r1, r2, t, n0, n: game.collected.filter((i) => i === 'sc-jaspa').length, pick: game.pickups.list.filter((p) => p.id === 'sc-jaspa').length, c: crystals() }; });
++const g8l = await said();
++check('ISL-1: asked again: his line about the sweat, no second crystal; the tray says it is sorted', g8.n === 1 && g8.pick === 0 && g8.c.n === after1.n && has(g8l, /look for the sweat/) && has(g8l, /Sorted\./), { g8, g8l });
++await shot('depth-isl1-02-sorted');
++
++// ================================================================ HAM-1 · The pilgrims' waystone (chapter 6)
++iso('chapter 6 by its flags (up the lift: c6_up); at the monastery hall\'s door, then a few metres from the waystone');
++await ev(() => setChapter('pass', { c6_started: true, c6_up: true, c6_trip1: true, c6_trip2: true }));
++await said();
++const w0 = await ev(() => { const G = game; G.regions.ensure('hamalayi', 'test'); const M = G.rooms.hamalayi; G.enterRoom('hamalayi', { x: M.monastery.yard.x, z: M.monastery.yard.z, a: 0 }, true); P.settle(); G.step(0.5);
++  const d = G.story.doors().find((q) => q.room === 'ham_hall'), sd = M.monastery.hall, a = sd.ry ?? 0; before(d.x, d.z, Math.sin(a), Math.cos(a), 2.6);
++  const t = P.through(d.x, d.z); P.settle(); const r = P.talk('hl_monk').r; const out = P.through(...(() => { const e = G.room.exits.find((x) => !x.room); return [e.x, e.z]; })()); P.settle();
++  return { inside: t.to, talk: r, out: out.to, ask: !!G.flags.dx_way_ask, built: !!D().way }; });
++const w0l = await said();
++check('HAM-1: Brother Tenpa (TALK, in the hall by its door): his own line, then the pilgrims who turned the waystone to face the shrine', w0.inside === 'ham_hall' && w0.talk === 'talked' && w0.ask && w0.built && has(w0l, /soup is on|Forty guests|old ones/) && has(w0l, /turned it to face the shrine/), { w0, w0l });
++const geo = await ev(() => { const Y = D().way, G = game, M = G.rooms.hamalayi, o = M.observatory;
++  const bear = (x, z) => Math.atan2(x - Y.cx, z - Y.cz), dn = (a) => Math.atan2(Math.sin(a), Math.cos(a));
++  // the dome panel's real normal in the world, with the stone as it will be when solved (2 quarters)
++  const v = new G.hero.pos.constructor(), n = new G.hero.pos.constructor(); const save = Y.turn.rotation.y; Y.turn.rotation.y = 2 * Math.PI / 2; Y.turn.updateMatrixWorld(true);
++  const pl = Y.panels[0]; pl.getWorldPosition(v); n.set(0, 0, 1).transformDirection(pl.matrixWorld); Y.turn.rotation.y = save; Y.turn.updateMatrixWorld(true);
++  const normal = Math.atan2(n.x, n.z);
++  return { face: D().wayFace(), obs: +bear(o.x, o.z).toFixed(3), normal: +normal.toFixed(3), off: +Math.abs(dn(normal - bear(o.x, o.z))).toFixed(3), mon: +bear(M.monastery.hall.x, M.monastery.hall.z).toFixed(3) }; });
++check('HAM-1: as found the stone is turned 3 quarters; solved (2), the dome carving\'s world normal points at the observatory (within 3°)', geo.face === 3 && geo.off < 0.05, geo);
++// walk up onto the plinth's top step at a corner (INPUT) and look, then turn
++const w1 = await ev(() => { const G = game, Y = D().way, h = G.hero; const a = Y.ry + Math.PI / 4 + Math.PI;   // (the corner on the observatory's side)
++  before(Y.cx + Math.sin(a) * 1.1, Y.cz + Math.cos(a) * 1.1, Math.sin(a), Math.cos(a), 4.5);
++  const g = P.go(Y.cx + Math.sin(a) * 1.1, Y.cz + Math.cos(a) * 1.1, { tol: 0.2 }); const up = +(h.pos.y - Y.gy).toFixed(2);
++  const lk = P.use(Y.cx, Y.cz, { kind: 'dx_way', near: 1.3, match: 2 }).r; const seen = !!G.flags.dx_way_seen;
++  return { g: g.r, up, lk, seen }; });
++const w1l = await said();
++check('HAM-1: up the plinth onto its top step at a corner (INPUT); a look: the upper stone turns, carved dome, roof, houses, ice', w1.g === 'arrived' && w1.up > 1.25 && w1.lk === 'used' && w1.seen && has(w1l, /carved on four sides/), { w1, w1l });
++await shot('depth-ham1-01-stone');
++await closeup('depth-ham1-03-stone-close', 'way');
++await closeup('depth-ham1-04-toward-observatory', 'wayobs');
++const w2 = await ev(() => { const G = game, Y = D().way, h = G.hero, out = {};
++  const tg = P.target(); out.label = tg?.label;
++  const B = 0.62; let hand = null;
++  // E: he steps to the corner's mark, both hands on the face's grips, and pushes; the hands' distance to the face measured mid-push
++  P.tap('KeyE', 0.1); let k = 0;
++  for (; k < 200 && !(h.actT > 0 && h.actAnim === 'pumpGrip'); k++) G.step(1 / 30);
++  G.step(0.5);
++  const v = new h.pos.constructor(); const lp = new h.pos.constructor();
++  const dist = []; for (const s of ['armR', 'armL']) { h.rig.j[s].hand.getWorldPosition(v); lp.copy(v); const lx = v.x - Y.cx, lz = v.z - Y.cz, a = Y.ry + Math.PI / 4 + Y.turn.rotation.y;
++    const c = Math.cos(a), sn = Math.sin(a), qx = c * lx - sn * lz, qz = sn * lx + c * lz; dist.push(+(Math.max(Math.abs(qx), Math.abs(qz)) - B).toFixed(3)); out.handY = +(v.y - Y.gy - Y.top).toFixed(2); }
++  out.handGap = dist; out.anim = h.actAnim;
++  for (let i = 0; i < 150 && (h.actT > 0 || Y.turnT > 0); i++) G.step(1 / 30); P.settle(); out.face = G.flags.dx_way_face; out.turns = G.flags.dx_way_turns; out.open = !!G.flags.dx_way_open; return out; });
++const w2l = await said();
++check('HAM-1: turned (INPUT, E): both his hands on the stone\'s face at its grips while it turns (within 8 cm of the face, at grip height)', w2.label === 'p_turn' && w2.anim === 'pumpGrip' && w2.handGap.every((d) => Math.abs(d) < 0.08) && Math.abs(w2.handY - 1.12) < 0.15, w2);
++check('HAM-1: a wrong face says what it faces: the ice faces the glacier; no niche', w2.face === 0 && w2.turns === 1 && has(w2l, /ice faces the glacier/) && !w2.open, { w2, w2l });
++iso('Save & quit, then Continue');
++await saveQuit();
++await reboot();
++const w3 = await ev(() => { const Y = D().way; return { room: game.room?.id, face: game.flags.dx_way_face, rot: +(Y.turn.rotation.y / (Math.PI / 2)).toFixed(2), open: !!game.flags.dx_way_open, slab: +(Y.slab.position.y - Y.slabY).toFixed(2) }; });
++check('HAM-1: after Continue the stone keeps its face (turned 0 quarters: the ice to the glacier), the niche still shut', w3.room === 'hamalayi' && w3.face === 0 && Math.abs(w3.rot) < 0.01 && !w3.open && w3.slab === 0, w3);
++const before2 = await ev(() => crystals());
++const w4 = await ev(() => { const G = game, Y = D().way, h = G.hero, out = {}; const a = Y.ry + Math.PI / 4 + Math.PI;
++  if (Math.hypot(h.pos.x - Y.cx, h.pos.z - Y.cz) > 1.5 || h.pos.y < Y.gy + 1.2) { before(Y.cx + Math.sin(a) * 1.1, Y.cz + Math.cos(a) * 1.1, Math.sin(a), Math.cos(a), 4.5); P.go(Y.cx + Math.sin(a) * 1.1, Y.cz + Math.cos(a) * 1.1, { tol: 0.2 }); }
++  out.u1 = P.use(Y.cx, Y.cz, { kind: 'dx_way', near: 1.3, match: 2 }).r; out.f1 = G.flags.dx_way_face;
++  out.u2 = P.use(Y.cx, Y.cz, { kind: 'dx_way', near: 1.3, match: 2 }).r; out.f2 = G.flags.dx_way_face; out.open = !!G.flags.dx_way_open;
++  for (let i = 0; i < 80 && !G.collected.includes('sc-waystone'); i++) { P.settle(); G.step(0.1); }
++  P.settle(); out.got = G.collected.includes('sc-waystone'); out.slab = +(Y.slab.position.y - Y.slabY).toFixed(2); out.owe = G.flags.dx_owe_sc_waystone ?? 0; return out; });
++const w4l = await said();
++const after2 = await ev(() => crystals());
++check('HAM-1: the roof faces the monastery\'s roof (INPUT), then the dome faces the dome on the ridge: the slab sinks, the niche opens', w4.u1 === 'used' && w4.f1 === 1 && w4.u2 === 'used' && w4.f2 === 2 && w4.open && w4.slab < -0.45 && has(w4l, /monastery's roof/) && has(w4l, /dome on the ridge/), { w4, w4l });
++check('HAM-1: the crystal from the niche, the words cut inside it; +1 max life', w4.got && !w4.owe && after2.n === before2.n + 1 && after2.max === before2.max + 1 && has(w4l, /FOR THE LAST PILGRIM/), { before2, after2, w4l });
++await shot('depth-ham1-02-open');
++await closeup('depth-ham1-05-open-close', 'way');
++const w5 = await ev(() => { const G = game, Y = D().way; const u = P.use(Y.cx, Y.cz, { kind: 'dx_way', near: 1.3, match: 2 }).r; G.step(1); return { u, face: G.flags.dx_way_face, n: G.collected.filter((i) => i === 'sc-waystone').length, c: crystals() }; });
++const w5l = await said();
++check('HAM-1: used again: it stays facing the dome, no second crystal', w5.u === 'used' && w5.face === 2 && w5.n === 1 && w5.c.n === after2.n && has(w5l, /Facing the dome/), { w5, w5l });
++
++// ================================================================ COL-1 · the layer
++const j = await ev(() => { const J = game.story.journal(); const s = J.find((c) => /Singing crystals/.test(c.title)); return { title: s?.title, lines: s?.lines.map((l) => [l.key, l.done]) }; });
++check('COL-1: the journal\'s section counts the crystals out of 12, with both favours done', /\(2 of 12\)/.test(j.title || '') && j.lines.some(([k, d]) => k === 'dx_j_jaspa' && d) && j.lines.some(([k, d]) => k === 'dx_j_way' && d), j);
++const c1 = await ev(() => { const G = game; const out = { all0: !!G.flags.crystalsAll };
++  // the six in the world (ISO: their ids, as their pick-ups would): crystalsAll keeps meaning them
++  for (const id of ['sc-lighthouse', 'sc-orchard', 'sc-pier', 'sc-east', 'sc-north']) G.collected.push(id);
++  const p = G.pickups.spawn('crystal', G.hero.pos.x, G.hero.pos.y + 0.8, G.hero.pos.z, { id: 'sc-mill' }); for (let i = 0; i < 10 && G.pickups.list.includes(p); i++) G.step(0.1); P.settle();
++  out.all = !!G.flags.crystalsAll; out.c = crystals(); return out; });
++const c1l = await said();
++check('COL-1: crystalsAll still means the six lying in the world: set when the sixth of them is taken (8 of 12 then, 18 max life)', !c1.all0 && c1.all && c1.c.n === 8 && c1.c.max === 18 && !c1.c.c12 && has(c1l, /hum together/), { c1, c1l });
++// an owed crystal survives a save: given (ISO, as a quest would) far from him, saved, loaded
++const c2 = await ev(() => { const G = game, h = G.hero; D().giveCrystal('sc-figures', h.pos.x + 30, h.pos.y + 1, h.pos.z, 'hamalayi'); const owe = G.flags.dx_owe_sc_figures; G.save(false);
++  const s = JSON.parse(localStorage.getItem('lba3_save_v1')); return { owe, saved: s.flags.dx_owe_sc_figures, v: s.v }; });
++await page.reload({ waitUntil: 'load' }); await reboot();
++const c3 = await ev(() => ({ c: crystals(), owe: game.flags.dx_owe_sc_figures ?? 0, got: game.collected.includes('sc-figures') }));
++check('COL-1: an owed quest crystal (given, not yet picked up) survives a save: after Continue it is in hand (save format unchanged)', c2.owe === 1 && c2.saved === 1 && c2.v === 5 && c3.got && !c3.owe && c3.c.n === 9, { c2, c3 });
++// all twelve (ISO: the three still unbuilt slots) and Sendell's catch in the core, once
++iso('the three crystals no quest gives yet: their ids pushed; chapter 12 by its flags, the fight on');
++const c4 = await ev(() => { const G = game, h = G.hero; for (const id of ['sc-trial', 'sc-pack']) G.collected.push(id);
++  const p = G.pickups.spawn('crystal', h.pos.x, h.pos.y + 0.8, h.pos.z, { id: 'sc-source' }); for (let i = 0; i < 10 && G.pickups.list.includes(p); i++) G.step(0.1); P.settle();
++  return { c: crystals() }; });
++const c4l = await said();
++check('COL-1: all twelve: 22 max life, dx_crystals12, the twelfth\'s line', c4.c.n === 12 && c4.c.max === 22 && c4.c.c12 && has(c4l, /Twelve\./), { c4, c4l });
++const c5 = await ev(() => { const G = game, h = G.hero, f = G.flags;
++  const keep = [...G.collected]; setChapter('core', { c3_started: true, c3_fight: true }); for (const id of keep) if (!G.collected.includes(id)) G.collected.push(id); G.applyCrystals(); f.dx_crystals12 = true;
++  G.regions.ensure('c3core', 'test'); G.enterRoom('c3core', null, true); P.settle(); G.step(0.5);
++  const out = { room: G.room?.id, max: h.maxHp }; h.clovers = 0; h.invuln = 0; h.hp = 1; h.damage(3, null); out.hp1 = h.hp; out.dead1 = !!h.dead; out.caught = !!f.dx_c12_caught; P.settle();
++  h.invuln = 0; h.hp = 1; h.damage(3, null); out.dead2 = !!h.dead; return out; });
++const c5l = await said();
++check('COL-1: in the core fight with all twelve, his life at zero: Sendell catches him once (full life, her line); the next time he falls as before', c5.room === 'c3core' && c5.hp1 === c5.max && !c5.dead1 && c5.caught && c5.dead2 && has(c5l, /Twelve of my splinters/), { c5, c5l });
++await browser.close();
++
++// ================================================================ old saves
++// a save written by the build before this change (db3707df: chapter 7 on the Hamalayi with the six world crystals)
++({ browser, page } = await launch({ scale: 1 }));
++const raw = fs.readFileSync(FIX, 'utf8');
++await page.addInitScript((s) => { if (!localStorage.getItem('lba3_save_v1')) localStorage.setItem('lba3_save_v1', s); }, raw);
++await open(page, '?nocine'); await menu(page, 'continue'); await ev(() => { for (let i = 0; i < 40; i++) game.step(0.05); P.settle(); });
++const o1 = await ev(() => ({ state: game.state, chapter: game.flags.chapterKey, room: game.room?.id, n: game.crystalCount(), max: game.hero.maxHp, all: !!game.flags.crystalsAll, c12: !!game.flags.dx_crystals12, dx: Object.keys(game.flags).filter((k) => k.startsWith('dx_') && k !== 'dx_way_face') }));
++check('an old save (from the build before COL-1, 6 crystals): loads into play with 16 max life, crystalsAll, 6 of 12, no dx_ state made up', o1.state === 'play' && o1.chapter === 'observatory' && o1.n === 6 && o1.max === 16 && o1.all && !o1.c12 && o1.dx.length === 0, o1);
++const o2 = await ev(() => { const J = game.story.journal(); return J.find((c) => /Singing crystals/.test(c.title))?.title || null; });
++check('…and its journal counts 6 of 12', /\(6 of 12\)/.test(o2 || ''), { o2 });
++await browser.close();
++done();
+diff --git a/lba3/tests/fixtures/pre-col1-save.json b/lba3/tests/fixtures/pre-col1-save.json
+new file mode 100644
+index 00000000..1d66d53c
+--- /dev/null
++++ b/lba3/tests/fixtures/pre-col1-save.json
+@@ -0,0 +1 @@
++{"v":5,"room":"hamalayi","hero":{"x":4334,"z":-38,"hp":16,"mp":10,"magicLevel":2,"clovers":2,"coins":0,"hasBall":true,"behaviour":"normal","hasSword":false,"hasPulse":false,"weapon":"ball","prevWeapon":"fists","arms":{"blowgun":false,"blowtron":false,"laser":false,"glove":false,"lightning":false,"protect":false,"conch":false,"lantern":false,"lanternOn":false,"jetpack":false,"jetpackOn":false,"pocketset":false,"lance":false,"fork":false,"line":false,"heatflask":false,"darts":0,"charge":0,"penguins":0,"water":0,"heat":0}},"flags":{"chapter":6,"chapterKey":"observatory","intro":true,"opening":true,"ballHint":true,"prologueDone":true,"c1_water":true,"c1_done":true,"c6_up":true,"crystalsAll":true,"ml_2":true,"e2_setHint":true,"c6_done":true,"c7_started":true},"killed":[],"collected":["sc-lighthouse","sc-orchard","sc-pier","sc-east","sc-north","sc-mill"],"searched":[],"crates":[],"loot":[],"at":1794316461052,"played":8}
+\ No newline at end of file
+-- 
+2.43.0
+

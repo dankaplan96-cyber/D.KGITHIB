@@ -1,0 +1,13 @@
+walkcheck · medium · 360 frames per route, every 40th drawn for real
+street: 360 updates · 478156 world matrices compared, 0 different · caster lists 360 (29036 casters), 0 different · 149760 batched pieces verified, 0 kept though changed · walked 1796 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+interior: 360 updates · 113813 world matrices compared, 0 different · caster lists 360 (25920 casters), 0 different · 28800 batched pieces verified, 0 kept though changed · walked 622 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+combat: 360 updates · 104242 world matrices compared, 0 different · caster lists 360 (33840 casters), 0 different · 720 batched pieces verified, 0 kept though changed · walked 575 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+transition: 360 updates · 221858 world matrices compared, 0 different · caster lists 360 (26343 casters), 0 different · 76176 batched pieces verified, 0 kept though changed · walked 988 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+arrival: 360 updates · 285245 world matrices compared, 0 different · caster lists 360 (19550 casters), 0 different · 123718 batched pieces verified, 0 kept though changed · walked 1134 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+hamalayi: 360 updates · 145800 world matrices compared, 0 different · caster lists 360 (15840 casters), 0 different · 67680 batched pieces verified, 0 kept though changed · walked 723 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+sweep: 360 updates · 519799 world matrices compared, 0 different · caster lists 360 (28079 casters), 0 different · 149760 batched pieces verified, 0 kept though changed · walked 1908 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+street@orbit: 360 updates · 487152 world matrices compared, 0 different · caster lists 360 (29285 casters), 0 different · 149760 batched pieces verified, 0 kept though changed · walked 1818 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+street@quality: 360 updates · 486539 world matrices compared, 0 different · caster lists 360 (38071 casters), 0 different · 149760 batched pieces verified, 0 kept though changed · walked 1861 a frame, frozen 0 (max 0) · ranges frozen 0, ended 0
+ALL EQUAL
+{}
+(230.5 s)

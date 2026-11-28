@@ -1,0 +1,59 @@
+From 74b893b6547172ebc7c64dace1bbefaceff42ca5 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 10 Nov 2026 14:08:53 +0000
+Subject: [PATCH 1/3] F-14: the test harness's Talk walk no longer presses E on
+ a neighbour's prompt
+
+- tests/lib/player.js P.talk: the short walks closer to the person stop on distance only, not on the
+  Talk prompt (it could be theirs while he turned on the way and a passer-by's once he faced them:
+  Brix at Tibbo's counter took the prompt, all three tries ended 2.2 m off); then it waits up to 5 s
+  for a passer-by to clear the prompt, as P.use does. The first walk still stops on their prompt
+  (the playthrough's Yorna fix is kept).
+- tests/lib/boot.mjs quitAndKeep: the reload waits BOOT_TIMEOUT as the first boot does.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_012GFEakZyL3XxjZKHRj5dFg
+---
+ lba3/tests/lib/boot.mjs  | 4 ++--
+ lba3/tests/lib/player.js | 8 +++++++-
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/lba3/tests/lib/boot.mjs b/lba3/tests/lib/boot.mjs
+index a420b212..fac26351 100644
+--- a/lba3/tests/lib/boot.mjs
++++ b/lba3/tests/lib/boot.mjs
+@@ -155,10 +155,10 @@ process.on('exit', (code) => {
+ export async function quitAndKeep(page, context, file) {
+   await page.evaluate(() => { P.release(); P.settle(); P.tap('Escape', 0.1); });
+   // the game saves, then reloads the page 500 ms later (src/main.js): wait for that reload, or a later open() races it
+-  const reloaded = page.waitForEvent('load', { timeout: 300000 });
++  const reloaded = page.waitForEvent('load', { timeout: +process.env.BOOT_TIMEOUT || 300000 });
+   await page.click('#pause [data-act="quit"]', { timeout: 60000 });
+   await reloaded;
+-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 })
++  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: +process.env.BOOT_TIMEOUT || 300000 })
+     .catch(async (e) => {   // say where the boot stopped, not just that it timed out
+       const st = await page.evaluate(() => ({ url: location.href, game: !!window.game, preparing: window.game?.preparing, loading: document.querySelector('#loading')?.textContent?.slice(0, 120) })).catch((x) => String(x));
+       console.log('quitAndKeep: the reload did not finish booting', JSON.stringify(st)); throw e; });
+diff --git a/lba3/tests/lib/player.js b/lba3/tests/lib/player.js
+index 87242267..7a6e006a 100644
+--- a/lba3/tests/lib/player.js
++++ b/lba3/tests/lib/player.js
+@@ -318,7 +318,13 @@
+         // the prompt must be for this person (not a bench or a sign beside them): step closer
+         // (each try a short walk that stops on their prompt: closer than their body allows, with 240 s to get there, the
+         //  bot circled Yorna at her winch for four minutes, chapter 6, PLAYTHROUGH-11.9)
+-        for (let k = 0; k < 3 && !(tg?.kind === 'npc' && tg.id === id); k++) { P.go(n.pos.x, n.pos.z, { tol: Math.max(1.0 - k * 0.2, hero().radius + (n.bodyR ?? n.radius ?? 0.4) + 0.1), maxT: 20, stopWhen: ready }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
++        // (F-14: no early stop on these short walks. The prompt can be theirs while he turns on the way and someone else's
++        //  once he faces them — Brix walking past Tibbo's counter —; stopping on it there had all three tries end where they
++        //  began, 2.2 m off, and E pressed on the neighbour)
++        const forThis = () => tg?.kind === 'npc' && tg.id === id;
++        for (let k = 0; k < 3 && !forThis(); k++) { P.go(n.pos.x, n.pos.z, { tol: Math.max(1.0 - k * 0.2, hero().radius + (n.bodyR ?? n.radius ?? 0.4) + 0.1), maxT: 20 }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
++        // (someone walking by still has the prompt: wait for them to pass, as P.use does and a player would; at most 5 s)
++        for (let k = 0; k < 20 && G.state === 'play' && !forThis(); k++) { G.step(0.25); P.face(n.pos.x, n.pos.z); tg = P.target(); }
+         P.tap('KeyE', 0.1);
+       }
+       const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene';
+-- 
+2.43.0
+

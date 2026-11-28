@@ -1,0 +1,22 @@
+[0s +0s] continue: {"state":"play","lines":0,"speakers":[]} | citadel [-56.15,18.74,-36.65] hp 4 | The square has water. Go home and talk to Zoé
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":4,"cloversNow":3,"revives":0}
+[6s +5s] home: Zoé — the square is full, our tap is not: {"r":"cannot reach house: failed:transition","room":"pumproom","fail":"ct_dry"} | pumproom [9696.3,0,602.3] hp 2 | The square has water. Go home and talk to Zoé
+  stats: {"play":51.9,"dialog":0.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":16,"says":1,"walked":122,"hpLost":2,"deaths":0,"rooms":1,"coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+  STOP: ct_dry
+FAIL the segment ran every step to its end "home: Zoé — the square is full, our tap is not: ct_dry"
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[0.4] go → (-46.1, 77.2) plan ok=false pts=4 left=112.1
+[5.4] stuck at (-53.7, -34.5): replan
+[6.5] hurt 4→2 at (-53.7, 10.3, -32.5) near: nobody sliding
+[10.9] stuck at (-53.6, -32.0): replan
+[51.6] stuck at (-47.1, 66.4): replan
+[52.0] go: transition (citadel → citadel, trans true) at (-47.11, 66.30)
+stats total: {"play":52,"dialog":0.2,"trans":0.7,"scene":0,"menu":0,"other":0,"lines":1,"words":16,"says":1,"walked":122,"hpLost":2,"deaths":0,"rooms":2,"chapter":"project","coinsNow":11,"hpNow":2,"cloversNow":3,"revives":0}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 1 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     2 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional)
+1 FAILED

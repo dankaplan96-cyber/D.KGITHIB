@@ -1,0 +1,87 @@
+{
+ "keeper_b": {
+  "look": "keeper_b",
+  "body": "keeper_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 972040
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967672
+   },
+   "heroCalls": 4,
+   "heroTris": 4368
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4368,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "oku_b": {
+  "look": "oku_b",
+  "body": "oku_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 972822
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968646
+   },
+   "heroCalls": 4,
+   "heroTris": 4176
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4176,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T04:11:46.980Z",
+ "candidates": {
+  "CAND_clerk": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/clerk.json",
+  "CAND_councilChair": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/councilChair.json",
+  "CAND_keeper": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/keeper.json",
+  "CAND_nara": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/nara.json",
+  "CAND_oku": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/oku.json",
+  "CAND_xil": "C:/Users/dan/lba3-blend/lba3/art/blender/characters/zeelich/export/xil.json"
+ }
+}

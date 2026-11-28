@@ -1,0 +1,25 @@
+{
+  "label": "Automated runtime only (SwiftShader): headless Chromium, ANGLE/SwiftShader, 4-core shared container, Medium. Not a GTX 1050 or UHD 620 figure.",
+  "base": "a4e1fb45",
+  "candidate": "ccr ARRIVAL-2 branch (57c3787a, dc490337, 616de816)",
+  "arrivalSteps_longestDrawBatchUnit_ms": [
+    { "run": "before-1", "build": "base", "conditions": "quiet", "zeelich": { "ms": 32.9, "unit": "array" }, "tavern": { "ms": 27.4, "unit": "cell part", "slice": 35 }, "verdict": "FAIL (desert shader warm-up 157)" },
+    { "run": "q-base-1", "build": "base", "conditions": "another browser 90 s beside", "zeelich": { "ms": 26.1, "unit": "array" }, "tavern": { "ms": 36.3, "unit": "cell part" }, "verdict": "PASS" },
+    { "run": "ab-base-1", "build": "base", "conditions": "load 5-7, another agent's browser", "zeelich": { "ms": 53.7, "unit": "cell part", "slice": 62 }, "tavern": { "ms": 37.9, "unit": "array", "slice": 48, "also": "cell 42.8 (slice 45)" }, "verdict": "FAIL x2" },
+    { "run": "after-1", "build": "cand 57c3787a", "conditions": "quiet", "zeelich": { "ms": 19.5, "unit": "array" }, "tavern": { "ms": 28.9, "unit": "array" }, "verdict": "PASS 12/12" },
+    { "run": "ab-cand-1", "build": "cand 57c3787a", "conditions": "load 5-7", "zeelich": { "ms": 22, "unit": "cell part", "slice": 31 }, "tavern": { "ms": 45.7, "unit": "cell", "slice": 53 }, "verdict": "FAIL x2 (tavern 53, desert 46)" },
+    { "run": "ab-cand-2", "build": "cand final", "conditions": "load 5 -> 8", "zeelich": { "ms": 66.2, "unit": "parts", "slice": 75 }, "tavern": { "ms": 58.7, "unit": "cell part", "slice": 59 }, "verdict": "FAIL x3" },
+    { "run": "q-cand-1", "build": "cand final", "conditions": "another browser 256 s beside, load -> 8.8", "zeelich": { "ms": 21.6, "unit": "array", "slice": 24 }, "tavern": { "ms": 99.8, "unit": "cell part", "slice": 107 }, "verdict": "FAIL x2" },
+    { "run": "q-cand-2", "build": "cand final", "conditions": "another browser 96 s beside", "zeelich": { "ms": 27.9, "unit": "array", "slice": 37 }, "tavern": { "ms": 24.2, "unit": "array", "slice": 24 }, "verdict": "PASS 12/12" }
+  ],
+  "unitsProbe_drawBatchUnits": [
+    { "run": "u-base-1", "build": "base", "zeelich": { "over10": 3, "longest": [[22.7, "array>array"], [15.1, "assign>array"], [10.5, "place>place"]] }, "tavern": { "over10": 3, "longest": [[28.7, "array>array"], [15.5, "cell part>cell part"], [11.5, "assign>array"]] } },
+    { "run": "u-cand-1", "build": "cand final", "zeelich": { "over10": 2, "longest": [[24.5, "array>array"], [20.4, "cell part>cell"]] }, "tavern": { "over10": 1, "longest": [[19.7, "array>array"], [7.1, "cell part>cell part"]] } },
+    { "run": "units-before-load3", "build": "base", "conditions": "3 busy loops", "zeelich": { "longest": [[113.3, "place>place"], [95.2, "place>place"], [49.9, "place>place"], [44.8, "assign>array"]] }, "tavern": { "longest": [[40.5, "cell part>cell part"], [35.3, "cell part>cell part"], [34.3, "array>array"]] } }
+  ],
+  "citadelReturnAfterZeelich": [
+    { "run": "c-base-1", "build": "base", "piecesLeavingFirstFrame": 12, "cause": "texture source version 3->5 (merge.js twinOf clone)", "firstFrameMs": 91, "uploads": 94, "uploadKB": 5666, "submitOtherMs": 58, "longestBlackMs": 91 },
+    { "run": "c-cand-1", "build": "cand final", "piecesLeavingFirstFrame": 0, "firstFrameMs": 48, "uploads": 65, "uploadKB": 536, "submitOtherMs": 21, "longestBlackMs": 48 },
+    { "run": "c-cand-lazy1", "build": "cand final", "conditions": "Zeelich built on its first visit (NOPREP)", "piecesLeavingFirstFrame": 0, "uploads": 65, "uploadKB": 536, "firstFrameMs": 1474, "note": "submit main 1462: SwiftShader canvas raster stall" }
+  ]
+}

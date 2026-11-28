@@ -1,0 +1,120 @@
+{
+  "file": "art/blender/props/items/clover/work/clover.blend",
+  "blender": "5.2.3 LTS",
+  "objects": [
+    {
+      "name": "bonus:clover.00",
+      "type": "MESH",
+      "parent": null,
+      "location": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.3296,
+        0.0781,
+        0.4042
+      ],
+      "mesh": {
+        "vertices": 2100,
+        "faces": 700,
+        "triangles": 700,
+        "uv_layers": [],
+        "color_attributes": [],
+        "materials": [
+          "bonus:clover"
+        ],
+        "vertex_groups": 0,
+        "modifiers": []
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "bonus:clover",
+      "users": 1,
+      "images": [],
+      "game": {
+        "key": "bonus:clover",
+        "recipe": null,
+        "color": "#5ae25e",
+        "roughness": 0.45,
+        "metalness": 0,
+        "map": null,
+        "vertexColors": false,
+        "tile": 0
+      }
+    }
+  ],
+  "images": [],
+  "armatures": [],
+  "actions": [],
+  "totals": {
+    "objects": 1,
+    "meshes": 1,
+    "triangles": 700,
+    "materials": 1,
+    "images": 0,
+    "estTextureMemoryBytes": 0,
+    "armatures": 0,
+    "actions": 0,
+    "bboxGame": {
+      "min": [
+        -0.1648,
+        -0.2106,
+        -0.0229
+      ],
+      "max": [
+        0.1648,
+        0.1936,
+        0.0551
+      ],
+      "size": [
+        0.3296,
+        0.4042,
+        0.0781
+      ]
+    }
+  },
+  "polyprop": {
+    "format": "lba3-polyprop",
+    "version": 1,
+    "name": "clover",
+    "units": "metres; +y up; front +z; origin at the bonus centre (it bobs about it)",
+    "source": {
+      "kind": "code-built bonus",
+      "builder": "src/game/bonuslook.js cloverGeo / bonusMat (ITEMS-1)"
+    },
+    "footprint": null,
+    "textureDir": "textures",
+    "bbox": {
+      "min": [
+        -0.1648,
+        -0.2106,
+        -0.0229
+      ],
+      "max": [
+        0.1648,
+        0.1936,
+        0.0551
+      ],
+      "size": [
+        0.3296,
+        0.4042,
+        0.0781
+      ]
+    },
+    "triangles": 700
+  }
+}

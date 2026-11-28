@@ -1,0 +1,3 @@
+Game.warmScene / Renderer.precompile synchronous main-thread cost (SwiftShader host, Medium, warm.mjs), ms
+before (533d0b5): precompile each call: outdoor 134/86/110, house 110/79/77, outdoor 78/92/98, house 151/107/100 (every door)
+after: warmScene first entry per scene/light state: outdoor 81.3, house 72.2; every later entry: 0.2-4.2

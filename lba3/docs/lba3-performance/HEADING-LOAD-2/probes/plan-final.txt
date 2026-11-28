@@ -1,0 +1,9 @@
+# name probe settings — the final build: per heading (the same as the 'before' sweep), the turns again, the Hamalayi's trade-off
+final-zeelich q_area.js W_AREA=zeelich W_FAST=1 W_TOP=14 W_IVBY=1 W_SHOTS=1 W_VARS=no_characters+no_particles/blobs
+final-desert q_area.js W_AREA=desert W_FAST=1 W_TOP=14 W_IVBY=1 W_SHOTS=1 W_VARS=no_characters+no_particles/blobs
+final-hamalayi q_area.js W_AREA=hamalayi W_FAST=1 W_TOP=14 W_IVBY=1 W_SHOTS=1 W_VARS=no_characters+no_particles/blobs
+final-isle_otringal q_area.js W_AREA=isle_otringal W_FAST=1 W_TOP=14 W_IVBY=1 W_SHOTS=1 W_VARS=no_characters+no_particles/blobs
+final-isle_knartas q_area.js W_AREA=isle_knartas W_FAST=1 W_TOP=14 W_IVBY=1 W_SHOTS=1 W_VARS=no_characters+no_particles/blobs
+fturn-desert q_aturn.js W_AREA=desert W_VARS=region_instances|instanced_decoration
+fturn-hamalayi q_aturn.js W_AREA=hamalayi W_VARS=region_instances|instanced_decoration
+trade4-hamalayi q_area.js W_AREA=hamalayi W_FAST=1 W_SHOTS=1 W_VARS=trees_detailed_to_22

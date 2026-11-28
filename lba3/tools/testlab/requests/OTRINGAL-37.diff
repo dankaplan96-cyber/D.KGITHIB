@@ -1,0 +1,68 @@
+diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
+index 9e5ffdbf..60a83288 100644
+--- a/lba3/src/game/zislands.js
++++ b/lba3/src/game/zislands.js
+@@ -324,6 +324,46 @@ function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }
+   }
+ }
+ 
++// OTRINGAL-37 (the cloud's original-mechanics sweep, 8.11: "grey rock spikes stand up through the paving between the
++// houses" of the high town; docs/lba-maturity/mechanics-entry.md): no scattered rock: they are the original's ground
++// itself, a grid point or two of its heights 1-3 m over the street, which the granite (S.turfRock) draws as grey
++// peaks between the houses, one at the foot of the way in to a door (looked at on the laptop's GPU, Follow/Medium).
++// S.paveFlat { R, span }: the ground drawn and walked on (not the analysis the plan reads: the dressing keeps its
++// places) is cut down to the street, the floor of the nearest house within R m of its walls:
++//   - a bump in the street, at most max m high: the ground comes back to the street's level (0.3 m over it to 0.6 m
++//     under it) on both sides, along x or along z, within span m: not a terrace rising behind a house, nor the rock
++//     mass at the rim (it does not come back down to the street within span on either line), nor ground falling away;
++//   - the way in to every door, 2.2 m out from its wall and 0.7 m either side (as the dressing keeps it, DOOR-SWEEP),
++//     with a grid cell more round it, so no triangle of a peak beside it slopes into it.
++// Only lowered, never raised.
++function paveFlat(A, L, P) {
++  const { nx, nz, cell } = L, { cx, cz, gx, gz } = A, H0 = A.H, H = H0.slice();
++  const hs = A.decor.filter((o) => o.fitted && (o.shape === 'house' || o.shape === 'tower'));
++  const at = (i, j) => (i < 0 || j < 0 || i >= nx || j >= nz ? null : H0[j * nx + i]);
++  const steps = Math.ceil(P.span / cell);
++  const back = (i, j, di, dj, ref) => {
++    for (let s = 1; s <= steps; s++) { const v = at(i + di * s, j + dj * s); if (v == null || v < ref - 0.6) return false; if (v <= ref + 0.3) return true; }
++    return false;
++  };
++  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
++    const k = j * nx + i, v = H0[k]; if (v == null) continue;
++    let ref = null, best = P.R;
++    for (const o of hs) { const dd = Math.max(Math.abs(cx(i) - o.x) - o.sx / 2, Math.abs(cz(j) - o.z) - o.sz / 2, 0); if (dd <= best) { best = dd; ref = o.y + 0.02; } }
++    if (ref == null || v <= ref + 0.25 || v > ref + P.max) continue;
++    if ((back(i, j, 1, 0, ref) && back(i, j, -1, 0, ref)) || (back(i, j, 0, 1, ref) && back(i, j, 0, -1, ref))) H[k] = ref;
++  }
++  for (const o of hs) {
++    if (o.noDoor || !o.face) continue;
++    const t = o.face, fx = o.x + t[0] * o.sx / 2, fz = o.z + t[1] * o.sz / 2, out = 2.2 + cell, lat = 0.7 + cell;
++    const x0 = t[0] ? Math.min(fx, fx + t[0] * out) : o.x - lat, x1 = t[0] ? Math.max(fx, fx + t[0] * out) : o.x + lat;
++    const z0 = t[1] ? Math.min(fz, fz + t[1] * out) : o.z - lat, z1 = t[1] ? Math.max(fz, fz + t[1] * out) : o.z + lat;
++    for (let j = Math.max(0, Math.ceil(gz(z0))); j <= Math.min(nz - 1, Math.floor(gz(z1))); j++) {
++      for (let i = Math.max(0, Math.ceil(gx(x0))); i <= Math.min(nx - 1, Math.floor(gx(x1))); i++) { const k = j * nx + i; if (H[k] != null && H[k] > o.y + 0.02) H[k] = o.y + 0.02; }
++    }
++  }
++  return H;
++}
++
+ // A place built on decks (the Lift Dock, the original's ASCENCE: its ground is a slab at the cloud line under
+ // decks on stilts at 4–7 m): the decks' tops are its ground. The style names the original's floor objects
+ // (S.floors: bodies) and may add decks of its own (S.extraDecor, bodies ≥ 990: ours). Returns the layout with
+@@ -539,6 +579,7 @@ const STYLE = {
+     grand: { x: 5.6, z: -23.9 }, portico: { x0: 1.5, x1: 9.7, z0: -20.5, z1: -16.8, zc: -18.5 }, target: { x: 5.6, z: -16.2, word: 'GRAND HALL' }, near: 16, far: 34,
+     crates: 'wood', lines: ['#7a3a8a', '#f0c040', '#f4eee0', '#2f8a9a'],
+     // (OTR-VARIETY: fewer buildings, each of a kind; the yard's wall lengths a wall: OTR above)
++    paveFlat: { R: 5, span: 7, max: 3.5 },   // (OTRINGAL-37: the high town's paving without the ground's grey peaks: paveFlat)
+     layout: otrLayout, house: otrHouse, shape: (o) => (o.body === 146 && o.kind === 'building' ? 'yardWall' : otrShape(o)), cellBatch: 48,
+     landmark(api) {
+       const f = api.near('fountain', -5, 6.6, 0, {}, 2.5);
+@@ -1398,7 +1439,7 @@ function buildIsland0(scene, physics, name, L, at) {
+   const S = STYLE[name] || {}, CY = cloudYOf(S);   // (SKY-9: this island's cloud sea)
+   if (S.layout) L = S.layout(L);   // (Celebration: its later state's figure)
+   if (S.decks) L = deckLayout(L, S);   // (the Lift Dock: its decks are its ground)
+-  const A = analyse(L, S), { w, d, H, cx, cz, gx, gz } = A;
++  const A = analyse(L, S), { w, d, cx, cz, gx, gz } = A, H = S.paveFlat ? paveFlat(A, L, S.paveFlat) : A.H;   // (OTRINGAL-37: the street's bumps cut down)
+   const plan = planIsland(name, L, A), pad = plan.pad;
+   const COL = { ...COL0, ...(S.ground ? { turf: C(S.ground[0]), turf2: C(S.ground[1]), dust: C(S.ground[2]) } : {}), ...(S.rock ? { rock: C(S.rock), rockHi: C(S.rockHi || S.rock), rim: C(S.rock).multiplyScalar(0.85) } : {}), ...(S.paveCol ? { pave: C(S.paveCol) } : {}) };
+   // the routes (to the landmarks) and the paving, at the terrain's points: worn paths, paved squares

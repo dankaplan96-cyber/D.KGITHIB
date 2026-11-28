@@ -1,0 +1,22 @@
+[0s +0s] continue: {"state":"play","lines":0} | citadel [-63.62,2.35,11] hp 10 | Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (ta
+[4s +4s] orchard (ball over the cage): {"open":true,"fail":null} | citadel [-71.51,13.89,-56.64] hp 10 | Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (ta
+[172s +168s] depot (fight the guards on the way): {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"open":true,"hp":7,"clovers":1,"fail":null} | citadel [-68.12,14,-70.64] hp 7 | Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (ta
+[176s +4s] cliffs: the target: {"hit":true,"fail":null} | citadel [-62.35,13.79,-32.42] hp 7 | Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (ta
+[206s +30s] cliffs: up the stones: {"reached":12,"of":12,"tries":28,"y":16.85,"fail":null} | citadel [-59.67,16.85,-36.82] hp 4 | Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (ta
+[218s +12s] cliffs: the valve: {"r":"used","target":{"kind":"valve","id":"p_valve","label":"p_valve"},"state":"play","lines":0,"open":true,"water":true,"fail":null} | citadel [-54.21,16.84,-36.43] hp 4 | Visit Vesk at the station in the old fortress
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[351.8] stuck at (-54.5, -36.7): replan
+[357.3] stuck at (-55.3, -35.6): replan
+[362.7] stuck at (-56.0, -36.8): replan
+[365.6] stuck at (-55.9, -36.7): replan
+[368.5] stuck at (-55.9, -36.8): replan
+[376.8] go → (-55.2, -36.6) plan ok=false pts=1 left=0.96
+[379.3] stuck at (-54.3, -36.4): replan
+[382.3] stuck at (-54.5, -36.5): replan
+[387.8] stuck at (-55.9, -36.5): replan
+[393.3] stuck at (-55.9, -36.8): replan
+[396.2] stuck at (-56.2, -36.8): replan
+[401.6] stuck at (-55.9, -36.0): replan
+kept docs/lba3-production/reviews/REV-TY-2/save-04.json
+no errors

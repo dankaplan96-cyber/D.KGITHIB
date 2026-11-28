@@ -1,0 +1,54 @@
+{
+ "room": "desert",
+ "chapterKey": "steam",
+ "hero": [
+  3292,
+  4
+ ],
+ "esmers": [
+  {
+   "id": "dg_cook",
+   "char": "farmerB",
+   "x": 3450,
+   "z": -1.45
+  },
+  {
+   "id": "dg_haul",
+   "char": "farmerC_b",
+   "x": 3431,
+   "z": -2.4
+  },
+  {
+   "id": "dg_clerk",
+   "char": "archivist",
+   "x": 3454.3,
+   "z": -3.65
+  }
+ ],
+ "street": {
+  "at": {
+   "x": 3445.1,
+   "z": 4.5,
+   "a": 3.141592653589793
+  },
+  "centre": [
+   3445.1,
+   -2.5000000000000004
+  ],
+  "n": 3,
+  "info": {
+   "calls": 180,
+   "triangles": 302606
+  },
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  }
+ },
+ "gpu": false,
+ "dialogue": "dg_haul",
+ "errors": [],
+ "at": "2026-11-08T11:30:35.144Z",
+ "candidates": {}
+}

@@ -1,0 +1,35 @@
+{
+ "prep: odile + crate": "hand",
+ "doors near the shop": [
+  {
+   "room": "office",
+   "d": 46.5
+  },
+  {
+   "room": "house",
+   "d": 70.8
+  },
+  {
+   "room": "wtent",
+   "d": 108.1
+  },
+  {
+   "room": "asylum",
+   "d": 139
+  }
+ ],
+ "hot into a room": {
+  "took": "hot",
+  "room": "office",
+  "t": 15,
+  "cs": "tripped",
+  "hp": 9
+ },
+ "hot into a room lines": [
+  "n_hero: It catches... the engine turns. And it's getting warm.",
+  "TOAST l_toast_hot",
+  "TOAST l_toast_dropped",
+  "n_mira: Welcome to the water office, Twinsen. Yes, we know there's no water. Yes, we complain about it too."
+ ],
+ "errors": []
+}

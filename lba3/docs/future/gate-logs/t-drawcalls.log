@@ -1,0 +1,109 @@
+=== drawcalls start 2026-11-01T20:38:53Z
+street medium info.calls 202 {"main":128,"shadow":75}
+--- by source
+  54 shadow | world:shadowBatch
+  46 main | actors
+  22 main | world:drawBatch
+  10 main | world:smallPool
+   7 shadow | world:dogParts
+   7 main | world:dogParts
+   6 main | island/dressing
+   5 shadow | island/dressing
+   5 main | world:terrain
+   4 main | spaceport/spaceport
+   3 shadow | island/pipeline
+   3 main | island/pipeline
+   2 shadow | world:lodBatch
+   2 main | world:gullsSquare
+   2 main | town/townMerged:merged
+   2 main | town/townMerged
+   2 main | world:lodBatch
+   2 main | island/original-props
+   2 main | citydress/citydress:merged
+   1 shadow | island
+   1 shadow | world:stallPile
+   1 shadow | 
+   1 shadow | world:dinofly-mesh
+   1 main | world:stallPile
+   1 main | town
+   1 main | town:merged
+   1 main | statue/statue
+   1 main | island/dressing:merged
+   1 main | world:dinofly-mesh
+   1 main | containers/containers
+   1 main | actors:merged
+   1 main | #6
+   1 main | #220/blobBatch
+   1 main | #7
+   1 main | #15/softParticles
+   1 main | 
+--- by source/kind/material
+  54 shadow | world:shadowBatch | Mesh | MeshDepthMaterial
+  26 main | actors | Mesh | MeshStandardMaterial#ffffff
+  22 main | world:drawBatch | Mesh | MeshStandardMaterial#ffffff
+  10 main | actors | skinned | MeshStandardMaterial#ffffff
+   7 shadow | world:dogParts | Mesh | MeshDepthMaterial
+   7 main | world:dogParts | Mesh | MeshStandardMaterial#ffffff
+   5 shadow | island/dressing | Mesh | MeshDepthMaterial+map
+   5 main | world:terrain | Mesh | MeshStandardMaterial#ffffff
+   3 shadow | island/pipeline | Mesh | MeshDepthMaterial
+   3 main | island/dressing | Mesh | MeshStandardMaterial#e0b080+map
+   3 main | island/dressing | Mesh | MeshStandardMaterial#9a6a40+map
+   3 main | island/pipeline | Mesh | MeshStandardMaterial#ff4a3a
+   3 main | spaceport/spaceport | Mesh | MeshStandardMaterial#ffffff+map
+   2 shadow | world:lodBatch | batched | MeshDepthMaterial
+   2 main | town/townMerged | Mesh | MeshStandardMaterial#ffffff+map
+   2 main | world:lodBatch | batched | MeshStandardMaterial#ffffff
+   2 main | world:smallPool | inst(1) | MeshStandardMaterial#ffffff
+   2 main | citydress/citydress:merged | Mesh | MeshStandardMaterial#ffffff+map
+   2 main | actors | Mesh | MeshStandardMaterial#8a6430
+   1 shadow | island | inst(14) | MeshDepthMaterial+map
+   1 shadow | world:stallPile | inst(1) | MeshDepthMaterial
+   1 shadow |  | Mesh | ShaderMaterial
+   1 shadow | world:dinofly-mesh | skinned | MeshDepthMaterial
+   1 main | world:stallPile | inst(1) | MeshStandardMaterial#ffffff
+   1 main | world:gullsSquare | inst(2) | MeshStandardMaterial#ffffff
+   1 main | world:gullsSquare | inst(4) | MeshStandardMaterial#ffffff
+   1 main | town/townMerged:merged | Mesh | MeshStandardMaterial#2f4f6a
+   1 main | town | inst(162) | MeshStandardMaterial#b9b3a8
+   1 main | town/townMerged:merged | Mesh | MeshStandardMaterial#ffffff
+   1 main | town:merged | Mesh | MeshStandardMaterial#ad9384
+   1 main | statue/statue | Mesh | MeshStandardMaterial#ffffff+map
+   1 main | world:smallPool | inst(38) | MeshStandardMaterial#ffffff
+   1 main | world:smallPool | inst(47) | MeshStandardMaterial#ffffff
+   1 main | world:smallPool | inst(35) | MeshStandardMaterial#ffffff
+   1 main | world:smallPool | inst(37) | MeshStandardMaterial#ffffff
+   1 main | world:smallPool | inst(29) | MeshStandardMaterial#ffffff
+   1 main | world:smallPool | inst(4) | MeshStandardMaterial#ffffff
+   1 main | world:smallPool | inst(5) | MeshStandardMaterial#ffffff
+   1 main | world:smallPool | inst(31) | MeshStandardMaterial#ffffff
+   1 main | island/original-props | inst(51) | MeshStandardMaterial#4f8f3a
+   1 main | island/original-props | inst(51) | MeshStandardMaterial#ffffff
+   1 main | island/dressing:merged | Mesh | MeshStandardMaterial#ffffff+map
+   1 main | world:dinofly-mesh | skinned | MeshStandardMaterial#ffffff
+   1 main | containers/containers | Mesh | MeshStandardMaterial#ffffff+map
+   1 main | actors | skinned | MeshStandardMaterial#fff0e0
+   1 main | actors | Mesh | MeshStandardMaterial#b88a4a
+   1 main | actors | Mesh | MeshStandardMaterial#d8c64a
+   1 main | actors | skinned | MeshStandardMaterial#d8f0d0
+   1 main | actors | skinned | MeshStandardMaterial#ffe8d8
+   1 main | actors | skinned | MeshStandardMaterial#fff8f0
+   1 main | actors | Mesh | MeshStandardMaterial#8a4f2c
+   1 main | actors:merged | Mesh | MeshStandardMaterial#ffffff
+   1 main | #6 | Mesh | ShaderMaterial
+   1 main | spaceport/spaceport | Mesh | MeshStandardMaterial#bfe6ff
+   1 main | #220/blobBatch | inst(25) | MeshBasicMaterial#ffffff+map
+   1 main | #7 | Mesh | ShaderMaterial
+   1 main | #15/softParticles | Mesh | ShaderMaterial
+   1 main | actors | skinned | MeshBasicMaterial#40c8ff
+   1 main |  | Mesh | RawShaderMaterial
+--- shader programs 156 [["",144],["merged-vcrm",4],["merged-vctrm",2],["merged-arr 256x256|4",2],["merged-arr 512x512|4",2],["unspecified",1],["OutputShader",1]]
+PASS the route drew a frame 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== drawcalls end rc=0 wall=208s 2026-11-01T20:42:21Z

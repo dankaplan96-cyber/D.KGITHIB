@@ -1,0 +1,210 @@
+{
+ "chapter": "network",
+ "start": "workshop",
+ "scenes": [
+  {
+   "scene": "workshop",
+   "people": [
+    [
+     "baldino",
+     1498.6,
+     -2.3,
+     0.6
+    ]
+   ],
+   "things": 7,
+   "rows": [
+    {
+     "thing": "wlook:p_look",
+     "verdict": "NEAR",
+     "useCells": 131,
+     "reach0": 128,
+     "reach1": 128,
+     "minGapToPerson": 0.23
+    },
+    {
+     "thing": "roomsearch:bench",
+     "verdict": "NEAR",
+     "useCells": 50,
+     "reach0": 50,
+     "reach1": 33,
+     "minGapToPerson": -0.73
+    }
+   ]
+  },
+  {
+   "scene": "office",
+   "people": [
+    [
+     "mira",
+     1198.8,
+     0.95,
+     0.368
+    ]
+   ],
+   "things": 1,
+   "rows": [
+    {
+     "thing": "roomsearch:pipemap",
+     "verdict": "NEAR",
+     "useCells": 192,
+     "reach0": 192,
+     "reach1": 192,
+     "minGapToPerson": 0.68
+    }
+   ]
+  },
+  {
+   "scene": "lighttop",
+   "people": [
+    [
+     "zoe",
+     1602.07,
+     1.01,
+     0.45
+    ],
+    [
+     "arthur",
+     1602.44,
+     0.17,
+     0.45
+    ]
+   ],
+   "things": 4,
+   "rows": []
+  },
+  {
+   "scene": "wtent",
+   "people": [
+    [
+     "bersimon",
+     5400.2,
+     -2.15,
+     0.496
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "school",
+   "people": [
+    [
+     "magus",
+     5605.2,
+     -4.1,
+     0.496
+    ],
+    [
+     "keraooc",
+     5593.1,
+     2.2,
+     0.495
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "obsv",
+   "people": [
+    [
+     "keeper",
+     4596.5,
+     4,
+     0.454
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "upper",
+   "people": [
+    [
+     "clerk",
+     4801,
+     0.6,
+     0.42
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "council",
+   "people": [
+    [
+     "chair",
+     4850,
+     -5,
+     0.47
+    ],
+    [
+     "councilB",
+     4847.4,
+     -5,
+     0.414
+    ],
+    [
+     "councilC",
+     4852.6,
+     -5,
+     0.645
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  },
+  {
+   "scene": "archive",
+   "people": [
+    [
+     "archivist",
+     4894.5,
+     -4,
+     0.441
+    ]
+   ],
+   "things": 0,
+   "rows": []
+  }
+ ],
+ "rooms": [
+  "house",
+  "well",
+  "office",
+  "projoffice",
+  "control",
+  "workshop",
+  "lighttop",
+  "cellar",
+  "c3shaft",
+  "c3deep",
+  "c3gallery",
+  "c3sendell",
+  "c3core",
+  "condA",
+  "condB",
+  "butemple",
+  "wtent",
+  "school",
+  "asylum",
+  "bumaze",
+  "buhalls",
+  "obsv",
+  "upper",
+  "council",
+  "archive",
+  "valves",
+  "arena",
+  "sewer",
+  "sewervault",
+  "tavern",
+  "bazoo",
+  "ticket",
+  "pharmacy",
+  "nbrhouse",
+  "nellhouse"
+ ]
+}

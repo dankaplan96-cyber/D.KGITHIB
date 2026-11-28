@@ -1,0 +1,26 @@
+waited 15s for other browsers; load 3.14 2.71 1.24
+PASS A staged batches = one-step batches (Desert Island: shadow cells, members, vertices, indices; draw batches, pieces, vertices, indices) {"staged":{"shadowCells":108,"shadowMembers":287,"shadowSolo":56,"shadowVerts":412996,"shadowIdx":551595,"drawBatches":39,"drawPieces":323,"drawVerts":397758,"drawIdx":524610},"one":{"shadowCells":108,"shadowMembers":287,"shadowSolo":56,"shadowVerts":412996,"shadowIdx":551595,"drawBatches":39,"drawPieces":323,"drawVerts":397758,"drawIdx":524610},"slices":{"shadow":11,"shadowMax":35,"draw":20,"drawMax":3482},"oneStepMs":{"shadow":89,"draw":69}}
+PASS A the staged builds came in several slices {"shadow":11,"shadowMax":35,"draw":20,"drawMax":3482}
+  zeelich: 93 frames, 62 black · 49 steps · shadow batches 8×, longest 13 ms [cell 3.3] · texture layers 5×, longest 31521 ms · draw batches 16×, longest 37 ms [array 27.9] · geometry 6×, longest 44 ms · draw batches settle 6×, longest 14 ms [cell part 5.1] · batch meshes 1×, longest 0 ms · textures 1×, longest 7 ms · shadow programs 1×, longest 0 ms · shader warm-up 5×, longest 20 ms [compile 8.7] (+1 with programs)
+    steps that compiled programs: shader warm-up 13 ms (+1 program)
+PASS B zeelich: the arrival came through (in the area, the screen revealed) {"room":"zeelich","revealed":true}
+PASS B zeelich: every batch / settle / layer / warm-up slice ≤ 40 ms []
+PASS B zeelich: no batch build or piece leaving a batch on the first 30 frames in view []
+PASS B zeelich: its shadow and draw batches built in several slices {"shadow batches":{"n":8,"max":13,"total":93,"prog":0,"u":"cell 3.3"},"texture layers":{"n":5,"max":31521,"total":31566,"prog":0},"draw batches":{"n":16,"max":37,"total":226,"prog":0,"u":"array 27.9"},"geometry":{"n":6,"max":44,"total":81,"prog":0},"draw batches settle":{"n":6,"max":14,"total":77,"prog":0,"u":"cell part 5.1"},"batch meshes":{"n":1,"max":0,"total":0,"prog":0},"textures":{"n":1,"max":7,"total":7,"prog":0},"shadow programs":{"n":1,"max":0,"total":0,"prog":0},"shader warm-up":{"n":5,"max":20,"total":62,"prog":1,"u":"compile 8.7"}}
+  desert: 93 frames, 62 black · 36 steps · shadow batches 8×, longest 14 ms [cell 1.8] · texture layers 1×, longest 4 ms · draw batches 7×, longest 13 ms [cell part 3.6] · geometry 6×, longest 34 ms · draw batches settle 5×, longest 16 ms [cell 10.5] · batch meshes 1×, longest 0 ms · textures 1×, longest 10 ms · shadow programs 1×, longest 0 ms · shader warm-up 6×, longest 17 ms [compile 8.1] (+1 with programs)
+    steps that compiled programs: shader warm-up 17 ms (+1 program)
+PASS B desert: the arrival came through (in the area, the screen revealed) {"room":"desert","revealed":true}
+PASS B desert: every batch / settle / layer / warm-up slice ≤ 40 ms []
+PASS B desert: no batch build or piece leaving a batch on the first 30 frames in view []
+  tavern: 83 frames, 52 black · 31 steps · shadow batches 4×, longest 18 ms [large piece 14.9] · texture layers 5×, longest 81564 ms · draw batches 7×, longest 24 ms [array 24.2] · geometry 6×, longest 17 ms · draw batches settle 1×, longest 0 ms [ 0] · batch meshes 1×, longest 0 ms · textures 1×, longest 1 ms · shadow programs 1×, longest 33 ms · shader warm-up 5×, longest 16 ms [compile 5.8]
+PASS B tavern: the arrival came through (in the area, the screen revealed) {"room":"tavern","revealed":true}
+PASS B tavern: every batch / settle / layer / warm-up slice ≤ 40 ms []
+PASS B tavern: no batch build or piece leaving a batch on the first 30 frames in view []
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 12 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+another browser ran beside it for 96s; load 4.39 3.45 1.80

@@ -1,0 +1,81 @@
+[0.3] go → (1502.8, -3.0) plan ok=true pts=2 left=0.3
+[2.2] go: transition (workshop → workshop, trans true) at (1502.78, -2.32)
+[3.1] go → (2376.0, 7.0) plan ok=true pts=2 left=0.61
+[5.9] go → (2398.0, -10.9) plan ok=true pts=4 left=0.43
+[15.5] go → (2399.8, -14.3) plan ok=true pts=2 left=0.32
+[16.5] go → (2400.2, -16.2) plan ok=true pts=2 left=0.05
+[17.6] go → (2400.7, -17.8) plan ok=true pts=2 left=0.26
+[19.2] go → (2400.7, -17.8) plan ok=true pts=2 left=0.14
+[22.8] go → (2401.4, -19.5) plan ok=true pts=2 left=0.21
+[24.9] go → (2401.4, -19.5) plan ok=true pts=2 left=0.22
+[30.0] go → (2401.2, -21.3) plan ok=true pts=2 left=0.07
+[31.8] go → (2401.2, -21.3) plan ok=true pts=2 left=0.09
+[35.7] go → (2400.2, -22.7) plan ok=true pts=2 left=0.25
+[41.1] go → (2400.2, -22.7) plan ok=true pts=2 left=0.28
+[46.4] go → (2398.5, -23.4) plan ok=true pts=2 left=0.28
+[52.0] go → (2398.5, -23.4) plan ok=true pts=2 left=0.24
+[57.2] go → (2396.7, -23.2) plan ok=true pts=2 left=0.08
+[59.0] go → (2396.7, -23.2) plan ok=true pts=2 left=0.14
+[62.8] go → (2395.3, -22.2) plan ok=true pts=2 left=0.24
+[68.0] go → (2398.0, -16.7) plan ok=true pts=4 left=0.66
+[71.1] go → (2398.0, -16.7) plan ok=true pts=2 left=0.05
+[73.1] go → (2394.6, -20.6) plan ok=true pts=4 left=0.23
+[86.3] go: no way round, taking a drop
+[86.3] go → (2399.8, -14.3) plan ok=true pts=5 left=0.34
+[89.2] hurt 7→5 at (2402.6, 6.0, -18.4) near: nobody 
+[91.7] go → (2396.0, 40.4) plan ok=false pts=6 left=1.28
+[106.9] stuck at (2396.1, 39.1): replan
+[112.3] stuck at (2395.9, 39.2): replan
+[117.7] stuck at (2396.6, 39.2): replan
+[123.2] stuck at (2395.9, 39.1): replan
+[128.6] stuck at (2396.1, 39.0): replan
+[134.1] stuck at (2395.9, 39.1): replan
+[141.0] go → (-65.5, 11.0) plan ok=true pts=9 left=0.27
+[157.2] go: transition (citadel → citadel, trans true) at (-64.83, 11.36)
+[158.0] go → (1198.8, 0.9) plan ok=true pts=4 left=0.73
+[163.8] go → (4995.8, -3.0) plan ok=true pts=2 left=0.3
+[166.8] go → (4995.8, -3.0) plan ok=true pts=2 left=0.29
+[168.1] go → (4998.6, -3.0) plan ok=true pts=2 left=0.32
+[169.9] go → (4998.6, -3.0) plan ok=true pts=2 left=0.2
+[171.1] go → (5001.4, -3.0) plan ok=true pts=2 left=0.4
+[172.2] go → (5001.4, -3.0) plan ok=true pts=2 left=0.3
+[173.7] go → (5004.2, -3.0) plan ok=true pts=2 left=0.38
+[175.8] go → (5004.2, -3.0) plan ok=true pts=2 left=0.08
+[176.0] go → (5004.2, -3.0) plan ok=true pts=2 left=0.01
+[176.0] go → (5004.2, -3.0) plan ok=true pts=2 left=0.01
+[176.8] go → (4994.5, 2.5) plan ok=true pts=2 left=0.15
+[183.4] go: transition (valves → valves, trans true) at (4995.23, 2.45)
+[184.2] go → (1202.7, -3.0) plan ok=true pts=2 left=0.22
+[186.7] go: transition (office → office, trans true) at (1202.75, -2.34)
+[187.5] go → (-107.5, 94.2) plan ok=true pts=12 left=0.08
+[212.4] go: transition (citadel → citadel, trans true) at (-106.56, 94.02)
+[213.2] go → (1598.5, -0.6) plan ok=true pts=5 left=0.65
+[216.0] go → (1598.5, -0.6) plan ok=true pts=2 left=0.35
+[217.6] ISO assist: moved zoe,arthur 1.6 m off the lighthouse dial bank (B-1)
+[217.6] go → (1599.0, -1.1) plan ok=true pts=2 left=0.2
+[218.7] go → (1599.0, -1.1) plan ok=true pts=1 left=0.12
+[219.0] go → (1599.0, -1.1) plan ok=true pts=1 left=0.12
+[219.2] go → (1599.0, -1.1) plan ok=true pts=1 left=0.12
+[219.5] go → (1599.5, -1.3) plan ok=true pts=2 left=0.2
+[220.7] go → (1599.5, -1.3) plan ok=true pts=1 left=0.09
+[221.0] go → (1599.5, -1.3) plan ok=true pts=1 left=0.09
+[221.2] go → (1599.5, -1.3) plan ok=true pts=1 left=0.09
+[221.5] go → (1600.1, -1.5) plan ok=true pts=2 left=0.25
+[226.5] stuck at (1600.2, -1.3): replan
+[228.2] go → (1600.1, -1.5) plan ok=true pts=1 left=0.11
+[228.5] go → (1600.1, -1.5) plan ok=true pts=1 left=0.11
+[228.7] go → (1600.1, -1.5) plan ok=true pts=1 left=0.11
+[230.1] go → (1601.4, -1.1) plan ok=false pts=6 left=0.51
+[235.1] stuck at (1599.2, -1.0): replan
+[240.6] stuck at (1600.1, -1.3): replan
+[246.1] stuck at (1600.2, -1.3): replan
+[249.0] stuck at (1599.9, -1.1): replan
+[251.9] stuck at (1600.3, -1.6): replan
+[254.8] stuck at (1600.0, -1.4): replan
+[261.4] go → (1601.4, -1.1) plan ok=true pts=7 left=0.07
+[266.5] stuck at (1599.2, -1.0): replan
+[271.9] stuck at (1600.3, -1.6): replan
+[274.9] stuck at (1600.0, -1.5): replan
+[280.3] stuck at (1600.2, -1.3): replan
+[283.3] stuck at (1599.8, -1.4): replan
+[288.7] stuck at (1599.9, -1.3): replan

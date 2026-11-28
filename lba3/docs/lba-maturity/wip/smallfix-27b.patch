@@ -1,0 +1,288 @@
+diff --git a/lba3/src/engine/physics.js b/lba3/src/engine/physics.js
+index 5c8f815d..3ed2c033 100644
+--- a/lba3/src/engine/physics.js
++++ b/lba3/src/engine/physics.js
+@@ -32,6 +32,7 @@ export class Physics {
+     c.bottom ??= -50;
+     if (c.block) c.noStand = true;
+     c.enabled ??= true;
++    if (c.brink) this.brinks = (this.brinks || 0) + 1;   // (SMALLFIX-27B: an isle's edge over the clouds; Hero.brinkFace asks only when there are some)
+     c._cam = 0;   // (GC-STREET: the camera's per-query mark, camera.js _stamp)
+     if (c.type === 'box') {
+       c.cos = Math.cos(c.rot || 0);
+diff --git a/lba3/src/game/actors.js b/lba3/src/game/actors.js
+index bb0e6df1..bf90dc7a 100644
+--- a/lba3/src/game/actors.js
++++ b/lba3/src/game/actors.js
+@@ -774,7 +774,21 @@ export class Hero extends Actor {
+     const P = this.game.physics, p = this.pos;
+     const upFace = (x, z) => { const st = P.steepAt(x, z, p.y); return st && P.groundInfo(x, z, p.y).h > p.y + 0.01 ? st : null; };
+     const st = upFace(p.x + dx, p.z + dz);
+-    if (!st) return o;
++    if (!st) {
++      // (SMALLFIX-27B, the lip: a step down onto a face whose way down ends against a brink — the invisible block at an
++      //  isle's edge over the clouds, zislands.js `brink` — before any footing is not taken: that slide had nowhere to go
++      //  and ended in SLIDE-RESCUE's last resort, put back on the last safe spot (the isles' rims: 400-odd such faces).
++      //  As at the foot of a face: the part down it taken out, along the top; onto ground too steep to stand on even so
++      //  (the top's edge bends, or rises: he would slide all the same), no step. Asked only when the step leaves
++      //  standing ground for a face)
++      const bf = this.brinkFace(p.x + dx, p.z + dz);
++      if (!bf) return o;
++      const kb = dx * bf.dx + dz * bf.dz;
++      if (kb <= 0) return o;
++      const bx = dx - kb * bf.dx, bz = dz - kb * bf.dz;
++      if (P.steepAt(p.x + bx, p.z + bz, p.y)) { o.x = 0; o.z = 0; } else { o.x = bx; o.z = bz; }
++      return o;
++    }
+     const k = dx * st.dx + dz * st.dz;   // (st.dx, st.dz: the way down the face; k < 0: up it)
+     if (k >= 0) return o;
+     const ax = dx - k * st.dx, az = dz - k * st.dz;
+@@ -782,6 +796,26 @@ export class Hero extends Actor {
+     return o;
+   }
+ 
++  // (SMALLFIX-27B) the face at (x, z) under his feet' height, when its way down (followed 0.25 m at a time, up to 14 m)
++  // meets a brink collider, or the cloud sea's ground (an area over the clouds, R.sky: where the brink blocks leave a gap
++  // a slide ends at the waterline all the same), before ground he can stand on: its way down {dx, dz}; else null (and at
++  // once in a game that has built no brink: physics.brinks)
++  brinkFace(x, z) {
++    const P = this.game.physics, T = P.terrain, p = this.pos;
++    if (!P.brinks) return null;
++    const st = P.steepAt(x, z, p.y);
++    if (!st || P.groundAt(x, z, p.y) > p.y + 0.01) return null;
++    const sky = !!this.game.room?.sky;
++    let cx = x, cz = z, d = st;
++    for (let k = 0; k < 56; k++) {
++      for (let ni = 0, NL = P.near(cx, cz); ni < NL.length; ni++) { const c = NL[ni]; if (c.brink && c.enabled && P._inside(c, cx, cz, this.radius)) return st; }
++      if (sky && T.heightAt(cx, cz) < WATER_FLOOR) return st;
++      if (k && !(d = P.steepAt(cx, cz, T.heightAt(cx, cz) + 0.3))) return null;   // (ground to stand on, or a floor, before it)
++      cx += d.dx * 0.25; cz += d.dz * 0.25;
++    }
++    return null;
++  }
++
+   // somewhere he can stand after a hop: not steep, not water, nothing solid there, and the ground round it (0.45 m)
+   // level enough not to send him sliding again at once
+   footingAt(x, z, g) {
+diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
+index ac5d9ab1..586c6f05 100644
+--- a/lba3/src/game/zislands.js
++++ b/lba3/src/game/zislands.js
+@@ -1761,6 +1761,12 @@ function buildIsland0(scene, physics, name, L, at) {
+   // on (he would slide to the waterline and be held there). Each grid square with land and sea corners whose land
+   // is more than a step above the sea is closed by a low invisible block, so he stops at the brink.
+   // (On decks the rails along their open edges do that: below.)
++  // (SMALLFIX-27B: block: false, as it was before SMALLFIX-27-11's rule made every noStand isle collider a block: as a
++  //  block it stood in the way of SLIDE-RESCUE's hop off a face held at the brink (findFooting's clear line and footing
++  //  test read a block from 12 cm up), and a slide that hopped back up onto the rim on the base was put back instead —
++  //  Otringal (1881.7, 1876.2), Celebration (2905.5, 1820.1), the Platform (3856.9, 1756.0), the Old Watch (5208.5,
++  //  1774.8). It stands 0.6 m over the land's top: it holds a walk or a slide as a wall does. brink: Hero.footOfSlope's
++  //  lip reads it)
+   let edges = 0;
+   if (!S.decks) for (let j = 0; j < L.nz - 1; j++) for (let i = 0; i < L.nx - 1; i++) {
+     const c = [H[j * L.nx + i], H[j * L.nx + i + 1], H[(j + 1) * L.nx + i], H[(j + 1) * L.nx + i + 1]];
+@@ -1768,7 +1774,7 @@ function buildIsland0(scene, physics, name, L, at) {
+     if (!landC.length || landC.length === 4) continue;
+     const top = Math.max(...landC);
+     if (top - SHORE <= MAX_SLOPE * cell * 0.75) continue;
+-    col({ type: 'box', x: cx(i) + cell / 2, z: cz(j) + cell / 2, hw: cell / 2, hd: cell / 2, top: top + 0.6, noStand: true, seeThrough: true });
++    col({ type: 'box', x: cx(i) + cell / 2, z: cz(j) + cell / 2, hw: cell / 2, hd: cell / 2, top: top + 0.6, noStand: true, seeThrough: true, block: false, brink: true });
+     edges++;
+   }
+ 
+diff --git a/lba3/tests/hamalayi-life.mjs b/lba3/tests/hamalayi-life.mjs
+index 84867438..a17c0437 100644
+--- a/lba3/tests/hamalayi-life.mjs
++++ b/lba3/tests/hamalayi-life.mjs
+@@ -177,10 +177,16 @@ const old = await ev(() => {
+   for (const key of ['observatory', 'network']) {
+     setChapter(key, {});
+     out[key] = Object.fromEntries(['yorna', 'pim', 'lhar1', 'lhar2', 'lhar3'].map((id) => { const n = G.npcs.find((q) => q.def.id === id); return [id, n.present ? +(n.pos.x - M.group.position.x).toFixed(0) : null]; }));
++    // (SMALLFIX-27B: since P109 part 2 (d67e5d2a, 23.11) a chapter-7 save that has not met Sefa has "The wrong roof" ahead
++    //  (rf_v): Pim is up on the peak by Sefa's signalling shutter (story/observatory.js RoofThread.place, M.shutter.pim),
++    //  not in Lhar's square and not at the monastery. This check is from 8.11)
++    const pim = G.npcs.find((q) => q.def.id === 'pim'), sp = M.shutter?.pim;
++    out[key].roof = !!G.flags.rf_v && G.story.cur?.key === 'observatory';
++    out[key].pimShutter = pim?.present && sp ? +Math.hypot(pim.pos.x - sp.x, pim.pos.z - sp.z).toFixed(2) : null;
+   }
+   return out;
+ });
+-check('a save with only chapter 7\'s or 10\'s key: Yorna, Pim and the three are at the monastery (x > 25), not in Lhar\'s square', Object.values(old).every((o) => Object.entries(o).every(([id, x]) => x === null ? id === 'pim' : x > 25)), old);
++check('a save with only chapter 7\'s or 10\'s key: Yorna, Pim and the three are at the monastery (x > 25), not in Lhar\'s square; in chapter 7 with the wrong roof ahead, Pim up by the shutter', Object.values(old).every((o) => Object.entries(o).every(([id, x]) => id === 'roof' || id === 'pimShutter' ? true : id === 'pim' && o.roof ? o.pimShutter !== null && o.pimShutter < 1.5 : x === null ? id === 'pim' : x > 25)) && old.observatory.roof, old);
+ 
+ // ---------------------------------------------------------------- the epilogue
+ iso('the epilogue by its flags (ep_dinner, ep_free)');
+@@ -199,7 +205,12 @@ iso('chapter 7 by its flags; saved at the monastery yard; then 99 damage');
+ await ev(([D]) => { setChapter('observatory', { ...D, c7_started: true }); const G = game, Y = G.rooms.hamalayi.monastery.yard; G.hero.pos.set(Y.x, G.physics.groundAt(Y.x, Y.z + 3, 60), Y.z + 3); P.settle(); G.save(false); }, [DONE6]);
+ const dd = await ev(() => { const G = game, h = G.hero; h.clovers = 0; h.invuln = 0; h.damage(99, null); G.step(3); return { state: G.state }; });
+ check('a death in the Hamalayi: Game Over', dd.state === 'gameover', dd);
+-await page.click('#gameover [data-act="retry"]');
++// (SMALLFIX-27B: Retry reloads the page (main.js reloadInto, 0.5 s after the click). The wait for the boot ran on the old
++//  page, before the reload, and passed at once; the reload then dropped the next wait, and the check read the new page
++//  while it was still loading. Now the reload's own load event first, as francos and isles-bar do)
++const reloaded = page.waitForEvent('load', { timeout: 600000 });
++await page.click('#gameover [data-act="retry"]', { timeout: 60000, noWaitAfter: true });
++await reloaded;
+ await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 600000 });
+ await page.waitForFunction(() => game.state === 'play', null, { timeout: 120000 }).catch(() => {});
+ await page.addScriptTag({ path: new URL('./lib/player.js', import.meta.url).pathname });
+diff --git a/lba3/tests/slidetraps.mjs b/lba3/tests/slidetraps.mjs
+index 01144005..f7720e36 100644
+--- a/lba3/tests/slidetraps.mjs
++++ b/lba3/tests/slidetraps.mjs
+@@ -28,16 +28,25 @@ const REGIONS = [
+   { id: 'desert', band: [3200, 3700], known: [] },
+   { id: 'hamalayi', band: [4100, 4600], known: [[4226.7, 86.2], [4226.2, 86.7], [4225.7, 87.2], [4227.2, 86.2], [4226.7, 86.6]] },
+ ];
++// (SMALLFIX-27B: the Zeelich isles too, each in its own 330 m slot (zislands.js ISLE_AT): the isles' low props and
++//  rocks are obstacles since SMALLFIX-27-11, and a slide held by one must resolve there as anywhere)
++const ISLES = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'platform', 'liftdock', 'orchard', 'oldwatch'];
++const SLOT = { otringal: 0, knartas: 1, mosquibee: 2, celebration: 3, undergas: 4, platform: 6, liftdock: 7, orchard: 9, oldwatch: 10 };
++// (known: SMALLFIX-27-11's four slides that came to a respawn when the isles' brink blocks became obstacles, SMALLFIX-27B)
++const ISLE_KNOWN = { otringal: [[1881.67, 1876.19]], celebration: [[2905.52, 1820.11]], platform: [[3856.89, 1755.98]], oldwatch: [[5208.45, 1774.75]] };
++for (const n of ISLES) { const x = 1900 + SLOT[n] * 330; REGIONS.push({ id: 'isle_' + n, band: [x - 165, x + 165], zband: [1800 - 165, 1800 + 165], known: ISLE_KNOWN[n] || [], ...(n === 'liftdock' ? { none: 'decks over the clouds, their open edges railed' } : {}) }); }
++// (ONLY=<substring>: the regions whose id holds it; a diagnosis, not the covering run)
++if (process.env.ONLY) REGIONS.splice(0, REGIONS.length, ...REGIONS.filter((R) => R.id.includes(process.env.ONLY)));
+ 
+ // the spots of one region: [x, z, why]
+-const spots = (R) => ev(({ id, band, known, MAXPER, ALWAYS }) => {
++const spots = (R) => ev(({ id, band, zband, known, MAXPER, ALWAYS }) => {
+   const G = game, PH = G.physics, T = PH.terrain;
+   if (id === 'citadel') { if (G.room) G.exitRoom({ x: -42, z: -2, a: 0 }, true, true); }
+   else G.enterRoom(id, null, true, true);
+   G.step(0.3); P.settle();
+   const out = [];
+   for (const c of PH.colliders) {
+-    if (!c.enabled || c.x < band[0] || c.x > band[1] || c.stair) continue;
++    if (!c.enabled || c.x < band[0] || c.x > band[1] || c.stair || (zband && (c.z < zband[0] || c.z > zband[1]))) continue;
+     const n = 12;
+     for (const off of [0.5, 0.9, 1.4]) for (let i = 0; i < n; i++) {
+       const a = (i / n) * Math.PI * 2, ux = Math.sin(a), uz = Math.cos(a);
+@@ -64,14 +73,59 @@ const spots = (R) => ev(({ id, band, known, MAXPER, ALWAYS }) => {
+ }, { ...R, MAXPER, ALWAYS });
+ 
+ const run = (id, list) => ev(({ id, list }) => {
+-  const G = game, h = G.hero, PH = G.physics;
++  const G = game, h = G.hero, PH = G.physics, keys = G.input.keys;
+   const res = [];
++  G.settings.controls = 'classic';   // (the lip's walks below: ArrowUp walks him along his facing)
++  // (an isle: 40 m east is often the cloud sea, where the respawn fell again and cost a life: the isle's own spawn. A
++  //  respawn is counted where it happens, Hero.respawnFromFall, with whether it hurt and whether he stood held at a
++  //  brink (zislands.js: the invisible block at an isle's edge over the clouds), not only by the jump)
++  const home = id.startsWith('isle_') ? G.rooms[id]?.spawn : null;
++  const rf = h.respawnFromFall, ownRf = Object.prototype.hasOwnProperty.call(h, 'respawnFromFall'); let resp = [];
++  const atBrink = (x, z) => PH.near(x, z).some((c) => c.brink && c.enabled && PH._inside(c, x, z, h.radius + 0.35));
++  h.respawnFromFall = function (hurt = true) { resp.push({ hurt, brink: atBrink(this.pos.x, this.pos.z) }); return rf.call(this, hurt); };
++  const put = (x, z) => { h.hp = h.maxHp ?? 10; h.invuln = 0; h.rescue = null; h.slideAnchor = null; h.pos.set(x, PH.groundAt(x, z, 1e9), z); h.onGround = true; h.vy = 0; h.vel.set(0, 0); h.gravity = null; };
++  // SMALLFIX-27B, the lip (actors.js Hero.footOfSlope): a face whose slide ends held at a brink is not stepped onto from
++  // the ground above it. From the spot up its fall line to the first ground he can stand on (12 m at most): the top;
++  // he starts 0.7 m (or 1.2 m) behind it and walks at the face by input for 2 s, straight (he must come to the top and
++  // stop there: no slide, no respawn) and 0.6 rad either side (no respawn); lipOff: the same walk without the lip
++  const topOf = (x, z) => {
++    let qx = x, qz = z, last = PH.steepAt(x, z, PH.groundAt(x, z, 1e9));
++    if (!last) return null;
++    for (let k = 0; k < 48; k++) {
++      qx -= last.dx * 0.25; qz -= last.dz * 0.25;
++      const g = PH.groundAt(qx, qz, 1e9), st = PH.steepAt(qx, qz, g);
++      if (!st) {
++        for (const back of [0.7, 1.2]) {
++          const sx = qx - last.dx * back, sz = qz - last.dz * back, sg = PH.groundInfo(sx, sz, 1e9);
++          if (!PH.steepAt(sx, sz, sg.h) && !PH.blockedAt(sx, sz, sg.h, h.radius) && (sg.h > -0.35 || sg.brick)) return { top: [qx, qz], start: [sx, sz], dir: [last.dx, last.dz] };
++        }
++        return null;
++      }
++      last = st;
++    }
++    return null;
++  };
++  const walk = (T, rot, lipOff) => {
++    if (lipOff) h.brinkFace = () => null;
++    put(T.start[0], T.start[1]); resp = [];
++    const dx = T.dir[0] * Math.cos(rot) - T.dir[1] * Math.sin(rot), dz = T.dir[0] * Math.sin(rot) + T.dir[1] * Math.cos(rot);
++    h.angle = Math.atan2(dx, dz);
++    let slid = false, near = 1e9;
++    keys.add('ArrowUp');
++    for (let i = 0; i < 60; i++) { G.step(1 / 30); if (G.state !== 'play') break; if (h.sliding) slid = true; near = Math.min(near, Math.hypot(h.pos.x - T.top[0], h.pos.z - T.top[1])); }
++    keys.delete('ArrowUp');
++    for (let i = 0; i < 45 && G.state === 'play'; i++) { G.step(1 / 30); if (h.sliding) slid = true; }
++    if (lipOff) delete h.brinkFace;   // (back to Hero's own)
++    const out = { slid, respawn: resp.length > 0, near: +near.toFixed(2) };
++    if (G.state !== 'play') P.settle();
++    return out;
++  };
++  let controls = 0;
+   for (const [x, z, why] of list) {
+     if (G.state !== 'play') P.settle();
+     // the last safe spot far off: a respawn shows as a jump there
+-    G.lastSafe = { x: x + 40, z };
+-    h.hp = h.maxHp ?? 10; const hp0 = h.hp; h.invuln = 0; h.rescue = null; h.slideAnchor = null;
+-    h.pos.set(x, PH.groundAt(x, z, 1e9), z); h.onGround = true; h.vy = 0; h.vel.set(0, 0); h.gravity = null;
++    G.lastSafe = home ? { x: home.x, z: home.z } : { x: x + 40, z };
++    put(x, z); resp = []; const hp0 = h.hp;
+     let jump = 0, slid = false, hopped = false, settled = 0, t = 0;
+     for (; t < 5; t += 1 / 30) {
+       const px = h.pos.x, pz = h.pos.z;
+@@ -86,23 +140,42 @@ const run = (id, list) => ev(({ id, list }) => {
+     const g = PH.groundInfo(h.pos.x, h.pos.z, h.pos.y + 0.1);
+     const standable = h.onGround && !h.sliding && !PH.steepAt(h.pos.x, h.pos.z, h.pos.y) && !(g.h < -0.35 && !g.brick) && !PH.blockedAt(h.pos.x, h.pos.z, h.pos.y, 0.05);
+     const moved = Math.hypot(h.pos.x - x, h.pos.z - z);
+-    res.push({ at: [x, z], why, ok: jump < 2.5 && h.hp >= hp0 && standable, respawn: jump >= 2.5, hpLost: hp0 - h.hp, standable, slid, hopped, moved: +moved.toFixed(2), t: +t.toFixed(2), state: G.state, end: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) });
++    const r0 = resp, respawn = jump >= 2.5 || r0.length > 0, hpLost = hp0 - h.hp;
++    const row = { at: [x, z], why, ok: !respawn && hpLost <= 0 && standable, respawn, hpLost, standable, slid, hopped, moved: +moved.toFixed(2), t: +t.toFixed(2), state: G.state, end: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) };
++    // a slide held at a brink, put back unhurt (SLIDE-RESCUE's last resort, no life lost), is no trap when the lip keeps
++    // a walk off that face; a face with no ground above it within 12 m is entered only by a jump or a knock: listed
++    if (respawn && why !== 'known' && r0.length && r0.every((q) => q.brink && !q.hurt) && hpLost <= 0) {
++      const T = topOf(x, z);
++      row.brink = T ? 'lip' : 'jumpOnly';
++      if (T) {
++        row.lip = [walk(T, 0), walk(T, 0.6), walk(T, -0.6)];
++        if (controls < 3) { row.lipOff = walk(T, 0, true); controls++; }
++        row.ok = !row.lip[0].slid && row.lip[0].near < 0.9 && row.lip.every((w) => !w.respawn);
++      } else row.ok = true;
++    }
++    res.push(row);
+   }
++  if (ownRf) h.respawnFromFall = rf; else delete h.respawnFromFall;
+   return res;
+ }, { id, list });
+ 
+-const all = {};
++const all = {}, lipOff = [];
+ for (const R of REGIONS) {
+   const s = await spots(R);
+   const r = await run(R.id, s.list);
+   all[R.id] = r;
+   const bad = r.filter((x) => !x.ok), known = r.filter((x) => x.why === 'known');
+-  const sum = { spots: r.length, found: s.total, respawns: r.filter((x) => x.respawn).length, hpLost: r.reduce((a, x) => a + Math.max(0, x.hpLost), 0), notStandable: r.filter((x) => !x.standable).length, slid: r.filter((x) => x.slid).length, hopped: r.filter((x) => x.hopped).length };
++  const sum = { spots: r.length, found: s.total, respawns: r.filter((x) => x.respawn).length, hpLost: r.reduce((a, x) => a + Math.max(0, x.hpLost), 0), notStandable: r.filter((x) => !x.standable).length, slid: r.filter((x) => x.slid).length, hopped: r.filter((x) => x.hopped).length, brinkLip: r.filter((x) => x.brink === 'lip').length, brinkJumpOnly: r.filter((x) => x.brink === 'jumpOnly').length };
++  for (const x of r) if (x.lipOff) lipOff.push({ at: x.at, ...x.lipOff });
+   console.log('MEASURE', R.id, JSON.stringify(sum));
+   if (process.env.SHOW) for (const x of r) console.log('  ', JSON.stringify(x));
++  for (const x of r.filter((q) => q.brink === 'jumpOnly')) console.log('LISTED', R.id, 'a face held at the brink with no ground above it within 12 m (entered by a jump or a knock; put back, no life lost):', JSON.stringify(x.at));
+   if (known.length) check(`${R.id}: the known traps resolve (no respawn, no life lost, standing on standable ground)`, known.every((x) => x.ok), known);
+-  check(`${R.id}: ${r.length} slide spots against colliders: none respawns, loses a life or ends off standable ground`, r.length > 0 && bad.length === 0, { ...sum, bad: bad.slice(0, 8) });
++  // (the Lift Dock stands on decks over the clouds: no terrain face to slide on, its open edges railed)
++  if (R.none && !r.length) { check(`${R.id}: no slide spot (${R.none})`, true, sum); continue; }
++  check(`${R.id}: ${r.length} slide spots against colliders: none respawns, loses a life or ends off standable ground (one held at an isle's brink: the lip keeps a walk off its face)`, r.length > 0 && bad.length === 0, { ...sum, bad: bad.slice(0, 8) });
+ }
++if (REGIONS.some((R) => R.id.startsWith('isle_'))) check('the lip is what holds the walks: the same walk at a brink face with the lip off slides', lipOff.length > 0 && lipOff.every((w) => w.slid), lipOff);
+ 
+ const fails = done();
+ await browser.close();
+diff --git a/lba3/tests/zeelich-doors.mjs b/lba3/tests/zeelich-doors.mjs
+index af59fb54..11d4f366 100644
+--- a/lba3/tests/zeelich-doors.mjs
++++ b/lba3/tests/zeelich-doors.mjs
+@@ -63,7 +63,11 @@ const tour = async (tag) => {
+     }, d);
+     await shot(tag + '-in-' + d.room);
+     const o = await ev((d) => {
+-      const G = game, e = G.room?.exits?.find((x) => !x.room || x.room === 'zeelich') || G.room?.exits?.[0];
++      // (SMALLFIX-27B: out by the way he came in. The terminal has two since P83 item 10 (2183c93a): the door from the
++      //  bridge and the gate from the deck; in by the gate, the first exit (the door's) put him 7.84 m from the gate he
++      //  came in by. The exit nearest where he stands inside is his own door's; a room with one exit is as before)
++      const G = game, h0 = G.hero.pos, ex = (G.room?.exits || []).filter((x) => !x.room || x.room === 'zeelich');
++      const e = ex.sort((a, b) => Math.hypot(a.x - h0.x, a.z - h0.z) - Math.hypot(b.x - h0.x, b.z - h0.z))[0] || G.room?.exits?.[0];
+       if (!e || G.room?.outdoor) return { out: 'no exit' };
+       const t = P.through(e.x, e.z); const h = G.hero.pos;
+       for (let i = 0; i < 20; i++) G.frame(1 / 30, false);

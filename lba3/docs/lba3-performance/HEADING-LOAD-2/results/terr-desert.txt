@@ -1,0 +1,10 @@
+desert: 4 terrain tiles (45k, 45k, 45k, 45k)
+heading 0°: tiles drawn 4 / 180k tris · in view: 25-cell squares 61 / 76k · 50-cell squares 21 / 105k
+heading 45°: tiles drawn 3 / 135k tris · in view: 25-cell squares 57 / 71k · 50-cell squares 20 / 100k
+heading 90°: tiles drawn 3 / 135k tris · in view: 25-cell squares 33 / 41k · 50-cell squares 11 / 55k
+heading 135°: tiles drawn 2 / 90k tris · in view: 25-cell squares 16 / 20k · 50-cell squares 6 / 30k
+heading 180°: tiles drawn 2 / 90k tris · in view: 25-cell squares 7 / 9k · 50-cell squares 3 / 15k
+heading 225°: tiles drawn 2 / 90k tris · in view: 25-cell squares 15 / 19k · 50-cell squares 5 / 25k
+heading 270°: tiles drawn 3 / 135k tris · in view: 25-cell squares 32 / 40k · 50-cell squares 11 / 55k
+heading 315°: tiles drawn 3 / 135k tris · in view: 25-cell squares 55 / 69k · 50-cell squares 19 / 95k
+mean: drawn 123.8k · 25-cell squares 34.5 / 43.1k · 50-cell squares 12.0 / 60.0k

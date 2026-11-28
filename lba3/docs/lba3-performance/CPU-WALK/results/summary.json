@@ -1,0 +1,36 @@
+{
+  "round": "CPU-WALK",
+  "date": "2026-10-31",
+  "base": "50f6208",
+  "machine": "this container: SwiftShader, 4 cores shared, load average 14-28; relative CPU ms only, no GPU ms, no fps",
+  "settings": "Auto on battery (desktop.onBattery) = Medium, 1366x768, the benchmark's routes, Follow camera at Far unless noted",
+  "old": "MW.frozen = false and drawbatch GEO.off = true: PERF-CPU's walk, every batched piece's geometry versions read each frame",
+  "new": "frozen subtrees (drawcull.js shownTreeF / Frozen), drawbatch watch with the frozen shortcut, GEO.n and the frozen-root fast path",
+  "counts_per_frame": {
+    "street_follow": { "old_walked": 1829, "new_walked": 643, "new_in_frozen_ranges": 1187, "new_settled_walked": 557, "new_settled_frozen": 1307, "batched_pieces_checked": 416, "old_composed": 189, "old_world_recomputed": 467 },
+    "street_orbit": { "old_walked": 1816, "new_walked": 521, "new_in_frozen_ranges": 1296 },
+    "house": { "old_walked": 596, "new_walked": 115, "new_in_frozen_ranges": 481, "batched_pieces_checked": 80 },
+    "combat": { "old_walked": 573, "new_walked": 253, "new_in_frozen_ranges": 320 },
+    "hamalayi": { "old_walked": 723, "new_walked": 128, "new_in_frozen_ranges": 594 },
+    "arrival_every_3s": { "old_walked": 1129, "new_walked": 427, "new_in_frozen_ranges": 702 },
+    "door_every_2s": { "old_walked": 994, "new_walked": 337, "new_in_frozen_ranges": 657 }
+  },
+  "cpu_ms_per_frame_min_of_block_means": {
+    "note": "q_cpu.js: old/new alternating blocks of 60 frames in one page, draws left out; minimum of the block means (medians swing up to 2x with the load)",
+    "street_follow": { "update": [0.53, 0.373], "check": [0.17, 0.117], "blocks": 12 },
+    "street_orbit": { "update": [0.627, 0.465], "check": [0.225, 0.108], "blocks": 10 },
+    "house": { "update": [0.157, 0.092], "check": [0.032, 0.023], "blocks": 10 },
+    "arrival_every_3s": { "update": [0.303, 0.3], "check": [0.107, 0.07], "blocks": 10 }
+  },
+  "exactness": {
+    "walkcheck_new": { "routes": 9, "updates": 3240, "world_matrices": 2857816, "different": 0, "caster_lists": 3240, "casters": 247338, "lists_different": 0, "batched_pieces_verified": 902521, "kept_though_changed": 0 },
+    "walkcheck_old_same_check": { "different": 0 },
+    "pre_existing_bug_found": "walkers.js sitShape left a resident's matrices in the sit pose: 100 world matrices wrong on the arrival route with PERF-CPU's walk and with the frozen walk before the fix; 0 after",
+    "geometry_edit_cases": { "cases": 5, "all_left_their_batch": true },
+    "suites_with_WALKCHECK_1": ["opening", "transitions", "travel"],
+    "pixels": { "shots_vs_perf_cpu_walk": 20, "shots_vs_three_full_update": 20, "pixels_different": 0, "note": "first two draws of the same state compared; a third draw differs by itself in some views (5-244 px) whatever the walk" },
+    "records_bounded": "17-31 records, 870-1900 entries over 6 cycles of street/door/arrival/combat"
+  },
+  "suites": { "pass": ["opening (WALKCHECK=1)", "chapter1", "house", "transitions (WALKCHECK=1)", "travel (WALKCHECK=1, second run; the first lost its page to the container's OOM killer)", "zislands", "drawcalls", "perfbudget", "combat", "containers", "camfollow", "doorcull"], "fail": { "occluders": "1 check, '(b) the rise over a house': no rise at all; identical with the upstream test (0dcec9a) and with NOFREEZE=1, so not from this round" } },
+  "laptop":"NOT VERIFIED: expected ~0.6-0.9 ms a frame less on the street (INFERRED from the ratios above), not 2-2.5 ms"
+}

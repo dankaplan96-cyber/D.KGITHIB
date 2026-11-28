@@ -1,0 +1,13 @@
+ball true
+prompt W Talk
+talk ["dialog","Zoé","Same next door. Their tap ran warm, knocked three times, and stopped."]
+talk ["dialog","Zoé","And look at their kettle. Furred with these since breakfast."]
+talk ["dialog","Twinsen","(Tiny crystals. Still warm.)"]
+talk ["dialog","Zoé","Mira's got the well padlocked, and she's telling everyone it's Gilbert's old pipes. Show "]
+talk ["dialog","Zoé","Mira's got the well padlocked, and she's telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it."]
+talk ["found","Zoé","Mira's got the well padlocked, and she's telling everyone it's Gilbert's old pipes. Show her these, and she'll have to open it."]
+minor near the square [["oda","citizens"],["brix","citizens"],["garrick","citizens"],["dot","citizens"]]
+talk oda {"st":"play","box":"","floats":["Have a good look at those.","Careful with the basket. It's my whole week."]}
+talk brix {"st":"dialog","box":"Shh. I'm resting my eyes. They've seen a lot","floats":["Have a good look at those.","Careful with the basket. It's my whole week."]}
+talk garrick {"st":"dialog","box":"I'm watering with what the harbour tap gives","floats":["Have a good look at those.","Careful with the basket. It's my whole week."]}
+talk dot {"st":"dialog","box":"I'm carrying a message. It's a secret. It's ","floats":["Have a good look at those.","Careful with the basket. It's my whole week."]}

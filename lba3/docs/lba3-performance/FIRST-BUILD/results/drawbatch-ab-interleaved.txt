@@ -1,0 +1,6 @@
+PROBE title after 253.7 s
+draw-batch first build, baseline (./src/engine/drawbatch.base.js) vs this build, interleaved, 8 each · medium
+house: whole build ms ms min 126.7 → 74.7 (median 282.7 → 210.3) · cell build build ms min 44.2 → 26.6 (median 87.3 → 44) · order (incl. planes) order ms min 38.7 → 22.4 (median 102.6 → 46.4) · planes plane ms min 36.9 → 19.5 (median 96 → 43.8)
+zeelich: whole build ms ms min 198.7 → 114.9 (median 281.5 → 450.7) · cell build build ms min 106 → 79.8 (median 210.9 → 322.4) · order (incl. planes) order ms min 26.3 → 20 (median 114.7 → 84.9) · planes plane ms min 9.8 → 5.4 (median 43.1 → 16.7)
+desert: whole build ms ms min 85.5 → 69.1 (median 183.1 → 129.5) · cell build build ms min 62.1 → 48.1 (median 133.6 → 94.9) · order (incl. planes) order ms min 12.4 → 16.3 (median 28.5 → 32.2) · planes plane ms min 3.1 → 1.3 (median 6 → 16)
+hamalayi: whole build ms ms min 152.2 → 92.8 (median 390 → 306.2) · cell build build ms min 89.1 → 55.4 (median 208.6 → 98.7) · order (incl. planes) order ms min 24.8 → 21.4 (median 91.4 → 64.1) · planes plane ms min 8.1 → 4.4 (median 25.9 → 8.9)

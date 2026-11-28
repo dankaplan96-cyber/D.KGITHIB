@@ -1,0 +1,5 @@
+CPU-WALK street (orbit) · medium · 10 blocks × 60 frames per variant, alternating · ms a frame (min / median of block means)
+  old: shown-world update 0.627 / 0.98 · draw-batch check 0.225 / 0.253 · objects walked 1854.7 · in frozen subtrees 0 (polled 0) · pieces checked 416
+  new: shown-world update 0.465 / 0.782 · draw-batch check 0.108 / 0.18 · objects walked 539.6 · in frozen subtrees 1314.3 (polled 1315.3) · pieces checked 416
+{"sum":{"old":{"walk":{"min":0.627,"med":0.98},"db":{"min":0.225,"med":0.253},"visited":1854.7,"frozen":0,"polled":0,"watched":416},"new":{"walk":{"min":0.465,"med":0.782},"db":{"min":0.108,"med":0.18},"visited":539.6,"frozen":1314.3,"polled":1315.3,"watched":416}}}
+(511.8 s)

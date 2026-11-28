@@ -1,0 +1,17 @@
+[
+ {
+  "try": 1,
+  "result": "pylons 0/3; converted at  s; throws 159",
+  "hpIn": 12,
+  "hpOut": 1,
+  "maxHp": 12,
+  "dead": false,
+  "secs": 420.3,
+  "hits": 47,
+  "byKind": {
+   "bolt": 47
+  },
+  "enemiesSeen": 1,
+  "beaten": 0
+ }
+]

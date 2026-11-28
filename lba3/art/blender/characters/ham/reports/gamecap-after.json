@@ -1,0 +1,191 @@
+{
+ "lharMan": {
+  "look": "lharMan",
+  "body": "lharMan",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 190,
+    "triangles": 973638
+   },
+   "withoutHero": {
+    "calls": 186,
+    "triangles": 967774
+   },
+   "heroCalls": 4,
+   "heroTris": 5864
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5864,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "lharElder": {
+  "look": "lharElder",
+  "body": "lharElder",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 973776
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968748
+   },
+   "heroCalls": 4,
+   "heroTris": 5028
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5028,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 14
+  }
+ },
+ "lharWoman": {
+  "look": "lharWoman",
+  "body": "lharWoman",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 191,
+    "triangles": 973302
+   },
+   "withoutHero": {
+    "calls": 187,
+    "triangles": 968348
+   },
+   "heroCalls": 4,
+   "heroTris": 4954
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 4954,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "lharMan_b": {
+  "look": "lharMan_b",
+  "body": "lharMan_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 193,
+    "triangles": 973948
+   },
+   "withoutHero": {
+    "calls": 189,
+    "triangles": 968428
+   },
+   "heroCalls": 4,
+   "heroTris": 5520
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5520,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "lharWoman_b": {
+  "look": "lharWoman_b",
+  "body": "lharWoman_b",
+  "settings": {
+   "camera": "follow",
+   "camDist": "medium",
+   "quality": "high"
+  },
+  "frame": {
+   "withHero": {
+    "calls": 187,
+    "triangles": 973392
+   },
+   "withoutHero": {
+    "calls": 183,
+    "triangles": 968086
+   },
+   "heroCalls": 4,
+   "heroTris": 5306
+  },
+  "rig": {
+   "meshes": 4,
+   "tris": 5306,
+   "materials": 4
+  },
+  "pos": [
+   -39.88,
+   2.200000047683716,
+   0.12
+  ],
+  "talk": {
+   "id": "dot",
+   "char": "pim",
+   "state": "dialog",
+   "tried": 13
+  }
+ },
+ "errors": [],
+ "gpu": false,
+ "at": "2026-11-08T16:48:49.690Z",
+ "candidates": {}
+}

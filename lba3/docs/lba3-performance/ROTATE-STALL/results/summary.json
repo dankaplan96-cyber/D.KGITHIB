@@ -1,0 +1,49 @@
+{
+  "task": "ROTATE-STALL",
+  "base": "2389dbc (0.42.1 [build])",
+  "machine": "development container, SwiftShader (software WebGL), 1366x768, Medium (Auto held at Medium unless noted), battery profile on",
+  "caveat": "Exact counts only. Milliseconds are SwiftShader CPU times on a shared 4-core container (other agents' browsers running): relative at best, never laptop GPU or fps.",
+  "street_follow_far_turn_in_place": {
+    "probe": "probes/q_sweep.js MODE=turn RATE=3 (360 deg in 2.1 s), 2 sweeps, 1/30 s steps",
+    "cache_full_builds": 0, "cache_slices": 0, "cache_swaps": 0, "cache_drops": 0,
+    "draw_batch_pieces_left": 0, "draw_batch_area_builds": 0, "shadow_batch_pieces_left": 0, "programs_compiled": 0,
+    "calls_by_view": { "min": 113, "max": 242 }, "triangles_by_view_k": { "min": 545, "max": 968 },
+    "first_sweep_new_on_gpu": {
+      "before_medium_by_hand": { "geometries": 1, "textures": 6, "file": "medium-hand-turn-before.txt" },
+      "after_auto_medium_instant_entry": { "geometries": 2, "textures": 0, "geometries_what": ["harbour piece 126 v", "draw-batch cell 26 v"], "file": "auto-medium-turn-after.txt" },
+      "after_auto_medium_door_entry": { "geometries": 0, "textures": 0, "file": "auto-medium-turn-after-door-entry.txt" }
+    },
+    "second_sweep_new_on_gpu": { "geometries": 0, "textures": 0 }
+  },
+  "street_follow_far_circle_walk": {
+    "probe": "probes/q_sweep.js MODE=circle RAD=4 RATE=0.6 (2.4 m/s), one 10.5 s lap",
+    "cache_full_builds": 0, "cache_drops": 0, "cache_slices_per_lap": 63, "cache_swaps_per_lap": 8,
+    "slice_frame_extra_shadow_calls": { "min": 4, "max": 31 },
+    "first_lap_new_on_gpu": {
+      "before": { "geometries": 2, "textures": 8, "textures_what": ["shadow cache spare target 1152x1152 colour + depth (first slice, in view)", "6 x 12x12 bone textures (people first looked at)"], "file": "auto-medium-circle-before.txt" },
+      "after": { "geometries": 2, "textures": 0, "file": "auto-medium-circle-after.txt" }
+    }
+  },
+  "heaviest_vs_lightest_heading_main_pass": {
+    "file": "headings-calls.txt",
+    "heading_225": { "calls": 220, "triangles_k": 925, "extra_vs_light": "draw-batch cells 41 vs 20, harbour 'keep' pieces 24, harbour instanced 14, people 40-45" },
+    "heading_135": { "calls": 118, "triangles_k": 587 }
+  },
+  "bench_preparation_long_task": {
+    "laptop_0_42_0": "cold street first frame 1200 ms; main thread 1084 ms in a TimerHandler:setTimeout callback",
+    "before": { "same_task": ["last region build 1020 ms", "warmShadows 1204 ms", "street route setup 1 ms"], "file": "bench-prep-tasks-before.txt" },
+    "after": { "separate_tasks_with_paint_between": ["hamalayi 755 ms", "shadow programs 1857 ms", "street route setup 1 ms (2 painted frames later)"], "file": "bench-prep-tasks-after.txt" },
+    "real_play": "no: the benchmark's own preparation (prepareAreas); a player builds an area behind its arrival card"
+  },
+  "arrival_first_drawn_frame": {
+    "hamalayi_cold": {
+      "before": { "new_textures": 13, "what": ["2 x 1152x1152 shadow cache target (freed and remade at every scene change)", "11 tree BatchedMesh data textures (6-20 texels)", "terrain tile 256x256 (shader uniform)"], "file": "arrival-hamalayi-before.txt" },
+      "after": { "new_textures": 1, "what": ["terrain tile 256x256"], "file": "arrival-hamalayi-after.txt" }
+    },
+    "repeat_visits_render_target_remade": { "before": 2, "after": 0 },
+    "citadel_in_view_draw_batch_rebuild_after_fade": {
+      "before": { "pieces_left": 2, "cause": "the warm stones' pulsing glow (prologue.js) left their cell after every arrival, rejoined at the next", "file": "arrival-house-citadel-before-keep.txt" },
+      "after": { "pieces_left_in_view": 0, "file": "arrival-house-citadel-after.txt" }
+    }
+  }
+}

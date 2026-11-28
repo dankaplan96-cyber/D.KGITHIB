@@ -1,0 +1,713 @@
+diff --git a/lba3/docs/MUSIC.md b/lba3/docs/MUSIC.md
+index 3d35b0d2..5b7876f4 100644
+--- a/lba3/docs/MUSIC.md
++++ b/lba3/docs/MUSIC.md
+@@ -316,3 +316,30 @@ episode: Market Day's harbour interlude was 10 dB under the rest and was raised
+ ear**: whether the tunes are good, the balance between instruments, how the HQ soundfont's patches sound next to the
+ older renders, and whether 20–60 s silences feel right in play. The excerpts in
+ `docs/lba3-production/reviews/MUSIC-2/` are for that.
++
++## MUSIC-CRACKLE (CLOUD_ORDERS 27b, 2026-11-08): measured on the user's laptop
++
++The user hears the game's music crackle on their laptop while other music plays fine. Measured there (Ryzen 5 3500U /
++Vega 8, Windows 11, plugged in, 48 kHz output; the desktop app's browser: Electron 43 / Chromium 150, GPU on) with
++`tools/music/crackle/` (usage in `run.mjs`): one scripted Citadel session per run (outdoors, walking with real keys,
++the water office in and out, ducking, the music slider, a change of area, combat in and out, Home's loop seam, a
++piece's end), plus a stress session (idle, 8 music decodes, 6 doors). **Not a listening test.**
++
++| What | How | Result |
++|---|---|---|
++| The source files | every MP3 decoded as the game decodes it | no clipping (peaks 0.52–0.83), decoded lengths exact (encoder padding trimmed), no discontinuity; loop seams continuous |
++| Game vs source | music-bus recording (AudioWorklet tap) nulled against the decoded file, per 128-frame quantum | the game plays the file exactly: residual −70 to −76 dB median, worst quantum −58 dB, through walking, ducking and across Home's loop seam |
++| Clicks in the music bus | 2nd-difference detector (catches ~75 % of 128-frame dropouts or held blocks) | 0 per minute in every phase, every run, before and after |
++| Output underruns | `AudioContext.playoutStats` (enabled by the desktop build) | 0–2 events (5–13 ms) per 3-minute session, none near a long frame, none in the stress session (8 decodes, 6 doors, frames up to 2.7 s); the installed 0.48 app fullscreen: 0 |
++| Duplicate sources | voices alive | never more than 2 (a crossfade) |
++| Settings sliders | the same null test | **a step**: each slider input set the bus gain directly, a jump between two samples (0.55 → 0.35 in one quantum) |
++
++Fixed: the volume sliders (`AudioEngine.applyVolumes`) glide (time constant 30 ms) instead of stepping; largest gain
++change between two quanta 0.35 → 0.03, spread over the samples. Seen in the code, not changed: a story scene's pause
++suspends the audio context at once (`Cinematic.pause`), which cuts the output mid-wave; a fade first needs the output
++latency (~0.2 s) before the suspend, and `tests/voices.mjs` expects the context suspended 0.2 s after the pause.
++
++**Not reproduced**: the crackle the user describes. Nothing measurable in the signal Chromium hands to Windows explains
++it on this laptop plugged in. Not measured: battery power, Windows' mixer and the driver after Chromium (a loopback
++capture through Electron returned silence), and the sound of the renders themselves by ear (draft FluidSynth renders,
++112 kbps MP3). Listening files (matched source/game pairs) are kept with the run, outside the repository.
+diff --git a/lba3/src/engine/audio.js b/lba3/src/engine/audio.js
+index 9a9bf07d..f86951d9 100644
+--- a/lba3/src/engine/audio.js
++++ b/lba3/src/engine/audio.js
+@@ -15,6 +15,7 @@ const REVERB_SEC = 0.25; // AUDIO-CRACKLE-2: the effects' room (see init)
+ // past 8192 + 4096 to a background thread), not in seconds: 0.25 s is 12000 frames at 48 kHz but 24000 at 96 kHz and
+ // 48000 at 192 kHz, rates a Windows laptop's output may run at. The impulse is held under the limit at any rate.
+ const REVERB_MAX_FRAMES = 12000;
++const VOL_GLIDE = 0.03; // s: the time constant of a volume change (MUSIC-CRACKLE; ~95 % there in 90 ms)
+ 
+ export class AudioEngine {
+   constructor() {
+@@ -126,13 +127,20 @@ export class AudioEngine {
+     return c ? { sampleRate: c.sampleRate, baseLatency: c.baseLatency, outputLatency: c.outputLatency, reverbFrames: this.reverb?.buffer?.length, ...this.playout } : null;
+   }
+ 
++  // MUSIC-CRACKLE (CLOUD_ORDERS 27b): after the first setting (init, nothing playing yet) a volume change glides over
++  // ~90 ms instead of jumping. Each input event of a settings slider set a bus gain directly: a step in the waveform of
++  // everything on that bus, a click per event while the slider is dragged (measured on the music bus: one gain step per
++  // move, none after this change; tools/music/crackle/).
+   applyVolumes() {
+     if (!this.ctx) return;
+-    this.master.gain.value = this.vol.master;
+-    this.musicBus.gain.value = this.vol.music; // (the ducking is a stage of its own in music.js: the slider never fights it)
+-    this.sfxBus.gain.value = this.vol.sfx;
+-    this.ambBus.gain.value = this.vol.sfx * 0.6;
+-    this.voiceBus.gain.value = (this.vol.voice ?? 0.8) * VOICE_BOOST;
++    const t = this.ctx.currentTime, first = !this._volSet;
++    const set = (p, v) => { if (first) { p.value = v; this._targets.set(p, v); } else this._glide(p, v, t, VOL_GLIDE); };
++    set(this.master.gain, this.vol.master);
++    set(this.musicBus.gain, this.vol.music); // (the ducking is a stage of its own in music.js: the slider never fights it)
++    set(this.sfxBus.gain, this.vol.sfx);
++    set(this.ambBus.gain, this.vol.sfx * 0.6);
++    set(this.voiceBus.gain, (this.vol.voice ?? 0.8) * VOICE_BOOST);
++    this._volSet = true;
+   }
+ 
+   _noise(sec) {
+diff --git a/lba3/tests/audio.mjs b/lba3/tests/audio.mjs
+index 983e73b8..acc1d23f 100644
+--- a/lba3/tests/audio.mjs
++++ b/lba3/tests/audio.mjs
+@@ -22,6 +22,7 @@ check('the effects room is ≤ 12000 frames at the context rate and at 44.1 / 96
+ await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
+ await page.click('#pause [data-act="settings"]');
+ for (const [k, v] of [['music', '0.3'], ['sfx', '0.5'], ['voice', '0.2']]) await page.$eval(`[data-range="${k}"]`, (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
++await page.waitForTimeout(500); // (MUSIC-CRACKLE: a volume change glides over ~90 ms on the audio clock instead of jumping)
+ const buses = await ev(() => { const A = game.audio; return { music: A.musicBus.gain.value, sfx: A.sfxBus.gain.value, voice: A.voiceBus.gain.value, amb: A.ambBus.gain.value }; });
+ check('sliders set the music, effects, voice (x2.2, VOICE-MIX) and ambience buses', Math.abs(buses.music - 0.3) < 1e-6 && Math.abs(buses.sfx - 0.5) < 1e-6 && Math.abs(buses.voice - 0.2 * 2.2) < 1e-6 && Math.abs(buses.amb - 0.3) < 1e-6, buses);
+ await page.click('#settings [data-act="back"]'); await page.click('#pause [data-act="resume"]');
+diff --git a/lba3/tools/music/crackle/analyze.mjs b/lba3/tools/music/crackle/analyze.mjs
+new file mode 100644
+index 00000000..c617cd1d
+--- /dev/null
++++ b/lba3/tools/music/crackle/analyze.mjs
+@@ -0,0 +1,82 @@
++// Reads a run (result.json [+ music-bus.wav]) and prints: underruns over time and their correlation with long frames;
++// the tap's discontinuities per phase of the session (per minute); offline detection on the recorded music bus.
++//   node analyze.mjs <label> [K] [floor]
++import fs from 'node:fs';
++import { RUNS } from './env.mjs';
++const label = process.argv[2];
++const K = +(process.argv[3] || 12), FLOOR = +(process.argv[4] || 0.004);
++const R = JSON.parse(fs.readFileSync(`${RUNS}/${label}/result.json`, 'utf8'));
++const sr = R.sr;
++const marks = R.marks; // [name, ct, pt, mood, room]
++const phaseOf = (ct) => { let p = 'pre'; for (const m of marks) if (ct >= m[1]) p = m[0]; return p; };
++const phaseDur = {}; for (let i = 0; i < marks.length - 1; i++) phaseDur[marks[i][0]] = marks[i + 1][1] - marks[i][1];
++const total = marks.at(-1)[1] - marks[0][1];
++const out = { label, tap: R.tapMode, sr, baseLatencyMs: +(R.base * 1000).toFixed(1), sessionS: +total.toFixed(1) };
++
++// ---- underruns (playoutStats fallback frames) per phase, and long frames near them
++const S = R.stats; // [pt, ct, events, ms, total]
++const under = [];
++for (let i = 1; i < S.length; i++) if (S[i][2] > S[i - 1][2]) under.push({ pt: S[i][0], ct: S[i][1], n: S[i][2] - S[i - 1][2], ms: +(S[i][3] - S[i - 1][3]).toFixed(2), prevPt: S[i - 1][0] });
++const inSession = under.filter((u) => u.ct >= marks[0][1] && u.ct <= marks.at(-1)[1]);
++const longs = R.long; // [pt, dur, ct]
++const near = inSession.filter((u) => longs.some(([pt, d]) => pt - d <= u.pt + 50 && pt >= u.prevPt - 50));
++out.underruns = { events: inSession.reduce((a, u) => a + u.n, 0), ms: +inSession.reduce((a, u) => a + u.ms, 0).toFixed(1), perMin: +(inSession.reduce((a, u) => a + u.n, 0) / (total / 60)).toFixed(2),
++  withLongFrameInWindow: near.length, intervals: inSession.length, byPhase: {} };
++for (const u of inSession) { const p = phaseOf(u.ct); out.underruns.byPhase[p] = (out.underruns.byPhase[p] || 0) + u.n; }
++out.underruns.list = inSession.slice(0, 40).map((u) => `${phaseOf(u.ct)} ct=${u.ct.toFixed(2)} n=${u.n} ${u.ms}ms longFrame=${longs.filter(([pt, d]) => pt - d <= u.pt + 50 && pt >= u.prevPt - 50).map((l) => l[1]).join(',') || '-'}`);
++const fr = R.frames.slice().sort((a, b) => a - b), q = (p) => fr[Math.floor(p * (fr.length - 1))];
++out.frames = { n: fr.length, p50: q(0.5), p95: q(0.95), p99: q(0.99), max: fr.at(-1), over50: longs.length, over100: longs.filter((l) => l[1] > 100).length };
++
++// ---- tap events (realtime detector) per phase
++function perPhase(evs, toCt) {
++  const by = {};
++  for (const e of evs) { const ct = toCt(e); if (ct < marks[0][1] || ct > marks.at(-1)[1]) continue; const p = phaseOf(ct); (by[p] = by[p] || []).push(e); }
++  const rows = {}; let n = 0;
++  for (const m of marks.slice(0, -1)) { const k = m[0], c = (by[k] || []).length; n += c; rows[k] = `${c} (${(c / (phaseDur[k] / 60)).toFixed(1)}/min)`; }
++  return { total: n, perMin: +(n / (total / 60)).toFixed(2), rows, by };
++}
++if (R.tapMode && R.tap.loop) { const tl = perPhase(R.tap.loop.ev, (e) => e[0] / sr); out.tapLoop = { total: tl.total, perMin: tl.perMin, phases: tl.rows, peak: R.tap.loop.peak }; }
++if (R.tapMode) {
++  const tm = perPhase(R.tap.music.ev, (e) => e[0] / sr), to = perPhase(R.tap.out.ev, (e) => e[0] / sr);
++  out.tapMusic = { total: tm.total, perMin: tm.perMin, phases: tm.rows, peak: R.tap.music.peak, over: R.tap.music.over };
++  out.tapOut = { total: to.total, perMin: to.perMin, phases: to.rows, peak: R.tap.out.peak, over: R.tap.out.over };
++  out.tapMusicSample = Object.fromEntries(Object.entries(tm.by).map(([k, v]) => [k, v.slice(0, 6).map((e) => `t=${(e[0] / sr).toFixed(3)} ch${e[1]} r=${e[2]} s=${e[3]} x=${e[4]}`)]));
++}
++
++// ---- offline detection on each recording (centered window, both sides of the sample excluded); dropouts: runs of
++// >= 16 exact-zero frames inside sounding audio (what a late buffer leaves when the output fills silence)
++for (const [name, file] of [['offlineMusic', 'music-bus'], ['offlineOut', 'out'], ['offlineLoop', 'loop']]) {
++  const wav = `${RUNS}/${label}/${file}.wav`;
++  if (!fs.existsSync(wav)) continue;
++  const meta = JSON.parse(fs.readFileSync(`${RUNS}/${label}/${file}.json`, 'utf8'));
++  const b = fs.readFileSync(wav); const pcm = new Int16Array(b.buffer, b.byteOffset + 44, (b.length - 44) / 2);
++  const N = pcm.length / 2, W = 512;
++  const evs = [];
++  for (let c = 0; c < 2; c++) {
++    const r = new Float32Array(N);
++    for (let i = 2; i < N; i++) r[i] = (pcm[2 * i + c] - 2 * pcm[2 * (i - 1) + c] + pcm[2 * (i - 2) + c]) / 32767;
++    const cs = new Float64Array(N + 1); for (let i = 0; i < N; i++) cs[i + 1] = cs[i] + r[i] * r[i];
++    let last = -1e9;
++    for (let i = W; i < N - W; i++) {
++      const a = Math.abs(r[i]); if (a < FLOOR) continue;
++      const e = (cs[i + W] - cs[i - W] - (cs[i + 4] - cs[i - 3])) / (2 * W - 7);
++      if (a > K * Math.sqrt(e) && i - last > 64) { last = i; evs.push([meta.firstFrame + i, c, +r[i].toFixed(4), +Math.sqrt(e).toFixed(5)]); }
++    }
++  }
++  evs.sort((x, y) => x[0] - y[0]);
++  const drops = [];
++  for (let i = 256, run = 0; i < N - 256; i++) {
++    if (pcm[2 * i] === 0 && pcm[2 * i + 1] === 0) { run++; continue; }
++    if (run >= 16) { let pre = 0, post = 0; for (let k = 1; k <= 256; k++) { pre = Math.max(pre, Math.abs(pcm[2 * (i - run - k)])); post = Math.max(post, Math.abs(pcm[2 * (i + k - 1)])); } if (pre > 33 && post > 33) drops.push([meta.firstFrame + i - run, run]); }
++    run = 0;
++  }
++  // the loopback runs on the device clock: its frames are placed on the context's time by its first frame (approximate)
++  const off = perPhase(evs, (e) => e[0] / sr);
++  const dp = perPhase(drops, (d) => d[0] / sr);
++  out[name] = { K, floor: FLOOR, total: off.total, perMin: off.perMin, phases: off.rows, dropouts: dp.total, dropoutPhases: dp.rows, sample: Object.fromEntries(Object.entries(off.by).map(([k, v]) => [k, v.slice(0, 5).map((e) => `t=${(e[0] / sr).toFixed(3)} ch${e[1]} r=${e[2]} s=${e[3]}`)])), dropSample: drops.slice(0, 8).map((d) => `t=${(d[0] / sr).toFixed(3)} ${d[1]} frames`) };
++}
++out.marks = marks.map((m) => `${m[0]} ct=${m[1]} mood=${m[3]} room=${m[4]}`);
++out.musicLog = R.log.slice(-40);
++out.maxVoices = R.maxVoices;
++out.logs = R.logs.slice(0, 20);
++console.log(JSON.stringify(out, null, 1));
+diff --git a/lba3/tools/music/crackle/cut.mjs b/lba3/tools/music/crackle/cut.mjs
+new file mode 100644
+index 00000000..28557c83
+--- /dev/null
++++ b/lba3/tools/music/crackle/cut.mjs
+@@ -0,0 +1,20 @@
++// Cut a matched A/B pair for listening: the source (decoded file, scaled to the game's music-bus level) and the game's
++// music-bus capture of the same passage, sample-aligned (positions from nulltest.mjs).
++//   node cut.mjs <out.wav> <in.wav> <startFrame in that file> <seconds> [gain] [loopStart,loopEnd samples]
++import fs from 'node:fs';
++const [out, inp, start, secs, gain, loop] = process.argv.slice(2);
++const b = fs.readFileSync(inp), sr = b.readUInt32LE(24);
++const pcm = new Int16Array(b.buffer, b.byteOffset + 44, (b.length - 44) / 2);
++const n = Math.round(+secs * sr), g = +(gain || 1), s0 = +start;
++const [LS, LE] = (loop || '0,0').split(',').map(Number);
++const o = new Int16Array(n * 2);
++for (let i = 0; i < n; i++) {
++  let j = s0 + i; if (LE && j >= LE) j -= LE - LS;
++  for (let c = 0; c < 2; c++) o[2 * i + c] = Math.max(-32768, Math.min(32767, Math.round(pcm[2 * j + c] * g)));
++}
++// 5 ms fades at both ends so the cut itself does not click
++const F = Math.round(0.005 * sr); for (let i = 0; i < F; i++) for (let c = 0; c < 2; c++) { o[2 * i + c] = Math.round(o[2 * i + c] * i / F); o[2 * (n - 1 - i) + c] = Math.round(o[2 * (n - 1 - i) + c] * i / F); }
++const data = Buffer.from(o.buffer), h = Buffer.alloc(44);
++h.write('RIFF', 0); h.writeUInt32LE(36 + data.length, 4); h.write('WAVE', 8); h.write('fmt ', 12); h.writeUInt32LE(16, 16); h.writeUInt16LE(1, 20); h.writeUInt16LE(2, 22); h.writeUInt32LE(sr, 24); h.writeUInt32LE(sr * 4, 28); h.writeUInt16LE(4, 32); h.writeUInt16LE(16, 34); h.write('data', 36); h.writeUInt32LE(data.length, 40);
++fs.writeFileSync(out, Buffer.concat([h, data]));
++console.log(out, n, 'frames');
+diff --git a/lba3/tools/music/crackle/dump.mjs b/lba3/tools/music/crackle/dump.mjs
+new file mode 100644
+index 00000000..de279a54
+--- /dev/null
++++ b/lba3/tools/music/crackle/dump.mjs
+@@ -0,0 +1,33 @@
++// The source files decoded as the game decodes them (decodeAudioData, Electron's Chromium, at the device rate), saved as
++// 16-bit stereo WAVs for the null test (nulltest.mjs) and for listening (the A/B's "source" side).
++//   node dump.mjs village_b home combat village
++import { electron, HERE, RUNS, ELECTRON, GAME } from './env.mjs';
++import fs from 'node:fs';
++const H = HERE;
++const OUT = `${RUNS}/src`; fs.mkdirSync(OUT, { recursive: true });
++const prof = `${RUNS}/profile-dump-${Date.now()}`;
++const app = await electron.launch({ executablePath: ELECTRON,
++  args: [H + '/main.cjs', '--user-data-dir=' + prof], env: { ...process.env, LBA_URL: GAME + 'assets/music/manifest.json' }, timeout: 180000 });
++const page = await app.firstWindow();
++await page.waitForLoadState('load');
++for (const name of process.argv.slice(2)) {
++  const n = await page.evaluate(async (name) => {
++    const man = await (await fetch('/assets/music/manifest.json')).json();
++    window.__ctx = window.__ctx || new AudioContext({ latencyHint: 0.08 });
++    const buf = await window.__ctx.decodeAudioData(await (await fetch('/assets/music/' + man.tracks[name].file)).arrayBuffer());
++    const L = buf.getChannelData(0), R = buf.getChannelData(buf.numberOfChannels > 1 ? 1 : 0);
++    const a = new Int16Array(L.length * 2);
++    for (let i = 0; i < L.length; i++) { a[2 * i] = Math.max(-32768, Math.min(32767, Math.round(L[i] * 32767))); a[2 * i + 1] = Math.max(-32768, Math.min(32767, Math.round(R[i] * 32767))); }
++    window.__a = a; return { len: a.length, sr: buf.sampleRate };
++  }, name);
++  const parts = [];
++  for (let i = 0; i < n.len; i += 1 << 21) {
++    parts.push(Buffer.from(await page.evaluate(([i, k]) => { const a = window.__a.subarray(i, i + k); let s = ''; const u = new Uint8Array(a.buffer, a.byteOffset, a.byteLength); for (let j = 0; j < u.length; j += 0x8000) s += String.fromCharCode.apply(null, u.subarray(j, j + 0x8000)); return btoa(s); }, [i, 1 << 21]), 'base64'));
++  }
++  const pcm = Buffer.concat(parts), sr = n.sr, hdr = Buffer.alloc(44);
++  hdr.write('RIFF', 0); hdr.writeUInt32LE(36 + pcm.length, 4); hdr.write('WAVE', 8); hdr.write('fmt ', 12); hdr.writeUInt32LE(16, 16); hdr.writeUInt16LE(1, 20); hdr.writeUInt16LE(2, 22); hdr.writeUInt32LE(sr, 24); hdr.writeUInt32LE(sr * 4, 28); hdr.writeUInt16LE(4, 32); hdr.writeUInt16LE(16, 34); hdr.write('data', 36); hdr.writeUInt32LE(pcm.length, 40);
++  fs.writeFileSync(`${OUT}/${name}.wav`, Buffer.concat([hdr, pcm]));
++  console.log(name, n.len / 2, 'frames');
++}
++await app.close();
++fs.rmSync(prof, { recursive: true, force: true });
+diff --git a/lba3/tools/music/crackle/env.mjs b/lba3/tools/music/crackle/env.mjs
+new file mode 100644
+index 00000000..aaf4cdff
+--- /dev/null
++++ b/lba3/tools/music/crackle/env.mjs
+@@ -0,0 +1,12 @@
++// Shared paths for the crackle tools: Playwright and Electron from the Test Lab (lba3/tools/testlab, npm install there),
++// the game's URL (GAME_URL, as the tests; serve lba3/ first), and where runs are written (CRACKLE_RUNS, default the
++// system's temp folder: recordings are large and are never committed).
++import os from 'node:os';
++import path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++export const HERE = path.dirname(fileURLToPath(import.meta.url));
++const LAB = path.join(HERE, '..', '..', 'testlab', 'node_modules');
++export const { _electron: electron } = await import(pathToFileURL(path.join(LAB, 'playwright', 'index.mjs')).href);
++export const ELECTRON = path.join(LAB, 'electron', 'dist', process.platform === 'win32' ? 'electron.exe' : 'electron');
++export const GAME = process.env.GAME_URL || 'http://localhost:8123/';
++export const RUNS = process.env.CRACKLE_RUNS || path.join(os.tmpdir(), 'lba3-crackle');
+diff --git a/lba3/tools/music/crackle/main.cjs b/lba3/tools/music/crackle/main.cjs
+new file mode 100644
+index 00000000..1bcce50a
+--- /dev/null
++++ b/lba3/tools/music/crackle/main.cjs
+@@ -0,0 +1,15 @@
++// Electron main for the crackle runs: the same Chromium switches as lba3/desktop/main.js (autoplay, playout stats,
++// GPU blocklist off, high-performance GPU, no background throttling), loading the worktree's game over http.
++const { app, BrowserWindow, session, desktopCapturer } = require('electron');
++app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
++app.commandLine.appendSwitch('enable-blink-features', process.env.LBA_BLINK || 'AudioContextPlayoutStats');
++app.commandLine.appendSwitch('ignore-gpu-blocklist');
++app.commandLine.appendSwitch('force_high_performance_gpu');
++app.whenReady().then(() => {
++  // LBA_LOOPBACK: getDisplayMedia gets the system's audio mix (WASAPI loopback: what Windows' mixer receives)
++  if (process.env.LBA_LOOPBACK) session.defaultSession.setDisplayMediaRequestHandler((req, cb) => { desktopCapturer.getSources({ types: [process.env.LBA_LOOPBACK === 'window' ? 'window' : 'screen'] }).then((s) => cb({ video: s[0], audio: 'loopback' })); });
++  const win = new BrowserWindow({ width: 1366, height: 768, useContentSize: true, backgroundColor: '#000000', autoHideMenuBar: true,
++    webPreferences: { contextIsolation: true, sandbox: true, backgroundThrottling: false } });
++  win.loadURL(process.env.LBA_URL || 'http://localhost:8123/?nocine');
++});
++app.on('window-all-closed', () => app.quit());
+diff --git a/lba3/tools/music/crackle/nulltest.mjs b/lba3/tools/music/crackle/nulltest.mjs
+new file mode 100644
+index 00000000..9eb8fd54
+--- /dev/null
++++ b/lba3/tools/music/crackle/nulltest.mjs
+@@ -0,0 +1,66 @@
++// Null test: the game's music bus (run's music-bus.wav) against the source file decoded the same way (runs/src/*.wav),
++// aligned to the sample (and the sub-sample start Chromium uses), passed through the voice's 20 kHz low-pass as Chromium
++// computes it, with one gain fitted per 128-frame render quantum. What remains is what the game's graph added: a click,
++// a held or dropped block, an unramped gain step shows as a residual spike in its quantum and as a gain jump.
++//   node nulltest.mjs <label> <track> <ct0> <ct1> <srcPosAtCt0 guess> [search s]
++import fs from 'node:fs';
++import { RUNS } from './env.mjs';
++const [label, track, a0, a1, g0, srch] = process.argv.slice(2);
++const ct0 = +a0, ct1 = +a1, guess = +g0, SEARCH = +(srch || 2);
++const readWav = (f) => { const b = fs.readFileSync(f); const s = new Int16Array(b.buffer, b.byteOffset + 44, (b.length - 44) / 2); const n = s.length / 2, L = new Float32Array(n), R = new Float32Array(n); for (let i = 0; i < n; i++) { L[i] = s[2 * i] / 32767; R[i] = s[2 * i + 1] / 32767; } return { L, R, n, sr: b.readUInt32LE(24) }; };
++const cap = readWav(`${RUNS}/${label}/music-bus.wav`);
++const meta = JSON.parse(fs.readFileSync(`${RUNS}/${label}/music-bus.json`, 'utf8'));
++const src = readWav(`${RUNS}/src/${track}.wav`);
++const sr = cap.sr;
++// Chromium's lowpass (Biquad::SetLowpassParams): cutoff normalised to Nyquist, resonance in dB
++function lowpass(x, f = 20000, qdb = 0.5) {
++  const c = f / (sr / 2); if (c >= 1) return x;
++  const res = Math.pow(10, qdb / 20), th = Math.PI * c, al = Math.sin(th) / (2 * res), cw = Math.cos(th), be = (1 - cw) / 2;
++  const a0 = 1 + al, b0 = be / a0, b1 = 2 * be / a0, b2 = be / a0, A1 = -2 * cw / a0, A2 = (1 - al) / a0;
++  const y = new Float32Array(x.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
++  for (let i = 0; i < x.length; i++) { const v = b0 * x[i] + b1 * x1 + b2 * x2 - A1 * y1 - A2 * y2; x2 = x1; x1 = x[i]; y2 = y1; y1 = v; y[i] = v; }
++  return y;
++}
++const SL0 = lowpass(src.L), SR0 = lowpass(src.R);
++// a looping track (LOOP=loopStartSample,loopEndSample): the source read wraps at loopEnd as the source node does
++const [LS, LE] = (process.env.LOOP || '0,0').split(',').map(Number);
++const wrap = (A) => (LE ? new Proxy(A, { get: (t, k) => (typeof k === 'string' && /^\d+$/.test(k) ? t[+k >= LE ? +k - (LE - LS) : +k] : t[k]) }) : A);
++const SL = wrap(SL0), SR = wrap(SR0);
++const ci0 = Math.round(ct0 * sr) - meta.firstFrame, ci1 = Math.round(ct1 * sr) - meta.firstFrame;
++// coarse: decimated mono correlation over guess ± SEARCH
++const D = 4, M = Math.round(1.5 * sr / D);
++const dec = (L, R, i0, n) => { const o = new Float32Array(n); for (let k = 0; k < n; k++) { let s = 0; for (let j = 0; j < D; j++) s += L[i0 + k * D + j] + R[i0 + k * D + j]; o[k] = s; } return o; };
++const cm = dec(cap.L, cap.R, ci0, M);
++const g = Math.round(guess * sr), lo = Math.max(0, g - SEARCH * sr), hi = Math.min(src.n - (M + 2) * D, g + SEARCH * sr);
++const sm = dec(SL, SR, lo, Math.floor((hi - lo) / D) + M + 1);
++let best = -2, bl = 0; let ec = 0; for (const v of cm) ec += v * v;
++for (let l = 0; l + M < sm.length; l++) { let s = 0, es = 0; for (let k = 0; k < M; k++) { s += cm[k] * sm[l + k]; es += sm[l + k] ** 2; } const r = s / Math.sqrt(ec * es + 1e-20); if (r > best) { best = r; bl = l; } }
++let off = lo + bl * D; // source index aligned with capture index ci0
++// fine (± 8 samples) and fractional (linear interpolation, as Chromium plays a sub-sample start)
++const N1 = sr;
++const fit = (o, f) => { let sc = 0, ss = 0, cc = 0; for (let k = 0; k < N1; k++) for (const [C, S] of [[cap.L, SL], [cap.R, SR]]) { const s = S[o + k] * (1 - f) + S[o + k + 1] * f, c = C[ci0 + k]; sc += s * c; ss += s * s; cc += c * c; } const gg = sc / ss; return (cc - gg * sc) / cc; };
++let bo = off, bf = 0, be = 1e9;
++for (let o = off - 8; o <= off + 8; o++) for (let f = 0; f < 1; f += 0.05) { const e = fit(o, f); if (e < be) { be = e; bo = o; bf = f; } }
++for (let f = Math.max(0, bf - 0.05); f <= bf + 0.05; f += 0.005) { const e = fit(bo, f); if (e < be) { be = e; bf = f; } }
++off = bo;
++// per render quantum (blocks on the context's 128-frame grid)
++const Q = 128; let q0 = ci0 + ((Q - ((meta.firstFrame + ci0) % Q)) % Q);
++const rows = []; let prevG = null;
++for (let i = q0; i + Q <= ci1 && off + (i - ci0) + Q + 1 < src.n * (LE ? 2 : 1); i += Q) {
++  let sc = 0, ss = 0, cc = 0;
++  for (let k = 0; k < Q; k++) for (const [C, S] of [[cap.L, SL], [cap.R, SR]]) { const j = off + (i - ci0) + k; const s = S[j] * (1 - bf) + S[j + 1] * bf, c = C[i + k]; sc += s * c; ss += s * s; cc += c * c; }
++  const gg = ss > 1e-12 ? sc / ss : 0, res = Math.max(0, cc - gg * sc);
++  rows.push({ ct: (meta.firstFrame + i) / sr, g: gg, p: cc / (2 * Q), r: cc > 0 ? res / cc : 0, dg: prevG === null ? 0 : gg - prevG });
++  prevG = gg;
++}
++const live = rows.filter((r) => r.p > 1e-6); // above -60 dBFS
++const db = (x) => +(10 * Math.log10(x + 1e-20)).toFixed(1);
++const sorted = live.map((r) => r.r).sort((a, b) => a - b), pct = (p) => sorted[Math.floor(p * (sorted.length - 1))];
++const spikes = live.filter((r) => r.r > 10 ** -2.5); // residual above -25 dB of the signal in one quantum
++// a step, not a ramp: the gain's change from one quantum to the next differs from its neighbours' (a ramp has a steady change)
++const jumps = live.filter((r, k) => k > 0 && k < live.length - 1 && Math.abs(r.dg - (live[k - 1].dg + live[k + 1].dg) / 2) > 0.006);
++console.log(JSON.stringify({ label, track, window: [ct0, ct1], srcPosAtCt0: +(off / sr).toFixed(4), frac: +bf.toFixed(3), coarseCorr: +best.toFixed(4), fitResidualDb: db(be),
++  quanta: rows.length, liveQuanta: live.length, residualDb: { median: db(pct(0.5)), p99: db(pct(0.99)), p999: db(pct(0.999)), max: db(sorted.at(-1)) },
++  spikesOver25dB: spikes.length, maxGainChangePerQuantum: +Math.max(...live.map((r) => Math.abs(r.dg))).toFixed(4), gainStepsOver0_006: jumps.length, gain: { first: +rows[0]?.g.toFixed(4), last: +rows.at(-1)?.g.toFixed(4) },
++  worst: live.slice().sort((a, b) => b.r - a.r).slice(0, 6).map((r) => `ct=${r.ct.toFixed(3)} res=${db(r.r)}dB g=${r.g.toFixed(4)} dg=${r.dg.toFixed(5)} lvl=${db(r.p)}dB`),
++  jumpList: jumps.slice(0, 6).map((r) => `ct=${r.ct.toFixed(3)} g=${r.g.toFixed(4)} dg=${r.dg.toFixed(5)}`) }, null, 1));
+diff --git a/lba3/tools/music/crackle/run.mjs b/lba3/tools/music/crackle/run.mjs
+new file mode 100644
+index 00000000..5904dc9f
+--- /dev/null
++++ b/lba3/tools/music/crackle/run.mjs
+@@ -0,0 +1,163 @@
++// MUSIC-CRACKLE (CLOUD_ORDERS 27b): the crackle measured in the desktop app's own browser (Electron from the Test Lab,
++// the same switches as desktop/main.js, GPU on) on one scripted Citadel session: outdoors, walking (real keys), into an
++// office room and out (gain 0.6 + 1100 Hz low-pass on the same track), dialogue ducking, the music slider, a change of
++// area, combat in and out, a loop seam (Home), a piece's end and the next piece. Never the player's own saves: every
++// run has its own profile.
++//   serve lba3/ (e.g. python -m http.server 8123), then from lba3/:
++//   TAP=0 node tools/music/crackle/run.mjs before        underruns (AudioContext.playoutStats) and frame times only
++//   TAP=1 node tools/music/crackle/run.mjs before-tap    + AudioWorklet taps on the music bus and the output, and a
++//                                                        recording of the music bus (music-bus.wav)
++//   ONLY=slider TAP=1 …                                  the slider part alone, in the house
++//   EXE="…\LBA3 The Awakening.exe" TAP=0 …               the installed app itself (fullscreen; WINDOWED=1 for a window)
++//   node tools/music/crackle/analyze.mjs <label>         underruns vs long frames, discontinuities per phase per minute
++//   node tools/music/crackle/dump.mjs village_b home     the source files decoded as the game decodes them
++//   node tools/music/crackle/nulltest.mjs <label> <track> <ct0> <ct1> <source s at ct0> [search s]   game vs source
++//   node tools/music/crackle/source.mjs                  every file alone: clipping, discontinuities, loop seams
++// A baseline frame-time measurement is a TAP=0 run (the taps cost main-thread time). Not a listening test.
++import { electron, HERE, RUNS, ELECTRON, GAME } from './env.mjs';
++import fs from 'node:fs';
++const H = HERE;
++const label = process.argv[2] || 'run';
++const TAP = process.env.TAP === '1';
++const OUT = `${RUNS}/${label}`; fs.mkdirSync(OUT, { recursive: true });
++const prof = `${RUNS}/profile-${label}-${Date.now()}`;
++// EXE: the installed desktop app itself (its own files, fullscreen as the user plays it unless WINDOWED=1); never the
++// user's data folder: --user-data-dir points into the runs folder
++const EXE = process.env.EXE;
++const app = await electron.launch(EXE
++  ? { executablePath: EXE, args: ['--user-data-dir=' + prof, '--enable-blink-features=AudioContextPlayoutStats', ...(process.env.WINDOWED ? ['--windowed'] : [])], timeout: 180000 }
++  : { executablePath: ELECTRON,
++    args: [H + '/main.cjs', '--user-data-dir=' + prof], env: { ...process.env, ...(process.env.LOOPBACK ? { LBA_LOOPBACK: '1' } : {}), LBA_URL: GAME + '?nocine' }, timeout: 180000 });
++const page = await app.firstWindow();
++const logs = [];
++page.on('console', (m) => { const t = m.text(); if (/audio|music|error/i.test(t)) logs.push(`${m.type()}: ${t}`); });
++page.on('pageerror', (e) => logs.push('pageerror: ' + e.message));
++const ev = (f, a) => page.evaluate(f, a);
++const sleep = (s) => new Promise((r) => setTimeout(r, s * 1000));
++const t0 = Date.now();
++await page.waitForFunction(() => window.game && document.querySelector('#loading')?.classList.contains('hidden') && !window.game.preparing, null, { timeout: 900000, polling: 500 });
++console.log('booted', ((Date.now() - t0) / 1000).toFixed(0), 's');
++await sleep(2);
++await page.click('[data-act="new"]', { timeout: 60000 });
++await page.waitForFunction(() => game.audio.ctx && game.audio.music.manifest && game.state !== 'title', null, { timeout: 120000, polling: 250 });
++await sleep(3);
++// (the installed app has no ?nocine: its opening cinematic is skipped as a player would)
++for (let i = 0; i < 20 && await ev(() => !!game.cine); i++) { await ev(() => game.cine?.skip?.()); await sleep(2); }
++await page.waitForFunction(() => game.state === 'play' && !game.cine, null, { timeout: 120000, polling: 250 }).catch(() => console.log('not in play state'));
++await sleep(2);
++if (process.env.LOOPBACK) await ev(() => { window.__loopback = true; });
++const tapSrc = fs.readFileSync(H + '/tap.js', 'utf8');
++const info = await ev(async ({ TAP, tapSrc }) => {
++  const A = game.audio, ctx = A.ctx;
++  const W = (window.__crk = { marks: [], stats: [], frames: [], long: [], tap: { music: { ev: [], pcm: [], peak: 0, over: 0 }, out: { ev: [], peak: 0, over: 0 } }, voices: [] });
++  if (TAP) {
++    const url = URL.createObjectURL(new Blob([tapSrc], { type: 'text/javascript' }));
++    await ctx.audioWorklet.addModule(url);
++    const mk = (id, rec) => {
++      const n = new AudioWorkletNode(ctx, 'tap', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit', processorOptions: { id, rec } });
++      n.port.onmessage = (e) => { const d = e.data, T = W.tap[id]; if (d.pcm) T.pcm.push({ at: d.at, pcm: d.pcm }); if (d.ev) { T.ev.push(...d.ev); T.peak = d.peak; T.over = d.over; T.start = d.start; T.frame = d.frame; } };
++      return n;
++    };
++    const LOOP = !!window.__loopback;
++    const tm = mk('music', !LOOP), to = mk('out', LOOP);
++    A.musicBus.disconnect(); A.musicBus.connect(tm).connect(A.master);
++    A.master.disconnect(); A.master.connect(to).connect(ctx.destination);
++    if (LOOP) {
++      // the system mix (Windows' loopback) into a recording tap that is pulled but not heard
++      const st = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
++      st.getVideoTracks().forEach((t) => t.stop());
++      W.tap.loop = { ev: [], pcm: [], peak: 0, over: 0 };
++      const tl = mk('loop', true), z = ctx.createGain(); z.gain.value = 0;
++      ctx.createMediaStreamSource(st).connect(tl).connect(z).connect(ctx.destination);
++      W.loopTrack = st.getAudioTracks()[0]?.getSettings?.() || null;
++    }
++  }
++  const ps = ctx.playoutStats;
++  const base = ps ? { e: ps.fallbackFramesEvents, d: ps.fallbackFramesDuration, t: ps.totalFramesDuration } : null;
++  W.base = base;
++  W.iv = setInterval(() => {
++    const M = A.music;
++    W.stats.push([+performance.now().toFixed(1), +ctx.currentTime.toFixed(4), ps ? ps.fallbackFramesEvents - base.e : -1, ps ? +(ps.fallbackFramesDuration - base.d).toFixed(2) : -1, ps ? +(ps.totalFramesDuration - base.t).toFixed(0) : -1]);
++    W.voices.push([+ctx.currentTime.toFixed(3), M.voices.map((v) => v.name + (v.stopping ? '-' : '') + ':' + v.gain.gain.value.toFixed(2)).join(' ')]);
++  }, 250);
++  let last = 0; const fr = W.frames;
++  const loop = (t) => { if (last) { const d = t - last; fr.push(+d.toFixed(1)); if (d > 50) W.long.push([+t.toFixed(1), +d.toFixed(1), +ctx.currentTime.toFixed(3)]); } last = t; W.raf = requestAnimationFrame(loop); };
++  W.raf = requestAnimationFrame(loop);
++  return { sr: ctx.sampleRate, base: ctx.baseLatency, out: ctx.outputLatency, ps: !!ps, state: game.state, room: game.room?.id, mood: A.music.baseName };
++}, { TAP, tapSrc });
++console.log('instrumented', JSON.stringify(info));
++const mark = (name) => ev((name) => { const W = window.__crk, A = game.audio; W.marks.push([name, +A.ctx.currentTime.toFixed(3), +performance.now().toFixed(1), A.music.baseName, game.room?.id || 'out']); }, name);
++const S = +(process.env.SECS || 1);
++const hold = async (key, s) => { await page.keyboard.down(key); await sleep(s); await page.keyboard.up(key); };
++
++let seam = null;
++// (the playlists' random choices from a fixed sequence, as tests/music.mjs does)
++await ev(() => { game.audio.music.rand = (() => { let s = 7; return () => ((s = (s * 16807) % 2147483647) / 2147483647); })(); });
++if (process.env.ONLY === 'slider') {
++  // the music volume slider alone, in the house (Home loops there): four moves, 1.5 s apart
++  await sleep(4); await mark('slider');
++  for (const v of [0.35, 0.55, 0.2, 0.55]) { await ev((v) => { game.settings.music = v; game.applySettings(); }, v); await sleep(1.5); }
++  await sleep(2); await mark('end'); await sleep(1);
++} else {
++// 1 village square outdoors
++await mark('village'); await ev(() => game.exitRoom({ x: -40, z: 0, a: 0 }, true)); await sleep(25 * S);
++// 2 walking (real input)
++await mark('walk'); await hold('ArrowUp', 6 * S); await hold('ArrowLeft', 2 * S); await hold('ArrowDown', 6 * S); await sleep(1);
++// 3 into the water office (office mood: same track, gain 0.6 + lowpass 1100 Hz), and out again
++await mark('office-in'); await ev(() => game.enterRoom('office')); await sleep(12 * S);
++await mark('office-out'); await ev(() => game.exitRoom({ x: -40, z: 0, a: 0 })); await sleep(12 * S);
++// 4 dialogue ducking x3
++await mark('duck');
++for (let i = 0; i < 3; i++) { await ev(() => game.audio.duck(true)); await sleep(3); await ev(() => game.audio.duck(false)); await sleep(3); }
++// 4b the music volume slider moved (settings: what an input event on the slider does)
++await mark('slider');
++for (const v of [0.35, 0.55, 0.2, 0.55]) { await ev((v) => { game.settings.music = v; game.applySettings(); }, v); await sleep(1.5); }
++await sleep(1);
++// 5 change of area: the open island (crossfade on a bar line), and back to town
++await mark('island'); await ev(() => game.exitRoom(game.story.chapters[0].exitTo('outdoor'))); await sleep(20 * S);
++await mark('town'); await ev(() => game.exitRoom({ x: -40, z: 0, a: 0 })); await sleep(15 * S);
++// 6 combat in and out (the game's own per-frame call held off meanwhile)
++await mark('combat-in');
++await ev(() => { const A = game.audio; A.__sc = A.setCombat; A.setCombat = () => {}; window.__thr = setInterval(() => A.music.setCombat(1), 100); });
++await sleep(12 * S);
++await mark('combat-out');
++await ev(() => { clearInterval(window.__thr); window.__thr = setInterval(() => game.audio.music.setCombat(0), 100); });
++await sleep(10 * S);
++await ev(() => { clearInterval(window.__thr); game.audio.setCombat = game.audio.__sc; });
++// 7 a loop seam: Home resumed 6 s before its loop end (crossfade town -> home, then the seam)
++await mark('home-seam');
++seam = await ev(() => { const M = game.audio.music, i = M.manifest.tracks.home; M.resume.set('home', { offset: i.loopEnd - 6, at: game.audio.ctx.currentTime }); game.enterRoom('house'); return { loopStart: i.loopStart, loopEnd: i.loopEnd }; });
++await sleep(14 * S);
++// 8 a piece's end outdoors: fade over its last bars, a short silence, the next piece from its first bar
++await mark('piece-end'); await ev(() => game.exitRoom({ x: -40, z: 0, a: 0 })); await sleep(8);
++await ev(() => { const M = game.audio.music; M.gapRange = [4, 4]; M.finishPiece(); }); await sleep(18 * S);
++await mark('end');
++await sleep(1.5);
++}
++const res = await ev(() => {
++  const W = window.__crk, A = game.audio; clearInterval(W.iv); cancelAnimationFrame(W.raf);
++  return { marks: W.marks, stats: W.stats, frames: W.frames, long: W.long, voices: W.voices, log: A.music.log.slice(-60), maxVoices: A.music.maxVoices, sr: A.ctx.sampleRate, base: A.ctx.baseLatency,
++    tap: Object.fromEntries(Object.entries(W.tap).map(([k, T]) => [k, { ev: T.ev, peak: T.peak, over: T.over, start: T.start, chunks: T.pcm?.length || 0 }])), loopTrack: W.loopTrack || null,
++    gameStats: A.stats?.() ?? null };
++});
++res.seam = seam; res.logs = logs; res.label = label; res.tapMode = TAP;
++fs.writeFileSync(`${OUT}/result.json`, JSON.stringify(res));
++for (const which of (TAP ? (process.env.LOOPBACK ? ['out', 'loop'] : ['music']) : [])) {
++  // a tap's recording, as a WAV (16-bit stereo) with its first frame number
++  const n = await ev((which) => { const P = window.__crk.tap[which].pcm; let len = 0; for (const c of P) len += c.pcm.length; const all = new Int16Array(len); let o = 0; for (const c of P) { all.set(c.pcm, o); o += c.pcm.length; } window.__all = all; return { len, first: P[0]?.at }; }, which);
++  const parts = [];
++  for (let i = 0; i < n.len; i += 1 << 21) {
++    parts.push(Buffer.from(await ev(([i, k]) => { const a = window.__all.subarray(i, i + k); let s = ''; const u = new Uint8Array(a.buffer, a.byteOffset, a.byteLength); for (let j = 0; j < u.length; j += 0x8000) s += String.fromCharCode.apply(null, u.subarray(j, j + 0x8000)); return btoa(s); }, [i, 1 << 21]), 'base64'));
++  }
++  const pcm = Buffer.concat(parts);
++  const hdr = Buffer.alloc(44); const sr = res.sr;
++  hdr.write('RIFF', 0); hdr.writeUInt32LE(36 + pcm.length, 4); hdr.write('WAVE', 8); hdr.write('fmt ', 12); hdr.writeUInt32LE(16, 16); hdr.writeUInt16LE(1, 20); hdr.writeUInt16LE(2, 22); hdr.writeUInt32LE(sr, 24); hdr.writeUInt32LE(sr * 4, 28); hdr.writeUInt16LE(4, 32); hdr.writeUInt16LE(16, 34); hdr.write('data', 36); hdr.writeUInt32LE(pcm.length, 40);
++  fs.writeFileSync(`${OUT}/${which === 'music' ? 'music-bus' : which}.wav`, Buffer.concat([hdr, pcm]));
++  fs.writeFileSync(`${OUT}/${which === 'music' ? 'music-bus' : which}.json`, JSON.stringify({ firstFrame: n.first, frames: n.len / 2, sr }));
++}
++const fr = res.frames.slice().sort((a, b) => a - b), q = (p) => fr[Math.floor(p * (fr.length - 1))];
++const st = res.stats.at(-1);
++console.log(JSON.stringify({ label, tap: TAP, underrunEvents: st?.[2], underrunMs: st?.[3], totalMs: st?.[4], frames: fr.length, p50: q(0.5), p95: q(0.95), p99: q(0.99), max: fr.at(-1), long50: res.long.length,
++  tapMusicEvents: res.tap.music.ev.length, tapOutEvents: res.tap.out.ev.length, peakMusic: res.tap.music.peak, peakOut: res.tap.out.peak, overOut: res.tap.out.over, maxVoices: res.maxVoices }));
++await app.close();
++fs.rmSync(prof, { recursive: true, force: true });
+diff --git a/lba3/tools/music/crackle/sensitivity.mjs b/lba3/tools/music/crackle/sensitivity.mjs
+new file mode 100644
+index 00000000..2f90bd48
+--- /dev/null
++++ b/lba3/tools/music/crackle/sensitivity.mjs
+@@ -0,0 +1,48 @@
++// How sensitive is the offline detector (analyze.mjs) on this music? Defects are injected into a recorded music bus at
++// 200 random places each and counted: a dropout of one render quantum (128 zero frames: an underrun-like gap), a
++// held block (128 frames repeating the last sample: a missed automation/parameter block), a gain step of 3 %, 10 %
++// and 30 % (an unramped gain change), and a polarity flip of 1 sample.
++import fs from 'node:fs';
++import { RUNS } from './env.mjs';
++const label = process.argv[2] || 'before-tap';
++const K = +(process.argv[3] || 12), FLOOR = +(process.argv[4] || 0.004);
++const b = fs.readFileSync(`${RUNS}/${label}/music-bus.wav`);
++const pcm16 = new Int16Array(b.buffer, b.byteOffset + 44, (b.length - 44) / 2);
++const N = pcm16.length / 2;
++const L0 = new Float32Array(N); for (let i = 0; i < N; i++) L0[i] = pcm16[2 * i] / 32767;
++function detect(x, W = 512) {
++  const r = new Float32Array(x.length), cs = new Float64Array(x.length + 1);
++  for (let i = 2; i < x.length; i++) r[i] = x[i] - 2 * x[i - 1] + x[i - 2];
++  for (let i = 0; i < x.length; i++) cs[i + 1] = cs[i] + r[i] * r[i];
++  const hits = []; let last = -1e9;
++  for (let i = W; i < x.length - W; i++) {
++    const a = Math.abs(r[i]); if (a < FLOOR) continue;
++    const e = (cs[i + W] - cs[i - W] - (cs[i + 4] - cs[i - 3])) / (2 * W - 7);
++    if (a > K * Math.sqrt(e) && i - last > 64) { last = i; hits.push(i); }
++  }
++  return hits;
++}
++let seed = 12345; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
++// only where the music is sounding (|x| rms over 4096 above -50 dBFS)
++const loud = []; for (let i = 8192; i < N - 8192; i += 4096) { let s = 0; for (let k = 0; k < 4096; k++) s += L0[i + k] ** 2; if (Math.sqrt(s / 4096) > 0.003) loud.push(i); }
++const base = detect(L0).length;
++const defects = {
++  'dropout 128 frames': (x, p) => { for (let k = 0; k < 128; k++) x[p + k] = 0; },
++  'held block 128': (x, p) => { const v = x[p]; for (let k = 1; k < 128; k++) x[p + k] = v; },
++  'gain step 3%': (x, p) => { for (let k = p; k < p + 2048; k++) x[k] *= 1.03; },
++  'gain step 10%': (x, p) => { for (let k = p; k < p + 2048; k++) x[k] *= 1.10; },
++  'gain step 30%': (x, p) => { for (let k = p; k < p + 2048; k++) x[k] *= 1.30; },
++};
++const out = { label, K, FLOOR, baselineEvents: base, loudBlocks: loud.length };
++for (const [name, f] of Object.entries(defects)) {
++  let found = 0, tried = 0;
++  for (let j = 0; j < 200; j++) {
++    const p = loud[Math.floor(rnd() * loud.length)] + Math.floor(rnd() * 2048);
++    const seg = L0.slice(p - 4096, p + 6144); const x = seg.slice();
++    f(x, 4096);
++    const h = detect(x).filter((i) => Math.abs(i - 4096) < 140 || (name.startsWith('gain') && Math.abs(i - 4096 - 2048) < 4) );
++    tried++; if (h.length) found++;
++  }
++  out[name] = `${found}/${tried} detected`;
++}
++console.log(JSON.stringify(out, null, 1));
+diff --git a/lba3/tools/music/crackle/source.mjs b/lba3/tools/music/crackle/source.mjs
+new file mode 100644
+index 00000000..751df221
+--- /dev/null
++++ b/lba3/tools/music/crackle/source.mjs
+@@ -0,0 +1,67 @@
++// The source files alone (no game): each music MP3 decoded the way the game decodes it (decodeAudioData in an
++// AudioContext at the device rate, Electron's Chromium), then the same discontinuity detector as analyze.mjs (K, floor)
++// over the whole file, the loop seam as an AudioBufferSourceNode plays it (loopEnd -> loopStart), and the decode's
++// length against the manifest (encoder padding trimmed or not).
++import { electron, HERE, RUNS, ELECTRON, GAME } from './env.mjs';
++import fs from 'node:fs';
++const H = HERE;
++fs.mkdirSync(RUNS, { recursive: true });
++const prof = `${RUNS}/profile-src-${Date.now()}`;
++const app = await electron.launch({ executablePath: ELECTRON,
++  args: [H + '/main.cjs', '--user-data-dir=' + prof], env: { ...process.env, LBA_URL: GAME + 'assets/music/manifest.json' }, timeout: 180000 });
++const page = await app.firstWindow();
++await page.waitForLoadState('load');
++const K = +(process.argv[2] || 12), FLOOR = +(process.argv[3] || 0.004), GAIN = +(process.argv[4] || 0.55);
++const res = await page.evaluate(async ({ K, FLOOR, GAIN }) => {
++  const man = await (await fetch('/assets/music/manifest.json')).json();
++  const ctx = new AudioContext({ latencyHint: 0.08 });
++  const out = { sr: ctx.sampleRate, tracks: {} };
++  const detect = (d, W = 512) => {
++    const N = d.length, r = new Float32Array(N), cs = new Float64Array(N + 1);
++    for (let i = 2; i < N; i++) r[i] = (d[i] - 2 * d[i - 1] + d[i - 2]) * GAIN;
++    for (let i = 0; i < N; i++) cs[i + 1] = cs[i] + r[i] * r[i];
++    let n = 0, last = -1e9; const at = [];
++    for (let i = W; i < N - W; i++) {
++      const a = Math.abs(r[i]); if (a < FLOOR) continue;
++      const e = (cs[i + W] - cs[i - W] - (cs[i + 4] - cs[i - 3])) / (2 * W - 7);
++      if (a > K * Math.sqrt(e) && i - last > 64) { last = i; n++; if (at.length < 5) at.push(+(i / ctx.sampleRate).toFixed(3)); }
++    }
++    return { n, at };
++  };
++  for (const [name, t] of Object.entries(man.tracks)) {
++    const ab = await (await fetch('/assets/music/' + t.file)).arrayBuffer();
++    const buf = await ctx.decodeAudioData(ab);
++    const sr = buf.sampleRate, ch = [0, 1].map((c) => buf.getChannelData(Math.min(c, buf.numberOfChannels - 1)));
++    let peak = 0, over = 0; for (const d of ch) for (let i = 0; i < d.length; i++) { const a = Math.abs(d[i]); if (a > peak) peak = a; if (a >= 0.999) over++; }
++    const det = ch.map((d) => detect(d));
++    const row = { dur: +buf.duration.toFixed(4), manDur: t.duration, peak: +peak.toFixed(4), over, events: det[0].n + det[1].n, perMin: +((det[0].n + det[1].n) / (buf.duration / 60)).toFixed(2), at: det[0].at, loop: !!t.loop };
++    // the first non-silent sample (decoder delay / encoder padding left in the decode)
++    let first = 0; while (first < ch[0].length && Math.abs(ch[0][first]) < 1e-4 && Math.abs(ch[1][first]) < 1e-4) first++;
++    row.firstSound = +(first / sr).toFixed(4);
++    if (t.loop) {
++      // what the source node plays across the seam: ... loopEnd-1, then loopStart ... (Chromium: frame = time * sr, linear interpolation)
++      const ls = t.loopStart * sr, le = t.loopEnd * sr;
++      row.loopFrames = { ls: +ls.toFixed(3), le: +le.toFixed(3), lenFrac: +((le - ls) % 1).toFixed(4) };
++      const seam = ch.map((d) => {
++        const L = 2048, s = new Float32Array(2 * L);
++        const at = (x) => { const i = Math.floor(x), f = x - i; return d[i] * (1 - f) + d[i + 1] * f; };
++        for (let i = 0; i < L; i++) s[i] = at(le - L + i);
++        for (let i = 0; i < L; i++) s[L + i] = at(ls + i);
++        // the jump at the joint against the local second-difference level
++        const r = (k) => s[k] - 2 * s[k - 1] + s[k - 2];
++        let e = 0; for (let k = 2; k < 2 * L; k++) if (Math.abs(k - L) > 3) e += r(k) ** 2; e = Math.sqrt(e / (2 * L - 9));
++        const j = Math.max(Math.abs(r(L)), Math.abs(r(L + 1)));
++        // and against the same positions one loop length earlier/later in the file (pass 1 vs pass 2 identical?)
++        let diff = 0; for (let i = -256; i < 256; i++) diff = Math.max(diff, Math.abs(at(le + i) - at(ls + i)));
++        return { jumpRatio: +(j / e).toFixed(2), passDiff: +diff.toFixed(5) };
++      });
++      row.seam = seam;
++    }
++    out.tracks[name] = row;
++  }
++  return out;
++}, { K, FLOOR, GAIN });
++console.log(JSON.stringify(res, null, 1));
++fs.writeFileSync(`${RUNS}/source.json`, JSON.stringify(res, null, 1));
++await app.close();
++fs.rmSync(prof, { recursive: true, force: true });
+diff --git a/lba3/tools/music/crackle/tap.js b/lba3/tools/music/crackle/tap.js
+new file mode 100644
+index 00000000..a6eb302e
+--- /dev/null
++++ b/lba3/tools/music/crackle/tap.js
+@@ -0,0 +1,62 @@
++// AudioWorklet tap: passes its input through unchanged, records it (16-bit, optional) and flags discontinuities:
++// a sample whose second difference is far above the signal's own recent second-difference level (a click/step).
++class Tap extends AudioWorkletProcessor {
++  constructor(o) {
++    super();
++    const p = o.processorOptions || {};
++    this.rec = !!p.rec; this.id = p.id || 'tap';
++    this.K = p.K || 12; this.floor = p.floor || 0.004; this.a = 1 / 256;
++    this.st = [0, 1].map(() => ({ p1: 0, p2: 0, e: 1e-8, last: -1e9 }));
++    this.ev = []; this.peak = 0; this.over = 0;
++    this.CH = 4096; this.buf = this.rec ? new Int16Array(this.CH * 2) : null; this.bi = 0; this.start = -1;
++    this.sent = 0;
++  }
++  process(inputs, outputs) {
++    const inp = inputs[0], out = outputs[0];
++    const n = out[0].length;
++    const f0 = currentFrame;
++    if (this.start < 0) this.start = f0;
++    for (let c = 0; c < 2; c++) {
++      const x = inp[c] || inp[0];
++      const o = out[c];
++      const S = this.st[c];
++      if (!x) { o.fill(0); continue; }
++      o.set(x);
++      let { p1, p2, e, last } = S;
++      for (let i = 0; i < n; i++) {
++        const v = x[i];
++        const r = v - 2 * p1 + p2;
++        const ar = r < 0 ? -r : r;
++        const s = Math.sqrt(e);
++        if (ar > this.K * s && ar > this.floor && f0 + i - last > 64) {
++          last = f0 + i;
++          if (this.ev.length < 4000) this.ev.push([f0 + i, c, +r.toFixed(5), +s.toFixed(6), +v.toFixed(5)]);
++        }
++        e += this.a * (r * r - e);
++        const av = v < 0 ? -v : v;
++        if (av > this.peak) this.peak = av;
++        if (av >= 0.999) this.over++;
++        p2 = p1; p1 = v;
++      }
++      S.p1 = p1; S.p2 = p2; S.e = e; S.last = last;
++    }
++    if (this.rec) {
++      const L = inp[0], R = inp[1] || inp[0];
++      for (let i = 0; i < n; i++) {
++        const l = L ? L[i] : 0, r = R ? R[i] : 0;
++        this.buf[this.bi++] = Math.max(-32768, Math.min(32767, Math.round(l * 32767)));
++        this.buf[this.bi++] = Math.max(-32768, Math.min(32767, Math.round(r * 32767)));
++      }
++      if (this.bi >= this.buf.length) {
++        this.port.postMessage({ pcm: this.buf, at: f0 + n - this.CH }, [this.buf.buffer]);
++        this.buf = new Int16Array(this.CH * 2); this.bi = 0;
++      }
++    }
++    if ((f0 / n) % 375 === 0 || this.ev.length >= 200) { // ~1 s
++      this.port.postMessage({ ev: this.ev, peak: this.peak, over: this.over, frame: f0, start: this.start });
++      this.ev = [];
++    }
++    return true;
++  }
++}
++registerProcessor('tap', Tap);

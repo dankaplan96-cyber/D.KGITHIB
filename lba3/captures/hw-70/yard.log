@@ -1,0 +1,30 @@
+staged {"tut2":true}
+goal ["Check the well",null]
+dino {"x":-53.7,"z":70.6,"asleep":true}
+caption F4 Discreet Hold Space to hide discreet
+sneak prompt {"woke":0,"prompt":"E Pet","beh":"discreet"}
+pet {"pr_dino":true,"line":"(He sleeps on, rumbling softly, as Twinsen strokes his snout.)"} {"prompt":""}
+goal after ["Check the well",null]
+steps {"barrel":false,"pipe":null}
+caption F2 Athletic Space Jump athletic
+to the pipe run-up there
+pipe before null
+pipe try 1 {"x":-46.47,"pr_pipe":null}
+pipe try 2 {"x":-41.13,"pr_pipe":1}
+caption en normal Normal Space Talk, search normal
+  after 2.8 s Normal Space Talk, search
+caption en athletic Athletic Space Jump athletic
+  after 2.8 s Athletic Space Jump
+caption en aggressive Aggressive Space Strike aggressive
+  after 2.8 s Aggressive Space Strike
+caption en discreet Discreet Hold Space to hide discreet
+  after 2.8 s Discreet Hold Space to hide
+caption he normal רגיל Space לדבר, לחפש normal
+  after 2.8 s רגיל Space לדבר, לחפש
+caption he athletic אתלטי Space לקפוץ athletic
+  after 2.8 s אתלטי Space לקפוץ
+caption he aggressive אגרסיבי Space להכות aggressive
+  after 2.8 s אגרסיבי Space להכות
+caption he discreet דיסקרטי להחזיק Space כדי להסתתר discreet
+  after 2.8 s דיסקרטי להחזיק Space כדי להסתתר
+done

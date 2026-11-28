@@ -1,0 +1,25 @@
+[0s +0s] continue: {"state":"play","lines":0} | citadel [-56,16.76,-36.73] hp 4 | Visit Vesk at the station in the old fortress
+[3s +3s] Vesk: the tour: {"r":"talked","to":"vesk","state":"play","lines":14,"fail":null} | control [1399.6,0,-1.13] hp 4 | Meet Zoé at the station gate
+[5s +2s] Zoé at the gate: {"r":"talked","to":"zoe","state":"play","lines":10,"room":"projoffice","body":"zoe","fail":null} | projoffice [1304.8,0,-3.7] hp 4 | Zoé: find the evacuation plan without getting caught
+[6s +1s] Zoé: the lockers (stealth): {"plan":true,"tries":["arrived"],"fail":null} | projoffice [1299.12,0,-3.71] hp 4 | Zoé: get out with the plan
+[63s +57s] Zoé: out: {"zoeDone":true,"body":"twinsen","fail":null} | citadel [13.48,2.35,26.5] hp 4 | Confront Vesk at the beam pad
+[70s +7s] Vesk: the confrontation: {"r":"talked","to":"vesk","state":"play","lines":20,"gone":true,"fail":null} | citadel [-19.44,14.38,-61.04] hp 4 | Go home. Arthur is calling you
+[74s +3s] home: Arthur's radio: {"r":"talked","to":"arthur","state":"play","lines":12,"radio":true,"fail":null} | citadel [-43.99,2.34,77.2] hp 4 | Talk to Doran at the harbour and sail to Zeelich
+[75s +2s] Doran: the ferry to Zeelich: {"r":"talked","to":"doran","state":"play","lines":20,"chapter":"zeelich","room":"zeelich","fail":null} | zeelich [2342.4,6,1.3] hp 4 | Find Baldino's workshop on the Esmer street
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[140.3] stuck at (13.3, 26.8): replan
+[145.8] stuck at (13.5, 26.5): replan
+[148.7] stuck at (13.4, 26.6): replan
+[151.7] stuck at (13.5, 26.8): replan
+[154.6] stuck at (13.2, 26.5): replan
+[157.8] go → (-18.0, -60.6) plan ok=true pts=20 left=0.53
+[240.9] go → (-46.1, 77.2) plan ok=true pts=23 left=0.26
+[276.2] go: transition (citadel → citadel, trans true) at (-46.25, 76.37)
+[277.1] go → (1002.1, 2.1) plan ok=true pts=2 left=0.61
+[281.5] go → (1001.2, 11.3) plan ok=false pts=2 left=0.6
+[286.1] go: transition (house → house, trans true) at (1001.41, 10.67)
+[287.0] go → (-118.0, 45.2) plan ok=true pts=11 left=0.9
+kept docs/lba3-production/reviews/REV-TY-1/save-05.json
+no errors
+chain-exit 0

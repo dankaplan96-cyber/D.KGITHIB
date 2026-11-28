@@ -1,0 +1,94 @@
+step continue {"chapter":"network","room":"workshop"}
+step Oku {"r":"talked","to":"oku","state":"play","lines":2,"ask":true}
+step brake the old mill (ball) {"braked":true,"fail":null}
+step climb the old mill (jumps) {"heights":[7.09,8.19,9.28,10.38,11.47,12.56,13.66,14.75],"y":14.75,"top":true,"fail":null}
+step the mill relay {"r":"used","target":{"kind":"c10mill","id":"p_relay","label":"p_relay"},"state":"play","lines":4,"mill":true,"fail":null}
+step down from the mill {"r":"arrived","t":5.366666666666657,"hops":[14.75,13.66,13.66,12.56,12.56,12.56,12.56],"y":6,"fail":null}
+step the spaceship to Citadel {"r":"picked","state":"play","room":"citadel","fail":null}
+step Mira: the valve room {"r":"talked","to":"mira","state":"play","lines":8,"room":"valves","ask":true}
+step the three valves {"valves":true,"levels":[2,2,2],"fail":null}
+step out {"room":"citadel"}
+step the lighthouse: Zoé {"r":"talked","to":"zoe","state":"play","lines":6,"ask":true,"room":"lighttop"}
+PROBE {
+ "dials": [
+  {
+   "id": "dial1",
+   "spots": 3,
+   "tried": [
+    {
+     "to": [
+      1599.43,
+      -1.26
+     ],
+     "r": "timeout",
+     "at": [
+      1598.91,
+      0.18
+     ],
+     "target": "npc:zoe"
+    },
+    {
+     "to": [
+      1599.53,
+      -1.28
+     ],
+     "r": "stuck",
+     "at": [
+      1598.91,
+      0.18
+     ],
+     "target": "npc:zoe"
+    },
+    {
+     "to": [
+      1599.38,
+      -1.38
+     ],
+     "r": "stuck",
+     "at": [
+      1598.91,
+      0.18
+     ],
+     "target": "npc:zoe"
+    }
+   ]
+  },
+  {
+   "id": "dial2",
+   "spots": 7,
+   "tried": [
+    {
+     "to": [
+      1600,
+      -1.2
+     ],
+     "r": "transition",
+     "at": [
+      -107.5,
+      97.1
+     ],
+     "target": "undefined:undefined"
+    }
+   ]
+  },
+  {
+   "id": "dial3",
+   "spots": 0,
+   "tried": []
+  }
+ ],
+ "npcs": [
+  {
+   "id": "zoe",
+   "x": 1598.48,
+   "z": -0.55
+  },
+  {
+   "id": "arthur",
+   "x": 1599.76,
+   "z": -0.3
+  }
+ ],
+ "flags": {}
+}
+rc=0

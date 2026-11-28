@@ -1,0 +1,1 @@
+[{ "op": "validate", "name": "citadel-2 candidates checks", "input": "art/blender/characters/citadel2/work/cast_poly_citadel2.blend", "output": "art/blender/characters/citadel2/reports/candidates.validate.json", "options": { "target": "character", "maxTriangles": 14000 } }]

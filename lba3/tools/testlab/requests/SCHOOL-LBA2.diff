@@ -1,0 +1,59 @@
+diff --git a/lba3/src/game/desertold.js b/lba3/src/game/desertold.js
+index 02ea4c6d..3bc24874 100644
+--- a/lba3/src/game/desertold.js
++++ b/lba3/src/game/desertold.js
+@@ -219,19 +219,43 @@ export function buildOldPlaces(C) {
+   {
+     const S = SCHOOL_SITE, f = frame(S.x, S.z, S.ry);   // (local +z faces east: f(u, v): u along the face (north −), v out of it)
+     const g = H(S.x, S.z), base = g - 0.4, top = g + S.h;
+-    // the canyon wall the mask is set in: a slab of the terrace's rock behind the face, boulders at its ends and over it
+-    { const [bx, bz] = f(0, -2.3); B.add(bbox(S.w + 2.6, S.h + 1.4, 2.6, 0.5, TILE.cliff), M.cliff, bx, base + (S.h + 1.4) / 2 - 0.2, bz, 0, S.ry, 0); camVol(col({ type: 'box', x: bx, z: bz, hw: (S.w + 2.6) / 2, hd: 1.3, rot: S.ry, top: top + 0.9, camSkip: true }), 'school rock wall'); }
+-    // (the boulders at its ends: OLD_ROCKS, drawn by the island's rock tiles)
+-    // the face: a broad stone egg, its chin pushed forward
+-    { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.grey, cx, g + 4.5, cz, 0, S.ry, 0, S.w / 2 - 0.1, 4.15, 1.45); }
+-    { const [cx, cz] = f(0, 0.55); B.add(bbox(3.4, 3.0, 1.6, 0.45, 1), M.grey, cx, g + 1.4, cz, 0, S.ry, 0); }   // the chin
+-    // the brows, slanting down to the nose; the eyes glowing in their sockets; the long nose
++    // (SCHOOL-LBA2, the user, 15.11, with LBA2's own picture: "yes, like LBA2": a pale lilac-grey mask carved into a grey
++    //  canyon, brows sweeping up into points, big rough orange eyes, the door in its chin. Before: a dark egg in front of a
++    //  brown square slab on the open sand. Kept: the place, the door, the forecourt, the bridge and every collider's role)
++    const mask = pm('#cdc6da', 0.7, { emissive: '#2e2a3a', emissiveIntensity: 0.55 });   // (lit a little: it faces away from the sun)
++    const rockG = tm('cliff', { color: '#e6e1ea', emissive: '#3a3642', ei: 0.75 });   // (the canyon's grey; lit a little, as the mask)
++    const lava = new THREE.MeshStandardMaterial({ roughness: 0.95, emissive: new THREE.Color('#7a2406'), emissiveIntensity: 0.9,
++      map: ctex('w80d-lava', 64, 64, (x, S) => { x.fillStyle = '#c4501c'; x.fillRect(0, 0, S, S); const r = rng(77); for (let i = 0; i < 260; i++) { x.fillStyle = ['#e07a2c', '#8e2e10', '#f0a040', '#a83a14'][i % 4]; const w = 2 + r() * 5; x.fillRect(r() * S, r() * S, w, w * (0.5 + r())); } }) });
++    // the canyon round the mask: the back wall, taller than the face, its crown broken; two flanks angled forward on either side
++    { const [bx, bz] = f(0, -2.3); B.add(bbox(S.w + 2.6, S.h + 3.0, 2.6, 0.5, TILE.cliff), rockG, bx, base + (S.h + 3.0) / 2 - 0.2, bz, 0, S.ry, 0); camVol(col({ type: 'box', x: bx, z: bz, hw: (S.w + 2.6) / 2, hd: 1.3, rot: S.ry, top: top + 2.5, camSkip: true }), 'school rock wall'); }
++    for (const [u, h, w, tilt] of [[-3.6, 2.4, 2.2, 0.25], [-1.2, 1.6, 2.6, -0.18], [1.4, 2.1, 2.4, 0.2], [3.7, 2.8, 2.0, -0.3]]) {   // (the crown's broken teeth)
++      const [cx, cz] = f(u, -2.4); B.add(bbox(w, h, 2.2, 0.3, TILE.cliff), rockG, cx, base + S.h + 2.6 + h / 2 - 0.3, cz, 0, S.ry, tilt);
++    }
++    for (const sd of [-1, 1]) {   // (the flanks: rock on both sides of the face, angled forward, as the canyon's walls in LBA2)
++      const [wx, wz] = sd > 0 ? f(3.95, -1.6) : f(-3.55, -2.1), H2 = S.h + 2.2, rot = S.ry + sd * (sd > 0 ? 0.55 : 0.32);   // (the north flank sits back: the pool's rim walk passes it)
++      B.add(bbox(1.9, H2, 2.4, 0.4, TILE.cliff), rockG, wx, base + H2 / 2 - 0.2, wz, 0, rot, 0);
++      { const [tx, tz] = f(sd * 4.15, -1.45); B.add(bbox(1.4, 2.2, 1.8, 0.3, TILE.cliff), rockG, tx, base + H2 + 0.6, tz, 0, rot, sd * 0.35); }
++      camVol(col({ type: 'box', x: wx, z: wz, hw: sd > 0 ? 0.95 : 0.75, hd: 1.2, rot, top: base + H2 + 1.5, camSkip: true }), 'school rock flank');
++    }
++    // (the wall's south end steps down into the terrace, so it reads as the canyon's rock and not a slab; its north end
++    //  stays where it was: the pool's rim walk runs past it)
++    for (const [u, v, h, w, ry] of [[5.6, -2.9, 6.2, 2.4, 0.35], [7.2, -3.4, 3.6, 2.2, -0.2]]) {
++      const [cx, cz] = f(u, v), by = H(cx, cz) - 0.3; B.add(bbox(w, h, 2.6, 0.45, TILE.cliff), rockG, cx, by + h / 2, cz, 0, S.ry + ry, 0.06);
++      col({ type: 'box', x: cx, z: cz, hw: w / 2, hd: 1.3, rot: S.ry + ry, top: by + h, seeThrough: true });
++    }
++    // the mask: a broad stone egg, a wider brow over it, its chin pushed forward
++    { const [cx, cz] = f(0, -0.35); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 4.5, cz, 0, S.ry, 0, S.w / 2 - 0.1, 4.15, 1.45); }
++    { const [cx, cz] = f(0, -0.15); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, cx, g + 6.4, cz, 0, S.ry, 0, S.w / 2 + 0.15, 1.7, 1.3); }
++    { const [cx, cz] = f(0, 0.55); B.add(bbox(3.4, 3.0, 1.6, 0.45, 1), mask, cx, g + 1.4, cz, 0, S.ry, 0); }   // the chin
++    // the brows: long, sweeping up from the nose past the face's edge into points; the deep sockets; the big orange eyes
+     for (const s of [-1, 1]) {
+-      { const [bx, bz] = f(s * 1.5, 1.05); B.add(bbox(2.6, 0.7, 1.1, 0.2, 1), M.grey, bx, g + 6.55, bz, 0, S.ry - s * 0.22, s * 0.3); }
+-      { const [ex, ez] = f(s * 1.45, 1.0); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.eye, ex, g + 5.85, ez, 0, S.ry, s * 0.28, 0.75, 0.34, 0.3); }
+-      { const [ex, ez] = f(s * 1.45, 0.85); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.dark, ex, g + 5.85, ez, 0, S.ry, s * 0.28, 1.0, 0.55, 0.4); }
++      { const [bx, bz] = f(s * 1.95, 1.0); B.add(bbox(3.6, 0.75, 1.15, 0.25, 1), mask, bx, g + 6.75, bz, 0, S.ry - s * 0.18, s * 0.42); }
++      { const [tx, tz] = f(s * 3.75, 0.75); B.add(cached('w80d-tip', () => new THREE.ConeGeometry(0.42, 1.5, 6)), mask, tx, g + 7.75, tz, 0, S.ry, -s * 0.75); }
++      { const [ex, ez] = f(s * 1.5, 0.82); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), M.dark, ex, g + 5.75, ez, 0, S.ry, s * 0.32, 1.25, 0.72, 0.42); }
++      { const [ex, ez] = f(s * 1.5, 1.0); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), lava, ex, g + 5.75, ez, 0, S.ry, s * 0.32, 1.02, 0.52, 0.3); }
++      { const [kx, kz] = f(s * 1.75, 0.75); B.add(cached('w80d-sphere', () => new THREE.SphereGeometry(1, 18, 14)), mask, kx, g + 3.9, kz, 0, S.ry, -s * 0.2, 0.9, 1.25, 0.55); }   // a cheekbone
+     }
+-    { const [nx, nz] = f(0, 1.1); B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), M.grey, nx, g + 4.9, nz, -0.22, S.ry + Math.PI / 4, 0); }
++    { const [nx, nz] = f(0, 1.15); B.add(cached('w80d-nose', () => new THREE.ConeGeometry(0.55, 2.2, 4)), mask, nx, g + 4.85, nz, -0.22, S.ry + Math.PI / 4, 0); }
+     // the door in the chin: a stone frame, a dark reveal, a wooden leaf, a star over it; the forecourt slab before it
+     const [dx, dz] = f(0, 1.36), doorY = g;
+     B.add(bbox(1.6, 2.3, 0.4, 0.04, 1), M.dark, dx, doorY + 1.15, dz, 0, S.ry, 0);

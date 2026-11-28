@@ -1,0 +1,24 @@
+start {"st":"play","room":"out","x":-62.60947619047616,"z":11,"fx":0,"fz":0.8795088969187654,"prompt":"","keys":0,"f":{},"clov":[2,null],"hud":"0","hudShown":false}
+set down in the yard [-20.6,16.17,-71]
+to the chest there
+prompt E Inspect
+after the chest {"keys":1,"f":{"kc_key_fort":true},"hud":"1","hudShown":true}
+pause save&quit button quit:Save & Quit
+after Continue {"keys":1,"hud":"1","hudShown":true,"x":-20.6,"z":-72.8}
+set down by the mouth {"N":[-25.9,13.19,-85.6],"at":[-30.9,13.55,-86.6]}
+to the passage there
+onto the sill there E Unlock
+prompt E Unlock
+after the lock {"room":"kc_tunnel","f":{"kc_key_fort":true,"kc_door_fort":true},"keys":0}
+tunnel room {"id":"kc_tunnel","box":[12396.6,-0.85],"bolt":[12404.4,-1.05],"exits":[["kc-fort-n",12392.85,0]]}
+to the box there
+prompt E Open the clover box
+after the box {"clov":[3,null],"f":{"kc_key_fort":true,"kc_door_fort":true,"kc_box_fort":true}}
+behaviour menu clovers {"boxes":10,"full":3,"cloverMax":10,"shown":false}
+to the bolt there
+prompt E Draw the bolt
+after the bolt {"f":{"kc_key_fort":true,"kc_door_fort":true,"kc_box_fort":true,"kc_bolt_fort":true}}
+exits after the bolt [["kc-fort-n",12392.85,0],["kc-fort-yard",12405.6,-1.25]]
+up the ladder {"r":"there","room":"out","x":-24.56169529142857,"z":-61.6}
+end {"keys":0,"f":{"kc_key_fort":true,"kc_door_fort":true,"kc_box_fort":true,"kc_bolt_fort":true},"clov":[3,null],"hudShown":false}
+errors-none

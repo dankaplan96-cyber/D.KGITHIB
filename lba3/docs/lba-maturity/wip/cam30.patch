@@ -1,0 +1,807 @@
+diff --git a/lba3/docs/lba-maturity/CAM-30.md b/lba3/docs/lba-maturity/CAM-30.md
+new file mode 100644
+index 00000000..09ac453e
+--- /dev/null
++++ b/lba3/docs/lba-maturity/CAM-30.md
+@@ -0,0 +1,44 @@
++# CAM-30 (27.11): #30, "two places where the camera goes into a wall" — the play camera against walls, game-wide
++
++Worktree branch `cam30` of `ccr-c1c2c4b9-dep6ed` from `ffe34e88`. Every result here is **automated runtime only
++(SwiftShader, headless Chromium)**: nobody played it, no real GPU, no frame times on real hardware. Every suite ran with
++`SERVE=1`. Pictures: `captures/cam-30/sheet.png` (before | after, the same walk replayed by input to the same frame).
++
++## What #30 was and how it was looked for
++
++The two places were never written down, so `tests/camwalls.mjs` (new) looks for every place of that kind. At the defaults
++(Follow camera, Far — P100 —, Classic controls) it walks every outdoor area — Citadel, Zeelich, Desert Island with Kesh,
++the Hamalayi, the nine isles, Ballastra's harbour and its two districts — by input (`tests/lib/player.js` P.go, held
++keys) at 60 fps, recording every camera update (`tests/lib/camwalk.js`, `tests/lib/camscan.js`):
++
++- **legs**: each resident's round, stop to stop (the residents' routes are the area's paths; an area with fewer than six
++  legs also gets its arrival-to-door paths);
++- **doors**: every door any chapter offers into the area (the chapters' `doors()` by their flags, as door-sweep.mjs sets
++  them, and an outdoor room's own exits): out of its room by input, recorded from the first frame outside, a walk away, a
++  whole turn on the spot with his back to the house, a stand;
++- **buildings**: round every building (the area's scenery volumes at least 2.5 m over the floor at their foot, pieces
++  that touch as one): its corners 1.0 m off the walls, a whole turn at the first corner, then round by input.
++
++The seeds are the game's own data, frozen in `tests/fixtures/cam30-seeds.json`, so the walks are the same before and
++after a fix. 397 walks outdoors (about 400,000 recorded frames), 21 skipped (a start inside something, a door whose room
++has no exit back to it in the state walked, the terminal's ticket dialogue).
++
++Judged per frame, against the drawn opaque triangles round the walk (instanced meshes by instance; foliage cards, glass,
++decals and skinned bodies left out):
++
++- the lens inside anything solid the camera knows (a collider, a scenery volume, the ground);
++- the lens behind a drawn face of a **wall-like** solid (inside it);
++- the **near plane** — its middle and four corners at `cam.near` in front of the lens — inside or within 0.15 m of a
++  wall-like solid (its inside shows, or is about to);
++- a wall-like solid covering him (the lines to his head and his chest both cut, past the near plane) longer than 0.75 s.
++
++Wall-like: the solid round the spot, measured by rays along x, y and z to its faces, has two extents of 1.5 m or more (a
++wall, a roof, a rock face, the ground); an eave's rim, a post, a rail or a branch has one; a lone sheet with no face
++round it in any direction (a gull, a card) is no solid. Listed, not judged: the same with smaller solids, and the lens
++within 0.15 m of a solid but outside it (nothing it draws is cut: the near plane's own test says when it is).
++
++Interiors (the fixed iso camera): every interior room, at each exit (0.25 m and 0.9 m inside it) and each landing, his
++head and chest against the room's own meshes (room-cutaway.mjs's rays; the lids settled as the room camera shows them,
++wire mesh and leaf cards seen through).
++
++RESULTS_PLACEHOLDER
+diff --git a/lba3/src/engine/camera.js b/lba3/src/engine/camera.js
+index 20bff1ef..9548e7cc 100644
+--- a/lba3/src/engine/camera.js
++++ b/lba3/src/engine/camera.js
+@@ -159,7 +159,7 @@ const CH_KI_A = 60, CH_KI_STEP = 0.5;   // (CAM-EASE-IN: the keep rules' entry e
+ const CH_KI_WAYS = 3, CH_KI_BLEND = 1, CH_KI_MID = [0.5, 0.4, 0.6];   // (CAM-EASE-ROUND: the ways tried for that entry's next spot — straight, round his pivot, round it tilt first: _easeWay; an entry over CH_KI_BLEND m none of them eases, split over two frames at a spot CH_KI_MID of the way: _chase)
+ const CH_KT_A = 30, CH_KT_T = 0.6, CH_VCAP_A = 30, CH_VCAP_AFTER = 1;   // (CAM-EASE: the "tilt" keep-out let go over play time — speeding up at most CH_KT_A m/s², for at most CH_KT_T s —; the turn's cap, under a lock-on and CH_VCAP_AFTER s after it, at most CH_VCAP_A rad/s²: _chase)
+ // CAM-KEYWALK: the pad off a tall box's sides near its top (m: pad, the band under the top, how tall over the ground)
+-const CH_CAP_PAD = 0.5, CH_CAP_BAND = 1.8, CH_CAP_TALL = 3.5, CH_CAP_UP = 0.45;
++const CH_CAP_PAD = 0.5, CH_CAP_AUTO = 1.0, CH_CAP_BAND = 1.8, CH_CAP_TALL = 3.5, CH_CAP_UP = 0.45, CAP8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.71, 0.71], [0.71, -0.71], [-0.71, 0.71], [-0.71, -0.71]];
+ const CH_OVER_SET = [[CH_OVER_ARMS[0], CH_OVER_P], ...CH_OVER_HI.map((a) => [a, CH_OVER_HI_P]), ...CH_OVER_ARMS.slice(1).map((a) => [a, CH_OVER_P])];
+ // (the lead's look-ahead turn at most CH_LEAD_YAW rad: a quick turn's spring speed times CH_LEAD s read headings well past
+ // where the view ever goes; its pivot risen with the ground ahead, at most CH_LEAD_RISE m a metre: CAM-STAIRS)
+@@ -169,6 +169,15 @@ const CH_LEAD_YAW = 0.42, CH_LEAD_RISE = 1.0;
+ // CH_NEAR_KEEP m beyond the cut (it shrinks back to the camera's own near plane as the arm comes in). Every other view
+ // (rooms, scripted shots, cinematics, the story's reveal beats) keeps the camera's own near plane.
+ const CH_NEAR_CUT = 1.0, CH_NEAR_KEEP = 2.0;
++// CAM-30 (OPEN-TASKS #30, "the camera goes into a wall"; tests/camwalls.mjs): the cut never reaches into what the camera
++// knows to be solid — the ground, a scenery volume (a house's walls and roof, a cliff block), a wall-like collider —: the
++// near plane cut a hole into the roof or the rock face beside the lens and its inside showed (Citadel's house corners,
++// the isles' cliffs, 0.1–1.3 s at a time). Its middle, its corners and its edges' middles are kept CH_NP_GAP m out of
++// them (CH_NP_GROUND over the ground; off a tall volume's sides near its top as the lens keeps, _capVol); where they are
++// not, the near plane comes in to the furthest that is (by halving), down to the camera's own. Only the lens's depth of
++// cut changes: the camera stands and turns as before. Posts, rails and thin trunks (a collider narrower than CH_NP_THIN)
++// are still cut, as NEAR-CUT means to
++const CH_NP_GAP = 0.15, CH_NP_GROUND = 0.3, CH_NP_THIN = 0.6, CH_NP_OUT = 1.5, NP9 = [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1], [-1, 0], [1, 0]];
+ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, CH_LOCK_ARM_MAX = 3;
+ // CAM-CLEAR-2 (AUDIT-CH12 #1, #2, #12-#15: at Far the Follow camera collapsed to a few metres in the fort yard, at the
+ // station gate and the beam pad, out of the house door and in the lane by the Bug house; rose ~24 m at the foot of the
+@@ -370,6 +379,13 @@ function outside(c, x, z) {
+ //  added: physics.js, occlude.js); was a shared Set, whose clear() made a new table and whose adds grew it again, a dozen
+ //  queries a step: the largest garbage of the camera's clearance)
+ let _stamp = 0;
++// CAM-30: how far (x, z) lies outside a scenery volume's footprint (0 on it)
++function volOut(v, x, z) {
++  const dx = x - v.x, dz = z - v.z;
++  if (v.kind === 'rev') return Math.max(0, Math.hypot(dx, dz) - v.R);
++  const lx = dx * v.cos - dz * v.sin, lz = dx * v.sin + dz * v.cos;
++  return Math.hypot(Math.max(0, Math.abs(lx) - v.hw), Math.max(0, Math.abs(lz) - v.hd));
++}
+ const _tall = [];   // (_keepOut's colliders too tall to rise over)
+ const _cells = [], NO_SKIP = new Set(), NONE_V = [], _near3 = [], _inF = [];
+ const _postVox = new WeakMap();   // (CAM-SIGNPOST: a post's collider → its boards' cells, or null: _postProps)
+@@ -540,20 +556,75 @@ export class CameraRig {
+     const cam = this.cam;
+     this._fid = (this._fid || 0) + 1; this._busy = true;   // (G1-CAM: a frame's own answers, see _sees)
+     try { this._update(dt, focus, heroAngle, moving, input, cam); } finally { this._busy = false; }
+-    this._lens(focus);
++    this._lens(focus, dt);
+   }
+   // NEAR-CUT: the near plane for this frame's view (see CH_NEAR_CUT)
+-  _lens(focus) {
++  _lens(focus, dt = 1 / 60) {
+     const cam = this.cam;
+     this.near0 ??= cam.near;
+     let n = this.near0;
+     if (!this.cine && !this.override && !this.iso && this.mode === 'follow' && focus) {
+       const d = Math.hypot(cam.position.x - focus.x, cam.position.y - (focus.y + 1.0), cam.position.z - focus.z);
+       n = Math.max(this.near0, Math.min(CH_NEAR_CUT, d - CH_NEAR_KEEP));
+-    }
++      // (CAM-30: drawn in at once where the cut would reach a solid; let out again at most CH_NP_OUT m/s, so a post or an
++      //  eave the cut takes away again comes and goes gradually, not in a flicker as the lens slides along a wall)
++      const clear = n > this.near0 + 1e-3 ? this._nearClear(n) : n;
++      this._npCut = this._npCut == null ? clear : Math.min(clear, this._npCut + CH_NP_OUT * Math.min(dt, 0.1));
++      n = Math.max(this.near0, this._npCut);
++    } else this._npCut = null;
+     if (Math.abs(cam.near - n) > 1e-4) { cam.near = n; cam.updateProjectionMatrix(); }
+   }
+ 
++  // CAM-30: the furthest near plane up to n whose nine points (NP9) stand CH_NP_GAP m out of the solids the camera knows
++  _nearClear(n) {
++    const cam = this.cam;
++    cam.updateMatrixWorld();
++    const e = cam.matrixWorld.elements, t = Math.tan((cam.fov * Math.PI) / 360) / (cam.zoom || 1), a = cam.aspect, c = cam.position;
++    const hit = (m) => {
++      const hy = t * m, hx = hy * a;
++      for (let i = 0; i < NP9.length; i++) {
++        const u = NP9[i][0] * hx, w = NP9[i][1] * hy;
++        if (this._npSolid(c.x - e[8] * m + e[0] * u + e[4] * w, c.y - e[9] * m + e[1] * u + e[5] * w, c.z - e[10] * m + e[2] * u + e[6] * w)) return true;
++      }
++      return false;
++    };
++    if (!hit(n)) return n;
++    let lo = this.near0, hi = n;
++    for (let i = 0; i < 7; i++) { const m = (lo + hi) / 2; if (hit(m)) hi = m; else lo = m; }
++    return lo;
++  }
++
++  // CAM-30: is (x, y, z) within CH_NP_GAP of the ground, a scenery volume (the camera's own ones too: a pipe is drawn
++  // solid) or a collider at least CH_NP_THIN across (not a post, a rail, a sign's pole, a thin trunk)?
++  _npSolid(x, y, z) {
++    const T = this.terrain, P = this.physics, occ = this.occ?.(), g = CH_NP_GAP;
++    if (T && T.heightAt(x, z) > y - CH_NP_GROUND) return true;
++    if (P) {
++      const L = P.near(x, z);
++      for (let ci = 0; ci < L.length; ci++) {
++        const c = L[ci];
++        if (!c.enabled || c.fades || (c.camSkip && occ) || y <= c.bottom - g || y >= c.top + g) continue;
++        if (c.type === 'cyl' ? c.r < CH_NP_THIN / 2 : Math.min(c.hw, c.hd) < CH_NP_THIN / 2) continue;
++        if (P._inside(c, x, z, g)) return true;
++      }
++    }
++    if (occ) {
++      const sv = ++_stamp;
++      for (let gi = 0; gi < 4; gi++) {
++        const L = vnear(occ, x + GAP4[gi][0] * CH_CAP_AUTO, z + GAP4[gi][1] * CH_CAP_AUTO);
++        for (let vi = 0; vi < L.length; vi++) {
++          const v = L[vi];
++          if (v._cam === sv) continue;
++          v._cam = sv;
++          if (y < v.y0 - g || y > v.top + CH_CAP_UP || volOut(v, x, z) > CH_CAP_AUTO + g) continue;
++          for (let k = 0; k < GAP11.length; k++) { const K = GAP11[k], px = x + K[0] * g, py = y + K[1] * g, pz = z + K[2] * g; if (py >= v.y0 && py <= occ.topAt(v, px, pz)) return true; }
++          if (this._capVol(v, x, y, z, occ)) return true;   // (its eaves and cornice, as the lens keeps off them)
++        }
++      }
++    }
++    return false;
++  }
++
+   _update(dt, focus, heroAngle, moving, input, cam) {
+     this._softOn = false;   // (CAM-COVER: set by _chase alone, the Follow camera's)
+     if (this._focus && focus.distanceToSquared(this._focus) > 16) this.snap();
+@@ -905,6 +976,26 @@ export class CameraRig {
+     return false;
+   }
+ 
++  // CAM-30: is (x, y, z) within CH_CAP_PAD of a tall scenery volume's sides (more than CH_CAP_TALL over the ground) in
++  // the band CH_CAP_BAND under its top there (up to CH_CAP_UP over it) — where a house's eaves, cornice and parapet, a
++  // tower's crenels, a roof's boards stand out of its volume, as _solidAt keeps off a tall collider's? (The near plane's
++  // test only, _npSolid: the same pad on the lens's own spot moved the camera in tight spots — camwalls' arm rate p95
++  // 47 → 66 m/s, a building walk's largest step 4.8 → 16.7°/frame — and was dropped.)
++  _capVol(v, x, y, z, occ) {
++    if (v.camOnly || v.walkUnder || y > v.top + CH_CAP_UP) return false;
++    const T = this.terrain;
++    if (v._capTall === undefined) v._capTall = !T || v.top - Math.max(v.y0, T.heightAt(v.x, v.z)) > CH_CAP_TALL;
++    if (!v._capTall) return false;
++    // (a volume made from a collider — occAuto's, a builder's occCollider —, is the walls' box: the roof drawn over them
++    //  overhangs it further — Desert Island's houses' roof slabs 0.7–0.9 m —: CH_CAP_AUTO off it)
++    const pad = v.src ? CH_CAP_AUTO : CH_CAP_PAD;
++    for (let ri = 0; ri < CAP8.length; ri++) {
++      const t = occ.topAt(v, x + CAP8[ri][0] * pad, z + CAP8[ri][1] * pad);
++      if (t > -Infinity && y < t + CH_CAP_UP && y > t - CH_CAP_BAND && y >= v.y0) return true;
++    }
++    return false;
++  }
++
+   // CAM-FOLLOW: is p over a house's roof — over a scenery volume's footprint by more than CH_RIM all round (grazing an
+   // eave's rim by inches, the way a camera running along a house does, is not over it)? In a tight spot the camera
+   // stays down by him rather than up over the roof
+diff --git a/lba3/tests/README.md b/lba3/tests/README.md
+index e6c8ae68..8d8b8006 100644
+--- a/lba3/tests/README.md
++++ b/lba3/tests/README.md
+@@ -17,6 +17,7 @@ node tests/saveslots.mjs       # SAVE-SLOTS: Save Game / Load Game / Continue =
+ node tests/uipass.mjs         # UI-PASS: Back / Esc the same on every screen (also with Pause or Up rebound), Controls: one list from the keys in use (first key in view, B gives up a wait), every settings row says what it does, the inventory's Close, a phone's touch buttons (aside in menus, an Inventory button), long messages wrap
+ node tests/solidnpc.mjs       # SOLID-NPC: Twinsen never walks into people (Grobo, Sphero, story people, walking residents), pets or the small props; residents sit on a bench's seat; SHOTS=dir for the bench captures
+ node tests/solidenemy.mjs     # SOLID-ENEMY: enemies are solid as in LBA2: every kind stops him (head on) and slides him (off centre), every attack still connects from there, a drone over his head is walked under, a beaten enemy is not solid, lunges never push him into a wall
++SERVE=1 node tests/camwalls.mjs      # CAM-30: the play camera against walls, every outdoor area at the defaults (Follow, Far, Classic): each resident's round, every door any chapter offers (out by input, a turn with his back to the house), round every building; per frame the lens and the near plane against the drawn solids (wall-like: inside or within 0.15 m), a wall-like piece covering him > 0.75 s; interiors: the room camera at every exit and landing. Seeds frozen in tests/fixtures/cam30-seeds.json (SEEDS=new). ONLY=, WALK=, PART=out|in, OUT=, SHOTS= (SHOTFROM=<OUT> TAG=before|after, SHOTKIND=); tools/cam30-sheet.py
+ SERVE=1 node tests/feet-on-surface.mjs # FEET-66: his feet against the drawn surface he stands on, every outdoor area: discovery from the drawn geometry, every class-A piece (a sheet, a slab or pad up to 30 cm, a floor with nothing drawn) walked over by input; 3 cm under / 5 cm over fails; water, soft snow, B (walk-through props) and C (rock caps) listed; HANDED list. REPORT=, ONLY=, DISCOVER=1. tests/feet-shots.mjs: its pictures
+ node tests/walkers.mjs        # WORLD-LIFE: the residents who walk round Citadel, Zeelich's street and Kesh: routes, benches, chats, avoidance, stuck fallback, talk, LOD cost
+ node tests/cast-rounds.mjs    # WC-2: the story's people's small rounds in chapters 3–10 and the epilogue (src/game/castrounds.js): stops clear of doors, prompts and other givers, ≥ 2 stops in 60 s, no collider overlap, talk stops them and they face him, scenes and the hero leaving put them on their mark, the excluded (sneak, disguise, dial bank) stand still, cost; MAP=1 prints each area as text; pictures in /dev/shm/cast-rounds-shots/
+diff --git a/lba3/tests/camwalls.mjs b/lba3/tests/camwalls.mjs
+new file mode 100644
+index 00000000..be49d5ff
+--- /dev/null
++++ b/lba3/tests/camwalls.mjs
+@@ -0,0 +1,227 @@
++// CAM-30 (OPEN-TASKS #30, "two places where the camera goes into a wall"): the play camera against walls, game-wide.
++// camclear.mjs covers Citadel's cliffs and its ball targets; this suite walks every outdoor area — Citadel, Zeelich,
++// Desert Island and Kesh, the Hamalayi, the nine isles, Ballastra's harbour and its two districts — at the defaults
++// (Follow, Far — P100 —, Classic controls), Twinsen moved by input (tests/lib/player.js P.go, held keys) at 60 fps, every
++// camera update recorded (tests/lib/camwalk.js, tests/lib/camscan.js):
++//   legs   each resident's round, stop to stop (the residents' routes are the area's paths)
++//   doors  every door any chapter offers into the area: out of its room by input, recorded from the first frame
++//          outside, a walk away, a whole turn on the spot with his back to the house, a stand
++//   loops  round every building (the area's scenery volumes, touching pieces as one): its corners 1.0 m off the walls,
++//          a whole turn at the first corner, then round by input
++// The seeds are the game's own data, frozen in tests/fixtures/cam30-seeds.json on the first run (SEEDS=new builds
++// them again), so a fix that adds a camera volume does not change what is walked.
++// Per walk, judged (FAIL):
++//   - the lens in anything solid the camera knows (a collider, a scenery volume, the terrain: CW.inside)
++//   - the lens behind a drawn face of a wall-like solid (inside it)
++//   - the near plane (its middle and four corners, at cam.near in front of the lens) inside or within 0.15 m of a
++//     wall-like drawn solid: its inside shows, or it is about to
++//   - a wall-like drawn solid covering him (the lines to his head and his chest both cut) longer than 0.75 s
++//   (wall-like: the solid round the spot, measured by rays along x, y and z to its faces, has two extents of 1.5 m or
++//   more — a wall, a roof, a rock face, the ground; an eave's rim, a post, a rail, a branch has one)
++// Listed (not judged): the lens within 0.15 m of a wall-like solid but outside it (beside the lens, nothing it draws is
++// cut: the near plane's own test above says when it is), the same with smaller solids (NEAR-CUT, camera.js, cuts what stands within 1 m of the lens on
++// purpose: an eave's rim, a post, a branch), the camera's own sight test (colliders and volumes), and per walk its
++// largest heading step per 60th of a second and its arm rate (the before/after: the view no jumpier).
++// LEFT below: what stays, with its reason (printed, never dropped).
++// PART=out|in (in: every interior room, the fixed iso camera at each of its exits and its landing: his head and chest
++// against the room's own meshes, room-cutaway.mjs's rays); ONLY=<area id regex>; WALK=<walk name regex>; MAX=<walks per
++// kind per area>; OUT=<file.json> every walk's numbers; SHOTS=<dir> a picture at each judged walk's worst frame (Follow,
++// the play camera); SHOTFROM=<an OUT file> TAG=<before|after> no walks: a picture at each of that run's findings,
++// replayed to the same frame (before and after pictures of one moment). Per area it prints the cost of the near plane's
++// choice (camera.js _lens) and per walk the near plane's largest change a frame and its reversals (no flicker).
++// SERVE=1 answers this checkout's files by request routing. Automated runtime only (SwiftShader).
++import { launch, open, menu, checker } from './lib/boot.mjs';
++import fs from 'node:fs';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++const { check, checkVisual, done } = checker({ info: 'always' });
++const SHOTFROM = process.env.SHOTFROM || '', TAG = process.env.TAG || '', ONLY = process.env.ONLY || '', WALK = process.env.WALK || '', MAX = +(process.env.MAX || 1e9), OUT = process.env.OUT || '', SHOTS = process.env.SHOTS || '', PART = process.env.PART || '';
++const SEEDF = fileURLToPath(new URL('./fixtures/cam30-seeds.json', import.meta.url));
++const iso = (s) => console.log('ISO  ' + s);
++const COV_S = 0.75;   // (wall-like: the solid's second largest extent ≥ 1.5 m, camscan.js CS.extent)
++// LEFT: [area, walk name regex, kind regex, reason]
++const LEFT = [];
++const leftFor = (area, name, kind) => LEFT.find(([a, n, k]) => a === area && new RegExp(n).test(name) && new RegExp(k).test(kind));
++
++const { browser, page } = await launch({ width: 960, height: 540 });
++const ev = (f, a) => page.evaluate(f, a);
++const t0 = Date.now();
++// (?allregions builds every area at the start: needed to gather the seeds; replaying frozen seeds, each area is built
++//  when a walk first goes there — the same areas, less memory on a shared machine)
++const seedsKnown = !process.env.SEEDS && fs.existsSync(SEEDF);
++await open(page, seedsKnown ? '?nocine' : '?nocine&allregions');
++await menu(page, 'new');
++await page.addScriptTag({ path: fileURLToPath(new URL('./lib/camwalk.js', import.meta.url)) });
++await page.addScriptTag({ path: fileURLToPath(new URL('./lib/camscan.js', import.meta.url)) });
++const setup = await ev(async () => {
++  const r0 = CW.setup(); const G = game;
++  G.settings.camDist = 'far'; G.settings.autoControls = 'off'; G.applySettings(); G.camRig.cut = false; G.hero.hasBall = true;
++  try { (await import('/src/engine/viewinst.js')).setViewInst(false); } catch (e) { /* (every instance in the triangle store) */ }
++  return { cam: G.settings.camera, dist: G.settings.camDist, controls: G.settings.controls, state: G.state, follow: G.camRig.mode };
++});
++iso((seedsKnown ? 'each area built when a walk first goes there' : 'every outdoor area built at the start (?allregions)') + '; a new game, the prologue done (flags); Twinsen put at each walk\'s start (CW.place), then moved by input');
++check('the defaults: Follow camera, Far (P100), Classic controls', setup.cam === 'follow' && setup.dist === 'far' && setup.controls === 'classic', setup);
++console.log('boot', ((Date.now() - t0) / 1000).toFixed(0), 's');
++
++// ---------------------------------------------------------------- the seeds (frozen)
++let SEEDS = !process.env.SEEDS && fs.existsSync(SEEDF) ? JSON.parse(fs.readFileSync(SEEDF, 'utf8')) : null;
++if (!SEEDS) {
++  SEEDS = {};
++  const areas = await ev(() => CS.areas());
++  console.log('doors offered across the chapters: ' + await ev(() => CS.collectDoors()) + '; Citadel\'s houses: ' + await ev(() => game.world.houses?.length));
++  for (const a of areas) { SEEDS[a] = await ev((a) => { CS.enter(a); return CS.seeds(a); }, a); console.log(`seeds ${a}: ${SEEDS[a].legs.length} legs, ${SEEDS[a].doors.length} doors, ${SEEDS[a].loops.length} buildings`); }
++  fs.writeFileSync(SEEDF, JSON.stringify(SEEDS));
++  console.log('seeds written to', SEEDF);
++}
++
++const walksOf = (area, S) => [
++  ...S.legs.slice(0, MAX).map((w, i) => ({ kind: 'leg', name: `${area} leg ${i} ${w.who}`, ...w, pts: [w.from, w.to] })),
++  ...S.doors.slice(0, MAX).map((w, i) => ({ kind: 'door', name: `${area} door ${w.room}@${Math.round(w.x)},${Math.round(w.z)}`, ...w, pts: [[w.x, w.z]] })),
++  ...S.loops.slice(0, MAX).map((w, i) => ({ kind: 'loop', name: `${area} building ${i} @${w.at.join(',')} ${w.size.join('x')}`, ...w })),
++];
++const results = [];
++const findings = [];
++// SHOTFROM=<an OUT file>: no walks, a picture at each of that run's findings (WALK / ONLY narrow them), replayed by input
++// to the frame it was found at (the same walk, the same frame: before and after pictures of one moment; TAG= names them)
++if (SHOTFROM) for (const f of JSON.parse(fs.readFileSync(SHOTFROM, 'utf8')).findings) {
++  if ((ONLY && !new RegExp(ONLY).test(f.area)) || (WALK && !new RegExp(WALK).test(f.walk)) || !SEEDS[f.area]) continue;
++  const w = walksOf(f.area, SEEDS[f.area]).find((q) => q.name === f.walk); if (w) findings.push({ ...f, w });
++}
++if (PART !== 'in') {
++  for (const [area, S] of Object.entries(SEEDS)) {
++    if (ONLY && !new RegExp(ONLY).test(area)) continue;
++    const room = area === 'citadel' ? undefined : area;
++    const walks = SHOTFROM ? [] : walksOf(area, S).filter((w) => !WALK || new RegExp(WALK).test(w.name));
++    console.log(`---- ${area}: ${walks.length} walks`);
++    let box = null;
++    const ta = Date.now();
++    for (const w of walks) {
++      const xs = w.pts.map((p) => p[0]), zs = w.pts.map((p) => p[1]);
++      const need = { x0: Math.min(...xs) - 20, x1: Math.max(...xs) + 20, z0: Math.min(...zs) - 20, z1: Math.max(...zs) + 20 };
++      if (!box || need.x0 < box.x0 || need.x1 > box.x1 || need.z0 < box.z0 || need.z1 > box.z1) {
++        box = { x0: Math.floor(need.x0 - 10), x1: Math.ceil(need.x1 + 10), z0: Math.floor(need.z0 - 10), z1: Math.ceil(need.z1 + 10) };
++        const n = await ev(([b, a, p]) => { CS.enter(a, { x: p[0], z: p[1] }); return CS.tris(b); }, [box, area, w.pts[0]]);
++        if (n.skipped) console.log('  surfaces', JSON.stringify(n));
++      }
++      const run = (w, stopAt = -1) => ev(([w, area, room, stopAt]) => {
++        const G = game; CW.stopAt = stopAt;
++        const r = w.kind === 'leg' ? CS.leg({ ...w, room }) : w.kind === 'door' ? CS.door(w, area) : CS.loop({ ...w, room });
++        CW.on = false;
++        return { r, st: r.skip ? null : CS.stats(CW.F) };
++      }, [w, area, room, stopAt]);
++      let res;
++      try { res = await run(w); } catch (e) { res = { r: { skip: 'error ' + e.message.split('\n')[0].slice(0, 160) } }; }
++      const st = res.st;
++      if (!st || st.frames < 30) { results.push({ area, name: w.name, kind: w.kind, skip: res.r.skip || 'no frames' }); console.log(`- ${w.name}: SKIP ${res.r.skip || 'no frames ' + st?.frames}`); continue; }
++      const F = [];
++      if (st.inside) F.push(['inside', st.insWhy, st.insAt2]);
++      if (st.lensWall) F.push(['lens', `${st.lensWallWho} (${st.lensWall} frames; least ${st.lensMin} m)`, st.lensWallAt]);
++      if (st.npWall) F.push(['nearplane', 'inside ' + Object.entries(st.npInWho).filter(([k]) => /wall-like/.test(k)).map(([k, n]) => `${k} ${n}f`).join(', '), st.npWallAt]);
++      if (st.np15Wall) F.push(['nearplane', 'within 0.15 m of ' + Object.entries(st.np15Who).filter(([k]) => /wall-like/.test(k)).map(([k, n]) => `${k} ${n}f`).join(', '), st.np15WallAt]);
++      if (st.covWallMax > COV_S) F.push(['cover', `${st.covWallWho} ${st.covWallMax} s`, st.covWallAt]);
++      const row = { area, name: w.name, kind: w.kind, r: res.r.r, frames: st.frames, minArm: st.minArm, maxStep: st.maxStepDeg60, maxArmRate: st.maxArmRate, nearStep: st.nearStep, nearRev: st.nearRev, inside: st.inside, lens15: st.lens15, lensMin: st.lensMin, behind: st.behindFace, npIn: st.npIn, npInWho: st.npInWho, np15: st.np15, np15Who: st.np15Who, covMax: st.covMax, covWho: st.covWho, covWallMax: st.covWallMax, npWall: st.npWall, np15Wall: st.np15Wall, lensWall: st.lensWall, lensNear: st.lensNear, unseenMax: st.unseenMax, hidMax: st.hidMax, xray: st.xray, F };
++      results.push(row);
++      for (const f of F) { const left = leftFor(area, w.name, f[0]); findings.push({ area, walk: w.name, kind: f[0], what: f[1], at: f[2], left: left?.[3] || null, w }); }
++      const brief = F.length ? ' FINDINGS ' + F.map((f) => `${f[0]}: ${f[1]}${f[2] ? ' cam ' + JSON.stringify(f[2].c) + ' hero ' + JSON.stringify(f[2].h) + ' #' + f[2].i : ''}`).join(' | ') : '';
++      console.log(`- ${w.name} [${res.r.r}] ${st.frames}f arm≥${st.minArm} step ${st.maxStepDeg60}°/f lens ${st.lensMin} np-in ${st.npIn} np15 ${st.np15} cover ${st.covMax}s ${st.covWho || ''} unseen ${st.unseenMax}f${brief}`);
++    }
++    const LT = await ev(() => { const L = { ...CS.lensT }; CS.lensT = { ms: 0, n: 0, max: 0 }; return L; });
++    console.log(`  (${area}: ${((Date.now() - ta) / 1000).toFixed(0)} s; the near plane's choice, camera.js _lens: ${LT.n ? (LT.ms / LT.n * 1000).toFixed(1) : '-'} µs a frame on average, ${(LT.max * 1000).toFixed(0)} µs at most, over ${LT.n} frames — SwiftShader's CPU, automated)`);
++  }
++  // the verdict per area and kind (none for a picture run)
++  const areas = SHOTFROM ? [] : [...new Set(results.map((r) => r.area))];
++  for (const a of areas) {
++    const R = results.filter((r) => r.area === a), walked = R.filter((r) => !r.skip);
++    for (const [k, label] of [['inside', 'the lens never inside a collider, a scenery volume or the terrain'], ['lens', 'the lens never inside a wall-like drawn solid'], ['nearplane', 'the near plane never inside or within 0.15 m of a wall-like drawn solid'], ['cover', `no wall-like drawn solid covers him longer than ${COV_S} s`]]) {
++      const bad = findings.filter((f) => f.area === a && f.kind === k && !f.left), left = findings.filter((f) => f.area === a && f.kind === k && f.left);
++      checkVisual(`${a} (${walked.length} walks: ${walked.filter((r) => r.kind === 'leg').length} route legs, ${walked.filter((r) => r.kind === 'door').length} doors, ${walked.filter((r) => r.kind === 'loop').length} buildings; ${R.length - walked.length} skipped): ${label}`, bad.length === 0, bad.slice(0, 6).map((f) => `${f.walk}: ${f.what}${f.at ? ' cam ' + f.at.c.join(',') : ''}`).concat(left.length ? [`LEFT ${left.length}`] : []));
++    }
++  }
++  for (const f of findings.filter((f) => f.left)) console.log(`LEFT ${f.area} ${f.walk} ${f.kind}: ${f.what} — ${f.left}`);
++  const skips = results.filter((r) => r.skip);
++  console.log(`skipped walks: ${skips.length}`); for (const s of skips.slice(0, 40)) console.log(`  ${s.name}: ${s.skip}`);
++  // pictures at the worst frames (re-run to that frame, rendered)
++  if (SHOTS) {
++    fs.mkdirSync(SHOTS, { recursive: true });
++    const seen = new Set();
++    for (const f of findings) {
++      const key = f.walk; if (seen.has(key) || !f.at || (process.env.SHOTKIND && f.kind !== process.env.SHOTKIND)) continue; seen.add(key);   // (SHOTKIND=nearplane: that kind's frame)
++      const room = f.area === 'citadel' ? undefined : f.area, w = f.w || walksOf(f.area, SEEDS[f.area]).find((q) => q.name === f.walk);
++      const xs = w.pts.map((p) => p[0]), zs = w.pts.map((p) => p[1]);
++      await ev(([b, a, p]) => { CS.enter(a, { x: p[0], z: p[1] }); return CS.tris(b); }, [{ x0: Math.min(...xs) - 30, x1: Math.max(...xs) + 30, z0: Math.min(...zs) - 30, z1: Math.max(...zs) + 30 }, f.area, w.pts[0]]);
++      const idx = await ev(([w, area, room, t]) => {
++        CW.stopAt = -1; const G = game;
++        // (stop at the recorded frame whose time matches the finding)
++        const up = CW.step; let hit = false;
++        CW.step = (s, fps = 60) => { const dt = 1 / fps; for (let q = 0; q < s - 1e-9; q += dt) { if (hit) return true; G.frame(dt, false); if (CW.on && CW.F.length > t) { hit = true; CW.on = false; } } return hit; };
++        const gs = G.step.bind(G); G.step = (s, dt = 1 / 60) => { for (let q = 0; q < s; q += dt) { if (hit) return; G.frame(dt, false); if (CW.on && CW.F.length > t) { hit = true; CW.on = false; } } };
++        try { w.kind === 'leg' ? CS.leg({ ...w, room }) : w.kind === 'door' ? CS.door(w, area) : CS.loop({ ...w, room }); } finally { CW.step = up; G.step = gs; }
++        G.renderer.render();
++        return hit;
++      }, [w, f.area, room, f.at.i]).catch((e) => 'error ' + e.message.slice(0, 100));
++      const file = path.join(SHOTS, ((TAG ? TAG + ' ' : '') + f.walk + ' ' + f.kind).replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.png');
++      await page.screenshot({ path: file, timeout: 300000 });
++      console.log('picture', file, idx);
++      for (const k of ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']) await page.keyboard.up(k);
++    }
++  }
++}
++
++// ---------------------------------------------------------------- interiors (the fixed iso camera at the doors)
++if ((!PART || PART === 'in') && !SHOTFROM) {
++  const rooms = await ev(async () => {
++    const G = game, T = (window.T3 = await import('three'));
++    const rc = new T.Raycaster(); rc.layers.enableAll();
++    window.blocked = (R, from, to) => {
++      rc.camera = G.camera;
++      const d = to.clone().sub(from), L = d.length(); rc.set(from, d.normalize()); rc.near = G.camera.near; rc.far = L - 0.35;
++      for (const x of rc.intersectObject(R.group, true)) {
++        const o = x.object; if (!o.isMesh || o.isSprite || o.userData.drawBatch || o.isSkinnedMesh) continue;
++        let vis = true; for (let p = o; p; p = p.parent) if (!p.visible) { vis = false; break; }
++        if (!vis) continue;
++        const m = Array.isArray(o.material) ? o.material[0] : o.material;
++        if ((m?.transparent && m.opacity < 0.6) || m?.colorWrite === false || m?.alphaTest > 0) continue;   // (a wire mesh, a leaf card: seen through)
++        return o.name || o.parent?.name || '?';
++      }
++      return '';
++    };
++    return [...G.regions.of.keys()].filter((id) => { const c = G.regions.centreOf(id); return c && !c.outdoor && !id.startsWith('isle_'); });
++  });
++  const IN = [];
++  for (const id of rooms) {
++    if (ONLY && !new RegExp(ONLY).test(id)) continue;
++    const r = await ev((id) => {
++      const G = game, T = window.T3, PH = G.physics, h = G.hero, cam = G.camera;
++      let R; try { R = G.regions.ensure(id, 'cam30'); } catch (e) { return { id, err: 'build ' + e.message.slice(0, 80) }; }
++      if (!R || R.outdoor) return { id, err: 'not a room' };
++      G.enterRoom(id, null, true, true); G.step(0.1);
++      const spots = [];
++      const c = R.center || R.spawn || { x: h.pos.x, z: h.pos.z };
++      if (R.spawn) spots.push({ k: 'landing', x: R.spawn.x, z: R.spawn.z });
++      for (const e of R.exits || []) { const dx = c.x - e.x, dz = c.z - e.z, L = Math.hypot(dx, dz) || 1; for (const dd of [(e.r || 0.8) + 0.25, (e.r || 0.8) + 0.9]) spots.push({ k: 'exit ' + (e.room || e.to || '?') + ' +' + dd.toFixed(1), x: e.x + dx / L * dd, z: e.z + dz / L * dd, y: e.y }); }
++      for (const [k, s] of Object.entries(R.entries || {})) if (s && Number.isFinite(s.x)) spots.push({ k: 'entry from ' + k, x: s.x, z: s.z });
++      const y0 = PH.groundAt(R.spawn?.x ?? c.x, R.spawn?.z ?? c.z);
++      const out = [];
++      for (const s of spots) {
++        const gy = PH.groundAt(s.x, s.z, (s.y ?? y0) + 1.5);
++        if (!Number.isFinite(gy) || gy < y0 - 1.5 || PH.blockedAt(s.x, s.z, gy + 0.3, 0.3)) { out.push({ ...s, skip: true }); continue; }
++        h.pos.set(s.x, gy, s.z); h.vy = 0; h.onGround = true; G.doorCool = 9;
++        G.camRig.snap(); for (let k = 0; k < 6; k++) { G.camRig.update(1 / 60, h.pos, h.angle, false, null); R.updateLids?.(h, 1); } cam.updateMatrixWorld();   // (the lids as room-cutaway.mjs settles them: at once)
++        const P0 = cam.position.clone(), hit = [1.5, 1.0, 0.55].map((hy) => window.blocked(R, P0, new T.Vector3(s.x, gy + hy, s.z)));
++        const sc = new T.Vector3(s.x, gy + 0.9, s.z).project(cam);
++        out.push({ k: s.k, x: +(s.x - c.x).toFixed(1), z: +(s.z - c.z).toFixed(1), head: hit[0], chest: hit[1], waist: hit[2], hidden: !!(hit[0] && hit[1]), onScreen: Math.abs(sc.x) <= 0.95 && Math.abs(sc.y) <= 0.95 });
++      }
++      return { id, n: out.filter((o) => !o.skip).length, bad: out.filter((o) => !o.skip && (o.hidden || !o.onScreen)), waist: out.filter((o) => !o.skip && !o.hidden && o.waist).map((o) => `${o.k}: ${o.waist}`) };
++    }, id).catch((e) => ({ id, err: e.message.slice(0, 160) }));
++    IN.push(r);
++    console.log('ROOM ' + JSON.stringify(r).slice(0, 400));
++  }
++  const ok = IN.filter((r) => !r.err), bad = ok.filter((r) => r.bad.length);
++  checkVisual(`interiors (${ok.length} rooms, ${ok.reduce((a, r) => a + r.n, 0)} door spots, the fixed iso camera): at every exit and landing he is on screen and no wall or rim hides his head and chest`, bad.length === 0 && ok.length > 50, bad.slice(0, 8).map((r) => ({ id: r.id, bad: r.bad.slice(0, 3) })));
++  console.log('rooms not built or not rooms: ' + IN.filter((r) => r.err).map((r) => `${r.id} (${r.err})`).join(', '));
++  console.log('listed: a rim over his waist at a door spot (head and chest seen): ' + ok.filter((r) => r.waist.length).map((r) => `${r.id} [${r.waist.slice(0, 3).join('; ')}]`).join(', '));
++  results.push({ interiors: IN });
++}
++if (OUT) fs.writeFileSync(OUT, JSON.stringify({ results, findings: findings.map(({ w, ...f }) => f) }, null, 1));
++await browser.close();
++done();
+diff --git a/lba3/tests/fixtures/cam30-seeds.json b/lba3/tests/fixtures/cam30-seeds.json
+new file mode 100644
+index 00000000..fb733324
+--- /dev/null
++++ b/lba3/tests/fixtures/cam30-seeds.json
+@@ -0,0 +1 @@
++{"citadel":{"legs":[{"who":"oda","from":[-65.3,11],"to":[-44,-6]},{"who":"oda","from":[-44.9,-6.4],"to":[-47.25,-1.61]},{"who":"oda","from":[-47.25,-1.61],"to":[-47.97,-6.9]},{"who":"oda","from":[-47.97,-6.9],"to":[-65.3,11]},{"who":"brix","from":[-36.59,1.76],"to":[-33.25,1.25]},{"who":"brix","from":[-33.25,1.25],"to":[-39.4,-7.6]},{"who":"brix","from":[-39.4,-7.6],"to":[-47.8,18.35]},{"who":"brix","from":[-47.8,18.35],"to":[-45.6,58.6]},{"who":"brix","from":[-45.6,58.6],"to":[-44.45,43.4]},{"who":"brix","from":[-44.45,43.4],"to":[-36.59,1.76]},{"who":"maro","from":[-46.1,27.4],"to":[-52.6,37.6]},{"who":"maro","from":[-52.6,37.6],"to":[-53.3,33.25]},{"who":"maro","from":[-53.3,33.25],"to":[-48,27.6]},{"who":"maro","from":[-46.1,27.4],"to":[-52.6,37.6]},{"who":"maro","from":[-52.6,37.6],"to":[-46.1,27.4]},{"who":"tilde","from":[-66,41.1],"to":[-50.4,37.6]},{"who":"tilde","from":[-50.4,37.6],"to":[-53,28.8]},{"who":"tilde","from":[-53,28.8],"to":[-48.3,33.25]},{"who":"tilde","from":[-48.3,33.25],"to":[-66,41.1]},{"who":"tilde","from":[-66,41.1],"to":[-50.4,37.6]},{"who":"tilde","from":[-50.4,37.6],"to":[-66,41.1]},{"who":"garrick","from":[-39.6,10],"to":[-39.9,-6.3]},{"who":"garrick","from":[-39.9,-6.3],"to":[-44.29,37.4]},{"who":"garrick","from":[-44.29,37.4],"to":[-40.83,-5.28]},{"who":"garrick","from":[-40.83,-5.28],"to":[-38.4,7.4]},{"who":"garrick","from":[-36.2,8.4],"to":[-39.6,10]},{"who":"pico","from":[-38.8,-9.4],"to":[-44,12.8]},{"who":"pico","from":[-44,12.8],"to":[-42.4,30.6]},{"who":"pico","from":[-42.4,30.6],"to":[-44.6,46]},{"who":"pico","from":[-44.6,46],"to":[-45.6,20]},{"who":"pico","from":[-45.6,20],"to":[-57.8,11.6]},{"who":"pico","from":[-57.8,11.6],"to":[-42.6,2.6]},{"who":"pico","from":[-42.6,2.6],"to":[-38.8,-9.4]},{"who":"dot","from":[-37.6,-8.8],"to":[-46.6,-9]},{"who":"dot","from":[-46.6,-9],"to":[-42,-5.78]},{"who":"dot","from":[-42,-5.78],"to":[-48.4,-3.6]},{"who":"dot","from":[-47.03,-3.33],"to":[-36.2,-3]},{"who":"dot","from":[-36.2,-3],"to":[-41,4.6]},{"who":"dot","from":[-41,4.6],"to":[-55.4,11.6]},{"who":"dot","from":[-55.4,11.6],"to":[-51.2,38.78]},{"who":"dot","from":[-51.2,38.78],"to":[-33.5,43.26]},{"who":"dot","from":[-33.5,43.26],"to":[-37.6,-8.8]},{"who":"marda","from":[-52.6,29.4],"to":[-66.75,28.4]},{"who":"marda","from":[-66.75,28.4],"to":[-82,36]},{"who":"marda","from":[-82,36],"to":[-95.8,37.4]},{"who":"marda","from":[-95.8,37.4],"to":[-101.42,31.48]},{"who":"marda","from":[-101.42,31.48],"to":[-94.4,31.45]},{"who":"marda","from":[-94.4,31.45],"to":[-52.6,29.4]},{"who":"tobb","from":[-113.95,38.8],"to":[-83,43.3]},{"who":"tobb","from":[-83,43.3],"to":[-49.5,-2.32]},{"who":"tobb","from":[-49.5,-2.32],"to":[-52.5,31]},{"who":"tobb","from":[-52.5,31],"to":[-113.95,38.8]},{"who":"sefa","from":[-86.5,42.9],"to":[-108.8,40.2]},{"who":"sefa","from":[-108.8,40.2],"to":[-80.2,41]},{"who":"sefa","from":[-80.2,41],"to":[-86.5,42.9]},{"who":"tibbo","from":[-34,0.7],"to":[-44.2,-5.8]},{"who":"tibbo","from":[-44.2,-5.8],"to":[-33.9,1.5]},{"who":"ume","from":[-33.5,43.26],"to":[-41,38.5]},{"who":"ume","from":[-41,38.5],"to":[-44.45,43.4]},{"who":"ume","from":[-44.45,43.4],"to":[-46.6,56.4]},{"who":"ume","from":[-46.6,56.4],"to":[-33.5,43.26]}],"doors":[{"room":"house","x":-46.15,"z":77.2,"r":0.9},{"room":"wtent","x":-96.25,"z":-71,"r":0.9},{"room":"asylum","x":-26.5,"z":-50.03,"r":0.9},{"room":"asylum","x":-9.55,"z":-65,"r":0.9},{"room":"tavern","x":-46.1,"z":27.15,"r":0.9},{"room":"bazoo","x":-66.25,"z":41.1,"r":0.9},{"room":"ticket","x":-88.8,"z":30.55,"r":0.9},{"room":"pharmacy","x":-58.25,"z":-8.8,"r":0.9},{"room":"nbrhouse","x":-30.35,"z":75.3,"r":0.9},{"room":"nellhouse","x":-99.1,"z":31.55,"r":0.9},{"room":"baggage","x":-56.55,"z":-13.4,"r":0.9},{"room":"tralucave","x":-80.7,"z":-82.35,"r":0.9},{"room":"terminal","x":-14.35,"z":40,"r":0.9},{"room":"terminal","x":-6.65,"z":40,"r":0.9},{"room":"office","x":-65.55,"z":11,"r":0.9},{"room":"pumproom","x":-47.4,"z":65.6,"r":0.75},{"room":"control","x":-25.7,"z":-58.5,"r":0.9},{"room":"lighttop","x":-107.5,"z":94.2,"r":1}],"loops":[{"at":[-50.6,79.8],"size":[8.2,9.5],"pts":[[-55.6,73.98],[-45.6,73.98],[-55.6,85.62]],"parts":2},{"at":[-61.5,-11.6],"size":[9.3,12.4],"pts":[[-55.97,-18.91],[-55.97,-4.24],[-66.93,-4.24]],"parts":4},{"at":[-30,0.5],"size":[6.6,7.8],"pts":[[-34.19,-4.46],[-25.81,-4.46],[-25.81,5.46],[-34.19,5.46]],"parts":2},{"at":[-28.5,21.6],"size":[6,6.8],"pts":[[-32.42,17.16],[-24.58,17.16],[-24.58,26.04],[-32.42,26.04]],"parts":2},{"at":[-48.2,23.3],"size":[9.8,7.2],"pts":[[-42.18,18.88],[-42.18,27.72],[-54.22,27.72]],"parts":2},{"at":[-33.6,75.3],"size":[6,6.4],"pts":[[-29.65,71.09],[-37.55,79.51]],"parts":2},{"at":[-84.2,25.4],"size":[16,9.4],"pts":[[-93.42,19.98],[-74.98,30.82]],"parts":2},{"at":[-100.8,26.4],"size":[8.3,9.8],"pts":[[-95.76,32.36],[-105.84,32.36]],"parts":2},{"at":[-71,42.5],"size":[9,9.8],"pts":[[-76.44,36.58],[-65.56,36.58],[-65.56,48.42],[-76.44,48.42]],"parts":2},{"at":[-43.2,-10.4],"size":[3.3,2.8],"pts":[[-46.09,-11.92],[-41.06,-12.87],[-40.31,-8.88],[-45.34,-7.93]],"parts":1},{"at":[-41,-65],"size":[7.2,33.2],"pts":[[-44.92,-83],[-37.08,-47]],"parts":7},{"at":[-15,-52],"size":[7.2,7.2],"pts":[[-11.44,-48.44],[-9.97,-52]],"parts":1},{"at":[-25.7,-55.4],"size":[5.7,4.9],"pts":[[-29.62,-58.77],[-21.78,-58.77]],"parts":1},{"at":[-10.5,40],"size":[7.5,12.5],"pts":[[-6.02,32.54],[-6.02,47.46]],"parts":1},{"at":[-102.8,33.9],"size":[3.5,3],"pts":[[-105.63,31.49],[-99.97,31.49],[-99.97,36.26],[-105.63,36.26]],"parts":1}]},"zeelich":{"legs":[{"who":"ilo","from":[2361.5,5.45],"to":[2373.4,7.2]},{"who":"ilo","from":[2373.4,7.2],"to":[2378.25,1.13]},{"who":"ilo","from":[2378.25,1.13],"to":[2370.11,1.92]},{"who":"ilo","from":[2370.11,1.92],"to":[2361.5,5.45]},{"who":"aven","from":[2369,-3.45],"to":[2355.5,-1.6]},{"who":"aven","from":[2355.5,-1.6],"to":[2396,-3]},{"who":"aven","from":[2396,-3],"to":[2403,-3.45]},{"who":"aven","from":[2403,-3.45],"to":[2369,-3.45]},{"who":"kira","from":[2379.4,-3.74],"to":[2376,3.6]},{"who":"kira","from":[2376,3.6],"to":[2394,3.74]},{"who":"kira","from":[2394,3.74],"to":[2387.5,1.6]},{"who":"kira","from":[2387.5,1.6],"to":[2379.4,-3.74]},{"who":"marl","from":[2366,-16.3],"to":[2379.6,-16.4]},{"who":"marl","from":[2379.6,-16.4],"to":[2366,-16.3]},{"who":"zc_guard","from":[2370.6,-6.6],"to":[2377,-6.3]},{"who":"zc_guard","from":[2377,-6.3],"to":[2370.6,-6.6]},{"who":"zc_clerk","from":[2374.5,-6.6],"to":[2373.2,2.6]},{"who":"zc_clerk","from":[2373.2,2.6],"to":[2394.5,22.5]},{"who":"zc_clerk","from":[2394.5,22.5],"to":[2374.5,-6.6]},{"who":"zc_courier","from":[2400.5,25.5],"to":[2374.5,-6.6]},{"who":"zc_courier","from":[2374.5,-6.6],"to":[2346,0.5]},{"who":"zc_courier","from":[2346,0.5],"to":[2400.5,25.5]},{"who":"zc_petit","from":[2371.6,-2.4],"to":[2373.4,2.9]},{"who":"zc_petit","from":[2373.4,2.9],"to":[2371.6,-2.4]},{"who":"zr_fennick","from":[2415.19,-5.85],"to":[2413.88,-10.1]},{"who":"zr_fennick","from":[2413.88,-10.1],"to":[2416.9,2.6]},{"who":"zr_fennick","from":[2416.9,2.6],"to":[2356.7,-6.3]},{"who":"zr_fennick","from":[2356.7,-6.3],"to":[2364.7,6.5]},{"who":"zr_fennick","from":[2364.7,6.5],"to":[2415.19,-5.85]},{"who":"zr_rezz","from":[2380.58,16.95],"to":[2381.38,12.95]},{"who":"zr_rezz","from":[2381.38,12.95],"to":[2356,1.6]},{"who":"zr_rezz","from":[2356,1.6],"to":[2380.58,16.95]},{"who":"zr_oma","from":[2377.6,-5.7],"to":[2378.4,2.6]},{"who":"zr_oma","from":[2378.4,2.6],"to":[2371.1,6.8]},{"who":"zr_oma","from":[2371.1,6.8],"to":[2372.8,-6.7]},{"who":"zr_oma","from":[2372.8,-6.7],"to":[2373.2,-1.8]},{"who":"zr_oma","from":[2373.2,-1.8],"to":[2377.6,-5.7]}],"doors":[{"room":"zterminal","x":2396,"z":30.65,"r":0.9},{"room":"zterminal","x":2396,"z":36.35,"r":0.9},{"room":"workshop","x":2389.5,"z":8.35,"r":0.9},{"room":"zh_pelleck","x":2359.5,"z":-6.85,"r":0.85},{"room":"zh_nara","x":2389,"z":-7.35,"r":0.85},{"room":"zh_oku","x":2361.5,"z":7.15,"r":0.85},{"room":"zh_bakery","x":2409.65,"z":-8.3,"r":0.9},{"room":"upper","x":2374.5,"z":-7.65,"r":1}],"loops":[{"at":[2359.5,-10.2],"size":[6.8,5.8],"pts":[[2355,-14.04],[2364,-14.04],[2364,-6.36],[2355,-6.36]],"parts":1},{"at":[2374.5,-12.4],"size":[8.8,8.1],"pts":[[2379.96,-17.38],[2379.96,-7.34],[2369.04,-7.34]],"parts":3},{"at":[2389,-10.6],"size":[6.6,5.6],"pts":[[2384.6,-14.34],[2393.4,-14.34],[2393.4,-6.86],[2384.6,-6.86]],"parts":2},{"at":[2361.5,10.6],"size":[7.2,6],"pts":[[2356.79,6.67],[2366.21,6.67],[2366.21,14.53],[2356.79,14.53]],"parts":2},{"at":[2388,12.2],"size":[8.2,6.8],"pts":[[2382.79,7.88],[2393.21,7.88],[2393.21,16.52],[2382.79,16.52]],"parts":2},{"at":[2376,9.2],"size":[4,2.5],"pts":[[2372.8,7.2],[2379.2,7.2],[2379.2,11.2],[2372.8,11.2]],"parts":1},{"at":[2398,-20],"size":[5.7,5.7],"pts":[[2398,-15.74],[2401.02,-23.02],[2398,-24.26],[2394.98,-23.02],[2393.74,-20],[2394.98,-16.98]],"parts":1},{"at":[2422,-17.5],"size":[5.1,5.1],"pts":[[2422,-13.54],[2424.8,-14.7],[2425.96,-17.5],[2424.8,-20.3],[2422,-21.46],[2419.2,-20.3],[2418.04,-17.5],[2419.2,-14.7]],"parts":1},{"at":[2397.5,21.5],"size":[5.1,5.1],"pts":[[2397.5,25.46],[2400.3,24.3],[2401.46,21.5],[2400.3,18.7],[2397.5,17.54],[2394.7,18.7],[2393.54,21.5],[2394.7,24.3]],"parts":1},{"at":[2411,-11.5],"size":[5.2,5],"pts":[[2407.4,-14.96],[2414.6,-14.96],[2414.6,-8.04]],"parts":1},{"at":[2352.8,-4.1],"size":[1,3.2],"pts":[[2351.88,-7.05],[2353.72,-7.05],[2353.72,-1.15],[2351.88,-1.15]],"parts":1},{"at":[2352.8,4.1],"size":[1,3.2],"pts":[[2351.88,1.15],[2353.72,1.15],[2351.88,7.05]],"parts":1},{"at":[2422.3,15.6],"size":[2.5,6.1],"pts":[[2420.51,19.96],[2420.51,11.24]],"parts":1},{"at":[2420.6,23],"size":[4.6,4],"pts":[[2417.23,20.07],[2423.97,25.93],[2417.23,25.93]],"parts":1},{"at":[2456.3,-1],"size":[3.4,2.4],"pts":[[2459.16,-3.02],[2459.16,1.02],[2453.44,1.02]],"parts":1},{"at":[2452.8,-8.3],"size":[4.3,3.1],"pts":[[2449.5,-10.68],[2456.1,-5.92],[2449.5,-5.92]],"parts":1},{"at":[2375.2,16.4],"size":[7,7],"pts":[[2375.18,21.27],[2378.65,19.83],[2380.09,16.35],[2378.65,12.88],[2375.18,11.44],[2371.7,12.88],[2370.26,16.35],[2371.7,19.83]],"parts":1},{"at":[2385.4,23.9],"size":[7.2,8.6],"pts":[[2380.89,18.52],[2389.91,18.52],[2389.91,29.28]],"parts":4},{"at":[2353.9,9.2],"size":[3,4.5],"pts":[[2351.62,5.72],[2356.18,5.72],[2356.18,12.58]],"parts":1}]},"desert":{"legs":[{"who":"safi","from":[3356.6,-6.6],"to":[3331.3,-2.65]},{"who":"safi","from":[3331.3,-2.65],"to":[3337.8,-4.2]},{"who":"safi","from":[3337.8,-4.2],"to":[3356.6,-6.6]},{"who":"tamu","from":[3381.2,12.6],"to":[3363.5,-6.4]},{"who":"tamu","from":[3363.5,-6.4],"to":[3332.4,-0.6]},{"who":"tamu","from":[3332.4,-0.6],"to":[3349.5,4]},{"who":"tamu","from":[3349.5,4],"to":[3381.2,12.6]},{"who":"bashir","from":[3337.4,-2],"to":[3351.4,-8.2]},{"who":"bashir","from":[3351.4,-8.2],"to":[3327.8,-0.8]},{"who":"bashir","from":[3327.8,-0.8],"to":[3357.8,-38]},{"who":"bashir","from":[3357.8,-38],"to":[3337.4,-2]},{"who":"dg_surv","from":[3463.7,7.22],"to":[3477.6,15.2]},{"who":"dg_surv","from":[3477.6,15.2],"to":[3461.2,6.2]},{"who":"dg_surv","from":[3461.2,6.2],"to":[3453,-1.7]},{"who":"dg_surv","from":[3453,-1.7],"to":[3463.7,7.22]},{"who":"dg_rod","from":[3475.6,12.4],"to":[3462.6,5.8]},{"who":"dg_rod","from":[3462.6,5.8],"to":[3445.6,31.4]},{"who":"dg_rod","from":[3445.6,31.4],"to":[3475.6,12.4]},{"who":"dg_cook","from":[3450,-1.45],"to":[3453.9,-1.7]},{"who":"dg_cook","from":[3453.9,-1.7],"to":[3446.93,-2.02]},{"who":"dg_haul","from":[3431.12,-2.74],"to":[3438.5,13.14]},{"who":"dg_haul","from":[3438.5,13.14],"to":[3451.4,-0.4]},{"who":"dg_haul","from":[3451.4,-0.4],"to":[3431.12,-2.74]},{"who":"dg_porter","from":[3432.6,-3.6],"to":[3436.74,14]},{"who":"dg_porter","from":[3436.74,14],"to":[3440.5,-6.6]},{"who":"dg_porter","from":[3440.5,-6.6],"to":[3432.6,-3.6]},{"who":"dg_mech","from":[3445.2,-7.42],"to":[3459.58,11.08]},{"who":"dg_mech","from":[3459.58,11.08],"to":[3431,-4.46]},{"who":"dg_mech","from":[3431,-4.46],"to":[3445.2,-7.42]},{"who":"dg_dig","from":[3446,35.2],"to":[3437.62,14.86]},{"who":"dg_dig","from":[3437.62,14.86],"to":[3453,-3.49]},{"who":"dg_dig","from":[3453,-3.49],"to":[3446,35.2]},{"who":"dg_clerk","from":[3429.74,-3.6],"to":[3439.26,14]},{"who":"dg_clerk","from":[3439.26,14],"to":[3454,-3.49]},{"who":"dg_clerk","from":[3454,-3.49],"to":[3435.6,-6.6]},{"who":"dg_clerk","from":[3435.6,-6.6],"to":[3429.74,-3.6]},{"who":"sc_master","from":[3344.4,-78.2],"to":[3338.2,-76.6]},{"who":"sc_master","from":[3338.2,-76.6],"to":[3343.6,-71.4]},{"who":"sc_master","from":[3343.6,-71.4],"to":[3344.4,-78.2]},{"who":"sc_pupa","from":[3338.83,-78.3],"to":[3343.6,-72.9]},{"who":"sc_pupa","from":[3343.6,-72.9],"to":[3340.4,-79.4]},{"who":"sc_pupb","from":[3342.4,-79.4],"to":[3342.69,-75.82]},{"who":"sc_pupb","from":[3342.69,-75.82],"to":[3342.4,-72.4]},{"who":"sc_pupb","from":[3342.4,-72.4],"to":[3342.4,-79.4]},{"who":"sc_pupc","from":[3338.83,-79.3],"to":[3340.7,-76]},{"who":"sc_pupc","from":[3340.7,-76],"to":[3338.83,-79.3]},{"who":"oni","from":[3330.6,-67],"to":[3335.1,-67.5]},{"who":"oni","from":[3335.1,-67.5],"to":[3330.6,-67]}],"doors":[{"room":"school","x":3404.1,"z":-0.2,"r":1},{"room":"ih_house_s40","x":3360.2,"z":-38.6,"r":0.85},{"room":"ih_s28","x":3403.02,"z":-17.5,"r":0.85},{"room":"ih_kesh_house0","x":3341.05,"z":-5.07,"r":0.85},{"room":"ih_kesh_house1","x":3338.88,"z":9.11,"r":0.85},{"room":"ih_kesh_house2","x":3349.4,"z":12.85,"r":0.85},{"room":"ih_kesh_house3","x":3363.96,"z":12.19,"r":0.85},{"room":"ih_kesh_house4","x":3347.89,"z":-15.79,"r":0.85},{"room":"ih_post_cabin0","x":3436.6,"z":-27.85,"r":0.85},{"room":"ih_post_cabin1","x":3452.1,"z":-27.95,"r":0.85},{"room":"ih_post_cabin2","x":3453.6,"z":-15.05,"r":0.85}],"loops":[{"at":[3352,-2],"size":[3.3,1.7],"pts":[[3349.09,-3.5],[3354.91,-3.5],[3354.91,-0.5],[3349.09,-0.5]],"parts":1},{"at":[3434.2,-29.2],"size":[7.4,4.9],"pts":[[3439.08,-32.48],[3439.08,-25.99],[3429.32,-25.99]],"parts":2},{"at":[3450.2,-29.2],"size":[6.4,4.7],"pts":[[3445.86,-32.44],[3454.54,-32.44],[3454.54,-26.03],[3445.86,-26.03]],"parts":2},{"at":[3451.8,-13.8],"size":[5.4,4.7],"pts":[[3455.56,-17.06],[3455.56,-10.47],[3448.04,-10.47]],"parts":2},{"at":[3412,49.3],"size":[7.2,4.6],"pts":[[3407.21,46.19],[3416.79,46.19],[3416.79,52.31],[3407.21,52.31]],"parts":1},{"at":[3332.2,-61.7],"size":[11.2,8],"pts":[[3325.46,-66.53],[3338.94,-66.53]],"parts":1},{"at":[3340,-8],"size":[7.1,6.1],"pts":[[3335.37,-11.97],[3344.63,-11.97],[3344.63,-4.03],[3335.37,-4.03]],"parts":2},{"at":[3336,10],"size":[5.5,5.9],"pts":[[3332.93,14.06],[3332.18,6.63],[3339.07,5.94],[3339.82,13.37]],"parts":1},{"at":[3350,16],"size":[7.2,5.4],"pts":[[3345.27,12.45],[3354.73,12.45],[3345.27,19.55]],"parts":2},{"at":[3364,15],"size":[5.8,5.5],"pts":[[3366.82,18.9],[3359.88,17.49],[3361.18,11.1],[3368.12,12.51]],"parts":1},{"at":[3346,-18],"size":[7.2,6.9],"pts":[[3341.01,-19.06],[3347.81,-22.77],[3350.99,-16.94],[3344.19,-13.23]],"parts":1},{"at":[3389.7,-47.6],"size":[3.2,3.7],"pts":[[3387.17,-50.52],[3392.23,-50.52],[3392.23,-44.68],[3387.17,-44.68]],"parts":1},{"at":[3384.6,-45.8],"size":[3.3,3.3],"pts":[[3384.6,-42.74],[3386.77,-43.63],[3386.77,-47.97],[3384.6,-48.86],[3382.43,-47.97],[3381.54,-45.8],[3382.43,-43.63]],"parts":1},{"at":[3447,-16],"size":[3.4,2],"pts":[[3444.08,-17.72],[3449.92,-17.72],[3444.08,-14.28]],"parts":1},{"at":[3441.5,-31.3],"size":[2.8,3.4],"pts":[[3443.8,-28.51],[3439.2,-28.51]],"parts":1},{"at":[3464.4,31.5],"size":[6.3,2.1],"pts":[[3468.73,32.99],[3459.83,31.98],[3460.05,29.97],[3468.96,30.98]],"parts":1},{"at":[3325.3,-72.4],"size":[3,4],"pts":[[3322.95,-75.53],[3322.95,-69.27]],"parts":1},{"at":[3321.8,-72.7],"size":[3,4],"pts":[[3319.45,-75.83],[3324.15,-75.83],[3324.15,-69.57],[3319.45,-69.57]],"parts":1},{"at":[3364.5,-38.9],"size":[7.6,6.1],"pts":[[3369.4,-42.82],[3369.4,-34.98],[3359.6,-34.98],[3359.6,-42.82]],"parts":1},{"at":[3404.7,-16],"size":[2.5,7.2],"pts":[[3403.01,-20.93],[3406.39,-11.07]],"parts":1},{"at":[3395.9,26],"size":[3,4],"pts":[[3393.55,22.87],[3393.55,29.13]],"parts":1},{"at":[3392.4,25.7],"size":[3,4],"pts":[[3390.05,22.57],[3394.75,22.57],[3394.75,28.83],[3390.05,28.83]],"parts":1}]},"hamalayi":{"legs":[{"who":"lh_bero","from":[4277.84,23.33],"to":[4282.7,0.7]},{"who":"lh_bero","from":[4282.7,0.7],"to":[4275.8,9.3]},{"who":"lh_bero","from":[4275.8,9.3],"to":[4277.84,23.33]},{"who":"lh_sana","from":[4294.4,-5.19],"to":[4303.78,21.2]},{"who":"lh_sana","from":[4303.78,21.2],"to":[4303.08,0.83]},{"who":"lh_sana","from":[4303.08,0.83],"to":[4294.4,-5.19]},{"who":"lh_old","from":[4295.2,16.1],"to":[4289,6.6]},{"who":"lh_old","from":[4289,6.6],"to":[4295.2,16.1]},{"who":"lh_tam","from":[4283.21,-4.4],"to":[4293.61,17.7]},{"who":"lh_tam","from":[4293.61,17.7],"to":[4306.69,14.85]},{"who":"lh_tam","from":[4306.69,14.85],"to":[4283.21,-4.4]},{"who":"lh_kid1","from":[4294.8,27.5],"to":[4301.5,18]},{"who":"lh_kid1","from":[4301.5,18],"to":[4286.8,16.6]},{"who":"lh_kid1","from":[4286.8,16.6],"to":[4294.8,27.5]},{"who":"lh_kid2","from":[4297.2,27.5],"to":[4309.7,14.68]},{"who":"lh_kid2","from":[4309.7,14.68],"to":[4297.2,27.5]},{"who":"lh_mira","from":[4283.83,12.12],"to":[4296.4,19.75]},{"who":"lh_mira","from":[4296.4,19.75],"to":[4290,9.5]},{"who":"lh_mira","from":[4290,9.5],"to":[4283.83,12.12]},{"who":"lh_grum","from":[4273.92,1.27],"to":[4283.77,1.78]},{"who":"lh_grum","from":[4283.77,1.78],"to":[4273.92,1.27]}],"doors":[{"room":"ih_ham_landing0","x":4288.93,"z":82.05,"r":0.85},{"room":"ih_ham_lhar0","x":4278.74,"z":6.55,"r":0.85},{"room":"ih_ham_lhar1","x":4287.88,"z":-1.25,"r":0.85},{"room":"ih_ham_lhar2","x":4301.49,"z":-0.5,"r":0.85},{"room":"ih_ham_lhar3","x":4277.19,"z":22.14,"r":0.85},{"room":"ih_ham_lhar4","x":4304.54,"z":20.09,"r":0.85},{"room":"ih_ham_obs0","x":4277.98,"z":-76.01,"r":0.85},{"room":"ham_hall","x":4334,"z":-44.95,"r":0.75},{"room":"obsv","x":4286,"z":-66,"r":1}],"loops":[{"at":[4334,-49.2],"size":[16.4,13],"pts":[[4324.69,-56.58],[4343.31,-56.58]],"parts":5},{"at":[4309,84],"size":[9.5,7.7],"pts":[[4302.9,85.99],[4313.07,79.04],[4315.1,82.01],[4304.93,88.96]],"parts":1},{"at":[4287.2,80.1],"size":[7.6,5.8],"pts":[[4282.24,76.37],[4292.12,76.37],[4282.24,83.84]],"parts":2},{"at":[4281.6,88.6],"size":[2.8,1.7],"pts":[[4278.78,88.77],[4283.87,86.92],[4284.42,88.43],[4279.33,90.28]],"parts":1},{"at":[4277.1,4],"size":[8.8,6.4],"pts":[[4271.6,0.01],[4282.67,0.01],[4282.67,8.01],[4271.6,8.01]],"parts":2},{"at":[4288,-4],"size":[6.6,5],"pts":[[4283.57,-7.35],[4292.43,-7.35],[4283.57,-0.65]],"parts":1},{"at":[4301.1,-3.1],"size":[7.9,5.8],"pts":[[4306.24,-6.85],[4306.24,0.63],[4296.05,0.63]],"parts":2},{"at":[4276,20],"size":[6.7,6.4],"pts":[[4271.28,19.03],[4277.74,15.5],[4280.72,20.97],[4274.26,24.5]],"parts":1},{"at":[4306.7,18.3],"size":[8.7,7.5],"pts":[[4301.32,13.59],[4312.12,13.59],[4312.12,23],[4301.32,23]],"parts":2},{"at":[4294.4,-6.2],"size":[2.9,0.8],"pts":[[4291.59,-6.98],[4297.21,-6.98],[4297.21,-5.42]],"parts":1},{"at":[4279,27],"size":[4.6,4],"pts":[[4275.63,29.93],[4275.63,24.07],[4282.37,24.07]],"parts":1},{"at":[4316,-19.2],"size":[2.4,1.8],"pts":[[4313.67,-20.95],[4318.33,-20.95],[4318.33,-17.45],[4313.67,-17.45]],"parts":1},{"at":[4338,-6],"size":[6.4,6.4],"pts":[[4338,-1.39],[4341.26,-2.74],[4334.74,-9.26]],"parts":1},{"at":[4284.4,-72.3],"size":[13.7,11.2],"pts":[[4276.46,-78.77],[4292.4,-78.77],[4292.4,-65.81],[4276.46,-65.81]],"parts":2}]},"ballastra":{"legs":[{"who":"path","from":[2979.6,-2985.4],"to":[2988.38,-2996.81]}],"doors":[{"room":"bl_shed","x":2989.6,"z":-2998.4,"r":0.6}],"loops":[{"at":[3019.6,-2994],"size":[2.5,2.5],"pts":[[3017.35,-2996.25],[3021.85,-2996.25],[3021.85,-2991.75],[3017.35,-2991.75]],"parts":1},{"at":[3010.4,-2996.4],"size":[2.5,2.5],"pts":[[3008.15,-2998.65],[3008.15,-2994.15]],"parts":1},{"at":[2989.6,-3001.3],"size":[6.9,5.8],"pts":[[2994.13,-3005.16],[2994.13,-2997.54]],"parts":2},{"at":[3013.6,-2991.1],"size":[3.9,3.9],"pts":[[3016.55,-2994.05],[3010.65,-2988.15]],"parts":2},{"at":[2973.5,-2981.4],"size":[7.2,7.2],"pts":[[2973.5,-2976.39],[2977.05,-2977.85],[2978.51,-2981.4],[2977.05,-2984.95],[2973.5,-2986.41],[2969.95,-2984.95],[2968.49,-2981.4],[2969.95,-2977.85]],"parts":1}]},"bl_arches":{"legs":[{"who":"path","from":[2991.16,-3778.42],"to":[2977.19,-3808.68]},{"who":"path","from":[2977.57,-3812.08],"to":[2990.79,-3829.17]},{"who":"path","from":[2994.01,-3830.71],"to":[3029.3,-3830.09]},{"who":"path","from":[3031.77,-3828.11],"to":[3040.13,-3793.94]}],"doors":[{"room":"ballastra","x":2992,"z":-3776.6,"r":1},{"room":"bl_gardens","x":3040.6,"z":-3792,"r":0.8},{"room":"bl_oren","x":3031.3,"z":-3830.05,"r":0.6},{"room":"bl_mags","x":2992.01,"z":-3830.75,"r":0.55},{"room":"bl_pump","x":2976.35,"z":-3810.5,"r":0.7}],"loops":[{"at":[2968,-3810],"size":[16,20],"pts":[[2976.88,-3821.1],[2976.88,-3798.9]],"parts":2},{"at":[3033,-3792.5],"size":[4.4,4.4],"pts":[[3029.8,-3795.7],[3036.2,-3795.7],[3036.2,-3789.3],[3029.8,-3789.3]],"parts":1}]},"bl_gardens":{"legs":[{"who":"path","from":[2945.79,-4601.53],"to":[2958.41,-4616.47]}],"doors":[{"room":"bl_arches","x":2944.5,"z":-4600,"r":0.8},{"room":"bl_tunnel","x":2959.7,"z":-4618,"r":0.5},{"room":"bl_kiln","x":3055,"z":-4611.35,"r":0.6}],"loops":[{"at":[2954,-4621.5],"size":[7.1,5],"pts":[[2949.3,-4624.84],[2958.7,-4624.84]],"parts":1},{"at":[3004.8,-4623],"size":[94.5,1.6],"pts":[[3053.41,-4623.82],[3053.41,-4622.18]],"parts":1},{"at":[3035.8,-4618.1],"size":[23.5,8.2],"pts":[[3048.84,-4613.53],[3022.66,-4613.53]],"parts":1},{"at":[3056.3,-4617],"size":[11.6,10.8],"pts":[[3063.08,-4623.36],[3063.08,-4610.62],[3049.42,-4610.62]],"parts":2},{"at":[3060.5,-4608.2],"size":[3.6,3.6],"pts":[[3060.5,-4604.99],[3062.77,-4605.93],[3062.77,-4610.47],[3058.23,-4610.47],[3057.29,-4608.2],[3058.23,-4605.93]],"parts":1},{"at":[2997.8,-4567.2],"size":[3.2,3.6],"pts":[[3000.34,-4570.06],[3000.34,-4564.34]],"parts":1},{"at":[3903.4,-4601.9],"size":[3.6,3.6],"pts":[[3903.4,-4598.69],[3900.19,-4601.9]],"parts":1}]},"isle_otringal":{"legs":[{"who":"ot_ulla","from":[1893.65,1799.01],"to":[1883.04,1810.39]},{"who":"ot_ulla","from":[1883.04,1810.39],"to":[1893.65,1799.01]},{"who":"ot_tanek","from":[1886.9,1802.84],"to":[1894.49,1799.85]},{"who":"ot_tanek","from":[1894.49,1799.85],"to":[1886.9,1802.84]},{"who":"ot_sweep","from":[1893.02,1808.99],"to":[1896.1,1804.25]},{"who":"ot_sweep","from":[1896.1,1804.25],"to":[1909.17,1808.7]},{"who":"ot_sweep","from":[1909.17,1808.7],"to":[1887.31,1800.17]},{"who":"ot_sweep","from":[1887.31,1800.17],"to":[1893.02,1808.99]},{"who":"ot_porter","from":[1898.6,1817.8],"to":[1884.57,1793.83]},{"who":"ot_porter","from":[1884.57,1793.83],"to":[1896.6,1808.9]},{"who":"ot_porter","from":[1896.6,1808.9],"to":[1898.6,1817.8]}],"doors":[{"room":"otrbar","x":1857.84,"z":1804.6,"r":0.9},{"room":"otrhotel","x":1884.57,"z":1792.98,"r":0.9},{"room":"ih_otringal_6_m29","x":1909.76,"z":1770.75,"r":0.85},{"room":"ih_otringal_m4_m60","x":1891.29,"z":1739.55,"r":0.85},{"room":"ih_otringal_m1_m53","x":1898.8,"z":1750.88,"r":0.85},{"room":"ih_otringal_3_m59","x":1907.12,"z":1740.66,"r":0.85},{"room":"ih_otringal_17_m71","x":1919.9,"z":1728.52,"r":0.85},{"room":"ih_otringal_63_m45","x":1962.77,"z":1758.89,"r":0.85},{"room":"ih_otringal_45_m52","x":1945.02,"z":1751.49,"r":0.85},{"room":"ih_otringal_55_m47","x":1951.85,"z":1753.27,"r":0.85},{"room":"ih_otringal_63_m52","x":1966.3,"z":1747.73,"r":0.85},{"room":"ih_otringal_59_m60","x":1959.43,"z":1736.49,"r":0.85},{"room":"ih_otringal_47_m68","x":1946.59,"z":1735.7,"r":0.85},{"room":"ih_otringal_52_m60","x":1951.97,"z":1744.49,"r":0.85},{"room":"ih_otringal_m55_m15","x":1850.13,"z":1785.34,"r":0.85},{"room":"ih_otringal_6_m24","x":1905.63,"z":1779.87,"r":0.85},{"room":"ih_otringal_4_26","x":1903.77,"z":1823.39,"r":0.85},{"room":"ih_otringal_m21_m10","x":1876.24,"z":1789.79,"r":0.85},{"room":"ih_otringal_4_m11","x":1903.82,"z":1792.25,"r":0.85},{"room":"ih_otringal_m49_55","x":1854.28,"z":1854.75,"r":0.85},{"room":"ih_otringal_4_31","x":1903.79,"z":1834.65,"r":0.85},{"room":"ih_otringal_m2_56","x":1897.57,"z":1853.91,"r":0.85},{"room":"ih_otringal_3_65","x":1905.15,"z":1864.63,"r":0.85},{"room":"ih_otringal_12_43","x":1911.88,"z":1839.36,"r":0.85},{"room":"ih_otringal_40_43","x":1941.29,"z":1843.23,"r":0.85}],"loops":[{"at":[1916.7,1728.5],"size":[5.7,5.7],"pts":[[1912.84,1724.66],[1920.56,1724.66],[1920.56,1732.38],[1912.84,1732.38]],"parts":1},{"at":[1962.8,1755.2],"size":[7.3,6.8],"pts":[[1967.45,1750.79],[1967.45,1759.51],[1958.09,1759.51]],"parts":1},{"at":[1945,1747.7],"size":[6.8,6.8],"pts":[[1940.6,1743.31],[1949.44,1752.15],[1940.6,1752.15]],"parts":1},{"at":[1955.4,1753.3],"size":[6.5,9.6],"pts":[[1951.4,1747.28],[1959.44,1759.26],[1951.4,1759.26]],"parts":1},{"at":[1962.5,1747.7],"size":[6.8,6.8],"pts":[[1966.96,1743.31],[1966.96,1752.15]],"parts":1},{"at":[1959.4,1740.5],"size":[7.3,7.3],"pts":[[1964.08,1735.83],[1954.78,1745.13]],"parts":1},{"at":[1962.7,1734.5],"size":[3.3,3.3],"pts":[[1959.98,1731.88],[1965.32,1731.88],[1965.32,1737.22]],"parts":1},{"at":[1857.1,1799.6],"size":[7,9.3],"pts":[[1852.82,1793.81],[1861.48,1793.81],[1861.48,1805.33],[1852.82,1805.33]],"parts":2},{"at":[1845,1785.3],"size":[9.6,4.4],"pts":[[1851.08,1782.57],[1851.08,1788.11]],"parts":1},{"at":[1888.2,1820.4],"size":[3.3,3.3],"pts":[[1885.5,1817.7],[1890.84,1817.7],[1890.84,1823.04],[1885.5,1823.04]],"parts":1},{"at":[1903.8,1829],"size":[7.6,10.6],"pts":[[1908.39,1835.46],[1899.17,1835.46]],"parts":2},{"at":[1879.1,1789.8],"size":[5,5.6],"pts":[[1875.64,1785.94],[1882.5,1785.94],[1875.64,1793.64]],"parts":1},{"at":[1884.6,1789.8],"size":[5.3,5.6],"pts":[[1880.98,1785.97],[1888.16,1785.97],[1888.16,1793.61],[1880.98,1793.61]],"parts":1},{"at":[1915.8,1806.2],"size":[2.4,6.6],"pts":[[1917.49,1801.54],[1917.49,1810.8]],"parts":1},{"at":[1911.3,1806.4],"size":[1.3,7.2],"pts":[[1910.38,1801.43],[1912.12,1801.43],[1912.12,1811.45],[1910.38,1811.45]],"parts":1},{"at":[1903.8,1789.1],"size":[5.3,5.6],"pts":[[1900.2,1785.3],[1907.44,1785.3],[1900.2,1792.94]],"parts":1},{"at":[1850.6,1854.8],"size":[6.7,5.9],"pts":[[1846.17,1850.85],[1846.17,1858.65]],"parts":1},{"at":[1897.6,1861.5],"size":[14.5,14.5],"pts":[[1889.32,1853.25],[1905.82,1869.75]],"parts":3},{"at":[1907.4,1872.4],"size":[3.3,3.3],"pts":[[1904.76,1869.71],[1910.1,1869.71],[1910.1,1875.05]],"parts":1},{"at":[1911.9,1843.2],"size":[5.3,7],"pts":[[1908.41,1838.56],[1915.35,1838.56],[1915.35,1847.86],[1908.41,1847.86]],"parts":1},{"at":[1915.3,1849],"size":[3.3,3.3],"pts":[[1917.92,1851.64],[1912.58,1851.64]],"parts":1},{"at":[1939.8,1843.2],"size":[2.4,7.6],"pts":[[1938.12,1838.09],[1941.38,1838.09],[1941.38,1848.37],[1938.12,1848.37]],"parts":1},{"at":[1945.8,1856.9],"size":[5.3,5.3],"pts":[[1948.66,1859.79],[1949.84,1856.93],[1948.66,1854.07],[1945.8,1852.89],[1942.94,1854.07],[1941.76,1856.93],[1942.94,1859.79]],"parts":1},{"at":[1902.8,1817.8],"size":[6.4,6.4],"pts":[[1902.81,1822.43],[1906.08,1821.08],[1907.43,1817.81],[1906.08,1814.55],[1902.81,1813.2],[1899.55,1814.55],[1898.2,1817.81],[1899.55,1821.08]],"parts":1}]},"isle_knartas":{"legs":[{"who":"kn_quill","from":[2213.35,1768.49],"to":[2213.9,1782.25]},{"who":"kn_quill","from":[2213.9,1782.25],"to":[2214.77,1763.61]},{"who":"kn_quill","from":[2214.77,1763.61],"to":[2213.35,1768.49]},{"who":"kn_nets","from":[2202.1,1761.7],"to":[2212.7,1758.7]},{"who":"kn_nets","from":[2212.7,1758.7],"to":[2217.2,1758.2]},{"who":"kn_nets","from":[2217.2,1758.2],"to":[2202.1,1761.7]},{"who":"kn_fisher","from":[2217.61,1754.76],"to":[2217.9,1780.3]},{"who":"kn_fisher","from":[2217.57,1782.7],"to":[2217.61,1754.76]},{"who":"kn_mother","from":[2220.9,1776.5],"to":[2248.73,1783.56]},{"who":"kn_mother","from":[2248.73,1783.56],"to":[2238.9,1782.6]},{"who":"kn_mother","from":[2238.9,1782.6],"to":[2220.9,1776.5]},{"who":"kn_kid","from":[2213.7,1769.6],"to":[2217.62,1754.8]},{"who":"kn_kid","from":[2217.62,1754.8],"to":[2213.48,1786]},{"who":"kn_kid","from":[2213.48,1786],"to":[2213.7,1769.6]}],"doors":[{"room":"ih_knartas_m30_m18","x":2203.1,"z":1782.45,"r":0.85},{"room":"ih_knartas_33_m14","x":2260.06,"z":1786.39,"r":0.85},{"room":"ih_knartas_25_m22","x":2257.71,"z":1777.6,"r":0.85},{"room":"ih_knartas_25_m20","x":2255.25,"z":1782.16,"r":0.85},{"room":"ih_knartas_33_m20","x":2261.24,"z":1779.87,"r":0.85},{"room":"ih_knartas_19_m20","x":2248.73,"z":1782.16,"r":0.85},{"room":"ih_knartas_19_m22","x":2246.27,"z":1777.6,"r":0.85},{"room":"ih_knartas_28_m36","x":2257.82,"z":1766.89,"r":0.85},{"room":"ih_knartas_14_m36","x":2244.13,"z":1766.89,"r":0.85},{"room":"ih_knartas_36_m20","x":2268.11,"z":1779.87,"r":0.85},{"room":"ih_knartas_37_m14","x":2269.29,"z":1786.39,"r":0.85},{"room":"ih_knartas_28_29","x":2258.43,"z":1825.32,"r":0.85},{"room":"ih_knartas_21_19","x":2251.47,"z":1821.07,"r":0.85},{"room":"ih_knartas_22_15","x":2255.27,"z":1814.65,"r":0.85},{"room":"ih_knartas_16_18","x":2245.56,"z":1814.94,"r":0.85},{"room":"ih_knartas_16_24","x":2249.55,"z":1823.99,"r":0.85},{"room":"ih_knartas_9_32","x":2239.17,"z":1827.99,"r":0.85},{"room":"ih_knartas_38_36","x":2267.9,"z":1832.38,"r":0.85},{"room":"ih_knartas_44_37","x":2273.61,"z":1832.75,"r":0.85},{"room":"ih_knartas_35_12","x":2268.65,"z":1811.74,"r":0.85}],"loops":[{"at":[2200.3,1782.5],"size":[4.8,3.1],"pts":[[2196.72,1780.12],[2203.88,1780.12]],"parts":3},{"at":[2262.5,1786.4],"size":[4.1,7.5],"pts":[[2259.76,1781.42],[2265.26,1791.36]],"parts":3},{"at":[2255.3,1777.6],"size":[1.5,2.6],"pts":[[2253.78,1775.08],[2256.72,1775.08]],"parts":1},{"at":[2255.3,1780.5],"size":[1.5,2.6],"pts":[[2256.72,1782.97],[2253.78,1782.97]],"parts":1},{"at":[2248.7,1780.5],"size":[1.5,2.6],"pts":[[2250.2,1782.97],[2247.26,1782.97]],"parts":1},{"at":[2248.7,1777.6],"size":[1.5,2.6],"pts":[[2250.2,1775.08],[2247.26,1775.08]],"parts":1},{"at":[2257.8,1764.5],"size":[4.1,4.1],"pts":[[2260.26,1766.91],[2254.37,1764.47],[2255.38,1766.91]],"parts":1},{"at":[2244.1,1764.5],"size":[4.1,4.1],"pts":[[2244.13,1767.92],[2246.57,1766.91],[2247.58,1764.47],[2246.57,1762.03],[2244.13,1761.02],[2241.69,1762.03],[2240.68,1764.47]],"parts":1},{"at":[2237.3,1761.9],"size":[3.7,4.1],"pts":[[2240.16,1765],[2234.52,1765]],"parts":2},{"at":[2239.4,1768.4],"size":[4.1,3.7],"pts":[[2242.54,1771.2],[2236.32,1771.2]],"parts":2},{"at":[2267.4,1770.8],"size":[3.7,4.1],"pts":[[2270.22,1767.69],[2270.22,1773.91],[2264.58,1773.91]],"parts":2},{"at":[2266.3,1779.9],"size":[2.9,2.2],"pts":[[2268.83,1777.9],[2268.83,1781.84]],"parts":1},{"at":[2266.8,1786.4],"size":[4.1,7.5],"pts":[[2269.59,1781.42],[2269.59,1791.36]],"parts":3},{"at":[2258.4,1829.3],"size":[6.9,7.3],"pts":[[2254,1824.64],[2262.86,1824.64],[2262.86,1834]],"parts":2},{"at":[2251.7,1814.7],"size":[6.4,5.4],"pts":[[2247.4,1811.02],[2255.98,1811.02],[2255.98,1818.28]],"parts":3},{"at":[2245.6,1818.3],"size":[5.5,5.9],"pts":[[2249.29,1822.26],[2241.83,1822.26]],"parts":2},{"at":[2245.6,1824],"size":[7.3,5.2],"pts":[[2240.77,1820.57],[2250.33,1827.41],[2240.77,1827.41]],"parts":3},{"at":[2239.2,1831.8],"size":[6.9,6.9],"pts":[[2239.17,1836.68],[2244.05,1831.8],[2242.62,1828.35],[2239.17,1826.92],[2235.72,1828.35],[2234.29,1831.8],[2235.72,1835.25]],"parts":1},{"at":[2267.9,1836.4],"size":[5.4,7.3],"pts":[[2264.38,1831.61],[2271.42,1831.61],[2271.42,1841.15],[2264.38,1841.15]],"parts":3},{"at":[2273.6,1836.6],"size":[5.7,6.9],"pts":[[2277.38,1832.03],[2269.84,1841.11]],"parts":3},{"at":[2258.3,1837.7],"size":[1.6,5],"pts":[[2259.49,1841.52],[2257.01,1841.52]],"parts":1},{"at":[2264.8,1811.7],"size":[6.9,6.9],"pts":[[2269.72,1811.74],[2268.29,1808.3],[2264.85,1806.87],[2261.41,1808.3],[2259.98,1811.74],[2261.41,1815.18]],"parts":1},{"at":[2188.9,1759.8],"size":[16,4.6],"pts":[[2198.26,1757.13],[2198.26,1762.47]],"parts":1},{"at":[2206.2,1758.2],"size":[6.4,6.4],"pts":[[2206.21,1762.82],[2209.47,1761.47],[2210.82,1758.21],[2201.6,1758.21],[2202.95,1761.47]],"parts":1}]},"isle_mosquibee":{"legs":[{"who":"mb_bzzra","from":[2584.7,1788.6],"to":[2590.53,1785.22]},{"who":"mb_bzzra","from":[2590.53,1785.22],"to":[2588.93,1779.56]},{"who":"mb_bzzra","from":[2588.93,1779.56],"to":[2584.7,1788.6]},{"who":"mb_tend1","from":[2577.87,1785.21],"to":[2585.38,1781.73]},{"who":"mb_tend1","from":[2585.38,1781.73],"to":[2581.72,1792.7]},{"who":"mb_tend1","from":[2581.72,1792.7],"to":[2577.87,1785.21]},{"who":"mb_tend2","from":[2580.74,1783.81],"to":[2589.04,1775.7]},{"who":"mb_tend2","from":[2589.04,1775.7],"to":[2590.42,1783.07]},{"who":"mb_tend2","from":[2590.42,1783.07],"to":[2580.74,1783.81]},{"who":"mb_flier","from":[2592.64,1763.53],"to":[2590.24,1785.36]},{"who":"mb_flier","from":[2590.24,1785.36],"to":[2585.85,1769.09]},{"who":"mb_flier","from":[2585.85,1769.09],"to":[2592.64,1763.53]}],"doors":[{"room":"ih_mosquibee_m15_28","x":2547.44,"z":1827.82,"r":0.85},{"room":"ih_mosquibee_26_15","x":2585.75,"z":1810.66,"r":0.85}],"loops":[{"at":[2545.4,1827.8],"size":[3.4,7.6],"pts":[[2543.18,1822.73],[2547.68,1822.73],[2547.68,1832.91],[2543.18,1832.91]],"parts":1},{"at":[2587.3,1788.6],"size":[4.6,4.6],"pts":[[2587.26,1792.28],[2589.89,1791.2],[2590.97,1788.57],[2587.26,1784.86],[2584.63,1785.94],[2583.55,1788.57],[2584.63,1791.2]],"parts":1},{"at":[2582.2,1760.2],"size":[6.4,6.4],"pts":[[2582.21,1764.82],[2585.47,1763.47],[2586.82,1760.21],[2585.47,1756.95],[2582.21,1755.6],[2578.95,1756.95],[2577.6,1760.21],[2578.95,1763.47]],"parts":1}]},"isle_celebration":{"legs":[{"who":"ce_steward","from":[2893.83,1808.54],"to":[2887.2,1795.4]},{"who":"ce_steward","from":[2887.2,1795.4],"to":[2884.05,1799.42]},{"who":"ce_steward","from":[2884.05,1799.42],"to":[2893.83,1808.54]},{"who":"ce_dancer1","from":[2886.4,1804.6],"to":[2897.4,1794.9]},{"who":"ce_dancer1","from":[2897.4,1794.9],"to":[2886.4,1804.6]},{"who":"ce_dancer2","from":[2887.6,1803.6],"to":[2883.4,1794.6]},{"who":"ce_dancer2","from":[2883.4,1794.6],"to":[2887.6,1803.6]}],"doors":[{"room":"celtemple","x":2892.2,"z":1792.05,"r":0.9},{"room":"ih_celebration_m9_4","x":2878.18,"z":1804.07,"r":0.85}],"loops":[{"at":[2881.5,1804.1],"size":[5.9,6.7],"pts":[[2877.58,1799.67],[2885.38,1799.67],[2885.38,1808.47],[2877.58,1808.47]],"parts":1},{"at":[2892.2,1800.6],"size":[6.9,6.9],"pts":[[2892.2,1805.48],[2895.65,1804.05],[2897.08,1800.6],[2895.65,1797.15],[2892.2,1795.72],[2888.75,1797.15],[2887.32,1800.6],[2888.75,1804.05]],"parts":1},{"at":[2899.6,1804.6],"size":[6.4,6.4],"pts":[[2899.6,1809.22],[2902.87,1807.87],[2904.22,1804.6],[2902.87,1801.34],[2899.6,1799.99],[2896.34,1801.34],[2894.99,1804.6],[2896.34,1807.87]],"parts":1}]},"isle_undergas":{"legs":[{"who":"ug_foreman","from":[3200.23,1775.46],"to":[3189.24,1767.27]},{"who":"ug_foreman","from":[3189.24,1767.27],"to":[3196.52,1773.47]},{"who":"ug_foreman","from":[3196.52,1773.47],"to":[3200.23,1775.46]},{"who":"ug_fitter","from":[3205.52,1781.88],"to":[3203.69,1767.26]},{"who":"ug_fitter","from":[3203.69,1767.26],"to":[3205.52,1781.88]},{"who":"ug_carrier","from":[3190.67,1767.7],"to":[3204.92,1775.74]},{"who":"ug_carrier","from":[3204.92,1775.74],"to":[3196.48,1768.75]},{"who":"ug_carrier","from":[3196.48,1768.75],"to":[3190.67,1767.7]},{"who":"ug_gauge","from":[3193.13,1760.41],"to":[3207.5,1770.85]},{"who":"ug_gauge","from":[3207.5,1770.85],"to":[3200.91,1757.59]},{"who":"ug_gauge","from":[3200.91,1757.59],"to":[3193.13,1760.41]}],"doors":[{"room":"ih_undergas_8_m39","x":3228.13,"z":1757.76,"r":0.85}],"loops":[{"at":[3228.1,1760.6],"size":[3.9,5],"pts":[[3225.3,1756.98],[3230.96,1764.26],[3225.3,1764.26]],"parts":1},{"at":[3230.1,1786.4],"size":[3.3,3.3],"pts":[[3230.1,1789.46],[3232.27,1788.56],[3233.17,1786.39],[3232.27,1784.22],[3227.93,1784.22],[3227.03,1786.39],[3227.93,1788.56]],"parts":1},{"at":[3240.8,1822.9],"size":[3.3,3.3],"pts":[[3240.83,1825.99],[3243,1825.09],[3243.9,1822.92],[3243,1820.75],[3240.83,1819.85],[3238.66,1820.75],[3237.76,1822.92]],"parts":1},{"at":[3239.5,1803.1],"size":[3.3,3.3],"pts":[[3241.71,1805.29],[3242.61,1803.12],[3241.71,1800.95],[3237.37,1800.95],[3236.47,1803.12],[3237.37,1805.29]],"parts":1},{"at":[3207.5,1767],"size":[6.7,6.7],"pts":[[3207.5,1771.76],[3210.87,1770.37],[3212.26,1767],[3210.87,1763.63],[3207.5,1762.24],[3202.74,1767],[3204.13,1770.37]],"parts":1},{"at":[3207,1782.5],"size":[2.1,3.5],"pts":[[3205.22,1785.46],[3205.22,1779.54],[3208.78,1779.54],[3208.78,1785.46]],"parts":1},{"at":[3196,1759],"size":[5.5,5.5],"pts":[[3196,1763.16],[3198.94,1761.94],[3200.16,1759],[3198.94,1756.06],[3196,1754.84],[3193.06,1756.06],[3191.84,1759],[3193.06,1761.94]],"parts":1},{"at":[3189.7,1765.7],"size":[3.5,2.1],"pts":[[3186.75,1763.93],[3192.67,1763.93],[3186.75,1767.49]],"parts":1},{"at":[3175.2,1769.2],"size":[6.4,6.4],"pts":[[3175.21,1773.82],[3178.47,1772.47],[3179.82,1769.21],[3178.47,1765.95],[3175.21,1764.6],[3171.95,1765.95],[3170.6,1769.21],[3171.95,1772.47]],"parts":1}]},"isle_platform":{"legs":[{"who":"pf_foreman","from":[3909.39,1775.46],"to":[3898.2,1776.2]},{"who":"pf_foreman","from":[3898.2,1776.2],"to":[3904.7,1778.1]},{"who":"pf_foreman","from":[3904.7,1778.1],"to":[3909.39,1775.46]},{"who":"pf_miner1","from":[3904.38,1791.82],"to":[3897.2,1777.2]},{"who":"pf_miner1","from":[3897.2,1777.2],"to":[3904.38,1791.82]},{"who":"pf_miner2","from":[3904.43,1792.37],"to":[3911.5,1785.3]},{"who":"pf_miner2","from":[3911.5,1785.3],"to":[3904.43,1792.37]},{"who":"pf_vill1","from":[3911.75,1807.31],"to":[3907.32,1806.88]},{"who":"pf_vill1","from":[3907.32,1806.88],"to":[3909.21,1815.02]},{"who":"pf_vill1","from":[3909.21,1815.02],"to":[3911.75,1807.31]},{"who":"pf_vill2","from":[3922.71,1812.84],"to":[3911.48,1806.77]},{"who":"pf_vill2","from":[3911.48,1806.77],"to":[3920.7,1814.5]}],"doors":[{"room":"ih_platform_m24_m27","x":3856.04,"z":1769.73,"r":0.85},{"room":"ih_platform_27_m31","x":3906.97,"z":1772.53,"r":0.85},{"room":"ih_platform_27_m38","x":3906.92,"z":1757.75,"r":0.85},{"room":"ih_platform_27_12","x":3907.32,"z":1808.27,"r":0.85},{"room":"ih_platform_35_15","x":3918.63,"z":1814.53,"r":0.85},{"room":"ih_platform_30_27","x":3911.96,"z":1826.97,"r":0.85},{"room":"ih_platform_50_46","x":3926.79,"z":1846.23,"r":0.85}],"loops":[{"at":[3855.2,1759.3],"size":[3.3,4.3],"pts":[[3857.7,1762.54],[3852.64,1762.54]],"parts":1},{"at":[3856,1772.6],"size":[5.1,5.1],"pts":[[3859.59,1776.12],[3852.49,1776.12]],"parts":1},{"at":[3907,1765],"size":[11.8,14.3],"pts":[[3913.75,1773.28],[3900.18,1773.28]],"parts":4},{"at":[3907.3,1811.6],"size":[6.6,5.9],"pts":[[3902.96,1807.67],[3911.68,1807.67],[3902.96,1815.45]],"parts":1},{"at":[3914.9,1814.5],"size":[6.7,6.6],"pts":[[3919.29,1810.24],[3919.29,1818.82]],"parts":1},{"at":[3910,1827],"size":[3.3,4.2],"pts":[[3907.42,1823.77],[3912.5,1823.77],[3912.5,1830.17],[3907.42,1830.17]],"parts":1},{"at":[3929.7,1846.2],"size":[5,5],"pts":[[3933.17,1849.75],[3926.13,1849.75]],"parts":1},{"at":[3907.3,1778.1],"size":[3.2,3.2],"pts":[[3904.66,1780.67],[3904.66,1775.47],[3909.86,1775.47],[3909.86,1780.67]],"parts":1},{"at":[3915.2,1754.2],"size":[6.4,6.4],"pts":[[3915.21,1758.82],[3918.47,1757.47],[3918.47,1750.95],[3911.95,1750.95],[3910.6,1754.21]],"parts":1}]},"isle_liftdock":{"legs":[{"who":"ld_op","from":[4205.1,1814.6],"to":[4209.55,1812.67]},{"who":"ld_op","from":[4209.55,1812.67],"to":[4205.1,1814.6]},{"who":"ld_crane","from":[4219.4,1804.9],"to":[4217,1813.56]},{"who":"ld_crane","from":[4217,1813.56],"to":[4219.4,1804.9]},{"who":"ld_load1","from":[4217.1,1813.73],"to":[4207.02,1816.91]},{"who":"ld_load1","from":[4207.02,1816.91],"to":[4212.2,1814.6]},{"who":"ld_load1","from":[4212.2,1814.6],"to":[4217.1,1813.73]},{"who":"ld_load2","from":[4212.2,1814.6],"to":[4198.44,1812.66]},{"who":"ld_load2","from":[4198.44,1812.66],"to":[4212.2,1814.6]}],"doors":[],"loops":[{"at":[4206.2,1803.3],"size":[3.6,3.6],"pts":[[4203.37,1800.53],[4208.97,1800.53],[4208.97,1806.13],[4203.37,1806.13]],"parts":1},{"at":[4192.6,1814.6],"size":[6.4,6.4],"pts":[[4195.87,1817.87],[4197.22,1814.6],[4195.87,1811.34],[4192.6,1809.99],[4189.34,1811.34],[4189.34,1817.87]],"parts":1}]},"isle_orchard":{"legs":[{"who":"or_pell","from":[4868.7,1815.6],"to":[4865.32,1817.21]},{"who":"or_pell","from":[4865.32,1817.21],"to":[4867.9,1814.31]},{"who":"or_pick1","from":[4865.79,1806.24],"to":[4873.71,1808.59]},{"who":"or_pick1","from":[4873.71,1808.59],"to":[4865.32,1817.21]},{"who":"or_pick1","from":[4865.32,1817.21],"to":[4865.79,1806.24]},{"who":"or_pick2","from":[4867.86,1811.91],"to":[4862.36,1812.72]},{"who":"or_pick2","from":[4862.36,1812.72],"to":[4870.73,1815.1]},{"who":"or_pick2","from":[4870.73,1815.1],"to":[4867.86,1811.91]},{"who":"or_carter","from":[4868.72,1816.11],"to":[4852.3,1802.1]},{"who":"or_carter","from":[4852.3,1802.1],"to":[4859.6,1795.97]},{"who":"or_carter","from":[4859.6,1795.97],"to":[4868.72,1816.11]}],"doors":[{"room":"ih_orchard_4_28","x":4877.79,"z":1827.5,"r":0.85}],"loops":[{"at":[4874,1827.5],"size":[6.9,5.3],"pts":[[4869.43,1823.99],[4878.57,1823.99],[4878.57,1831.01],[4869.43,1831.01]],"parts":1},{"at":[4863.2,1828.6],"size":[3.3,2.9],"pts":[[4860.49,1826.22],[4865.91,1826.22],[4865.91,1830.98],[4860.49,1830.98]],"parts":1},{"at":[4848.1,1802.1],"size":[6.4,6.4],"pts":[[4848.06,1806.67],[4851.32,1805.32],[4852.67,1802.06],[4851.32,1798.8],[4848.06,1797.44],[4844.8,1798.8],[4843.44,1802.06],[4844.8,1805.32]],"parts":1}]},"isle_oldwatch":{"legs":[{"who":"ow_oumi","from":[5210.7,1813.55],"to":[5200.4,1813.38]},{"who":"ow_oumi","from":[5200.4,1813.38],"to":[5210.7,1813.55]},{"who":"ow_mason","from":[5207.74,1784],"to":[5213,1787.1]},{"who":"ow_mason","from":[5213,1787.1],"to":[5207.26,1784.45]},{"who":"ow_sketch","from":[5210.5,1788.24],"to":[5196.42,1804.87]},{"who":"ow_sketch","from":[5196.42,1804.87],"to":[5210.5,1788.24]},{"who":"ow_kid","from":[5209.9,1777.6],"to":[5210.9,1818.4]},{"who":"ow_kid","from":[5210.9,1818.4],"to":[5196.27,1804.5]},{"who":"ow_kid","from":[5196.27,1804.5],"to":[5209.9,1777.6]}],"doors":[],"loops":[{"at":[5209.9,1782],"size":[4.9,4.9],"pts":[[5209.94,1785.89],[5213.8,1782.03],[5212.67,1779.3],[5209.94,1778.17],[5207.21,1779.3],[5206.08,1782.03],[5207.21,1784.76]],"parts":1},{"at":[5193.3,1797.3],"size":[6.4,6.4],"pts":[[5193.33,1801.95],[5196.59,1800.59],[5196.59,1794.07],[5193.33,1792.72],[5190.07,1794.07],[5188.72,1797.33],[5190.07,1800.59]],"parts":1}]}}
+\ No newline at end of file
+diff --git a/lba3/tests/lib/camscan.js b/lba3/tests/lib/camscan.js
+new file mode 100644
+index 00000000..c4e5ced8
+--- /dev/null
++++ b/lba3/tests/lib/camscan.js
+@@ -0,0 +1,308 @@
++// CAM-30, page side (tests/camwalls.mjs loads it after tests/lib/player.js and tests/lib/camwalk.js). camwalk.js records
++// every camera update (CW.F: the arm, what solid the lens stands in, the nearest drawn surface, behind a face, the
++// near-plane cut, his sight by colliders and volumes); this file adds, on the same frames:
++//   np    the camera's near plane itself: five points of its rectangle (the middle, the four corners) at cam.near in
++//         front of the lens — the least distance from them to a drawn surface, and whether one of them stands behind
++//         a one-sided face (the near plane inside a closed mesh: the inside of a wall shows); with its piece's name and
++//         size (the largest side of the mesh's box: an eave's rim or a post is small, a wall or a cliff large)
++//   cov   a drawn surface covers him: the lines from the lens to his head (1.5 m) and to his chest (1.0 m) both cut by a
++//         drawn opaque triangle beyond the near plane (what NEAR-CUT leaves out is not drawn) and short of him (0.35 m)
++//   sil   the silhouette pass draws him (characters.js) at that frame
++// CS.seeds(area)  the area's walks, from the game's own data (frozen by the runner into a fixture on the first run):
++//   legs   each resident's round, stop to stop (walkers.js), Twinsen walked along it by input (P.go)
++//   doors  every door the story offers into the area (any chapter): out of its room by input (P.through), recorded from
++//          the first frame outside, then a walk away, a whole turn on the spot (his back to the house), a stand
++//   loops  round every building (the area's scenery volumes made into footprints, pieces that touch as one): its
++//          corners 1.0 m off its walls walked round by input, a whole turn at the first corner
++(() => {
++  const G = window.game, C = G.camRig, cam = G.camera, PH = G.physics, CW = window.CW;
++  const V3 = cam.position.constructor;
++  const CS = (window.CS = {});
++  const _a = new V3(), _b = new V3(), _d = new V3(), _e1 = new V3(), _e2 = new V3(), _p = new V3(), _q = new V3(), _t = new V3();
++
++  // ------------------------------------------------------------------ areas
++  CS.areas = () => ['citadel', ...Object.entries(G.rooms).filter(([, R]) => R.outdoor).map(([id]) => id)];
++  const spawnOf = (id) => (id === 'citadel' ? { x: -42, z: 8 } : G.rooms[id].spawn || G.rooms[id].center);
++  CS.areaOf = (x, z) => { if (Math.abs(x) < 300 && Math.abs(z) < 300) return 'citadel'; let best = null, bd = 260; for (const id of CS.areas()) { if (id === 'citadel') continue; const s = spawnOf(id); const d = Math.hypot(s.x - x, s.z - z); if (d < bd) { bd = d; best = id; } } return best; };
++  CS.enter = (id, at = null) => { const s = at || spawnOf(id); return CW.place({ room: id === 'citadel' ? undefined : id, x: s.x, z: s.z, a: s.a ?? 0 }); };
++  const occOf = (id) => (id === 'citadel' ? G.world.occ : G.rooms[id]?.occ) || null;
++  const standable = (x, z, ref = null) => {
++    const g = ref == null ? PH.groundAt(x, z) : PH.groundAt(x, z, ref + 1.2);
++    if (!Number.isFinite(g) || g < -0.3 || PH.blockedAt(x, z, g + 0.3, 0.35) || PH.steepAt?.(x, z, g)) return null;
++    if (ref != null && Math.abs(g - ref) > 1.6) return null;
++    return g;
++  };
++
++  // ------------------------------------------------------------------ seeds
++  // every door the story offers in each chapter (by its flags, as door-sweep.mjs sets them), then the flags as they were
++  CS.collectDoors = () => {
++    const S = G.story, f = G.flags, keep = { chapter: f.chapter, chapterKey: f.chapterKey }, out = [];
++    for (let ci = 0; ci < S.chapters.length; ci++) {
++      Object.assign(f, { chapter: ci, chapterKey: S.chapters[ci].key });
++      try { S.refreshCast?.(); out.push(...S.doors()); } catch (e) { /* a chapter that needs more of its flags */ }
++    }
++    Object.assign(f, keep); S.refreshCast?.(); P.settle();
++    CS.allDoors = out.filter((d) => d && Number.isFinite(d.x));
++    return CS.allDoors.length;
++  };
++  CS.seeds = (id) => {
++    const out = { legs: [], doors: [], loops: [] };
++    // residents' rounds
++    for (const r of G.walkers.res) {
++      const st = (r.stops || []).filter((s) => Number.isFinite(s.x) && CS.areaOf(s.x, s.z) === id);
++      for (let i = 0; i < st.length; i++) { const a = st[i], b = st[(i + 1) % st.length]; if (st.length < 2 || Math.hypot(a.x - b.x, a.z - b.z) < 3) continue; out.legs.push({ who: r.def.id, from: [+a.x.toFixed(2), +a.z.toFixed(2)], to: [+b.x.toFixed(2), +b.z.toFixed(2)] }); }
++    }
++    // the story's doors (every chapter's, the town's), once per room and spot
++    const S = G.story, seen = new Set();
++    const all = [...(CS.allDoors || [])];
++    G.regions.peek?.(() => { for (const f of [() => S.doors(), () => S.townDoors?.() || [], ...S.chapters.map((c) => () => c.doors()), ...[S.life, S.workshop, S.kesh, S.zlife].filter(Boolean).map((c) => () => c.doors?.() || [])]) { try { all.push(...f()); } catch (e) { /* needs its flags */ } } });
++    if (!all.length) for (const f of [() => S.doors(), () => S.townDoors?.() || [], ...S.chapters.map((c) => () => c.doors())]) { try { all.push(...f()); } catch (e) { /* */ } }
++    for (const d of all) {
++      if (!d || !Number.isFinite(d.x) || (d.region || 'citadel') !== id || !d.room) continue;
++      const k = d.room + '@' + Math.round(d.x) + ',' + Math.round(d.z); if (seen.has(k)) continue; seen.add(k);
++      out.doors.push({ room: d.room, x: +d.x.toFixed(2), z: +d.z.toFixed(2), r: d.r || 0.9 });
++    }
++    // an outdoor room's own exits (Ballastra's doors and its districts' gates: { x, z, r, room })
++    for (const e of (id === 'citadel' ? [] : G.rooms[id].exits || [])) {
++      if (!e?.room || !Number.isFinite(e.x)) continue;
++      const k = e.room + '@' + Math.round(e.x) + ',' + Math.round(e.z); if (seen.has(k)) continue; seen.add(k);
++      out.doors.push({ room: e.room, x: +e.x.toFixed(2), z: +e.z.toFixed(2), r: e.r || 0.9 });
++    }
++    // an area with few residents: its paths between its doors and its arrival (nearest next, up to 45 m a leg)
++    if (out.legs.length < 6) {
++      const sp = spawnOf(id), pts = [[sp.x, sp.z], ...out.doors.map((d) => [d.x, d.z])], left = pts.slice(1);
++      let cur = pts[0];
++      while (left.length) { left.sort((a, b) => Math.hypot(a[0] - cur[0], a[1] - cur[1]) - Math.hypot(b[0] - cur[0], b[1] - cur[1])); const nx = left.shift();
++        const L = Math.hypot(nx[0] - cur[0], nx[1] - cur[1]);
++        if (L <= 45 && L > 5) { const ux = (nx[0] - cur[0]) / L, uz = (nx[1] - cur[1]) / L, a0 = cur === pts[0] ? 0 : 2, a = [cur[0] + ux * a0, cur[1] + uz * a0], b = [nx[0] - ux * 2, nx[1] - uz * 2];   // (2 m short of a door: not into it)
++          out.legs.push({ who: 'path', from: a.map((u) => +u.toFixed(2)), to: b.map((u) => +u.toFixed(2)) }); }
++        cur = nx; }
++    }
++    // buildings: the scenery volumes' footprints (pieces whose boxes touch, as one), at least 2.5 m tall over the ground
++    const occ = occOf(id), T = G.world.terrain, fp = [];
++    if (occ) for (const v of occ.list) {
++      if (v.camOnly) continue;
++      let pts;
++      if (v.kind === 'rev') { if (v.R < 1.2) continue; pts = [0, 1, 2, 3, 4, 5, 6, 7].map((k) => [v.x + Math.sin(k * Math.PI / 4) * v.R, v.z + Math.cos(k * Math.PI / 4) * v.R]); }
++      else { if (Math.max(v.hw, v.hd) < 1.2 || Math.min(v.hw, v.hd) < 0.4) continue; const c = Math.cos(v.rot || 0), s = Math.sin(v.rot || 0); pts = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, w]) => { const lx = u * v.hw, lz = w * v.hd; return [v.x + lx * c + lz * s, v.z - lx * s + lz * c]; }); }
++      const cx0 = pts.reduce((a, q) => a + q[0], 0) / pts.length, cz0 = pts.reduce((a, q) => a + q[1], 0) / pts.length;
++      // (the ground at its foot: a floor he can stand on just outside it, at least 2.5 m under its top — not a neighbour's
++      //  higher roof; a volume whose base reaches far down, a district's on its brick floor, the same)
++      const gs = pts.map(([x, z]) => { const px = x + Math.sign(x - cx0) * 1.2, pz = z + Math.sign(z - cz0) * 1.2, f = PH.groundAt(px, pz, v.top - 2.5 + 0.01); return Number.isFinite(f) && f > -0.3 && !PH.blockedAt(px, pz, f + 0.3, 0.35) ? f : null; }).filter((f) => f != null);
++      if (!gs.length) continue;
++      const g = Math.min(...gs);
++      fp.push({ g, pts, x0: Math.min(...pts.map((p) => p[0])), x1: Math.max(...pts.map((p) => p[0])), z0: Math.min(...pts.map((p) => p[1])), z1: Math.max(...pts.map((p) => p[1])), y: v.top, rot: v.kind === 'box' ? v.rot || 0 : null, n: 1 });
++    }
++    // (merge the touching ones into one building: its box)
++    let merged = true;
++    while (merged) { merged = false;
++      for (let i = 0; i < fp.length && !merged; i++) for (let j = i + 1; j < fp.length; j++) { const a = fp[i], b = fp[j];
++        if (a.x0 - 0.15 > b.x1 || b.x0 - 0.15 > a.x1 || a.z0 - 0.15 > b.z1 || b.z0 - 0.15 > a.z1) continue;
++        const x0 = Math.min(a.x0, b.x0), x1 = Math.max(a.x1, b.x1), z0 = Math.min(a.z0, b.z0), z1 = Math.max(a.z1, b.z1);
++        if ((x1 - x0) + (z1 - z0) > 60) continue;   // (a fortress wall's run, a terrace of houses: kept in its pieces)
++        fp[i] = { pts: [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], x0, x1, z0, z1, g: Math.min(a.g, b.g), y: Math.max(a.y, b.y), rot: null, n: a.n + b.n }; fp.splice(j, 1); merged = true; break; }
++    }
++    for (const b of fp) {
++      // the corners 1.0 m out (along the diagonal from the middle; a tower: its eight points)
++      const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2;
++      const ring = b.pts.map(([x, z]) => { const dx = x - cx, dz = z - cz, L = Math.hypot(dx, dz) || 1; return [x + dx / L * 1.0 * Math.SQRT2, z + dz / L * 1.0 * Math.SQRT2]; });
++      const ok = ring.map(([x, z]) => [x, z, standable(x, z, b.g)]).filter((p) => p[2] != null).map(([x, z]) => [+x.toFixed(2), +z.toFixed(2)]);
++      if (ok.length < 2) continue;
++      out.loops.push({ at: [+cx.toFixed(1), +cz.toFixed(1)], size: [+(b.x1 - b.x0).toFixed(1), +(b.z1 - b.z0).toFixed(1)], pts: ok, parts: b.n });
++    }
++    return out;
++  };
++
++  // ------------------------------------------------------------------ the per-frame additions
++  const FOV = () => (cam.fov * Math.PI) / 360;
++  // CW.tris, with each triangle's piece size (the box of every triangle of that name: the largest side, m)
++  CS.tris = (box) => {
++    const r = CW.tris(box), B = new Map();
++    for (const T of CW.tri.tris) { let b = B.get(T.name); if (!b) B.set(T.name, (b = [1e9, 1e9, 1e9, -1e9, -1e9, -1e9])); b[0] = Math.min(b[0], T.mx); b[1] = Math.min(b[1], T.my); b[2] = Math.min(b[2], T.mz); b[3] = Math.max(b[3], T.Mx); b[4] = Math.max(b[4], T.My); b[5] = Math.max(b[5], T.Mz); }
++    for (const [k, b] of B) CS.sizes.set(k, +Math.max(b[3] - b[0], b[4] - b[1], b[5] - b[2]).toFixed(1));
++    return r;
++  };
++  // segment a→b against the drawn triangles (CW.tri's grid); the first hit's [t (m from a), name] beyond tMin, short of b by tEnd
++  const segHit = (a, b, tMin, tEnd) => {
++    const D = CW.tri; if (!D) return null;
++    _d.subVectors(b, a); const L = _d.length(); if (L < 1e-3) return null; _d.divideScalar(L);
++    const seen = new Set(), n = Math.ceil(L / (D.cell * 0.5));
++    let best = null;
++    for (let s = 0; s <= n; s++) {
++      const x = a.x + _d.x * L * s / n, z = a.z + _d.z * L * s / n;
++      const k = D.key(Math.floor(x / D.cell), Math.floor(z / D.cell));
++      for (const ti of D.grid.get(k) || []) {
++        if (seen.has(ti)) continue; seen.add(ti);
++        const T = D.tris[ti]; if (T.mat.transparent && T.mat.opacity < 0.9) continue;
++        _e1.subVectors(T.b, T.a); _e2.subVectors(T.c, T.a); _p.crossVectors(_d, _e2); const det = _e1.dot(_p);
++        if (Math.abs(det) < 1e-9) continue; const inv = 1 / det; _t.subVectors(a, T.a); const u = _t.dot(_p) * inv; if (u < 0 || u > 1) continue;
++        _q.crossVectors(_t, _e1); const v = _d.dot(_q) * inv; if (v < 0 || u + v > 1) continue; const t = _e2.dot(_q) * inv;
++        if (t > tMin && t < L - tEnd && (!best || t < best[0])) best = [t, T.name, T.size];
++      }
++    }
++    return best;
++  };
++  CS.cover = () => {
++    const h = G.hero, c = cam.position, near = cam.near;
++    _a.set(h.pos.x, h.pos.y + 1.5, h.pos.z); const hh = segHit(c, _a, near, 0.35);
++    if (!hh) return null;
++    _b.set(h.pos.x, h.pos.y + 1.0, h.pos.z); const hc = segHit(c, _b, near, 0.35);
++    if (!hc) return null;
++    _d.subVectors(_a, c).normalize(); const pin = c.clone().addScaledVector(_d, hh[0] + 0.05), E = CS.extent(pin);
++    return [hh[0], hh[1], wallLike(E), E];
++  };
++  // the near plane's five points; the least distance to a drawn surface, behind a face, the piece
++  // the nearest drawn surface to p within R: { d, who, back (p behind that one-sided face), q (its closest point), n (its normal) }
++  const closest = (p, T, q) => {
++    const a = T.a, b = T.b, c = T.c;
++    const abx = b.x - a.x, aby = b.y - a.y, abz = b.z - a.z, acx = c.x - a.x, acy = c.y - a.y, acz = c.z - a.z, apx = p.x - a.x, apy = p.y - a.y, apz = p.z - a.z;
++    const d1 = abx * apx + aby * apy + abz * apz, d2 = acx * apx + acy * apy + acz * apz; if (d1 <= 0 && d2 <= 0) return q.copy(a);
++    const bpx = p.x - b.x, bpy = p.y - b.y, bpz = p.z - b.z, d3 = abx * bpx + aby * bpy + abz * bpz, d4 = acx * bpx + acy * bpy + acz * bpz; if (d3 >= 0 && d4 <= d3) return q.copy(b);
++    const vc = d1 * d4 - d3 * d2; if (vc <= 0 && d1 >= 0 && d3 <= 0) { const v = d1 / (d1 - d3); return q.set(a.x + abx * v, a.y + aby * v, a.z + abz * v); }
++    const cpx = p.x - c.x, cpy = p.y - c.y, cpz = p.z - c.z, d5 = abx * cpx + aby * cpy + abz * cpz, d6 = acx * cpx + acy * cpy + acz * cpz; if (d6 >= 0 && d5 <= d6) return q.copy(c);
++    const vb = d5 * d2 - d1 * d6; if (vb <= 0 && d2 >= 0 && d6 <= 0) { const w = d2 / (d2 - d6); return q.set(a.x + acx * w, a.y + acy * w, a.z + acz * w); }
++    const va = d3 * d6 - d5 * d4; if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) { const w = (d4 - d3) / (d4 - d3 + (d5 - d6)); return q.set(b.x + (c.x - b.x) * w, b.y + (c.y - b.y) * w, b.z + (c.z - b.z) * w); }
++    const den = 1 / (va + vb + vc), v = vb * den, w = vc * den; return q.set(a.x + abx * v + acx * w, a.y + aby * v + acy * w, a.z + abz * v + acz * w);
++  };
++  const _cq = new V3(), _bq = new V3();
++  CS.nearest = (p, R = 0.6) => {
++    const D = CW.tri; if (!D) return { d: 99, who: '', back: false };
++    let best = R, bt = null;
++    const i0 = Math.floor((p.x - R) / D.cell), i1 = Math.floor((p.x + R) / D.cell), j0 = Math.floor((p.z - R) / D.cell), j1 = Math.floor((p.z + R) / D.cell), seen = new Set();
++    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) for (const ti of D.grid.get(D.key(i, j)) || []) {
++      if (seen.has(ti)) continue; seen.add(ti);
++      const T = D.tris[ti]; if (T.mat.transparent && T.mat.opacity < 0.9) continue;
++      if (p.x < T.mx - best || p.x > T.Mx + best || p.z < T.mz - best || p.z > T.Mz + best || p.y < T.my - best || p.y > T.My + best) continue;
++      closest(p, T, _cq); const d = _cq.distanceTo(p); if (d < best - 1e-6) { best = d; bt = T; _bq.copy(_cq); }
++    }
++    if (!bt) return { d: 99, who: '', back: false };
++    const back = bt.side !== 2 && (p.x - _bq.x) * bt.n.x + (p.y - _bq.y) * bt.n.y + (p.z - _bq.z) * bt.n.z < -1e-4;
++    return { d: best, who: bt.name, back, q: _bq.clone(), n: bt.n };
++  };
++  // the solid round a point inside it: its extents along x, y and z (rays out to the first drawn face, 3 m each way at
++  // most), largest first. A wall, a roof or a rock face has two large ones (≥ 1.5 m); an eave's rim, a post, a branch one
++  const _x0 = new V3(), _x1 = new V3();
++  CS.extent = (pin) => {
++    const E = [];
++    for (const [dx, dy, dz] of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
++      let t = 0;
++      for (const s of [1, -1]) { _x1.set(pin.x + dx * 3 * s, pin.y + dy * 3 * s, pin.z + dz * 3 * s); const h = segHit(pin, _x1, 0.005, 0); t += h ? h[0] : 3; }
++      E.push(+t.toFixed(2));
++    }
++    return E.sort((a, b) => b - a);
++  };
++  const wallLike = (E) => E[1] >= 1.5 && E[2] < 6;   // (no face round it at all along any axis: a lone sheet — a gull, a leaf card —, not inside a solid)
++  // the near plane's five points (its middle and corners at cam.near in front of the lens): the worst of them — inside a
++  // mesh first, else the nearest surface — with that solid's extents when it is inside or within 0.15 m
++  CS.nearPlane = () => {
++    cam.updateMatrixWorld();
++    const n = cam.near, hy = Math.tan(FOV()) * n, hx = hy * cam.aspect, e = cam.matrixWorld.elements;
++    const X = [e[0], e[1], e[2]], Y = [e[4], e[5], e[6]], Z = [-e[8], -e[9], -e[10]], c = cam.position;
++    let W = null, Wp = null;
++    for (const [u, w] of [[0, 0], [-1, -1], [1, -1], [1, 1], [-1, 1]]) {
++      _p.set(c.x + Z[0] * n + X[0] * hx * u + Y[0] * hy * w, c.y + Z[1] * n + X[1] * hx * u + Y[1] * hy * w, c.z + Z[2] * n + X[2] * hx * u + Y[2] * hy * w);
++      const r = CS.nearest(_p, 0.6), inn = r.back && r.d < 0.6;
++      if (!W || (inn && !W.inn) || (inn === W.inn && r.d < W.d)) { W = { ...r, inn }; Wp = _p.clone(); }
++    }
++    if (!W || (!W.inn && W.d >= 0.15)) return { d: W?.d ?? 99, who: W?.who || '', back: false };
++    const pin = W.inn ? Wp : W.q.clone().addScaledVector(W.n, -0.04);
++    const E = CS.extent(pin);
++    return { d: W.d, who: W.who, back: W.inn, ext: E, wall: wallLike(E) };
++  };
++  // the piece sizes: the mesh's box (by name: the largest of that name)
++  CS.sizes = new Map();
++  // (the cost of the near plane's choice, camera.js _lens: ms over calls, while recording)
++  CS.lensT = { ms: 0, n: 0, max: 0 };
++  if (C._lens) { const L0 = C._lens.bind(C); C._lens = (...a) => { if (!CW.on) return L0(...a); const t0 = performance.now(); const r = L0(...a); const dt = performance.now() - t0; CS.lensT.ms += dt; CS.lensT.n++; if (dt > CS.lensT.max) CS.lensT.max = dt; return r; }; }
++  const up0 = C.update.bind(C);
++  C.update = (...args) => {
++    up0(...args);
++    if (!CW.on || C.cine || C.override || C.iso || (G.room && !G.room.outdoor)) return;
++    const f = CW.F[CW.F.length - 1]; if (!f || f._cs) return; f._cs = 1;
++    const np = CS.nearPlane(); f.npd = np.d; f.npWho = np.who; f.npBack = np.back; f.npWall = !!np.wall; f.npExt = np.ext || null;
++    if (f.back && f.nd < 0.6) { const E = CS.extent(cam.position); f.lensExt = E; f.lensWall = wallLike(E); f.lensIn = f.lensWall; }
++    if (f.nd < 0.15 && !f.back) { const r = CS.nearest(cam.position, 0.2); if (r.q) { const E = CS.extent(r.q.clone().addScaledVector(r.n, -0.04)); f.lensExt = E; f.lensWall = wallLike(E); } }
++    // (how far the camera's own solids — the terrain, the colliders, its scenery volumes — stand from the lens there: the
++    //  drawn surface lies that much outside what the camera knows)
++    if (f.lensWall) { f.known = 9; for (let g = 0; g <= 1.5; g += 0.05) if (C._solidAt(cam.position, g)) { f.known = +g.toFixed(2); break; } }
++    const cv = CS.cover(); f.cov = cv ? cv[1] + (cv[2] ? ' (wall-like ' : ' (small ') + cv[3].join('/') + ')' : ''; f.covWall = !!cv?.[2];
++    f.sil = !!G.hero.rig.silhouette && G.hero.rig.silhouette.visible !== false;
++    f.cn = cam.near;
++  };
++  // a walk's numbers (CW.stats plus the near plane, the drawn cover, the lens within 0.15 m)
++  CS.stats = (F) => {
++    const s = CW.stats(F), r = (u, k = 2) => +u.toFixed(k);
++    let lensNear = 0, cwRun = 0, cwMax = 0, cwAt = -1, cwWho = '', npWall = 0, npWallAt = -1, np15Wall = 0, np15WallAt = -1, lensWall = 0, lensWallAt = -1, lensWallWho = '', lens15 = 0, lensMin = 99, lensWho = '', lensAt = -1, npIn = 0, npInWho = {}, np15 = 0, np15Who = {}, cov = 0, covRun = 0, covMax = 0, covAt = -1, covWho = '', covRunWho = '';
++    const ev = [];
++    for (let i = 0; i < F.length; i++) {
++      const f = F[i], dt = i ? Math.max(1e-4, F[i].t - F[i - 1].t) : 1 / 60;
++      if (f.nd < 0.15) { lens15++; if (f.nd < lensMin) { lensMin = f.nd; lensWho = f.nwho; lensAt = i; } }
++      const tag = f.npWho + (f.npWall ? ' (wall-like)' : f.npExt ? ' (small)' : '');
++      if (f.npBack) { npIn++; npInWho[tag] = (npInWho[tag] || 0) + 1; if (f.npWall) { npWall++; if (npWallAt < 0) npWallAt = i; } }
++      else if (f.npd < 0.15) { np15++; np15Who[tag] = (np15Who[tag] || 0) + 1; if (f.npWall) { np15Wall++; if (np15WallAt < 0) np15WallAt = i; } }
++      if (f.lensWall && !f.lensIn) lensNear++;
++      if (f.lensIn) { lensWall++; if (lensWallAt < 0) lensWallAt = i; lensWallWho = f.nwho + ' ' + f.lensExt.join('/') + ' (the camera\'s own solids ' + f.known + ' m off)'; }
++      if (f.cov) { cov++; covRun += dt; if (!covRunWho) covRunWho = f.cov; if (covRun > covMax) { covMax = covRun; covAt = i; covWho = covRunWho; } } else { covRun = 0; covRunWho = ''; }
++      if (f.covWall) { cwRun += dt; if (cwRun > cwMax) { cwMax = cwRun; cwAt = i - Math.round(cwRun * 30); cwWho = f.cov; } } else cwRun = 0;
++      if (f.ins || f.nd < 0.15 || (f.back && f.nd < 0.6) || f.npBack) ev.push(i);
++    }
++    // (the near plane's own motion: its largest change a frame, and its reversals — in, out, in — of more than 5 cm)
++    let nStep = 0, nRev = 0, lastD = 0;
++    for (let i = 1; i < F.length; i++) { const d = (F[i].cn ?? 0) - (F[i - 1].cn ?? 0); nStep = Math.max(nStep, Math.abs(d)); if (Math.abs(d) > 0.05) { if (lastD && Math.sign(d) !== Math.sign(lastD)) nRev++; lastD = d; } }
++    const at = (i) => (i >= 0 && F[i] ? { c: F[i].c.map((u) => r(u)), h: F[i].h.map((u) => r(u)), t: r(F[i].t), i } : null);
++    return { ...s, lensNear, nearStep: r(nStep, 3), nearRev: nRev, covWallMax: r(cwMax), covWallAt: at(Math.max(0, cwAt)), covWallWho: cwWho, npWall, npWallAt: at(npWallAt), np15Wall, np15WallAt: at(np15WallAt), lensWall, lensWallAt: at(lensWallAt), lensWallWho, lens15, lensMin: r(lensMin, 3), lensWho, lensAt: at(lensAt), npIn, npInWho, np15, np15Who, cov, covMax: r(covMax), covWho, covAt: at(covAt), covIdx: covAt, insAt2: at(s.insAt), backAt2: at(s.backAt), evIdx: ev.slice(0, 1)[0] ?? -1, ev: ev.length };
++  };
++
++  // ------------------------------------------------------------------ the walks
++  const hold = (codes, s) => { for (const k of codes) G.input.keys.add(k); CW.step(s, 60); for (const k of codes) G.input.keys.delete(k); };
++  const keepAlive = () => { const h = G.hero; h.hp = h.maxHp ?? h.hp; h.dead = false; };
++  CS.leg = (w) => {
++    const [x0, z0] = w.from, [x1, z1] = w.to;
++    const g = standable(x0, z0); if (g == null) return { skip: 'start not standable' };
++    CW.place({ x: x0, z: z0, a: Math.atan2(x1 - x0, z1 - z0), room: w.room });
++    keepAlive(); CW.start();
++    const r = P.go(x1, z1, { tol: 0.8, maxT: Math.min(40, 4 + Math.hypot(x1 - x0, z1 - z0) / 1.2), fight: false });
++    hold([], 0.5);
++    return { r: r.r };
++  };
++  CS.door = (w, area) => {
++    const R = G.regions.ensure(w.room, 'cam30'); if (!R) return { skip: 'no room' };
++    // its exit that leads back out to this door (a story exit, or one between two rooms / districts: { room })
++    let best = null;
++    for (const e of R.exits || []) {
++      let to = null;
++      if (e.room) { if (e.room !== area) continue; const A = G.rooms[area]; to = { room: area, ...(A?.entries?.[w.room] || A?.spawn || {}) }; }
++      else { try { const pr = G.regions.probe(() => G.story.exitTo(e.to)); for (const m of pr.misses || []) G.regions.ensure(m, 'cam30'); to = G.story.exitTo(e.to); } catch (err) { continue; } }
++      if (!to || !Number.isFinite(to.x)) continue;
++      const reg = to.room || 'citadel'; if (reg !== area) continue;
++      const d = Math.hypot(to.x - w.x, to.z - w.z); if (d < 12 && (!best || d < best.d)) best = { e, d };
++    }
++    if (!best) return { skip: 'no exit back to it' };
++    for (const k of [...G.input.keys]) G.input.keys.delete(k);
++    for (let i = 0; i < 100 && (G.trans || G.state !== 'play'); i++) { if (G.state === 'dialog') G.input.taps.add('KeyE'); else if (G.state !== 'play' && G.state !== 'cinematic') G.setState('play'); G.step(0.1); }
++    G.enterRoom(w.room, null, true, true); G.step(0.3);
++    const h = G.hero, e = best.e;
++    // 1.4 m inside the exit, facing it (the room's spawn side)
++    const cx = R.center?.x ?? R.spawn?.x ?? e.x, cz = R.center?.z ?? R.spawn?.z ?? e.z, dx = cx - e.x, dz = cz - e.z, L = Math.hypot(dx, dz) || 1;
++    let sx = e.x + dx / L * (e.r + 1.0), sz = e.z + dz / L * (e.r + 1.0);
++    const gy = PH.groundAt(sx, sz, (e.y ?? h.pos.y) + 1);
++    if (PH.blockedAt(sx, sz, gy + 0.3, 0.3)) { sx = R.spawn?.x ?? sx; sz = R.spawn?.z ?? sz; }
++    h.pos.set(sx, PH.groundAt(sx, sz, (e.y ?? h.pos.y) + 1), sz); h.angle = Math.atan2(e.x - sx, e.z - sz); h.resetMotion?.(); G.doorCool = 0;
++    G.step(0.2);
++    keepAlive(); CW.start();
++    const r = P.through(e.x, e.z, { fight: false });
++    if ((G.room?.id ?? 'citadel') !== area || G.room && !G.room.outdoor && area !== 'citadel') { CW.on = false; return { skip: 'did not come out here: ' + (G.room?.id ?? 'citadel') + ' ' + (r?.r || '') }; }
++    hold(['ArrowUp'], 2.5); hold(['ArrowLeft'], 3.6); hold([], 0.8);
++    return { r: 'out' };
++  };
++  CS.loop = (w) => {
++    const p = w.pts; if (p.length < 2) return { skip: 'short' };
++    CW.place({ x: p[0][0], z: p[0][1], a: Math.atan2(p[1][0] - p[0][0], p[1][1] - p[0][1]), room: w.room });
++    keepAlive(); CW.start();
++    hold(['ArrowLeft'], 3.6);
++    const res = [];
++    for (let i = 1; i <= p.length; i++) { const q = p[i % p.length]; const r = P.go(q[0], q[1], { tol: 0.7, maxT: 14, fight: false }); res.push(r.r); keepAlive(); }
++    hold([], 0.6);
++    return { r: res.join(',') };
++  };
++})();
+diff --git a/lba3/tools/cam30-sheet.py b/lba3/tools/cam30-sheet.py
+new file mode 100644
+index 00000000..89d097e6
+--- /dev/null
++++ b/lba3/tools/cam30-sheet.py
+@@ -0,0 +1,35 @@
++#!/usr/bin/env python3
++# CAM-30: the before/after sheet of camwalls.mjs's pictures (SHOTFROM=<base OUT> TAG=before / TAG=after, one directory).
++# usage: python3 tools/cam30-sheet.py <shots dir> <out.png> <name> [<name> ...]
++#   each <name> is a picture's name without its before-/after- prefix (e.g. isle-platform-building-3-...-nearplane.png);
++#   rows of before | after, 600 px wide each (scaled from 960 x 540), a caption over each row; at most 1300 x 3500 px.
++import sys
++from PIL import Image, ImageDraw, ImageFont
++
++src, out, names = sys.argv[1], sys.argv[2], sys.argv[3:]
++W, H, CAP, GAP = 640, 360, 24, 6
++rows = []
++for n in names:
++    try:
++        a = Image.open(f'{src}/before-{n}').convert('RGB').resize((W, H))
++        b = Image.open(f'{src}/after-{n}').convert('RGB').resize((W, H))
++    except FileNotFoundError:
++        continue
++    rows.append((n, a, b))
++h = min(3500, len(rows) * (H + CAP + GAP) + CAP)
++sheet = Image.new('RGB', (2 * W + GAP, h), (24, 24, 24))
++d = ImageDraw.Draw(sheet)
++try:
++    font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 15)
++except OSError:
++    font = ImageFont.load_default()
++d.text((8, 4), 'CAM-30: before (left) | after (right): Follow, Far; automated runtime only (SwiftShader)', fill=(235, 235, 235), font=font)
++y = CAP
++for n, a, b in rows:
++    if y + CAP + H > h:
++        break
++    d.text((8, y + 3), n.replace('.png', '').replace('-', ' '), fill=(255, 220, 120), font=font)
++    sheet.paste(a, (0, y + CAP)); sheet.paste(b, (W + GAP, y + CAP))
++    y += CAP + H + GAP
++sheet.save(out, optimize=True)
++print(out, sheet.size, len(rows), 'rows')

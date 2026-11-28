@@ -1,0 +1,30 @@
+=== perfbudget start 2026-11-01T20:19:45Z
+startup {"load":{"worldSteps":{"textures":4179,"heights":1276,"ground":541,"terrain":380,"town":550,"statue":284,"tree spots":13,"tree round":55,"tree fruit":3,"tree tall":2,"tree pine":4,"trees":28,"plants":133,"island":819,"landmarks":21,"end":26},"world":8314,"spaceport":676,"townlife":190,"containers":35,"citydress":334,"wizards":50,"lba1":7,"sewers":3,"citadel":13028,"house":1181,"well":48,"regioncontainers":0,"actors":434,"story":519,"total":29404,"regions":{"startup":[{"group":"house","ms":1181,"why":"startup"},{"group":"well","ms":48,"why":"startup"}],"later":[],"deferred":["office","projoffice","control","workshop","lighttop","cellar","zeelich","underground","desert","condenser","butemple","wtent","school","asylum","bumaze","hamalayi","obsv","upper","valves","arena","sewer","isle_otringal","isle_knartas","isle_mosquibee","isle_celebration","isle_undergas","isle_cxislet","isle_platform","isle_liftdock","isle_tralu","isle_orchard","isle_oldwatch"],"speed":2.51},"prep":{"paint":3798,"programs":84,"textures":9,"geometry":14918,"geometryPart":2485,"shadowBatches":419,"layers":22992,"batches":1594,"batchUpload":257,"startRoom":25921,"audioContext":160,"shadowPrograms":25086,"firstDraws":20295,"firstFrame":26406},"slices":{"textures":[5],"layers":[7180,411,415,526,513,463,453,376,381,522,333,264,358,535,323,324,683,625,347,246,279,235,457,706,356,277,1280,461,622,609,532,421,312,501,517,2],"startLayers":[16582,370,1185,322,332,410,115,760,371,516,237,323,337,338,304,323,264,318,428,263,170,296,401,0],"shadowPrograms":[82,82,8223,6965,2621,2315,1539,1216,2043]},"shaders":141934,"programs":85,"timeline":[[3614,"Building Citadel…"],[7798,"Building Citadel…"],[9086,"Building Citadel…"],[9634,"Building Citadel…"],[10016,"Building Citadel…"],[10568,"Building Citadel…"],[10855,"Building Citadel…"],[10870,"Building Citadel…"],[10916,"Building Citadel…"],[10926,"Building Citadel…"],[10928,"Building Citadel…"],[10934,"Building Citadel…"],[11319,"Building Citadel…"],[11754,"Building Citadel…"],[11971,"Building Citadel…"],[12327,"Building Citadel…"],[12746,"Building Citadel…"],[13240,"Building Citadel…"],[13451,"Building Citadel…"],[14407,"Building Citadel…"],[14437,"Building Citadel…"],[14917,"Building Citadel…"],[28775,"Building Twinsen's house…"],[29972,"Building the well cave…"],[32372,"Preparing the story…"],[33042,"Preparing graphics…"],[33408,"Preparing graphics…"],[33649,"Preparing Citadel…"],[34148,"Preparing Citadel…"],[48612,"Preparing Citadel…"],[50261,"Preparing Citadel…"],[50279,"Preparing Citadel…"],[50294,"Preparing Citadel…"],[51019,"Almost there…"],[76029,"Almost there…"],[76290,"Almost there…"],[102396,"Almost there…"],[127512,"Almost there…"],[136035,"Almost there…"],[144613,"Almost there…"],[147820,"Almost there…"],[147835,"Almost there…"],[174977,"title"]],"longestStep":27142},"programs":85,"gpu":"Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver"} page boot 175.115 s
+low    street     calls  107 (p95 114, max 117, shadow 0) · GPU draws 121 · tris 366k (max 446k) · submit 8.4 ms · first frame 162 ms · new programs 0 · pr 0.85 · lamps 2
+low    interior   calls   50 (p95 53, max 54, shadow 0) · GPU draws 50 · tris 214k (max 215k) · submit 4.1 ms · first frame 33 ms · new programs 0 · pr 0.85 · lamps 2
+low    combat     calls   96 (p95 98, max 98, shadow 0) · GPU draws 96 · tris 127k (max 127k) · submit 4.6 ms · first frame 122 ms · new programs 0 · pr 0.85 · lamps 2
+low    transition calls   64 (p95 68, max 68, shadow 0) · GPU draws 97 · tris 324k (max 324k) · submit 5.8 ms · first frame 17 ms · new programs 0 · pr 0.85 · lamps 2
+medium street     calls  135 (p95 155, max 163, shadow 30) · GPU draws 151 · tris 440k (max 684k) · submit 10.8 ms · first frame 95 ms · new programs 0 · pr 1 · lamps 4
+medium interior   calls   53 (p95 56, max 56, shadow 2) · GPU draws 53 · tris 252k (max 316k) · submit 4.7 ms · first frame 33 ms · new programs 0 · pr 1 · lamps 4
+medium combat     calls  152 (p95 156, max 157, shadow 55) · GPU draws 152 · tris 233k (max 233k) · submit 6.1 ms · first frame 13 ms · new programs 0 · pr 1 · lamps 4
+medium transition calls   87 (p95 121, max 123, shadow 19) · GPU draws 120 · tris 400k (max 664k) · submit 6.4 ms · first frame 17 ms · new programs 0 · pr 1 · lamps 4
+high   street     calls  167 (p95 173, max 175, shadow 41) · GPU draws 317 · tris 802k (max 909k) · submit 11.4 ms · first frame 125 ms · new programs 0 · pr 1 · lamps 8
+high   interior   calls   68 (p95 71, max 71, shadow 5) · GPU draws 68 · tris 417k (max 417k) · submit 5.7 ms · first frame 5 ms · new programs 0 · pr 1 · lamps 8
+high   combat     calls  152 (p95 156, max 156, shadow 51) · GPU draws 152 · tris 233k (max 234k) · submit 4.2 ms · first frame 10 ms · new programs 0 · pr 1 · lamps 8
+high   transition calls  112 (p95 116, max 117, shadow 31) · GPU draws 282 · tris 576k (max 576k) · submit 7.3 ms · first frame 13 ms · new programs 0 · pr 1 · lamps 8
+PASS street at Medium: ≤ 300 draw calls 
+PASS street at High: ≤ 450 draw calls 
+PASS street at Low: ≤ 260 draw calls 
+PASS interior at low: ≤ 150 draw calls 
+PASS interior at medium: ≤ 150 draw calls 
+PASS interior at high: ≤ 150 draw calls 
+PASS no shader compiles on the routes after loading (Low/Medium/High, transitions included) 
+PASS frame pacing: no object gets a new geometry more than twice while a route plays (no per-frame rebuilds: garbage + a GPU upload each time) 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 8 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== perfbudget end rc=0 wall=1148s 2026-11-01T20:38:53Z

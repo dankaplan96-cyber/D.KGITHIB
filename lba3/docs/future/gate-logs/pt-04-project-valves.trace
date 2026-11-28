@@ -1,0 +1,108 @@
+[0.4] go → (-72.1, -56.5) plan ok=true pts=16 left=0.13
+[18.1] stuck at (-41.6, -40.7): replan
+[23.5] stuck at (-40.8, -40.4): replan
+[41.5] stuck at (-60.0, -56.1): replan
+[50.2] go → (-68.0, -71.4) plan ok=false pts=10 left=0.99
+[56.0] threat: fight
+[57.5] fight drone1 d=6.4 st=windup aim=none e@-68.7,16.0,-70.4 me@-63.4,15.9,-73.2 ball=idle hp 3→3 me 11 mp 7.344166666666668
+[58.7] fight gdog1 d=3.3 st=chase aim=none e@-65.7,16.0,-72.5 me@-63.4,15.9,-73.2 ball=idle hp 3→3 me 11 mp 6.787500000000003
+[60.1] fight gdog1 d=2.4 st=recover aim=none e@-65.7,16.0,-73.0 me@-63.4,15.9,-73.2 ball=fly hp 3→3 me 11 mp 6.254166666666672
+[62.7] fight gdog1 d=2.3 st=recover aim=none e@-65.1,16.0,-73.6 me@-63.4,15.9,-73.2 ball=fly hp 3→3 me 11 mp 6.187500000000009
+[65.5] fight gdog1 d=1.8 st=chase aim=it e@-62.9,15.9,-73.7 me@-62.5,15.9,-72.9 ball=idle hp 3→2 me 10 mp 6.144166666666679
+[66.9] fight gdog1 d=0.9 st=windup aim=it e@-62.2,15.9,-74.1 me@-62.1,15.9,-72.1 ball=idle hp 2→1 me 9 mp 5.645833333333348
+[68.2] fight gdog1 d=2.0 st=dead aim=it e@-62.1,15.9,-73.2 me@-62.1,15.9,-72.1 ball=idle hp 1→0 me 9 mp 5.10083333333335
+[70.0] fight drone2 d=5.9 st=chase aim=none e@-67.3,16.0,-69.3 me@-62.1,15.9,-72.1 ball=fly hp 3→3 me 9 mp 7.344166666666668
+[71.7] fight drone2 d=5.9 st=chase aim=none e@-67.3,16.0,-69.3 me@-62.1,15.9,-72.1 ball=fly hp 3→3 me 9 mp 6.9391666666666705
+[73.2] fight guard1 d=5.8 st=aim aim=none e@-66.8,16.0,-70.1 me@-62.1,15.9,-72.1 ball=fly hp 3→3 me 9 mp 6.452500000000006
+[74.9] fight guard1 d=5.1 st=chase aim=none e@-66.3,16.0,-70.3 me@-62.1,15.9,-72.1 ball=fly hp 3→3 me 9 mp 6.047500000000008
+[76.6] fight guard1 d=4.6 st=recover aim=none e@-65.6,16.0,-70.8 me@-62.1,15.9,-72.1 ball=fly hp 3→3 me 9 mp 5.642500000000011
+[78.1] fight guard1 d=3.7 st=chase aim=none e@-65.6,16.0,-71.1 me@-62.1,15.9,-72.1 ball=fly hp 3→3 me 9 mp 5.155833333333346
+[79.1] dodge a bolt
+[79.9] fight guard1 d=3.6 st=chase aim=none e@-65.6,15.9,-71.2 me@-59.3,15.8,-72.9 ball=fly hp 3→3 me 8 mp 4.809166666666682
+[82.1] fight: guard1 unreachable from here, leaving it
+[82.1] fight guard1 d=6.5 st=recover aim=none e@-65.6,16.0,-71.7 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 4.555833333333352
+[84.4] fight drone1 d=6.6 st=chase aim=none e@-65.6,16.0,-72.0 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 4.360833333333355
+[86.6] fight drone1 d=6.4 st=chase aim=none e@-65.6,16.0,-72.4 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 4.130833333333358
+[88.8] fight drone1 d=6.4 st=chase aim=none e@-65.6,16.0,-72.6 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 3.9008333333333614
+[90.9] fight drone1 d=6.4 st=windup aim=none e@-65.6,16.0,-72.7 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 3.6591666666666978
+[93.1] fight: drone1 unreachable from here, leaving it
+[93.1] fight drone1 d=6.4 st=windup aim=none e@-65.6,16.0,-72.8 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 3.417500000000034
+[95.3] fight drone2 d=6.4 st=chase aim=none e@-65.6,16.0,-72.8 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 3.1758333333333706
+[97.4] fight drone2 d=6.4 st=chase aim=none e@-65.6,16.0,-72.9 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 2.934166666666707
+[97.4] fight → {"left":1,"dead":false,"hp":8,"t":40.2}
+[97.4] threat: fight
+[99.6] fight drone2 d=6.4 st=windup aim=none e@-65.6,16.0,-72.9 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 2.6925000000000434
+[101.8] fight: drone2 unreachable from here, leaving it
+[101.8] fight drone2 d=6.4 st=windup aim=none e@-65.6,16.0,-72.9 me@-59.2,15.8,-72.9 ball=fly hp 3→3 me 8 mp 2.45083333333338
+[101.8] fight → {"left":0,"dead":false,"hp":8,"t":4.4}
+[104.6] hurt 8→7 at (-65.9, 16.0, -73.6) near: drone1:windup,drone2:chase,guard1:windup 
+[107.1] threat: fight
+[107.8] dodge a bolt
+[108.7] fight guard1 d=0.9 st=home aim=it e@-64.7,16.0,-73.5 me@-62.2,15.9,-74.3 ball=idle hp 3→2 me 6 mp 3.8775000000000563
+[108.7] fight → {"left":0,"dead":false,"hp":6,"t":1.2}
+[109.2] threat: fight
+[109.5] dodge a bolt
+[110.4] fight guard1 d=1.5 st=aim aim=it e@-65.6,16.0,-72.7 me@-61.2,15.9,-74.3 ball=idle hp 2→1 me 5 mp 3.4725000000000588
+[111.6] fight guard1 d=4.7 st=recover aim=none e@-65.6,16.0,-72.7 me@-61.2,15.9,-74.3 ball=fly hp 1→1 me 5 mp 2.8925000000000605
+[112.0] dodge a bolt
+[113.0] dodge a bolt
+[113.3] fight guard1 d=4.7 st=home aim=other:drone2@-64.6,-73.8 d7.7 e@-65.9,16.0,-72.9 me@-57.4,16.0,-76.7 ball=idle hp 1→1 me 4 mp 3.4991666666667296
+[113.3] fight → {"left":0,"dead":false,"hp":4,"t":4.2}
+[114.3] hurt 4→3 at (-60.8, 15.9, -75.5) near: drone1:windup,drone2:chase,guard1:home 
+[116.4] hurt 3→2 at (-66.9, 16.0, -73.3) near: drone1:windup,drone2:chase,guard1:home 
+[116.9] go → (-68.0, -71.4) plan ok=false pts=5 left=0.76
+[118.5] threat: fight
+[121.4] dodge a bolt
+[121.6] fight drone1 d=4.7 st=chase aim=it e@-64.7,16.0,-73.7 me@-72.1,16.0,-71.5 ball=idle hp 3→2 me 1 mp 5.386666666666741
+[121.6] go → (-64.7, -73.7) plan ok=true pts=2 left=3.16
+[121.8] hurt 1→0 at (-72.5, 16.0, -71.4) near: drone1:windup,drone2:chase,guard1:home 
+[125.1] hurt 11→10 at (-70.4, 16.0, -71.7) near: drone1:chase,drone2:windup 
+[127.0] fight drone1 d=3.5 st=chase aim=none e@-66.2,16.0,-73.5 me@-70.3,16.0,-71.7 ball=idle hp 2→1 me 10 mp 7.344166666666668
+[128.0] dodge a bolt
+[128.2] fight drone2 d=3.5 st=chase aim=none e@-67.0,16.0,-73.0 me@-71.7,16.0,-71.2 ball=impact hp 3→3 me 10 mp 6.752500000000003
+[128.5] dodge a bolt
+[129.8] fight drone2 d=5.0 st=chase aim=it e@-67.2,16.0,-72.9 me@-72.9,16.0,-70.9 ball=idle hp 3→3 me 9 mp 7.300833333333339
+[132.4] dodge a bolt
+[132.7] dodge a bolt
+[132.9] fight guard1 d=5.7 st=dead aim=it e@-76.6,16.0,-69.4 me@-68.8,16.0,-72.9 ball=idle hp 1→0 me 8 mp 7.344166666666668
+[135.0] dodge a bolt
+[135.8] fight drone2 d=1.6 st=windup aim=it e@-66.3,16.0,-73.0 me@-72.1,16.0,-74.2 ball=idle hp 3→2 me 6 mp 7.344166666666668
+[136.9] dodge a bolt
+[137.0] fight drone2 d=6.0 st=chase aim=other:drone1@-66.0,-73.3 d7.0 e@-66.5,16.0,-73.0 me@-73.0,16.0,-74.4 ball=idle hp 2→2 me 6 mp 6.752500000000003
+[138.2] fight drone2 d=6.6 st=chase aim=it e@-69.1,16.0,-73.5 me@-75.1,16.0,-74.6 ball=idle hp 2→2 me 5 mp 7.160833333333338
+[139.3] fight drone2 d=6.1 st=chase aim=it e@-68.6,16.0,-73.5 me@-75.1,16.0,-74.6 ball=idle hp 2→1 me 5 mp 6.569166666666673
+[140.5] fight drone2 d=6.6 st=dead aim=it e@-68.7,16.0,-73.5 me@-75.1,16.0,-74.6 ball=idle hp 1→0 me 5 mp 5.977500000000008
+[140.5] fight → {"left":0,"dead":false,"hp":5,"t":16.7}
+[140.6] go → (-68.0, -71.4) plan ok=false pts=3 left=0.78
+[148.2] stuck at (-67.9, -70.6): replan
+[151.2] stuck at (-67.8, -70.6): replan
+[156.6] stuck at (-68.1, -70.6): replan
+[164.6] stuck at (-68.0, -72.4): replan
+[175.0] stuck at (-68.0, -70.6): replan
+[180.5] stuck at (-68.1, -70.6): replan
+[191.4] go → (-63.1, -32.8) plan ok=true pts=18 left=0.59
+[211.6] go → (-65.0, -34.8) plan ok=false pts=3 left=1.58
+[216.6] stuck at (-63.9, -33.7): replan
+[221.2] hurt 5→4 at (-42.1, 9.5, -38.7) near: nobody 
+[234.7] stuck at (-63.9, -33.6): replan
+[242.6] stuck at (-65.0, -31.3): replan
+[248.0] stuck at (-63.8, -33.9): replan
+[258.6] stuck at (-65.6, -32.2): replan
+[268.9] go → (-68.5, -24.2) plan ok=true pts=5 left=0.21
+[273.5] go → (-69.0, -22.6) plan ok=true pts=2 left=0.07
+[275.4] go → (-67.4, -23.1) plan ok=true pts=1 left=0.12
+[276.5] go → (-65.7, -23.7) plan ok=true pts=1 left=0.17
+[278.1] go → (-66.4, -25.5) plan ok=true pts=1 left=0.11
+[279.3] go → (-66.5, -27.0) plan ok=true pts=1 left=0.1
+[280.9] go → (-64.4, -27.3) plan ok=true pts=1 left=0.25
+[282.2] go → (-63.5, -28.2) plan ok=true pts=1 left=0.14
+[283.7] go → (-64.5, -30.2) plan ok=false pts=1 left=0.34
+[286.2] stuck at (-64.5, -29.8): replan
+[289.3] go → (-63.8, -31.3) plan ok=true pts=1 left=0.2
+[290.8] go → (-61.6, -31.5) plan ok=true pts=1 left=0.28
+[293.3] stuck at (-61.9, -31.4): replan
+[297.1] go → (-61.5, -32.9) plan ok=true pts=1 left=0.19
+[298.3] go → (-62.3, -34.6) plan ok=true pts=1 left=0.1
+[300.2] go → (-60.5, -33.8) plan ok=true pts=1 left=0.1
+[301.7] go → (-55.2, -36.6) plan ok=false pts=4 left=0.81
+[304.1] go → (-55.2, -36.6) plan ok=false pts=2 left=0.73

@@ -1,0 +1,29 @@
+[0.4] go → (4286.0, -66.0) plan ok=true pts=8 left=0
+[15.6] stuck at (4307.8, -60.2): replan
+[28.3] go: transition (hamalayi → hamalayi, trans true) at (4286.87, -65.68)
+[29.2] go → (4596.5, 4.0) plan ok=true pts=1 left=0.85
+[31.8] go → (4598.0, -2.0) plan ok=false pts=3 left=0.86
+[35.7] go → (4598.0, -2.0) plan ok=false pts=3 left=0.87
+[41.1] go → (4598.0, 2.0) plan ok=false pts=3 left=0.89
+[44.5] go → (4598.0, 2.0) plan ok=false pts=2 left=0.89
+[47.0] stuck at (4598.0, 1.1): replan
+[51.2] go → (4602.0, 2.0) plan ok=false pts=3 left=0.88
+[55.3] go → (4602.0, 2.0) plan ok=false pts=4 left=0.98
+[64.0] go → (4604.0, 4.0) plan ok=false pts=3 left=1.19
+[66.2] go → (4604.0, 4.0) plan ok=false pts=4 left=1.17
+[71.1] go → (4594.0, 4.5) plan ok=true pts=3 left=0.2
+[77.4] go: transition (obsv → obsv, trans true) at (4594.54, 3.95)
+[78.3] go → (4258.0, -40.0) plan ok=true pts=6 left=1.11
+[83.2] go → (4248.5, -52.9) plan ok=true pts=3 left=2.71
+[88.6] hurt 10→9 at (4259.3, 16.0, -55.3) near: heavydrone:chase 
+[90.7] hurt 9→8 at (4256.6, 16.0, -55.0) near: heavydrone:chase 
+[92.6] fight heavydrone d=3.5 st=windup aim=it e@4253.1,16.2,-52.9 me@4256.8,16.0,-55.5 ball=idle hp 8→5 me 8 mp 11.344166666666668
+[93.8] fight heavydrone d=4.4 st=windup aim=it e@4252.4,16.2,-52.4 me@4256.8,16.0,-55.5 ball=idle hp 5→2 me 8 mp 10.752500000000003
+[95.0] fight heavydrone d=5.4 st=dead aim=it e@4252.2,16.2,-52.2 me@4256.8,16.0,-55.5 ball=impact hp 2→-1 me 8 mp 9.910000000000004
+[95.2] go → (4252.8, -48.0) plan ok=false pts=2 left=1.22
+[102.2] go → (4252.8, -48.0) plan ok=false pts=1 left=1.22
+[104.7] stuck at (4254.0, -47.8): replan
+[112.4] go → (4334.0, -32.0) plan ok=true pts=11 left=0.28
+[122.5] stuck at (4274.7, -60.0): replan
+[125.4] stuck at (4274.5, -60.0): replan
+[128.4] stuck at (4274.6, -60.1): replan

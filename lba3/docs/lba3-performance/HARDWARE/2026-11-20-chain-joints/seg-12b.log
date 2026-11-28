@@ -1,0 +1,40 @@
+[0s +0s] continue: {"chapter":"throttle","room":"citadel","fail":null} | citadel [-1.7,2.47,39.5] hp 10 | Find Mira at the Water Office
+  stats: {"play":0.1,"dialog":0,"trans":0,"scene":0,"menu":0,"other":0,"lines":0,"words":0,"says":0,"walked":0,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+[2s +2s] Mira at the Water Office: down to the valve room: {"r":"talked","to":"mira","state":"play","lines":10,"speakers":["mira","hero"],"room":"valves","fail":null} | valves [4995.8,0,2.5] hp 10 | Ease the hammer in the valve room◆ Bleed a kick (0/3)
+  stats: {"play":22.2,"dialog":1,"trans":2.8,"scene":0,"menu":0,"other":0,"lines":5,"words":51,"says":5,"walked":81,"hpLost":0,"deaths":0,"rooms":3,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+[3s +1s] three bleeds: each wheel opened as it kicks: {"tries":[1,2,3],"steady":true,"fail":null} | valves [5001.41,0,-2.09] hp 10 | Tell Gilbert at the fortress shelter
+  stats: {"play":21.9,"dialog":7,"trans":0,"scene":0,"menu":0,"other":0,"lines":18,"words":166,"says":18,"walked":10,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+[6s +3s] out to the fortress shelter: Gilbert, Zoé on the relay: {"r":"talked","thanks":true,"zoe":true,"room":"projoffice","fail":null} | projoffice [1304.8,0,-3.7] hp 10 | Zoé: find Balance Works in the project's register
+  stats: {"play":33.7,"dialog":4,"trans":2.1,"scene":0,"menu":0,"other":0,"lines":15,"words":151,"says":15,"walked":103,"hpLost":0,"deaths":0,"rooms":1,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+[9s +2s] Zoé: the register, the crates, the B-7: {"out":["used","used","used","used"],"b7":true,"fail":null} | projoffice [1302.98,0,-2.33] hp 10 | Zoé: take the regulator to the fortress shelter
+  stats: {"play":37.3,"dialog":2.3,"trans":0,"scene":0,"menu":0,"other":0,"lines":9,"words":136,"says":9,"walked":25,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+[10s +1s] Zoé to the shelter: Twinsen again: {"body":"twinsen","done":true,"fail":null} | citadel [-48.41,15.97,-68.56] hp 10 | Fit the B-7 on the shelter's branch◆ Shut the branch's feed◆ Fit the regulator between the flanges◆ Open the feed again◆
+  stats: {"play":13.8,"dialog":0.8,"trans":1,"scene":0,"menu":0,"other":0,"lines":3,"words":29,"says":3,"walked":16,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+[11s +1s] the branch: feed shut, the B-7 fitted, feed open, the band to green: {"out":["used","used","used","used","used"],"band":3,"set":true,"fail":null} | citadel [-48.42,15.97,-68.77] hp 10 | Hold the B-7's lever
+  stats: {"play":15.9,"dialog":1,"trans":0,"scene":0,"menu":0,"other":0,"lines":5,"words":30,"says":5,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+[12s +1s] Oren swings the lever; a hand holds it → the network: {"lever":true,"chapter":"ballastra","fail":"no network"} | citadel [-1.7,2.47,39.5] hp 10 | Board Doran's freighter at Citadel Spaceport
+  stats: {"play":3.6,"dialog":5.6,"trans":0.7,"scene":3.8,"menu":0,"other":0,"lines":19,"words":243,"says":19,"walked":0,"hpLost":0,"deaths":0,"rooms":0,"coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+  STOP: no network
+FAIL the segment ran every step to its end "Oren swings the lever; a hand holds it → the network: no network"
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[150.3] go → (-48.4, -69.0) plan ok=true pts=2 left=0.07
+[151.4] go → (-48.4, -69.0) plan ok=true pts=2 left=0.07
+[154.0] go → (-48.2, -69.0) plan ok=true pts=1 left=0.36
+[154.4] go → (-48.2, -69.0) plan ok=true pts=2 left=0.27
+[157.4] go → (-48.4, -69.0) plan ok=true pts=1 left=0.26
+[157.8] go → (-48.4, -69.0) plan ok=true pts=1 left=0.26
+[160.2] go → (-48.2, -69.0) plan ok=true pts=1 left=0.35
+[161.4] go → (-48.2, -69.0) plan ok=true pts=2 left=0.27
+[163.7] go → (-48.2, -69.0) plan ok=true pts=1 left=0.35
+[164.6] go → (-48.2, -69.0) plan ok=true pts=2 left=0.27
+[167.3] go → (-48.2, -69.0) plan ok=true pts=1 left=0.35
+[168.2] go → (-48.2, -69.0) plan ok=true pts=2 left=0.27
+stats total: {"play":148.5,"dialog":21.7,"trans":6.6,"scene":3.8,"menu":0,"other":0,"lines":74,"words":806,"says":74,"walked":235,"hpLost":0,"deaths":0,"rooms":5,"chapter":"ballastra","coinsNow":17,"hpNow":10,"cloversNow":3,"revives":0}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 1 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     8 capture(s) written for review, not judged here
+VERDICT: FAIL (1 functional)
+1 FAILED

@@ -1,0 +1,10 @@
+transitions exit 0 42 s VERDICT: PASS
+timing exit 0 46 s VERDICT: PASS
+display exit 0 83 s VERDICT: PASS
+camfollow exit 0 104 s VERDICT: PASS
+solidnpc exit 0 62 s VERDICT: PASS
+worldfit exit 0 115 s VERDICT: PASS
+drawcalls exit 0 73 s VERDICT: PASS
+perfbudget exit 0 427 s VERDICT: PASS
+chapter1 exit 0 108 s VERDICT: PASS
+done

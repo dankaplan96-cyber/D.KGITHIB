@@ -1,0 +1,90 @@
+== run 1 06:10:27 load 7.34
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 2 06:11:58 load 12.19
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 3 06:13:44 load 17.32
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 4 06:15:33 load 17.34
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+FAIL real time: black while the new room compiles, then the fade-in runs in full {"room":"cellar","held":1,"heldBlack":true,"swap":{"t":0.35,"set":1,"shown":1},"noCssEase":true,"done":false,"maxJump":0.1}
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+1 FAILED
+== run 5 06:17:20 load 16.10
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 6 06:19:11 load 17.10
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 7 06:21:08 load 18.38
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 8 06:22:49 load 17.84
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 9 06:24:49 load 19.06
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED
+== run 10 06:26:33 load 15.49
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+PASS real time: black while the new room compiles, then the fade-in runs in full 
+PASS real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) 
+no errors
+ALL PASSED

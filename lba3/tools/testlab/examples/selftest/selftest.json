@@ -1,0 +1,56 @@
+{
+  "results": [
+    {
+      "name": "launch failure is recorded as Blocked",
+      "ok": true,
+      "detail": "blocked: game EXE not found: C:/no/such/game.exe"
+    },
+    {
+      "name": "a timeout fails the test and the run goes on",
+      "ok": true,
+      "detail": "failed: timed out after 5 s"
+    },
+    {
+      "name": "a crash fails the test and the next test gets a new game",
+      "ok": true,
+      "detail": "failed: page.evaluate: Target page, context or browser has been closed; next: blocked"
+    },
+    {
+      "name": "a missing save is Blocked with the reason",
+      "ok": true,
+      "detail": "blocked: no save in the test profile: this test needs one"
+    },
+    {
+      "name": "no GPU timer → \"Unavailable\", not a number",
+      "ok": true,
+      "detail": "GPU time reported as Unavailable: Unavailable"
+    },
+    {
+      "name": "the report is written after failures",
+      "ok": true,
+      "detail": "C:\\Users\\dan\\lba3\\lba3\\tools\\testlab\\runs\\2026-10-31T15-15-19-selftest\\runs\\2026-10-31T15-15-28-selftest-failures"
+    },
+    {
+      "name": "Stop ends the run within 60 s",
+      "ok": true,
+      "detail": "exited 62 s after start"
+    },
+    {
+      "name": "Stop writes a partial report marked stopped",
+      "ok": true,
+      "detail": "{\"type\":\"end\",\"t\":1793459902494,\"report\":\"C:\\\\Users\\\\dan\\\\lba3\\\\lba3\\\\tools\\\\testlab\\\\runs\\\\2026-10-31T15-15-19-selftest\\\\runs\\\\2026-10-31T15-17-20-quick\\\\report.html\",\"dir\":\"C:\\\\Users\\\\dan\\\\lba3\\\\lba3\\\\tools\\\\testlab\\\\runs\\\\2026-10-31T15-15-19-selftest\\\\runs\\\\2026-10-31T15-17-20-quick\",\"findings\":3,\"elapsedMs\":54220,\"stopped\":true}"
+    },
+    {
+      "name": "nothing left running after Stop",
+      "ok": true,
+      "detail": "no test-profile process found"
+    },
+    {
+      "name": "after a hard kill nothing is left running",
+      "ok": true,
+      "detail": "0 leftover process(es) found and closed by the cleanup (0: the game exited with the tool); none after"
+    }
+  ],
+  "passed": 10,
+  "of": 10
+}

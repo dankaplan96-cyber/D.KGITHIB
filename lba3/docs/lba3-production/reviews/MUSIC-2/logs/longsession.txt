@@ -1,0 +1,22 @@
+cycle  objs children geo tex progs particles pickups enemies npcs voices intervals listeners heapMB bolts
+    0 8721 369 1250 469 101  7 66 51 0 1 29 719.3 0
+    1 8721 369 1250 469 101  7 66 51 1 1 29 704 0
+    2 8721 369 1250 469 101  7 66 51 1 1 29 704 0
+    4 8721 369 1250 469 101  7 66 51 1 1 29 704 0
+    9 8721 369 1250 469 101  7 66 51 1 1 29 704.4 0
+   14 8721 369 1250 469 101  7 66 51 1 1 29 704.9 0
+   19 8721 369 1250 469 101  7 66 51 1 1 29 704.7 0
+   24 8721 369 1250 469 101  7 66 51 1 1 29 705.1 0
+   29 8721 369 1250 469 101  7 66 51 1 1 29 704.9 0
+PASS 30 cycles: scene objects don't accumulate 
+PASS 30 cycles: GPU geometries/textures/programs don't accumulate 
+PASS 30 cycles: particles, pickups, bolts, enemies, NPCs stay bounded 
+PASS 30 cycles: never more than 2 music voices; intervals and listeners don't accumulate 
+PASS 30 cycles: JS heap after GC grows less than 10 MB 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 5 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

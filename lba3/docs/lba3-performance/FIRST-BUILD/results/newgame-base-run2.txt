@@ -1,0 +1,14 @@
+PROBE title after 172.6 s
+New Game (stepped 60 Hz frames) · medium · battery true · title frames 30 · audio before the click: none
+click handler: 169 ms (title frame, in view)  · state play · room house · audio running
+    0  70136 ms view  play   house  sim 793 render 69342 calls 50 draw batches built 69238 ms, shadow batches built 743 ms, shadow cache built (dropped: casters changed), +40 geometries
+    1     10 ms view  play   house  sim 3 render 7 calls 45 
+    2      9 ms view  play   house  sim 4 render 4 calls 45 
+    3      8 ms view  play   house  sim 2 render 6 calls 45 
+    4      6 ms view  play   house  sim 2 render 3 calls 45 
+    5      4 ms view  play   house  sim 1 render 3 calls 45 
+    6      6 ms view  play   house  sim 2 render 3 calls 45 
+    7      6 ms view  play   house  sim 2 render 3 calls 45 
+   23  15223 ms view  play   house  sim 3 render 15219 calls 46 
+frames in view: worst 70136 ms, mean of frames 5+ 280.0 ms · black frames 0 ms in all (worst 0) · frames in view that made geometries 1
+state play · room house · draw batch areas 2 · shadow areas 2 · programs 83 · geometries 1047 · textures 234

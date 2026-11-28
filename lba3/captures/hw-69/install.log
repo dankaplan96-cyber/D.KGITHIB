@@ -1,0 +1,45 @@
+SETUP 0
+ Volume in drive C has no label.
+ Volume Serial Number is 6A59-0FD5
+
+ Directory of C:\Users\danka\AppData\Local\Programs\LBA3 The Awakening
+
+11/24/2026  07:05 PM    <DIR>          .
+11/24/2026  07:05 PM    <DIR>          ..
+11/24/2026  07:04 PM           119,905 chrome_100_percent.pak
+11/24/2026  07:04 PM           197,089 chrome_200_percent.pak
+11/24/2026  07:04 PM         4,741,488 d3dcompiler_47.dll
+11/24/2026  07:04 PM        25,610,240 dxcompiler.dll
+11/24/2026  07:04 PM         1,509,760 dxil.dll
+11/24/2026  07:04 PM         3,061,248 ffmpeg.dll
+11/24/2026  07:04 PM        10,875,024 icudtl.dat
+11/24/2026  07:04 PM       239,115,776 LBA3 The Awakening.exe
+11/24/2026  07:04 PM           467,968 libEGL.dll
+11/24/2026  07:04 PM         8,058,368 libGLESv2.dll
+11/24/2026  07:04 PM             1,096 LICENSE.electron.txt
+11/24/2026  07:04 PM        20,313,960 LICENSES.chromium.html
+11/24/2026  07:05 PM    <DIR>          locales
+11/24/2026  07:05 PM    <DIR>          resources
+11/24/2026  07:04 PM         7,236,872 resources.pak
+11/24/2026  07:04 PM           365,488 snapshot_blob.bin
+11/24/2026  07:04 PM           240,487 Uninstall LBA3 The Awakening.exe
+11/24/2026  07:04 PM           740,048 v8_context_snapshot.bin
+11/24/2026  07:04 PM         5,506,048 vk_swiftshader.dll
+11/24/2026  07:04 PM               106 vk_swiftshader_icd.json
+11/24/2026  07:04 PM           924,160 vulkan-1.dll
+              19 File(s)    329,085,131 bytes
+               4 Dir(s)  147,964,801,024 bytes free
+ Volume in drive C has no label.
+ Volume Serial Number is 6A59-0FD5
+
+ Directory of C:\Users\danka\AppData\Local\Programs\LBA3 The Awakening\resources
+
+11/24/2026  07:05 PM    <DIR>          .
+11/24/2026  07:05 PM    <DIR>          ..
+11/24/2026  07:04 PM       131,909,001 app.asar
+11/24/2026  07:04 PM           107,520 elevate.exe
+               2 File(s)    132,016,521 bytes
+               2 Dir(s)  147,964,801,024 bytes free
+11/24/2026  07:05 PM             2,607 LBA3 The Awakening.lnk
+File Not Found
+DONE

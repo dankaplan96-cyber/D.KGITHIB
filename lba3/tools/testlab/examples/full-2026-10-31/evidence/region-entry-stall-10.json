@@ -1,0 +1,84 @@
+{
+  "file": "evidence/region-entry-stall-10.json",
+  "frame": {
+    "t": 57930.8,
+    "ms": 1100,
+    "real": 1.1,
+    "sim": 2.2999999821186066,
+    "render": 0,
+    "black": true,
+    "calls": 0,
+    "tris": 0,
+    "shadowCalls": 0,
+    "draws": 0,
+    "up": 0,
+    "upKB": 0,
+    "lag": 0,
+    "why": "frame before: work 1092 ms, draw batches built 408 ms, shadow batches built 159 ms, 1 shader program compiled, +84 geometries, +30 textures on the GPU, geometry upload",
+    "lamps": 0
+  },
+  "at": {
+    "t": 57933.1,
+    "state": "play",
+    "screen": null,
+    "room": "hamalayi",
+    "trans": true,
+    "cine": false,
+    "pos": [
+      4304,
+      2.82,
+      86
+    ],
+    "angle": 3.142,
+    "hp": 10,
+    "mp": 8,
+    "camera": {
+      "view": 0,
+      "yaw": 6.283,
+      "pitch": 0.46
+    },
+    "chapter": "well",
+    "objective": "<b>Check the well</b><span class=\"s \">◆ Take the magic ball from the cupboard</span>"
+  },
+  "counters": {
+    "geometries": 1386,
+    "textures": 369,
+    "programs": 101,
+    "heapMB": 721.5,
+    "drawBatchBuilds": 5,
+    "drawBatchMs": 3966,
+    "shadowBatchBuilds": 5,
+    "shadowCache": {
+      "full": 11,
+      "sliced": 0,
+      "swaps": 0,
+      "drops": 8
+    },
+    "regionsBuilt": 5,
+    "uploads": 12,
+    "jobs": {
+      "p": 101,
+      "g": 1386,
+      "x": 369,
+      "sc": 11,
+      "scd": 8,
+      "db": 3966.300000011921,
+      "dbn": 5,
+      "sb": 859,
+      "sbn": 5,
+      "up": 12,
+      "aq": 3,
+      "h": 756584999,
+      "rt": 5
+    }
+  },
+  "screenshot": "evidence/region-entry-stall-10.jpg",
+  "loaf": [
+    {
+      "t": 56832.3,
+      "ms": 1094.7,
+      "blocking": 1044.5,
+      "scripts": []
+    }
+  ]
+}

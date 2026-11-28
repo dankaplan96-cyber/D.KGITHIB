@@ -1,0 +1,109 @@
+{
+ "W": 1280,
+ "H": 720,
+ "talks": [
+  {
+   "id": "bram",
+   "skipped": "interrupted"
+  },
+  {
+   "id": "ume",
+   "lines": [
+    {
+     "who": "ume",
+     "fav": "npc",
+     "why": [
+      0.76,
+      1,
+      0.3,
+      -1,
+      0.3,
+      0.32
+     ],
+     "head": {
+      "px": 128,
+      "x": 605,
+      "bottom": 348,
+      "turn": 40
+     },
+     "box": 552,
+     "out": true
+    }
+   ]
+  },
+  {
+   "id": "tilde",
+   "lines": [
+    {
+     "who": "tilde",
+     "fav": "npc",
+     "why": [
+      0.9,
+      1.28,
+      0.2,
+      1,
+      0.3,
+      1.08
+     ],
+     "head": {
+      "px": 101,
+      "x": 751,
+      "bottom": 340,
+      "turn": 71
+     },
+     "box": 552,
+     "out": true
+    }
+   ]
+  },
+  {
+   "id": "maro",
+   "lines": [
+    {
+     "who": "maro",
+     "fav": "npc",
+     "why": [
+      0.62,
+      1,
+      0.3,
+      -1,
+      0.3,
+      0.45
+     ],
+     "head": {
+      "px": 128,
+      "x": 558,
+      "bottom": 332,
+      "turn": 38
+     },
+     "box": 552,
+     "out": true
+    }
+   ]
+  },
+  {
+   "id": "cs_corla",
+   "lines": [
+    {
+     "who": "cs_corla",
+     "fav": "",
+     "head": {
+      "px": 74,
+      "x": 760,
+      "bottom": 272,
+      "turn": 36
+     },
+     "box": 534,
+     "out": true
+    }
+   ]
+  }
+ ],
+ "path": {
+  "frames": 1012,
+  "cuts": [],
+  "maxMovePerFrame": 0.173,
+  "solid": [],
+  "solidN": 0
+ }
+}

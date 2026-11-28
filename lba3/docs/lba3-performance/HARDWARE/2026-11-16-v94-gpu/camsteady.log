@@ -1,0 +1,18 @@
+// CAM-2: the play camera stays calm (the user, 2026-10-20: "the camera doesn't work very well — it moves a lot").
+// Repeatable routes walked by input (tests/lib/player.js, Classic controls unless named) on Citadel, recorded every frame
+// by tests/lib/camrec.js: where the camera stands and looks, and which of its rules moved it. All three camera settings: the
+// LBA follow (remaster), the free orbit and Follow (CAM-FOLLOW: a chase camera, its own budgets). Measured per route (CR.stats):
+//   turnPerM    how far the view turns (°) per metre Twinsen walks — LBA2's view keeps its angle while it follows
+//   revYaw/revPitch/revY/revDist   reversals per minute of the view's heading, tilt (≥ 0.5°), the camera's height
+//               (≥ 5 cm) and its distance from him (≥ 10 cm): oscillation, rules undoing each other
+//   stillTurnDeg / stillMove       the view turning / moving while he stands or turns on the spot
+exit 1
+functional: 107 passed, 4 failed
+visual:     0 capture(s) written for review, not judged here
+VERDICT: FAIL (4 functional, 1 resource)
+FAIL free · street, Modern controls: few jolts (3.5/min ≤ 30, max 1749.1 m/s² ≤ 1600) {"frames":4248,"dur":69,"heroPath":103.6,"camPath":109,"camPerM":1.05,"turnDeg":94.5,"turnPerM":0.91,"rateP9
+FAIL follow · harbour pier: it turns only as he turns (heading reversals 12.1/min ≤ his own 8.6/min) {"frames":2149,"dur":34.8,"heroPath":57.8,"camPath":146.8,"camPerM":2.54,"turnDeg":637.1,"turnPe
+FAIL follow · street, Modern controls: it turns only as he turns (heading reversals 103.4/min ≤ his own 101.7/min) {"frames":4282,"dur":69.6,"heroPath":105,"camPath":1003,"camPerM":9.55,"turnDeg":4
+FAIL follow (medium) · street, Modern controls: it turns only as he turns (heading reversals 103.4/min ≤ his own 101.7/min) {"frames":4284,"dur":69.6,"heroPath":105,"camPath":853.5,"camPerM":8.13,"
+
+[exited with code 0]

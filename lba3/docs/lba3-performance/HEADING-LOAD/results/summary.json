@@ -1,0 +1,46 @@
+{
+  "task": "HEADING-LOAD",
+  "base": "df26b4d (Merge ROTATE-STALL), served from a git archive on port 8844; candidate this branch on 8843",
+  "machine": "development container, SwiftShader (software WebGL), 1366x768, Auto held at Medium, battery profile on, Follow camera at Far, the street route's setup (probes/run.mjs NOPREP=1)",
+  "caveat": "Exact counts and pixel A/Bs only. No GPU time or fps here: the laptop prices each line (benchgpu variants and before/after builds).",
+  "per_heading_main_pass": {
+    "files": ["headings-before.txt", "headings-after.txt"],
+    "columns": "calls / triangles (k), main pass; shadow pass unchanged (7-18 calls, 4-10k)",
+    "before": { "0": [136, 601], "45": [127, 576], "90": [120, 513], "135": [117, 584], "180": [192, 810], "225": [213, 921], "270": [162, 865], "315": [142, 704] },
+    "after":  { "0": [132, 464], "45": [123, 430], "90": [115, 430], "135": [103, 430], "180": [166, 675], "225": [189, 854], "270": [156, 815], "315": [139, 628] },
+    "heavy_225_by_group_k": {
+      "before": { "scenery": [126, 476], "trees": [2, 169], "grass": [13, 113], "terrain": [8, 78], "characters": [49, 61], "water": [1, 22] },
+      "after":  { "scenery": [102, 451], "trees": [2, 169], "grass": [13, 71], "terrain": [8, 78], "characters": [49, 61], "water": [1, 22] }
+    },
+    "light_135_by_group_k": {
+      "before": { "scenery": [59, 300], "grass": [12, 106], "trees": [2, 59], "terrain": [6, 59], "characters": [33, 39] },
+      "after":  { "scenery": [48, 231], "grass": [9, 21], "trees": [2, 59], "terrain": [6, 59], "characters": [33, 39] }
+    },
+    "pixels_shown_225": "terrain 63.9 %, scenery 22.5 %, trees 5.6 %, characters 5.0 %, grass 0.6 % (113k triangles before: 18 triangles a shown pixel; 71k after, all in view: 11.6)"
+  },
+  "changes": [
+    { "what": "grass/flowers/tulip pools: only the 9 m squares in the frustum, refilled at the render (world.js SMALL_VIEW)", "kind": "image-preserving",
+      "ab": "same frozen frame, culled vs not: 0 px differ at 135 and 225 deg; a 32-frame Follow-camera turn, each frame the game's own render vs the same frame unculled: 0 px differ in every frame", "files": ["grass-cull-ab.txt", "turn-viewculls-ab.txt", "turn-viewculls-ab-final.txt"] },
+    { "what": "static non-casting instanced decoration (tulip rows) view-culled in 8 m squares (engine/viewinst.js)", "kind": "image-preserving", "ab": "in the same 32-frame turn A/B: 0 px" },
+    { "what": "quay and original props' repeated props placed as pieces of their group's merge (no longer one InstancedMesh per kind); the cargo lift's static group no longer keep; boat, ferry and lift parts folded by texture",
+      "kind": "image-preserving within float rounding",
+      "ab": "base vs final build, people and particles left out of both frames (they differ run to run): 180 deg 8 px (5 over 2 levels), 225 deg 1 px (0), 270 deg 58 px (42); 45/135 deg only the statue and the flower dots, which differ as much between two runs of the base", "files": ["build-ab-base.txt", "build-ab-new.txt", "build-ab-final.txt", "harbour-moving-parts-after.txt"] },
+    { "what": "compile with the culled meshes shown (renderer.js wraps three's compile)", "kind": "no image change; no program left to a first frame" }
+  ],
+  "turn_mean": { "file": "turn-viewculls-ab-final.txt", "main_calls": [141.3, 139.5], "main_triangles_k": [590.6, 482.8], "note": "the second number is with the culls; BatchedMesh (trees) not counted in this probe" },
+  "tradeoffs_not_applied": {
+    "file": "tradeoffs.txt",
+    "grass/flowers half beyond 28 m (new switch, off)": { "225": "-15.9k tris, 933 px differ (500 over 8 levels)", "180": "-5.1k", "135": "-2.1k" },
+    "grass/flowers to 30 m (existing variant)": { "225": "-30.8k tris, -2 calls, 940 px (676)", "180": "-5.6k", "135": "-0.7k" },
+    "trees detailed to 22 m (existing variant)": { "225": "-11.2k tris, 1953 px (466)", "180": "-11.3k", "135": "-8.0k" }
+  },
+  "benchgpu_variants_added": [
+    "GPU group: grass/flowers not culled to the view (as before)",
+    "GPU group: instanced decoration not culled to the view (as before)",
+    "GPU group: grass/flowers half beyond 28 m (trade-off)"
+  ],
+  "laptop": [
+    "node docs/lba3-performance/local/electron-bench.mjs full docs/lba3-performance/results/laptop-<ver>-full-follow-battery.txt battery follow",
+    "node docs/lba3-performance/local/electron-bench.mjs sweep docs/lba3-performance/results/laptop-<ver>-sweep-battery.txt battery follow"
+  ]
+}

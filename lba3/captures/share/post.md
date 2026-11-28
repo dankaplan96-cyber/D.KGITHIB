@@ -1,0 +1,84 @@
+# Post for "Twinsen's Little Big Adventure Fans"
+
+## English (to post)
+
+Hi everyone!
+
+I grew up on Little Big Adventure. I've always loved the look of these games, the colourful islands, the funny characters and that special mood. Ever since, I've dreamed of a sequel.
+
+So I decided to try to make one myself: **The Awakening**, a fan-made sequel to LBA2. I can't code, so I'm building it with Claude Code, an AI coding assistant. I describe what I want, play it, give feedback, and we fix it together. To be clear: this is not an official game. I have no formal permission from the rights holders and no connection to the original developers, and I have no intention of making any money from it. It's free, non-commercial, and made purely out of love for the game, a love letter to Twinsen's world.
+
+It takes place twelve years after LBA2. Twinsen is back home on Citadel Island, and something under the island is starting to wake up...
+
+What's in it so far:
+- 16 chapters across Citadel Island, the Zeelich islands and the Hamalayi mountains
+- The four behaviour modes, the magic ball, and the classic LBA spirit of talking to everyone
+- Two control schemes, a modern one and a classic LBA-style one
+- All models, music and code were made for this project (no files from the original games)
+- English and Hebrew
+
+The pictures are real in-game screenshots: Citadel Island, and a few of the places further into the adventure. It's still a work in progress; I'm aiming for a full release on 31 May 2027.
+
+I'd love to hear what you think: what feels like LBA to you, and what doesn't. Later on I'll be looking for a few people who'd like to playtest it.
+
+Thanks, and long live Twinsen! 🌍
+
+## עברית (לך, כדי לדעת מה כתוב)
+
+שלום לכולם!
+
+גדלתי על Little Big Adventure. תמיד אהבתי את המראה של המשחקים האלה: האיים הצבעוניים, הדמויות המצחיקות והאווירה המיוחדת. ומאז חלמתי שיהיה משחק המשך.
+
+אז החלטתי לנסות לעשות אחד בעצמי: **The Awakening**, משחק המשך של מעריצים ל־LBA2. אני לא יודע לתכנת, אז אני בונה אותו בעזרת Claude Code, עוזר תכנות של בינה מלאכותית. אני מתאר מה אני רוצה, משחק, נותן הערות, וביחד אנחנו מתקנים. שיהיה ברור: זה לא משחק רשמי. אין לי אישור פורמלי מבעלי הזכויות ואין לי קשר למפתחים המקוריים, ואין לי שום כוונה להרוויח ממנו כסף. הוא חינמי, לא מסחרי, ונעשה נטו מאהבה למשחק, מכתב אהבה לעולם של טווינסן.
+
+הוא מתרחש שתים עשרה שנה אחרי LBA2. טווינסן חוזר הביתה לאי המצודה, ומשהו מתחת לאי מתחיל להתעורר...
+
+מה יש בו עד עכשיו:
+- 16 פרקים באי המצודה, באיי זיליך ובהרי ההמלאיי
+- ארבעת מצבי ההתנהגות, כדור הקסם, והרוח של LBA, שמדברים עם כולם
+- שתי שיטות שליטה, מודרנית וקלאסית בסגנון LBA
+- כל המודלים, המוזיקה והקוד נעשו לפרויקט (בלי קבצים מהמשחקים המקוריים)
+- אנגלית ועברית
+
+התמונות הן צילומי מסך אמיתיים מהמשחק: אי המצודה, וכמה מהמקומות בהמשך ההרפתקה. הוא עדיין בעבודה, והיעד הוא יציאה מלאה ב־31 במאי 2027.
+
+אשמח לשמוע מה אתם חושבים: מה מרגיש לכם LBA ומה לא. בהמשך אחפש כמה אנשים שירצו לבדוק אותו.
+
+תודה, ויחי טווינסן! 🌍
+
+## Follow-up (more pictures, 26.11) — English, to post as a comment or a new post
+
+Thanks so much for all the interest! Here are a few more places from further into the adventure: the harbour town and stilt houses of Ballastra, the Zeelich islands (Knartas with its round huts and a moored zeppelin, the blossom orchard, the old gas works), Zeelich's city gate, the Kesh oasis on Desert Island, and Twinsen's home. All real in-game screenshots, still a work in progress.
+
+## המשך (עברית, לך)
+תודה רבה על כל ההתעניינות! הנה עוד כמה מקומות מהמשך ההרפתקה: עיר הנמל ובתי הכלונסאות של בלסטרה, איי זיליך (קנרטאס עם הבקתות העגולות והצפלין העוגן, מטע הפריחה, מפעל הגז הישן), שער העיר של זיליך, נווה המדבר קש באי המדבר, והבית של טווינסן. כולם צילומי מסך אמיתיים מהמשחק, שעדיין בעבודה.
+
+## Follow-up 2 (inside, 26.11) — English
+And a peek inside: every building with a door can be entered, the classic LBA way, with the roof lifted off. A hotel with a pool, a bar on the islands, the Citadel tavern, the glowing cave under the well, a little workshop, a shuttle terminal, a temple, the ticket office and an island office. Still a work in progress!
+
+## המשך 2 (בפנים) — עברית
+והצצה פנימה: לכל בניין עם דלת אפשר להיכנס, כמו ב־LBA, עם הגג שמורם. מלון עם בריכה, בר באיים, הטברנה של המצודה, המערה הזוהרת מתחת לבאר, סדנה קטנה, טרמינל מעבורות, מקדש, משרד הכרטיסים ומשרד באי. עדיין בעבודה!
+
+## Edit for the original post (26.11) — English, add at the end
+EDIT: Thank you all for the comments, including the critical ones, I read every one. I understand that LBA means a lot to many of us and that a fan project can feel strange. I'm not trying to replace the originals; nothing can. I'm a fan who grew up on these games and is building this out of passion, for free. If something feels wrong or "not LBA" to you, please tell me what. That's exactly the feedback that helps.
+
+## עריכה לפוסט המקורי — עברית
+עריכה: תודה לכולם על התגובות, גם הביקורתיות, אני קורא כל אחת. אני מבין ש־LBA חשוב להרבה מאיתנו ושפרויקט של מעריץ יכול להרגיש מוזר. אני לא מנסה להחליף את המקוריים; שום דבר לא יכול. אני מעריץ שגדל על המשחקים האלה ובונה את זה מתשוקה, בחינם. אם משהו מרגיש לכם לא נכון או "לא LBA", תגידו לי מה. זה בדיוק הפידבק שעוזר.
+
+## Pilot announcement post (27.11) — English, with itch-cover-1260x1000.png
+🎮 The Awakening: closed pilot now open!
+
+A few weeks ago I shared my fan-made Little Big Adventure tribute here, and the response blew me away. Thank you all! 💙
+
+So I'm opening a small closed pilot for 20–30 players:
+• The whole adventure as it is today, 16 chapters from start to finish
+• Plays in your browser on a PC, nothing to download or install
+• Weekly updates with fixes and new things
+
+I'm looking for players who'll tell me honestly what works, what breaks, and what feels like LBA (and what doesn't).
+
+Want in? Send me a private message saying "I'd like to test" and I'll send you the link and password. Places are limited, first come first served.
+
+It's free, unofficial, and made purely out of love for Twinsen's world.
+
+Long live Twinsen! 🌍

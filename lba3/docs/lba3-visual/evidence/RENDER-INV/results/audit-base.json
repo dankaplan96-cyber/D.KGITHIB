@@ -1,0 +1,1634 @@
+{
+ "quality": "medium",
+ "load": [
+  4.57,
+  2.79,
+  1.26
+ ],
+ "scenes": {
+  "title": {
+   "med": {
+    "total": 33.2,
+    "render": 24.8,
+    "sim": 5,
+    "calls": 586,
+    "tris": 1665267,
+    "shadowCalls": 62,
+    "rigN": 51,
+    "npcHere": 19,
+    "npcAway": 32,
+    "worldUpdate": 0.9,
+    "roomUpdaters": 0,
+    "npcs": 1.7,
+    "enemies": 0,
+    "env": 0,
+    "shadowCull": 0.6,
+    "lightPool": 0.1,
+    "rigUpdates": 0.9
+   },
+   "drawsByArea": {
+    "citadel": {
+     "shadow": 44,
+     "shadowTris": 523256,
+     "main": 397,
+     "mainTris": 856708
+    },
+    "actor:here": {
+     "shadow": 12,
+     "shadowTris": 92576,
+     "main": 105,
+     "mainTris": 135726
+    },
+    "scene:actors": {
+     "shadow": 6,
+     "shadowTris": 444,
+     "main": 9,
+     "mainTris": 468
+    },
+    "scene:Mesh": {
+     "main": 2,
+     "mainTris": 96802
+    },
+    "scene:lba1": {
+     "main": 8,
+     "mainTris": 742
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 600
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1
+   },
+   "visitedShown": 3947,
+   "sceneObjects": 9119,
+   "mem": {
+    "geometries": 1169,
+    "textures": 458,
+    "programs": 85,
+    "heapMB": 712.4
+   },
+   "room": "citadel",
+   "state": "loading",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 0,
+   "npcsPresent": 51,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "opening@8": {
+   "cineT": 8.033333333333315,
+   "med": {
+    "total": 23,
+    "render": 19.9,
+    "sim": 3.4,
+    "calls": 498,
+    "tris": 1294299,
+    "shadowCalls": 39,
+    "rigN": 19,
+    "npcHere": 0,
+    "npcAway": 16,
+    "worldUpdate": 0.6,
+    "roomUpdaters": 0,
+    "npcs": 0.5,
+    "enemies": 0,
+    "env": 0,
+    "shadowCull": 0.6,
+    "lightPool": 0,
+    "rigUpdates": 0.5
+   },
+   "drawsByArea": {
+    "citadel": {
+     "shadow": 33,
+     "shadowTris": 326290,
+     "main": 410,
+     "mainTris": 870851
+    },
+    "scene:actors": {
+     "shadow": 6,
+     "shadowTris": 48,
+     "main": 9,
+     "mainTris": 468
+    },
+    "scene:Mesh": {
+     "main": 2,
+     "mainTris": 96802
+    },
+    "scene:wizards": {
+     "main": 11,
+     "mainTris": 604
+    },
+    "scene:lba1": {
+     "main": 8,
+     "mainTris": 742
+    },
+    "actor:here": {
+     "main": 1,
+     "mainTris": 2328
+    },
+    "actor:away": {
+     "main": 13,
+     "mainTris": 20126
+    },
+    "scene:Group": {
+     "main": 2,
+     "mainTris": 3346
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 280
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 2
+   },
+   "visitedShown": 1780,
+   "sceneObjects": 9183,
+   "mem": {
+    "geometries": 1173,
+    "textures": 460,
+    "programs": 160,
+    "heapMB": 712.4
+   },
+   "room": "citadel",
+   "state": "cinematic",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 0,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "opening@30": {
+   "cineT": 30.00000000000065,
+   "med": {
+    "total": 8.6,
+    "render": 7,
+    "sim": 2,
+    "calls": 102,
+    "tris": 427162,
+    "shadowCalls": 5,
+    "rigN": 19,
+    "npcHere": 0,
+    "npcAway": 16,
+    "worldUpdate": 0.2,
+    "roomUpdaters": 0,
+    "npcs": 0.5,
+    "enemies": 0,
+    "env": 0.1,
+    "shadowCull": 0.2,
+    "lightPool": 0.1,
+    "rigUpdates": 0.6
+   },
+   "drawsByArea": {
+    "room:house": {
+     "shadow": 3,
+     "shadowTris": 217004,
+     "main": 79,
+     "mainTris": 197540
+    },
+    "actor:here": {
+     "shadow": 2,
+     "shadowTris": 100,
+     "main": 13,
+     "mainTris": 9031
+    },
+    "scene:Group": {
+     "main": 2,
+     "mainTris": 3346
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 140
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 4
+   },
+   "visitedShown": 958,
+   "sceneObjects": 9186,
+   "mem": {
+    "geometries": 1255,
+    "textures": 462,
+    "programs": 160,
+    "heapMB": 712.4
+   },
+   "room": "house",
+   "state": "cinematic",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 1,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "opening@60": {
+   "cineT": 60.033333333332486,
+   "med": {
+    "total": 4.6,
+    "render": 3.2,
+    "sim": 1.3,
+    "calls": 57,
+    "tris": 420871,
+    "shadowCalls": 4,
+    "rigN": 19,
+    "npcHere": 0,
+    "npcAway": 16,
+    "worldUpdate": 0.2,
+    "roomUpdaters": 0,
+    "npcs": 0.4,
+    "enemies": 0,
+    "env": 0,
+    "shadowCull": 0.1,
+    "lightPool": 0.1,
+    "rigUpdates": 0.5
+   },
+   "drawsByArea": {
+    "room:house": {
+     "shadow": 2,
+     "shadowTris": 216716,
+     "main": 45,
+     "mainTris": 191758
+    },
+    "actor:here": {
+     "shadow": 2,
+     "shadowTris": 100,
+     "main": 3,
+     "mainTris": 8810
+    },
+    "scene:Group": {
+     "main": 2,
+     "mainTris": 3346
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 140
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 4
+   },
+   "visitedShown": 962,
+   "sceneObjects": 9186,
+   "mem": {
+    "geometries": 1265,
+    "textures": 462,
+    "programs": 160,
+    "heapMB": 712.4
+   },
+   "room": "house",
+   "state": "cinematic",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 1,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "house": {
+   "med": {
+    "total": 8.5,
+    "render": 5,
+    "sim": 2.8,
+    "calls": 99,
+    "tris": 441964,
+    "shadowCalls": 3,
+    "rigN": 29,
+    "npcHere": 1,
+    "npcAway": 17,
+    "worldUpdate": 0.3,
+    "roomUpdaters": 0,
+    "npcs": 0.7,
+    "enemies": 0.4,
+    "env": 0,
+    "shadowCull": 0.1,
+    "lightPool": 0.1,
+    "rigUpdates": 0.5
+   },
+   "drawsByArea": {
+    "room:house": {
+     "shadow": 3,
+     "shadowTris": 217104,
+     "main": 86,
+     "mainTris": 218151
+    },
+    "actor:here": {
+     "main": 7,
+     "mainTris": 6588
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 120
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 4
+   },
+   "visitedShown": 900,
+   "sceneObjects": 9127,
+   "mem": {
+    "geometries": 1262,
+    "textures": 459,
+    "programs": 85,
+    "heapMB": 712.4
+   },
+   "room": "house",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 1,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "street": {
+   "med": {
+    "total": 18.2,
+    "render": 10.2,
+    "sim": 6.5,
+    "calls": 288,
+    "tris": 1082790,
+    "shadowCalls": 59,
+    "rigN": 29,
+    "npcHere": 14,
+    "npcAway": 4,
+    "worldUpdate": 0.2,
+    "roomUpdaters": 0,
+    "npcs": 0.6,
+    "enemies": 0.2,
+    "env": 0.1,
+    "shadowCull": 0.7,
+    "lightPool": 0.1,
+    "rigUpdates": 0.6
+   },
+   "drawsByArea": {
+    "citadel": {
+     "shadow": 53,
+     "shadowTris": 453118,
+     "main": 194,
+     "mainTris": 548838
+    },
+    "scene:actors": {
+     "shadow": 6,
+     "shadowTris": 444
+    },
+    "scene:Mesh": {
+     "main": 2,
+     "mainTris": 96802
+    },
+    "actor:here": {
+     "main": 28,
+     "mainTris": 29708
+    },
+    "scene:wizards": {
+     "main": 2,
+     "mainTris": 364
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 300
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 2
+   },
+   "visitedShown": 1752,
+   "sceneObjects": 9122,
+   "mem": {
+    "geometries": 1259,
+    "textures": 460,
+    "programs": 85,
+    "heapMB": 712.4
+   },
+   "room": "citadel",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 0,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "harbour": {
+   "med": {
+    "total": 20.4,
+    "render": 13.8,
+    "sim": 6.8,
+    "calls": 321,
+    "tris": 1199801,
+    "shadowCalls": 35,
+    "rigN": 29,
+    "npcHere": 14,
+    "npcAway": 4,
+    "worldUpdate": 0.7,
+    "roomUpdaters": 0,
+    "npcs": 0.7,
+    "enemies": 0.3,
+    "env": 0.1,
+    "shadowCull": 0.6,
+    "lightPool": 0,
+    "rigUpdates": 0.7
+   },
+   "drawsByArea": {
+    "citadel": {
+     "shadow": 32,
+     "shadowTris": 365720,
+     "main": 256,
+     "mainTris": 648760
+    },
+    "scene:actors": {
+     "shadow": 3,
+     "shadowTris": 24,
+     "main": 6,
+     "mainTris": 48
+    },
+    "scene:Mesh": {
+     "main": 2,
+     "mainTris": 96802
+    },
+    "actor:here": {
+     "main": 19,
+     "mainTris": 29492
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 300
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 1
+   },
+   "visitedShown": 1735,
+   "sceneObjects": 9122,
+   "mem": {
+    "geometries": 1263,
+    "textures": 460,
+    "programs": 86,
+    "heapMB": 712.4
+   },
+   "room": "citadel",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 0,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "houseDoorView": {
+   "med": {
+    "total": 10.6,
+    "render": 7.6,
+    "sim": 3.9,
+    "calls": 167,
+    "tris": 852743,
+    "shadowCalls": 33,
+    "rigN": 29,
+    "npcHere": 14,
+    "npcAway": 4,
+    "worldUpdate": 0.6,
+    "roomUpdaters": 0,
+    "npcs": 0.7,
+    "enemies": 0.3,
+    "env": 0,
+    "shadowCull": 0.5,
+    "lightPool": 0,
+    "rigUpdates": 0.8
+   },
+   "drawsByArea": {
+    "citadel": {
+     "shadow": 33,
+     "shadowTris": 307408,
+     "main": 111,
+     "mainTris": 402872
+    },
+    "scene:Mesh": {
+     "main": 2,
+     "mainTris": 96802
+    },
+    "actor:here": {
+     "main": 18,
+     "mainTris": 29468
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 300
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 1
+   },
+   "visitedShown": 1762,
+   "sceneObjects": 9122,
+   "mem": {
+    "geometries": 1268,
+    "textures": 460,
+    "programs": 86,
+    "heapMB": 712.4
+   },
+   "room": "citadel",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 0,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 66
+  },
+  "combat": {
+   "med": {
+    "total": 9.2,
+    "render": 5.7,
+    "sim": 3.5,
+    "calls": 186,
+    "tris": 232869,
+    "shadowCalls": 70,
+    "rigN": 39,
+    "npcHere": 0,
+    "npcAway": 18,
+    "worldUpdate": 0.2,
+    "roomUpdaters": 0,
+    "npcs": 0.7,
+    "enemies": 0.6,
+    "env": 0,
+    "shadowCull": 0,
+    "lightPool": 0,
+    "rigUpdates": 0.9
+   },
+   "drawsByArea": {
+    "room:arena": {
+     "shadow": 2,
+     "shadowTris": 2284,
+     "main": 7,
+     "mainTris": 2616
+    },
+    "actor:here": {
+     "shadow": 68,
+     "shadowTris": 105764,
+     "main": 97,
+     "mainTris": 116930
+    },
+    "scene:Mesh": {
+     "main": 6,
+     "mainTris": 712
+    },
+    "actor:away": {
+     "main": 3,
+     "mainTris": 4222
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 300
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 1
+   },
+   "visitedShown": 1019,
+   "sceneObjects": 9346,
+   "mem": {
+    "geometries": 1341,
+    "textures": 466,
+    "programs": 86,
+    "heapMB": 712.4
+   },
+   "room": "arena",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 0,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 76
+  },
+  "zeelich": {
+   "med": {
+    "total": 9.9,
+    "render": 3.5,
+    "sim": 6.8,
+    "calls": 130,
+    "tris": 400383,
+    "shadowCalls": 27,
+    "rigN": 39,
+    "npcHere": 0,
+    "npcAway": 18,
+    "worldUpdate": 0.3,
+    "roomUpdaters": 0.1,
+    "npcs": 0.5,
+    "enemies": 0.6,
+    "env": 0,
+    "shadowCull": 0.4,
+    "lightPool": 0,
+    "rigUpdates": 0.7
+   },
+   "drawsByArea": {
+    "room:zeelich": {
+     "shadow": 27,
+     "shadowTris": 239457,
+     "main": 96,
+     "mainTris": 156104
+    },
+    "actor:here": {
+     "main": 4,
+     "mainTris": 4700
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 20
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1
+   },
+   "visitedShown": 1885,
+   "sceneObjects": 9368,
+   "mem": {
+    "geometries": 1398,
+    "textures": 466,
+    "programs": 87,
+    "heapMB": 712.4
+   },
+   "room": "zeelich",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 15,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 76
+  },
+  "desert": {
+   "med": {
+    "total": 11.6,
+    "render": 2.6,
+    "sim": 8.9,
+    "calls": 29,
+    "tris": 64287,
+    "shadowCalls": 7,
+    "rigN": 39,
+    "npcHere": 0,
+    "npcAway": 18,
+    "worldUpdate": 0.3,
+    "roomUpdaters": 0.1,
+    "npcs": 0.6,
+    "enemies": 0.6,
+    "env": 0,
+    "shadowCull": 0.3,
+    "lightPool": 0,
+    "rigUpdates": 0.7
+   },
+   "drawsByArea": {
+    "room:desert": {
+     "shadow": 7,
+     "shadowTris": 34752,
+     "main": 18,
+     "mainTris": 63098
+    },
+    "actor:here": {
+     "main": 4,
+     "mainTris": 4700
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 20
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1
+   },
+   "visitedShown": 1474,
+   "sceneObjects": 9394,
+   "mem": {
+    "geometries": 1419,
+    "textures": 475,
+    "programs": 87,
+    "heapMB": 712.4
+   },
+   "room": "desert",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 16,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 76
+  },
+  "houseAgain": {
+   "med": {
+    "total": 8.5,
+    "render": 5.8,
+    "sim": 2.9,
+    "calls": 99,
+    "tris": 441964,
+    "shadowCalls": 3,
+    "rigN": 39,
+    "npcHere": 1,
+    "npcAway": 17,
+    "worldUpdate": 0.3,
+    "roomUpdaters": 0,
+    "npcs": 0.8,
+    "enemies": 0.7,
+    "env": 0,
+    "shadowCull": 0.1,
+    "lightPool": 0.1,
+    "rigUpdates": 0.9
+   },
+   "drawsByArea": {
+    "room:house": {
+     "shadow": 3,
+     "shadowTris": 217104,
+     "main": 86,
+     "mainTris": 218151
+    },
+    "actor:here": {
+     "main": 7,
+     "mainTris": 6588
+    },
+    "scene:Points": {
+     "main": 1,
+     "mainTris": 233
+    },
+    "scene:blobBatch": {
+     "main": 1,
+     "mainTris": 120
+    },
+    "scene": {
+     "main": 1,
+     "mainTris": 1
+    }
+   },
+   "lights": {
+    "HemisphereLight": 1,
+    "DirectionalLight+shadow": 1,
+    "PointLight": 4
+   },
+   "visitedShown": 1116,
+   "sceneObjects": 9394,
+   "mem": {
+    "geometries": 1419,
+    "textures": 475,
+    "programs": 87,
+    "heapMB": 712.4
+   },
+   "room": "house",
+   "state": "play",
+   "quality": "medium",
+   "worldUpdaters": 23,
+   "roomUpdaters": 1,
+   "npcsPresent": 18,
+   "npcsTotal": 51,
+   "enemiesTotal": 76
+  }
+ },
+ "loadTimes": {
+  "world": 1947,
+  "spaceport": 239,
+  "townlife": 57,
+  "citydress": 93,
+  "interiors": 1176,
+  "zeelich": 1249,
+  "underground": 370,
+  "desert": 605,
+  "condenser": 43,
+  "temple": 26,
+  "wizards": 116,
+  "lba1": 246,
+  "hamalayi": 392,
+  "obsroom": 9,
+  "upper": 353,
+  "valves": 19,
+  "arena": 4,
+  "islands": 2861,
+  "actors": 397,
+  "total": 10360,
+  "shaders": 39146
+ },
+ "inventoryHouse": {
+  "byArea": {
+   "scene": {
+    "objects": 1,
+    "shownObjects": 1
+   },
+   "citadel": {
+    "objects": 1357,
+    "meshes": 1125,
+    "trisBuilt": 1854054,
+    "geoms": 671,
+    "geoMB": 110.5,
+    "textures": 94,
+    "texMB": 38.4,
+    "lights": 10,
+    "casters": 124
+   },
+   "scene:HemisphereLight": {
+    "objects": 1,
+    "shownObjects": 1,
+    "lights": 1
+   },
+   "scene:DirectionalLight": {
+    "objects": 1,
+    "shownObjects": 1,
+    "lights": 1
+   },
+   "scene:Object3D": {
+    "objects": 1,
+    "shownObjects": 1
+   },
+   "scene:Mesh": {
+    "objects": 25,
+    "meshes": 25,
+    "trisBuilt": 98858,
+    "geoms": 8,
+    "geoMB": 2.1,
+    "textures": 2,
+    "texMB": 1.4
+   },
+   "scene:LineSegments": {
+    "objects": 1,
+    "meshes": 1,
+    "trisBuilt": 1600,
+    "geoms": 1,
+    "geoMB": 0.1
+   },
+   "scene:PointLight": {
+    "objects": 4,
+    "shownObjects": 4,
+    "lights": 4
+   },
+   "room:house": {
+    "objects": 129,
+    "shownObjects": 114,
+    "lights": 10,
+    "meshes": 113,
+    "trisBuilt": 437141,
+    "geoms": 105,
+    "geoMB": 20.1,
+    "textures": 42,
+    "texMB": 12.6,
+    "casters": 3
+   },
+   "room:well": {
+    "objects": 92,
+    "lights": 5,
+    "meshes": 84,
+    "trisBuilt": 93836,
+    "geoms": 84,
+    "geoMB": 3.6,
+    "casters": 14,
+    "textures": 5,
+    "texMB": 1.8
+   },
+   "room:office": {
+    "objects": 69,
+    "lights": 5,
+    "meshes": 63,
+    "casters": 52,
+    "trisBuilt": 69482,
+    "geoms": 63,
+    "geoMB": 4.6,
+    "textures": 19,
+    "texMB": 7.8
+   },
+   "room:projoffice": {
+    "objects": 70,
+    "meshes": 63,
+    "trisBuilt": 121118,
+    "geoms": 63,
+    "geoMB": 9.1,
+    "lights": 5,
+    "casters": 43,
+    "textures": 17,
+    "texMB": 8
+   },
+   "room:control": {
+    "objects": 64,
+    "meshes": 59,
+    "trisBuilt": 64956,
+    "geoms": 59,
+    "geoMB": 4.3,
+    "textures": 7,
+    "texMB": 3.9,
+    "lights": 4,
+    "casters": 35
+   },
+   "room:workshop": {
+    "objects": 193,
+    "lights": 8,
+    "meshes": 167,
+    "casters": 88,
+    "trisBuilt": 108952,
+    "geoms": 138,
+    "geoMB": 7.1,
+    "textures": 33,
+    "texMB": 12.5
+   },
+   "room:lighttop": {
+    "objects": 94,
+    "meshes": 80,
+    "casters": 63,
+    "trisBuilt": 65870,
+    "geoms": 55,
+    "geoMB": 3.5,
+    "lights": 5,
+    "textures": 12,
+    "texMB": 4.2
+   },
+   "room:cellar": {
+    "objects": 47,
+    "lights": 2,
+    "meshes": 40,
+    "casters": 35,
+    "trisBuilt": 47862,
+    "geoms": 40,
+    "geoMB": 4.4,
+    "textures": 2,
+    "texMB": 1.4
+   },
+   "room:zeelich": {
+    "objects": 899,
+    "meshes": 823,
+    "trisBuilt": 425694,
+    "geoms": 523,
+    "geoMB": 21.9,
+    "textures": 37,
+    "texMB": 14.5,
+    "casters": 565
+   },
+   "room:c3shaft": {
+    "objects": 78,
+    "meshes": 62,
+    "casters": 37,
+    "trisBuilt": 81343,
+    "geoms": 57,
+    "geoMB": 6.3,
+    "textures": 9,
+    "texMB": 3.8,
+    "lights": 13
+   },
+   "room:c3deep": {
+    "objects": 111,
+    "meshes": 91,
+    "trisBuilt": 103822,
+    "geoms": 90,
+    "geoMB": 9,
+    "lights": 10,
+    "casters": 57,
+    "textures": 17,
+    "texMB": 5.9
+   },
+   "room:c3gallery": {
+    "objects": 102,
+    "meshes": 76,
+    "trisBuilt": 45891,
+    "geoms": 72,
+    "geoMB": 4.4,
+    "lights": 14,
+    "casters": 33,
+    "textures": 5,
+    "texMB": 4.6
+   },
+   "room:c3sendell": {
+    "objects": 35,
+    "meshes": 25,
+    "trisBuilt": 15369,
+    "geoms": 24,
+    "geoMB": 0.9,
+    "textures": 10,
+    "texMB": 10.9,
+    "lights": 8,
+    "casters": 9
+   },
+   "room:c3core": {
+    "objects": 99,
+    "meshes": 88,
+    "trisBuilt": 94277,
+    "geoms": 79,
+    "geoMB": 5.6,
+    "textures": 2,
+    "texMB": 1.7,
+    "lights": 9,
+    "casters": 20
+   },
+   "room:desert": {
+    "objects": 531,
+    "meshes": 470,
+    "trisBuilt": 312915,
+    "geoms": 303,
+    "geoMB": 131.6,
+    "textures": 29,
+    "texMB": 4.8,
+    "casters": 356
+   },
+   "room:condA": {
+    "objects": 34,
+    "meshes": 31,
+    "casters": 29,
+    "trisBuilt": 14752,
+    "geoms": 23,
+    "geoMB": 0.9,
+    "textures": 11,
+    "texMB": 2.1,
+    "lights": 2
+   },
+   "room:condB": {
+    "objects": 33,
+    "meshes": 28,
+    "trisBuilt": 10522,
+    "casters": 23,
+    "geoms": 15,
+    "geoMB": 0.6,
+    "textures": 3,
+    "texMB": 0.7,
+    "lights": 3
+   },
+   "room:butemple": {
+    "objects": 24,
+    "lights": 4,
+    "meshes": 19,
+    "trisBuilt": 31094,
+    "casters": 14,
+    "geoms": 15,
+    "geoMB": 3,
+    "textures": 3,
+    "texMB": 2.2
+   },
+   "scene:wizards": {
+    "objects": 12,
+    "shownObjects": 12,
+    "meshes": 11,
+    "casters": 11,
+    "trisBuilt": 604,
+    "geoms": 10,
+    "geoMB": 0,
+    "textures": 2,
+    "texMB": 1
+   },
+   "room:wtent": {
+    "objects": 30,
+    "lights": 3,
+    "meshes": 26,
+    "trisBuilt": 9288,
+    "casters": 18,
+    "geoms": 21,
+    "geoMB": 0.6,
+    "textures": 3,
+    "texMB": 1.7
+   },
+   "room:school": {
+    "objects": 26,
+    "lights": 3,
+    "meshes": 22,
+    "casters": 21,
+    "trisBuilt": 16976,
+    "geoms": 22,
+    "geoMB": 1.1,
+    "textures": 5,
+    "texMB": 1.5
+   },
+   "room:asylum": {
+    "objects": 12,
+    "meshes": 2,
+    "casters": 2,
+    "trisBuilt": 29570,
+    "geoms": 2,
+    "geoMB": 3.7,
+    "textures": 2,
+    "texMB": 1.7,
+    "lights": 9
+   },
+   "scene:lba1": {
+    "objects": 9,
+    "shownObjects": 9,
+    "meshes": 8,
+    "casters": 8,
+    "trisBuilt": 742,
+    "geoms": 7,
+    "geoMB": 0.1,
+    "textures": 1,
+    "texMB": 0.4
+   },
+   "room:bumaze": {
+    "objects": 12,
+    "meshes": 2,
+    "casters": 2,
+    "trisBuilt": 3852,
+    "geoms": 2,
+    "geoMB": 0.5,
+    "textures": 2,
+    "texMB": 1.7,
+    "lights": 9
+   },
+   "room:buhalls": {
+    "objects": 12,
+    "meshes": 2,
+    "casters": 2,
+    "trisBuilt": 27216,
+    "geoms": 2,
+    "geoMB": 3.4,
+    "textures": 2,
+    "texMB": 1.7,
+    "lights": 9
+   },
+   "room:hamalayi": {
+    "objects": 258,
+    "meshes": 245,
+    "trisBuilt": 321137,
+    "geoms": 197,
+    "geoMB": 62.3,
+    "casters": 163,
+    "textures": 12,
+    "texMB": 4.9
+   },
+   "room:obsv": {
+    "objects": 44,
+    "meshes": 36,
+    "casters": 24,
+    "trisBuilt": 5230,
+    "geoms": 21,
+    "geoMB": 0.4,
+    "lights": 2,
+    "textures": 2,
+    "texMB": 2.1
+   },
+   "room:upper": {
+    "objects": 16,
+    "lights": 1,
+    "meshes": 14,
+    "casters": 14,
+    "trisBuilt": 12628,
+    "geoms": 14,
+    "geoMB": 1,
+    "textures": 6,
+    "texMB": 3.2
+   },
+   "room:council": {
+    "objects": 33,
+    "lights": 4,
+    "meshes": 28,
+    "trisBuilt": 28138,
+    "geoms": 28,
+    "geoMB": 1.8,
+    "textures": 7,
+    "texMB": 2.3,
+    "casters": 22
+   },
+   "room:archive": {
+    "objects": 33,
+    "lights": 2,
+    "meshes": 30,
+    "casters": 29,
+    "trisBuilt": 285206,
+    "geoms": 30,
+    "geoMB": 29.3,
+    "textures": 6,
+    "texMB": 0.8
+   },
+   "room:valves": {
+    "objects": 55,
+    "meshes": 51,
+    "casters": 33,
+    "trisBuilt": 11012,
+    "geoms": 43,
+    "geoMB": 0.9,
+    "textures": 15,
+    "texMB": 3.2,
+    "lights": 2
+   },
+   "room:arena": {
+    "objects": 9,
+    "meshes": 7,
+    "trisBuilt": 2616,
+    "geoms": 7,
+    "geoMB": 0.2,
+    "lights": 1,
+    "casters": 5,
+    "textures": 1,
+    "texMB": 1.3
+   },
+   "room:isle_otringal": {
+    "objects": 196,
+    "meshes": 191,
+    "trisBuilt": 1440287,
+    "geoms": 45,
+    "geoMB": 51.3,
+    "casters": 93,
+    "textures": 15,
+    "texMB": 10.5
+   },
+   "room:isle_knartas": {
+    "objects": 156,
+    "meshes": 148,
+    "trisBuilt": 552407,
+    "geoms": 34,
+    "geoMB": 22.8,
+    "casters": 98,
+    "textures": 7,
+    "texMB": 4.7
+   },
+   "room:isle_mosquibee": {
+    "objects": 150,
+    "meshes": 145,
+    "trisBuilt": 374101,
+    "geoms": 26,
+    "geoMB": 22.5,
+    "casters": 80,
+    "textures": 5,
+    "texMB": 4.3
+   },
+   "room:isle_celebration": {
+    "objects": 105,
+    "meshes": 100,
+    "trisBuilt": 119972,
+    "geoms": 20,
+    "geoMB": 2.2,
+    "casters": 77,
+    "textures": 3,
+    "texMB": 4
+   },
+   "room:isle_undergas": {
+    "objects": 144,
+    "meshes": 137,
+    "trisBuilt": 170387,
+    "geoms": 34,
+    "geoMB": 9.2,
+    "casters": 84,
+    "textures": 5,
+    "texMB": 4.3
+   },
+   "room:isle_cxislet": {
+    "objects": 106,
+    "meshes": 101,
+    "trisBuilt": 101558,
+    "geoms": 24,
+    "geoMB": 7.8,
+    "casters": 77,
+    "textures": 5,
+    "texMB": 4.3
+   },
+   "room:isle_platform": {
+    "objects": 162,
+    "meshes": 156,
+    "trisBuilt": 475961,
+    "geoms": 35,
+    "geoMB": 24.6,
+    "casters": 91,
+    "textures": 5,
+    "texMB": 4.3
+   },
+   "room:isle_liftdock": {
+    "objects": 127,
+    "meshes": 116,
+    "casters": 103,
+    "trisBuilt": 66444,
+    "geoms": 25,
+    "geoMB": 5.7,
+    "textures": 4,
+    "texMB": 4.1
+   },
+   "room:isle_tralu": {
+    "objects": 139,
+    "meshes": 126,
+    "trisBuilt": 135808,
+    "geoms": 30,
+    "geoMB": 12.4,
+    "casters": 104,
+    "textures": 3,
+    "texMB": 4
+   },
+   "room:isle_orchard": {
+    "objects": 109,
+    "meshes": 104,
+    "trisBuilt": 131664,
+    "geoms": 19,
+    "geoMB": 10.1,
+    "casters": 71,
+    "textures": 4,
+    "texMB": 4.1
+   },
+   "room:isle_oldwatch": {
+    "objects": 96,
+    "meshes": 91,
+    "trisBuilt": 20250,
+    "geoms": 11,
+    "geoMB": 0.9,
+    "casters": 63,
+    "textures": 4,
+    "texMB": 4.1
+   },
+   "scene:Points": {
+    "objects": 1,
+    "shownObjects": 1,
+    "meshes": 1,
+    "trisBuilt": 233,
+    "geoms": 1,
+    "geoMB": 0
+   },
+   "scene:lantern": {
+    "objects": 1,
+    "lights": 1
+   },
+   "scene:Sprite": {
+    "objects": 3,
+    "meshes": 3,
+    "trisBuilt": 6,
+    "textures": 3,
+    "texMB": 0.1
+   },
+   "actor:here": {
+    "objects": 136,
+    "shownObjects": 136,
+    "meshes": 53,
+    "trisBuilt": 120148,
+    "geoms": 17,
+    "geoMB": 1.1,
+    "casters": 32
+   },
+   "actor:away": {
+    "objects": 2776,
+    "shownObjects": 591,
+    "meshes": 845,
+    "trisBuilt": 1097537,
+    "geoms": 456,
+    "geoMB": 16.1,
+    "casters": 411
+   },
+   "scene:actors": {
+    "objects": 63,
+    "meshes": 56,
+    "trisBuilt": 932,
+    "geoms": 56,
+    "geoMB": 0,
+    "shownObjects": 28,
+    "casters": 21
+   },
+   "scene:blobBatch": {
+    "objects": 1,
+    "shownObjects": 1,
+    "meshes": 1,
+    "trisBuilt": 120
+   }
+  },
+  "byBucket": {
+   "scene-level (sky, water, fx, pickups)": {
+    "objects": 124,
+    "shownObjects": 59,
+    "lights": 7,
+    "meshes": 106,
+    "trisBuilt": 103095,
+    "geoms": 83,
+    "geoMB": 2.3,
+    "textures": 8,
+    "texMB": 2.9,
+    "casters": 40
+   },
+   "citadel (not current)": {
+    "objects": 1357,
+    "meshes": 1125,
+    "trisBuilt": 1854054,
+    "geoms": 671,
+    "geoMB": 110.5,
+    "textures": 94,
+    "texMB": 38.4,
+    "lights": 10,
+    "casters": 124
+   },
+   "CURRENT(room:house)": {
+    "objects": 129,
+    "shownObjects": 114,
+    "lights": 10,
+    "meshes": 113,
+    "trisBuilt": 437141,
+    "geoms": 105,
+    "geoMB": 20.1,
+    "textures": 42,
+    "texMB": 12.6,
+    "casters": 3
+   },
+   "other rooms/regions": {
+    "objects": 4605,
+    "lights": 142,
+    "meshes": 4149,
+    "trisBuilt": 6049463,
+    "geoms": 2395,
+    "geoMB": 495.5,
+    "casters": 2749,
+    "textures": 344,
+    "texMB": 169.6
+   },
+   "actor:here": {
+    "objects": 136,
+    "shownObjects": 136,
+    "meshes": 53,
+    "trisBuilt": 120148,
+    "geoms": 17,
+    "geoMB": 1.1,
+    "casters": 32
+   },
+   "actor:away": {
+    "objects": 2776,
+    "shownObjects": 591,
+    "meshes": 845,
+    "trisBuilt": 1097537,
+    "geoms": 456,
+    "geoMB": 16.1,
+    "casters": 411
+   }
+  }
+ },
+ "inventoryStreet": {
+  "scene-level (sky, water, fx, pickups)": {
+   "objects": 124,
+   "shownObjects": 61,
+   "lights": 7,
+   "meshes": 106,
+   "trisBuilt": 103275,
+   "geoms": 83,
+   "geoMB": 2.3,
+   "textures": 8,
+   "texMB": 2.9,
+   "casters": 40
+  },
+  "CURRENT(citadel)": {
+   "objects": 1352,
+   "shownObjects": 964,
+   "meshes": 1120,
+   "trisBuilt": 1830662,
+   "geoms": 666,
+   "geoMB": 110.1,
+   "textures": 94,
+   "texMB": 38.4,
+   "lights": 10,
+   "casters": 134
+  },
+  "other rooms/regions": {
+   "objects": 4734,
+   "lights": 152,
+   "meshes": 4262,
+   "trisBuilt": 6486604,
+   "geoms": 2500,
+   "geoMB": 515.6,
+   "textures": 386,
+   "texMB": 182.2,
+   "casters": 2752
+  },
+  "actor:here": {
+   "objects": 831,
+   "shownObjects": 425,
+   "meshes": 191,
+   "trisBuilt": 143952,
+   "geoms": 133,
+   "geoMB": 7.1,
+   "casters": 66
+  },
+  "actor:away": {
+   "objects": 2081,
+   "shownObjects": 302,
+   "meshes": 707,
+   "trisBuilt": 1073733,
+   "geoms": 340,
+   "geoMB": 10.1,
+   "casters": 377
+  }
+ },
+ "cycles": {
+  "before": {
+   "geometries": 1419,
+   "textures": 475,
+   "programs": 87,
+   "objects": 9394,
+   "heapMB": 712.4,
+   "shadowAreas": 5
+  },
+  "after20house": {
+   "geometries": 1419,
+   "textures": 475,
+   "programs": 87,
+   "objects": 9394,
+   "heapMB": 712.4,
+   "shadowAreas": 5
+  },
+  "after5zeelich": {
+   "geometries": 1419,
+   "textures": 475,
+   "programs": 87,
+   "objects": 9394,
+   "heapMB": 712.4,
+   "shadowAreas": 5
+  }
+ },
+ "loadAfter": [
+  5.58,
+  6.08,
+  4.16
+ ],
+ "errors": []
+}

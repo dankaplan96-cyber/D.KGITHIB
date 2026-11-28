@@ -1,0 +1,40 @@
+# Builds the closed pilot (English only, lba3/tools/itch-build.mjs) and pushes it to itch.io with butler.
+# Runs only for a push to the cloud branch whose commit message contains [itch] (the coordinator adds it after the user
+# approved a version), or by hand. The key is the repository secret BUTLER_API_KEY (the user's; never in the repo).
+# See lba3/docs/lba-maturity/PILOT.md.
+name: itch.io pilot
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ccr-c1c2c4b9-dep6ed]
+
+concurrency:
+  group: itch-pilot
+  cancel-in-progress: false
+
+jobs:
+  push:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[itch]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the pilot zip
+        working-directory: lba3
+        run: |
+          npm i --no-save --prefix tools rollup@4
+          node tools/he-bundle.mjs
+          node tools/itch-build.mjs "$GITHUB_WORKSPACE/awakening-itch.zip"
+      - name: Get butler
+        run: |
+          curl -sSL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip -d butler && chmod +x butler/butler
+          ./butler/butler -V
+      - name: Push to itch.io (channel html5)
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          ./butler/butler push awakening-itch.zip dankaplan96-cyber/the-awakening-fan:html5 --userversion "$(date -u +%Y-%m-%d-%H%M)-${GITHUB_SHA::7}"

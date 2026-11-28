@@ -1,0 +1,1543 @@
+diff --git a/lba3/docs/lba-maturity/FORTSTAIRS-139.md b/lba3/docs/lba-maturity/FORTSTAIRS-139.md
+new file mode 100644
+index 00000000..fd86f577
+--- /dev/null
++++ b/lba3/docs/lba-maturity/FORTSTAIRS-139.md
+@@ -0,0 +1,117 @@
++# FORTSTAIRS-139 (P139a: "the fort wall's stairs read too busy with the painted relief", DEPTH-LOOK e)
++
++Evidence: **automated runtime only (SwiftShader, headless Chromium)**. Nobody played it. Nothing was checked on a real
++GPU, so there are no GPU or frame-time numbers. The local agent saw the fault on the GTX 1050 (ORDER-73,
++`captures/hw-73/02-fortwall-stairs-before-now-walking.jpg`).
++
++**The user picked it on 27.11 (relayed by the coordinator): the calm steps are the default now.** `?fortstairs=old`
++gives the look before. With `old`, `stepMat()` returns the material it was given and no extra texture is made. The
++pictures and numbers below were taken while it was still the candidate `?fortstairs=calm`.
++
++## What it does
++- The walls keep their painted relief (DEPTH-LOOK e) and their normal maps (WALL-NORMALS f).
++- A stair's treads and risers get their own material:
++  - a calmer copy of the same texture: the relief painted at **0.3** of the wall's weight (`?fscalm=`);
++  - the wall normal map at **0.35** of its weight (`?fsnorm=`);
++  - the joints' ambient occlusion at half.
++- Code:
++  - `src/engine/textures.js`: `FORTSTAIRS`, `calmCopy` (taken before the wall's paint), `stepMat`.
++  - Each stair builder asks for its material through `stepMat` (the sweep below).
++
++## Cost (the switch on)
++- **Textures:** one more canvas texture for each painted texture a stair uses, at the same size (256 or 512 px). On the
++  first Citadel and Zeelich views that was five: `stone` ×3 (three tints), `rubble` and `plasterWall`.
++- **Materials:** one more for each stair material.
++- **Draws and triangles:** `renderer.info`, counted over the probe's whole run, five views of about 60 frames each:
++  - draw calls 11011 → 11044: +33, under one per frame;
++  - triangles 39 464 899 → 39 464 883: unchanged.
++- **Shaders:** no new shader text.
++
++## Results (High, 1366×768, Follow camera, Far)
++Sheet: `captures/fortstairs-139/sheet.png` (before | after). Rows:
++1. the fort wall's flight from the user's spot, with an enlarged crop;
++2. the flight from the street;
++3. the lighthouse's rubble steps, with an enlarged crop;
++4. Zeelich's watch-house stair (plaster), enlarged.
++
++Probe: `captures/fortstairs-139/fsshots.mjs`.
++
++At the user's spot, fine detail is the mean |L − its 9×9 mean|, in levels of 255:
++
++| | wall face | the flight's treads and risers |
++|---|---|---|
++| detail before → after | 6.38 → 6.37 (unchanged) | 15.24 → 12.80 (−16 %) |
++| mean brightness before → after | 48.5 → 48.5 | 63.4 → 66.5 |
++
++Enlarged crops, fine detail before → after:
++- fort flight: 10.3 → 8.7;
++- lighthouse steps: 8.4 → 8.0;
++- watch-house stair: 7.31 → 7.20.
++
++The plaster was painted at only 0.5, so the watch-house stair barely changes.
++
++What the pictures show: each tread reads as one clean step with a light nosing and a dark riser. The broken pattern of
++lit and shaded block edges, which looked like stacked bricks, is gone. The blocks' joints still show, faintly. The wall
++beside the flight is unchanged.
++
++## The sweep: every stair built from a painted texture
++Wrapped in `stepMat`. A wrapped stair changes only if its texture carries the painted relief or a wall normal map. The
++probe logs each material asked for (`FORTSTAIRS.log`).
++
++**Changed (seen in the probe's log, with a calm copy):**
++- Citadel:
++  - the promenade's 20-step flight on the fort wall, the lawn steps and the square's plaza rings (`island.js`, `stone`
++    with its normal map);
++  - the plateau's flight to Tralu's cave (`island.js`, its `stone` treads; the `fortStone` cheeks are walls and stay);
++  - the lighthouse's steps (`lighthouse.js`, `rubble`).
++- Zeelich:
++  - the watch house's guards' stair (`zeelife.js`, `plasterWall`);
++  - the Cistern Rise's stair (`zlift.js`, `stone`).
++
++**Wrapped, changed by the source, not in the probe's views:**
++- the desert houses' roof stairs (`desert.js`, `stone`);
++- Kesh's cool-room stair (`keshlife.js`, `plasterWall`);
++- the wave-8 arch's steps in the Hamalayi (`wave8world.js`);
++- the sewers' stairs (`sewers.js`).
++
++These use painted textures or the sewers' own; untested.
++
++**Left as it is:**
++- The monastery porch's single step (`props-mountain.js`) was wrapped, then put back to be safe after the first
++  worldfit run. That run reported two 0.62 m² coplanar overlaps in the Hamalayi; the Hamalayi is reported there, not
++  judged.
++- The final run still reports them, at local (61.8, −50.5), both in the same `stone` material.
++  - So the porch step was not their cause.
++  - They are far from every stair changed here (the wave-8 arch's steps are at x −30).
++  - Not traced further; handed to the coordinator.
++
++**Wrapped, no change (their textures carry no painted relief):**
++- The interior stairs: house, tavern, tavern cellar, baggage claim, keys room, temple dais, Celestial Temple, Otringal
++  bar and hotel, upper district, Wannie's mine, wizards' tent and walkway, Tralu's cave inside, the Zeelich terminal.
++  Their materials are `props.js`'s own canvas textures (`MAT.*`), which DEPTH-LOOK's paint never touched.
++- The asylum pit's steps (`lba1places.js`). Its log entry reads `other`, `calm: false`.
++
++The asylum climb's own step textures are not painted either, so they were not wrapped.
++
++**Not swept (another worker owns these files):**
++- `zislands.js`: the isles' flights. There are 7 `stair: true` / `flights` sites, including `S.flights`.
++- `src/game/ballastra/arches.js`, `gardens.js`, `harbor.js`, `look.js`: their steps.
++
++Handed to the coordinator. The fix is one `stepMat(...)` round each step material.
++
++## Tests (once each, SERVE=1)
++- With `QUERY="zeelich29=new&fortstairs=calm"` while it was a candidate:
++  - `walkers` PASS (37/0);
++  - `residents` PASS (182/0);
++  - `zeelich-doors` 21/3. The same three fail with both switches off (an A/B run on the same tree): the terminal's door
++    leads out 7.84 m away, and Lissa's and Wenna's lines are not caught.
++    - That A/B ran on this worktree's tree with both switches off, not on the base. The few edits that are not behind a
++      switch only wrap materials, which is a no-op when off (source only).
++    - Handed to the coordinator.
++  - `worldfit`: the first run failed on #29's tile bands, which lay under the street's kerb stones 2.5 mm apart; they
++    are fixed (ZEELICH-29.md). The monastery porch step was put back to its old material after that run.
++- As the default: see ZEELICH-29.md §5 (`walkers`, `worldfit`, `zeelich-doors` on the final tree).
++
++## For the user
++It is the default now. If the steps are still too busy on the GTX 1050, try `?fsnorm=0` (no normal map on the steps).
++To bring back a little relief, try `?fscalm=0.5`. A real-GPU look (the local agent) is the next step.
+diff --git a/lba3/docs/lba-maturity/ZEELICH-29.md b/lba3/docs/lba-maturity/ZEELICH-29.md
+new file mode 100644
+index 00000000..da3e5b27
+--- /dev/null
++++ b/lba3/docs/lba-maturity/ZEELICH-29.md
+@@ -0,0 +1,273 @@
++# ZEELICH-29 (#29, OPEN-TASKS.he.md: "Zeelich looks simpler than the Citadel")
++
++Evidence: **automated runtime only (SwiftShader, headless Chromium)**. Nobody played it. Nothing was checked on a real
++GPU, so there are no GPU, frame-time or load-time numbers.
++
++**The user picked it on 27.11 (relayed by the coordinator): it is the default now, with a second pass on top (§7).**
++`?zeelich29=old` gives the street as it was. With `old`:
++- `buildZeelich29` is never called;
++- `z29Clear` answers false;
++- the paving, kerb and granite textures and the lamps are the originals.
++
++The island is then exactly as before. §1–§4 describe the first pass, when it was still the candidate
++`?zeelich29=new`. The "before" numbers (`b2`) were taken on the committed tree with the switch off; they are the
++original street.
++
++## 1. What the Citadel has that Zeelich lacks (measured)
++**Method.**
++- The play camera (Follow, Far), Medium, 1366×768, chapter 3 on Zeelich.
++- Five Zeelich spots: the dock, the gate, the plaza, the main street east of the plaza, the council house.
++- Two Citadel spots: the square, Bug Street from the square.
++- Probe: `captures/zeelich-29/z29shots.mjs`.
++- Pixel measure: `detail.py`. "Fine detail" is the mean |L − its 9×9 mean|; "edges" is the share of pixels with a Sobel
++  edge over 24 levels. Both are measured below the sky band, without the HUD strip.
++
++| | fine detail | edges | furniture /100 m² | people /100 m² |
++|---|---|---|---|---|
++| Citadel square | 14.6 | 32 % | 5.75 | 2.43 |
++| Citadel, Bug Street | 13.2 | 28 % | 2.65 | 0.22 |
++| Zeelich dock | 7.2 | 12 % | 7.52 | 0.44 |
++| Zeelich gate | 7.6 | 14 % | 7.52 | 0.44 |
++| Zeelich plaza | 8.3 | 15 % | 6.19 | 1.55 |
++| Zeelich main street | 7.3 | 15 % | 4.86 | 0.22 |
++| Zeelich council house | 7.7 | 15 % | 5.31 | 0.88 |
++
++Census: the colliders and people within 12 m of the point 7 m ahead of him.
++
++What this says, and what the pictures show:
++1. **Not the furniture count.** Zeelich has as many lamps, benches and planters per area as the Citadel square, or
++   more. They stand in one regular line along the street.
++2. **The ground carries most of the gap: about half the fine detail and half the edges.**
++   - The Citadel's cobbles and flags have dark joints and painted relief, and its ground changes from cobble to grass,
++     dirt, beds and kerbs.
++   - Zeelich's street is one pale lilac flag edge to edge (a joint barely darker than the flag).
++   - Its houses stand on bare granite with nothing between kerb and wall.
++   - Zeelich's own textures (`ctex` in zeelich.js) never got DEPTH-LOOK's painted relief.
++3. **Empty lots and a flat skyline.**
++   - East of the plaza the street runs between granite on both sides: one house (the watch house) north and the depot
++     fence south.
++   - Every house wall is 3.6–4.3 m. Nothing in view stands taller than the council house's cap except the mills.
++4. **People.** In the frames at the dock, the gate, the main street and the council house there are fewer people than
++   on the Citadel square (2.43 per 100 m²). The plaza reaches 1.55.
++5. **Facades: not the gap** (source only).
++   - Zeelich's houses already have: recessed doors with dark reveals, an alfiz and a lintel; window frames, sills and
++     flower boxes; glass-block feet; a tiled frieze, a cornice and corner piers; caps on drums.
++   - Citadel's have: quoins, eaves, gutters, shutters, chimneys.
++   - Both read as built at the Far camera.
++6. **Lighting accents.** Both towns have lamps at a similar spacing, and their glass glows (emissive). The Citadel has
++   no extra lights either.
++
++## 2. The candidate (`src/game/zeelich29.js`, a few lines in zeelich.js)
++Everything is in Zeelich's own Esmer style, LBA2's look (`props-esmer.js` with `setLook`). Every piece is an original,
++from the shared kit.
++
++**Buildings: five Esmer buildings on the empty lots.**
++- A two-storey house with a balcony east of the north mill lane.
++- A two-storey house behind the plaza (it fills the council house's right in view 5).
++- A domed tower at the street's east end (walls 5.4 m, 9.4 m to the cap).
++- A low hall past the depot's east corner.
++- A small domed house between the south mill's lane and the depot.
++
++Each has a solid collider and is registered with worldfit. The camera's shapes come from regions.js `occAuto`.
++**They have no doors**, so no door leads nowhere.
++
++**Ground.**
++- The street's flags, kerbs and the island's granite are redrawn (`zeelich.js` `pave29Tex`, `kerb29Tex`,
++  `granite29Tex`), at the same sizes, 128–512 px:
++  - the flags' tones spread wider, some of them warmer;
++  - darker joints, a hairline crack here and there;
++  - the painted relief at 0.35–0.6.
++- Forecourts: each house's front is paved from the street to its wall in square warm flags of their own (`fore29Tex`,
++  256 px). This is visual only; his floor stays the island's bricks, with the top 0.85 cm over the slab, between the
++  gravel and the street.
++- Glazed-tile bands cross the street at each lamp pair.
++- Flower beds stand by the depot fence, the stall's back and the north house.
++
++**Life and furniture.**
++- A bin at each bench.
++- Banner poles at the gate.
++- Pennant festoons along the street's edges, from post to post. A first try hung them across the street, between the
++  camera and him; that was dropped.
++- Jars and barrels by the stall, the workshop and the hall.
++- A cage lantern (emissive, no light) at each new building's street corner.
++
++**Fitting.** Each piece is placed only where nothing stands:
++- clear of every collider, the walking lane and every door;
++- clear of the residents' stops (`walkrounds.js`) and the story's stops (`storylife.js`, `npcSpots`);
++- clear of the life places (`zlClear`), the Cistern Rise (`liftClear`) and the depot's yard.
++
++`R.z29.skipped` lists what was left out: a bin at the plaza bench (street) and one bed (crowded).
++
++**Tried and dropped** (`R.z29.cost` tallies triangles by kind):
++- Crate stacks: 0.9k triangles a crate, 11k for two.
++- A third bed.
++- A stair tower beside Mr Pelleck's house: his minaret already stands there.
++- A lantern line over the plaza: it crossed the council house's front.
++
++## 3. Cost: `renderer.info` at the five spots, switch off → on
++These are one frame's counts, all passes.
++
++| spot | draw calls | triangles |
++|---|---|---|
++| dock | 306 → 316 (+3.3 %) | 519 688 → 567 907 (+9.3 %) |
++| gate | 116 → 120 (+3.4 %) | 232 657 → 257 767 (+10.8 %) |
++| plaza | 194 → 201 (+3.6 %) | 333 599 → 379 226 (+13.7 %) |
++| main street | 164 → 174 (+6.1 %) | 419 128 → 472 450 (+12.7 %) |
++| council house | 126 → 128 (+1.6 %) | 209 969 → 231 128 (+10.1 %) |
++
++**Every spot is within the +15 % budget.**
++
++**What the candidate adds:** about 51k triangles island-wide.
++
++| kind | triangles |
++|---|---|
++| buildings | 32.7k |
++| beds | 6.3k |
++| cage lanterns | 3.5k |
++| bins | 2.8k |
++| festoons | 1.6k |
++| forecourts | 1.4k |
++| barrels | 1.2k |
++| tile bands | 0.8k |
++| jars | 1.0k |
++| banners | 0.5k |
++
++- Zeelich's Batch is one mesh per material island-wide, so most of the added triangles are drawn wherever their
++  material is in view. That is why the plaza pays for the east end.
++- Draws stay low: the pieces join the island's draw batches. 21 materials are used, most of them already the island's
++  or the kit's.
++
++**Textures.** Five new canvas textures:
++- 512 px: the granite;
++- 256 px: the street flags and the forecourt flags;
++- 128 px: the kerb and the band tiles.
++
++Three of them replace their originals when the switch is on. `renderer.info.memory.textures` was the same at every spot
++(509–517). No texture is larger than 512 px.
++
++**Not added:** no light, no shader, nothing per frame.
++
++**Not measured:** build time and memory, on a real machine.
++
++## 4. Results after (the same spots and settings)
++
++| | fine detail before → after | edges before → after | furniture /100 m² before → after |
++|---|---|---|---|
++| dock | 7.2 → 8.0 | 12 → 14 % | 7.52 → 7.96 |
++| gate | 7.6 → 12.1 | 14 → 25 % | 7.52 → 7.96 |
++| plaza | 8.3 → 13.7 | 15 → 28 % | 6.19 → 7.07 |
++| main street | 7.3 → 12.6 | 15 → 27 % | 4.86 → 5.97 |
++| council house | 7.7 → 12.1 | 15 → 24 % | 5.31 → 5.53 |
++| *Citadel square / Bug Street* | *14.6 / 13.2* | *32 / 28 %* | *5.75 / 2.65* |
++
++**Heights in view:**
++- before: walls 3.6–4.3 m (the mills apart);
++- after: the new buildings' walls reach 6.4 m, and the tower 9.4 m to its cap. They show in the main-street and
++  council-house frames.
++
++**Sheet:** `captures/zeelich-29/sheet.png` (1296×2392): five rows of before | after, then a Citadel reference row.
++
++## 5. Tests (once each, SERVE=1)
++**First pass**, with `QUERY="zeelich29=new&fortstairs=calm"`:
++- `walkers` PASS (37/0); `residents` PASS (182/0).
++- `worldfit` FAIL, 1 visual. #29's tile bands ran under the street's kerb stones 2.5 mm apart: six coplanar overlaps
++  of 0.18–0.25 m². Fixed: the bands are 5.4 m long and lie between the kerbs.
++- `zeelich-doors` 21/3. The three fail the same with both switches off. That A/B ran on this worktree's tree, not on
++  the base; the few edits that are not behind a switch only wrap materials, a no-op when off (source only). The
++  three:
++  - the terminal's door leads out 7.84 m from it, in chapters 3 and 5;
++  - Lissa's and Wenna's lines are not caught (`tl` empty).
++
++**The final tree** (both on by default, no query):
++- `walkers` PASS (37/0). It booted on `27928197`, just before the last commit, which only puts the east stall in a
++  batch of its own.
++- `worldfit` PASS (every check).
++- `zeelich-doors` 21/3: the same three pre-existing failures as above.
++
++## 6. Open: visual gaps toward the rubric (for the user)
++- **People.** Neither pass adds residents. A resident is a cast member with a name and lines (English and Hebrew), and
++  `tests/walkers.mjs` pins the cast count (47 in all, 35 waiting), so adding one is a change of its own. The life the
++  second pass adds is two gull flocks (6 birds). The street stays at 0.2–1.6 people per 100 m², against the Citadel
++  square's 2.4.
++- **Doorless houses.** The five new buildings have no door on any side. Doors that open would need rooms; doors kept
++  shut would need their lines and the Hebrew for them.
++- **The dock view barely changes** (detail 7.2 → 8.0). It sees the gate wall and the pier. A landmark seen over the
++  gate from the ferry was tried and dropped (§2).
++- **The paving's relief.** At the Far camera the plaza frame comes close to the Citadel's (13.7 against 14.6). If the
++  user finds it busy, the paint weights in `zeelich.js` `pave29Tex` (0.4) and `granite29Tex` (0.5) are the knobs.
++- **Budget headroom.** The final default adds 8–14 % triangles, against a limit of 15 %. Anything more needs geometry
++  taken out first; §7 lists what was taken out and what was dropped.
++- **Not checked on a real GPU.** One look on the GTX 1050 or UHD 620 with F9, at these five spots, would confirm the
++  cost.
++
++## 7. The second pass (the user's request of 27.11, now the default)
++Everything is again in the Esmer style, from the shared kit or painted here. There are no words on any sign. Every
++piece goes through the same fitting as §2.
++
++**Shop fronts and signs.**
++- Blade signs on brass brackets: seven of them.
++  - On three old houses, beside the door: Mr Pelleck's, the south-west house, Baldino's workshop.
++  - On the four new buildings' street corners.
++  - Each carries a painted emblem: a loaf, a jar, a cog, a flower, a cup or a fish. They come from one 256×172 atlas,
++    `sign29Tex`.
++- Striped awnings, with brass struts, over the new buildings' street-side ground windows.
++- Two notice boards with pinned papers and no words (`notice29Tex`, 128 px): at the plaza's west mouth and by the gate.
++
++**A market stall with goods.**
++- The kit's fruit stall, on the east street's north side.
++- It is a batch of its own: inside the island's per-material meshes it made the plaza frame draw 32k more triangles.
++- Its canopy is a camera volume, as the plaza stall's is (`roomOcc`, the API only).
++- A cloth stall across from the workshop was tried and dropped for the budget.
++
++**Landmarks and cloth.**
++- Two 7.2 m flag masts at the street's east end, either side of the platform's gate, in view down the main street with
++  the domed tower.
++- A laundry line with hanging cloth before the south house.
++
++**Life.** Two small gull flocks (`gulls.js`, 3 birds each) perch on the plaza's lamps, the fountain's rim, the stall's
++canopy and the east street's new roofs and lamps. They take off when he comes close. Their cost:
++- 2 instanced draws a flock;
++- no shadow;
++- simulated only while he is on Zeelich.
++
++**Geometry taken out to pay for it.** Under the default, the street's 18 lamps use 6-sided turnings and slimmer rings.
++That is about half of their 0.9k triangles a lamp, and they read the same at the Far camera.
++
++**`renderer.info` at the five spots, the original → the final default** (one frame, all passes):
++
++| spot | draw calls | triangles |
++|---|---|---|
++| dock | 306 → 324 (+5.9 %) | 519 688 → 571 369 (+9.9 %) |
++| gate | 116 → 120 (+3.4 %) | 232 657 → 252 185 (+8.4 %) |
++| plaza | 194 → 205 (+5.7 %) | 333 599 → 376 671 (+12.9 %) |
++| main street | 164 → 183 (+11.6 %) | 419 128 → 476 724 (+13.7 %) |
++| council house | 126 → 133 (+5.6 %) | 209 969 → 231 415 (+10.2 %) |
++
++**Every spot is within +15 %.**
++
++What the numbers above leave out:
++- **Added geometry:** 61k triangles in all, island-wide (`R.z29.cost`). The largest parts:
++  - buildings 32.7k;
++  - beds 6.3k;
++  - the stall 5.9k;
++  - cage lanterns 3.5k;
++  - bins 2.8k;
++  - signs 1.5k.
++- **Materials:** 30 in use.
++- **Textures:** `renderer.info.memory.textures` rose by 5–6 at each spot. All are canvas textures of 512 px or less.
++
++**Frames** (fine detail, before → after): dock 7.2 → 8.0, gate 7.6 → 12.2, plaza 8.3 → 13.7, main street 7.3 → 12.7,
++council house 7.7 → 12.3. The Citadel square is 14.6.
++
++**Furniture per 100 m²:** gate 7.5 → 8.2, plaza 6.2 → 7.1, main street 4.9 → 6.4, council house 5.3 → 5.8.
++
++**Sheet:** `captures/zeelich-29/sheet-2.png` (1296×2392). Before is the original street, after is the final default;
++the same five spots, and the Citadel reference row.
++
++## For the user
++It is the default (your pick). `?zeelich29=old` shows the street as it was, for comparison.
++
++Still open:
++- residents with routines on the new east street (§6: cast, lines, Hebrew, the walkers suite's count);
++- doors for the new buildings;
++- a real-GPU look.
+diff --git a/lba3/src/engine/textures.js b/lba3/src/engine/textures.js
+index 38934f2d..e60cb8ea 100644
+--- a/lba3/src/engine/textures.js
++++ b/lba3/src/engine/textures.js
+@@ -704,8 +704,10 @@ export function wallTexture(kind) {
+     }
+     speckle(x, N, r, 200, ['#eee8de', '#7c7468'], 0.25, 0.3);
+   }
++  const wt = toTex(c);
++  if (DL.paint && FORTSTAIRS.on) calmCopy(wt, c, null, 1);   // (P139a: a stair's calmer copy, before the wall's paint)
+   if (DL.paint) paintDepthCanvas(c, null, 1);   // (DEPTH-LOOK ?depth=paint)
+-  WALL_TEX[kind] = toTex(c); nameWorldTexture(WALL_TEX[kind], 'wall' + kind);
++  WALL_TEX[kind] = wt; nameWorldTexture(WALL_TEX[kind], 'wall' + kind);
+   return WALL_TEX[kind];
+ }
+ 
+@@ -885,9 +887,62 @@ function paintDepth(T) {
+   for (const [name, k] of Object.entries(PAINT)) {
+     const t = T[name], c = t?.source?.data; if (!c?.getContext) continue;
+     const L = LAYOUT[name];
++    if (FORTSTAIRS.on) calmCopy(t, c, L ? heightCanvas(L) : null, k);   // (P139a: the steps' own, calmer copy, before the wall's paint)
+     paintDepthCanvas(c, L ? heightCanvas(L) : null, k * DL.paintK);
+   }
+ }
++
++// P139a (status.md; ORDER-73, the local agent on the GTX 1050: "the fort wall's stairs read too busy with the painted
++// relief", DEPTH-LOOK e): the candidate `?fortstairs=calm`, picked by the user 27.11 and ON by default since;
++// `?fortstairs=old` turns it off (then nothing here runs and stepMat returns the material it is given). The walls keep their painted relief and normal maps; a stair's treads and
++// risers get a calmer copy of the same texture — painted at FORTSTAIRS.k of the wall's weight (`?fscalm=`, default 0.3)
++// — and the wall normal map at FORTSTAIRS.n of its weight (`?fsnorm=`, default 0.35), its joints' shade at half. Every
++// stair built of a painted texture asks for its material through stepMat (the sweep: docs/lba-maturity/FORTSTAIRS-139.md).
++// Cost with the switch on: one more canvas texture per painted texture a stair uses (the same size: 256 or 512 px),
++// one more material per stair material (its pieces batch as before, in their own draw).
++const FS_Q = typeof location !== 'undefined' ? location.search : '';
++export const FORTSTAIRS = {
++  on: !/[?&]fortstairs=old\b/.test(FS_Q),   // (the user's pick 27.11: on by default; `?fortstairs=old` the look before)
++  k: /[?&]fscalm=([\d.]+)/.test(FS_Q) ? +/[?&]fscalm=([\d.]+)/.exec(FS_Q)[1] : 0.3,
++  n: /[?&]fsnorm=([\d.]+)/.test(FS_Q) ? +/[?&]fsnorm=([\d.]+)/.exec(FS_Q)[1] : 0.35,
++  made: 0,   // (calm materials made: tests, the report)
++  log: [],   // (each material asked for: its map's name, whether it got a calm copy — the sweep's evidence)
++};
++const CALM = new Map();   // the source texture's image source → its calm texture
++function calmCopy(t, c, hc, k) {
++  if (CALM.has(t.source)) return;
++  const cc = document.createElement('canvas'); cc.width = c.width; cc.height = c.height;
++  cc.getContext('2d').drawImage(c, 0, 0);
++  if (DL.paint && FORTSTAIRS.k > 0) paintDepthCanvas(cc, hc, k * DL.paintK * FORTSTAIRS.k);
++  const ct = toTex(cc, t.wrapS === THREE.RepeatWrapping); ct.anisotropy = t.anisotropy; ct.name = (t.name || 'tex') + '-calm';
++  nameWorldTexture(ct, 'calm');
++  CALM.set(t.source, ct);
++}
++const STEP_MAT = new Map();
++// the material for a stair's treads and risers: with `?fortstairs=calm`, a copy of m on the calm copy of its painted map
++// (its repeat, offset and wrap as m's map), its wall normal map lighter; else m itself
++export function stepMat(m) {
++  if (!FORTSTAIRS.on || !m) return m;
++  if (STEP_MAT.has(m)) return STEP_MAT.get(m);
++  textures();
++  const base = m.map ? CALM.get(m.map.source) : null;
++  FORTSTAIRS.log.push({ map: m.map ? (Object.entries(textures()).find(([, t]) => t?.source === m.map.source)?.[0] || Object.entries(WALL_TEX).find(([, t]) => t.source === m.map.source)?.[0] || m.map.name || 'other') : null, calm: !!base, normal: !!m.normalMap });
++  if (!base && !m.normalMap) { STEP_MAT.set(m, m); return m; }
++  const c = m.clone();
++  if (base) {
++    const map = m.map; let ct = base;
++    if (map.repeat.x !== base.repeat.x || map.repeat.y !== base.repeat.y || map.offset.x || map.offset.y || map.rotation || map.wrapS !== base.wrapS || map.wrapT !== base.wrapT) {
++      ct = cloneTex(base); ct.repeat.copy(map.repeat); ct.offset.copy(map.offset); ct.rotation = map.rotation; ct.center.copy(map.center); ct.wrapS = map.wrapS; ct.wrapT = map.wrapT;
++    }
++    c.map = ct;
++  }
++  if (c.normalMap) c.normalScale.multiplyScalar(FORTSTAIRS.n);
++  if (c.aoMap) c.aoMapIntensity *= 0.5;
++  c.name = (m.name || '') + ' (calm step)';
++  FORTSTAIRS.made++;
++  STEP_MAT.set(m, c);
++  return c;
++}
+ export function paintDepthCanvas(c, hc, k) {
+   const N = c.width, M = c.height, x = c.getContext('2d'), img = x.getImageData(0, 0, N, M), D = img.data;
+   let H = new Float32Array(N * M);
+diff --git a/lba3/src/game/baggage.js b/lba3/src/game/baggage.js
+index 32e3a508..365d4322 100644
+--- a/lba3/src/game/baggage.js
++++ b/lba3/src/game/baggage.js
+@@ -18,6 +18,7 @@
+ //   BAGGAGE_PLAN                the layout in the room's frame (the builder's own numbers): roomlife.js places the
+ //                               room's people from it, so a change of the layout carries them along
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, noticeBoard } from './props.js';
+ import { boxStack, sackPile, hanging } from './roomdress.js';
+@@ -97,8 +98,8 @@ export function buildBaggageRoom(scene, physics) {
+   const SX0 = LX + 0.15, SX1 = LX + 1.55 * FX, N = 6, run = 0.6, rise = UY / N;
+   for (let i = 0; i < N; i++) {
+     const top = rise * (N - i), z = UZ1 + (i + 0.5) * run;
+-    k.add(rbox(SX1 - SX0, top - 0.02, run + 0.02, 0.015), stone, (SX0 + SX1) / 2, (top - 0.02) / 2, z);
+-    k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), cap, (SX0 + SX1) / 2, top - 0.025, z);
++    k.add(rbox(SX1 - SX0, top - 0.02, run + 0.02, 0.015), stepMat(stone), (SX0 + SX1) / 2, (top - 0.02) / 2, z);
++    k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), stepMat(cap), (SX0 + SX1) / 2, top - 0.025, z);
+     B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.12, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink)
+   }
+   // the balustrade along the upper level's edge (open over the stair), the stair's own rail, globe lamps at the ends
+diff --git a/lba3/src/game/celtemple.js b/lba3/src/game/celtemple.js
+index dd833b51..d44670c6 100644
+--- a/lba3/src/game/celtemple.js
++++ b/lba3/src/game/celtemple.js
+@@ -22,6 +22,7 @@
+ //     lectern {x, z, r}        sealDoor { x, z, open, setOpen(b, instant) }
+ //     frieze {x, z, look: {x, y, z}}   the Wannies' carving under the prophecy (WAVE6 second round: story/liftbelow.js)
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex } from './props.js';
+ 
+@@ -152,7 +153,7 @@ export function buildCelTempleRoom(scene, physics) {
+ 
+   // --- the sealed door in the left wall at the back, up a short stair: open now, dark beyond; four empty sockets
+   const SDX = LX + 0.3;
+-  for (let i = 0; i < 3; i++) { const top = 0.2 * (i + 1), x = LX + 1.6 - (i + 0.5) * 0.42; k.add(rbox(0.44, top, 2.0, 0.02), g, x, top / 2, SEALZ); B.col(x, SEALZ, 0.22 + 0.12, 1.0, top, { stair: true }); }
++  for (let i = 0; i < 3; i++) { const top = 0.2 * (i + 1), x = LX + 1.6 - (i + 0.5) * 0.42; k.add(rbox(0.44, top, 2.0, 0.02), stepMat(g), x, top / 2, SEALZ); B.col(x, SEALZ, 0.22 + 0.12, 1.0, top, { stair: true }); }
+   k.add(rbox(0.12, 3.0, 2.0, 0.03), MAT.flat('#0a0b0e', 0.95), SDX - 0.18, 0.6 + 1.5, SEALZ);
+   for (const s of [-1, 1]) k.add(rbox(0.4, 3.4, 0.4, 0.04), g, SDX + 0.05, 0.6 + 1.7, SEALZ + s * 1.2);
+   k.add(rbox(0.42, 0.4, 2.82, 0.04), g, SDX + 0.05, 0.6 + 3.4, SEALZ);   // (FLICKER-142: 1 cm proud of the pillars' faces)
+diff --git a/lba3/src/game/desert.js b/lba3/src/game/desert.js
+index 8a5ebc56..e3643782 100644
+--- a/lba3/src/game/desert.js
++++ b/lba3/src/game/desert.js
+@@ -33,7 +33,7 @@ import * as THREE from 'three';
+ import { crystalMats, gemGeo } from './crystallook.js';
+ import { Terrain, ROCK_EDGE } from '../engine/terrain.js';
+ import { quietRock } from './quietrock.js';
+-import { textures, cloneTex } from '../engine/textures.js';
++import { textures, cloneTex, stepMat } from '../engine/textures.js';
+ import { rng, smoothstep, distToSegment } from '../engine/math.js';
+ import { rockGeometry } from './vegetation.js';
+ import { shuttleTraffic } from './shuttle.js';
+@@ -687,7 +687,7 @@ export function* buildDesertSteps(scene, physics) {
+       const s = hd.stair, n = 6, sx = s * (hd.w / 2 + 0.55);
+       for (let k = 0; k < n; k++) {
+         const y = (k + 1) * (hd.h + 0.3) / n, zz = hd.d / 2 - 0.5 - k * (hd.d - 1.0) / n;
+-        HB.add(bbox(1.0, y, (hd.d - 1.0) / n + 0.02, 0.05, 2.2), wall, sx, y / 2, zz);
++        HB.add(bbox(1.0, y, (hd.d - 1.0) / n + 0.02, 0.05, 2.2), stepMat(wall), sx, y / 2, zz);   // (P139a: ?fortstairs=calm)
+       }
+     }
+     // rooftop: jars, a ladder top, a clothesline
+diff --git a/lba3/src/game/interiors.js b/lba3/src/game/interiors.js
+index 8572faa8..12d612f1 100644
+--- a/lba3/src/game/interiors.js
++++ b/lba3/src/game/interiors.js
+@@ -4,7 +4,7 @@
+ // the outdoor scenery is hidden while you are inside.
+ import * as THREE from 'three';
+ import { mat } from '../engine/rig.js';
+-import { textures } from '../engine/textures.js';
++import { textures, stepMat } from '../engine/textures.js';
+ import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, soft, softMat, canvasTex } from './props.js';
+ import * as P from './props.js';
+ import { dressHomeLife } from './homelife.js';
+@@ -805,7 +805,7 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
+   const { sx0, sx1, sz0, sz1 } = HOUSE_STAIRS;
+   for (let i = 0; i < 6; i++) {
+     const top = -0.13 * (i + 1), z = sz0 + 0.235 + i * 0.45;
+-    k.add(rbox(sx1 - sx0 - 0.04, top + 0.82, 0.47, 0.012), MAT.wood('honey'), (sx0 + sx1) / 2, (top - 0.82) / 2, z);
++    k.add(rbox(sx1 - sx0 - 0.04, top + 0.82, 0.47, 0.012), stepMat(MAT.wood('honey')), (sx0 + sx1) / 2, (top - 0.82) / 2, z);
+     B.col((sx0 + sx1) / 2, z, (sx1 - sx0) / 2, 0.35, top, { stair: true, bottom: -3 }); // (overlapping: no gap between treads)
+   }
+   P.railing(k, [[sx1 + 0.06, sz0 - 0.06], [sx1 + 0.06, sz1], [sx0, sz1]], { h: 0.95, mat: MAT.wood('dark'), step: 0.7 });
+@@ -837,7 +837,7 @@ function buildCellar(scene, physics) {
+   const sz = D / 2 - 0.95, sw = 1.25, N = 6, run = 0.4;
+   for (let i = 0; i < N; i++) {
+     const hgt = 0.2 * (i + 1), x = LX + 0.4 + (N - 1 - i) * run + run / 2;
+-    k.add(rbox(run + 0.02, hgt, sw, 0.015), MAT.wood('honey'), x, hgt / 2, sz);
++    k.add(rbox(run + 0.02, hgt, sw, 0.015), stepMat(MAT.wood('honey')), x, hgt / 2, sz);
+     B.col(x, sz, run / 2 + 0.06, sw / 2, hgt, { stair: true });
+   }
+   R.exits.push({ ...B.world(LX + 0.65, sz), r: 0.6, room: 'house', back: true });
+diff --git a/lba3/src/game/island.js b/lba3/src/game/island.js
+index 003fa72f..272737f8 100644
+--- a/lba3/src/game/island.js
++++ b/lba3/src/game/island.js
+@@ -7,7 +7,7 @@
+ // textures with world-scaled UVs, sculpted geometry for organic shapes,
+ // instancing/merging for repeated parts, a collider for every solid thing.
+ import * as THREE from 'three';
+-import { textures, keyJSON, wallTexture, withWallNormal } from '../engine/textures.js';
++import { textures, keyJSON, wallTexture, withWallNormal, stepMat } from '../engine/textures.js';
+ import { sculptRigid } from '../engine/sculpt.js';
+ import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/math.js';
+ import { rockGeometry, treeGeometry } from './vegetation.js';
+@@ -3195,7 +3195,7 @@ function plateauStair(W, root, o) {
+     // the step (one stone from below the ground, 2 cm into each cheek: no face shared with it); its collider runs on
+     // under the steps above it to the top (no seam between two: physics.js reads a brick 5 cm in from its edges), the
+     // first one's from 15 cm back over the landing
+-    const [px, pz] = f(m, S.lz); B.add(bbox(run + 0.02, top - bot, S.w + 0.04, 0.03, 1), trimM, px, (top + bot) / 2, pz, 0, o.ry, 0);
++    const [px, pz] = f(m, S.lz); B.add(bbox(run + 0.02, top - bot, S.w + 0.04, 0.03, 1), stepMat(trimM), px, (top + bot) / 2, pz, 0, o.ry, 0);   // (P139a: ?fortstairs=calm)
+     // (CAVE-STAIR: and 0.3 m on over the apron past the top, 2 cm under the top tread: the terrain's slope from the
+     //  cut under the last tread up to the apron, one point to the next, stopped him at the tread's edge)
+     { const c0 = i ? a : a - 0.15, c1 = S.lx1 + 0.3, [cx, cz] = f((c0 + c1) / 2, S.lz); P.add({ type: 'box', x: cx, z: cz, hw: (c1 - c0) / 2, hd: hw, rot: o.ry, top }); }
+@@ -3243,7 +3243,7 @@ function buildFlatTown(W, root) {
+   const { physics } = W;
+   const grp = new THREE.Group(); grp.name = 'flat-town'; root.add(grp);
+   const B = new Batch(grp);
+-  const rub = wallMat(), cope = tm('stone', { color: '#e8e4dc' }), step = tm('stone', { color: '#d4cec4' });
++  const rub = wallMat(), cope = tm('stone', { color: '#e8e4dc' }), step = stepMat(tm('stone', { color: '#d4cec4' }));   // (P139a: the lawn steps, the promenade's flight, the plaza's rings: ?fortstairs=calm)
+   // FLAT-TOWN-2: the walls that face east, away from the sun (the inland wall behind the water office, the lawns'),
+   // read near black in their shade beside the sunlit sea wall: the same rubble, lifted by its own texture as light
+   // (colour only: an emissive map, ~a third of the stones' own tone)
+diff --git a/lba3/src/game/keshlife.js b/lba3/src/game/keshlife.js
+index a8d0806e..c52bab94 100644
+--- a/lba3/src/game/keshlife.js
++++ b/lba3/src/game/keshlife.js
+@@ -27,6 +27,7 @@
+ // keshFlat(x,z) / keshBank(x,z) / keshDrift(x,z) shape the ground (desert.js heightFn, local coordinates);
+ // keshClear(x,z) keeps the island's scatter (rocks, shrubs, cacti) out of these places.
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { smoothstep, distToSegment } from '../engine/math.js';
+ import { tm, pm, ctex, bbox, cyl, lathe, Batch, mesh, rod } from './kit.js';
+ 
+@@ -308,7 +309,7 @@ export function buildKesh({ group, col, H, W, updaters, ox, oz }) {
+     const rise = COOL.h / STAIR.n;
+     for (let k = 0; k < STAIR.n; k++) {
+       const top = gy + (k + 1) * rise, zc = STAIR.z0 - k * STAIR.deep - STAIR.deep / 2;
+-      B.add(bbox(1.1, top - base, STAIR.deep + 0.01, 0.03, 2.2), adobe, STAIR.x, (top + base) / 2, zc);
++      B.add(bbox(1.1, top - base, STAIR.deep + 0.01, 0.03, 2.2), stepMat(adobe), STAIR.x, (top + base) / 2, zc);
+       col({ type: 'box', x: STAIR.x, z: zc, hw: 0.55, hd: STAIR.deep / 2 + 0.06, top });   // (overlapping treads: no seam to drop through; solid from the side)
+     }
+   }
+diff --git a/lba3/src/game/keyrooms.js b/lba3/src/game/keyrooms.js
+index f3904e28..8fe6d4df 100644
+--- a/lba3/src/game/keyrooms.js
++++ b/lba3/src/game/keyrooms.js
+@@ -23,6 +23,7 @@
+ //     kc_mill:   tin {x, z}, setTin(open)
+ //   clover box prop: cloverBox(k) (a small LBA-style casket, its lid apart: boxLid) → its footprint
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder, glowSprite } from './interiors.js';
+ import { esmerRoom } from './zhomes.js';
+ import { MAT, M, rbox, plane, cyl, sphere, canvasTex, table, chair, crate, barrel, chest, gauge, valveWheel, workbench, toolBoard, wallShelf, frame, jar, papers } from './props.js';
+@@ -231,8 +232,8 @@ export function buildKcGoats(scene, physics) {
+   const N = 8, rise = LOFT / N, run = 0.27, SX0 = 2.12, SD = 1.1, SZ = -D / 2 + SD / 2;
+   for (let i = 0; i < N; i++) {
+     const x = SX0 - i * run, top = (i + 1) * rise;
+-    k.add(rbox(run + 0.02, 0.06, SD - 0.02, 0.01), MAT.planks('honey'), x, top - 0.03, SZ);
+-    k.add(rbox(run, top - 0.06, SD - 0.08, 0.01), planks, x, (top - 0.06) / 2, SZ);
++    k.add(rbox(run + 0.02, 0.06, SD - 0.02, 0.01), stepMat(MAT.planks('honey')), x, top - 0.03, SZ);
++    k.add(rbox(run, top - 0.06, SD - 0.08, 0.01), stepMat(planks), x, (top - 0.06) / 2, SZ);
+     B.col(x, SZ, run / 2 + 0.09, SD / 2, top, { stair: true });   // (+0.09: over each other and the loft's edge under groundAt's 5 cm shrink)
+   }
+   const LX1 = SX0 - (N - 1) * run - run / 2;   // (the loft's east edge: the top step's west edge)
+diff --git a/lba3/src/game/lba1places.js b/lba3/src/game/lba1places.js
+index 58684031..34693e56 100644
+--- a/lba3/src/game/lba1places.js
++++ b/lba3/src/game/lba1places.js
+@@ -16,6 +16,7 @@
+ //            after it are merged into it: one optional room, one chest)
+ // Doors and exits are open in every chapter (src/game/story/index.js via lba1Doors / lba1Exit).
+ import * as THREE from 'three';
++import { stepMat as calmStep } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { buildLba1Room, hasLba1Room } from './lba1room.js';
+ import { Kit, M as cachedMat } from './props.js';
+ import { streetDist } from './town.js';
+@@ -807,7 +808,7 @@ export function buildLba1Asylum(scene, physics) {
+       // the steps: two treads from the floor (5) down to the pit's floor (2), each a cell's height
+       for (const [z0, z1, top] of [[41.5, 42.08, 4], [42.08, 42.66, 3]]) {
+         const [lx, lz] = L(10.5, (z0 + z1) / 2), d = (z1 - z0) * cw, hgt = (top - 2) * CH;
+-        k.add(rbox(2 * cw - 0.04, hgt, d, 0.02), wood, lx, 2 * CH + hgt / 2, lz);
++        k.add(rbox(2 * cw - 0.04, hgt, d, 0.02), calmStep(wood), lx, 2 * CH + hgt / 2, lz);   // (P139a: ?fortstairs=calm)
+         const w = R.cell(10.5, 0, (z0 + z1) / 2); physics.add({ type: 'box', x: w.x, z: w.z, hw: cw - 0.02, hd: d / 2, rot: 0, top: top * CH, stair: true });
+       }
+       { const [lx, lz] = L(10.5, 43.1); k.add(plane(2 * cw - 0.1, 0.7 * cw), MAT.flat('#14100c', 1), lx, 2 * CH + 0.01, lz, 0, { rx: -Math.PI / 2 }); }   // the way on, into the dark
+diff --git a/lba3/src/game/lighthouse.js b/lba3/src/game/lighthouse.js
+index 47524fdb..acb12a26 100644
+--- a/lba3/src/game/lighthouse.js
++++ b/lba3/src/game/lighthouse.js
+@@ -12,6 +12,7 @@
+ // gives it a box of its own (LH_ANNEX), so he never walks into them.
+ import * as THREE from 'three';
+ import { Batch, tm, pm, lathe, boxUV, tint, cached } from './kit.js';
++import { stepMat } from '../engine/textures.js';
+ 
+ export const LH = {
+   HW: 2.2, CH: 0.5,    // the shaft: half-width and the corners' cut (corner points 2.78 m from the axis)
+@@ -225,8 +226,8 @@ export function buildLighthouse(grp, lampMat) {
+   }
+   // the step before the door, to z 3.3 (he stands >= 3.5 from the axis), and the flight down to the path
+   // (USER-ASKS 3, "a door in the air": the headland falls ~1.1 m in front of the door; world.js gives each its collider)
+-  BN.add(rb(bx(dw + 1.0, 0.4, 0.55, 1)), rubble, 0, -0.05, 3.02);
+-  for (const S of LH_STEPS) BN.add(rb(bx(LH_STEP_W, S.top + 1.5, S.z1 - S.z0, 1)), rubble, 0, S.top - (S.top + 1.5) / 2, (S.z0 + S.z1) / 2);
++  BN.add(rb(bx(dw + 1.0, 0.4, 0.55, 1)), stepMat(rubble), 0, -0.05, 3.02);   // (P139a: ?fortstairs=calm)
++  for (const S of LH_STEPS) BN.add(rb(bx(LH_STEP_W, S.top + 1.5, S.z1 - S.z0, 1)), stepMat(rubble), 0, S.top - (S.top + 1.5) / 2, (S.z0 + S.z1) / 2);
+ 
+   BC.build(); BN.build();
+   return { topY, lampY: glazeY0 + glazeH / 2, capY };
+diff --git a/lba3/src/game/otrbar.js b/lba3/src/game/otrbar.js
+index be65c264..32dc239d 100644
+--- a/lba3/src/game/otrbar.js
++++ b/lba3/src/game/otrbar.js
+@@ -24,6 +24,7 @@
+ //     counter {x,z,r}  (a search spot behind the bar)                       winch {x,y,z,r}  (a ball target, high)
+ //     setCurtain(open)  (WAVE6 H-16: the curtains drawn, or gathered at the posts once the winch is freed)
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex, table, counter, jar, pottedPlant, railing } from './props.js';
+ import { FIT } from './worldfit.js';
+@@ -115,7 +116,7 @@ export function buildOtrBarRoom(scene, physics) {
+   const SX0 = -6.6, SX1 = -4.8, N = 3, run = 0.42;   // (the stair down at the raised floor's front)
+   for (let i = 0; i < N; i++) {
+     const tp = UH * (N - i) / (N + 1), z = UZ1 + (i + 0.5) * run;
+-    k.add(rbox(SX1 - SX0, tp, run + 0.02, 0.015), darkStone, (SX0 + SX1) / 2, tp / 2, z);
++    k.add(rbox(SX1 - SX0, tp, run + 0.02, 0.015), stepMat(darkStone), (SX0 + SX1) / 2, tp / 2, z);
+     B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.12, tp, { stair: true });   // (+0.12: no seam to drop through)
+   }
+   const bal = (pts) => k.at(0, UH, 0, 0, () => railing(k, pts, { h: 0.9, mat: WOOD(), step: 0.22 }));
+@@ -131,7 +132,7 @@ export function buildOtrBarRoom(scene, physics) {
+   k.add(rbox(GX1 - GX0, GH, GZ1 - BZ - 0.3, 0.03), MAT.wood('dark'), (GX0 + GX1) / 2, GH / 2, (BZ + 0.3 + GZ1) / 2);
+   k.add(rbox(GX1 - GX0, 0.02, GZ1 - BZ - 0.32, 0.01), MAT.planks('honey'), (GX0 + GX1) / 2, GH + 0.005, (BZ + 0.3 + GZ1) / 2);
+   B.col((GX0 + GX1) / 2, (BZ + 0.3 + GZ1) / 2, (GX1 - GX0) / 2 + 0.06, (GZ1 - BZ - 0.3) / 2 + 0.06, GH);
+-  for (let i = 0; i < 3; i++) { const z = GZ1 + (i + 0.5) * 0.4, tp = GH * (3 - i) / 3; k.add(rbox(1.8, tp, 0.42, 0.015), MAT.wood('dark'), GX0 + 1.2, tp / 2, z); B.col(GX0 + 1.2, z, 0.9, 0.2 + 0.12, tp, { stair: true }); }
++  for (let i = 0; i < 3; i++) { const z = GZ1 + (i + 0.5) * 0.4, tp = GH * (3 - i) / 3; k.add(rbox(1.8, tp, 0.42, 0.015), stepMat(MAT.wood('dark')), GX0 + 1.2, tp / 2, z); B.col(GX0 + 1.2, z, 0.9, 0.2 + 0.12, tp, { stair: true }); }
+   // (WAVE6 H-16: the two curtains are a pair of their own meshes, drawn together over the stage while the winch is
+   //  jammed and gathered to the frame's posts once it is freed: BAR.setCurtain, story/liftbelow.js)
+   const curtain = MAT.flat('#e0703a', 0.7, { emissive: '#3a1408' });
+diff --git a/lba3/src/game/otrhotel.js b/lba3/src/game/otrhotel.js
+index 9c118a55..f445af67 100644
+--- a/lba3/src/game/otrhotel.js
++++ b/lba3/src/game/otrhotel.js
+@@ -19,6 +19,7 @@
+ //   HOTEL (filled when the lobby is built): desk {x,z,r}, register {x,z,r} (a read spot on the desk),
+ //     machines [{x,z,a,kind}] (life, magic), npcSpots {clerk, explorer, manicurist} {x,z,a}
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex, jar, railing } from './props.js';
+ import { FIT } from './worldfit.js';
+@@ -91,7 +92,7 @@ export function buildOtrHotelRoom(scene, physics) {
+   const slab = (x0, z0, x1, z1) => { k.add(rbox(x1 - x0, UH, z1 - z0, 0.03), dark, (x0 + x1) / 2, UH / 2, (z0 + z1) / 2); k.add(rbox(x1 - x0 - 0.04, 0.02, z1 - z0 - 0.04, 0.01), floor, (x0 + x1) / 2, UH + 0.005, (z0 + z1) / 2); B.col((x0 + x1) / 2, (z0 + z1) / 2, (x1 - x0) / 2 + 0.06, (z1 - z0) / 2 + 0.06, UH); };
+   slab(LX, BZ, W / 2, UZ1); slab(LX, UZ1, UX1, 2.6);
+   // two stairs down: from the back strip's front (right of the lounge) and from the left strip's front
+-  const stair = (x, z0, dir, axis) => { for (let i = 0; i < 3; i++) { const tp = UH * (3 - i) / 4; if (axis === 'z') { const z = z0 + dir * (i + 0.5) * 0.45; k.add(rbox(1.6, tp, 0.47, 0.015), dark, x, tp / 2, z); B.col(x, z, 0.8, 0.225 + 0.12, tp, { stair: true }); } else { const xx = x + dir * (i + 0.5) * 0.45; k.add(rbox(0.47, tp, 1.6, 0.015), dark, xx, tp / 2, z0); B.col(xx, z0, 0.225 + 0.12, 0.8, tp, { stair: true }); } } };
++  const stair = (x, z0, dir, axis) => { for (let i = 0; i < 3; i++) { const tp = UH * (3 - i) / 4; if (axis === 'z') { const z = z0 + dir * (i + 0.5) * 0.45; k.add(rbox(1.6, tp, 0.47, 0.015), stepMat(dark), x, tp / 2, z); B.col(x, z, 0.8, 0.225 + 0.12, tp, { stair: true }); } else { const xx = x + dir * (i + 0.5) * 0.45; k.add(rbox(0.47, tp, 1.6, 0.015), stepMat(dark), xx, tp / 2, z0); B.col(xx, z0, 0.225 + 0.12, 0.8, tp, { stair: true }); } } };
+   stair(6.4, UZ1, 1, 'z'); stair(UX1, 1.4, 1, 'x');
+   const postsZ = (x0, x1, z) => { for (let x = x0; x <= x1; x += 0.9) { k.add(cyl(0.05, 0.06, 0.9, 8), GOLD(), x, UH + 0.45, z); k.add(sphere(0.07, 8, 6), GOLD(), x, UH + 0.94, z); } k.add(cyl(0.02, 0.02, x1 - x0, 6), MAT.paint('#2f8a9a', 0.4), (x0 + x1) / 2, UH + 0.8, z, 0, { rz: Math.PI / 2 }); B.col((x0 + x1) / 2, z, (x1 - x0) / 2, 0.06, UH + 1.0, { seeThrough: true, noStand: true }); };
+   const postsX = (z0, z1, x) => { for (let z = z0; z <= z1; z += 0.9) { k.add(cyl(0.05, 0.06, 0.9, 8), GOLD(), x, UH + 0.45, z); k.add(sphere(0.07, 8, 6), GOLD(), x, UH + 0.94, z); } k.add(cyl(0.02, 0.02, z1 - z0, 6), MAT.paint('#2f8a9a', 0.4), x, UH + 0.8, (z0 + z1) / 2, 0, { rx: Math.PI / 2 }); B.col(x, (z0 + z1) / 2, 0.06, (z1 - z0) / 2, UH + 1.0, { seeThrough: true, noStand: true }); };
+diff --git a/lba3/src/game/sewers.js b/lba3/src/game/sewers.js
+index 4f2ad17b..07104698 100644
+--- a/lba3/src/game/sewers.js
++++ b/lba3/src/game/sewers.js
+@@ -40,7 +40,7 @@ import * as THREE from 'three';
+ import { RoomBuilder, blueRocks, glowSprite } from './interiors.js';
+ import { MAT, M, TEX, rbox, cyl, sphere, torus, lathe, plane, pipe, canvasTex, soft, softMat } from './props.js';
+ import * as P from './props.js';
+-import { textures, cloneTex } from '../engine/textures.js';
++import { textures, cloneTex, stepMat } from '../engine/textures.js';
+ import { pumpDoors, pumpExit } from './pumproom.js';
+ 
+ export const SEWER_AT = { sewer: { x: 5800, z: 0 }, sewervault: { x: 5880, z: 0 }, sewerglobe: { x: 5960, z: 0 } };
+@@ -213,10 +213,11 @@ function buildHall(scene, physics) {
+   let massN = 0;
+   const mass = (x0, z0, x1, z1, top, { pave = true, col = true, lip = true, stair = false } = {}) => {
+     const w = x1 - x0, d = z1 - z0, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, h = top - 0.1 - BASE;
+-    k.add(new THREE.BoxGeometry(w, h, d), rubbleM(), cx, BASE + h / 2, cz);
++    const sm = stair ? stepMat : (m) => m;   // (P139a: a stair's treads calmer, ?fortstairs=calm)
++    k.add(new THREE.BoxGeometry(w, h, d), sm(rubbleM()), cx, BASE + h / 2, cz);
+     // (FLICKER-142: neighbouring masses' lips 4 mm apart in height: where they overlap their tops lay in one plane)
+-    if (lip) k.add(rbox(w + 0.08, 0.12, d + 0.08, 0.035), capM(), cx, top - 0.07 + (massN++ % 3) * 0.004, cz);
+-    if (pave) k.add(new THREE.BoxGeometry(w - 0.06, 0.04, d - 0.06), paveM(), cx, top - 0.005, cz);
++    if (lip) k.add(rbox(w + 0.08, 0.12, d + 0.08, 0.035), sm(capM()), cx, top - 0.07 + (massN++ % 3) * 0.004, cz);
++    if (pave) k.add(new THREE.BoxGeometry(w - 0.06, 0.04, d - 0.06), sm(paveM()), cx, top - 0.005, cz);
+     if (col) B.col(cx, cz, w / 2, d / 2, top, stair ? { stair: true } : {});
+   };
+   // stairs from level hi down to lo across the rectangle, in n treads; dir: which way they go down ('+x', '-x', '+z', '-z')
+diff --git a/lba3/src/game/tavcellar.js b/lba3/src/game/tavcellar.js
+index c53732fd..3e9b9de9 100644
+--- a/lba3/src/game/tavcellar.js
++++ b/lba3/src/game/tavcellar.js
+@@ -18,6 +18,7 @@
+ //   the way in and out: an exit { room: 'tavern' } at the doorway, R.entries.tavern; the tavern's arched door is an exit
+ //   { room: 'tavcellar' } (tavern.js), with its own R.entries.tavcellar
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, jar, railing } from './props.js';
+ import { sackPile, boxStack, goodsShelf } from './roomdress.js';
+@@ -71,8 +72,8 @@ export function buildTavCellarRoom(scene, physics) {
+   const N = 5, run = 0.75, rise = (WH - SH) / N;
+   for (let i = 0; i < N - 1; i++) {
+     const top = WH - rise * (i + 1), x = SX0 + (i + 0.5) * run;
+-    k.add(rbox(run + 0.02, top - 0.02, AZ1 - BZ, 0.015), stone, x, (top - 0.02) / 2, (BZ + AZ1) / 2);
+-    k.add(rbox(run + 0.04, 0.05, AZ1 - BZ + 0.04, 0.01), cap, x, top - 0.025, (BZ + AZ1) / 2);
++    k.add(rbox(run + 0.02, top - 0.02, AZ1 - BZ, 0.015), stepMat(stone), x, (top - 0.02) / 2, (BZ + AZ1) / 2);
++    k.add(rbox(run + 0.04, 0.05, AZ1 - BZ + 0.04, 0.01), stepMat(cap), x, top - 0.025, (BZ + AZ1) / 2);
+     B.col(x, (BZ + AZ1) / 2, run / 2 + 0.12, (AZ1 - BZ) / 2, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink, no seam to drop through)
+   }
+   const SX1 = SX0 + (N - 1) * run;   // (the stair's foot: the store's platform begins)
+diff --git a/lba3/src/game/tavern.js b/lba3/src/game/tavern.js
+index 691fdb21..82c089dd 100644
+--- a/lba3/src/game/tavern.js
++++ b/lba3/src/game/tavern.js
+@@ -24,6 +24,7 @@
+ //   TAVERN_PLAN                 the layout in the room's frame (the builder's own numbers): roomlife.js places the
+ //                               room's people from it, so a change of the layout carries them along
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, table, chair, jar, plate, counter, noticeBoard, pottedPlant, railing, barrel, hangingLamp, crate } from './props.js';
+ import { hanging, sackPile } from './roomdress.js';
+@@ -116,8 +117,8 @@ export function buildTavernRoom(scene, physics) {
+   const SZ0 = GZ1, SZ1 = P.SZ1, N = 10, run = 0.55, rise = GH / N, SX0 = P.SX0;   // (its foot at x = SX0)
+   for (let i = 0; i < N; i++) {
+     const top = rise * (i + 1), x = SX0 - (i + 0.5) * run;
+-    k.add(rbox(run + 0.02, top - 0.02, SZ1 - SZ0, 0.015), stone, x, (top - 0.02) / 2, (SZ0 + SZ1) / 2);   // (pale stone, as the original's)
+-    k.add(rbox(run + 0.04, 0.06, SZ1 - SZ0 + 0.04, 0.01), cap, x, top - 0.03, (SZ0 + SZ1) / 2);
++    k.add(rbox(run + 0.02, top - 0.02, SZ1 - SZ0, 0.015), stepMat(stone), x, (top - 0.02) / 2, (SZ0 + SZ1) / 2);   // (pale stone, as the original's)
++    k.add(rbox(run + 0.04, 0.06, SZ1 - SZ0 + 0.04, 0.01), stepMat(cap), x, top - 0.03, (SZ0 + SZ1) / 2);
+     B.col(x, (SZ0 + SZ1) / 2, run / 2 + 0.12, (SZ1 - SZ0) / 2, top, { stair: true });   // (+0.12: the steps overlap each other and the landing under groundAt's 5 cm shrink; +0.04 left a 2 cm seam between steps, +0.08 one at the top step against the landing: both dropped Twinsen under the stair)
+   }
+   const LX1 = SX0 - N * run;   // (the landing: from the stair's top to the left wall, level with the gallery)
+diff --git a/lba3/src/game/temple.js b/lba3/src/game/temple.js
+index e79750b9..490c091a 100644
+--- a/lba3/src/game/temple.js
++++ b/lba3/src/game/temple.js
+@@ -11,6 +11,7 @@
+ //   R.npcSpots {ilka, dallan} {x,z,a}
+ //   R.mites [{x,z}]      crystal mites that got in through the project's cut
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder, glowSprite } from './interiors.js';
+ import { MAT, rbox, plane, cyl, sphere, torus, lathe, canvasTex } from './props.js';
+ 
+@@ -79,8 +80,8 @@ function buildTempleRoom(scene, physics) {
+   for (let i = 0; i < 3; i++) k.add(plane(4.2, 1.05), fz, -W / 2 + 0.04, 3.4, -4.6 + i * 4.4, Math.PI / 2);
+ 
+   // the great relief on the back wall, on a raised dais with two steps
+-  k.add(rbox(8.38, 0.3, 3.2, 0.05), rough, 5.6, 0.15, BZ + 1.6);   // (FLICKER-142: 1 cm in from the piers' outer faces)
+-  k.add(rbox(8.38, 0.3, 0.6, 0.05), rough, 5.6, 0.15, BZ + 3.5);   // (FLICKER-142: 1 cm in at each end: the two blocks' ends lay in one plane)
++  k.add(rbox(8.38, 0.3, 3.2, 0.05), stepMat(rough), 5.6, 0.15, BZ + 1.6);   // (FLICKER-142: 1 cm in from the piers' outer faces)
++  k.add(rbox(8.38, 0.3, 0.6, 0.05), stepMat(rough), 5.6, 0.15, BZ + 3.5);   // (FLICKER-142: 1 cm in at each end: the two blocks' ends lay in one plane)
+   B.col(5.6, BZ + 1.6, 4.2, 1.6, 0.3, { stair: true });
+   k.add(rbox(7.4, 4.0, 0.3, 0.06), MAT.stone('lav', 1), 5.6, 2.4, BZ + 0.18);
+   k.add(plane(6.8, 3.55), MAT.map(reliefTex(), 0.95), 5.6, 2.45, BZ + 0.35);
+diff --git a/lba3/src/game/tralucave.js b/lba3/src/game/tralucave.js
+index b91c71f2..dfe6b404 100644
+--- a/lba3/src/game/tralucave.js
++++ b/lba3/src/game/tralucave.js
+@@ -14,6 +14,7 @@
+ //   traluCaveDoors() / traluCaveExit(to)   the plateau's door leads in ({ house: 'plateau' }: story/prologue.js no
+ //                                          longer offers it as shut); 'tralucave-out' leads back out before it
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { Kit, MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, table, bench, barrel, plate, jar, candle } from './props.js';
+ import { OLD_DOORS, PLATEAU_STAIR } from './island.js';
+@@ -182,8 +183,8 @@ export function buildTraluCaveRoom(scene, physics) {
+   const SX0 = TX1 - 1.45 * F, SX1 = TX1 - 0.05, N = 6, run = 0.6, rise = TY / N;
+   for (let i = 0; i < N; i++) {
+     const top = rise * (N - i), z = TZ1 + (i + 0.5) * run;
+-    k.add(rbox(SX1 - SX0, top - 0.02, run + 0.02, 0.02), block, (SX0 + SX1) / 2, (top - 0.02) / 2, z);   // (OVERLAP-1: 2 cm inside its tread, not level with the tread's top: the two flickered)
+-    k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), cap, (SX0 + SX1) / 2, top - 0.025, z);
++    k.add(rbox(SX1 - SX0, top - 0.02, run + 0.02, 0.02), stepMat(block), (SX0 + SX1) / 2, (top - 0.02) / 2, z);   // (OVERLAP-1: 2 cm inside its tread, not level with the tread's top: the two flickered)
++    k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), stepMat(cap), (SX0 + SX1) / 2, top - 0.025, z);
+     B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.12, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink)
+     // CAVE-STAIR: its open east side is the steps' own stone, a wall from the floor: a stair collider never pushes
+     // (physics.js: the ground under the feet decides), so from the lower floor he walked into the flight's side at
+diff --git a/lba3/src/game/upper.js b/lba3/src/game/upper.js
+index 0120de64..b4b896bf 100644
+--- a/lba3/src/game/upper.js
++++ b/lba3/src/game/upper.js
+@@ -16,6 +16,7 @@
+ //            setOpen(b))
+ //   upper    CAMPAIGN-7: R.order {x,z, show(b)}: Vesk's standing order beside the archive's door (the deliveries' plate under it)
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import * as P from './props.js';
+ import { MAT, rbox, plane, cyl, torus, canvasTex } from './props.js';
+@@ -163,8 +164,8 @@ function buildArchive(scene, physics) {
+     const SX0 = GX0, SX1 = GX0 + 1.0, TR = 0.45;
+     for (let i = 0; i < 7; i++) {
+       const z0 = GZ1 + i * TR, top = GY - (i + 1) * 0.3;
+-      k.add(rbox(SX1 - SX0, top - 0.01, TR, 0.01), stone, (SX0 + SX1) / 2, (top - 0.01) / 2, z0 + TR / 2);   // (OVERLAP-SWEEP: 1 cm under its plank tread's top: one plane with it, the seven treads fought it)
+-      k.add(rbox(SX1 - SX0 + 0.02, 0.04, TR + 0.02, 0.01), plank, (SX0 + SX1) / 2, top - 0.02, z0 + TR / 2);
++      k.add(rbox(SX1 - SX0, top - 0.01, TR, 0.01), stepMat(stone), (SX0 + SX1) / 2, (top - 0.01) / 2, z0 + TR / 2);   // (OVERLAP-SWEEP: 1 cm under its plank tread's top: one plane with it, the seven treads fought it)
++      k.add(rbox(SX1 - SX0 + 0.02, 0.04, TR + 0.02, 0.01), stepMat(plank), (SX0 + SX1) / 2, top - 0.02, z0 + TR / 2);
+       B.col((SX0 + SX1) / 2, (GZ1 - 0.15 + z0 + TR) / 2, (SX1 - SX0) / 2, (z0 + TR - GZ1 + 0.15) / 2, top, { stair: true });
+     }
+     // rails: along the gallery's front (open at the stair's head) and its east end, down the stair's open side
+diff --git a/lba3/src/game/wanniemine.js b/lba3/src/game/wanniemine.js
+index fe490c7b..7e9d6ef2 100644
+--- a/lba3/src/game/wanniemine.js
++++ b/lba3/src/game/wanniemine.js
+@@ -27,6 +27,7 @@
+ //   wannieMineDoors() / wannieMineExit(to)  the Platform's mine mouth leads into the gallery's upper end (always open:
+ //                                           the shortcut once the bulkhead is down); 'wm-out' back out before the mouth
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder, glowSprite } from './interiors.js';
+ import { MAT, M, rbox, plane, cyl, sphere, canvasTex, barrel, crate, jar } from './props.js';
+ import { rockGeo, rockMat, floorTex } from './underground.js';
+@@ -387,7 +388,7 @@ function buildGallery(scene, physics) {
+   const IZ0 = -4.0, IZ1 = 3.0, run = (INC.x0 - INC.x1) / INC.n;
+   for (let i = 0; i < INC.n; i++) {
+     const tp = INC.top * (i + 1) / (INC.n + 1), x = INC.x0 - (i + 0.5) * run;
+-    k.add(rbox(run + 0.02, tp, IZ1 - IZ0, 0.015), rock(), x, tp / 2, (IZ0 + IZ1) / 2);
++    k.add(rbox(run + 0.02, tp, IZ1 - IZ0, 0.015), stepMat(rock()), x, tp / 2, (IZ0 + IZ1) / 2);
+     k.add(rbox(0.14, 0.05, IZ1 - IZ0 - 0.2, 0.01), timber(), x + run / 2 - 0.08, tp + 0.02, (IZ0 + IZ1) / 2);
+     B.col(x, (IZ0 + IZ1) / 2, run / 2 + 0.12, (IZ1 - IZ0) / 2, tp, { stair: true });
+   }
+diff --git a/lba3/src/game/wave8world.js b/lba3/src/game/wave8world.js
+index 62686386..103c4fd9 100644
+--- a/lba3/src/game/wave8world.js
++++ b/lba3/src/game/wave8world.js
+@@ -16,6 +16,7 @@
+ //   papers  (Otringal's market) a stack of news sheets under a stone at one end of an unattended stall's counter, the
+ //           day's bill (CLOUD CRIER · NEWS) tied to the stall's post beside it
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { MAT, M, rbox, cyl, sphere, canvasTex, plane, Kit } from './props.js';
+ import { rockGeometry } from './vegetation.js';
+ import { dogRig } from './dogs.js';
+@@ -153,6 +154,7 @@ export function archLane(at = ARCH_AT) { const f = at.foot, p = (lz) => turn(f.x
+ // (+z out). Returns their group and colliders.
+ const STEPS = { w: 1.3, rise: 0.24, from: 2.0, to: 7.0 };   // (risers of 0.24 m at most, as the isles' flights: zislands.js S.flights)
+ function bankSteps(parent, physics, foot, wf, stone) {
++  stone = stepMat(stone);   // (P139a: ?fortstairs=calm)
+   const grp = new THREE.Group(); grp.name = 'wave8 arch steps'; parent.add(grp);
+   const T = physics.terrain, S = STEPS, k = new Kit(grp), out = [];
+   const span = (lz, d) => { let lo = Infinity, hi = -Infinity; for (const lx of [-S.w / 2, 0, S.w / 2]) for (const dz of [-d / 2, 0, d / 2]) { const p = wf(lx, lz + dz), h = T.heightAt(p.x, p.z); lo = Math.min(lo, h); hi = Math.max(hi, h); } return { lo, hi }; };
+diff --git a/lba3/src/game/wizards.js b/lba3/src/game/wizards.js
+index 7e88bdd6..66278c7c 100644
+--- a/lba3/src/game/wizards.js
++++ b/lba3/src/game/wizards.js
+@@ -18,6 +18,7 @@
+ //   wizardDoors() [{x,z,r,room,region?}]   wizardExit(to) for 'wtent-out' and 'school-out'
+ //   R.npcSpots: wtent {bersimon}, school {magus, keraooc}
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder, glowSprite } from './interiors.js';
+ import { MAT, rbox, plane, cyl, sphere, lathe, canvasTex, table, bench, jar, plate, candle, rug, railing, barrel, M, TEX, Kit } from './props.js';
+ import { DESERT } from './desert.js';
+@@ -261,7 +262,7 @@ function buildSchoolRoom(scene, physics) {
+   // --- the stair down to the walkway, the rocks either side of it
+   for (let i = 0; i < 3; i++) {
+     const top = CL - L * (i + 1), x = X(40 + i) + s / 2, z0 = Z(8), z1 = Z(13);
+-    k.add(rbox(s + 0.02, top, z1 - z0, 0.015), cap, x, top / 2, (z0 + z1) / 2);
++    k.add(rbox(s + 0.02, top, z1 - z0, 0.015), stepMat(cap), x, top / 2, (z0 + z1) / 2);
+     B.col(x, (z0 + z1) / 2, s / 2 + 0.12, (z1 - z0) / 2, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink)
+   }
+   rocks(40, 3, 47, 8, CL - 0.3, CL + 0.6, 5);
+@@ -282,7 +283,7 @@ function buildSchoolRoom(scene, physics) {
+   }
+   for (let i = 0; i < 4; i++) {
+     const top = WK - L * (i + 1), x = X(46 + i) + s / 2;
+-    k.add(rbox(s + 0.02, top, SZ1 - SZ0, 0.015), cap, x, top / 2, (SZ0 + SZ1) / 2);
++    k.add(rbox(s + 0.02, top, SZ1 - SZ0, 0.015), stepMat(cap), x, top / 2, (SZ0 + SZ1) / 2);
+     B.col(x, (SZ0 + SZ1) / 2, s / 2 + 0.12, (SZ1 - SZ0) / 2, top, { stair: true });
+   }
+   for (const z of [SZ0, SZ1]) {
+diff --git a/lba3/src/game/zeelich.js b/lba3/src/game/zeelich.js
+index 528a5479..8ee9e0ea 100644
+--- a/lba3/src/game/zeelich.js
++++ b/lba3/src/game/zeelich.js
+@@ -36,7 +36,7 @@ import { esmerShuttle, shuttleTraffic } from './shuttle.js';
+ import { Dog, addDogs } from './dogs.js';
+ import { esmerBuilding, Place, setLook, glassM, tealGlassM, capParts, capSpike, capM, frondTree, goldPlant } from './props-esmer.js';
+ const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
+-import { textures, keyJSON, cloneTex, withWallNormal, registerWallTexture } from '../engine/textures.js';
++import { textures, keyJSON, cloneTex, withWallNormal, registerWallTexture, paintDepthCanvas } from '../engine/textures.js';
+ import { rng, lerp, smoothstep } from '../engine/math.js';
+ import { SpriteBatch } from '../engine/spritebatch.js';
+ import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
+@@ -48,6 +48,7 @@ import { roomOcc } from './roomocc.js';
+ import { buildCisternRise, liftClear } from './zlift.js';
+ import { touch } from './story/reach.js';
+ import { f58, COVER58 } from './fight58.js';
++import { Z29, buildZeelich29, z29Clear } from './zeelich29.js';   // (#29: on by default since the user's pick 27.11; ?zeelich29=old the street before)
+ 
+ export const ZEELICH = { x: 2400, z: 0 };
+ const Y0 = 6.0;              // walking level of the island
+@@ -224,7 +225,8 @@ export const puffTex = (grey = false) => ctex('puff' + (grey ? 'g' : ''), 128, 1
+ }, false);
+ // ZSTYLE-1: the island's rock, LBA2's Zeelich ground (measured on the original's Otringal, Knartas and the Platform:
+ // grey granite #62625c–#aaa19a with pale #d6d1d4 lights, no lawn): a neutral speckled grey, lit planes and fine cracks
+-const graniteTex = () => ctex('zgranite', 512, 512, (x, S) => {
++const graniteTex = () => (Z29.on ? granite29Tex() : graniteTex0());
++const graniteTex0 = () => ctex('zgranite', 512, 512, (x, S) => {
+   const r = rng(91);
+   x.fillStyle = '#c4c0b8'; x.fillRect(0, 0, S, S);
+   for (let i = 0; i < 220; i++) {
+@@ -254,7 +256,54 @@ const ribTex = () => registerWallTexture('zrib', ctex('zrib', 128, 128, (x, S) =
+ }), { kind: 'ribs', N: 128, n: 8 });
+ // ZSTYLE-2: LBA2's Zeelich paving (LBA2_VISUAL_NOTES: lavender-grey paving with lighter borders; the original's Otringal
+ // paving #d3ced9 / #afa5ad): pale lavender-grey flags in staggered rows, thin joints; it was the dark grey cobble
+-const paveTex = () => ctex('zpave', 256, 256, (x, S) => {
++// #29 (on by default; ?zeelich29=old the originals): the street's flags, the kerbs and the granite with the Citadel's contrast — the same sizes, the
++// flags' tones spread wider (some warmer), darker joints, a hairline crack here and there, and the painted relief the
++// world's textures have had since DEPTH-LOOK (e) (textures.js paintDepthCanvas: Zeelich's own textures had none). Off:
++// the textures below, unchanged. (Named as the originals: tests/lib/pathends.js finds the paving by name.)
++const pave29Tex = () => { const t = ctex('zpave29', 256, 256, (x, S) => {
++  const r = rng(61), cols = 4, rows = 6, cw = S / cols, rh = S / rows;
++  x.fillStyle = '#958fa0'; x.fillRect(0, 0, S, S);
++  for (let j = 0; j < rows; j++) for (let i = -1; i < cols; i++) {
++    const x0 = i * cw + (j % 2 ? cw / 2 : 0) + 2, y0 = j * rh + 2, k = 0.87 + r() * 0.16, warm = r() < 0.15;
++    x.fillStyle = warm ? `rgb(${222 * k | 0},${206 * k | 0},${204 * k | 0})` : `rgb(${210 * k | 0},${205 * k | 0},${222 * k | 0})`;
++    x.beginPath(); x.roundRect(x0, y0, cw - 4, rh - 4, 3); x.fill();
++    if (r() < 0.12) { x.strokeStyle = 'rgba(110,104,122,0.35)'; x.lineWidth = 1; x.beginPath(); x.moveTo(x0 + r() * cw * 0.6, y0 + 2); x.lineTo(x0 + cw * 0.3 + r() * cw * 0.3, y0 + rh * 0.5); x.lineTo(x0 + r() * cw * 0.8, y0 + rh - 6); x.stroke(); }
++  }
++  for (let i = 0; i < 900; i++) { x.fillStyle = r() < 0.5 ? 'rgba(116,110,128,0.2)' : 'rgba(250,248,252,0.3)'; x.fillRect(r() * S, r() * S, 1 + r() * 1.5, 1 + r() * 1.5); }
++  paintDepthCanvas(x.canvas, null, 0.4);
++}); t.name = 'zpave'; return t; };
++const kerb29Tex = () => { const t = ctex('zkerb29', 128, 128, (x, S) => {
++  const r = rng(71);
++  x.fillStyle = '#ebe7f0'; x.fillRect(0, 0, S, S);
++  for (let i = 0; i < 700; i++) { x.fillStyle = r() < 0.5 ? 'rgba(130,124,142,0.24)' : 'rgba(255,255,255,0.5)'; x.fillRect(r() * S, r() * S, 1 + r(), 1 + r()); }
++  x.fillStyle = 'rgba(112,106,124,0.6)'; x.fillRect(0, 0, 2, S);   // (one joint a metre, as the original: the plaza's star is laid in it)
++  paintDepthCanvas(x.canvas, null, 0.6);
++}); t.name = 'zkerb'; return t; };
++const granite29Tex = () => ctex('zgranite29', 512, 512, (x, S) => {
++  x.drawImage(graniteTex0().source.data, 0, 0);
++  const r = rng(93);
++  // weathered patches and seams: darker, a little warmer, larger than the speckle (they read from the play camera)
++  for (let i = 0; i < 70; i++) {
++    const px = r() * S, py = r() * S, w = 40 + r() * 110, h = 20 + r() * 50, rot = r() * 3, t = r();
++    x.fillStyle = t < 0.5 ? 'rgba(120,112,100,0.16)' : t < 0.8 ? 'rgba(160,150,132,0.16)' : 'rgba(236,232,226,0.22)';
++    wrap9(S, (a, b) => { x.beginPath(); x.ellipse(px + a, py + b, w / 2, h / 2, rot, 0, 7); x.fill(); });
++  }
++  paintDepthCanvas(x.canvas, null, 0.5);
++});
++// the forecourts' flags (#29): square, a warm pale stone, half-bond rows, low contrast (the street's are lilac-grey runners)
++export const fore29Tex = () => { const t = ctex('zfore29', 256, 256, (x, S) => {
++  const r = rng(63), n = 4, q = S / n;
++  x.fillStyle = '#b4aaa0'; x.fillRect(0, 0, S, S);
++  for (let j = 0; j < n; j++) for (let i = -1; i < n; i++) {
++    const x0 = i * q + (j % 2 ? q / 2 : 0) + 2, y0 = j * q + 2, k = 0.9 + r() * 0.12;
++    x.fillStyle = `rgb(${236 * k | 0},${226 * k | 0},${214 * k | 0})`; x.beginPath(); x.roundRect(x0, y0, q - 4, q - 4, 4); x.fill();
++  }
++  for (let i = 0; i < 700; i++) { x.fillStyle = r() < 0.5 ? 'rgba(140,128,116,0.2)' : 'rgba(255,252,246,0.3)'; x.fillRect(r() * S, r() * S, 1 + r(), 1 + r()); }
++  paintDepthCanvas(x.canvas, null, 0.35);
++}); t.name = 'zpave'; return t; };
++const paveTex = () => (Z29.on ? pave29Tex() : pave0Tex());
++const kerbTex = () => (Z29.on ? kerb29Tex() : kerb0Tex());
++const pave0Tex = () => ctex('zpave', 256, 256, (x, S) => {
+   const r = rng(61), cols = 4, rows = 6, cw = S / cols, rh = S / rows;
+   x.fillStyle = '#a49fac'; x.fillRect(0, 0, S, S);
+   for (let j = 0; j < rows; j++) for (let i = -1; i < cols; i++) {
+@@ -265,7 +314,7 @@ const paveTex = () => ctex('zpave', 256, 256, (x, S) => {
+   for (let i = 0; i < 900; i++) { x.fillStyle = r() < 0.5 ? 'rgba(120,114,130,0.22)' : 'rgba(250,248,252,0.3)'; x.fillRect(r() * S, r() * S, 1 + r() * 1.5, 1 + r() * 1.5); }
+ });
+ // the borders' kerb stone: a pale lavender-white with fine speckle and a joint each metre (lighter than the flags)
+-const kerbTex = () => ctex('zkerb', 128, 128, (x, S) => {
++const kerb0Tex = () => ctex('zkerb', 128, 128, (x, S) => {
+   const r = rng(71);
+   x.fillStyle = '#f2eff6'; x.fillRect(0, 0, S, S);
+   for (let i = 0; i < 500; i++) { x.fillStyle = r() < 0.5 ? 'rgba(150,144,160,0.2)' : 'rgba(255,255,255,0.5)'; x.fillRect(r() * S, r() * S, 1 + r(), 1 + r()); }
+@@ -789,6 +838,14 @@ export function* buildZeelichSteps(scene, physics) {
+   // CAMPAIGN-3: the Cistern Rise on Mill Lane (the freight lift, the quarter's cistern, Irsa's Pump Works): src/game/zlift.js
+   const lift = buildCisternRise({ group, col, W, updaters, Y0, mat: { stone: tm('stone', { color: '#d6d2cc' }), planks: tm('planks'), cobble: tm('cobble'), brass: brassM(), teal: tealM(), steel: darkSteel() } });
+   yield;
++  // #29 (?zeelich29=new): the street brought to the Citadel's level, src/game/zeelich29.js (on by default; ?zeelich29=old: nothing)
++  if (Z29.on) {
++    const loc = (p) => [p.x - ox, p.z - oz];
++    const doors = [...houses.filter((h) => h.door).map((h) => h.door), ...mills.map((m) => loc(m.api.door)), [21.2, 20.5], [53.8, -6.2], [DEPOT.gate[0] / 2 + DEPOT.gate[1] / 2, DEPOT.z0],
++      ...[life.watch?.hatch, life.watch?.door, life.burrow, life.watch?.stairFoot, lift?.door, lift?.works?.door].filter((p) => p && p.x != null).map(loc)];
++    buildZeelich29({ group, B, col, physics, ox, oz, Y0, R, tm, updaters, seats: ZEELICH_SEATS, doors, houses: HOUSES, foreM: new THREE.MeshStandardMaterial({ map: fore29Tex(), roughness: 0.86 }), foreTile: 2.4 });
++    yield;
++  }
+ 
+   buildIslets();
+   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
+@@ -1659,17 +1716,20 @@ export function* buildZeelichSteps(scene, physics) {
+   function buildStreetFurniture() {
+     for (let x = -44; x <= 34; x += 10.5) { lamps.push([x, -4.1]); lamps.push([x + 5, 4.1]); }
+     lamps.push([PLAZA.x - 5.8, PLAZA.z - 5.8], [PLAZA.x + 5.8, PLAZA.z + 5.8 - 0.4]);
+-    const lampGeo = cached('zlamp', () => ({
++    // (#29: the lamps a little lighter — 6-sided turnings and slimmer rings, as the street's other brass reads at the Far
++    //  camera — about half their 0.9k triangles a lamp, spent on the new buildings; ?zeelich29=old the lamps as before)
++    const LS = Z29.on ? { l: 6, c: 6, tr: 4, tt: 8, g: 6 } : { l: 10, c: 8, tr: 6, tt: 12, g: 10 };
++    const lampGeo = cached('zlamp' + LS.l, () => ({
+       metal: compose([
+-        [lathe([[0, 0], [0.3, 0], [0.3, 0.1], [0.2, 0.2], [0.13, 0.5], [0.1, 0.58], [0.12, 0.64], [0, 0.64]], 10)],
+-        [cyl(0.05, 0.07, 2.7, 8), 0, 1.95, 0], [new THREE.TorusGeometry(0.09, 0.025, 6, 12).rotateX(Math.PI / 2), 0, 1.1, 0], [new THREE.TorusGeometry(0.075, 0.025, 6, 12).rotateX(Math.PI / 2), 0, 3.1, 0],
++        [lathe([[0, 0], [0.3, 0], [0.3, 0.1], [0.2, 0.2], [0.13, 0.5], [0.1, 0.58], [0.12, 0.64], [0, 0.64]], LS.l)],
++        [cyl(0.05, 0.07, 2.7, LS.c), 0, 1.95, 0], [new THREE.TorusGeometry(0.09, 0.025, LS.tr, LS.tt).rotateX(Math.PI / 2), 0, 1.1, 0], [new THREE.TorusGeometry(0.075, 0.025, LS.tr, LS.tt).rotateX(Math.PI / 2), 0, 3.1, 0],
+         [tube([[0, 3.2, 0], [0.12, 3.55, 0], [0.42, 3.62, 0], [0.62, 3.5, 0], [0.64, 3.36, 0]], 0.03, 5, 1)],
+         [tube([[0, 2.9, 0], [0.3, 3.1, 0], [0.5, 3.38, 0]], 0.02, 4, 1)],
+-        [lathe([[0, 0], [0.2, 0.02], [0.16, 0.12], [0.07, 0.26], [0.02, 0.4], [0, 0.42]], 10), 0.64, 3.2, 0],
+-        [lathe([[0, 0], [0.14, 0], [0.16, 0.04], [0.12, 0.06], [0, 0.06]], 10), 0.64, 2.66, 0],
+-        [lathe([[0, 0], [0.04, 0], [0.04, 0.3], [0.08, 0.36], [0, 0.48]], 8), 0, 3.2, 0],
++        [lathe([[0, 0], [0.2, 0.02], [0.16, 0.12], [0.07, 0.26], [0.02, 0.4], [0, 0.42]], LS.l), 0.64, 3.2, 0],
++        [lathe([[0, 0], [0.14, 0], [0.16, 0.04], [0.12, 0.06], [0, 0.06]], LS.l), 0.64, 2.66, 0],
++        [lathe([[0, 0], [0.04, 0], [0.04, 0.3], [0.08, 0.36], [0, 0.48]], LS.c), 0, 3.2, 0],
+       ]),
+-      glass: lathe([[0.05, 0], [0.15, 0.08], [0.19, 0.28], [0.15, 0.46], [0.06, 0.54]], 10).translate(0.64, 2.68, 0),
++      glass: lathe([[0.05, 0], [0.15, 0.08], [0.19, 0.28], [0.15, 0.46], [0.06, 0.54]], LS.g).translate(0.64, 2.68, 0),
+     }));
+     const lm = tm('brass', { color: '#d8c0a0', rough: 0.4, metal: 0.6 }), lg = pm('#fff4e4', 0.3, { emissive: '#ffd8a8', emissiveIntensity: 1.4 });   // (ZSTYLE-1: warm white, not pink)
+     for (const [x, z] of lamps) {
+@@ -2400,7 +2460,7 @@ export function* buildZeelichSteps(scene, physics) {
+       if (!onIsland(x, z, 2) || !isClear(x, z, 1)) continue;
+       const v = items[0].length <= items[1].length ? 0 : 1;
+       const s = 0.9 + r() * 0.35, it = { x, y: Y0 - 0.05, z, ry: r() * 6, s };
+-      if (zlClear(x, z, 1) || liftClear(x, z, 1)) continue;   // (after the draws: the island's other trees keep their places)
++      if (zlClear(x, z, 1) || liftClear(x, z, 1) || z29Clear(x, z, 1)) continue;   // (after the draws: the island's other trees keep their places)
+       items[v].push(it);
+       col({ type: 'cyl', x, z, r: 0.3, top: Y0 + 2.6 * s, seeThrough: true });
+     }
+@@ -2415,7 +2475,7 @@ export function* buildZeelichSteps(scene, physics) {
+       const x = -48 + r() * 84, z = -28 + r() * 56;
+       if (!onIsland(x, z, 1.2) || !isClear(x, z, 1.5)) continue;
+       const s = 0.25 + r() * 0.5, it = { x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#eeece8').multiplyScalar(0.95 + r() * 0.15) };
+-      if (zlClear(x, z, 1) || liftClear(x, z, 1)) continue;
++      if (zlClear(x, z, 1) || liftClear(x, z, 1) || z29Clear(x, z, 1)) continue;
+       rocks[i % 3].push(it);
+       col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true, block: true });   // (FEET-66B: every stone in the grass an obstacle (block): a boulder's flat top held him up to 0.5 m over its dome, and the small ones, with no collider, he walked through; as drawn, neither is stood on)
+     }
+@@ -2430,7 +2490,7 @@ export function* buildZeelichSteps(scene, physics) {
+       if (patch < 0.6) continue;   // (ZEELICH-2: tufts in a few patches on the granite, no lawn)
+       const gr = { x, y: Y0 - 0.02, z, ry: r() * 6, s: 0.8 + r() * 0.7, color: new THREE.Color().setHSL(0.1 + r() * 0.04, 0.42, 0.5 + r() * 0.15) };   // (ZSTYLE-1: dry golden tufts, as Knartas' and Otringal's)
+       const fl = r() < 0.35 ? [Math.floor(r() * 4), { x: x + (r() - 0.5) * 0.6, y: Y0, z: z + (r() - 0.5) * 0.6, ry: r() * 6, s: 0.9 + r() * 0.6 }] : null;
+-      if (zlClear(x, z, 0.1) || liftClear(x, z, 0.1)) continue;   // (the draws are made either way)
++      if (zlClear(x, z, 0.1) || liftClear(x, z, 0.1) || z29Clear(x, z, 0.1)) continue;   // (the draws are made either way)
+       grass.push(gr);
+       if (fl) flowers[fl[0]].push(fl[1]);
+     }
+diff --git a/lba3/src/game/zeelich29.js b/lba3/src/game/zeelich29.js
+new file mode 100644
+index 00000000..b3bcbf95
+--- /dev/null
++++ b/lba3/src/game/zeelich29.js
+@@ -0,0 +1,344 @@
++// #29 (OPEN-TASKS.he.md, the user: "Zeelich looks simpler than the Citadel"): the candidate `?zeelich29=new`, picked by
++// the user 27.11 and ON by default since. `?zeelich29=old` turns it off: then nothing here runs (zeelich.js calls
++// buildZeelich29 only under Z29.on, and z29Clear answers false) and the island is exactly as before.
++//
++// Measured against the Citadel from the play camera (docs/lba-maturity/ZEELICH-29.md): Zeelich's street is one row of
++// five low houses (3.6–4.3 m walls) with long empty stretches east of the plaza and by the gate, its furniture only
++// lamps, benches and planters in a regular line, its paving one flat colour edge to edge, nothing in the air over the
++// street, and no building taller than the council house's cap in view. What this adds, in Zeelich's own Esmer language
++// (props-esmer.js, LBA2's look: setLook), all original pieces from the shared kit:
++//   - six Esmer buildings on the empty lots, so the street reads as a town and its skyline steps: a two-storey house
++//     with a balcony east of the north mill lane, another behind the plaza, a domed tower at the east end (the landmark
++//     down the street from the plaza), a low hall by the depot's east corner, and a small domed house between the south
++//     mill's lane and the depot. (A slim stair tower beside Mr Pelleck's house was planned for the view from the gate:
++//     his house's minaret already stands there.) They have no doors at all (door: false: no door that leads nowhere; a gap listed for the user); each
++//     registered with worldfit; solid colliders; the camera's own tall-solid shapes (regions.js occAuto);
++//   - pennant festoons along the street's edges, lamp post to lamp post;
++//   - forecourts: each house's front paved from the street to its wall in square flags of their own (zeelich.js fore29Tex);
++//   - the street's flags, kerbs and the island's granite with more contrast and the painted relief (zeelich.js *29Tex);
++//   - on the ground: glazed-tile bands across the street at each lamp pair (the paving's rhythm), flower beds before
++//     the depot's fence and the new houses;
++//   - street life: a bin at each bench, goods by the new houses and the stall (crates, jars, barrels), banner poles at
++//     the gate, a cage lantern at each new house's street corner.
++// Every piece is fitted where nothing stands (fit below): clear of every collider built before it, the street's
++// walking lane, every door, the story's and the residents' stops (walkrounds.js, storylife.js, zeelich.js npcSpots), the
++// street's life places (zeelife.js zlClear), the Cistern Rise (zlift.js liftClear), the depot's yard (its fence and the
++// beats inside it: DEPOT below); a piece that does not fit is left out (R.z29.skipped lists it). Colliders for everything he can
++// walk into (low pieces see-through for the camera, the buildings solid). Static parts go into the island's Batch (one
++// mesh per material, as the rest of the street); the props' materials are the shared kit's (kit.js/props-esmer.js).
++import * as THREE from 'three';
++import { Place, esmerBuilding, setLook, capM, bin, barrel, jars, flowerBed, bannerPole, cageLamp, hangingLine, stall, flagPole, laundry, EM, cm, tileTex } from './props-esmer.js';
++import { Gulls } from './gulls.js';
++import { roomOcc } from './roomocc.js';
++import { bbox, cyl, compose, cached, ctex, Batch as KitBatch } from './kit.js';
++import { zlClear } from './zeelife.js';
++import { liftClear } from './zlift.js';
++
++const Q = typeof location !== 'undefined' ? location.search : '';
++export const Z29 = { on: !/[?&]zeelich29=old\b/.test(Q) };   // (the user's pick 27.11: on by default; `?zeelich29=old` the street before)
++
++// ---- the new buildings (island-local; ry: the way the front faces, +z of its frame; the fronts face away from the street)
++const BUILDINGS = [
++  // east of the north mill lane, before the watch house's stair: two storeys, a balcony, a hipped roof
++  { id: 'z29-north', x: 3.2, z: -11.4, ry: Math.PI, w: 4.6, d: 4.4, h: 6.4, wall: '#e8dcd0', dome: ['#78a8ae', '#b4d8d8'], trim: '#2f7a84', seed: 291, domed: false, balconyP: 1 },
++  // the east end, north side: a domed tower, the landmark down the street
++  { id: 'z29-tower', x: 28.6, z: -10.8, ry: Math.PI, w: 5.0, d: 5.0, h: 9.4, wallH: 5.4, wall: '#dcd0c8', dome: ['#5f98a4', '#a6d4d8'], trim: '#3a6a80', seed: 292 },
++  // the east end, south side, past the depot's fence: a low hall under a hipped roof
++  { id: 'z29-hall', x: 29.8, z: 11.4, ry: 0, w: 5.4, d: 4.4, h: 4.9, wall: '#e6dacc', dome: ['#b0824a', '#e6c47e'], trim: '#a87838', seed: 293, domed: false },
++  // behind the plaza, between the council house and the octagonal hall: a two-storey house under a hipped roof
++  { id: 'z29-mid', x: -17.5, z: -13.0, ry: Math.PI, w: 4.2, d: 4.0, h: 6.2, wall: '#e6d8cc', dome: ['#6c9ea8', '#a8d0d4'], trim: '#3a6a80', seed: 296, domed: false },
++  // south side, between the south mill's lane and the depot's fence (the bare ground the east street opens on): a small
++  // domed house
++  { id: 'z29-south', x: 0.9, z: 11.8, ry: 0, w: 4.4, d: 4.0, h: 6.0, wallH: 3.7, wall: '#e4d6cc', dome: ['#82b0b4', '#c0e0de'], trim: '#2f7a84', seed: 295 },
++];
++// places kept clear: the residents' and the story's stops (walkrounds.js zeelichRoster, storylife.js ZEELICH_PEOPLE,
++// zeelich.js npcSpots), island-local
++const STOPS = [[-38.5, 7.2], [-26.6, 7.2], [-21.2, 1.4], [-31, 2.2], [-44.5, -1.6], [-4.0, -3.0], [3, -4.6], [-20.6, -3.4], [-24, 3.6], [-6, 3.4], [-12.5, 1.6],
++  [-34.0, -16.3], [-20.4, -16.4], [-29.4, -6.6], [-23.0, -6.3], [-26.8, 2.6], [-5.5, 22.5], [0.5, 25.5], [-54.0, 0.5], [-28.4, -2.4], [-26.6, 2.9],
++  [-34.5, -3.2], [-24, 7.0], [-15.5, -2.6], [-29.0, 5.6], [-12.0, 3.0], [-60.5, 0.9], [35.2, 3.6], [46.5, -4.5]];
++// the blade signs' emblems (#29 second pass): a 3 × 2 atlas, 256 × 172 — a loaf, a jar, a cog, a flower, a cup, a fish,
++// cream on teal, plum or gold boards with a gold rim (painted here: no words, no original art)
++const sign29Tex = () => ctex('z29signs', 256, 172, (x, W, H) => {
++  const cw = W / 3, ch = H / 2, boards = ['#2f7a84', '#5a2e52', '#a87838', '#2f6a80', '#5a2e52', '#2f7a84'];
++  for (let e = 0; e < 6; e++) {
++    const x0 = (e % 3) * cw, y0 = Math.floor(e / 3) * ch, cx = x0 + cw / 2, cy = y0 + ch / 2;
++    x.fillStyle = boards[e]; x.fillRect(x0, y0, cw, ch);
++    x.strokeStyle = '#e8b84a'; x.lineWidth = 5; x.strokeRect(x0 + 5, y0 + 5, cw - 10, ch - 10);
++    x.fillStyle = '#f4e6c8'; x.strokeStyle = '#f4e6c8'; x.lineWidth = 4;
++    x.beginPath();
++    if (e === 0) { x.ellipse(cx, cy + 4, 26, 16, 0, 0, 7); x.fill(); x.strokeStyle = boards[e]; for (const d of [-10, 0, 10]) { x.beginPath(); x.moveTo(cx + d - 4, cy - 6); x.lineTo(cx + d + 4, cy + 10); x.stroke(); } }
++    else if (e === 1) { x.moveTo(cx - 14, cy - 22); x.lineTo(cx + 14, cy - 22); x.lineTo(cx + 10, cy - 14); x.quadraticCurveTo(cx + 26, cy, cx + 14, cy + 22); x.lineTo(cx - 14, cy + 22); x.quadraticCurveTo(cx - 26, cy, cx - 10, cy - 14); x.closePath(); x.fill(); }
++    else if (e === 2) { for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; x.fillRect(cx + Math.cos(a) * 20 - 5, cy + Math.sin(a) * 20 - 5, 10, 10); } x.arc(cx, cy, 18, 0, 7); x.fill(); x.fillStyle = boards[e]; x.beginPath(); x.arc(cx, cy, 7, 0, 7); x.fill(); }
++    else if (e === 3) { for (let k = 0; k < 5; k++) { const a = k * 1.2566; x.beginPath(); x.ellipse(cx + Math.cos(a) * 12, cy + Math.sin(a) * 12, 10, 6, a, 0, 7); x.fill(); } x.fillStyle = '#e8b84a'; x.beginPath(); x.arc(cx, cy, 7, 0, 7); x.fill(); }
++    else if (e === 4) { x.moveTo(cx - 20, cy - 12); x.lineTo(cx + 14, cy - 12); x.lineTo(cx + 10, cy + 18); x.lineTo(cx - 16, cy + 18); x.closePath(); x.fill(); x.beginPath(); x.arc(cx + 18, cy, 8, -1.4, 1.4); x.stroke(); }
++    else { x.ellipse(cx - 4, cy, 22, 11, 0, 0, 7); x.fill(); x.beginPath(); x.moveTo(cx + 14, cy); x.lineTo(cx + 28, cy - 12); x.lineTo(cx + 28, cy + 12); x.closePath(); x.fill(); x.fillStyle = boards[e]; x.beginPath(); x.arc(cx - 16, cy - 3, 3, 0, 7); x.fill(); }
++  }
++}, false);
++// a notice board's face (its front in the texture's top half, its plain back in the bottom half): pinned papers, lines
++// for writing, no words
++const notice29Tex = () => ctex('z29notice', 128, 128, (x, W, H) => {
++  for (const [y0, papers] of [[0, true], [H / 2, false]]) {
++    x.fillStyle = '#6a4a32'; x.fillRect(0, y0, W, H / 2); x.fillStyle = '#8a6444'; x.fillRect(4, y0 + 4, W - 8, H / 2 - 8);
++    if (!papers) continue;
++    const P = [[8, 8, 34, 40, '#f4eee0'], [46, 6, 30, 26, '#f0e0b8'], [82, 10, 36, 32, '#e8f0ee'], [44, 36, 38, 22, '#f4e6d8'], [12, 50, 26, 10, '#f0c8c0']];
++    for (const [px, py, w, h, c] of P) { x.fillStyle = c; x.fillRect(px, y0 + py, w, h); x.fillStyle = 'rgba(80,70,90,0.45)'; for (let l = py + 6; l < py + h - 3; l += 5) x.fillRect(px + 4, y0 + l, w - 8 - ((l * 7) % 9), 1.5); x.fillStyle = '#c84a3a'; x.beginPath(); x.arc(px + w / 2, y0 + py + 2.5, 2, 0, 7); x.fill(); }
++  }
++}, false);
++const DEPOT = [3.5, 8.5, 24.5, 25.7];   // (zeelich.js DEPOT, its fence and yard, +0.5 m)
++const FOOT = [];   // the buildings' footprints (+ their goods' strip): z29Clear
++export function z29Clear(x, z, pad = 0) {
++  if (!Z29.on) return false;
++  return FOOT.some(([x0, z0, x1, z1]) => x > x0 - pad && x < x1 + pad && z > z0 - pad && z < z1 + pad);
++}
++
++// ctx: { group, B (zeelich.js's Batch), col (island-local collider → physics), physics, ox, oz, Y0, R, tm, houses, doors }
++export function buildZeelich29(ctx) {
++  const { col, physics, ox, oz, Y0, R, tm } = ctx;
++  // (the budget: every part added counted by kind — triangles as drawn, the materials it uses — R.z29.cost)
++  const cost = {}, mats = new Set();
++  let kind = 'other';
++  let B = { add: (geo, mat, ...a) => { tally(geo, mat); return ctx.B.add(geo, mat, ...a); }, addM: (geo, mat, m) => { tally(geo, mat); return ctx.B.addM(geo, mat, m); } };
++  function tally(geo, mat) { const n = (geo.index ? geo.index.count : geo.attributes.position.count) / 3; (cost[kind] ||= { tris: 0, parts: 0 }); cost[kind].tris += n; cost[kind].parts++; mats.add(mat); }
++  const placed = [], skipped = [];
++  const doors = (ctx.doors || []).map(([x, z]) => [x, z]);
++  // ---------------------------------------------------------------- where a piece may stand
++  const blockers = (x, z, rad) => {
++    for (const c of physics.near(x + ox, z + oz)) {
++      if (c.enabled === false || c.top < Y0 + 0.06) continue;   // (the island's floor bricks, the paving)
++      if (physics._inside(c, x + ox, z + oz, rad)) return c;
++    }
++    return null;
++  };
++  const why = (x, z, rad, { lane = 4.2, stop = 1.4, door = 2.0 } = {}) => {
++    if (x > -50 && x < 37 && Math.abs(z) < lane + rad) return 'street';
++    if (x > DEPOT[0] - rad && x < DEPOT[2] + rad && z > DEPOT[1] - rad && z < DEPOT[3] + rad) return 'depot';
++    if (zlClear(x, z, rad) || liftClear(x, z, rad)) return 'life';
++    for (const [dx, dz] of doors) if (Math.hypot(x - dx, z - dz) < door + rad) return 'door';
++    for (const [sx, sz] of STOPS) if (Math.hypot(x - sx, z - sz) < stop + rad) return 'stop';
++    for (const p of placed) if (Math.hypot(x - p.x, z - p.z) < p.r + rad) return 'placed';
++    const c = blockers(x, z, rad);
++    return c ? `collider ${c.type} (${(c.x - ox).toFixed(1)}, ${(c.z - oz).toFixed(1)}) top ${(c.top - Y0).toFixed(1)}` : null;
++  };
++  // a footprint (hw × hd turned ry) sampled at its corners, edges and middle
++  const fpWhy = (x, z, ry, hw, hd, o) => {
++    const c = Math.cos(ry), s = Math.sin(ry), rr = Math.min(hw, hd, 0.6);
++    const nx = Math.max(1, Math.ceil((hw - rr) / rr)), nz = Math.max(1, Math.ceil((hd - rr) / rr));
++    for (let i = -nx; i <= nx; i++) for (let j = -nz; j <= nz; j++) {
++      const u = (i / nx) * (hw - rr), v = (j / nz) * (hd - rr), px = x + c * u + s * v, pz = z - s * u + c * v;
++      const w = why(px, pz, rr, o); if (w) return w;
++    }
++    return null;
++  };
++  const addCols = (P) => { for (const c of P.cols) col({ ...c, x: c.x, z: c.z }); };
++  // a prop: tries (x, z), then a metre round it; draws it and adds its colliders, or lists why not
++  const prop = (name, x, z, ry, r, draw, o = {}) => {
++    for (const [dx, dz] of [[0, 0], [0.5, 0], [-0.5, 0], [0, 0.5], [0, -0.5], [0.9, 0], [-0.9, 0], [0, 0.9], [0, -0.9]]) {
++      if (o.fixed && (dx || dz)) break;
++      const w = why(x + dx, z + dz, r, o); if (w) { if (dx === 0 && dz === 0) o.first = w; continue; }
++      const P = new Place(B, x + dx, Y0, z + dz, ry);
++      const k0 = kind; kind = name.replace(/^z29-\w+ /, ''); draw(P); kind = k0; addCols(P);
++      placed.push({ name, x: x + dx, z: z + dz, r: Math.max(r, P.r || 0) });
++      return P;
++    }
++    skipped.push(`${name} (${x.toFixed(1)}, ${z.toFixed(1)}): ${o.first || 'blocked'}`);
++    return null;
++  };
++
++  // ---------------------------------------------------------------- the buildings
++  kind = 'buildings';
++  setLook(true);   // (LBA2's look, as the street: zeelich.js ZEELICH-2)
++  try {
++    for (const b of BUILDINGS) {
++      const w = fpWhy(b.x, b.z, b.ry, b.w / 2 + 0.25, b.d / 2 + 0.25, { lane: 4.6, stop: 1.0, door: 2.4 });
++      if (w) { skipped.push(`${b.id} (${b.x}, ${b.z}): ${w}`); continue; }
++      const P = new Place(B, b.x, Y0, b.z, b.ry);
++      esmerBuilding(P, { w: b.w, d: b.d, h: b.h, wallH: b.wallH, wall: tm('plasterWall', { color: b.wall }), domeM: capM(b.dome), trim: b.trim, accent: '#e8b84a', seed: b.seed,
++        door: false, domed: b.domed, balconyP: b.balconyP, bury: 0.35, fit: { region: 'zeelich', name: b.id, ox, oz } });
++      col({ type: 'box', x: b.x, z: b.z, hw: b.w / 2 - 0.02, hd: b.d / 2 - 0.02, rot: b.ry, top: Y0 + b.h, noStand: true });
++      const c = Math.cos(b.ry), s = Math.sin(b.ry), hw = b.w / 2, hd = b.d / 2;
++      const ex = Math.abs(c) * hw + Math.abs(s) * hd, ez = Math.abs(s) * hw + Math.abs(c) * hd;
++      FOOT.push([b.x - ex - 0.6, b.z - ez - 0.6, b.x + ex + 0.6, b.z + ez + 0.6]);
++      placed.push({ name: b.id, x: b.x, z: b.z, r: 0 });   // (the props test the building's collider itself)
++    }
++  } finally { setLook(null); }
++  const built = new Set(placed.map((p) => p.name));
++  kind = 'building goods';
++  // a cage lantern at each new building's street corner, goods along its street side (island-local)
++  const streetSide = (b) => (b.z < 0 ? 1 : -1);   // (toward the street: +z for a north-side building)
++  for (const b of BUILDINGS) {
++    if (!built.has(b.id)) continue;
++    const sz = b.z + streetSide(b) * (b.d / 2 + 0.75), ry = b.z < 0 ? 0 : Math.PI;
++    prop(b.id + ' lantern', b.x - b.w / 2 + 0.2, sz, ry, 0.45, (P) => cageLamp(P, { h: 2.5 }));
++    // (crate stacks were tried here: 0.9k triangles a crate — their bevelled battens — 11k for two stacks, over the budget)
++    if (b.id === 'z29-hall') prop(b.id + ' barrels', b.x + b.w / 2 - 0.9, sz, ry, 0.8, (P) => { barrel(P, { lx: -0.35 }); barrel(P, { lx: 0.38, lz: 0.2, color: '#9a6a48' }); });
++    if (b.id === 'z29-tower') prop(b.id + ' jars', b.x + 0.9, sz - streetSide(b) * 0.1, ry, 0.75, (P) => jars(P, { n: 4, seed: 7 }));
++    if (b.id === 'z29-north') prop(b.id + ' bed', b.x - 0.6, sz + streetSide(b) * 0.35, ry, 1.45, (P) => flowerBed(P, { w: 2.2, d: 0.9, colors: ['#f0c030', '#e8608a', '#f4eee0', '#3fa8b8'] }));
++  }
++
++  // ---------------------------------------------------------------- along the street: pennant festoons
++  // the lamps (zeelich.js buildStreetFurniture): north at x = −44 + 10.5k (z −4.1), south 5 m on (z 4.1). A festoon from a
++  // post's ring to the next post on the same side, every other span, none in the plaza: along the street's edges, never
++  // across it (lines across the street hung between the Follow camera and him in the first pictures). (A lantern line
++  // over the plaza was tried and left out: it crossed the council house's front at its middle.)
++  kind = 'lines';
++  const PEN = ['#3a8a9a', '#e8b84a', '#f4eee0', '#c86a8a', '#5aa8a0'];
++  const post = (x, z) => [x, Y0 + 3.05, z];
++  let lines = 0;
++  for (const [x0, z] of [[-44, -4.1], [-39, 4.1]]) for (let k = 0; k < 7; k++) {
++    const xa = x0 + 10.5 * k, xb = xa + 10.5;
++    if ((k + (z > 0 ? 1 : 0)) % 2 || xb > 36 || (xb > -36 && xa < -14)) continue;   // (every other span; the plaza)
++    hangingLine(B, post(xa + 0.1, z), post(xb - 0.1, z), { kind: 'pennants', colors: PEN, sag: 0.4, step: 0.55, seed: k + (z > 0 ? 7 : 0) });
++    lines++;
++  }
++
++  // ---------------------------------------------------------------- the ground: forecourts
++  // each house's front (the old five but the council house, whose arcade floor runs to the plaza already; the watch house;
++  // the new ones) paved from the street to its wall in square warm flags of their own (zeelich.js fore29Tex; the Citadel's
++  // houses stand on paved fronts, here they stood on bare granite). The court runs in under the street's edge and its
++  // border stones, to |z| 3.15 (the street's edge is at 3.3–3.6, its kerb stones 0.5 m inside it): no strip of bare
++  // granite between them (P136: paving that stops short of other paving). Visual only (his floor is the island's
++  // bricks): the top 0.85 cm over the slab, between the mill tracks' gravel (0.4) and the street (1.4), 4.5 mm or more
++  // from each (worldfit's 3 mm)
++  kind = 'forecourts';
++  const fronts = [];
++  for (const h of ctx.houses || []) {
++    if (h.arcade) continue;
++    const zf = h.ry === 0 ? h.z + h.d / 2 : h.z - h.d / 2;
++    fronts.push([h.x - h.w / 2 - 0.2, h.x + h.w / 2 + 0.2, zf]);
++  }
++  fronts.push([8.4, 13.6, -9.2]);   // (the watch house, zeelife.js WH)
++  for (const b of BUILDINGS) if (built.has(b.id)) fronts.push([b.x - b.w / 2 - 0.2, b.x + b.w / 2 + 0.2, b.z < 0 ? b.z + b.d / 2 : b.z - b.d / 2]);
++  let courts = 0;
++  for (const [x0, x1, zf] of fronts) {
++    const s = Math.sign(zf), za = s * 3.15, d = Math.abs(zf - za) + 0.02;
++    if (d < 0.6 || !ctx.foreM) continue;
++    B.add(bbox(x1 - x0, 0.03, d, 0.004, ctx.foreTile || 3.2), ctx.foreM, (x0 + x1) / 2, Y0 + 0.0085 - 0.015, (za + zf) / 2);
++    courts++;
++  }
++
++  // ---------------------------------------------------------------- the ground: tile bands across the street
++  // a band of glazed tiles (props-esmer's diamond tiles) across the paving at each lamp pair, 0.5 m wide, its top 4.5 mm
++  // over the street's (zeelich.js PV: the street's top 1.4 cm over the slab, the kerbs' 2.1: under the kerbs)
++  kind = 'tile bands';
++  const tiles = cm(tileTex('#2f8a9a', '#e8b84a', '#e2d6cc'), { rough: 0.5 });
++  let bands = 0;
++  for (let k = 0; k <= 7; k++) {
++    const x = -44 + 10.5 * k + 2.5;
++    if (x > -33 && x < -15) continue;   // (the plaza's own paving)
++    B.add(bbox(0.5, 0.01, 5.4, 0.002, 0.5), tiles, x, Y0 + 0.0185 - 0.005, 0);   // (0.5 m a tile repeat: kit.js boxUV; between the borders' kerb stones, which lie on the street's edges 0.5 m in (worldfit: the first try ran under them, 2.5 mm apart))
++    bands++;
++  }
++
++  // ---------------------------------------------------------------- street furniture
++  kind = 'furniture';
++  // a bin at each bench's end (zeelich.js ZEELICH_SEATS: [x, z, ry]), on the side away from the lamp
++  for (const [x, z, ry] of ctx.seats || []) {
++    const c = Math.cos(ry), s = Math.sin(ry);
++    for (const side of [1, -1]) { const lx = side * 1.45, bx = x + c * lx, bz = z - s * lx; if (prop('bin', bx, bz, ry, 0.42, (P) => bin(P, { color: '#2f7f86' }), { lane: 3.75, stop: 1.0, door: 1.6 })) break; }
++  }
++  // banner poles either side of the gate's street end (zeelich.js buildGateway: x −47.2, the arch's piers at z ±4.1)
++  for (const s of [-1, 1]) prop('gate banner', -45.6, s * 5.0, 0, 0.45, (P) => bannerPole(P, { h: 5.0, colors: ['#2f7a84', '#e8b84a', '#f4eee0'] }), { lane: 4.4 });
++  // flower beds along the depot's fence (its street side, either side of its spur) and by the stall's back
++  for (const [x, z] of [[7.0, 6.6], [-19.6, 9.6]]) prop('bed', x, z, 0, 1.4, (P) => flowerBed(P, { w: 2.4, d: 1.0, colors: ['#f0c030', '#e8608a', '#f4eee0', '#c050d0'] }), { lane: 4.6 });
++  // goods: barrels by the workshop's yard side, jars by the stall, a cargo stack at the depot spur
++  prop('barrels', -6.6, 8.4, 0, 0.8, (P) => { barrel(P, { lx: -0.35 }); barrel(P, { lx: 0.38, lz: 0.2, color: '#9a6a48' }); }, { lane: 4.6 });
++  prop('stall jars', -27.0, 10.2, 0, 0.7, (P) => jars(P, { n: 3, seed: 5 }), { lane: 4.6 });
++
++  // ================================================================ the second pass (the user, 27.11: "continue enriching
++  // Zeelich toward the Citadel": street life, stalls and shop fronts with goods, signs and notice boards, facade detail,
++  // landmarks down the main street)
++  // ---------------------------------------------------------------- shop fronts: blade signs, awnings, a notice board
++  // a blade sign on a brass bracket beside a door or a street corner: a painted emblem (no words: a loaf, a jar, a cog, a
++  // flower, a cup, a fish) on a board in the trims' teal, plum or gold, one small atlas (sign29Tex)
++  kind = 'signs';
++  const signM = cm(sign29Tex(), { rough: 0.7 });
++  const bladeSign = (x, y, z, ry, e) => {
++    const P = new Place(B, x, y, z, ry);
++    P.add(cached('z29bracket', () => compose([[cyl(0.025, 0.025, 0.72, 6).rotateZ(Math.PI / 2), 0.36, 0, 0], [cyl(0.02, 0.02, 0.5, 5).rotateZ(Math.PI / 4), 0.18, -0.18, 0], [new THREE.SphereGeometry(0.05, 6, 4), 0.74, 0, 0]])), EM.brass());
++    P.add(cached('z29sign' + e, () => { const g = bbox(0.52, 0.52, 0.05, 0.015, 1).clone(), uv = g.attributes.uv, q = g.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, (e % 3) / 3 + (q.getX(i) / 0.52 + 0.5) / 3, 1 - (Math.floor(e / 3) + 1) / 2 + (q.getY(i) / 0.52 + 0.5) / 2); return g; }), signM, 0.42, -0.34, 0);
++  };
++  // (on the old houses' street fronts beside the door, at 2.75 m: clear of the door's alfiz, under the frieze; e the emblem)
++  for (const [i, e, dx] of [[0, 3, 1.45], [3, 4, -1.45], [4, 2, 1.25]]) {
++    const h = (ctx.houses || [])[i]; if (!h) continue;
++    const sg = h.ry === 0 ? 1 : -1, fz = h.z + sg * (h.d / 2 + 0.02), x = h.x + sg * ((h.doorX ?? 0) + dx);
++    bladeSign(x, Y0 + 2.75, fz, h.ry === 0 ? -Math.PI / 2 : Math.PI / 2, e);
++  }
++  // (on the new buildings' street corners: a loaf on the north house, a jar on the south one, a cup on the hall, a fish on
++  //  the tower)
++  for (const [id, e] of [['z29-north', 0], ['z29-hall', 4], ['z29-tower', 5], ['z29-south', 1]]) {
++    const b = BUILDINGS.find((q) => q.id === id); if (!b || !built.has(id)) continue;
++    const sg = b.z < 0 ? 1 : -1, fz = b.z + sg * (b.d / 2 + 0.02);
++    bladeSign(b.x + b.w / 2 - 0.35, Y0 + 2.6, fz, b.z < 0 ? -Math.PI / 2 : Math.PI / 2, e);
++  }
++  // striped awnings over the new buildings' street-side ground windows (their window row: props-esmer.js esmerBuilding,
++  // 2.1 m apart, the first row's top at the plinth + 2.07 m)
++  kind = 'awnings';
++  const awn = (x, y, z, ry, w, ca, cb) => {
++    const P = new Place(B, x, y, z, ry);
++    P.add(cached('z29awn' + w, () => { const g = bbox(w, 0.025, 0.78, 0.01, 1).clone(); g.translate(0, 0, 0.39); g.rotateX(0.42); const uv = g.attributes.uv, q = g.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, q.getX(i) / 0.9, q.getZ(i) / 0.9); return g; }), EM.canvas(ca, cb));
++    for (const sx of [-1, 1]) P.add(cached('z29awnstrut', () => cyl(0.012, 0.012, 0.62, 4).rotateX(0.95)), EM.brass(), sx * (w / 2 - 0.05), -0.24, 0.27);
++  };
++  const AWN = { 'z29-north': ['#2f7a84', '#f4eee0'], 'z29-mid': ['#a87838', '#f4eee0'], 'z29-tower': ['#3a6a80', '#f4eee0'], 'z29-hall': ['#c86a5a', '#f8eee4'], 'z29-south': ['#2f7a84', '#f8eee4'] };
++  for (const b of BUILDINGS) {
++    if (!built.has(b.id)) continue;
++    const W2 = b.w - 0.32, n = Math.max(0, Math.floor((W2 - 0.9) / 2.1)), base = Math.min(0.38, (b.wallH ?? b.h - 0.46) * 0.15);
++    const sg = b.z < 0 ? 1 : -1, fz = b.z + sg * (b.d / 2 - 0.12);
++    for (let q = 0; q < n; q++) { const u = (q - (n - 1) / 2) * 2.1; awn(b.x + u, Y0 + base + 2.2, fz, b.z < 0 ? 0 : Math.PI, 1.05, ...AWN[b.id]); }
++  }
++  // notice boards at the plaza's west mouth and by the gate (pinned papers, no words)
++  kind = 'notice boards';
++  const board = (P) => {
++    P.add(cached('z29nbposts', () => compose([[cyl(0.05, 0.06, 2.0, 6), -0.62, 1.0, 0], [cyl(0.05, 0.06, 2.0, 6), 0.62, 1.0, 0], [bbox(1.5, 0.1, 0.16, 0.02, 1), 0, 2.02, 0]])), EM.brass());
++    P.add(cached('z29nb', () => { const g = bbox(1.3, 0.9, 0.06, 0.02, 1).clone(), uv = g.attributes.uv, q = g.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, q.getX(i) / 1.3 + 0.5, (q.getY(i) / 0.9 + 0.5) * 0.5 + (q.getZ(i) > 0 ? 0.5 : 0)); return g; }), cm(notice29Tex(), { rough: 0.85 }), 0, 1.45, 0);
++    P.box(0, 0, 0.75, 0.12, 2.05, { seeThrough: false }); P.r = 0.85;
++  };
++  prop('notice board', -33.2, -6.2, 0.35, 0.9, board, { lane: 4.6 });
++  prop('notice board', -44.6, 6.4, Math.PI - 0.3, 0.9, board, { lane: 4.6 });
++
++  // ---------------------------------------------------------------- market stalls with goods
++  // one more of the kit's stalls (props-esmer.js stall): fruit on the east street's north side, past the bakehouse's
++  // yard, facing the street. (A cloth stall across from the workshop was tried: 4.5k triangles, over the budget at the
++  // plaza, which already has Oku's stall.)
++  kind = 'stalls';
++  // (its own small batch, its meshes bounded round the stall: merged into the island's per-material meshes, their bounds
++  //  grew across the island and the plaza's frame drew 32k more triangles for a 5.9k stall)
++  const SB = ctx.group ? new KitBatch(ctx.group) : null, B0 = B;
++  if (SB) B = { add: (geo, mat, ...q) => { tally(geo, mat); return SB.add(geo, mat, ...q); }, addM: (geo, mat, m) => { tally(geo, mat); return SB.addM(geo, mat, m); } };
++  const st = prop('stall fruit', 19.8, -7.6, 0, 2.0, (P) => stall(P, { a: '#2f7a84', b: '#f4eee0', goods: 'fruit', seed: 3 }), { lane: 4.4 });
++  if (SB) { SB.build(); B = B0; }
++  // (its canopy a scenery volume for the play camera, as the plaza's stall's: zeelich.js buildPlaza, CAM-COVER)
++  if (st) roomOcc(R, physics.terrain).add({ kind: 'box', x: ox + st.x, z: oz + st.z, hw: 2.0, hd: 1.25, y0: Y0 + 1.85, y1: Y0 + 2.75, walkUnder: true, name: 'z29 stall canopy' });
++
++  // ---------------------------------------------------------------- landmarks down the main street, hanging cloth
++  // two flag masts at the street's east end, either side of the platform's gate; a laundry line before the south house
++  kind = 'landmarks';
++  for (const sg of [-1, 1]) prop('east flag', 33.6, sg * 6.6, sg < 0 ? 0 : Math.PI, 0.45, (P) => flagPole(P, { h: 7.2, colors: ['#2f7a84', '#e8b84a'] }), { lane: 4.4 });
++  kind = 'laundry';
++  prop('laundry', -1.6, 7.6, 0.08, 1.9, (P) => laundry(P, { w: 3.0 }), { lane: 4.6 });
++
++  // ---------------------------------------------------------------- street life: birds
++  // two small flocks of the town's gulls (gulls.js: two instanced draws each, no shadow, simulated only near him): the
++  // plaza's lamps, the fountain's rim and the stall's canopy; the east street's new roofs and lamps. They sit, peck and
++  // lift off when he comes close, as on Citadel's square.
++  const birds = [];
++  if (ctx.group && ctx.updaters) {
++    const bg = new THREE.Group(); bg.name = 'z29 gulls'; bg.position.set(-ox, 0, -oz); ctx.group.add(bg);
++    const W = (x, z, y) => ({ x: x + ox, z: z + oz, y });
++    const roof = (id, dx, dz) => { const b = BUILDINGS.find((q) => q.id === id); return b && built.has(b.id) ? W(b.x + dx, b.z + dz, Y0 + (b.domed === false ? b.h - 0.46 : (b.wallH ?? b.h)) + 0.25) : null; };
++    const flocks = [
++      { name: 'z29 gulls plaza', n: 3, seed: 29, perches: [W(-29.8, -5.8, Y0 + 3.66), W(-18.2, 5.4, Y0 + 3.66), W(-22.1, 0, Y0 + 0.74), W(-25.4, 1.3, Y0 + 0.74), W(-24, 9.2, Y0 + 2.62), W(-22, 2.6, Y0)] },
++      { name: 'z29 gulls east', n: 3, seed: 31, perches: [roof('z29-north', -1, 0.5), roof('z29-north', 1.2, -0.6), roof('z29-hall', 0, 0), W(8.5, -4.1, Y0 + 3.66), W(13.5, 4.1, Y0 + 3.66), W(9, 1.8, Y0)].filter(Boolean) },
++    ];
++    for (const f of flocks) birds.push(new Gulls({ parent: bg, physics, name: f.name, perches: f.perches, n: f.n, seed: f.seed }));
++    ctx.updaters.push((dt) => {
++      const G = globalThis.game; if (!G || !G.hero) return;
++      const live = G.room === R && G.state === 'play', h = G.hero;
++      const c = { outdoors: live, hero: { x: h.pos.x, y: h.pos.y, z: h.pos.z, speed: h.speed || 0 }, near: [] };
++      for (const f of birds) f.update(live ? dt : 0, c);
++    });
++  }
++
++  for (const k in cost) cost[k].tris = Math.round(cost[k].tris);
++  R.z29 = { placed: placed.map((p) => p.name), skipped, lines, bands, courts, birds: birds.reduce((t, f) => t + f.n, 0), cost, materials: mats.size };
++  return R.z29;
++}
+diff --git a/lba3/src/game/zeelife.js b/lba3/src/game/zeelife.js
+index a1500ba2..747b6914 100644
+--- a/lba3/src/game/zeelife.js
++++ b/lba3/src/game/zeelife.js
+@@ -22,6 +22,7 @@
+ // zlClear(x, z, pad) keeps Zeelich's scatter (trees, rocks, grass) out of these places; it is applied after the
+ // scatter's random draws, so everything else on the island keeps its place.
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { crystalMats, gemGeo } from './crystallook.js';
+ import { tm, pm, ctex, bbox, boxUV, cyl, lathe, Batch, compose, tint, cached } from './kit.js';
+ import { capM, glassM } from './props-esmer.js';
+@@ -179,7 +180,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
+     const rise = WH.h / STAIR.n;
+     for (let k = 0; k < STAIR.n; k++) {
+       const top = Y0 + (k + 1) * rise, zc = STAIR.z0 - STAIR.deep * (k + 0.5);
+-      B.add(bbox(1.1, top - Y0 + 0.1, STAIR.deep + 0.01, 0.03, 1.8), C.ash, STAIR.x, (top + Y0 - 0.1) / 2, zc);
++      B.add(bbox(1.1, top - Y0 + 0.1, STAIR.deep + 0.01, 0.03, 1.8), stepMat(C.ash), STAIR.x, (top + Y0 - 0.1) / 2, zc);
+       col({ type: 'box', x: STAIR.x + 0.08, z: zc, hw: 0.63, hd: STAIR.deep / 2 + 0.06, rot: 0, top });   // (into the wall: no seam at the roof's edge)
+       B.add(bbox(0.14, 0.82, STAIR.deep + 0.02, 0.03, 1.8), C.ashD, STAIR.x - 0.52, top + 0.41, zc);
+       col({ type: 'box', x: STAIR.x - 0.58, z: zc, hw: 0.08, hd: STAIR.deep / 2 + 0.06, rot: 0, top: top + 0.95, noStand: true });
+diff --git a/lba3/src/game/zlift.js b/lba3/src/game/zlift.js
+index d7c19b7c..24bb8df1 100644
+--- a/lba3/src/game/zlift.js
++++ b/lba3/src/game/zlift.js
+@@ -28,6 +28,7 @@
+ //     on the feed box), kellDeck, kellDoor (Kell's spots), setService(open), setIso(on)
+ //   liftClear(x, z, pad)   the scatter keeps off it (zeelich.js)
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { mergeStatic } from '../engine/merge.js';
+ import { touch } from './story/reach.js';
+ 
+@@ -86,8 +87,8 @@ export function buildCisternRise({ group, col, W, updaters, Y0, mat }) {
+   // ---- the stair up the south face, from the bridge's side (12 steps of 0.3 m), an outer rail
+   for (let i = 0; i < STAIR.n; i++) {
+     const x = STAIR.x0 - (i + 0.5) * STAIR.tread, top = Y0 + (i + 1) * (T.h / STAIR.n);
+-    add(box(STAIR.tread, top - Y0, STAIR.w), stone, x, (Y0 + top) / 2, STAIR.z0 + STAIR.w / 2);
+-    add(box(STAIR.tread + 0.04, 0.06, STAIR.w + 0.06), stone, x, top - 0.03, STAIR.z0 + STAIR.w / 2);
++    add(box(STAIR.tread, top - Y0, STAIR.w), stepMat(stone), x, (Y0 + top) / 2, STAIR.z0 + STAIR.w / 2);
++    add(box(STAIR.tread + 0.04, 0.06, STAIR.w + 0.06), stepMat(stone), x, top - 0.03, STAIR.z0 + STAIR.w / 2);
+     // (each step's brick runs on under the ones above it, to the stair's head: no seam between two steps to drop into;
+     //  stair: the height under his feet decides, step by step, and the steps ahead never push him aside)
+     { const xe = STAIR.x0 - i * STAIR.tread; col({ type: 'box', x: (xe + T.x0) / 2, z: STAIR.z0 + STAIR.w / 2 - 0.075, hw: (xe - T.x0) / 2, hd: STAIR.w / 2 + 0.075, rot: 0, top, stair: true }); }   // (0.15 m into the terrace's brick: no seam at the head either, physics.js groundInfo)
+diff --git a/lba3/src/game/zterminal.js b/lba3/src/game/zterminal.js
+index c0235b17..ab053b6b 100644
+--- a/lba3/src/game/zterminal.js
++++ b/lba3/src/game/zterminal.js
+@@ -37,6 +37,7 @@
+ //   ZTERMINAL_PLAN                       the layout in the room's frame (the builder's own numbers): roomlife.js places
+ //                                        the hall's people from it (BIGGER-1's way)
+ import * as THREE from 'three';
++import { stepMat } from '../engine/textures.js';   // (P139a: ?fortstairs=calm)
+ import { RoomBuilder } from './interiors.js';
+ import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, torus, canvasTex, counter } from './props.js';
+ import { Batch, tm } from './kit.js';
+@@ -201,7 +202,7 @@ export function buildZTerminalRoom(scene, physics) {
+   const run = P.stair.run, N = P.stair.n, rise = AH / N;
+   for (const x of P.stair.xs) for (let i = 0; i < N; i++) {
+     const top = rise * (N - i), z = AZ1 + (i + 0.5) * run;
+-    k.add(rbox(1.2, top, run + 0.02, 0.015), cap, x, top / 2, z);
++    k.add(rbox(1.2, top, run + 0.02, 0.015), stepMat(cap), x, top / 2, z);
+     B.col(x, z, 0.6, run / 2 + 0.12, top, { stair: true });   // (+0.12: the steps overlap each other and the deck: no seam to drop through)
+   }
+   k.at(0, AH, 0, 0, () => { for (let x = AX0 + 1.3; x <= AX1 - 1.3; x += 0.9) { k.add(cyl(0.035, 0.035, 0.95, 6), MAT.steel(), x, 0.475, AZ1 - 0.06); k.add(sphere(0.06, 8, 6), TURQ(), x, 0.98, AZ1 - 0.06); } });

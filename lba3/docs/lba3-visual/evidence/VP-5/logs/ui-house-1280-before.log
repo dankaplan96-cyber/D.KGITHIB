@@ -1,0 +1,9 @@
+{"state":"play","lines":0}
+{"r":{"r":"arrived","t":1.4333333333333345,"early":true},"tg":"roomsearch"}
+cupboard prompt {"prompt":"","weapon":"","cls":"prompt.show weapon.show","state":"play"}
+after ball {"prompt":"","weapon":"","cls":"prompt weapon.show","state":"play"} true
+{"r":{"r":"arrived","t":3.433333333333331},"tg":"npc"}
+arthur prompt {"prompt":"","weapon":"","cls":"prompt.show weapon","state":"play"}
+arthur dialog {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"","dialog":"8,525,1264,187","next":"1239,683,16,20","cls":"prompt weapon.show","state":"dialog"}
+back in play {"prompt":"W Talk op1.00 @590,561,101,39","weapon":"✦Magic BallR: Fists op1.00 @1079,668,185,36","cls":"prompt.show weapon.show","state":"play"}
+no page errors

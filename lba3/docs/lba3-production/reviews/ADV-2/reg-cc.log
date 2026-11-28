@@ -1,0 +1,8 @@
+---- ch4 the dig: a pump gear
+  setup (ISO): {"key":"dig","room":"desert","state":"play"}
+  gear: {"how":"ISO hit (no throw landed)","throws":10,"log":["spot 7 unusable","spot 8 unusable","spot 9 unusable"],"fired":true,"frames":1522,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.27]},"room":"desert","state":"play"}
+PASS ch4 the dig: a pump gear  gear: the event fires 
+PASS ch4 the dig: a pump gear  gear: camera never inside a collider, a scenery volume or the terrain (1522 frames) 
+PASS ch4 the dig: a pump gear  gear: Twinsen on screen and seen afterwards 
+no errors
+ALL PASSED

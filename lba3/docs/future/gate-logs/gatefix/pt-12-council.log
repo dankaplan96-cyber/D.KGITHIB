@@ -1,0 +1,38 @@
+=== 12-council start 2026-11-01T22:54:22Z LOAD=/dev/shm/gatefix/saves/f/11.json ASSIST= SRC=/dev/shm/gatefix/c/lba3/tests/playthrough/12-council.mjs
+[0s +0s] continue: {"chapter":"council","room":"zeelich"} | zeelich [2396,6,36.8] hp 7 | Find Baldino in his workshop
+[6s +6s] street folk: ["talked","talked","talked"] | zeelich [2361.38,6,-4.95] hp 7 | Find Baldino in his workshop
+[12s +6s] Baldino: the petition: {"r":"talked","to":"baldino","state":"play","lines":8,"form":true,"fail":null} | zeelich [2387.4,6,7.05] hp 7 | Get two stamps on the petition◆ Nara's stamp◆ Oku's stamp
+[14s +2s] Nara: {"r":"talked","to":"nara","state":"play","lines":8,"nara":true,"fail":null} | zeelich [2366.45,6,-2.63] hp 7 | Get two stamps on the petition◆ Nara's stamp◆ Oku's stamp
+[15s +1s] Oku: {"r":"talked","to":"oku","state":"play","lines":4,"ask":true} | zeelich [2375.19,6,6.31] hp 7 | Get two stamps on the petition◆ Nara's stamp◆ Oku's stamp◆ Release the brakes on the mills (0/3)
+[21s +6s] free the mills (ball): {"free":3,"fail":null} | zeelich [2402.14,6,21.69] hp 7 | Get two stamps on the petition◆ Nara's stamp◆ Oku's stamp◆ Release the brakes on the mills (3/3)
+[22s +1s] Oku: the stamp: {"r":"talked","to":"oku","state":"play","lines":4,"oku":true,"fail":null} | zeelich [2377.48,6,7.24] hp 7 | Hand the petition to the clerk in the council house
+[23s +1s] the council house: {"r":"transition","from":"zeelich","to":"upper"} | upper [4796.08,0,0] hp 7 | Hand the petition to the clerk in the council house
+[23s +0s] the clerk: {"r":"talked","to":"clerk","state":"play","lines":2,"clerk":true,"fail":null} | upper [4799.49,0,0.26] hp 7 | Speak to the council
+[24s +0s] the hearing: {"heard":true,"fail":null} | council [4844,0,4.5] hp 7 | Find the master plans in the project archive
+[24s +0s] the archive: the coat: {"r":"used","target":{"kind":"c9coat","id":"p_coat","label":"p_coat"},"state":"play","lines":2,"coat":true,"disguised":true,"fail":null} | archive [4894.02,0,2.03] hp 7 | Find the master plans in the project archive
+[26s +2s] the BORE cabinet: {"r":"used","target":{"kind":"c9cab","id":"p_cabinet","label":"p_cabinet"},"state":"play","lines":2,"misses":0,"waited":44.6,"plans":true,"fail":null} | archive [4904.81,0,-4.2] hp 7 | Bring the plans to the council
+[31s +5s] back to the council → chapter 10: {"vote":true,"chapter":"network","fail":null} | workshop [1502.75,0,-1.95] hp 7 | Set Baldino's relays at the five stations (0/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: t
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[122.0] go → (4842.5, 4.5) plan ok=true pts=2 left=0.1
+[124.0] go: transition (council → council, trans true) at (4843.30, 4.54)
+[124.8] go → (4803.5, -4.5) plan ok=true pts=2 left=0.24
+[129.0] go: transition (upper → upper, trans true) at (4802.76, -4.36)
+[130.3] go → (4893.8, 1.6) plan ok=true pts=2 left=0.45
+[131.7] go → (4893.8, 1.6) plan ok=true pts=2 left=0.28
+[186.6] go → (4904.9, -4.5) plan ok=true pts=5 left=0.14
+[190.5] go → (4904.9, -4.5) plan ok=true pts=2 left=0.06
+[195.2] go → (4892.5, 4.0) plan ok=true pts=4 left=0.22
+[204.8] go: transition (archive → archive, trans true) at (4892.91, 3.37)
+[205.6] go → (4796.5, -4.5) plan ok=true pts=2 left=0.24
+[209.8] go: transition (upper → upper, trans true) at (4797.24, -4.36)
+kept /dev/shm/gatefix/saves/f/12.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 12-council end rc=0 wall=432s 2026-11-01T23:01:34Z

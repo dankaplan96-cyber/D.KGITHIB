@@ -1,0 +1,222 @@
+diff --git a/lba3/src/game/characters.js b/lba3/src/game/characters.js
+index 0e7801ad..a69e3cc4 100644
+--- a/lba3/src/game/characters.js
++++ b/lba3/src/game/characters.js
+@@ -156,6 +156,14 @@ export const LOOKS = {
+     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#f2a582', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
+     eyes: '#e8a040', height: 1.06,
+   },
++  nara_c: {
++    // CAST-VARIANTS-2 (nara's second shape variant: nara still dressed 9 people after nara_b): an Esmer woman at work on the
++    // isles, broader, a wrapped headcloth and a belt over the short robe (cast_poly.py CAST nara_c). Taken by Knartas's
++    // net-mender (kn_nets), the orchard's picker (or_pick1) and the sketcher (ow_sketch); Nara, Neska (sefa), Ulla, the
++    // dancer, Lissa and Liwa keep nara
++    race: 'esmer', outfit: 'robe', hem: 0.08, skin: '#f2a582', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
++    eyes: '#e8a040', hat: '#f2c45a', height: 1.04,
++  },
+   nara_b: {
+     // CAST-POLISH-UNDERGROUND (order 24, nara's shape variant: nara dresses more people than any other look): an Esmer woman
+     // in a long dress flared to the boots with a belt at the waist, in place of the short robe over trousers (cast_poly.py
+@@ -184,10 +192,22 @@ export const LOOKS = {
+     // a Mosquibee porter: a gold abdomen with brown bands, green eyes
+     race: 'bee', outfit: 'tunic', tunic: '#e0a83a', tunicTrim: '#5a3a1a', skin: '#5a4a4a', eyes: '#3a9a4a', wing: '#8ac8b0', height: 1.0,
+   },
++  zbee1_b: {
++    // CAST-VARIANTS-2 (zbee1's shape variant): a heavier Mosquibee porter, a fuller abdomen, a satchel on a strap across it
++    // (cast_poly.py build_bee `pouch`). Taken by the first tender (mb_tend1) and the second loader (ld_load2); the other
++    // tender, the flier and Zuzz keep zbee1
++    race: 'bee', outfit: 'tunic', tunic: '#e0a83a', tunicTrim: '#5a3a1a', skin: '#5a4a4a', eyes: '#3a9a4a', wing: '#8ac8b0', belly: 0.1, pouch: '#8a5a2a', height: 1.0,
++  },
+   zbee2: {
+     // a Mosquibee matron: a red abdomen, plain, a little gold crown
+     race: 'bee', outfit: 'tunic', tunic: '#c83a2a', tunicTrim: '#c83a2a', stripes: false, skin: '#3a5a7a', eyes: '#c83030', wing: '#e08a6a', crown: '#f2c45a', belly: 0.06, height: 1.0,
+   },
++  zbee2_b: {
++    // CAST-VARIANTS-2 (zbee2's shape variant): a working Mosquibee in the matron's red, without her crown, slimmer, a satchel
++    // on a strap (cast_poly.py build_bee `pouch`). Taken by the orchard's carter (or_carter) and the lantern-lighter
++    // (ce_lanterns); Bzzra, Zett and Otringal's guest keep zbee2
++    race: 'bee', outfit: 'tunic', tunic: '#c83a2a', tunicTrim: '#c83a2a', stripes: false, skin: '#3a5a7a', eyes: '#c83030', wing: '#e08a6a', pouch: '#7a4a2a', height: 1.0,
++  },
+   ztri1: {
+     // a triangle-headed Zeelichian clerk: a green suit, a red tie, a flat blond top
+     race: 'tri', outfit: 'tunic', slim: true, skin: '#c8906a', tunic: '#2f6a3a', pants: '#9a7a3a', shoes: '#4a8a5a', hair: '#e8d098', tie: '#c83a2a', eyes: '#3a2a1a', height: 1.1,
+@@ -210,6 +230,12 @@ export const LOOKS = {
+     // a smaller mole in a white smock with a red apron (the original's homemaker)
+     race: 'mole', outfit: 'robe', tunic: '#ecebe6', apron: '#c85a3a', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
+   },
++  zmole2_b: {
++    // CAST-VARIANTS-2 (zmole2's shape variant): a small Wannie at work: no apron (the belt and buckle show), a miner's cap
++    // with its lamp (cast_poly.py CAST zmole2_b). Taken by the underground's carrier and gauge-reader (ug_carrier, ug_gauge);
++    // the two villagers keep zmole2
++    race: 'mole', outfit: 'robe', tunic: '#ecebe6', hat: '#d8a838', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
++  },
+   joe: {
+     // Joe the Elf, Twinsen's old friend from LBA2 (tools/blender/cast_poly.py build_elf): a green pointed hat with a
+     // yellow pompom, great pointed ears, a long nose, a white beard, a green tunic, pointed shoes
+@@ -353,6 +379,12 @@ export const LOOKS = {
+     race: 'quetch', outfit: 'dress', hem: 0.12, slim: true, tunic: '#2f6a5a', tunicTrim: '#f2d8a0', belt: '#d8302a', pants: '#2f6a5a', shoes: '#3a2a1a',
+     hair: '#1a1210', skin: '#e0b090', hairStyle: 'longtail', nose: 'button', eyes: '#2a1a10', lashes: true, height: 0.9, neck: 0.08,
+   },
++  kira: {
++    // CAST-VARIANTS-2: Kira, Zeelich's plaza gardener, her own look (she shared lharWoman with Dawa, Sana and Oda): a wide straw
++    // hat, sleeves rolled to the elbow, a gardener's apron and leather gloves, her dress in a warmer green (cast_poly.py CAST kira)
++    race: 'quetch', outfit: 'dress', hem: 0.12, slim: true, tunic: '#3a7a4a', tunicTrim: '#f2d8a0', belt: '#8a5a2a', pants: '#3a7a4a', shoes: '#3a2a1a',
++    hair: '#5a3a1a', skin: '#e0b090', hairStyle: 'longtail', nose: 'button', eyes: '#2a1a10', lashes: true, hat: '#e8d090', apron: '#d8c8a0', height: 0.9, neck: 0.08,
++  },
+   lharWoman_b: {
+     // CAST-POLISH-HAMALAYI (order 24, lharWoman's shape variant): an older Lhar woman, the hair up in a bun, a fuller figure
+     // (cast_poly.py CAST lharWoman_b). Taken by Mrs Pell (pell, pell_q) and Mrs Ardo (zc_petit); Dawa (lhar2), Sana (lh_sana),
+diff --git a/lba3/src/game/walkrounds.js b/lba3/src/game/walkrounds.js
+index 17709014..0daa9d9f 100644
+--- a/lba3/src/game/walkrounds.js
++++ b/lba3/src/game/walkrounds.js
+@@ -244,7 +244,7 @@ export function zeelichRoster(game) {
+       bench('aven_b3', 3, -4.6, [22, 34]),
+     ]) },
+     // the plaza's gardener: the planters by the fountain, water from the basin
+-    { id: 'kira', char: 'lharWoman', tint: '#ffffff', speed: 1.0, start: 0, color: '#d0c0f0', stops: ok([
++    { id: 'kira', char: 'kira', tint: '#ffffff', speed: 1.0, start: 0, color: '#d0c0f0', stops: ok([
+       look('kira_a', -18.4, -3.4, -18.4, -5.2, [14, 20], { act: 'tend', carry: null }),
+       look('kira_draw', -24, 3.6, -24, 0, [5, 7], { act: 'draw', carry: 'can' }),
+       look('kira_b', -6, 3.4, -6, 5.2, [9, 13], { act: 'water' }),
+diff --git a/lba3/tools/blender/cast_poly.py b/lba3/tools/blender/cast_poly.py
+index 92ff3afa..02a3be77 100644
+--- a/lba3/tools/blender/cast_poly.py
++++ b/lba3/tools/blender/cast_poly.py
+@@ -94,12 +94,14 @@ CAST = {
+     'lharMan': dict(browS=1.5, browTilt=-0.2, mouthLift=0.2, pockets=True, pocketY=0.1, moustacheSwept=True),   # (MOUSTACHE-LHAR)
+     'lharMan_b': dict(browS=1.8, browTilt=-0.1, mouthLift=0.5, mouthW=1.1, pockets=True, pocketY=0.06, moustacheSwept=True, noseS=1.1),   # (CAST-POLISH-HAMALAYI)
+     'lharWoman': dict(lashes=True, mouthLift=1.0, lip='#a03a4a', browTilt=0.2, hemH=0.07),
++    'kira': dict(lashes=True, mouthLift=1.2, lip='#a03a4a', browTilt=0.25, browS=1.0, hemH=0.07, rolled=True, glove='#7a5a3a', noseS=0.95),   # (CAST-VARIANTS-2: Kira, the plaza's gardener)
+     'lharWoman_b': dict(lashes=True, mouthLift=0.6, lip='#a03a4a', browTilt=0.0, browS=1.1, hemH=0.07, noseS=1.05),   # (CAST-POLISH-HAMALAYI)
+     'lharElder': dict(earBend=(0.9, 0.9), earLen=0.95, mouthLift=0.6, browTilt=0.3, cheekS=1.1, glassesRim=True),   # (GLASSES-ELDER)
+     'sphero1': dict(mouthLift=0.6),
+     'sphero2': dict(mouthLift=-0.8, lidDrop=6, mouthW=1.0),
+     # ---- part 3: Zeelich's races and the Esmers (build_esmer / build_bee / build_mole / build_tri / build_vesk)
+     'nara': dict(lashes=True, browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.9),
++    'nara_c': dict(lashes=True, browS=1.1, browTilt=-0.05, mouthLift=0.8, noseS=1.0, headcloth=True, beltBand=True),   # (CAST-VARIANTS-2: an island worker: a headcloth, a belted short robe, broader)
+     'nara_b': dict(lashes=True, browS=1.0, browTilt=0.1, mouthLift=0.6, noseS=0.95, robeLong=True, beltBand=True),   # (CAST-POLISH-UNDERGROUND: the long dress)
+     'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
+     'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
+@@ -111,10 +113,13 @@ CAST = {
+     'keeper_b': dict(browS=1.5, browTilt=-0.35, mouthLift=-0.3, noseS=1.05, helmet=True, beltBand=True),
+     'oku_b': dict(browS=1.3, browTilt=0.1, mouthLift=0.4, robeLong=True, headcloth=True),
+     'zbee1': dict(browS=1.5, lip='#7a2a30'),
++    'zbee1_b': dict(browS=1.7, browTilt=-0.1, lip='#7a2a30'),   # (CAST-VARIANTS-2: a heavier porter)
+     'zbee2': dict(browS=0.8, lashes=True, lip='#a02840'),
++    'zbee2_b': dict(browS=1.0, lashes=True, lip='#a02840'),   # (CAST-VARIANTS-2: a worker, no crown, slimmer)
+     'zmole1': dict(browS=1.9, lidT=0.9, lidShade=0.4, eyeW=0.015, tufts=2),
+     'zmole1_b': dict(browS=1.9, lidT=0.9, lidShade=0.4, eyeW=0.015, tufts=0, minerCap=True),   # (CAST-POLISH-ISLES: the Wannies at work)
+     'zmole2': dict(lidT=0.45, eyeW=0.021, earIn='#f0b0b8', lipIn='#5a1a2a', tufts=2),
++    'zmole2_b': dict(lidT=0.6, eyeW=0.02, earIn='#f0b0b8', lipIn='#5a1a2a', tufts=0, minerCap=True),   # (CAST-VARIANTS-2: a small mole at work: a miner's cap, a belt, no apron)
+     'ztri1': dict(fringe=True, browS=0.9, browTilt=0.2, mouthLift=1.0, noseS=1.0),
+     'ztri2': dict(rolled=True, browS=1.5, browTilt=-0.1, mouthLift=0.5, noseS=1.1),
+     'vesk': dict(browS=1.6, browTilt=-0.55, mouthLift=0.9),
+@@ -2043,6 +2048,29 @@ def build_bee(name):
+         bands += [(9e9, body)]
+     banded(b, 'abdomen', rings, bands, w_abd)
+     tube(b.P('stinger', shade(dark, 0.8), w_abd, 40), (0, 0.34 * H, -0.07 * H), (0, 0.27 * H, -0.135 * H), 0.024 * H, 0.004 * H, 6)
++    if L.get('pouch'):
++        # (CAST-VARIANTS-2: a porter's satchel: a strap from the front of the right shoulder across the abdomen's front to a
++        # bag on the left side, the strap laid on the abdomen's surface; the bag's flap a darker multiple of the pouch's hex)
++        def abd_r(y):
++            t = y / H
++            for i in range(len(ys) - 1):
++                if ys[i] <= t <= ys[i + 1]:
++                    f = (t - ys[i]) / (ys[i + 1] - ys[i])
++                    return R * (ks[i] + (ks[i + 1] - ks[i]) * f)
++            return R * ks[-1]
++        pc_ = L['pouch']
++        strap_ = []
++        for i in range(9):
++            t = i / 8
++            phi = math.radians(40 - 135 * t)   # (from the front-right, over the front, to the left side)
++            y = (0.655 - 0.17 * t) * H
++            r = abd_r(y) + 0.006 * H
++            strap_.append((math.sin(phi) * r, y, -0.01 * H + math.cos(phi) * r * 0.95))
++        cord(b.P('strap', shade(pc_, 0.8), w_abd, 40), strap_, 0.007 * H, 5, closed=False)
++        yb = 0.47 * H
++        xr = abd_r(yb)
++        box(b.P('pouch', pc_, w_abd, 35), -xr - 0.05 * H, -xr + 0.012 * H, yb - 0.055 * H, yb + 0.03 * H, -0.06 * H, 0.05 * H)
++        box(b.P('pouchFlap', shade(pc_, 0.75), w_abd, 35), -xr - 0.056 * H, -xr - 0.04 * H, yb - 0.005 * H, yb + 0.036 * H, -0.062 * H, 0.052 * H)
+     # thorax collar and neck
+     tube(b.P('neck', dark, lambda p: {'torso': 1 - smooth(neckY, headY, p[1]), 'head': smooth(neckY, headY, p[1])}, 50), (0, 0.69 * H, 0.0), (0, 0.76 * H, 0.03 * H), 0.05 * H, 0.04 * H, 8)
+     fuzz = b.P('fuzz', cp.get('fuzz') or shade(body, 0.82), 'torso', 60)
+diff --git a/lba3/src/game/islandlife.js b/lba3/src/game/islandlife.js
+index 11735c4a..a4a86095 100644
+--- a/lba3/src/game/islandlife.js
++++ b/lba3/src/game/islandlife.js
+@@ -108,7 +108,7 @@ export const ISLE_PEOPLE = {
+     { id: 'kn_quill', char: 'oku', tint: '#e8f4ff', color: '#90b8e0', speed: 0.8, rounds: {
+       ord: [at('qu_boats', -20.6, -30.4, 'stand', [12, 18], { d: 2.6, gest: ['nod'] }), at('qu_light', -15.8, -16.8, 'stand', [10, 14], { d: 1.0, gest: ['sigh'] }), at('qu_bench', -14.3, -35.8, 'stand', [6, 9])],
+     } },
+-    { id: 'kn_nets', char: 'nara', tint: '#f0fff4', color: '#a0e0b8', speed: 0.85, rounds: {
++    { id: 'kn_nets', char: 'nara_c', tint: '#f0fff4', color: '#a0e0b8', speed: 0.85, rounds: {
+       ord: [at('ne_rack1', -29.8, -38.3, 'browse', [18, 26], { d: 1.0 }), at('ne_crate', -17.3, -40.3, 'put', [5, 7], { carry: 'basket', d: 1.0, dir: PI }), at('ne_rack2', -11.8, -41.8, 'browse', [16, 22], { d: 1.0, carry: null })],
+     } },
+     { id: 'kn_fisher', char: 'keeper', tint: '#f4eadc', color: '#d0b088', speed: 0.9, start: 1, rounds: {
+@@ -126,7 +126,7 @@ export const ISLE_PEOPLE = {
+     { id: 'mb_bzzra', char: 'zbee2', tint: '#fff4d8', color: '#f0c050', speed: 0.8, rounds: {
+       ord: [at('bz_great', 27.3, -11.4, 'browse', [14, 20], { d: 2.2, dir: PI }), keep('bz_stall', 31.7, -13.8, -2.68, 'put', [10, 14]), at('bz_hive', 29.7, -19.8, 'tend', [8, 12], { d: 1.0, gest: ['shrug'] })],
+     } },
+-    { id: 'mb_tend1', char: 'zbee1', tint: '#fff8e0', color: '#e8c060', speed: 0.95, rounds: {
++    { id: 'mb_tend1', char: 'zbee1_b', tint: '#fff8e0', color: '#e8c060', speed: 0.95, rounds: {
+       ord: [at('t1_hive', 17.7, -13.8, 'tend', [10, 14], { d: 1.0 }), at('t1_bed', 26.2, -17.3, 'tend', [6, 9], { carry: 'can', d: 1.0 }), at('t1_honey', 21.7, -6.3, 'put', [5, 7], { carry: null, d: 1.0 })],
+     } },
+     { id: 'mb_tend2', char: 'zbee1', tint: '#f0ffe8', color: '#b0e090', speed: 0.95, start: 1, rounds: {
+@@ -142,13 +142,13 @@ export const ISLE_PEOPLE = {
+       // (his round keeps to the press yard's west side: the press house's giver, by its door, stays out of talk reach)
+       ord: [at('pe_crates', -0.4, 15.6, 'tend', [16, 22], { d: 1.0, dir: -PI / 2, gest: ['nod'] }), at('pe_crates2', -4.4, 18.1, 'tend', [6, 9], { d: 1.0 }), at('pe_bed', -1.4, 13.1, 'tend', [6, 9], { d: 1.4, dir: -PI / 2 })],
+     } },
+-    { id: 'or_pick1', char: 'nara', tint: '#fffbe6', color: '#f0d880', speed: 0.9, rounds: {
++    { id: 'or_pick1', char: 'nara_c', tint: '#fffbe6', color: '#f0d880', speed: 0.9, rounds: {
+       ord: [at('p1_bed', -3.9, 7.6, 'tend', [10, 14], { d: 1.4 }), at('p1_bed2', 4.6, 7.6, 'tend', [10, 14], { d: 1.4, carry: 'basket' }), at('p1_crates', -4.4, 18.1, 'tend', [5, 7], { carry: null, d: 1.0 })],
+     } },
+     { id: 'or_pick2', char: 'xil', tint: '#f2ffee', color: '#a8e0a0', speed: 0.9, start: 1, rounds: {
+       ord: [at('p2_bed', -1.4, 13.1, 'tend', [10, 14], { d: 1.4 }), at('p2_bed2', -7.9, 14.1, 'tend', [10, 14], { d: 1.4, carry: 'basket' }), at('p2_honey', 1.6, 15.6, 'tend', [5, 7], { carry: null, d: 1.0 })],
+     } },
+-    { id: 'or_carter', char: 'zbee2', tint: '#e8f4ff', color: '#a0c0f0', speed: 1.05, rounds: {
++    { id: 'or_carter', char: 'zbee2_b', tint: '#e8f4ff', color: '#a0c0f0', speed: 1.05, rounds: {
+       ord: [at('ca_crates', -0.4, 15.6, 'put', [5, 7], { carry: 'crate', d: 1.6, dir: -PI / 2 }), at('ca_pad', -21.9, 2.1, 'stand', [5, 7], { carry: null, d: 4.2, dir: PI / 2, gest: ['shrug'] }), at('ca_bench', -9.9, -4.9, 'stand', [6, 9], { d: 1.0 })],
+     } },
+   ] },
+@@ -163,7 +163,7 @@ export const ISLE_PEOPLE = {
+     { id: 'ce_dancer2', char: 'xil', tint: '#f0ecff', color: '#c0b0f0', speed: 1.0, rounds: {
+       ord: [op('d2_dance', -2.4, 3.6, -0.9, 'stand', [16, 22], { pair: 'celdance', mate: 'ce_dancer1' }), op('d2_bench', -6.6, -5.4, 0.7, 'stand', [6, 9])],
+     } },
+-    { id: 'ce_lanterns', char: 'zbee2', tint: '#fff6e0', color: '#f0c070', speed: 0.8, rounds: {
++    { id: 'ce_lanterns', char: 'zbee2_b', tint: '#fff6e0', color: '#f0c070', speed: 0.8, rounds: {
+       ord: [at('la_stand', -4.45, 2.55, 'browse', [18, 26], { d: 1.0, dir: 2.0 + PI }), at('la_pole', -4.93, 1.81, 'reachHigh', [5, 8], { d: 0.6, dir: -2.57 })],
+     } },
+   ], avoid: [[2.2, 0.6, 5.0]] },   // (the figure's base)
+@@ -175,10 +175,10 @@ export const ISLE_PEOPLE = {
+     { id: 'ug_fitter', char: 'zmole1_b', tint: '#fff0e6', color: '#e0b090', speed: 0.8, start: 1, rounds: {
+       ord: [at('fi_pump', -13, -17.5, 'tend', [14, 20], { d: 1.6 }), at('fi_holder', -12.5, -33, 'tend', [8, 12], { d: 3.2 })],
+     } },
+-    { id: 'ug_carrier', char: 'zmole2', tint: '#fff8f0', color: '#f0c0a0', speed: 0.8, rounds: {
++    { id: 'ug_carrier', char: 'zmole2_b', tint: '#fff8f0', color: '#f0c0a0', speed: 0.8, rounds: {
+       ord: [at('ca_a', -29.3, -31.3, 'put', [5, 7], { carry: 'crate', d: 1.0 }), at('ca_b', -14.8, -23.3, 'put', [5, 7], { carry: null, d: 1.0 }), at('ca_barrel', -24.3, -30.8, 'dip', [5, 7], { d: 0.9 })],
+     } },
+-    { id: 'ug_gauge', char: 'zmole2', tint: '#eef8ff', color: '#a0c8e0', speed: 0.8, rounds: {
++    { id: 'ug_gauge', char: 'zmole2_b', tint: '#eef8ff', color: '#a0c8e0', speed: 0.8, rounds: {
+       ord: [at('ga_holder', -24, -41, 'stand', [10, 14], { d: 3.2, gest: ['nod'] }), at('ga_holder2', -12.5, -33, 'draw', [10, 14], { d: 3.2, dir: 0 }), at('ga_crates', -18.3, -41.8, 'stand', [5, 7], { d: 1.0 })],
+     } },
+   ] },
+@@ -214,7 +214,7 @@ export const ISLE_PEOPLE = {
+     { id: 'ld_load1', char: 'oku', tint: '#fff4e8', color: '#e8c0a0', speed: 0.95, rounds: {
+       ord: [at('l1_a', 7.6, 14.6, 'put', [4, 6], { carry: 'crate', d: 1.0 }), at('l1_b', -2.4, 16.1, 'draw', [4, 6], { carry: null, d: 1.0 }), at('l1_rest', 3.6, 14.6, 'stand', [5, 7], { d: 1.4 })],
+     } },
+-    { id: 'ld_load2', char: 'zbee1', tint: '#fff0f0', color: '#f0a8a8', speed: 1.05, start: 1, rounds: {
++    { id: 'ld_load2', char: 'zbee1_b', tint: '#fff0f0', color: '#f0a8a8', speed: 1.05, start: 1, rounds: {
+       ord: [at('l2_a', 3.6, 14.6, 'put', [4, 6], { carry: 'crate', d: 1.0 }), at('l2_b', -11.9, 13.6, 'put', [4, 6], { carry: null, d: 1.0 })],
+     } },
+   ] },
+@@ -226,7 +226,7 @@ export const ISLE_PEOPLE = {
+     { id: 'ow_mason', char: 'ztri2', tint: '#fff0e0', color: '#e0b890', speed: 0.85, rounds: {
+       ord: [at('ma_tower', 9.9, -18, 'tend', [14, 20], { d: 3.4 }), at('ma_dome', 14.6, -12.9, 'tend', [8, 12], { d: 1.6, dir: -PI / 2, carry: 'crate' }), at('ma_back', 9.9, -18, 'put', [5, 7], { d: 3.6, carry: null })],
+     } },
+-    { id: 'ow_sketch', char: 'nara', tint: '#eefcf4', color: '#a8e0c8', speed: 0.85, rounds: {
++    { id: 'ow_sketch', char: 'nara_c', tint: '#eefcf4', color: '#a8e0c8', speed: 0.85, rounds: {
+       ord: [at('sk_post', 11.5, -11.7, 'stand', [16, 22], { d: 1.0 }), at('sk_bench', -3.2, 5.8, 'stand', [10, 14], { d: 1.0 })],
+     } },
+     { id: 'ow_kid', char: 'xil', scale: 0.72, tint: '#fff4f0', color: '#f0c0b0', speed: 1.4, rounds: {
