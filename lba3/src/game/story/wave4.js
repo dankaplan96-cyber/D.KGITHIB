@@ -67,7 +67,9 @@ const COLORS = { w4_raph: '#e8c890' };
 export class Wave4 extends ChapterBase {
   constructor(story) { super(story); this.race = null; this.lamp = null; this._room = undefined; }
   get ck() { return this.story.cur?.key; }
-  boatOpen() { return BOAT_KEYS.includes(this.ck); }
+  // (P154: while chapter 2's radio call is pending — Vesk gone, Arthur's radio not yet heard — the boat stands aside: its
+  //  hook would answer Arthur first and walk him to the pond, and the radio talk never came)
+  boatOpen() { const f = this.f; return BOAT_KEYS.includes(this.ck) && !(f.c1_veskGone && !f.c1_radio); }
   boatActive() { const f = this.f; return this.boatOpen() && !!f.w4b_hook && !f.w4b_won; }
   lampOpen() { const f = this.f; return this.ck === 'home' && !!f.w4b_won && !f.w4b_lamp; }
   isleOpen() { return islePhase(this.story) != null; }
