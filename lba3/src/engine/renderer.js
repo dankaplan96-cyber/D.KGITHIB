@@ -432,6 +432,15 @@ export class Renderer {
     this.scenePass = new ScaledRenderPass(scene, camera);
     c.addPass(this.scenePass);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);
+    // P155: a single NaN (or infinite) pixel in the scene's half-float target was spread by the bloom's blur into a large
+    // black rectangle for one frame (High only: the only preset with bloom). The bloom's input is made finite first:
+    // NaN → 0, ±Inf → the half-float limit. max() before min(): on Direct3D a NaN operand yields the other operand.
+    {
+      const M = this.bloom.materialHighPassFilter;
+      M.fragmentShader = M.fragmentShader.replace('vec4 texel = texture2D( tDiffuse, vUv );', ['vec4 texel = texture2D( tDiffuse, vUv );',
+        'if ( any( isnan( texel ) ) ) texel = vec4( 0.0 );', 'texel = min( max( texel, vec4( 0.0 ) ), vec4( 65504.0 ) );'].join(' '));
+      M.needsUpdate = true;
+    }
     c.addPass(this.bloom);
     // the output pass reads only the part of the target the scene pass drew (automatic resolution)
     this.output = new OutputPass();
