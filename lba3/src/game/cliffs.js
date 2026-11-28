@@ -535,16 +535,22 @@ export function rockFootColliders(mesh, terrain, physics, { cell = 0.33, slope =
     if (y - fl <= 0.03) continue;
     if (!brick && Math.hypot(H(px + e, pz) - H(px - e, pz), H(px, pz + e) - H(px, pz - e)) / (2 * e) > slope) continue;   // (steep: not walked)
     if (!rows.has(j)) rows.set(j, []);
-    rows.get(j).push([i, Math.max(y, fl + 0.13)]);
+    rows.get(j).push([i, y]);   // (STUCK-ROCKS: the rock's own height: he stands on it)
   }
   let n = 0;
   for (const [j, list] of rows) {
     list.sort((a, b) => a[0] - b[0]);
     for (let s = 0; s < list.length;) {
       let e2 = s, hi = list[s][1];
-      while (e2 + 1 < list.length && list[e2 + 1][0] === list[e2][0] + 1) { e2++; hi = Math.max(hi, list[e2][1]); }
+      // (a run only over cells of one height, within 4 cm: a box's top is a floor now, and one taller cell must not lift
+      //  the whole run)
+      while (e2 + 1 < list.length && list[e2 + 1][0] === list[e2][0] + 1 && Math.abs(list[e2 + 1][1] - list[s][1]) <= 0.04) { e2++; hi = Math.max(hi, list[e2][1]); }
       const i0 = list[s][0], i1 = list[e2][0];
-      physics.add({ type: 'box', x: (i0 + i1 + 1) / 2 * cell, z: (j + 0.5) * cell, hw: (i1 - i0 + 1) * cell / 2, hd: cell / 2, rot: 0, top: hi, seeThrough: true, block: true });
+      // (STUCK-ROCKS, the user 28.11 "people get stuck": as `block`, a toe 13-55 cm high was a wall — `block` is stepped over
+      //  only under 12 cm — and on a rocky slope the rows closed round him: no way out (the slope south of the hostel's
+      //  side door, -13.3, -44.1). A plain brick now: a toe up to a step's height is walked onto (his feet on the rock,
+      //  not in it, FEET-66B's aim), a taller one stops him as any brick over STEP_UP does)
+      physics.add({ type: 'box', x: (i0 + i1 + 1) / 2 * cell, z: (j + 0.5) * cell, hw: (i1 - i0 + 1) * cell / 2, hd: cell / 2, rot: 0, top: hi, seeThrough: true });
       n++; s = e2 + 1;
     }
   }
